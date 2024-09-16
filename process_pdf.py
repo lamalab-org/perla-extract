@@ -63,6 +63,9 @@ def resize_image(image, max_dimension):
 
     return image
 
+def encode_image_to_base64(filepath):
+    with open(filepath, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
 
 def convert_to_jpeg(image):
     with io.BytesIO() as output:
@@ -91,12 +94,14 @@ def process_image(image, max_size, output_folder, file_path, i):
 def process_pdf(file_path, output_folder_images):
     pdf_images = convert_from_path(file_path)
     filename = Path(file_path).stem
+    image_paths = []
+    for idx in range(len(pdf_images)):
+        image_path = os.path.join(output_folder_images, f"{filename}_page_{idx + 1}.png")
+        pdf_images[idx].save(image_path, 'PNG')
+        image_paths.append(image_path)
+    print("Successfully converted PDF to processed_images")
+    for j, image in enumerate(pdf_images):
+        resized_image = resize_image(image, 1024)
+        _rotated_image = correct_text_orientation(resized_image, output_folder_images, file_path, j)
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        for idx in range(len(pdf_images)):
-            image_path = os.path.join(temp_dir, f"{filename}_page_{idx + 1}.png")
-            pdf_images[idx].save(image_path, 'PNG')
-        print("Successfully converted PDF to processed_images")
-        for j, image in enumerate(pdf_images):
-            resized_image = resize_image(image, 1024)
-            rotate_image = correct_text_orientation(resized_image, output_folder_images, file_path, j)
+    return image_paths
