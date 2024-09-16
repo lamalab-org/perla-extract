@@ -13,7 +13,7 @@ class PCE(UnitValue):
     unit: Literal['%']
 
 class JSC(UnitValue):
-    value: confloat(ge=7, le=40)
+    value: confloat(ge=0)
     unit: Literal['mA cm^-2', 'A m^-2', 'A cm^-2', 'mA m^-2', 'uA cm^-2']
 
 class VOC(UnitValue):
@@ -47,8 +47,8 @@ class ActiveArea(UnitValue):
         return v
 
 class LightIntensity(UnitValue):
-    value: confloat(ge=50, le=200)
-    unit: Literal['mW cm^-2', 'W m^-2', 'mW m^-2', 'sun']
+    value: confloat(ge=0)
+    unit: Literal['mW cm^-2', 'W m^-2', 'mW m^-2', 'sun', 'lux']
 
 class Bandgap(UnitValue):
     value: confloat(ge=0.5, le=4.0)
@@ -64,17 +64,21 @@ class Temperature(UnitValue):
             return v - 273.15
         return v
 
+class Time(UnitValue):
+    value: float
+    unit: Literal['s', 'min', 'h']
+
 class PowerDensity(UnitValue):
     value: float
     unit: Literal['uW/cm^2', 'mW/cm^2']
 
 class LightSource(BaseModel):
-    type: Literal['AM 1.5G', 'AM 1.5D', 'AM 0', 'Monochromatic', 'White LED', 'Other']
-    description: Optional[str] = Field(None, description="Additional details about the light source")
+    type: Literal['AM 1.5G', 'AM 1.5D', 'AM 0', 'Monochromatic', 'White LED', 'Other', 'Outdoor']
+    description: Optional[str] = Field(None, description="Additional details about the light source. This is very important.")
     wavelength_range: Optional[str] = Field(None, description="Wavelength range of the spectrum, e.g., '400-1100 nm'")
     light_intensity: LightIntensity
     lamp: Optional[str] = Field(None, description="Type of lamp used to generate the spectrum")
-    color_temperature: Optional[str] = Field(None, description="Color temperature of the spectrum in K")
+    color_temperature: Optional[Temperature] = Field(None, description="Color temperature of the spectrum in K")
     power_density: Optional[PowerDensity] = Field(None, description="Power density of the light source")
 
 class PerovskiteSolarCell(BaseModel):
@@ -86,14 +90,14 @@ class PerovskiteSolarCell(BaseModel):
     ff: FF
     active_area: ActiveArea
     light_source: LightSource
-    bandgap: Bandgap
+    bandgap: Optional[Bandgap]
     substrate: str
     electron_transport_layer: str
     hole_transport_layer: str
     back_contact: str
-    deposition_method: str = Field(..., description="Method used for perovskite deposition")
-    annealing_temperature: Temperature
-    annealing_time: float = Field(..., description="Annealing time in minutes")
+    deposition_method: Optional[str] = Field(..., description="Method used for perovskite deposition")
+    annealing_temperature: Optional[Temperature]
+    annealing_time: Optional[Time] = Field(..., description="Annealing time in minutes")
     
     encapsulation: Optional[str] = Field(None, description="Encapsulation method, if any")
     

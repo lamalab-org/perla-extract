@@ -11,6 +11,19 @@ from marker.models import load_all_models
 
 model_lst = load_all_models()
 
+from diskcache import Cache
+cache = Cache(".cache")
+
+def pdf_to_md(pdf_path):
+    # check if in cache
+    if (cached := cache.get(pdf_path)) is not None:
+        print(cached)
+        return cached
+    else:
+        full_text, images, out_meta = convert_single_pdf(pdf_path, model_lst)
+        cache.set(pdf_path, full_text)
+        return full_text
+
 def extract_one_pdf(filepath, output_folder, vision_model=False) -> PerovskiteSolarCells:
     if vision_model:
         with tempfile.TemporaryDirectory() as tmp_output_folder:
@@ -19,9 +32,9 @@ def extract_one_pdf(filepath, output_folder, vision_model=False) -> PerovskiteSo
             response = anthropic_call(PerovskiteSolarCells, images=image_paths, vision_model=True)
     else: 
         # convert PDF with marker 
-        full_text, images, out_meta = convert_single_pdf(filepath, model_lst)
+        full_text = pdf_to_md(filepath)
         print("Calling Anthropic API")
-        response = anthropic_call(PerovskiteSolarCells, text=full_text, images=images)
+        response = anthropic_call(PerovskiteSolarCells, text=full_text)
     stem = Path(filepath).stem
     timestr = time.strftime("%Y%m%d-%H%M%S")
     with open(f"{output_folder}/{stem}_{timestr}.json", "w") as f:
