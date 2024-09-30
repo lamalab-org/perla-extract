@@ -22,7 +22,7 @@ class VOC(UnitValue):
 
     @validator('value')
     def check_voc_value(cls, v, values):
-        
+
         unit = values.get('unit')
         if unit == 'V' and v > 1.5:
             raise ValueError("When unit is 'V', value must be <= 1.5")
@@ -81,6 +81,70 @@ class LightSource(BaseModel):
     color_temperature: Optional[Temperature] = Field(None, description="Color temperature of the spectrum in K")
     power_density: Optional[PowerDensity] = Field(None, description="Power density of the light source")
 
+
+class Pressure(UnitValue):
+    value: float
+    unit: Literal['Pa', 'kPa', 'atm', 'bar', 'mbar', 'mmHg', 'Torr']
+
+class Humidity(UnitValue):
+    value: confloat(ge=0, le=100)
+    unit: Literal['%']
+
+class Concentration(UnitValue):
+    value: float
+    unit: Literal['mol/L', 'mmol/L', 'g/L', 'mg/L', 'wt%', 'vol%']
+
+class Volume(UnitValue):
+    value: float
+    unit: Literal['L', 'mL', 'μL']
+
+class ProcessingAtmosphere(BaseModel):
+    type: str
+    pressure: Pressure
+    relative_humidity: Optional[Humidity]
+
+class ReactionSolution(BaseModel):
+    compounds: List[str]
+    concentrations: List[Concentration]
+    volume: Volume
+    temperature: Temperature
+
+class QuenchingProcess(BaseModel):
+    induced_crystallisation: bool
+    media_mixing_ratios: Optional[List[float]]
+    media_volume: Optional[Volume]
+    media_additives_compounds: Optional[List[str]]
+    media_additives_concentrations: Optional[List[Concentration]]
+
+class ThermalAnnealing(BaseModel):
+    temperature: Temperature
+    time: Time
+    atmosphere: ProcessingAtmosphere
+
+class SolventAnnealing(BaseModel):
+    solvent_atmosphere: str
+    time: Time
+    temperature: Temperature
+
+class ProcessingStep(BaseModel):
+    step_name: Optional[str]
+    method: Optional[str]
+    atmosphere: Optional[ProcessingAtmosphere]
+    temperature: Optional[Temperature]
+    duration: Optional[Time]
+    solution: Optional[ReactionSolution]
+    thermal_annealing: Optional[ThermalAnnealing]
+    solvent_annealing: Optional[SolventAnnealing]
+    quenching: Optional[QuenchingProcess]
+    additional_parameters: Optional[dict] = Field(None, description="Any additional parameters specific to this processing step")
+
+class Deposition(BaseModel):
+    steps: List[ProcessingStep] = Field(..., min_items=1, description="List of processing steps in order of execution")
+    substrate: str
+    substrate_cleaning: Optional[str]
+    total_thickness: Optional[float] = Field(None, description="Total thickness of the deposited perovskite layer in nm")
+    additional_notes: Optional[str] = Field(None, description="Any additional notes about the overall deposition process")
+
 class PerovskiteSolarCell(BaseModel):
     cell_stack: List[str] = Field(..., description="The stack sequence of the cell. For the perovskite, only include 'perovskite' and list the composition in the 'perovskite_composition' field")
     perovskite_composition: str = Field(..., description="Chemical formula of the perovskite absorber")
@@ -90,17 +154,12 @@ class PerovskiteSolarCell(BaseModel):
     ff: FF
     active_area: ActiveArea
     light_source: LightSource
-    bandgap: Optional[Bandgap]
-    substrate: str
+    bandgap: Optional[Bandgap] = Field(None, description="Bandgap of the perovskite material in eV. Include this field only if the bandgap has been directly measured in the experiment. Do not include estimated or literature values.")
     electron_transport_layer: str
     hole_transport_layer: str
     back_contact: str
-    deposition_method: Optional[str] = Field(..., description="Method used for perovskite deposition")
-    annealing_temperature: Optional[Temperature]
-    annealing_time: Optional[Time] = Field(..., description="Annealing time in minutes")
-    
+    deposition: Deposition
     encapsulation: Optional[str] = Field(None, description="Encapsulation method, if any")
-    
     additional_notes: Optional[str] = Field(None, description="Any additional comments or observations")
 
     @validator('cell_stack')

@@ -9,7 +9,7 @@ INSTRUCTION_TEXT = 'Extract the data from the text of the paper. Do only report 
 
 from cache import instructor_cache
 
-def anthropic_call(model, text: str , images: List[str] = None, vision_model: bool=False):    
+def anthropic_call(model, text: str , images: List[str] = None, vision_model: bool=False):
     client = instructor.from_anthropic(Anthropic())
     message_content = []
     if vision_model:
@@ -31,7 +31,7 @@ def anthropic_call(model, text: str , images: List[str] = None, vision_model: bo
             "type": "text",
             'text': INSTRUCTION_TEXT_VISION
         })
-    else: 
+    else:
         message_content.append(   {
             "type": "text",
             'text': INSTRUCTION_TEXT
@@ -42,8 +42,8 @@ def anthropic_call(model, text: str , images: List[str] = None, vision_model: bo
         })
 
     resp = client.messages.create(
-        model="claude-3-opus-20240229",
-        max_tokens=4096,
+        model="claude-3-5-sonnet-20240620",
+        max_tokens=8192,
         system=SYSTEM_PROMPT,
         messages=[
             {
