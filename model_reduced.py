@@ -154,6 +154,9 @@ class ProcessingStep(BaseModel):
     additional_parameters: Optional[dict] = Field(
         None, description="Any additional parameters specific to this processing step"
     )
+    number_devices: Optional[int] = Field(None, description="Over how may devices the performance metrics have been averaged")
+    averaged_quantities: bool = Field(None, description="True if the reported performance metrics are reported based on an average over multiple devices. If there are additional statistics that have been reported, extract them into `additional_notes`")
+
 
 
 class Deposition(BaseModel):
