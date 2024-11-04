@@ -125,16 +125,17 @@ class ProcessingAtmosphere(BaseModel):
     relative_humidity: Optional[Humidity]
 
 
-class ReactionSolution(BaseModel):
-    compounds: List[str]
-    concentrations: List[Concentration]
-    volume: Volume
-    temperature: Temperature
-
-
 class Solvent(BaseModel):
     name: str
     volume: Optional[float]
+
+
+class ReactionSolution(BaseModel):
+    compounds: List[str]
+    concentrations: Optional[List[Concentration]]
+    volume: Optional[Volume]
+    temperature: Temperature
+    solvent: Solvent
 
 
 class ProcessingStep(BaseModel):
@@ -157,7 +158,7 @@ class ProcessingStep(BaseModel):
 
 class Deposition(BaseModel):
     steps: List[ProcessingStep] = Field(
-        ..., min_items=1, description="List of processing steps in order of execution"
+        ..., min_items=1, description="List of processing steps in order of execution.  Only report conditions that have  reported in the paper."
     )
     additional_notes: Optional[str] = Field(
         None, description="Any additional notes about the overall deposition process"
@@ -207,7 +208,7 @@ class PerovskiteSolarCell(BaseModel):
     jsc: JSC
     voc: VOC
     ff: FF
-    active_area: ActiveArea
+    active_area: ActiveArea = Field(..., description='Reported active area of the solar cell.')
     light_source: LightSource
     bandgap: Optional[Bandgap] = Field(
         None,
@@ -219,8 +220,8 @@ class PerovskiteSolarCell(BaseModel):
     additional_notes: Optional[str] = Field(
         None, description="Any additional comments or observations"
     )
-    stability: Optional[Stability]
-    layers: List[Layer]
+    stability: Optional[Stability] = Field(None, description="Include this field only if stability tests have been performed. Only include conditions that have been explicitly reported in the paper. If there are additional statistics, report them in `additional_notes`.")
+    layers: List[Layer] = Field(None, description="Include all layers in the device stack. Only report conditions for those where deposition conditions have been reported (e.g., not the substrate).")
 
     @validator("cell_stack")
     def check_cell_stack(cls, v):
