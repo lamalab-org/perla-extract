@@ -11,6 +11,7 @@ import numpy as np
 from pdf2image import convert_from_path
 from pathlib import Path
 import tempfile
+import pymupdf
 
 def pil_to_cv2(image):
     np_image = np.array(image)
@@ -90,6 +91,13 @@ def process_image(image, max_size, output_folder, file_path, i):
         max(width, height),  # same tuple metadata
     )
 
+def pdf2text(file_path):
+    # Load your PDF
+    doc = pymupdf.open(file_path)
+    text = ""
+    for page in doc:
+        text+= page.get_text()+ "\n\n"
+    return text
 
 def process_pdf(file_path, output_folder_images):
     pdf_images = convert_from_path(file_path)
