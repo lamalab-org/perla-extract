@@ -1,0 +1,1089 @@
+{
+    "cells": [
+        {
+        "cell_stack": ["ITO", "PEDOT:PSS", "Perovskite", "PCBM-60", "C60", "Al"],
+        "perovskite_composition": "CH3NH3PbI3",
+        "device_architecture": "pin",
+        "pce": { "value": 15.2, "unit": "%" },
+        "jsc": { "value": 20.98, "unit": "mA cm^-2" },
+        "voc": { "value": 1.04, "unit": "V" },
+        "ff": { "value": 70.0 },
+        "active_area": { "value": 0.09, "unit": "cm^2" },
+        "light_source": {
+            "type": "AM 1.5G",
+            "description": null,
+            "light_intensity": { "value": 100.0, "unit": "mW cm^-2" },
+            "lamp": null
+        },
+        "bandgap": null,
+        "encapsulation": null,
+        "additional_notes": "A-1",
+        "stability": "Newport 94043A",
+        "layers": [
+            {
+                "name": "ITO",
+                "thickness": null,
+                "functionality": "substrate",
+                "deposition": null
+            },
+
+            {
+                "name": "PTAA",
+                "thickness": null,
+                "functionality": "hole-transport",
+                "deposition": {
+                    "steps": [
+                    {
+                        "method": "Spin coating",
+                        "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
+                    },
+                    {
+                        "method": "Aneling",
+                        "time": {"value": 30, "unit": "min"},
+                        "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                        "temperature": { "value": 120, "unit": "°C"}
+                    }                    
+                    ]
+                }
+            },
+
+            {
+                "name": "Perovskite",
+                "thickness": null,
+                "functionality": "absorber",
+                "deposition": {
+                    "steps": [
+                    {
+                        "method": "spin coating",
+                        "time": {"value": 60, "unit": "s"},
+                        "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                        "solution": {
+                            "compounds": ["PbCl2", "MAI", "PbAc2"],
+                            "concentrations": [
+                                { "value": 0.8, "unit": "mol/L" },
+                                { "value": 2.4, "unit": "mol/L" },
+                                { "value": 0.008, "unit": "mol/L" }
+                            ],
+                            "solvent": { "name": "DMF", "volume": null }
+                            }
+                    },
+
+                    {
+                        "method": "solvent annealing",
+                        "time": {"value": 10, "unit": "min"},
+                        "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                        "solvent": { "name": "DMF", "volume": 10, "unit": "µl" }
+                    },
+
+                    {
+                        "method": "thermal annealing",
+                        "time": {"value": 90, "unit": "min"},
+                        "temperature": {"value": 95.0, "unit": "°C"},
+                        "atmosphere": {"type": "vacuum"}
+                    }                
+                    ],
+                    "additional_notes": "A-1"
+                }
+            },
+
+            {
+                "name": "PCBM",
+                "thickness": null,
+                "functionality": "electron-transport",
+                "deposition": {
+                    "steps": [
+                    {
+                        "method": "Spin coating",
+                        "time": {"value": 40, "unit": "s"},
+                        "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                        "solution": {
+                            "compounds": ["PCBM"],
+                            "concentrations": [{ "value": 20, "unit": "mg/mL" }],
+                            "solvent": { "name": "clorobenzene", "volume": 80, "unit": "µl"}
+                            }
+                    }
+                    ]
+                }
+            },
+
+            {
+                "name": "C60",
+                "thickness": 20,
+                "functionality":  "electron-transport",
+                "deposition": {
+                    "steps": [
+                    {
+                        "method": "evaporation",
+                        "atmosphere": {"type": "vacuum"}
+                    }
+                    ]
+                }
+            },
+
+            {
+                "name": "Al",
+                "thickness": 120,
+                "functionality":  "backkontact",
+                "deposition": {
+                    "steps": [
+                    {
+                        "method": "evaporation",
+                        "atmosphere": {"type": "vacuum"}
+                    }
+                    ]
+                }
+            }
+        ]
+        },
+
+        {
+            "cell_stack": ["ITO", "PEDOT:PSS", "Perovskite", "PCBM-60", "C60", "Al"],
+            "perovskite_composition": "CH3NH3PbI3",
+            "device_architecture": "pin",
+            "pce": { "value": 11.91, "unit": "%" },
+            "jsc": { "value": 18.11, "unit": "mA cm^-2" },
+            "voc": { "value": 1.04, "unit": "V" },
+            "ff": { "value": 63.0 },
+            "active_area": { "value": 0.09, "unit": "cm^2" },
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": null,
+                "light_intensity": { "value": 100.0, "unit": "mW cm^-2" },
+                "lamp": null
+            },
+            "bandgap": null,
+            "encapsulation": null,
+            "additional_notes": "W/0",
+            "stability": "Newport 94043A",
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "substrate",
+                    "deposition": null
+                },
+    
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "hole-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
+                        },
+                        {
+                            "method": "Aneling",
+                            "time": {"value": 30, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "temperature": { "value": 120, "unit": "°C"}
+                        }                    
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "absorber",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "spin coating",
+                            "time": {"value": 60, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PbCl2", "MAI"],
+                                "concentrations": [
+                                    { "value": 0.8, "unit": "mol/L" },
+                                    { "value": 2.4, "unit": "mol/L" }
+                                ],
+                                "solvent": { "name": "DMF", "volume": null }
+                                }
+                        },
+    
+                        {
+                            "method": "solvent annealing",
+                            "time": {"value": 10, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solvent": { "name": "DMF", "volume": 10, "unit": "µl" }
+                        },
+    
+                        {
+                            "method": "thermal annealing",
+                            "time": {"value": 90, "unit": "min"},
+                            "temperature": {"value": 95.0, "unit": "°C"},
+                            "atmosphere": {"type": "vacuum"}
+                        }                
+                        ],
+                        "additional_notes": "A-1"
+                    }
+                },
+    
+                {
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "time": {"value": 40, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PCBM"],
+                                "concentrations": [{ "value": 20, "unit": "mg/mL" }],
+                                "solvent": { "name": "clorobenzene", "volume": 80, "unit": "µl"}
+                                }
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "C60",
+                    "thickness": 20,
+                    "functionality":  "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Al",
+                    "thickness": 120,
+                    "functionality":  "backkontact",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "cell_stack": ["ITO", "PEDOT:PSS", "Perovskite", "PCBM-60", "C60", "Al"],
+            "perovskite_composition": "CH3NH3PbI3",
+            "device_architecture": "pin",
+            "pce": { "value": 11.15, "unit": "%" },
+            "jsc": { "value": 18.67, "unit": "mA cm^-2" },
+            "voc": { "value": 1.03, "unit": "V" },
+            "ff": { "value": 58.0 },
+            "active_area": { "value": 0.09, "unit": "cm^2" },
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": null,
+                "light_intensity": { "value": 100.0, "unit": "mW cm^-2" },
+                "lamp": null
+            },
+            "bandgap": null,
+            "encapsulation": null,
+            "additional_notes": "W/0-1",
+            "stability": "Newport 94043A",
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "substrate",
+                    "deposition": null
+                },
+    
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "hole-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
+                        },
+                        {
+                            "method": "Aneling",
+                            "time": {"value": 30, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "temperature": { "value": 120, "unit": "°C"}
+                        }                    
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "absorber",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "spin coating",
+                            "time": {"value": 60, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PbCl2", "MAI"],
+                                "concentrations": [
+                                    { "value": 0.808, "unit": "mol/L" },
+                                    { "value": 2.4, "unit": "mol/L" }
+                                ],
+                                "solvent": { "name": "DMF", "volume": null }
+                                }
+                        },
+    
+                        {
+                            "method": "solvent annealing",
+                            "time": {"value": 10, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solvent": { "name": "DMF", "volume": 10, "unit": "µl" }
+                        },
+    
+                        {
+                            "method": "thermal annealing",
+                            "time": {"value": 90, "unit": "min"},
+                            "temperature": {"value": 95.0, "unit": "°C"},
+                            "atmosphere": {"type": "vacuum"}
+                        }                
+                        ],
+                        "additional_notes": "W/O-1"
+                    }
+                },
+    
+                {
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "time": {"value": 40, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PCBM"],
+                                "concentrations": [{ "value": 20, "unit": "mg/mL" }],
+                                "solvent": { "name": "clorobenzene", "volume": 80, "unit": "µl"}
+                                }
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "C60",
+                    "thickness": 20,
+                    "functionality":  "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Al",
+                    "thickness": 120,
+                    "functionality":  "backkontact",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "cell_stack": ["ITO", "PEDOT:PSS", "Perovskite", "PCBM-60", "C60", "Al"],
+            "perovskite_composition": "CH3NH3PbI3",
+            "device_architecture": "pin",
+            "pce": { "value": 13.87, "unit": "%" },
+            "jsc": { "value": 20.44, "unit": "mA cm^-2" },
+            "voc": { "value": 1.01, "unit": "V" },
+            "ff": { "value": 67.0 },
+            "active_area": { "value": 0.09, "unit": "cm^2" },
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": null,
+                "light_intensity": { "value": 100.0, "unit": "mW cm^-2" },
+                "lamp": null
+            },
+            "bandgap": null,
+            "encapsulation": null,
+            "additional_notes": "A-3",
+            "stability": "Newport 94043A",
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "substrate",
+                    "deposition": null
+                },
+    
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "hole-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
+                        },
+                        {
+                            "method": "Aneling",
+                            "time": {"value": 30, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "temperature": { "value": 120, "unit": "°C"}
+                        }                    
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "absorber",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "spin coating",
+                            "time": {"value": 60, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PbCl2", "MAI", "PbAc2"],
+                                "concentrations": [
+                                    { "value": 0.8, "unit": "mol/L" },
+                                    { "value": 2.4, "unit": "mol/L" },
+                                    { "value": 0.024, "unit": "mol/L" }
+                                ],
+                                "solvent": { "name": "DMF", "volume": null }
+                                }
+                        },
+    
+                        {
+                            "method": "solvent annealing",
+                            "time": {"value": 10, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solvent": { "name": "DMF", "volume": 10, "unit": "µl" }
+                        },
+    
+                        {
+                            "method": "thermal annealing",
+                            "time": {"value": 90, "unit": "min"},
+                            "temperature": {"value": 95.0, "unit": "°C"},
+                            "atmosphere": {"type": "vacuum"}
+                        }                
+                        ],
+                        "additional_notes": "A-3"
+                    }
+                },
+    
+                {
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "time": {"value": 40, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PCBM"],
+                                "concentrations": [{ "value": 20, "unit": "mg/mL" }],
+                                "solvent": { "name": "clorobenzene", "volume": 80, "unit": "µl"}
+                                }
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "C60",
+                    "thickness": 20,
+                    "functionality":  "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Al",
+                    "thickness": 120,
+                    "functionality":  "backkontact",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "cell_stack": ["ITO", "PEDOT:PSS", "Perovskite", "PCBM-60", "C60", "Al"],
+            "perovskite_composition": "CH3NH3PbI3",
+            "device_architecture": "pin",
+            "pce": { "value": 9.61, "unit": "%" },
+            "jsc": { "value": 17.22, "unit": "mA cm^-2" },
+            "voc": { "value": 0.91, "unit": "V" },
+            "ff": { "value": 60.0 },
+            "active_area": { "value": 0.09, "unit": "cm^2" },
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": null,
+                "light_intensity": { "value": 100.0, "unit": "mW cm^-2" },
+                "lamp": null
+            },
+            "bandgap": null,
+            "encapsulation": null,
+            "additional_notes": "A-6",
+            "stability": "Newport 94043A",
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "substrate",
+                    "deposition": null
+                },
+    
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "hole-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
+                        },
+                        {
+                            "method": "Aneling",
+                            "time": {"value": 30, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "temperature": { "value": 120, "unit": "°C"}
+                        }                    
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "absorber",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "spin coating",
+                            "time": {"value": 60, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PbCl2", "MAI", "PbAc2"],
+                                "concentrations": [
+                                    { "value": 0.8, "unit": "mol/L" },
+                                    { "value": 2.4, "unit": "mol/L" },
+                                    { "value": 0.048, "unit": "mol/L" }
+                                ],
+                                "solvent": { "name": "DMF", "volume": null }
+                                }
+                        },
+    
+                        {
+                            "method": "solvent annealing",
+                            "time": {"value": 10, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solvent": { "name": "DMF", "volume": 10, "unit": "µl" }
+                        },
+    
+                        {
+                            "method": "thermal annealing",
+                            "time": {"value": 90, "unit": "min"},
+                            "temperature": {"value": 95.0, "unit": "°C"},
+                            "atmosphere": {"type": "vacuum"}
+                        }                
+                        ],
+                        "additional_notes": "A-6"
+                    }
+                },
+    
+                {
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "time": {"value": 40, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PCBM"],
+                                "concentrations": [{ "value": 20, "unit": "mg/mL" }],
+                                "solvent": { "name": "clorobenzene", "volume": 80, "unit": "µl"}
+                                }
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "C60",
+                    "thickness": 20,
+                    "functionality":  "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Al",
+                    "thickness": 120,
+                    "functionality":  "backkontact",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "cell_stack": ["ITO", "PEDOT:PSS", "Perovskite", "PCBM-60", "C60", "Al"],
+            "perovskite_composition": "CH3NH3PbI3",
+            "device_architecture": "pin",
+            "pce": { "value": 8.27, "unit": "%" },
+            "jsc": { "value": 17.11, "unit": "mA cm^-2" },
+            "voc": { "value": 0.99, "unit": "V" },
+            "ff": { "value": 49.0 },
+            "active_area": { "value": 0.09, "unit": "cm^2" },
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": null,
+                "light_intensity": { "value": 100.0, "unit": "mW cm^-2" },
+                "lamp": null
+            },
+            "bandgap": null,
+            "encapsulation": null,
+            "additional_notes": "S-1",
+            "stability": "Newport 94043A",
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "substrate",
+                    "deposition": null
+                },
+    
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "hole-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
+                        },
+                        {
+                            "method": "Aneling",
+                            "time": {"value": 30, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "temperature": { "value": 120, "unit": "°C"}
+                        }                    
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "absorber",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "spin coating",
+                            "time": {"value": 60, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PbCl2", "MAI", "PbAc2"],
+                                "concentrations": [
+                                    { "value": 0.792, "unit": "mol/L" },
+                                    { "value": 2.4, "unit": "mol/L" },
+                                    { "value": 0.008, "unit": "mol/L" }
+                                ],
+                                "solvent": { "name": "DMF", "volume": null }
+                                }
+                        },
+    
+                        {
+                            "method": "solvent annealing",
+                            "time": {"value": 10, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solvent": { "name": "DMF", "volume": 10, "unit": "µl" }
+                        },
+    
+                        {
+                            "method": "thermal annealing",
+                            "time": {"value": 90, "unit": "min"},
+                            "temperature": {"value": 95.0, "unit": "°C"},
+                            "atmosphere": {"type": "vacuum"}
+                        }                
+                        ],
+                        "additional_notes": "S-1"
+                    }
+                },
+    
+                {
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "time": {"value": 40, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PCBM"],
+                                "concentrations": [{ "value": 20, "unit": "mg/mL" }],
+                                "solvent": { "name": "clorobenzene", "volume": 80, "unit": "µl"}
+                                }
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "C60",
+                    "thickness": 20,
+                    "functionality":  "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Al",
+                    "thickness": 120,
+                    "functionality":  "backkontact",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "cell_stack": ["ITO", "PEDOT:PSS", "Perovskite", "PCBM-60", "C60", "Al"],
+            "perovskite_composition": "CH3NH3PbI3",
+            "device_architecture": "pin",
+            "pce": { "value": 8.51, "unit": "%" },
+            "jsc": { "value": 14.89, "unit": "mA cm^-2" },
+            "voc": { "value": 0.95, "unit": "V" },
+            "ff": { "value": 60.0 },
+            "active_area": { "value": 0.09, "unit": "cm^2" },
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": null,
+                "light_intensity": { "value": 100.0, "unit": "mW cm^-2" },
+                "lamp": null
+            },
+            "bandgap": null,
+            "encapsulation": null,
+            "additional_notes": "S-3",
+            "stability": "Newport 94043A",
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "substrate",
+                    "deposition": null
+                },
+    
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "hole-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
+                        },
+                        {
+                            "method": "Aneling",
+                            "time": {"value": 30, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "temperature": { "value": 120, "unit": "°C"}
+                        }                    
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "absorber",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "spin coating",
+                            "time": {"value": 60, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PbCl2", "MAI", "PbAc2"],
+                                "concentrations": [
+                                    { "value": 0.776, "unit": "mol/L" },
+                                    { "value": 2.4, "unit": "mol/L" },
+                                    { "value": 0.024, "unit": "mol/L" }
+                                ],
+                                "solvent": { "name": "DMF", "volume": null }
+                                }
+                        },
+    
+                        {
+                            "method": "solvent annealing",
+                            "time": {"value": 10, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solvent": { "name": "DMF", "volume": 10, "unit": "µl" }
+                        },
+    
+                        {
+                            "method": "thermal annealing",
+                            "time": {"value": 90, "unit": "min"},
+                            "temperature": {"value": 95.0, "unit": "°C"},
+                            "atmosphere": {"type": "vacuum"}
+                        }                
+                        ],
+                        "additional_notes": "S-3"
+                    }
+                },
+    
+                {
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "time": {"value": 40, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PCBM"],
+                                "concentrations": [{ "value": 20, "unit": "mg/mL" }],
+                                "solvent": { "name": "clorobenzene", "volume": 80, "unit": "µl"}
+                                }
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "C60",
+                    "thickness": 20,
+                    "functionality":  "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Al",
+                    "thickness": 120,
+                    "functionality":  "backkontact",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "cell_stack": ["ITO", "PEDOT:PSS", "Perovskite", "PCBM-60", "C60", "Al"],
+            "perovskite_composition": "CH3NH3PbI3",
+            "device_architecture": "pin",
+            "pce": { "value": 7.9, "unit": "%" },
+            "jsc": { "value": 16.33, "unit": "mA cm^-2" },
+            "voc": { "value": 0.99, "unit": "V" },
+            "ff": { "value": 49.0 },
+            "active_area": { "value": 0.09, "unit": "cm^2" },
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": null,
+                "light_intensity": { "value": 100.0, "unit": "mW cm^-2" },
+                "lamp": null
+            },
+            "bandgap": null,
+            "encapsulation": null,
+            "additional_notes": "S-6",
+            "stability": "Newport 94043A",
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "substrate",
+                    "deposition": null
+                },
+    
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "hole-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
+                        },
+                        {
+                            "method": "Aneling",
+                            "time": {"value": 30, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "temperature": { "value": 120, "unit": "°C"}
+                        }                    
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "absorber",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "spin coating",
+                            "time": {"value": 60, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PbCl2", "MAI", "PbAc2"],
+                                "concentrations": [
+                                    { "value": 0.752, "unit": "mol/L" },
+                                    { "value": 2.4, "unit": "mol/L" },
+                                    { "value": 0.048, "unit": "mol/L" }
+                                ],
+                                "solvent": { "name": "DMF", "volume": null }
+                                }
+                        },
+    
+                        {
+                            "method": "solvent annealing",
+                            "time": {"value": 10, "unit": "min"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solvent": { "name": "DMF", "volume": 10, "unit": "µl" }
+                        },
+    
+                        {
+                            "method": "thermal annealing",
+                            "temperature": {"value": 95.0, "unit": "°C"},
+                            "time": {"value": 90, "unit": "min"},
+                            "atmosphere": {"type": "vacuum"}
+                        }                
+                        ],
+                        "additional_notes": "S-6"
+                    }
+                },
+    
+                {
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "Spin coating",
+                            "time": {"value": 40, "unit": "s"},
+                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
+                            "solution": {
+                                "compounds": ["PCBM"],
+                                "concentrations": [{ "value": 20, "unit": "mg/mL" }],
+                                "solvent": { "name": "clorobenzene", "volume": 80, "unit": "µl"}
+                                }
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "C60",
+                    "thickness": 20,
+                    "functionality":  "electron-transport",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evaporation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                },
+    
+                {
+                    "name": "Al",
+                    "thickness": 120,
+                    "functionality":  "backkontact",
+                    "deposition": {
+                        "steps": [
+                        {
+                            "method": "evattokkation",
+                            "atmosphere": {"type": "vacuum"}
+                        }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
