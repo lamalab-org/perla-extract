@@ -178,11 +178,14 @@ class Stability(BaseModel):
     PCE_after_1000_hours: Optional[PCE]
     PCE_at_the_end_of_description: Optional[PCE]
 
+class Thickness(BaseModel):
+    value: float
+    unit: Literal["nm", "µm"]
 
 class Layer(BaseModel):
     name: str
-    thickness: Optional[float] = Field(
-        None, description="Total thickness of the deposited perovskite layer in nm"
+    thickness: Optional[Thickness] = Field(
+        None, description="Total thickness of the deposited perovskite layer."
     )
     functionality: Literal[
         "Hole-transport",
