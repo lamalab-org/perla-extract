@@ -8,11 +8,11 @@ ureg = UnitRegistry()
 class Ion(BaseModel):
     abbreviation: Optional[str] = Field(
         None,
-        description="The abbreviation used for the ion when writing the perovskite composition. Such as: 'Cs', 'MA', 'FA', 'PEA'",
+        description="The abbreviation used for the ion when writing the perovskite composition such as: 'Cs', 'MA', 'FA', 'PEA'",
     )
     coefficient: Optional[str] = Field(
         None,
-        description="The stoichiometric coefficient of the ion. Such as “0.75”, or “1-x”.",
+        description="The stoichiometric coefficient of the ion such as “0.75”, or “1-x”.",
     )
 
 
