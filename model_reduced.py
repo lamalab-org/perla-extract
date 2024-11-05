@@ -223,7 +223,7 @@ class Layer(BaseModel):
     ] = Field(
         None,
         description="""
-        Layer functionality in perovskite solar cell:
+        The functionality of the perovskite solar cell layer should be one of the following:
         - Hole-transport: Spiro-MeOTAD, PEDOT, PTAA, NiO
         - Electron-transport: TiO2, SnO2, ZnO, PCBM
         - Contact: Au, Ag, Al, MoO3, interface layers
