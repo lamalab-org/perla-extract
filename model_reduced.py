@@ -5,6 +5,27 @@ from pint import UnitRegistry
 
 ureg = UnitRegistry()
 
+class Ion(BaseModel):
+    abbreviation: Optional[str] = Field(
+        None,
+        description="The abbreviation used for the ion when writing the perovskite composition. Such as: 'Cs', 'MA', 'FA', 'PEA'",
+    )
+    coefficient: Optional[str] = Field(
+        None,
+        description="The stoichiometric coefficient of the ion. Implemented as a string such as “0.75”, or “1-x”.",
+    )
+
+
+class PerovskiteComposition(BaseModel):
+    formula: Optional[str] = Field(
+        None,
+        description="The perovskite composition according to IUPAC recommendations, where standard abbreviations are used for all ions.",
+    )
+    dimensionality: Optional[str] = Literal["0D", "1D", "2D", "3D", "2D/3D"]
+    a_ions: List[Ion] = Field(None)
+    b_ions: List[Ion] = Field(None)
+    x_ions: List[Ion] = Field(None)
+
 
 class UnitValue(BaseModel):
     value: Optional[float] = Field(None)
@@ -208,9 +229,7 @@ class PerovskiteSolarCell(BaseModel):
     cell_stack: Optional[List[str]] = Field(
         None, description="The stack sequence of the cell."
     )
-    perovskite_composition: Optional[str] = Field(
-        None, description="Chemical formula of the perovskite absorber"
-    )
+    perovskite_composition: Optional[PerovskiteComposition] = Field(None)
     device_architecture: Optional[
         Literal["pin", "nip", "Back contacted", "Front contacted"]
     ] = Field(None)
