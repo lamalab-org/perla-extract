@@ -1,0 +1,7 @@
+defaults:
+  - _self_
+input_folder: "INPUT_FOLDER_PATH"
+output_folder: "OUTPUT_FOLDER_PATH"
+cache_dir: ".cache"
+vision_model: false
+anthropic_api_key: "YOUR_API_KEY"
