@@ -142,7 +142,7 @@ class ProcessingStep(BaseModel):
     step_name: Optional[str]
     method: Optional[str] = Field(
         ...,
-        description="This is the method for the processing of steps in the design of the cells. Some examples are: spin-coating, drop-infiltration, co-evaporation, doctor blading, spray coating, slot-die coating, ultrasonic spray, dropcasing, inject printing, electrospraying, thermal-annealing, antisolvent-quenching.",
+        description="This is the method for the processing of steps in the design of the cells. Some examples are: Spin-coating, Drop-infiltration, Co-evaporation, Doctor blading, Spray coating, Slot-die coating, Ultrasonic spray, Dropcasting, Inkjet printing, Electrospraying, Thermal-annealing, Antisolvent-quenching.",
     )
     time: Optional[Time]
     atmosphere: Optional[ProcessingAtmosphere]
@@ -161,7 +161,7 @@ class ProcessingStep(BaseModel):
 
 class Deposition(BaseModel):
     steps: List[ProcessingStep] = Field(
-        ..., min_items=1, description="List of processing steps in order of execution.  Only report conditions that have  reported in the paper."
+        ..., min_items=1, description="List of processing steps in order of execution.  Only report conditions that have reported in the paper."
     )
     additional_notes: Optional[str] = Field(
         None, description="Any additional notes about the overall deposition process"
@@ -188,13 +188,12 @@ class Layer(BaseModel):
         None, description="Total thickness of the deposited perovskite layer in nm"
     )
     functionality: Literal[
-        "backcontact",
-        "hole-transport",
-        "electron-transport",
-        "contact",
-        "absorber",
-        "other",
-        "substrate",
+        "Hole-transport",
+        "Electron-transport",
+        "Contact",
+        "Absorber",
+        "Other",
+        "Substrate",
     ]
     deposition: Optional[Deposition]
 
@@ -205,7 +204,7 @@ class PerovskiteSolarCell(BaseModel):
         ..., description="Chemical formula of the perovskite absorber"
     )
     device_architecture: Optional[
-        Literal["pin", "nip", "back-contacted", "front-contacted"]
+        Literal["pin", "nip", "Back contacted", "Front contacted"]
     ]
     pce: PCE
     jsc: JSC
