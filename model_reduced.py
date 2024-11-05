@@ -180,15 +180,13 @@ class Stability(BaseModel):
         None,
         description="The time after which the cell performance has degraded by 20% with respect to the initial performance.",
     )
-    PCE_at_the_start_of_the_experiment: Optional[PCE] = Field(None)
-    PCE_after_1000_hours: Optional[PCE] = Field(None)
-    PCE_at_the_end_of_description: Optional[PCE] = Field(None)
-
+    PCE_at_the_start_of_the_experiment: Optional[PCE]
+    PCE_after_1000_hours: Optional[PCE]
+    PCE_at_the_end_of_description: Optional[PCE]
 
 class Thickness(BaseModel):
     value: Optional[float] = Field(None)
     unit: Optional[Literal["nm", "µm"]] = Field(None)
-
 
 class Layer(BaseModel):
     name: Optional[str] = Field(None)
