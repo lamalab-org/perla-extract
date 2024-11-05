@@ -1,58 +1,33 @@
-from pydantic import BaseModel, Field, validator, confloat, create_model
-from typing import List, Literal, Optional, Type, Any, Tuple
+from pydantic import BaseModel, Field, validator, confloat
+from typing import List, Literal, Optional
 from datetime import datetime
 from pint import UnitRegistry
-from copy import deepcopy
-from pydantic.fields import FieldInfo
 
 ureg = UnitRegistry()
 
 
-def partial_model(model: Type[BaseModel]):
-    """Creates a new model with all fields made optional"""
-
-    def make_field_optional(
-        field: FieldInfo, default: Any = None
-    ) -> Tuple[Any, FieldInfo]:
-        new = deepcopy(field)
-        new.default = default
-        new.required = False
-        new.annotation = Optional[field.annotation]
-        return new.annotation, new
-
-    return create_model(
-        f"Partial{model.__name__}",
-        __base__=model,
-        __module__=model.__module__,
-        **{
-            field_name: make_field_optional(field_info)
-            for field_name, field_info in model.__fields__.items()
-        },
-    )
-
-
 class UnitValue(BaseModel):
-    value: Optional[float] = None
-    unit: Optional[str] = None
+    value: Optional[float] = Field(None)
+    unit: Optional[str] = Field(None)
 
 
 class PCE(UnitValue):
-    value: Optional[confloat(ge=0, le=40)] = None
-    unit: Optional[Literal["%"]] = None
+    value: Optional[confloat(ge=0, le=40)] = Field(None)
+    unit: Optional[Literal["%"]] = Field(None)
 
 
 class JSC(UnitValue):
-    value: Optional[float] = None
+    value: Optional[float] = Field(None)
     unit: Optional[Literal["mA cm^-2", "A m^-2", "A cm^-2", "mA m^-2", "uA cm^-2"]] = (
-        None
+        Field(None)
     )
 
 
 class VOC(UnitValue):
-    value: Optional[confloat(ge=0, le=1500)] = None
-    unit: Optional[Literal["V", "mV"]] = None
+    value: Optional[confloat(ge=0, le=1500)] = Field(None)
+    unit: Optional[Literal["V", "mV"]] = Field(None)
 
-    @validator("value", pre=True)
+    @validator("value")
     def check_voc_value(cls, v, values):
         if v is None:
             return v
@@ -65,14 +40,17 @@ class VOC(UnitValue):
 
 
 class FF(BaseModel):
-    value: Optional[confloat(ge=0.0, le=100)] = None
+    value: Optional[confloat(ge=0.0, le=100)] = Field(
+        None,
+        description="Mostly the Fill factor is given as a percentage (%). In case is not make sure to convert it from ratio to percentage.",
+    )
 
 
 class ActiveArea(UnitValue):
-    value: Optional[confloat(gt=0)] = None
-    unit: Optional[Literal["cm^2", "mm^2"]] = None
+    value: Optional[confloat(gt=0)] = Field(None)
+    unit: Optional[Literal["cm^2", "mm^2"]] = Field(None)
 
-    @validator("value", pre=True)
+    @validator("value")
     def convert_to_cm2(cls, v, values):
         if v is None:
             return v
@@ -83,20 +61,20 @@ class ActiveArea(UnitValue):
 
 
 class LightIntensity(UnitValue):
-    value: Optional[confloat(ge=0)] = None
-    unit: Optional[Literal["mW cm^-2", "W m^-2", "mW m^-2", "sun", "lux"]] = None
+    value: Optional[confloat(ge=0)] = Field(None)
+    unit: Optional[Literal["mW cm^-2", "W m^-2", "mW m^-2", "sun", "lux"]] = Field(None)
 
 
 class Bandgap(UnitValue):
-    value: Optional[confloat(ge=0.5, le=4.0)] = None
-    unit: Optional[Literal["eV"]] = None
+    value: Optional[confloat(ge=0.5, le=4.0)] = Field(None)
+    unit: Optional[Literal["eV"]] = Field(None)
 
 
 class Temperature(UnitValue):
-    value: Optional[float] = None
-    unit: Optional[Literal["°C", "K"]] = None
+    value: Optional[float] = Field(None)
+    unit: Optional[Literal["°C", "K"]] = Field(None)
 
-    @validator("value", pre=True)
+    @validator("value")
     def convert_to_celsius(cls, v, values):
         if v is None:
             return v
@@ -106,13 +84,13 @@ class Temperature(UnitValue):
 
 
 class Time(UnitValue):
-    value: Optional[float] = None
-    unit: Optional[Literal["s", "min", "h"]] = None
+    value: Optional[float] = Field(None)
+    unit: Optional[Literal["s", "min", "h"]] = Field(None)
 
 
 class PowerDensity(UnitValue):
-    value: Optional[float] = None
-    unit: Optional[Literal["uW/cm^2", "mW/cm^2"]] = None
+    value: Optional[float] = Field(None)
+    unit: Optional[Literal["uW/cm^2", "mW/cm^2"]] = Field(None)
 
 
 class LightSource(BaseModel):
@@ -126,85 +104,115 @@ class LightSource(BaseModel):
             "Other",
             "Outdoor",
         ]
-    ] = None
-    description: Optional[str] = None
-    light_intensity: Optional[LightIntensity] = None
-    lamp: Optional[str] = None
+    ] = Field(None)
+    description: Optional[str] = Field(
+        None,
+        description="Additional details about the light source. This is very important.",
+    )
+    light_intensity: Optional[LightIntensity] = Field(None)
+    lamp: Optional[str] = Field(
+        None, description="Type of lamp used to generate the spectrum"
+    )
 
 
 class Pressure(UnitValue):
-    value: Optional[float] = None
-    unit: Optional[Literal["Pa", "kPa", "atm", "bar", "mbar", "mmHg", "Torr"]] = None
+    value: Optional[float] = Field(None)
+    unit: Optional[Literal["Pa", "kPa", "atm", "bar", "mbar", "mmHg", "Torr"]] = Field(
+        None
+    )
 
 
 class Humidity(UnitValue):
-    value: Optional[confloat(ge=0, le=100)] = None
-    unit: Optional[Literal["%"]] = None
+    value: Optional[confloat(ge=0, le=100)] = Field(None)
+    unit: Optional[Literal["%"]] = Field(None)
 
 
 class Concentration(UnitValue):
-    value: Optional[float] = None
-    unit: Optional[Literal["mol/L", "mmol/L", "g/L", "mg/L", "wt%", "vol%", "M"]] = None
+    value: Optional[float] = Field(None)
+    unit: Optional[Literal["mol/L", "mmol/L", "g/L", "mg/L", "wt%", "vol%", "M"]] = (
+        Field(None)
+    )
 
 
 class Volume(UnitValue):
-    value: Optional[float] = None
-    unit: Optional[Literal["L", "mL", "μL"]] = None
+    value: Optional[float] = Field(None)
+    unit: Optional[Literal["L", "mL", "μL"]] = Field(None)
 
 
 class ProcessingAtmosphere(BaseModel):
-    type: Optional[str] = None
-    pressure: Optional[Pressure] = None
-    relative_humidity: Optional[Humidity] = None
+    type: Optional[str] = Field(None)
+    pressure: Optional[Pressure] = Field(None)
+    relative_humidity: Optional[Humidity] = Field(None)
 
 
 class Solvent(BaseModel):
-    name: Optional[str] = None
-    volume: Optional[float] = None
+    name: Optional[str] = Field(None)
+    volume: Optional[float] = Field(None)
 
 
 class ReactionSolution(BaseModel):
-    compounds: Optional[List[str]] = None
-    concentrations: Optional[List[Concentration]] = None
-    volume: Optional[Volume] = None
-    temperature: Optional[Temperature] = None
-    solvent: Optional[Solvent] = None
+    compounds: Optional[List[str]] = Field(None)
+    concentrations: Optional[List[Concentration]] = Field(None)
+    volume: Optional[Volume] = Field(None)
+    temperature: Optional[Temperature] = Field(None)
+    solvent: Optional[Solvent] = Field(None)
 
 
 class ProcessingStep(BaseModel):
-    step_name: Optional[str] = None
-    method: Optional[str] = None
-    time: Optional[Time] = None
-    atmosphere: Optional[ProcessingAtmosphere] = None
-    temperature: Optional[Temperature] = None
-    duration: Optional[Time] = None
-    antisolvent: Optional[Solvent] = None
-    gas: Optional[str] = None
-    solution: Optional[ReactionSolution] = None
-    additional_parameters: Optional[dict] = None
-    number_devices: Optional[int] = None
-    averaged_quantities: Optional[bool] = None
+    step_name: Optional[str] = Field(None)
+    method: Optional[str] = Field(
+        None,
+        description="This is the method for the processing of steps in the design of the cells. Some examples are: spin-coating, drop-infiltration, co-evaporation, doctor blading, spray coating, slot-die coating, ultrasonic spray, dropcasing, inject printing, electrospraying, thermal-annealing, antisolvent-quenching.",
+    )
+    time: Optional[Time] = Field(None)
+    atmosphere: Optional[ProcessingAtmosphere] = Field(None)
+    temperature: Optional[Temperature] = Field(None)
+    duration: Optional[Time] = Field(None)
+    antisolvent: Optional[Solvent] = Field(None)
+    gas: Optional[str] = Field(None)
+    solution: Optional[ReactionSolution] = Field(None)
+    additional_parameters: Optional[dict] = Field(
+        None, description="Any additional parameters specific to this processing step"
+    )
+    number_devices: Optional[int] = Field(
+        None,
+        description="Over how may devices the performance metrics have been averaged",
+    )
+    averaged_quantities: Optional[bool] = Field(
+        None,
+        description="True if the reported performance metrics are reported based on an average over multiple devices. If there are additional statistics that have been reported, extract them into `additional_notes`",
+    )
 
 
 class Deposition(BaseModel):
-    steps: Optional[List[ProcessingStep]] = None
-    additional_notes: Optional[str] = None
+    steps: Optional[List[ProcessingStep]] = Field(
+        None,
+        description="List of processing steps in order of execution. Only report conditions that have reported in the paper.",
+    )
+    additional_notes: Optional[str] = Field(
+        None, description="Any additional notes about the overall deposition process"
+    )
 
 
 class Stability(BaseModel):
-    time: Optional[Time] = None
-    light_intensity: Optional[LightIntensity] = None
-    humidity: Optional[Humidity] = None
-    temperature: Optional[Temperature] = None
-    PCE_T80: Optional[Time] = None
-    PCE_at_the_start_of_the_experiment: Optional[PCE] = None
-    PCE_after_1000_hours: Optional[PCE] = None
-    PCE_at_the_end_of_description: Optional[PCE] = None
+    time: Optional[Time] = Field(None)
+    light_intensity: Optional[LightIntensity] = Field(None)
+    humidity: Optional[Humidity] = Field(None)
+    temperature: Optional[Temperature] = Field(None)
+    PCE_T80: Optional[Time] = Field(
+        None,
+        description="The time after which the cell performance has degraded by 20% with respect to the initial performance.",
+    )
+    PCE_at_the_start_of_the_experiment: Optional[PCE] = Field(None)
+    PCE_after_1000_hours: Optional[PCE] = Field(None)
+    PCE_at_the_end_of_description: Optional[PCE] = Field(None)
 
 
 class Layer(BaseModel):
-    name: Optional[str] = None
-    thickness: Optional[float] = None
+    name: Optional[str] = Field(None)
+    thickness: Optional[float] = Field(
+        None, description="Total thickness of the deposited perovskite layer in nm"
+    )
     functionality: Optional[
         Literal[
             "backcontact",
@@ -215,27 +223,46 @@ class Layer(BaseModel):
             "other",
             "substrate",
         ]
-    ] = None
-    deposition: Optional[Deposition] = None
+    ] = Field(None)
+    deposition: Optional[Deposition] = Field(None)
 
 
 class PerovskiteSolarCell(BaseModel):
-    cell_stack: Optional[List[str]] = None
-    perovskite_composition: Optional[str] = None
+    cell_stack: Optional[List[str]] = Field(
+        None, description="The stack sequence of the cell."
+    )
+    perovskite_composition: Optional[str] = Field(
+        None, description="Chemical formula of the perovskite absorber"
+    )
     device_architecture: Optional[
         Literal["pin", "nip", "back-contacted", "front-contacted"]
-    ] = None
-    pce: Optional[PCE] = None
-    jsc: Optional[JSC] = None
-    voc: Optional[VOC] = None
-    ff: Optional[FF] = None
-    active_area: Optional[ActiveArea] = None
-    light_source: Optional[LightSource] = None
-    bandgap: Optional[Bandgap] = None
-    encapsulation: Optional[str] = None
-    additional_notes: Optional[str] = None
-    stability: Optional[Stability] = None
-    layers: Optional[List[Layer]] = None
+    ] = Field(None)
+    pce: Optional[PCE] = Field(None)
+    jsc: Optional[JSC] = Field(None)
+    voc: Optional[VOC] = Field(None)
+    ff: Optional[FF] = Field(None)
+    active_area: Optional[ActiveArea] = Field(
+        None, description="Reported active area of the solar cell."
+    )
+    light_source: Optional[LightSource] = Field(None)
+    bandgap: Optional[Bandgap] = Field(
+        None,
+        description="Bandgap of the perovskite material in eV. Include this field only if the bandgap has been directly measured in the experiment. Do not include estimated or literature values.",
+    )
+    encapsulation: Optional[str] = Field(
+        None, description="Encapsulation method, if any"
+    )
+    additional_notes: Optional[str] = Field(
+        None, description="Any additional comments or observations"
+    )
+    stability: Optional[Stability] = Field(
+        None,
+        description="Include this field only if stability tests have been performed. Only include conditions that have been explicitly reported in the paper. If there are additional statistics, report them in `additional_notes`.",
+    )
+    layers: Optional[List[Layer]] = Field(
+        None,
+        description="Include all layers in the device stack. Only report conditions for those where deposition conditions have been reported (e.g., not the substrate).",
+    )
 
     @validator("cell_stack")
     def check_cell_stack(cls, v):
@@ -245,4 +272,4 @@ class PerovskiteSolarCell(BaseModel):
 
 
 class PerovskiteSolarCells(BaseModel):
-    cells: Optional[List[PerovskiteSolarCell]] = None
+    cells: Optional[List[PerovskiteSolarCell]] = Field(None)
