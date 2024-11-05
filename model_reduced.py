@@ -144,7 +144,6 @@ class ProcessingStep(BaseModel):
         ...,
         description="This is the method for the processing of steps in the design of the cells. Some examples are: Spin-coating, Drop-infiltration, Co-evaporation, Doctor blading, Spray coating, Slot-die coating, Ultrasonic spray, Dropcasting, Inkjet printing, Electrospraying, Thermal-annealing, Antisolvent-quenching.",
     )
-    time: Optional[Time]
     atmosphere: Optional[ProcessingAtmosphere]
     temperature: Optional[Temperature]
     duration: Optional[Time]
