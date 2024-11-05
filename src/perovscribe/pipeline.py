@@ -20,11 +20,13 @@ class ExtractionPipeline:
     ):
         """
         Initialize the extraction pipeline.
-
         Args:
             config: Configuration containing all settings
         """
         self.config = config
+        self.input_folder = (
+            config.input_folder
+        )  
         self.preprocessor = PDFPreprocessor(config.cache_dir)
 
         if not os.getenv("ANTHROPIC_API_KEY"):
@@ -36,6 +38,7 @@ class ExtractionPipeline:
         """
         stem = Path(filepath).stem
         existing_jsons = list(Path(self.config.output_folder).glob(f"{stem}_*.json"))
+
         if existing_jsons:
             print(f"Skipping {filepath} - already processed")
             return None
@@ -81,11 +84,13 @@ class ExtractionPipeline:
         skipped = 0
 
         print(f"Found {total_pdfs} PDF files")
+
         for pdf_file in pdf_files:
             stem = pdf_file.stem
             existing_jsons = list(
                 Path(self.config.output_folder).glob(f"{stem}_*.json")
             )
+
             if existing_jsons:
                 print(f"Skipping {pdf_file.name} - already processed")
                 skipped += 1
@@ -105,7 +110,6 @@ class ExtractionPipeline:
 def main(cfg: DictConfig) -> None:
     """
     Main function to run the extraction pipeline.
-
     Args:
         cfg: Hydra configuration object
     """
