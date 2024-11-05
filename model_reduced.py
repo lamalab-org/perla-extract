@@ -12,7 +12,7 @@ class Ion(BaseModel):
     )
     coefficient: Optional[str] = Field(
         None,
-        description="The stoichiometric coefficient of the ion. Implemented as a string such as “0.75”, or “1-x”.",
+        description="The stoichiometric coefficient of the ion. Such as “0.75”, or “1-x”.",
     )
 
 
