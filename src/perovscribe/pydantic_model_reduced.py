@@ -5,6 +5,7 @@ from pint import UnitRegistry
 
 ureg = UnitRegistry()
 
+
 class Ion(BaseModel):
     abbreviation: Optional[str] = Field(
         None,
