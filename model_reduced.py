@@ -127,7 +127,7 @@ class ProcessingAtmosphere(BaseModel):
 
 class Solvent(BaseModel):
     name: str
-    volume: Optional[float]
+    volume: Optional[Volume]
 
 
 class ReactionSolution(BaseModel):
