@@ -18,9 +18,7 @@ class PCE(UnitValue):
 
 class JSC(UnitValue):
     value: Optional[float] = Field(None)
-    unit: Optional[Literal["mA cm^-2", "A m^-2", "A cm^-2", "mA m^-2", "uA cm^-2"]] = (
-        Field(None)
-    )
+    unit: Optional[Literal["mA cm^-2", "A m^-2", "A cm^-2", "mA m^-2", "uA cm^-2"]] = Field(None)
 
 
 class VOC(UnitValue):
@@ -85,7 +83,7 @@ class Temperature(UnitValue):
 
 class Time(UnitValue):
     value: Optional[float] = Field(None)
-    unit: Optional[Literal["s", "min", "h"]] = Field(None)
+    unit: Optional[Literal["s", "min", "h", "days", "weeks", "months", "years"]] = Field(None)
 
 
 class PowerDensity(UnitValue):
@@ -94,17 +92,9 @@ class PowerDensity(UnitValue):
 
 
 class LightSource(BaseModel):
-    type: Optional[
-        Literal[
-            "AM 1.5G",
-            "AM 1.5D",
-            "AM 0",
-            "Monochromatic",
-            "White LED",
-            "Other",
-            "Outdoor",
-        ]
-    ] = Field(None)
+    type: Optional[Literal[
+        "AM 1.5G", "AM 1.5D", "AM 0", "Monochromatic", "White LED", "Other", "Outdoor"
+    ]] = Field(None)
     description: Optional[str] = Field(
         None,
         description="Additional details about the light source. This is very important.",
@@ -117,9 +107,7 @@ class LightSource(BaseModel):
 
 class Pressure(UnitValue):
     value: Optional[float] = Field(None)
-    unit: Optional[Literal["Pa", "kPa", "atm", "bar", "mbar", "mmHg", "Torr"]] = Field(
-        None
-    )
+    unit: Optional[Literal["Pa", "kPa", "atm", "bar", "mbar", "mmHg", "Torr"]] = Field(None)
 
 
 class Humidity(UnitValue):
@@ -129,9 +117,7 @@ class Humidity(UnitValue):
 
 class Concentration(UnitValue):
     value: Optional[float] = Field(None)
-    unit: Optional[Literal["mol/L", "mmol/L", "g/L", "mg/L", "wt%", "vol%", "M"]] = (
-        Field(None)
-    )
+    unit: Optional[Literal["mol/L", "mmol/L", "g/L", "mg/L", "wt%", "vol%", "M"]] = Field(None)
 
 
 class Volume(UnitValue):
@@ -147,7 +133,7 @@ class ProcessingAtmosphere(BaseModel):
 
 class Solvent(BaseModel):
     name: Optional[str] = Field(None)
-    volume: Optional[float] = Field(None)
+    volume: Optional[Volume] = Field(None)
 
 
 class ReactionSolution(BaseModel):
@@ -162,9 +148,8 @@ class ProcessingStep(BaseModel):
     step_name: Optional[str] = Field(None)
     method: Optional[str] = Field(
         None,
-        description="This is the method for the processing of steps in the design of the cells. Some examples are: spin-coating, drop-infiltration, co-evaporation, doctor blading, spray coating, slot-die coating, ultrasonic spray, dropcasing, inject printing, electrospraying, thermal-annealing, antisolvent-quenching.",
+        description="This is the method for the processing of steps in the design of the cells. Some examples are: Spin-coating, Drop-infiltration, Co-evaporation, Doctor blading, Spray coating, Slot-die coating, Ultrasonic spray, Dropcasting, Inkjet printing, Electrospraying, Thermal-annealing, Antisolvent-quenching.",
     )
-    time: Optional[Time] = Field(None)
     atmosphere: Optional[ProcessingAtmosphere] = Field(None)
     temperature: Optional[Temperature] = Field(None)
     duration: Optional[Time] = Field(None)
@@ -174,20 +159,12 @@ class ProcessingStep(BaseModel):
     additional_parameters: Optional[dict] = Field(
         None, description="Any additional parameters specific to this processing step"
     )
-    number_devices: Optional[int] = Field(
-        None,
-        description="Over how may devices the performance metrics have been averaged",
-    )
-    averaged_quantities: Optional[bool] = Field(
-        None,
-        description="True if the reported performance metrics are reported based on an average over multiple devices. If there are additional statistics that have been reported, extract them into `additional_notes`",
-    )
 
 
 class Deposition(BaseModel):
     steps: Optional[List[ProcessingStep]] = Field(
-        None,
-        description="List of processing steps in order of execution. Only report conditions that have reported in the paper.",
+        None, 
+        description="List of processing steps in order of execution. Only report conditions that have reported in the paper."
     )
     additional_notes: Optional[str] = Field(
         None, description="Any additional notes about the overall deposition process"
@@ -208,22 +185,24 @@ class Stability(BaseModel):
     PCE_at_the_end_of_description: Optional[PCE] = Field(None)
 
 
+class Thickness(BaseModel):
+    value: Optional[float] = Field(None)
+    unit: Optional[Literal["nm", "µm"]] = Field(None)
+
+
 class Layer(BaseModel):
     name: Optional[str] = Field(None)
-    thickness: Optional[float] = Field(
-        None, description="Total thickness of the deposited perovskite layer in nm"
+    thickness: Optional[Thickness] = Field(
+        None, description="Total thickness of the deposited perovskite layer."
     )
-    functionality: Optional[
-        Literal[
-            "backcontact",
-            "hole-transport",
-            "electron-transport",
-            "contact",
-            "absorber",
-            "other",
-            "substrate",
-        ]
-    ] = Field(None)
+    functionality: Optional[Literal[
+        "Hole-transport",
+        "Electron-transport",
+        "Contact",
+        "Absorber",
+        "Other",
+        "Substrate",
+    ]] = Field(None)
     deposition: Optional[Deposition] = Field(None)
 
 
@@ -235,14 +214,20 @@ class PerovskiteSolarCell(BaseModel):
         None, description="Chemical formula of the perovskite absorber"
     )
     device_architecture: Optional[
-        Literal["pin", "nip", "back-contacted", "front-contacted"]
+        Literal["pin", "nip", "Back contacted", "Front contacted"]
     ] = Field(None)
     pce: Optional[PCE] = Field(None)
     jsc: Optional[JSC] = Field(None)
     voc: Optional[VOC] = Field(None)
     ff: Optional[FF] = Field(None)
+    number_devices: Optional[int] = Field(
+        None, description="Over how may devices the performance metrics have been averaged."
+    )
+    averaged_quantities: Optional[bool] = Field(
+        None, description="True if the reported performance metrics are reported based on an average over multiple devices. If there are additional statistics that have been reported, extract them into `additional_notes`."
+    )
     active_area: Optional[ActiveArea] = Field(
-        None, description="Reported active area of the solar cell."
+        None, description='Reported active area of the solar cell.'
     )
     light_source: Optional[LightSource] = Field(None)
     bandgap: Optional[Bandgap] = Field(
@@ -256,12 +241,10 @@ class PerovskiteSolarCell(BaseModel):
         None, description="Any additional comments or observations"
     )
     stability: Optional[Stability] = Field(
-        None,
-        description="Include this field only if stability tests have been performed. Only include conditions that have been explicitly reported in the paper. If there are additional statistics, report them in `additional_notes`.",
+        None, description="Include this field only if stability tests have been performed. Only include conditions that have been explicitly reported in the paper. If there are additional statistics, report them in `additional_notes`."
     )
     layers: Optional[List[Layer]] = Field(
-        None,
-        description="Include all layers in the device stack. Only report conditions for those where deposition conditions have been reported (e.g., not the substrate).",
+        None, description="Include all layers in the cell stack. Only report conditions for those where deposition conditions have been reported in the paper. Include the ETL, HTL, Contact, Absorber, and Substrate layers."
     )
 
     @validator("cell_stack")
