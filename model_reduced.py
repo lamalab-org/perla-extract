@@ -223,28 +223,14 @@ class Layer(BaseModel):
     ] = Field(
         None,
         description="""
-        Given the name and description of a layer from a perovskite solar cell, 
-        classify this layer into one of the functionalities or make an educated 
-        guess based on context. If the function cannot be clearly determined, 
-        select "Other".
-
-        Classification Guidelines:
-        - "Hole-transport": Layers such as Spiro-MeOTAD, PEDOT, PTAA, or metal 
-          oxides like NiO that facilitate hole transport.
-        - "Electron-transport": Layers including materials like TiO2, SnO2, ZnO, 
-          or PCBM that enable electron transport.
-        - "Contact": General conductive or interface layers, including back contacts 
-          (e.g., Au, Ag, Al, or MoO3) and other unspecified contact layers.
-        - "Absorber": Active perovskite layers such as MAPbI3, CsPbI3, or mixed 
-          formulations used for light absorption.
-        - "Substrate": Supportive materials like FTO, ITO, SLG (soda-lime glass), 
-          or flexible polymers.
-        - "Other": Select this category for layers like antireflective coatings, 
-          buffer layers, or any material whose role cannot be clearly classified.
-
-        Utilize functional descriptions or clues provided to make your best 
-        classification. If uncertainty persists, default to "Other".
-        """,
+        Layer functionality in perovskite solar cell:
+        - Hole-transport: Spiro-MeOTAD, PEDOT, PTAA, NiO
+        - Electron-transport: TiO2, SnO2, ZnO, PCBM
+        - Contact: Au, Ag, Al, MoO3, interface layers
+        - Absorber: Perovskite active layers (MAPbI3, CsPbI3)
+        - Substrate: FTO, ITO, glass, flexible polymers
+        - Other: Antireflective, buffer layers, unclassified
+    """,
     )
     deposition: Optional[Deposition] = Field(None)
 
