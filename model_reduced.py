@@ -77,7 +77,7 @@ class Temperature(UnitValue):
 
 class Time(UnitValue):
     value: float
-    unit: Literal["s", "min", "h"]
+    unit: Literal["s", "min", "h", "days", "weeks", "months", "years"]
 
 
 class PowerDensity(UnitValue):
