@@ -224,7 +224,7 @@ class PerovskiteSolarCell(BaseModel):
         None, description="Any additional comments or observations"
     )
     stability: Optional[Stability] = Field(None, description="Include this field only if stability tests have been performed. Only include conditions that have been explicitly reported in the paper. If there are additional statistics, report them in `additional_notes`.")
-    layers: List[Layer] = Field(None, description="Include all layers in the device stack. Only report conditions for those where deposition conditions have been reported (e.g., not the substrate).")
+    layers: List[Layer] = Field(None, description="Include all layers in the cell stack. Only report conditions for those where deposition conditions have been reported in the paper. Include the ETL, HTL, Contact, Absorber, and Substrate layers.")
 
     @validator("cell_stack")
     def check_cell_stack(cls, v):
