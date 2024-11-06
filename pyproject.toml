@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -24,12 +24,13 @@ classifiers = [
 ]
 
 
-dependencies = ["pydantic", "litellm"]
+dependencies = ["pydantic", "litellm", "diskcache"]
 
 [project.optional-dependencies]
 dev = ["jupyter", "docformatter", "pytest", "ruff", "bump-my-version"]
 nougat = ["nougat"]
 marker = ["marker-pdf"]
+pymupdf = ['pymupdf']
 
 docs = [
     "mkdocs-material>=9.4.0",

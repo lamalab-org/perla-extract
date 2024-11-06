@@ -1,4 +1,4 @@
-from perovscribe.preprocessing.pymupdf import PyMuPDFPreprocessor
+from perovscribe.preprocessing.pymupdf_processor import PyMuPDFPreprocessor
 
 
 def test_pymupdf(get_nat_comm_7139_file):
