@@ -13,9 +13,8 @@ authors = [
     { name = "Pepe Marquez", email = "jose.marquez@physik.hu-berlin.de" },
     { name = "Kevin Jablonka", email = "mail@kjablonka.com" },
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -37,4 +36,8 @@ docs = [
     "mkdocstrings[python]>=0.22.0",
     "mkdocs-gen-files>=0.5.0",
     "mkdocs-literate-nav>=0.6.0",
+    "fire"
 ]
+
+[project.scripts]
+perovscribe = "perovscribe.pipeline:main_cli"

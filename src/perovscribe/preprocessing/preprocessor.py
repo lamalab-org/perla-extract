@@ -11,6 +11,11 @@ def get_preprocessor(name, cache_dir_root: Union[Path, str], use_cache: bool):
         return PyMuPDFPreprocessor(
             name, cache_dir_root=cache_dir_root, use_cache=use_cache
         )
+    elif name == "marker":
+        from perovscribe.preprocessing.marker_processor import MarkerPreprocessor
+        return MarkerPreprocessor(
+            name, cache_dir_root=cache_dir_root, use_cache=use_cache
+        )
     else:
         raise NotImplementedError(f"Preprocessing method {name} is not implemented")
 
