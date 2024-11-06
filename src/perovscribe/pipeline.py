@@ -38,6 +38,9 @@ class ExtractionPipeline:
         pdftext = self.preprocessor.pdf_to_text(filepath)
         # TODO: Call LLM_call, postprocessor, export 
 
+def fire_me(filepath: str, model_name: str = "claude-sonnet??", preprocessor: str = "marker", postprocessor: str = "NONE", cache_dir: str ="", use_cache: bool = True):
+    ExtractionPipeline(model_name, preprocessor, postprocessor, cache_dir, use_cache).run(filepath)
+
 def main_cli():
     import fire
-    fire.Fire(ExtractionPipeline("test", "marker", "", "", True).run)
+    fire.Fire(fire_me)
