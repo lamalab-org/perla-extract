@@ -2,6 +2,7 @@ from litellm import completion
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 from typing import List
 
+
 def create_text_completion(model_name: str, messages: List[dict]) -> str:
     """Call LLM via the LiteLLM using the standard pydantic model
 
@@ -13,8 +14,7 @@ def create_text_completion(model_name: str, messages: List[dict]) -> str:
     Returns:
         str: the response of the LLM
     """
+    # ToDo: we should also cache LLM calls
     return completion(
-        model=model_name,
-        messages=messages,
-        response_format=PerovskiteSolarCells
+        model=model_name, messages=messages, response_format=PerovskiteSolarCells
     )

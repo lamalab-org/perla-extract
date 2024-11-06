@@ -6,7 +6,6 @@ import os
 from perovscribe.preprocessing.utils import get_hash
 
 class BasePreprocessor:
-
     def __init__(self, name: str, cache_dir_root: PathType, use_cache: bool=True)
         self.cache_dir = os.path.join(self.cache_dir, name)
         self.name = name

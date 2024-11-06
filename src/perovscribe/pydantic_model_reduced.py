@@ -1,9 +1,6 @@
 from pydantic import BaseModel, Field, validator, confloat
 from typing import List, Literal, Optional
 from datetime import datetime
-from pint import UnitRegistry
-
-ureg = UnitRegistry()
 
 
 class Ion(BaseModel):
