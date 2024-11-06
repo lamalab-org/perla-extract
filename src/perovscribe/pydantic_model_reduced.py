@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field, validator, confloat
 from typing import List, Literal, Optional
-from datetime import datetime
 
 
 class Ion(BaseModel):
