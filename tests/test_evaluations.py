@@ -2,7 +2,7 @@ from perovscribe.evaluations import Evaluations
 
 import os
 import json
-
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 def test_evaluations():
     
     with open(os.path.dirname(os.path.realpath(__file__)) + os.sep + "truth_test_file_10.1016--j.orgel.2017.01.022.json") as f:
