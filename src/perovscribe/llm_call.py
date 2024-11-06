@@ -27,14 +27,6 @@ def create_text_completion(
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": f"{instruction}\n\nHere is the text:\n{pdf_text}"}
     ]
-    
-    # Call LLM via LiteLLM
-    # response_json = json.loads(completion(
-    #     model=model_name,
-    #     messages=messages,
-    #     response_format=PerovskiteSolarCells
-    # )["choices"][0]["message"]["content"])
-    # return PerovskiteSolarCells(**response_json)
 
     # Call with Instructor
     client = instructor.from_anthropic(Anthropic())
