@@ -8,9 +8,9 @@ version = "0.0.1"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [
-    { name = "Sherjeel Shabih", email = "" },
-    { name = "Sreekanth Kunchapu", email = "" },
-    { name = "Pepe Marquez", email = "" },
+    { name = "Sherjeel Shabih", email = "sherjeel.shabih@hu-berlin.de" },
+    { name = "Sreekanth Kunchapu", email = "sreekanth.kunchapu@uni-jena.de" },
+    { name = "Pepe Marquez", email = "jose.marquez@physik.hu-berlin.de" },
     { name = "Kevin Jablonka", email = "mail@kjablonka.com" },
 ]
 requires-python = ">=3.9"
@@ -25,6 +25,7 @@ classifiers = [
 
 
 dependencies = ["pydantic", "litellm"]
+
 [project.optional-dependencies]
 dev = ["jupyter", "docformatter", "pytest", "ruff", "bump-my-version"]
 nougat = ["nougat"]
