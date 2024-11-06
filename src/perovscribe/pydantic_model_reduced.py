@@ -174,6 +174,10 @@ class Solvent(BaseModel):
     volume: Optional[Volume] = Field(None)
 
 
+class AntiSolvent(Solvent):
+    time: Optional[Time]
+
+
 class ReactionSolution(BaseModel):
     compounds: Optional[List[str]] = Field(None)
     concentrations: Optional[List[Concentration]] = Field(None)
@@ -181,6 +185,9 @@ class ReactionSolution(BaseModel):
     temperature: Optional[Temperature] = Field(None)
     solvent: Optional[Solvent] = Field(None)
 
+class GasQuenching(BaseModel):
+    gas_name: str
+    time: Time
 
 class ProcessingStep(BaseModel):
     step_name: Optional[str] = Field(None)
@@ -191,23 +198,12 @@ class ProcessingStep(BaseModel):
     atmosphere: Optional[ProcessingAtmosphere] = Field(None)
     temperature: Optional[Temperature] = Field(None)
     duration: Optional[Time] = Field(None)
-    antisolvent: Optional[Solvent] = Field(None)
-    gas: Optional[str] = Field(None)
+    antisolvent: Optional[AntiSolvent] = Field(None)
+    gas_quenching: Optional[GasQuenching] = Field(None)
     solution: Optional[ReactionSolution] = Field(None)
     additional_parameters: Optional[dict] = Field(
         None, description="Any additional parameters specific to this processing step"
     )
-
-
-class Deposition(BaseModel):
-    steps: Optional[List[ProcessingStep]] = Field(
-        None,
-        description="List of processing steps in order of execution. Only report conditions that have reported in the paper.",
-    )
-    additional_notes: Optional[str] = Field(
-        None, description="Any additional notes about the overall deposition process"
-    )
-
 
 class Stability(BaseModel):
     time: Optional[Time] = Field(None)
@@ -254,7 +250,10 @@ class Layer(BaseModel):
         - Other: Antireflective, buffer layers, unclassified
     """,
     )
-    deposition: Optional[Deposition] = Field(None)
+    deposition: Optional[List[ProcessingStep]] = Field(
+        None,
+        description="List of processing steps in order of execution. Only report conditions that have reported in the paper.",
+    )
 
 
 class PerovskiteSolarCell(BaseModel):
