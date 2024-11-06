@@ -2,4 +2,5 @@
 
 ## Getting started
 
-TO BE WRITTEN
+To use type:
+    perovscribe <filepath> 

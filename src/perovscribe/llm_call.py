@@ -1,6 +1,8 @@
-from litellm import completion
+import instructor
+from anthropic import Anthropic
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 from perovscribe.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
+import json
 
 def create_text_completion(
     model_name: str,
@@ -25,10 +27,17 @@ def create_text_completion(
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": f"{instruction}\n\nHere is the text:\n{pdf_text}"}
     ]
-    
-    # Call LLM via LiteLLM
-    return completion(
+
+    # Call with Instructor
+    client = instructor.from_anthropic(Anthropic())
+
+    # note that client.chat.completions.create will also work
+    resp = client.messages.create(
         model=model_name,
+        max_tokens=8192,
         messages=messages,
-        response_format=PerovskiteSolarCells
+        response_model=PerovskiteSolarCells,
+        temperature=0
     )
+
+    return resp
