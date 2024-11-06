@@ -1,20 +1,34 @@
 from litellm import completion
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
-from typing import List
+from perovscribe.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
 
-
-def create_text_completion(model_name: str, messages: List[dict]) -> str:
-    """Call LLM via the LiteLLM using the standard pydantic model
-
+def create_text_completion(
+    model_name: str,
+    pdf_text: str,
+    system_prompt: str = SYSTEM_PROMPT,
+    instruction: str = INSTRUCTION_TEXT,
+) -> PerovskiteSolarCells:  
+    """
+    Extract perovskite solar cell data from a PDF using preprocessing and LLM.
+    
     Arguments:
         model_name (str): the name of the LLM to call
-        message (List[str]): messages to send to the LLM.
-            Each dict should contain "role" and "content" keys
-
+        pdf_text (str): the text content from the PDF
+        system_prompt (str): system prompt for the LLM (default: SYSTEM_PROMPT)
+        instruction (str): instruction text for the LLM (default: INSTRUCTION_TEXT)
+    
     Returns:
-        str: the response of the LLM
+        PerovskiteSolarCells: the response from the LLM containing extracted perovskite solar cell data
     """
-    # ToDo: we should also cache LLM calls
+    # Construct messages for LLM
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": f"{instruction}\n\nHere is the text:\n{pdf_text}"}
+    ]
+    
+    # Call LLM via LiteLLM
     return completion(
-        model=model_name, messages=messages, response_format=PerovskiteSolarCells
+        model=model_name,
+        messages=messages,
+        response_format=PerovskiteSolarCells
     )
