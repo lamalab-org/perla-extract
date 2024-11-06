@@ -1,6 +1,7 @@
 from typing import Optional
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
-from perovscribe.types import PathType
+from typing import Union
+from pathlib import Path
 from perovscribe.preprocessing import Preprocessor
 
 
@@ -12,7 +13,7 @@ class ExtractionPipeline:
         model_name: str,
         preprocessor: str,
         postprocessor: str,
-        cache_dir: PathType,
+        cache_dir: Union[Path, str],
         use_caching: bool = True,
     ):
         """
@@ -20,7 +21,7 @@ class ExtractionPipeline:
 
         Args:
             model_name (str): name of the LLM to call
-            cache_dir (PathType): the root directory for the diskcache
+            cache_dir (Path | str): the root directory for the diskcache
             use_caching (bool): True if caching should be utilized
         """
         self.model_name = model_name
@@ -30,5 +31,5 @@ class ExtractionPipeline:
         self.use_caching = use_caching
 
     def extract_from_pdf(
-        self, filepath: PathType
+        self, filepath: Union[Path, str]
     ) -> Optional[PerovskiteSolarCells]: ...

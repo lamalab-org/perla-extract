@@ -1,8 +1,8 @@
 from perovscribe.preprocessing.base import BasePreprocessor
-from perovscribe.types import PathType
+from typing import Union
+from pathlib import Path
 
-
-def get_preprocessor(name, cache_dir_root: PathType, use_cache: bool):
+def get_preprocessor(name, cache_dir_root: Union[Path, str], use_cache: bool):
     if name == "nougat":
         raise NotImplementedError("Nougat preprocessing is not implemented")
     elif name == "pymupdf":
@@ -16,8 +16,8 @@ def get_preprocessor(name, cache_dir_root: PathType, use_cache: bool):
 
 
 class Preprocessor(BasePreprocessor):
-    def __init__(self, name: str, cache_dir_root: PathType, use_cache: bool = True):
+    def __init__(self, name: str, cache_dir_root: Union[Path, str], use_cache: bool = True):
         self.preprocessor = get_preprocessor(name, cache_dir_root, use_cache)
 
-    def pdf_to_text(self, pdf_path: PathType) -> str:
+    def pdf_to_text(self, pdf_path: Union[Path, str]) -> str:
         return self.preprocessor.pdf_to_text(pdf_path)
