@@ -19,9 +19,9 @@ class PerovskiteComposition(BaseModel):
         description="The perovskite composition according to IUPAC recommendations, where standard abbreviations are used for all ions.",
     )
     dimensionality: Optional[Literal["0D", "1D", "2D", "3D", "2D/3D"]] = Field(None)
-    a_ions: List[Ion] = Field(None)
-    b_ions: List[Ion] = Field(None)
-    x_ions: List[Ion] = Field(None)
+    a_ions: Optional[List[Ion]] = Field(None)
+    b_ions: Optional[List[Ion]] = Field(None)
+    x_ions: Optional[List[Ion]] = Field(None)
 
 
 class UnitValue(BaseModel):
@@ -176,10 +176,6 @@ class ReactionSolution(BaseModel):
     temperature: Optional[Temperature] = Field(None)
     solvent: Optional[str] = Field(None)
 
-class GasQuenching(BaseModel):
-    gas_name: str
-    time: Time
-
 class ProcessingStep(BaseModel):
     step_name: Optional[str] = Field(None)
     method: Optional[str] = Field(
@@ -190,7 +186,7 @@ class ProcessingStep(BaseModel):
     temperature: Optional[Temperature] = Field(None)
     duration: Optional[Time] = Field(None)
     antisolvent: Optional[str] = Field(None)
-    gas_quenching: Optional[GasQuenching] = Field(None)
+    gas_quenching: Optional[bool] = Field(None, description="Whether the crystallization was induced by gas quenching")
     solution: Optional[ReactionSolution] = Field(None)
     additional_parameters: Optional[dict] = Field(
         None, description="Any additional parameters specific to this processing step"
@@ -286,8 +282,8 @@ class PerovskiteSolarCell(BaseModel):
         None,
         description="Bandgap of the perovskite material in eV. Include this field only if the bandgap has been directly measured in the experiment. Do not include estimated or literature values.",
     )
-    encapsulation: Optional[str] = Field(
-        None, description="Encapsulation method, if any"
+    encapsulated: Optional[bool] = Field(
+        None, description="True if the cell has been encapsulated."
     )
     additional_notes: Optional[str] = Field(
         None, description="Any additional comments or observations"
