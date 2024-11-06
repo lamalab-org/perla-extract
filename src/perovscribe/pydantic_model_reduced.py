@@ -169,21 +169,12 @@ class ProcessingAtmosphere(BaseModel):
     relative_humidity: Optional[Humidity] = Field(None)
 
 
-class Solvent(BaseModel):
-    name: Optional[str] = Field(None)
-    volume: Optional[Volume] = Field(None)
-
-
-class AntiSolvent(Solvent):
-    time: Optional[Time]
-
-
 class ReactionSolution(BaseModel):
     compounds: Optional[List[str]] = Field(None)
     concentrations: Optional[List[Concentration]] = Field(None)
     volume: Optional[Volume] = Field(None)
     temperature: Optional[Temperature] = Field(None)
-    solvent: Optional[Solvent] = Field(None)
+    solvent: Optional[str] = Field(None)
 
 class GasQuenching(BaseModel):
     gas_name: str
@@ -198,7 +189,7 @@ class ProcessingStep(BaseModel):
     atmosphere: Optional[ProcessingAtmosphere] = Field(None)
     temperature: Optional[Temperature] = Field(None)
     duration: Optional[Time] = Field(None)
-    antisolvent: Optional[AntiSolvent] = Field(None)
+    antisolvent: Optional[str] = Field(None)
     gas_quenching: Optional[GasQuenching] = Field(None)
     solution: Optional[ReactionSolution] = Field(None)
     additional_parameters: Optional[dict] = Field(
