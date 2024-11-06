@@ -258,6 +258,17 @@ class Layer(BaseModel):
         None,
         description="List of processing steps in order of execution. Only report conditions that have reported in the paper.",
     )
+    additional_treatment: Optional[str] = Field(None, description="""
+        Description of modifications applied to this layer beyond its basic composition, including:
+
+        - Self-assembled monolayers (SAMs)
+        - Surface passivation treatments
+        - Interface engineering (e.g., Lewis base/acid treatments)
+        - Additives or dopants
+        - Post-deposition treatments
+
+        Use established terminology: "SAM" for self-organized molecular layers, "surface passivation", "doping" where applicable.
+    """)
 
 
 class PerovskiteSolarCell(BaseModel):
