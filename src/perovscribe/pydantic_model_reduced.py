@@ -157,6 +157,10 @@ class Concentration(UnitValue):
         Field(None)
     )
 
+class Solute(BaseModel):
+    name: Optional[str]
+    concentration: Optional[Concentration]
+
 
 class Volume(UnitValue):
     value: Optional[float] = Field(None)
@@ -180,10 +184,10 @@ class AntiSolvent(Solvent):
 
 class ReactionSolution(BaseModel):
     compounds: Optional[List[str]] = Field(None)
-    concentrations: Optional[List[Concentration]] = Field(None)
+    solutes: Optional[List[Solute]] = Field(None)
     volume: Optional[Volume] = Field(None)
     temperature: Optional[Temperature] = Field(None)
-    solvent: Optional[Solvent] = Field(None)
+    solvent: Optional[str] = Field(None)
 
 class GasQuenching(BaseModel):
     gas_name: str
