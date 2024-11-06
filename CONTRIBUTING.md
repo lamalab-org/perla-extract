@@ -33,6 +33,10 @@ acceptance and merge into the main branch. This has several benefits:
 
 We use pre-commit hooks that format the code according to standard conventions.
 
+To set up the hooks:
+1. Install pre-commit: `pip install pre-commit`
+2. Install the hooks: `pre-commit install`
+
 ### Dependency Management
 
 We use `pyproject.toml` for dependency management. Please ensure that any new dependencies are added to the appropriate section in `pyproject.toml`.
