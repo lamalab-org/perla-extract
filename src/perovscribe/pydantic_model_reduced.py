@@ -157,6 +157,10 @@ class Concentration(UnitValue):
         Field(None)
     )
 
+class Solute(BaseModel):
+    name: Optional[str]
+    concentration: Optional[Concentration]
+
 
 class Volume(UnitValue):
     value: Optional[float] = Field(None)
@@ -180,10 +184,10 @@ class AntiSolvent(Solvent):
 
 class ReactionSolution(BaseModel):
     compounds: Optional[List[str]] = Field(None)
-    concentrations: Optional[List[Concentration]] = Field(None)
+    solutes: Optional[List[Solute]] = Field(None)
     volume: Optional[Volume] = Field(None)
     temperature: Optional[Temperature] = Field(None)
-    solvent: Optional[Solvent] = Field(None)
+    solvent: Optional[str] = Field(None)
 
 class GasQuenching(BaseModel):
     gas_name: str
@@ -254,6 +258,17 @@ class Layer(BaseModel):
         None,
         description="List of processing steps in order of execution. Only report conditions that have reported in the paper.",
     )
+    additional_treatment: Optional[str] = Field(None, description="""
+        Description of modifications applied to this layer beyond its basic composition, including:
+
+        - Self-assembled monolayers (SAMs)
+        - Surface passivation treatments
+        - Interface engineering (e.g., Lewis base/acid treatments)
+        - Additives or dopants
+        - Post-deposition treatments
+
+        Use established terminology: "SAM" for self-assembled molecular layers, "surface passivation", "doping" where applicable.
+    """)
 
 
 class PerovskiteSolarCell(BaseModel):
