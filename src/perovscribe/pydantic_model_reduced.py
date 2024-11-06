@@ -267,7 +267,7 @@ class Layer(BaseModel):
         - Additives or dopants
         - Post-deposition treatments
 
-        Use established terminology: "SAM" for self-organized molecular layers, "surface passivation", "doping" where applicable.
+        Use established terminology: "SAM" for self-assembled molecular layers, "surface passivation", "doping" where applicable.
     """)
 
 
