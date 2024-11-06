@@ -19,9 +19,9 @@ class PerovskiteComposition(BaseModel):
         description="The perovskite composition according to IUPAC recommendations, where standard abbreviations are used for all ions.",
     )
     dimensionality: Optional[Literal["0D", "1D", "2D", "3D", "2D/3D"]] = Field(None)
-    a_ions: List[Ion] = Field(None)
-    b_ions: List[Ion] = Field(None)
-    x_ions: List[Ion] = Field(None)
+    a_ions: Optional[List[Ion]] = Field(None)
+    b_ions: Optional[List[Ion]] = Field(None)
+    x_ions: Optional[List[Ion]] = Field(None)
 
 
 class UnitValue(BaseModel):
