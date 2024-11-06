@@ -21,5 +21,10 @@ repos:
       - id: ruff-format
         types_or: [python, pyi, jupyter]
         exclude: (reports/scripts|data)/.*
+  - repo: https://github.com/jsh9/pydoclint
+    rev: 0.5.9
+    hooks:
+      - id: pydoclint
+        args: [--style=google, --check-return-types=False]
 ci:
   autofix_prs: false

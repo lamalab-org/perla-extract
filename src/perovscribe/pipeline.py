@@ -9,7 +9,17 @@ import os
 
 
 class ExtractionPipeline:
-    """Handle the extraction pipeline for perovskite solar cell data."""
+    """Handle the extraction pipeline for perovskite solar cell data.
+
+    Initialize the extraction pipeline.
+
+    Args:
+        model_name (str): name of the LLM to call
+        preprocessor (str): the preprocessor to use
+        postprocessor (str): the postprocessor to use
+        cache_dir (Union[Path, str]): the root directory for the diskcache
+        use_cache (bool): True if caching should be utilized
+    """
 
     def __init__(
         self,
@@ -19,14 +29,6 @@ class ExtractionPipeline:
         cache_dir: Union[Path, str],
         use_cache: bool = True,
     ):
-        """
-        Initialize the extraction pipeline.
-
-        Args:
-            model_name (str): name of the LLM to call
-            cache_dir (Path | str): the root directory for the diskcache
-            use_cache (bool): True if caching should be utilized
-        """
         self.model_name = model_name
         self.preprocessor = Preprocessor(
             preprocessor, cache_dir_root=cache_dir, use_cache=use_cache
