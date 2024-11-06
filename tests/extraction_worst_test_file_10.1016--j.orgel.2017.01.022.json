@@ -1,5 +1,6 @@
 {
     "cells": [
+        
         {
         "cell_stack": ["ITO", "PEDOT:PSS", "Perovskite", "PCBM-60", "C60", "Al"],
         "perovskite_composition": "CH3NH3PbI3",
@@ -38,7 +39,7 @@
                         "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
                     },
                     {
-                        "method": "Aneling",
+                        "method": "Anealing",
                         "time": {"value": 30, "unit": "min"},
                         "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
                         "temperature": { "value": 120, "unit": "°C"}
@@ -123,7 +124,7 @@
             {
                 "name": "Al",
                 "thickness": 120,
-                "functionality":  "backkontact",
+                "functionality":  "backcontact",
                 "deposition": {
                     "steps": [
                     {
@@ -174,7 +175,7 @@
                             "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
                         },
                         {
-                            "method": "Aneling",
+                            "method": "Anealing",
                             "time": {"value": 30, "unit": "min"},
                             "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
                             "temperature": { "value": 120, "unit": "°C"}
@@ -258,7 +259,7 @@
                 {
                     "name": "Al",
                     "thickness": 120,
-                    "functionality":  "backkontact",
+                    "functionality":  "backcontact",
                     "deposition": {
                         "steps": [
                         {
@@ -309,7 +310,7 @@
                             "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
                         },
                         {
-                            "method": "Aneling",
+                            "method": "Anealing",
                             "time": {"value": 30, "unit": "min"},
                             "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
                             "temperature": { "value": 120, "unit": "°C"}
@@ -393,7 +394,7 @@
                 {
                     "name": "Al",
                     "thickness": 120,
-                    "functionality":  "backkontact",
+                    "functionality":  "backcontact",
                     "deposition": {
                         "steps": [
                         {
@@ -444,7 +445,7 @@
                             "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
                         },
                         {
-                            "method": "Aneling",
+                            "method": "Anealing",
                             "time": {"value": 30, "unit": "min"},
                             "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
                             "temperature": { "value": 120, "unit": "°C"}
@@ -529,7 +530,7 @@
                 {
                     "name": "Al",
                     "thickness": 120,
-                    "functionality":  "backkontact",
+                    "functionality":  "backcontact",
                     "deposition": {
                         "steps": [
                         {
@@ -580,7 +581,7 @@
                             "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
                         },
                         {
-                            "method": "Aneling",
+                            "method": "Anealing",
                             "time": {"value": 30, "unit": "min"},
                             "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
                             "temperature": { "value": 120, "unit": "°C"}
@@ -665,7 +666,7 @@
                 {
                     "name": "Al",
                     "thickness": 120,
-                    "functionality":  "backkontact",
+                    "functionality":  "backcontact",
                     "deposition": {
                         "steps": [
                         {
@@ -682,149 +683,9 @@
             "cell_stack": ["ITO", "PEDOT:PSS", "Perovskite", "PCBM-60", "C60", "Al"],
             "perovskite_composition": "CH3NH3PbI3",
             "device_architecture": "pin",
-            "pce": { "value": 8.51, "unit": "%" },
-            "jsc": { "value": 14.89, "unit": "mA cm^-2" },
-            "voc": { "value": 0.95, "unit": "V" },
-            "ff": { "value": 60.0 },
             "active_area": { "value": 0.09, "unit": "cm^2" },
             "light_source": {
-                "type": "AM 1.5G",
-                "description": null,
-                "light_intensity": { "value": 100.0, "unit": "mW cm^-2" },
-                "lamp": null
-            },
-            "bandgap": null,
-            "encapsulation": null,
-            "additional_notes": "S-3",
-            "stability": "Newport 94043A",
-            "layers": [
-                {
-                    "name": "ITO",
-                    "thickness": null,
-                    "functionality": "substrate",
-                    "deposition": null
-                },
-    
-                {
-                    "name": "PTAA",
-                    "thickness": null,
-                    "functionality": "hole-transport",
-                    "deposition": {
-                        "steps": [
-                        {
-                            "method": "Spin coating",
-                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
-                        },
-                        {
-                            "method": "Aneling",
-                            "time": {"value": 30, "unit": "min"},
-                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
-                            "temperature": { "value": 120, "unit": "°C"}
-                        }                    
-                        ]
-                    }
-                },
-    
-                {
-                    "name": "Perovskite",
-                    "thickness": null,
-                    "functionality": "absorber",
-                    "deposition": {
-                        "steps": [
-                        {
-                            "method": "spin coating",
-                            "time": {"value": 60, "unit": "s"},
-                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
-                            "solution": {
-                                "compounds": ["PbCl2", "MAI", "PbAc2"],
-                                "concentrations": [
-                                    { "value": 0.776, "unit": "mol/L" },
-                                    { "value": 2.4, "unit": "mol/L" },
-                                    { "value": 0.024, "unit": "mol/L" }
-                                ],
-                                "solvent": { "name": "DMF", "volume": null }
-                                }
-                        },
-    
-                        {
-                            "method": "solvent annealing",
-                            "time": {"value": 10, "unit": "min"},
-                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
-                            "solvent": { "name": "DMF", "volume": 10, "unit": "µl" }
-                        },
-    
-                        {
-                            "method": "thermal annealing",
-                            "time": {"value": 90, "unit": "min"},
-                            "temperature": {"value": 95.0, "unit": "°C"},
-                            "atmosphere": {"type": "vacuum"}
-                        }                
-                        ],
-                        "additional_notes": "S-3"
-                    }
-                },
-    
-                {
-                    "name": "PCBM",
-                    "thickness": null,
-                    "functionality": "electron-transport",
-                    "deposition": {
-                        "steps": [
-                        {
-                            "method": "Spin coating",
-                            "time": {"value": 40, "unit": "s"},
-                            "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
-                            "solution": {
-                                "compounds": ["PCBM"],
-                                "concentrations": [{ "value": 20, "unit": "mg/mL" }],
-                                "solvent": { "name": "clorobenzene", "volume": 80, "unit": "µl"}
-                                }
-                        }
-                        ]
-                    }
-                },
-    
-                {
-                    "name": "C60",
-                    "thickness": 20,
-                    "functionality":  "electron-transport",
-                    "deposition": {
-                        "steps": [
-                        {
-                            "method": "evaporation",
-                            "atmosphere": {"type": "vacuum"}
-                        }
-                        ]
-                    }
-                },
-    
-                {
-                    "name": "Al",
-                    "thickness": 120,
-                    "functionality":  "backkontact",
-                    "deposition": {
-                        "steps": [
-                        {
-                            "method": "evaporation",
-                            "atmosphere": {"type": "vacuum"}
-                        }
-                        ]
-                    }
-                }
-            ]
-        },
-
-        {
-            "cell_stack": ["ITO", "PEDOT:PSS", "Perovskite", "PCBM-60", "C60", "Al"],
-            "perovskite_composition": "CH3NH3PbI3",
-            "device_architecture": "pin",
-            "pce": { "value": 8.27, "unit": "%" },
-            "jsc": { "value": 17.11, "unit": "mA cm^-2" },
-            "voc": { "value": 0.99, "unit": "V" },
-            "ff": { "value": 49.0 },
-            "active_area": { "value": 0.09, "unit": "cm^2" },
-            "light_source": {
-                "type": "AM 1.5G",
+                "type": "AM 1.5K",
                 "description": null,
                 "light_intensity": { "value": 100.0, "unit": "mW cm^-2" },
                 "lamp": null
@@ -852,7 +713,7 @@
                             "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
                         },
                         {
-                            "method": "Aneling",
+                            "method": "Anealing",
                             "time": {"value": 30, "unit": "min"},
                             "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
                             "temperature": { "value": 120, "unit": "°C"}
@@ -937,7 +798,7 @@
                 {
                     "name": "Al",
                     "thickness": 120,
-                    "functionality":  "backkontact",
+                    "functionality":  "backcontact",
                     "deposition": {
                         "steps": [
                         {
@@ -954,10 +815,10 @@
             "cell_stack": ["ITO", "PEDOT:PSS", "Perovskite", "PCBM-60", "C60", "Al"],
             "perovskite_composition": "CH3NH3PbI3",
             "device_architecture": "pin",
-            "pce": { "value": 7.9, "unit": "%" },
-            "jsc": { "value": 16.33, "unit": "mA cm^-2" },
-            "voc": { "value": 0.99, "unit": "V" },
-            "ff": { "value": 49.0 },
+            "pce": { "value": 8.51, "unit": "%" },
+            "jsc": { "value": 14.89, "unit": "mA cm^-2" },
+            "voc": { "value": 0.95, "unit": "V" },
+            "ff": { "value": 60.0 },
             "active_area": { "value": 0.09, "unit": "cm^2" },
             "light_source": {
                 "type": "AM 1.5G",
@@ -967,7 +828,7 @@
             },
             "bandgap": null,
             "encapsulation": null,
-            "additional_notes": "S-6",
+            "additional_notes": "S-3",
             "stability": "Newport 94043A",
             "layers": [
                 {
@@ -988,7 +849,7 @@
                             "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}}
                         },
                         {
-                            "method": "Aneling",
+                            "method": "Anealing",
                             "time": {"value": 30, "unit": "min"},
                             "atmosphere": {"type": "air", "relative_humidity": { "value": 45, "unit": "%"}},
                             "temperature": { "value": 120, "unit": "°C"}
@@ -1010,9 +871,9 @@
                             "solution": {
                                 "compounds": ["PbCl2", "MAI", "PbAc2"],
                                 "concentrations": [
-                                    { "value": 0.752, "unit": "mol/L" },
+                                    { "value": 0.776, "unit": "mol/L" },
                                     { "value": 2.4, "unit": "mol/L" },
-                                    { "value": 0.048, "unit": "mol/L" }
+                                    { "value": 0.024, "unit": "mol/L" }
                                 ],
                                 "solvent": { "name": "DMF", "volume": null }
                                 }
@@ -1027,12 +888,12 @@
     
                         {
                             "method": "thermal annealing",
-                            "temperature": {"value": 95.0, "unit": "°C"},
                             "time": {"value": 90, "unit": "min"},
+                            "temperature": {"value": 95.0, "unit": "°C"},
                             "atmosphere": {"type": "vacuum"}
                         }                
                         ],
-                        "additional_notes": "S-6"
+                        "additional_notes": "S-3"
                     }
                 },
     
@@ -1068,22 +929,12 @@
                         }
                         ]
                     }
-                },
-    
-                {
-                    "name": "Al",
-                    "thickness": 120,
-                    "functionality":  "backkontact",
-                    "deposition": {
-                        "steps": [
-                        {
-                            "method": "evattokkation",
-                            "atmosphere": {"type": "vacuum"}
-                        }
-                        ]
-                    }
                 }
+    
+                
             ]
         }
+
+        
     ]
 }
