@@ -3,6 +3,9 @@ from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 from typing import Union
 from pathlib import Path
 from perovscribe.preprocessing.preprocessor import Preprocessor
+from perovscribe import llm_call
+from perovscribe.export import to_json
+import os
 
 
 class ExtractionPipeline:
@@ -35,8 +38,12 @@ class ExtractionPipeline:
     ) -> Optional[PerovskiteSolarCells]: ...
 
     def run(self, filepath: Union[Path, str], output: Union[Path, str] = "./"):
-        pdftext = self.preprocessor.pdf_to_text(filepath)
-        # TODO: Call LLM_call, postprocessor, export 
+        output = output + os.path.split(filepath)[1][:-4]+".json"
+        pdf_text = self.preprocessor.pdf_to_text(filepath)
+        results = llm_call.create_text_completion(self.model_name, pdf_text)
+        to_json(results, output)
+        # TODO: Call postprocessor
+
 
 def extract(filepath: str, model_name: str = "claude-3-5-sonnet-20240620", preprocessor: str = "marker", postprocessor: str = "NONE", cache_dir: str ="", use_cache: bool = True):
     ExtractionPipeline(model_name, preprocessor, postprocessor, cache_dir, use_cache).run(filepath)
