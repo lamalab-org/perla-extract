@@ -10,7 +10,6 @@ import io
 import numpy as np
 from pdf2image import convert_from_path
 from pathlib import Path
-import tempfile
 import pymupdf
 
 
