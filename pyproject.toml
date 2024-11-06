@@ -27,7 +27,8 @@ classifiers = [
 dependencies = ["pydantic", "litellm"]
 [project.optional-dependencies]
 dev = ["jupyter", "docformatter", "pytest", "ruff", "bump-my-version"]
-
+nougat = ["nougat"]
+marker = ["marker-pdf"]
 
 docs = [
     "mkdocs-material>=9.4.0",

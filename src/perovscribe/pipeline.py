@@ -3,6 +3,7 @@ from typing import Optional
 from perovscribe.llm_call import create_text_completion
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 from perovscribe.types import PathType
+from perovscribe.preprocessing import Preprocessor
 
 
 class ExtractionPipeline:
@@ -25,7 +26,7 @@ class ExtractionPipeline:
             use_caching (bool): True if caching should be utilized
         """
         self.model_name = model_name
-        self.preprocessor = ...  # call preprocessing factory to obtain preprocessor
+        self.preprocessor =  Preprocessor(preprocessor)
         self.postprocessor = ...  # call postprocessing factory to obtain postprocessor
         self.cache_dir = cache_dir
         self.use_caching = use_caching
