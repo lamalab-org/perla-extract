@@ -32,5 +32,4 @@ class BasePreprocessor:
                 output = self._pdf_to_text(pdf_path)
                 self.cache.set(str(filehash), output)
                 return output
-        else:
-            return self._pdf_to_text(pdf_path)
+        return self._pdf_to_text(pdf_path)
