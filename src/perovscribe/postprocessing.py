@@ -2,6 +2,7 @@ from pint import UnitRegistry
 from typing import Dict, Any
 
 ureg = UnitRegistry()
+Q_ = ureg.Quantity
 ureg.default_preferred_units = [ureg.V,ureg.cm**2,ureg.L,ureg.degC,ureg.s,ureg.nm,ureg.mbar,ureg.eV,ureg.mW/ureg.cm**2,ureg.mA/ureg.cm**2]
 
 def convert_units_in_dict(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -29,14 +30,12 @@ def convert_units_in_dict(data: Dict[str, Any]) -> Dict[str, Any]:
                 try:
                     if obj['unit'] == '%': #For % values no conversion needed
                         converted = obj['value']
-                    elif obj['unit'] == '°C': #Handles pint DegC ambiguity error
-                        converted = obj['value']
                     elif parent_key == 'concentration':
                         converted = {}
                         converted['concentration'] = obj['value']
                         converted['concentration_unit'] = obj['unit']
                     else:
-                        quantity = obj['value'] * ureg(obj['unit'])
+                        quantity = Q_(obj['value'],ureg(obj['unit']))
                         if parent_key == 'PCE_T80': 
                             converted = quantity.to_preferred(ureg.hour)
                         else:
