@@ -215,7 +215,7 @@ class Thickness(BaseModel):
 class Layer(BaseModel):
     name: Optional[str] = Field(
         None,
-        description="Name of the material in the layer. Use standard abbreviations or names if possible.",
+        description="Name of the material in the layer. Use standard abbreviations if possible.",
     )
     thickness: Optional[Thickness] = Field(
         None, description="Total thickness of the deposited perovskite layer."
@@ -228,9 +228,6 @@ class Layer(BaseModel):
             "Absorber",
             "Other",
             "Substrate",
-            "SAM",
-            "Interface-modification",
-            "Surface-passivation",
             "Buffer-layer",
             "Anti-reflection",
             "Encapsulation",
@@ -246,9 +243,6 @@ class Layer(BaseModel):
         - Contact: Au, Ag, Al, MoO3, interface layers
         - Absorber: Perovskite active layers (MAPbI3, CsPbI3)
         - Substrate: FTO, ITO, glass, flexible polymers
-        - SAM: Self-assembled monolayers
-        - Interface-modification: Lewis base/acid treatments
-        - Surface-passivation: Surface treatments
         - Buffer-layer: Buffer layers
         - Anti-reflection: Anti-reflection coatings
         - Encapsulation: Encapsulation layers
