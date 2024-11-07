@@ -9,7 +9,17 @@ import os
 
 
 class ExtractionPipeline:
-    """Handle the extraction pipeline for perovskite solar cell data."""
+    """Handle the extraction pipeline for perovskite solar cell data.
+
+    Initialize the extraction pipeline.
+
+    Args:
+        model_name (str): name of the LLM to call
+        preprocessor (str): the preprocessor to use
+        postprocessor (str): the postprocessor to use
+        cache_dir (Union[Path, str]): the root directory for the diskcache
+        use_cache (bool): True if caching should be utilized
+    """
 
     def __init__(
         self,
@@ -19,16 +29,10 @@ class ExtractionPipeline:
         cache_dir: Union[Path, str],
         use_cache: bool = True,
     ):
-        """
-        Initialize the extraction pipeline.
-
-        Args:
-            model_name (str): name of the LLM to call
-            cache_dir (Path | str): the root directory for the diskcache
-            use_cache (bool): True if caching should be utilized
-        """
         self.model_name = model_name
-        self.preprocessor = Preprocessor(preprocessor, cache_dir_root=cache_dir, use_cache=use_cache)
+        self.preprocessor = Preprocessor(
+            preprocessor, cache_dir_root=cache_dir, use_cache=use_cache
+        )
         self.postprocessor = ...  # call postprocessing factory to obtain postprocessor
         self.cache_dir = cache_dir
         self.use_cache = use_cache
@@ -38,16 +42,27 @@ class ExtractionPipeline:
     ) -> Optional[PerovskiteSolarCells]: ...
 
     def run(self, filepath: Union[Path, str], output: Union[Path, str] = "./"):
-        output = output + os.path.split(filepath)[1][:-4]+".json"
+        output = output + os.path.split(filepath)[1][:-4] + ".json"
         pdf_text = self.preprocessor.pdf_to_text(filepath)
         results = llm_call.create_text_completion(self.model_name, pdf_text)
         to_json(results, output)
         # TODO: Call postprocessor
 
 
-def extract(filepath: str, model_name: str = "claude-3-5-sonnet-20240620", preprocessor: str = "marker", postprocessor: str = "NONE", cache_dir: str ="", use_cache: bool = True):
-    ExtractionPipeline(model_name, preprocessor, postprocessor, cache_dir, use_cache).run(filepath)
+def extract(
+    filepath: str,
+    model_name: str = "claude-3-5-sonnet-20240620",
+    preprocessor: str = "marker",
+    postprocessor: str = "NONE",
+    cache_dir: str = "",
+    use_cache: bool = True,
+):
+    ExtractionPipeline(
+        model_name, preprocessor, postprocessor, cache_dir, use_cache
+    ).run(filepath)
+
 
 def main_cli():
     import fire
+
     fire.Fire(extract)
