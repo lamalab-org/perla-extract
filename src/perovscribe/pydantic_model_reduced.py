@@ -228,11 +228,6 @@ class Layer(BaseModel):
             "Absorber",
             "Other",
             "Substrate",
-            "Buffer-layer",
-            "Anti-reflection",
-            "Encapsulation",
-            "Mesoporous-scaffold",
-            "Light-management",
         ]
     ] = Field(
         None,
@@ -243,11 +238,7 @@ class Layer(BaseModel):
         - Contact: Au, Ag, Al, MoO3, interface layers
         - Absorber: Perovskite active layers (MAPbI3, CsPbI3)
         - Substrate: FTO, ITO, glass, flexible polymers
-        - Buffer-layer: Buffer layers
-        - Anti-reflection: Anti-reflection coatings
-        - Encapsulation: Encapsulation layers
-        - Mesoporous-scaffold: Mesoporous scaffolds
-        - Light-management: Light management layers
+        - Other: Antireflective, buffer layers, unclassified
     """,
     )
     deposition: Optional[List[ProcessingStep]] = Field(
