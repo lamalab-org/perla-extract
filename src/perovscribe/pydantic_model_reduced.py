@@ -137,7 +137,7 @@ class LightSource(BaseModel):
 
 class Pressure(UnitValue):
     value: Optional[float] = Field(None)
-    unit: Optional[Literal["Pa", "kPa", "atm", "bar", "mbar", "mmHg", "Torr"]] = Field(
+    unit: Optional[Literal["Pa", "kPa", "atm", "bar", "mbar", "mmHg", "torr"]] = Field(
         None
     )
 
