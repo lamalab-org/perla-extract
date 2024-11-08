@@ -11,8 +11,6 @@ def convert_units_in_dict(data: Dict[str, Any]) -> Dict[str, Any]:
     
     Args:
         data: Nested dictionary containing values with units
-        preferred_units: Dictionary mapping unit types to preferred units
-                        e.g. {'length': 'm', 'mass': 'kg', 'temperature': 'celsius'}
     
     Returns:
         Dictionary with converted values
@@ -24,19 +22,19 @@ def convert_units_in_dict(data: Dict[str, Any]) -> Dict[str, Any]:
             new_dict = {}
             if 'value' in obj and 'unit' not in obj: #For FF there is no unit
                 new_dict = obj['value']
-            elif 'value' in obj and 'unit' in obj:
+            elif 'value' in obj and 'unit' in obj: #Handle Null values
                 if obj['value'] is None:
                     return None
                 try:
-                    if obj['unit'] == '%': #For % values no conversion needed
+                    if obj['unit'] == '%': #For % values no conversion is needed
                         converted = obj['value']
-                    elif parent_key == 'concentration':
+                    elif parent_key == 'concentration': #For concentration values, units need to preserved
                         converted = {}
                         converted['concentration'] = obj['value']
                         converted['concentration_unit'] = obj['unit']
                     else:
                         quantity = Q_(obj['value'],ureg(obj['unit']))
-                        if parent_key == 'PCE_T80': 
+                        if parent_key == 'PCE_T80': #For PCE_T80, convert to hours instead of seconds
                             converted = quantity.to_preferred(ureg.hour)
                         else:
                             converted = float(quantity.to_preferred().magnitude)
@@ -49,11 +47,11 @@ def convert_units_in_dict(data: Dict[str, Any]) -> Dict[str, Any]:
             else:
                 # Recursively process all key-value pairs
                 for key, value in obj.items():
-                    if key == 'additional_parameters':
+                    if key == 'additional_parameters': #For additional parameters, keep JSON structure
                         new_dict[key] = value
                     elif key == "concentration":
                         concentration = traverse_and_convert(key,value)
-                        if concentration is not None:
+                        if concentration is not None: #For concentration values, units need to preserved
                             new_dict['concentration'] = concentration['concentration']
                             new_dict['concentration_unit'] = concentration['concentration_unit']
                         else:

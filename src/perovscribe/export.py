@@ -1,15 +1,10 @@
-from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
-from typing import Union
-from pathlib import Path
 import requests
 import json
 import io
+from typing import Union, Dict, Any
+from pathlib import Path
+from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 from postprocessing import convert_units_in_dict
-from typing import Dict, Any
-
-USERNAME = ''
-PASSWORD = ''
-URL = ''
 
 
 def to_json(pydantic_model: PerovskiteSolarCells, output: Union[Path, str]):
@@ -45,7 +40,7 @@ def remove_none_values(input_dict: Dict[str, Any]) -> Dict[str, Any]:
         if value is not None
     }
 
-def push_to_nomad(doi: str, response: Dict[str, Any], token: str, upload_id:str = None):
+def push_to_nomad(doi: str, response: Dict[str, Any], nomad_url: str, token: str, upload_id: str = None):
     response = convert_units_in_dict(response)
     for index, cell in enumerate(response["cells"]):
         transformed_data = {
@@ -58,10 +53,10 @@ def push_to_nomad(doi: str, response: Dict[str, Any], token: str, upload_id:str 
         transformed_json = json.dumps(transformed_data, indent=4)
         file = io.StringIO(transformed_json)
         if upload_id is None:
-            res = requests.post(f"{URL}uploads/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},
+            res = requests.post(f"{nomad_url}uploads/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},
                  files={'file': (doi+"-cell-"+str(index)+".archive.json", file)}, timeout=30)
         else:
-            res = requests.put(f"{URL}uploads/{upload_id}/raw/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},
+            res = requests.put(f"{nomad_url}uploads/{upload_id}/raw/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},
                  files={'file': (doi+"-cell-"+str(index)+".archive.json", file)}, timeout=30)
         upload_id = res.json().get('upload_id')
         if upload_id:
