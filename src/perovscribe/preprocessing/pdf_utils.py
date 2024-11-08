@@ -5,12 +5,10 @@ import cv2
 import os
 import base64
 from PIL import Image
-import time
 import io
 import numpy as np
 from pdf2image import convert_from_path
 from pathlib import Path
-import pymupdf
 
 
 def pil_to_cv2(image):
@@ -60,8 +58,6 @@ def resize_image(image, max_dimension):
             new_width = int(width * (max_dimension / height))
         image = image.resize((new_width, new_height), Image.LANCZOS)
 
-        timestamp = time.time()
-
     return image
 
 
@@ -92,15 +88,6 @@ def process_image(image, max_size, output_folder, file_path, i):
         base64_encoded_image,
         max(width, height),  # same tuple metadata
     )
-
-
-def pdf2text(file_path):
-    # Load your PDF
-    doc = pymupdf.open(file_path)
-    text = ""
-    for page in doc:
-        text += page.get_text() + "\n\n"
-    return text
 
 
 def process_pdf(file_path, output_folder_images):

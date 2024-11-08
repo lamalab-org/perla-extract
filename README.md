@@ -3,4 +3,4 @@
 ## Getting started
 
 To use type:
-    perovscribe <filepath> 
+    perovscribe <filepath>

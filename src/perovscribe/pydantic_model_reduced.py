@@ -137,7 +137,7 @@ class LightSource(BaseModel):
 
 class Pressure(UnitValue):
     value: Optional[float] = Field(None)
-    unit: Optional[Literal["Pa", "kPa", "atm", "bar", "mbar", "mmHg", "Torr"]] = Field(
+    unit: Optional[Literal["Pa", "kPa", "atm", "bar", "mbar", "mmHg", "torr"]] = Field(
         None
     )
 
@@ -152,6 +152,7 @@ class Concentration(UnitValue):
     unit: Optional[Literal["mol/L", "mmol/L", "g/L", "mg/L", "wt%", "vol%", "M"]] = (
         Field(None)
     )
+
 
 class Solute(BaseModel):
     name: Optional[str]
@@ -176,6 +177,7 @@ class ReactionSolution(BaseModel):
     temperature: Optional[Temperature] = Field(None)
     solvent: Optional[str] = Field(None)
 
+
 class ProcessingStep(BaseModel):
     step_name: Optional[str] = Field(None)
     method: Optional[str] = Field(
@@ -186,11 +188,14 @@ class ProcessingStep(BaseModel):
     temperature: Optional[Temperature] = Field(None)
     duration: Optional[Time] = Field(None)
     antisolvent: Optional[str] = Field(None)
-    gas_quenching: Optional[bool] = Field(None, description="Whether the crystallization was induced by gas quenching")
+    gas_quenching: Optional[bool] = Field(
+        None, description="Whether the crystallization was induced by gas quenching"
+    )
     solution: Optional[ReactionSolution] = Field(None)
     additional_parameters: Optional[dict] = Field(
         None, description="Any additional parameters specific to this processing step"
     )
+
 
 class Stability(BaseModel):
     time: Optional[Time] = Field(None)
@@ -241,7 +246,9 @@ class Layer(BaseModel):
         None,
         description="List of processing steps in order of execution. Only report conditions that have reported in the paper.",
     )
-    additional_treatment: Optional[str] = Field(None, description="""
+    additional_treatment: Optional[str] = Field(
+        None,
+        description="""
         Description of modifications applied to this layer beyond its basic composition, including:
 
         - Self-assembled monolayers (SAMs)
@@ -251,7 +258,8 @@ class Layer(BaseModel):
         - Post-deposition treatments
 
         Use established terminology: "SAM" for self-assembled molecular layers, "surface passivation", "doping" where applicable.
-    """)
+    """,
+    )
 
 
 class PerovskiteSolarCell(BaseModel):
