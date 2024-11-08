@@ -164,12 +164,6 @@ class Volume(UnitValue):
     unit: Optional[Literal["L", "mL", "μL"]] = Field(None)
 
 
-class ProcessingAtmosphere(BaseModel):
-    type: Optional[str] = Field(None)
-    pressure: Optional[Pressure] = Field(None)
-    relative_humidity: Optional[Humidity] = Field(None)
-
-
 class ReactionSolution(BaseModel):
     compounds: Optional[List[str]] = Field(None)
     solutes: Optional[List[Solute]] = Field(None)
@@ -184,7 +178,9 @@ class ProcessingStep(BaseModel):
         None,
         description="This is the method for the processing of steps in the design of the cells. Some examples are: Spin-coating, Drop-infiltration, Co-evaporation, Doctor blading, Spray coating, Slot-die coating, Ultrasonic spray, Dropcasting, Inkjet printing, Electrospraying, Thermal-annealing, Antisolvent-quenching.",
     )
-    atmosphere: Optional[ProcessingAtmosphere] = Field(None)
+    atmosphere: Literal[
+        "Ambient air", "Dry air", "Air", "N2", "Ar", "He", "H2", "Vacuum", "Other"
+    ]
     temperature: Optional[Temperature] = Field(None)
     duration: Optional[Time] = Field(None)
     antisolvent: Optional[str] = Field(None)
@@ -217,7 +213,10 @@ class Thickness(BaseModel):
 
 
 class Layer(BaseModel):
-    name: Optional[str] = Field(None)
+    name: Optional[str] = Field(
+        None,
+        description="Name of the material in the layer. Use standard abbreviations if possible.",
+    )
     thickness: Optional[Thickness] = Field(
         None, description="Total thickness of the deposited perovskite layer."
     )
