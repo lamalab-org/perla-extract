@@ -1,4 +1,4 @@
-from perovscribe.llm_factory import LLMFactory
+from perovscribe.providers.llm_factory import LLMFactory
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 
 
@@ -7,16 +7,15 @@ def create_text_completion(
     model_name: str,
     pdf_text: str,
 ) -> PerovskiteSolarCells:
-    """
-    Extract perovskite solar cell data from a PDF using preprocessing and LLM.
+    """Extract perovskite solar cell data from a PDF using preprocessing and LLM.
 
-    Arguments:
-        provider_name (str): name of the LLM provider (e.g., "anthropic")
-        model_name (str): name of the specific model to use
-        pdf_text (str): the text content from the PDF
+    Args:
+        provider_name (str): Name of the LLM provider
+        model_name (str): Name of the specific model to use
+        pdf_text (str): Text content from PDF to analyze
 
     Returns:
-        PerovskiteSolarCells: the response from the LLM containing extracted perovskite solar cell data
+        PerovskiteSolarCells: Extracted data in structured format
     """
-    provider = LLMFactory.create_provider(provider_name, model_name)
-    return provider.extract_data(pdf_text)
+    llm = LLMFactory(provider_name, model_name)
+    return llm.extract_data(pdf_text)
