@@ -1,19 +1,19 @@
 from loguru import logger
-from typing import Optional
+from typing import Optional, Dict
 from perovscribe.providers.base_provider import LLMProvider
 
 
 def get_provider(
     provider_name: str,
     model_name: Optional[str] = None,
-    max_tokens: int = 4096,
+    model_kwargs: Optional[Dict] = None,
 ) -> LLMProvider:
     """Create an instance of the specified LLM provider.
 
     Args:
         provider_name (str): Name of the LLM provider
         model_name (Optional[str]): Name of the specific model to use
-        max_tokens (int): Maximum number of tokens in the response
+        model_kwargs (Optional[Dict]): Additional keyword arguments for the model
 
     Returns:
         LLMProvider: Instance of the specified provider
@@ -31,13 +31,15 @@ def get_provider(
 
         if model_name is None:
             model_name = default_models["anthropic"]
-        return AnthropicProvider(model_name=model_name, max_tokens=max_tokens)
+        return AnthropicProvider(model_name=model_name, model_kwargs=model_kwargs)
+
     elif provider_name == "openai":
         from perovscribe.providers.openai_provider import OpenAIProvider
 
         if model_name is None:
             model_name = default_models["openai"]
-        return OpenAIProvider(model_name=model_name, max_tokens=max_tokens)
+        return OpenAIProvider(model_name=model_name, model_kwargs=model_kwargs)
+
     else:
         available_providers = ["anthropic", "openai"]
         logger.error(
@@ -54,19 +56,19 @@ class LLMFactory:
     Args:
         provider_name (str): Name of the LLM provider
         model_name (Optional[str]): Name of the specific model to use
-        max_tokens (int): Maximum number of tokens in the response
+        model_kwargs (Optional[Dict]): Additional keyword arguments for the model
     """
 
     def __init__(
         self,
         provider_name: str,
         model_name: Optional[str] = None,
-        max_tokens: int = 4096,
+        model_kwargs: Optional[Dict] = None,
     ):
         self.provider = get_provider(
             provider_name,
             model_name=model_name,
-            max_tokens=max_tokens,
+            model_kwargs=model_kwargs,
         )
 
     def extract_data(self, pdf_text: str):
