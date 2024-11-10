@@ -7,10 +7,31 @@ class Ion(BaseModel):
         None,
         description="The abbreviation used for the ion when writing the perovskite composition such as: 'Cs', 'MA', 'FA', 'PEA'",
     )
+
+    common_name: Optional[str] = Field(
+        None,
+        description="The common name of the ion such as 'Cesium', 'Methylammonium', 'Formamidinium', 'Phenylethylammonium'",
+    )
+
+    molecular_formula: Optional[str] = Field(
+        None,
+        description="The molecular formula of the ion such as 'Cs+', 'CH5N+', 'CH6N+', 'C10H15N2+'",
+    )
+
     coefficient: Optional[str] = Field(
         None,
         description="The stoichiometric coefficient of the ion such as “0.75”, or “1-x”.",
     )
+
+
+class UnitValue(BaseModel):
+    value: Optional[float] = Field(None)
+    unit: Optional[str] = Field(None)
+
+
+class Bandgap(UnitValue):
+    value: Optional[confloat(ge=0.5, le=4.0)] = Field(None)
+    unit: Optional[Literal["eV"]] = Field(None)
 
 
 class PerovskiteComposition(BaseModel):
@@ -19,14 +40,22 @@ class PerovskiteComposition(BaseModel):
         description="The perovskite composition according to IUPAC recommendations, where standard abbreviations are used for all ions.",
     )
     dimensionality: Optional[Literal["0D", "1D", "2D", "3D", "2D/3D"]] = Field(None)
-    a_ions: Optional[List[Ion]] = Field(None)
-    b_ions: Optional[List[Ion]] = Field(None)
-    x_ions: Optional[List[Ion]] = Field(None)
-
-
-class UnitValue(BaseModel):
-    value: Optional[float] = Field(None)
-    unit: Optional[str] = Field(None)
+    a_ions: Optional[List[Ion]] = Field(
+        None,
+        description="A-site ions. Only include information that is described in the paper.",
+    )
+    b_ions: Optional[List[Ion]] = Field(
+        None,
+        description="B-site ions. Only include information that is described in the paper.",
+    )
+    x_ions: Optional[List[Ion]] = Field(
+        None,
+        description="X-site ions. Only include information that is described in the paper.",
+    )
+    bandgap: Optional[Bandgap] = Field(
+        None,
+        description="Bandgap of the perovskite material in eV. Include this field only if the bandgap has been directly measured in the experiment. Do not include estimated or literature values.",
+    )
 
 
 class PCE(UnitValue):
@@ -81,11 +110,6 @@ class ActiveArea(UnitValue):
 class LightIntensity(UnitValue):
     value: Optional[confloat(ge=0)] = Field(None)
     unit: Optional[Literal["mW cm^-2", "W m^-2", "mW m^-2", "sun", "lux"]] = Field(None)
-
-
-class Bandgap(UnitValue):
-    value: Optional[confloat(ge=0.5, le=4.0)] = Field(None)
-    unit: Optional[Literal["eV"]] = Field(None)
 
 
 class Temperature(UnitValue):
@@ -262,9 +286,6 @@ class Layer(BaseModel):
 
 
 class PerovskiteSolarCell(BaseModel):
-    cell_stack: Optional[List[str]] = Field(
-        None, description="The stack sequence of the cell."
-    )
     perovskite_composition: Optional[PerovskiteComposition] = Field(None)
     device_architecture: Optional[
         Literal["pin", "nip", "Back contacted", "Front contacted"]
@@ -285,10 +306,6 @@ class PerovskiteSolarCell(BaseModel):
         None, description="Reported active area of the solar cell."
     )
     light_source: Optional[LightSource] = Field(None)
-    bandgap: Optional[Bandgap] = Field(
-        None,
-        description="Bandgap of the perovskite material in eV. Include this field only if the bandgap has been directly measured in the experiment. Do not include estimated or literature values.",
-    )
     encapsulated: Optional[bool] = Field(
         None, description="True if the cell has been encapsulated."
     )
@@ -303,12 +320,6 @@ class PerovskiteSolarCell(BaseModel):
         None,
         description="Include all layers in the cell stack. Only report conditions for those where deposition conditions have been reported in the paper. Include the ETL, HTL, Contact, Absorber, and Substrate layers.",
     )
-
-    @validator("cell_stack")
-    def check_cell_stack(cls, v):
-        if v is not None and len(v) < 4:
-            raise ValueError("Cell stack must have at least 4 layers")
-        return v
 
 
 class PerovskiteSolarCells(BaseModel):
