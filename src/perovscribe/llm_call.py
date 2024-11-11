@@ -17,5 +17,7 @@ def create_text_completion(
     Returns:
         PerovskiteSolarCells: Extracted data in structured format
     """
+    if model_kwargs is None:
+        model_kwargs = {}
     llm = LLMFactory(provider_name, model_name, **model_kwargs)
     return llm.extract_data(pdf_text)
