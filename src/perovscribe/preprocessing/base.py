@@ -12,7 +12,11 @@ class BasePreprocessor:
     ):
         self.cache_dir = os.path.join(cache_dir_root, name) if cache_dir_root else None
         self.name = name
-        self.cache = Cache(self.cache_dir) if self.cache_dir else None
+        self.cache = (
+            Cache(self.cache_dir)
+            if self.cache_dir
+            else Cache(Path.home() / "perovskite_extraction_cache")
+        )
         self.use_cache = use_cache
 
     @abstractmethod
