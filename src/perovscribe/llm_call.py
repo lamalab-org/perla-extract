@@ -1,5 +1,5 @@
+from litellm import completion
 import instructor
-from anthropic import Anthropic
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 from perovscribe.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
 
@@ -29,10 +29,9 @@ def create_text_completion(
     ]
 
     # Call with Instructor
-    client = instructor.from_anthropic(Anthropic())
+    client = instructor.from_litellm(completion)
 
-    # note that client.chat.completions.create will also work
-    resp = client.messages.create(
+    resp = client.chat.completions.create(
         model=model_name,
         max_tokens=8192,
         messages=messages,
