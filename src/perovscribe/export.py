@@ -4,7 +4,9 @@ import io
 from typing import Union, Dict, Any
 from pathlib import Path
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
-from postprocessing import convert_units_in_dict
+from postprocessing import convert_to_nomad_schema
+from loguru import logger 
+
 
 
 def to_json(pydantic_model: PerovskiteSolarCells, output: Union[Path, str]):
@@ -41,7 +43,7 @@ def remove_none_values(input_dict: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 def push_to_nomad(doi: str, response: Dict[str, Any], nomad_url: str, token: str, upload_id: str = None):
-    response = convert_units_in_dict(response)
+    response = convert_to_nomad_schema(response)
     for index, cell in enumerate(response["cells"]):
         transformed_data = {
             "data": cell}
@@ -60,9 +62,7 @@ def push_to_nomad(doi: str, response: Dict[str, Any], nomad_url: str, token: str
                  files={'file': (doi+"-cell-"+str(index)+".archive.json", file)}, timeout=30)
         upload_id = res.json().get('upload_id')
         if upload_id:
-            print(f"doi:{doi} cell:{index}")
-            print(upload_id)
-            print("pushed!", res.status_code)
+            logger.info(f"Doi:{doi} Cell:{index} Upload Id:{upload_id} Status Code:{res.status_code}")
         else:
-            print(f'response is missing upload_id for doi:{doi} cell:{index}')
-            print(res.json())
+            logger.error(f'Response is missing upload_id for Doi:{doi} Cell:{index}')
+            logger.error(f"Response:{res.json()}")
