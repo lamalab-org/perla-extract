@@ -23,11 +23,10 @@ def get_authentication_token(nomad_url: str, username: str, password: str) -> st
         if token:
             return token
 
-        print('response is missing token: ')
-        print(response.json())
+        logger.error(f'response is missing token: {response.json()}')
         return
     except Exception:
-        print('something went wrong trying to get authentication token')
+        logger.error('something went wrong trying to get authentication token')
         return
 
 def remove_none_values(input_dict: Dict[str, Any]) -> Dict[str, Any]:
