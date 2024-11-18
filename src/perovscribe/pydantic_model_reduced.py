@@ -188,12 +188,20 @@ class Volume(UnitValue):
     unit: Optional[Literal["L", "mL", "μL"]] = Field(None)
 
 
+class Solvent(BaseModel):
+    name: Optional[str] = Field(None)
+    volume_fraction: Optional[float] = Field(
+        None,
+        description="The volume fraction of the solvent with respect to the other solvents in the solution",
+    )
+
+
 class ReactionSolution(BaseModel):
     compounds: Optional[List[str]] = Field(None)
     solutes: Optional[List[Solute]] = Field(None)
     volume: Optional[Volume] = Field(None)
     temperature: Optional[Temperature] = Field(None)
-    solvent: Optional[str] = Field(None)
+    solvents: Optional[List[Solvent]] = Field(None)
 
 
 class ProcessingStep(BaseModel):
@@ -202,15 +210,14 @@ class ProcessingStep(BaseModel):
         None,
         description="This is the method for the processing of steps in the design of the cells. Some examples are: Spin-coating, Drop-infiltration, Co-evaporation, Doctor blading, Spray coating, Slot-die coating, Ultrasonic spray, Dropcasting, Inkjet printing, Electrospraying, Thermal-annealing, Antisolvent-quenching.",
     )
-    atmosphere: Literal[
-        "Ambient air", "Dry air", "Air", "N2", "Ar", "He", "H2", "Vacuum", "Other"
+    atmosphere: Optional[
+        Literal[
+            "Ambient air", "Dry air", "Air", "N2", "Ar", "He", "H2", "Vacuum", "Other"
+        ]
     ]
     temperature: Optional[Temperature] = Field(None)
     duration: Optional[Time] = Field(None)
     antisolvent: Optional[str] = Field(None)
-    gas_quenching: Optional[bool] = Field(
-        None, description="Whether the crystallization was induced by gas quenching"
-    )
     solution: Optional[ReactionSolution] = Field(None)
     additional_parameters: Optional[dict] = Field(
         None, description="Any additional parameters specific to this processing step"
@@ -229,6 +236,15 @@ class Stability(BaseModel):
     PCE_at_the_start_of_the_experiment: Optional[PCE]
     PCE_after_1000_hours: Optional[PCE]
     PCE_at_the_end_of_description: Optional[PCE]
+    potential_bias: Optional[
+        Literal[
+            "Open circuit",
+            "MPPT",
+            "Constant potential",
+            "Constant current",
+            "Constant resistance",
+        ]
+    ]
 
 
 class Thickness(BaseModel):
@@ -288,7 +304,7 @@ class Layer(BaseModel):
 class PerovskiteSolarCell(BaseModel):
     perovskite_composition: Optional[PerovskiteComposition] = Field(None)
     device_architecture: Optional[
-        Literal["pin", "nip", "Back contacted", "Front contacted"]
+        Literal["pin", "nip", "Back contacted", "Front contacted", "Other"]
     ] = Field(None)
     pce: Optional[PCE] = Field(None)
     jsc: Optional[JSC] = Field(None)
