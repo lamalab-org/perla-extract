@@ -208,7 +208,7 @@ class ProcessingStep(BaseModel):
     step_name: Optional[str] = Field(None)
     method: Optional[str] = Field(
         None,
-        description="This is the method for the processing of steps in the design of the cells. Some examples are: Spin-coating, Drop-infiltration, Co-evaporation, Doctor blading, Spray coating, Slot-die coating, Ultrasonic spray, Dropcasting, Inkjet printing, Electrospraying, Thermal-annealing, Antisolvent-quenching, Gas quenching.",
+        description="This is the method for the processing of steps in the design of the cells. Some examples are: Spin-coating, Drop-infiltration, Evaporation, Co-evaporation, Doctor blading, Spray coating, Slot-die coating, Ultrasonic spray, Dropcasting, Inkjet printing, Electrospraying, Thermal-annealing, Antisolvent-quenching, Gas quenching.",
     )
     atmosphere: Optional[
         Literal[
