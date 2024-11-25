@@ -201,7 +201,7 @@ class ReactionSolution(BaseModel):
     solutes: Optional[List[Solute]] = Field(None)
     volume: Optional[Volume] = Field(
         None,
-        "This volume is the volume of solution used in the experiment, e.g. the solvent volume that is spin-coated rather than the volume of the stock solution.",
+        description="This volume is the volume of solution used in the experiment, e.g. the solvent volume that is spin-coated rather than the volume of the stock solution.",
     )
     temperature: Optional[Temperature] = Field(None)
     solvents: Optional[List[Solvent]] = Field(None)
