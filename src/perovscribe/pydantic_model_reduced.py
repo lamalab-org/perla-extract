@@ -199,7 +199,10 @@ class Solvent(BaseModel):
 class ReactionSolution(BaseModel):
     compounds: Optional[List[str]] = Field(None)
     solutes: Optional[List[Solute]] = Field(None)
-    volume: Optional[Volume] = Field(None)
+    volume: Optional[Volume] = Field(
+        None,
+        description="This volume is the volume of solution used in the experiment, e.g. the solvent volume that is spin-coated rather than the volume of the stock solution.",
+    )
     temperature: Optional[Temperature] = Field(None)
     solvents: Optional[List[Solvent]] = Field(None)
 
@@ -208,7 +211,7 @@ class ProcessingStep(BaseModel):
     step_name: Optional[str] = Field(None)
     method: Optional[str] = Field(
         None,
-        description="This is the method for the processing of steps in the design of the cells. Some examples are: Spin-coating, Drop-infiltration, Co-evaporation, Doctor blading, Spray coating, Slot-die coating, Ultrasonic spray, Dropcasting, Inkjet printing, Electrospraying, Thermal-annealing, Antisolvent-quenching, Gas quenching.",
+        description="This is the method for the processing of steps in the design of the cells. Some examples are: Spin-coating, Drop-infiltration, Evaporation, Co-evaporation, Doctor blading, Spray coating, Slot-die coating, Ultrasonic spray, Dropcasting, Inkjet printing, Electrospraying, Thermal-annealing, Antisolvent-quenching, Gas quenching.",
     )
     atmosphere: Optional[
         Literal[
