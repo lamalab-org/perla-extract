@@ -15,3 +15,13 @@ def test_evaluations():
         worst_extraction = json.load(f)
     assert Evaluations(truth, best_extraction).score > Evaluations(truth, mid_extraction).score
     assert Evaluations(truth, mid_extraction).score > Evaluations(truth, worst_extraction).score
+
+def test_matching():
+    with open(os.path.dirname(os.path.realpath(__file__)) + os.sep + "matching_1.json") as f:
+        truth = json.load(f)
+    with open(os.path.dirname(os.path.realpath(__file__)) + os.sep + "matching_2.json") as f:
+        extraction = json.load(f)
+
+    for match in Evaluations(truth, extraction).match():
+        assert str(match["truth"]) == str(match["extraction"])
+    
