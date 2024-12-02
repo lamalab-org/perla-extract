@@ -173,9 +173,9 @@ class Humidity(UnitValue):
 
 class Concentration(UnitValue):
     value: Optional[float] = Field(None)
-    unit: Optional[Literal["mol/L", "mmol/L", "g/L", "mg/L", "wt%", "vol%", "M"]] = (
-        Field(None)
-    )
+    unit: Optional[
+        Literal["mol/L", "mmol/L", "g/L", "mg/L", "mg/mL", "wt%", "vol%", "M"]
+    ] = Field(None)
 
 
 class Solute(BaseModel):
