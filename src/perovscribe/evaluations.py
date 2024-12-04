@@ -87,7 +87,6 @@ def match_cells(truth_cells: List[dict], extracted_cells: List[dict]) -> List[di
         for tid, t in enumerate(truth_cells)
     ]
     indexes = m.compute(scores)
-    print(indexes)
 
     matches = [
         {
