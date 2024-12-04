@@ -1,4 +1,4 @@
-from perovscribe.evaluations import Evaluations
+from perovscribe.evaluations import Evaluations, match_cells
 
 
 def test_evaluations(truth, best_extraction, mid_extraction, worst_extraction):
@@ -13,5 +13,5 @@ def test_evaluations(truth, best_extraction, mid_extraction, worst_extraction):
 
 
 def test_matching(matching_1, matching_2):
-    for match in Evaluations(matching_1, matching_2).match():
+    for match in match_cells(matching_1["cells"], matching_2["cells"]):
         assert str(match["truth"]) == str(match["extraction"])

@@ -47,27 +47,54 @@ class Evaluations:
             else 1
         )
 
-    def match(self) -> matches:
-        """Matches cells from the truth and extraction and stores them in a new object called matches."""
-        m = Munkres()
 
-        # rows = truth, cols = extraction
-        scores = [
-            [
-                1 - Evaluations(t["layers"], e["layers"]).score
-                for e in self.extraction["cells"]
-            ]
-            for t in self.truth["cells"]
+def sanitized_deepdiff(lhs: dict, rhs: dict) -> int:
+    """Compute a score ranging from 0 to 1, where 1 indicates the highest similarity"""
+    deep_results = DeepDiff(lhs, rhs, get_deep_distance=True)
+    return 1 - deep_results["deep_distance"] if "deep_distance" in deep_results else 1
+
+
+def match_cells(truth_cells: List[dict], extracted_cells: List[dict]) -> List[dict]:
+    """Matches cells from the truth and extraction and stores them in a new object called matches."""
+    m = Munkres()
+
+    truth_stacks = [
+        "".join([layer["name"] for layer in t["layers"]]) for t in truth_cells
+    ]
+    extracted_stacks = [
+        "".join([layer["name"] for layer in e["layers"]]) for e in extracted_cells
+    ]
+    truth_depositions = [
+        [layer.get("deposition") for layer in t["layers"]] for t in truth_cells
+    ]
+    extracted_depositions = [
+        [layer.get("deposition") for layer in e["layers"]] for e in extracted_cells
+    ]
+
+    # rows = truth, cols = extraction
+    scores = [
+        [
+            (0.7 * -sanitized_deepdiff(truth_stacks[tid], extracted_stacks[eid]))
+            + (
+                0.2
+                * -sanitized_deepdiff(
+                    truth_depositions[tid], extracted_depositions[eid]
+                )
+            )
+            + (0.1 * -sanitized_deepdiff(t, e))
+            for eid, e in enumerate(extracted_cells)
         ]
-        indexes = m.compute(scores)
-        print(indexes)
+        for tid, t in enumerate(truth_cells)
+    ]
+    indexes = m.compute(scores)
+    print(indexes)
 
-        self.matches = [
-            {
-                "truth": self.truth["cells"][row],
-                "extraction": self.extraction["cells"][col],
-            }
-            for row, col in indexes
-        ]
+    matches = [
+        {
+            "truth": deepcopy(truth_cells[row]),
+            "extraction": deepcopy(extracted_cells[col]),
+        }
+        for row, col in indexes
+    ]
 
-        return deepcopy(self.matches)
+    return matches
