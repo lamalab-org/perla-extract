@@ -50,7 +50,7 @@ class Evaluations:
 
 def sanitized_deepdiff(lhs: dict, rhs: dict) -> int:
     """Compute a score ranging from 0 to 1, where 1 indicates the highest similarity"""
-    deep_results = DeepDiff(lhs, rhs, get_deep_distance=True)
+    deep_results = DeepDiff(lhs, rhs, get_deep_distance=True, ignore_string_case=True)
     return 1 - deep_results["deep_distance"] if "deep_distance" in deep_results else 1
 
 
