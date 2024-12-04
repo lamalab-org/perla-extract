@@ -70,3 +70,17 @@ def matching_1():
 @pytest.fixture()
 def matching_2():
     return json.load(open(os.path.join(THIS_DIR, "test_files", "matching_2.json")))
+
+
+@pytest.fixture()
+def normalize_input():
+    return json.load(
+        open(os.path.join(THIS_DIR, "test_files", "test_normalize_input.json"))
+    )
+
+
+@pytest.fixture()
+def normalize_output():
+    return json.load(
+        open(os.path.join(THIS_DIR, "test_files", "test_normalize_output.json"))
+    )
