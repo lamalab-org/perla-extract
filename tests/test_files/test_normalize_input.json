@@ -36,8 +36,8 @@
               "solution": null,
               "step_name": null,
               "temperature": {
-                "unit": "\u00b0C",
-                "value": 140.0
+                "unit": "K",
+                "value": 413.15
               }
             }
           ],
@@ -107,8 +107,8 @@
           "functionality": "Contact",
           "name": "LiF",
           "thickness": {
-            "unit": "nm",
-            "value": 1.0
+            "unit": "mm",
+            "value": 1e-06
           }
         },
         {
