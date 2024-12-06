@@ -2,6 +2,42 @@ from typing import List, Dict, Union, Optional, Any, Tuple
 from dataclasses import dataclass
 from deepdiff import DeepDiff
 import numpy as np
+import json
+
+
+PARAMETER_CONFIG = {
+    "pce": {
+        "display_name": "PCE",
+        "units": "%",
+        "getter": lambda cell: cell.get("pce", {}).get("value", "N/A"),
+        "safe_getter": lambda cell: cell.get("pce", {}).get("value"),
+    },
+    "jsc": {
+        "display_name": "JSC",
+        "units": "mA cm^-2",
+        "getter": lambda cell: cell.get("jsc", {}).get("value", "N/A"),
+        "safe_getter": lambda cell: cell.get("jsc", {}).get("value"),
+    },
+    "voc": {
+        "display_name": "VOC",
+        "units": "V",
+        "getter": lambda cell: cell.get("voc", {}).get("value", "N/A"),
+        "safe_getter": lambda cell: cell.get("voc", {}).get("value"),
+    },
+    "ff": {
+        "display_name": "FF",
+        "units": "",
+        "getter": lambda cell: cell.get("ff", {}).get("value", "N/A"),
+        "safe_getter": lambda cell: cell.get("ff", {}).get("value"),
+    },
+}
+
+LAYER_FIELDS = {
+    "name": "Name",
+    "functionality": "Functionality",
+    "thickness": "Thickness",
+    "deposition": "Deposition Method",
+}
 
 
 @dataclass
@@ -23,42 +59,25 @@ class DetailedScore:
     def calculate(
         cls, truth_cell: Dict[str, Any], pred_cell: Dict[str, Any]
     ) -> "DetailedScore":
-        def safe_get_value(cell: Dict[str, Any], param: str) -> Optional[float]:
-            try:
-                return cell.get(param, {}).get("value")
-            except AttributeError:
-                return None
+        maes = {}
+        for param_key, config in PARAMETER_CONFIG.items():
+            truth_val = config["safe_getter"](truth_cell)
+            pred_val = config["safe_getter"](pred_cell)
 
-        def calculate_mae(
-            truth_val: Optional[float], pred_val: Optional[float]
-        ) -> float:
             if truth_val is None or pred_val is None:
-                return np.nan
-            return abs(truth_val - pred_val)
+                maes[f"{param_key}_mae"] = np.nan
+            else:
+                maes[f"{param_key}_mae"] = abs(truth_val - pred_val)
 
-        pce_mae = calculate_mae(
-            safe_get_value(truth_cell, "pce"), safe_get_value(pred_cell, "pce")
-        )
-        jsc_mae = calculate_mae(
-            safe_get_value(truth_cell, "jsc"), safe_get_value(pred_cell, "jsc")
-        )
-        voc_mae = calculate_mae(
-            safe_get_value(truth_cell, "voc"), safe_get_value(pred_cell, "voc")
-        )
-        ff_mae = calculate_mae(
-            safe_get_value(truth_cell, "ff"), safe_get_value(pred_cell, "ff")
-        )
-
-        return cls(pce_mae=pce_mae, jsc_mae=jsc_mae, voc_mae=voc_mae, ff_mae=ff_mae)
+        return cls(**maes)
 
     @classmethod
     def aggregate(cls, scores: List["DetailedScore"]) -> "DetailedScore":
-        return cls(
-            pce_mae=np.nanmean([s.pce_mae for s in scores]),
-            jsc_mae=np.nanmean([s.jsc_mae for s in scores]),
-            voc_mae=np.nanmean([s.voc_mae for s in scores]),
-            ff_mae=np.nanmean([s.ff_mae for s in scores]),
-        )
+        aggregated_maes = {}
+        for param_key in PARAMETER_CONFIG.keys():
+            values = [getattr(s, f"{param_key}_mae") for s in scores]
+            aggregated_maes[f"{param_key}_mae"] = np.nanmean(values)
+        return cls(**aggregated_maes)
 
 
 @dataclass
@@ -134,43 +153,20 @@ def check_critical_params_within_tolerance(
     truth: Dict[str, Any], pred: Dict[str, Any], tolerance_config: ToleranceConfig
 ) -> float:
     try:
-        has_pce = "pce" in pred and "value" in pred["pce"]
-        has_jsc = "jsc" in pred and "value" in pred["jsc"]
-        has_voc = "voc" in pred and "value" in pred["voc"]
-        has_ff = "ff" in pred and "value" in pred["ff"]
-
-        if not any([has_pce, has_jsc, has_voc, has_ff]):
-            return 0.0
-
         matches = []
-        if has_pce:
-            pce_diff = (
-                abs(truth["pce"]["value"] - pred["pce"]["value"])
-                / truth["pce"]["value"]
-            )
-            matches.append(pce_diff <= tolerance_config.pce_tolerance)
-        if has_jsc:
-            jsc_diff = (
-                abs(truth["jsc"]["value"] - pred["jsc"]["value"])
-                / truth["jsc"]["value"]
-            )
-            matches.append(jsc_diff <= tolerance_config.jsc_tolerance)
-        if has_voc:
-            voc_diff = (
-                abs(truth["voc"]["value"] - pred["voc"]["value"])
-                / truth["voc"]["value"]
-            )
-            matches.append(voc_diff <= tolerance_config.voc_tolerance)
-        if has_ff:
-            ff_diff = (
-                abs(truth["ff"]["value"] - pred["ff"]["value"]) / truth["ff"]["value"]
-            )
-            matches.append(ff_diff <= tolerance_config.ff_tolerance)
+        for param_key, config in PARAMETER_CONFIG.items():
+            truth_val = config["safe_getter"](truth)
+            pred_val = config["safe_getter"](pred)
+
+            if truth_val is not None and pred_val is not None:
+                diff = abs(truth_val - pred_val) / truth_val
+                tolerance = getattr(tolerance_config, f"{param_key}_tolerance")
+                matches.append(diff <= tolerance)
 
         stack_match = truth["cell_stack"] == pred["cell_stack"]
         matches.append(stack_match)
 
-        return float(all(matches))
+        return float(all(matches)) if matches else 0.0
     except (KeyError, TypeError, ZeroDivisionError):
         return 0.0
 
@@ -192,14 +188,7 @@ def get_layer_differences(
     truth_layer: Dict[str, Any], pred_layer: Dict[str, Any]
 ) -> Dict[str, Dict[str, Any]]:
     differences = {}
-    fields_to_check = {
-        "name": "Name",
-        "functionality": "Functionality",
-        "thickness": "Thickness",
-        "deposition": "Deposition Method",
-    }
-
-    for field, display_name in fields_to_check.items():
+    for field, display_name in LAYER_FIELDS.items():
         truth_value = truth_layer.get(field)
         pred_value = pred_layer.get(field)
 
@@ -222,9 +211,13 @@ def format_layer_difference(
         truth_val = "None" if diff["truth"] is None else diff["truth"]
         extracted_val = "None" if diff["extracted"] is None else diff["extracted"]
 
-        lines.append(f"        {diff['display_name']}:")
-        lines.append(f"          Groundtruth: {truth_val}")
-        lines.append(f"          Extracted: {extracted_val}")
+        lines.extend(
+            [
+                f"        {diff['display_name']}:",
+                f"          Groundtruth: {truth_val}",
+                f"          Extracted: {extracted_val}",
+            ]
+        )
 
     return lines
 
@@ -270,26 +263,70 @@ def add_layer_difference_section(
 
 
 def generate_detailed_report(
-    overall_score: OverallScore, tolerance_config: ToleranceConfig
+    overall_score: OverallScore,
+    tolerance_config: ToleranceConfig,
+    truth_cells: List[Dict[str, Any]],
+    extracted_cells: List[Dict[str, Any]],
 ) -> str:
+    def format_device_section(device_score, cell, prefix=""):
+        lines = []
+        lines.append(f"{prefix}ID/Notes: {device_score.device_id}")
+
+        for param_key, config in PARAMETER_CONFIG.items():
+            value = config["getter"](cell)
+            unit_str = f" {config['units']}" if config["units"] else ""
+            lines.append(f"{prefix}{config['display_name']}: {value}{unit_str}")
+
+        lines.append(f"{prefix}Stack: {', '.join(cell['cell_stack'])}")
+        lines.append(
+            f"{prefix}Composition: {cell.get('perovskite_composition', 'N/A')}"
+        )
+        return lines
+
+    def format_metrics_section(device_score, truth_cell, pred_cell, tolerance_config):
+        lines = []
+        for param_key, config in PARAMETER_CONFIG.items():
+            truth_val = config["safe_getter"](truth_cell)
+            pred_val = config["safe_getter"](pred_cell)
+
+            if truth_val is not None and pred_val is not None:
+                rel_error = abs(truth_val - pred_val) / truth_val * 100
+                tolerance = getattr(tolerance_config, f"{param_key}_tolerance")
+                match = (abs(truth_val - pred_val) / truth_val) <= tolerance
+
+                mae = getattr(device_score.detailed_score, f"{param_key}_mae")
+
+                lines.extend(
+                    [
+                        f"    {config['display_name']} Absolute Difference: {mae:.4f}"
+                        if not np.isnan(mae)
+                        else f"    {config['display_name']} Absolute Difference: N/A",
+                        f"    {config['display_name']} Relative Error: {rel_error:.4f}%"
+                        if not np.isnan(rel_error)
+                        else f"    {config['display_name']} Relative Error: N/A",
+                        f"    {config['display_name']} Match (within {tolerance*100}%): {match}",
+                    ]
+                )
+
+        lines.append(
+            f"    Stack Similarity: {1.0 if not device_score.deepdiff_stack else 0.0:.2f}"
+        )
+        return lines
+
     report = [
         "DETAILED MATCHING ANALYSIS REPORT",
         "=" * 80,
         "",
         "1. DEVICE COUNTS",
         "-" * 80,
+        f"Total truth devices: {overall_score.num_devices_found}",
+        f"Total extracted devices: {overall_score.num_devices_matched}",
+        f"Total matched pairs: {len(overall_score.device_scores)}",
+        "",
+        "2. MATCHED PAIRS ANALYSIS",
+        "-" * 80,
+        "",
     ]
-    report.extend(
-        [
-            f"Total truth devices: {overall_score.num_devices_found}",
-            f"Total extracted devices: {overall_score.num_devices_matched}",
-            f"Total matched pairs: {len(overall_score.device_scores)}",
-            "",
-            "2. MATCHED PAIRS ANALYSIS",
-            "-" * 80,
-            "",
-        ]
-    )
 
     for idx, device_score in enumerate(overall_score.device_scores, 1):
         truth_cell = next(
@@ -310,125 +347,24 @@ def generate_detailed_report(
         )
 
         if truth_cell and pred_cell:
-            pce_rel_error = (
-                abs(truth_cell["pce"]["value"] - pred_cell["pce"]["value"])
-                / truth_cell["pce"]["value"]
-                * 100
-                if "pce" in pred_cell and "value" in pred_cell["pce"]
-                else np.nan
-            )
-            jsc_rel_error = (
-                abs(truth_cell["jsc"]["value"] - pred_cell["jsc"]["value"])
-                / truth_cell["jsc"]["value"]
-                * 100
-                if "jsc" in pred_cell and "value" in pred_cell["jsc"]
-                else np.nan
-            )
-            voc_rel_error = (
-                abs(truth_cell["voc"]["value"] - pred_cell["voc"]["value"])
-                / truth_cell["voc"]["value"]
-                * 100
-                if "voc" in pred_cell and "value" in pred_cell["voc"]
-                else np.nan
-            )
-            ff_rel_error = (
-                abs(truth_cell["ff"]["value"] - pred_cell["ff"]["value"])
-                / truth_cell["ff"]["value"]
-                * 100
-                if "ff" in pred_cell and "value" in pred_cell["ff"]
-                else np.nan
-            )
-
-            pce_match = (
-                abs(truth_cell["pce"]["value"] - pred_cell["pce"]["value"])
-                / truth_cell["pce"]["value"]
-                <= tolerance_config.pce_tolerance
-                if "pce" in pred_cell and "value" in pred_cell["pce"]
-                else False
-            )
-            jsc_match = (
-                abs(truth_cell["jsc"]["value"] - pred_cell["jsc"]["value"])
-                / truth_cell["jsc"]["value"]
-                <= tolerance_config.jsc_tolerance
-                if "jsc" in pred_cell and "value" in pred_cell["jsc"]
-                else False
-            )
-            voc_match = (
-                abs(truth_cell["voc"]["value"] - pred_cell["voc"]["value"])
-                / truth_cell["voc"]["value"]
-                <= tolerance_config.voc_tolerance
-                if "voc" in pred_cell and "value" in pred_cell["voc"]
-                else False
-            )
-            ff_match = (
-                abs(truth_cell["ff"]["value"] - pred_cell["ff"]["value"])
-                / truth_cell["ff"]["value"]
-                <= tolerance_config.ff_tolerance
-                if "ff" in pred_cell and "value" in pred_cell["ff"]
-                else False
-            )
-
-            stack_similarity = 1.0 if not device_score.deepdiff_stack else 0.0
-
+            report.append(f"Pair {idx}:")
+            report.append("  Truth Device:")
+            report.extend(format_device_section(device_score, truth_cell, "    "))
+            report.append("  Extracted Device:")
+            report.extend(format_device_section(device_score, pred_cell, "    "))
+            report.append("  Comparison Metrics:")
             report.extend(
-                [
-                    f"Pair {idx}:",
-                    "  Truth Device:",
-                    f"    ID/Notes: {device_score.device_id}",
-                    f"    PCE: {truth_cell['pce']['value']} %",
-                    f"    JSC: {truth_cell['jsc']['value']} mA cm^-2",
-                    f"    VOC: {truth_cell['voc']['value']} V",
-                    f"    FF: {truth_cell['ff']['value']}",
-                    f"    Stack: {', '.join(truth_cell['cell_stack'])}",
-                    f"    Composition: {truth_cell.get('perovskite_composition', 'N/A')}",
-                    "  Extracted Device:",
-                    f"    ID/Notes: {device_score.device_id}",
-                    f"    PCE: {pred_cell.get('pce', {}).get('value', 'N/A')} %",
-                    f"    JSC: {pred_cell.get('jsc', {}).get('value', 'N/A')} mA cm^-2",
-                    f"    VOC: {pred_cell.get('voc', {}).get('value', 'N/A')} V",
-                    f"    FF: {pred_cell.get('ff', {}).get('value', 'N/A')}",
-                    f"    Stack: {', '.join(pred_cell['cell_stack'])}",
-                    f"    Composition: {pred_cell.get('perovskite_composition', 'N/A')}",
-                    "  Comparison Metrics:",
-                    f"    PCE Absolute Difference: {device_score.detailed_score.pce_mae:.4f}"
-                    if not np.isnan(device_score.detailed_score.pce_mae)
-                    else "    PCE Absolute Difference: N/A",
-                    f"    PCE Relative Error: {pce_rel_error:.4f}%"
-                    if not np.isnan(pce_rel_error)
-                    else "    PCE Relative Error: N/A",
-                    f"    PCE Match (within {tolerance_config.pce_tolerance*100}%): {pce_match}",
-                    f"    JSC Absolute Difference: {device_score.detailed_score.jsc_mae:.4f}"
-                    if not np.isnan(device_score.detailed_score.jsc_mae)
-                    else "    JSC Absolute Difference: N/A",
-                    f"    JSC Relative Error: {jsc_rel_error:.4f}%"
-                    if not np.isnan(jsc_rel_error)
-                    else "    JSC Relative Error: N/A",
-                    f"    JSC Match (within {tolerance_config.jsc_tolerance*100}%): {jsc_match}",
-                    f"    VOC Absolute Difference: {device_score.detailed_score.voc_mae:.4f}"
-                    if not np.isnan(device_score.detailed_score.voc_mae)
-                    else "    VOC Absolute Difference: N/A",
-                    f"    VOC Relative Error: {voc_rel_error:.4f}%"
-                    if not np.isnan(voc_rel_error)
-                    else "    VOC Relative Error: N/A",
-                    f"    VOC Match (within {tolerance_config.voc_tolerance*100}%): {voc_match}",
-                    f"    FF Match (within {tolerance_config.ff_tolerance*100}%): {ff_match}",
-                    f"    FF Absolute Difference: {device_score.detailed_score.ff_mae:.4f}"
-                    if not np.isnan(device_score.detailed_score.ff_mae)
-                    else "    FF Absolute Difference: N/A",
-                    f"    FF Relative Error: {ff_rel_error:.4f}%"
-                    if not np.isnan(ff_rel_error)
-                    else "    FF Relative Error: N/A",
-                    f"    Stack Similarity: {stack_similarity:.2f}",
-                ]
+                format_metrics_section(
+                    device_score, truth_cell, pred_cell, tolerance_config
+                )
             )
-
             add_layer_difference_section(report, truth_cell, pred_cell)
 
     return "\n".join(report)
 
 
 def generate_performance_report(overall_score: OverallScore) -> str:
-    results = [
+    lines = [
         "=== Overall Extraction Performance ===",
         f"Devices Found: {overall_score.num_devices_found}",
         f"Devices Matched: {overall_score.num_devices_matched}",
@@ -436,55 +372,45 @@ def generate_performance_report(overall_score: OverallScore) -> str:
         f"Average Critical Parameters Precision: {overall_score.avg_critical_precision:.3f}",
         f"Sum Critical Parameters Precision: {overall_score.sum_critical_precision:.3f}",
         "\n=== Aggregate Parameter Extraction Accuracy ===",
-        f"PCE MAE: {overall_score.detailed_aggregate.pce_mae:.3f}"
-        if not np.isnan(overall_score.detailed_aggregate.pce_mae)
-        else "PCE MAE: N/A",
-        f"JSC MAE: {overall_score.detailed_aggregate.jsc_mae:.3f}"
-        if not np.isnan(overall_score.detailed_aggregate.jsc_mae)
-        else "JSC MAE: N/A",
-        f"VOC MAE: {overall_score.detailed_aggregate.voc_mae:.3f}"
-        if not np.isnan(overall_score.detailed_aggregate.voc_mae)
-        else "VOC MAE: N/A",
-        f"FF MAE: {overall_score.detailed_aggregate.ff_mae:.3f}"
-        if not np.isnan(overall_score.detailed_aggregate.ff_mae)
-        else "FF MAE: N/A",
-        "\n=== Device Level Scores ===",
     ]
 
-    for device in overall_score.device_scores:
-        results.extend(
-            [
-                f"\nDevice: {device.device_id}",
-                f"Critical Parameters Precision: {device.critical_params_precision:.3f}",
-                f"Stack differences: {len(device.deepdiff_stack.get('values_changed', {}))}",
-                f"Layer differences: {len(device.deepdiff_layers.get('values_changed', {}))}",
-                f"PCE MAE: {device.detailed_score.pce_mae:.3f}"
-                if not np.isnan(device.detailed_score.pce_mae)
-                else "PCE MAE: N/A",
-                f"JSC MAE: {device.detailed_score.jsc_mae:.3f}"
-                if not np.isnan(device.detailed_score.jsc_mae)
-                else "JSC MAE: N/A",
-                f"VOC MAE: {device.detailed_score.voc_mae:.3f}"
-                if not np.isnan(device.detailed_score.voc_mae)
-                else "VOC MAE: N/A",
-                f"FF MAE: {device.detailed_score.ff_mae:.3f}"
-                if not np.isnan(device.detailed_score.ff_mae)
-                else "FF MAE: N/A",
-            ]
+    for param_key, config in PARAMETER_CONFIG.items():
+        mae = getattr(overall_score.detailed_aggregate, f"{param_key}_mae")
+        lines.append(
+            f"{config['display_name']} MAE: {mae:.3f}"
+            if not np.isnan(mae)
+            else f"{config['display_name']} MAE: N/A"
         )
 
-    return "\n".join(results)
+    lines.append("\n=== Device Level Scores ===")
+
+    for device in overall_score.device_scores:
+        device_lines = [
+            f"\nDevice: {device.device_id}",
+            f"Critical Parameters Precision: {device.critical_params_precision:.3f}",
+            f"Stack differences: {len(device.deepdiff_stack.get('values_changed', {}))}",
+            f"Layer differences: {len(device.deepdiff_layers.get('values_changed', {}))}",
+        ]
+
+        for param_key, config in PARAMETER_CONFIG.items():
+            mae = getattr(device.detailed_score, f"{param_key}_mae")
+            device_lines.append(
+                f"{config['display_name']} MAE: {mae:.3f}"
+                if not np.isnan(mae)
+                else f"{config['display_name']} MAE: N/A"
+            )
+
+        lines.extend(device_lines)
+
+    return "\n".join(lines)
 
 
 def main():
-    import json
-
     with open("truth_test_file.json", "r") as f:
         truth_data = json.load(f)
     with open("extraction_test_file.json", "r") as f:
         extracted_data = json.load(f)
 
-    global truth_cells, extracted_cells
     truth_cells = truth_data["cells"]
     extracted_cells = extracted_data["cells"]
 
@@ -494,12 +420,14 @@ def main():
 
     scores = OverallScore.calculate(truth_cells, extracted_cells, tolerance_config)
 
-    detailed_report = generate_detailed_report(scores, tolerance_config)
+    detailed_report = generate_detailed_report(
+        scores, tolerance_config, truth_cells, extracted_cells
+    )
     performance_report = generate_performance_report(scores)
 
-    with open("detailed_analysis_report.txt", "w") as f:
+    with open("detailed_analysis_report_2.txt", "w") as f:
         f.write(detailed_report)
-    with open("overall_performance_analysis_report.txt", "w") as f:
+    with open("overall_performance_analysis_report_2.txt", "w") as f:
         f.write(performance_report)
 
 
