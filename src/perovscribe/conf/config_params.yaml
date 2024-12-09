@@ -1,0 +1,24 @@
+defaults:
+  - _self_
+
+parameters:
+  pce:
+    units: "%"
+  jsc:
+    units: "mA cm^-2"
+  voc:
+    units: "V"
+  ff:
+    units: ""
+
+tolerances:
+  pce: 0.01
+  jsc: 0.01
+  voc: 0.01
+  ff: 0.01
+
+layer_fields:
+  name: "Name"
+  functionality: "Functionality"
+  thickness: "Thickness"
+  deposition: "Deposition Method"
