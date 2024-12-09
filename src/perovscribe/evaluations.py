@@ -59,16 +59,20 @@ def match_cells(truth_cells: List[dict], extracted_cells: List[dict]) -> List[di
     m = Munkres()
 
     truth_stacks = [
-        "".join([layer["name"] for layer in t["layers"]]) for t in truth_cells
+        "".join([layer.get("name", "") for layer in t.get("layers") or []])
+        for t in truth_cells
     ]
     extracted_stacks = [
-        "".join([layer["name"] for layer in e["layers"]]) for e in extracted_cells
+        "".join([layer.get("name", "") for layer in e.get("layers") or []])
+        for e in extracted_cells
     ]
     truth_depositions = [
-        [layer.get("deposition") for layer in t["layers"]] for t in truth_cells
+        [layer.get("deposition") for layer in t.get("layers") or []]
+        for t in truth_cells
     ]
     extracted_depositions = [
-        [layer.get("deposition") for layer in e["layers"]] for e in extracted_cells
+        [layer.get("deposition") for layer in e.get("layers") or []]
+        for e in extracted_cells
     ]
 
     # rows = truth, cols = extraction
@@ -95,5 +99,5 @@ def match_cells(truth_cells: List[dict], extracted_cells: List[dict]) -> List[di
         }
         for row, col in indexes
     ]
-
+    print(indexes)
     return matches

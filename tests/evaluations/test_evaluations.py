@@ -15,3 +15,9 @@ def test_evaluations(truth, best_extraction, mid_extraction, worst_extraction):
 def test_matching(matching_1, matching_2):
     for match in match_cells(matching_1["cells"], matching_2["cells"]):
         assert str(match["truth"]) == str(match["extraction"])
+
+    matching_1["cells"][1]["layers"] = None
+    matching_2["cells"][0]["layers"] = None
+
+    for match in match_cells(matching_1["cells"], matching_2["cells"]):
+        assert str(match["truth"]) == str(match["extraction"])
