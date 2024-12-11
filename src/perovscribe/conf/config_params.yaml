@@ -1,6 +1,3 @@
-defaults:
-  - _self_
-
 parameters:
   pce:
     units: "%"
@@ -12,10 +9,10 @@ parameters:
     units: ""
 
 tolerances:
-  pce: 0.01
-  jsc: 0.01
-  voc: 0.01
-  ff: 0.01
+  pce: 0.1 # %
+  jsc: 0.1 # mA cm^-2
+  voc: 0.01 # V
+  ff: 0.1 # %
 
 layer_fields:
   name: "Name"

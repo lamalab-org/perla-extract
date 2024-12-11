@@ -43,15 +43,10 @@ class DetailedScore:
 @dataclass
 class ParameterToleranceResult:
     within_tolerance: bool
-    relative_error: Optional[float]
+    error: Optional[float]
     truth_value: Optional[float]
     pred_value: Optional[float]
     tolerance: Optional[float] = None
-
-    def __str__(self) -> str:
-        if self.relative_error is not None:
-            return f"Error: {self.relative_error:.4f}, Within {self.tolerance*100:.1f}% tolerance: {self.within_tolerance}"
-        return f"Match: {self.within_tolerance}"
 
 
 @dataclass
@@ -129,19 +124,19 @@ class OverallScore:
 
             device_score = DeviceLevelScore(
                 device_id=truth.get("additional_notes", "unknown"),
-                deepdiff_overall=DeepDiff(truth, pred, ignore_order=True),
+                deepdiff_overall=DeepDiff(truth, pred, ignore_order=True, ignore_string_case=True, ignore_numeric_type_changes=True),
                 deepdiff_stack=DeepDiff(
-                    truth["cell_stack"], pred["cell_stack"], ignore_order=True
+                    truth["cell_stack"], pred["cell_stack"], ignore_order=False, ignore_string_case=True, ignore_numeric_type_changes=True
                 ),
                 deepdiff_layers=DeepDiff(
-                    truth["layers"], pred["layers"], ignore_order=True
+                    truth["layers"], pred["layers"], ignore_order=True,  ignore_string_case=True, ignore_numeric_type_changes=True
                 ),
                 parameter_scores=parameter_scores,
                 detailed_score=detailed_score,
             )
             device_scores.append(device_score)
 
-        recall = len(device_scores) / len(truth_cells) if truth_cells else 0
+        recall = len(device_scores) / len(truth_cells) if truth_cells else np.nan
         detailed_aggregate = DetailedScore.aggregate(detailed_scores)
 
         return cls(
@@ -183,22 +178,18 @@ def check_essential_parameters_within_tolerance(
 
             if truth_val is not None and pred_val is not None:
                 try:
-                    rel_error = (
-                        abs(truth_val - pred_val) / truth_val
-                        if truth_val != 0
-                        else float("inf")
-                    )
-                    within_tol = rel_error <= tolerance
+                    error = abs(truth_val - pred_val)
+                    within_tol = error <= tolerance
                 except (TypeError, ValueError):
-                    rel_error = None
+                    error = None
                     within_tol = False
             else:
-                rel_error = None
+                error = None
                 within_tol = False
 
             results[param] = ParameterToleranceResult(
                 within_tolerance=within_tol,
-                relative_error=rel_error,
+                error=error,
                 truth_value=truth_val,
                 pred_value=pred_val,
                 tolerance=tolerance,

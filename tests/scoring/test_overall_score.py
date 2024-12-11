@@ -130,27 +130,6 @@ class TestDetailedScore:
         assert aggregated.ff_mae == pytest.approx(0.015)
 
 
-class TestParameterToleranceResult:
-    def test_str_representation_with_error(self):
-        result = ParameterToleranceResult(
-            within_tolerance=True,
-            relative_error=0.03,
-            truth_value=20.0,
-            pred_value=19.4,
-            tolerance=0.05,
-        )
-        assert str(result) == "Error: 0.0300, Within 5.0% tolerance: True"
-
-    def test_str_representation_without_error(self):
-        result = ParameterToleranceResult(
-            within_tolerance=False,
-            relative_error=None,
-            truth_value=None,
-            pred_value=None,
-        )
-        assert str(result) == "Match: False"
-
-
 class TestDeviceLevelScore:
     @pytest.fixture
     def sample_device_score(self, sample_cell_pair):
