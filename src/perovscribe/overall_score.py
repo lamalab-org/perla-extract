@@ -2,9 +2,7 @@ from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from deepdiff import DeepDiff
 import numpy as np
-import hydra
 from omegaconf import DictConfig
-from perovscribe.evaluations import match_cells
 
 
 @dataclass
@@ -218,22 +216,22 @@ def check_essential_parameters_within_tolerance(
     return results
 
 
-@hydra.main(version_base=None, config_path="././conf", config_name="config_params")
-def main(cfg: DictConfig, truth_cells: List[dict], extracted_cells: List[dict]) -> None:
-    """
-    Main function to evaluate extraction performance.
+# @hydra.main(version_base=None, config_path="././conf", config_name="config_params")
+# def main(cfg: DictConfig, truth_cells: List[dict], extracted_cells: List[dict]) -> None:
+#     """
+#     Main function to evaluate extraction performance.
 
-    Args:
-        cfg (DictConfig): Configuration object
-        truth_cells (List[dict]): List of ground truth cells
-        extracted_cells (List[dict]): List of extracted cells
-    """
-    matched_pairs = match_cells(truth_cells, extracted_cells)
-    matched_truth = [pair["truth"] for pair in matched_pairs]
-    matched_extracted = [pair["extraction"] for pair in matched_pairs]
-    scores = OverallScore.calculate(matched_truth, matched_extracted, cfg)
-    print(scores)
+#     Args:
+#         cfg (DictConfig): Configuration object
+#         truth_cells (List[dict]): List of ground truth cells
+#         extracted_cells (List[dict]): List of extracted cells
+#     """
+#     matched_pairs = match_cells(truth_cells, extracted_cells)
+#     matched_truth = [pair["truth"] for pair in matched_pairs]
+#     matched_extracted = [pair["extraction"] for pair in matched_pairs]
+#     scores = OverallScore.calculate(matched_truth, matched_extracted, cfg)
+#     print(scores)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

@@ -23,7 +23,16 @@ classifiers = [
 ]
 
 
-dependencies = ["pydantic", "litellm", "diskcache"]
+dependencies = [
+    "pydantic",
+    "litellm",
+    "diskcache",
+    "deepdiff",
+    "numpy",
+    "munkres",
+    "pymupdf",
+    "pyyaml",
+]
 
 [project.optional-dependencies]
 dev = ["jupyter", "docformatter", "pytest", "ruff", "bump-my-version"]
@@ -36,7 +45,7 @@ docs = [
     "mkdocstrings[python]>=0.22.0",
     "mkdocs-gen-files>=0.5.0",
     "mkdocs-literate-nav>=0.6.0",
-    "fire"
+    "fire",
 ]
 
 [project.scripts]
