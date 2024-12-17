@@ -1,7 +1,6 @@
-from pint import UnitRegistry
+import warnings
 
-# Initialize the UnitRegistry
-ureg = UnitRegistry()
+from perovscribe import configuration as config
 
 
 def normalize(data: dict) -> dict:
@@ -16,23 +15,7 @@ def normalize(data: dict) -> dict:
         dict: The updated dictionary with converted values.
     """
     # Define default units for each quantity type
-    default_units_by_type = {
-        ureg.percent.dimensionality: (ureg.percent, "%"),  # Efficiency, humidity, etc.
-        (ureg.ampere / (ureg.centimeter**2)).dimensionality: (
-            "mA cm^-2",
-            "mA cm^-2",
-        ),  # Current density
-        ureg.volt.dimensionality: (ureg.volt, "V"),  # Voltage
-        ureg.nanometer.dimensionality: (ureg.nanometer, "nm"),  # Thickness
-        ureg.day.dimensionality: (
-            ureg.second,
-            "s",
-        ),  # Time (converted to hours for finer granularity)
-        ureg.celsius.dimensionality: (
-            ureg.celsius,
-            "°C",
-        ),  # Temperature converted from Celsius
-    }
+    default_units_by_type = config.pint["default_units_by_type"]
     for key, value in data.items():
         if isinstance(value, dict):
             # Recursively handle nested dictionaries
@@ -40,12 +23,17 @@ def normalize(data: dict) -> dict:
         elif isinstance(value, list):
             # Handle lists by normalizing each element
             data[key] = [
-                normalize(item) if isinstance(item, (dict, list)) else item
+                normalize(item) if isinstance(item, (dict, list, tuple)) else item
                 for item in value
             ]
-        elif key == "value" and "unit" in data:
+        elif (
+            key == "value"
+            and "unit" in data
+            and data["value"] is not None
+            and data["unit"] is not None
+        ):
             try:
-                quantity = ureg.Quantity(value, ureg.Unit(data["unit"]))
+                quantity = config.ureg.Quantity(value, config.ureg.Unit(data["unit"]))
 
                 # Determine the quantity type (e.g., length, speed)
                 quantity_type = quantity.dimensionality
@@ -58,6 +46,10 @@ def normalize(data: dict) -> dict:
                     # Update the dictionary
                     data["value"] = round(converted_quantity.magnitude, 2)
                     data["unit"] = default_unit_str
+                else:
+                    warnings.warn(
+                        f"No default unit type found for the following unit during normalization: {data['unit']}"
+                    )
             except Exception as e:
                 print(f"Error converting {value} {data['unit']}: {e}")
 
