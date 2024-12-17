@@ -48,10 +48,14 @@ class Evaluations:
         )
 
 
-def sanitized_deepdiff(lhs: dict, rhs: dict) -> int:
+def inverted_deepdiff(lhs: dict, rhs: dict) -> int:
     """Compute a score ranging from 0 to 1, where 1 indicates the highest similarity"""
-    deep_results = DeepDiff(lhs, rhs, get_deep_distance=True, ignore_string_case=True)
-    return 1 - deep_results["deep_distance"] if "deep_distance" in deep_results else 1
+    return (
+        1
+        - DeepDiff(lhs, rhs, get_deep_distance=True, ignore_string_case=True)[
+            "deep_distance"
+        ]
+    )
 
 
 def match_cells(truth_cells: List[dict], extracted_cells: List[dict]) -> List[dict]:
@@ -78,14 +82,12 @@ def match_cells(truth_cells: List[dict], extracted_cells: List[dict]) -> List[di
     # rows = truth, cols = extraction
     scores = [
         [
-            (0.7 * -sanitized_deepdiff(truth_stacks[tid], extracted_stacks[eid]))
+            (0.7 * -inverted_deepdiff(truth_stacks[tid], extracted_stacks[eid]))
             + (
                 0.2
-                * -sanitized_deepdiff(
-                    truth_depositions[tid], extracted_depositions[eid]
-                )
+                * -inverted_deepdiff(truth_depositions[tid], extracted_depositions[eid])
             )
-            + (0.1 * -sanitized_deepdiff(t, e))
+            + (0.1 * -inverted_deepdiff(t, e))
             for eid, e in enumerate(extracted_cells)
         ]
         for tid, t in enumerate(truth_cells)
