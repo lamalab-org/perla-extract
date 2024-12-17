@@ -23,7 +23,7 @@ classifiers = [
 ]
 
 
-dependencies = ["pydantic", "litellm", "diskcache"]
+dependencies = ["pydantic", "litellm", "diskcache", "pymupdf", "deepdiff>=8.1.0", "munkres"]
 
 [project.optional-dependencies]
 dev = ["jupyter", "docformatter", "pytest", "ruff", "bump-my-version"]
