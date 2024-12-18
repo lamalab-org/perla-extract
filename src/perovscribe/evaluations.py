@@ -99,5 +99,4 @@ def match_cells(truth_cells: List[dict], extracted_cells: List[dict]) -> List[di
         }
         for row, col in indexes
     ]
-    print(indexes)
     return matches
