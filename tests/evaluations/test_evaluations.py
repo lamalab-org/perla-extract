@@ -1,14 +1,19 @@
 from perovscribe.evaluations import Evaluations, match_cells
 
 
-def test_evaluations(truth, best_extraction, mid_extraction, worst_extraction):
+def test_evaluations(
+    truth,
+    postprocessed_best_extraction,
+    postprocessed_mid_extraction,
+    postprocessed_worst_extraction,
+):
     assert (
-        Evaluations(truth, best_extraction).score
-        > Evaluations(truth, mid_extraction).score
+        Evaluations(truth, postprocessed_best_extraction).score
+        > Evaluations(truth, postprocessed_mid_extraction).score
     )
     assert (
-        Evaluations(truth, mid_extraction).score
-        > Evaluations(truth, worst_extraction).score
+        Evaluations(truth, postprocessed_mid_extraction).score
+        > Evaluations(truth, postprocessed_worst_extraction).score
     )
 
 

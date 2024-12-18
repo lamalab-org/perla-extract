@@ -3,7 +3,8 @@ from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 from typing import Union
 from pathlib import Path
 from perovscribe.preprocessing.preprocessor import Preprocessor
-from perovscribe.postprocessing import normalize
+from perovscribe.postprocessing import postprocess
+from perovscribe.evaluations import Evaluations
 from perovscribe import llm_call
 from perovscribe.export import to_json
 import os
@@ -42,17 +43,35 @@ class ExtractionPipeline:
         self, filepath: Union[Path, str]
     ) -> Optional[PerovskiteSolarCells]: ...
 
-    def run(self, filepath: Union[Path, str], output: Union[Path, str] = "./"):
+    def run(
+        self, filepath: Union[Path, str], truth: str, output: Union[Path, str] = "./"
+    ):
         output = output + os.path.split(filepath)[1][:-4] + ".json"
-        pdf_text = self.preprocessor.pdf_to_text(filepath)
-        results = llm_call.create_text_completion(self.model_name, pdf_text)
-        normalize(results.model_dump())
-        # TODO: Call evaluations on normalized data
-        to_json(results, output)
+        if ".pdf" in filepath:
+            pdf_text = self.preprocessor.pdf_to_text(filepath)
+            results = llm_call.create_text_completion(self.model_name, pdf_text)
+            to_json(results, output)
+            postprocess(results.model_dump())
+        elif ".json" in filepath:
+            import json
+
+            results = json.load(open(filepath, "r"))
+            results = postprocess(results)
+            evals = Evaluations(postprocess(json.load(open(truth))), results)
+            print("==========================================")
+            print("Score:", evals.score)
+            print("Devices found:", evals.devices_found)
+            print("Devices matched:", evals.devices_matched)
+            print("Device recall:", evals.recall_devices)
+            print("Device stack score:", evals.score_device_stacks)
+            print("Device layers score:", evals.score_device_layers)
+            print("Precisions:", evals.score_precisions)
+            print("Details:", evals.detailed_score)
 
 
 def extract(
     filepath: str,
+    truth: str,
     model_name: str = "claude-3-5-sonnet-20240620",
     preprocessor: str = "marker",
     postprocessor: str = "NONE",
@@ -61,7 +80,7 @@ def extract(
 ):
     ExtractionPipeline(
         model_name, preprocessor, postprocessor, cache_dir, use_cache
-    ).run(filepath)
+    ).run(filepath, truth)
 
 
 def main_cli():

@@ -3,6 +3,16 @@ import warnings
 from perovscribe import configuration as config
 
 
+def postprocess(data: dict) -> dict:
+    data = add_device_stack(data)
+    data = normalize(data)
+    return data
+
+
+def normalize_perovskite():
+    pass
+
+
 def normalize(data: dict) -> dict:
     """
     Recursively walks through a dictionary and converts 'value' and 'unit' pairs
@@ -53,4 +63,12 @@ def normalize(data: dict) -> dict:
             except Exception as e:
                 print(f"Error converting {value} {data['unit']}: {e}")
 
+    return data
+
+
+def add_device_stack(data: dict) -> dict:
+    for id, cell in enumerate(data["cells"]):
+        data["cells"][id]["device_stack"] = " ".join(
+            [layer.get("name", "") for layer in cell.get("layers") or []]
+        )
     return data
