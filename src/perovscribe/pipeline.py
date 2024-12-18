@@ -3,6 +3,7 @@ from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 from typing import Union
 from pathlib import Path
 from perovscribe.preprocessing.preprocessor import Preprocessor
+from perovscribe.postprocessing import normalize
 from perovscribe import llm_call
 from perovscribe.export import to_json
 import os
@@ -45,8 +46,9 @@ class ExtractionPipeline:
         output = output + os.path.split(filepath)[1][:-4] + ".json"
         pdf_text = self.preprocessor.pdf_to_text(filepath)
         results = llm_call.create_text_completion(self.model_name, pdf_text)
+        normalize(results.model_dump())
+        # TODO: Call evaluations on normalized data
         to_json(results, output)
-        # TODO: Call postprocessor
 
 
 def extract(

@@ -1,0 +1,211 @@
+{
+  "cells": [
+    {
+      "active_area": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
+      "device_architecture": "pin",
+      "encapsulated": null,
+      "ff": {
+        "value": 79.0
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 21.39
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "ITO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Air",
+              "duration": {
+                "unit": "s",
+                "value": 1200.0
+              },
+              "method": "Spin-coating",
+              "solution": null,
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 140.0
+              }
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "PEDOT:PSS",
+          "thickness": {
+            "unit": "nm",
+            "value": 50.0
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": "toluene",
+              "atmosphere": "N2",
+              "duration": {
+                "unit": "s",
+                "value": 600.0
+              },
+              "method": "Spin-coating",
+              "solution": null,
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 100.0
+              }
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3 with 0.03% PbF4",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "N2",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "PCBM",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Thermal evaporation",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            }
+          ],
+          "functionality": "Contact",
+          "name": "LiF",
+          "thickness": {
+            "unit": "nm",
+            "value": 1.0
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Thermal evaporation",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": {
+            "unit": "nm",
+            "value": 100.0
+          }
+        }
+      ],
+      "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": null,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 16.7
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "coefficient": null,
+            "common_name": "Methylammonium",
+            "molecular_formula": null
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": null,
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ],
+        "bandgap": null,
+        "dimensionality": null,
+        "formula": "CH3NH3PbI3",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": null,
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ]
+      },
+      "stability": {
+        "PCE_T80": null,
+        "PCE_after_1000_hours": {
+          "unit": "%",
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": "%",
+          "value": 12.69
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": "%",
+          "value": 16.7
+        },
+        "humidity": {
+          "unit": "%",
+          "value": 45.0
+        },
+        "light_intensity": null,
+        "potential_bias": "Open circuit",
+        "temperature": {
+          "unit": "\u00b0C",
+          "value": 30.0
+        },
+        "time": {
+          "unit": "s",
+          "value": 2592000.0
+        }
+      },
+      "voc": {
+        "unit": "V",
+        "value": 0.99
+      }
+    }
+  ]
+}
