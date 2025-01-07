@@ -148,9 +148,16 @@ def inverted_deepdiff(lhs: Any, rhs: Any) -> float:
     """Compute a score ranging from 0 to 1, where 1 indicates the highest similarity"""
     return (
         1
-        - DeepDiff(lhs, rhs, get_deep_distance=True, ignore_string_case=True)[
-            "deep_distance"
-        ]
+        - DeepDiff(
+            lhs,
+            rhs,
+            get_deep_distance=True,
+            ignore_string_case=True,
+            ignore_string_type_changes=True,
+            ignore_numeric_type_changes=True,
+            significant_digits=2,
+            number_format_notation="e",
+        )["deep_distance"]
     )
 
 
