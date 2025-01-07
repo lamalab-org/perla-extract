@@ -22,6 +22,8 @@ class Evaluations:
     This class uses the DeepDiff library to compute the "deep distance" between
     two datasets, and the Munkres algorithm for optimal cell matching.
 
+    Note: The input datasets have to be normalized with perovscribe.postprocessing.
+
     Attributes:
         score (float): A similarity score between the datasets, where 1
             represents identical datasets.
@@ -78,7 +80,6 @@ def score_cells_detailed(matches: List[Matches]) -> dict:
                     - safe_get_value(match["extraction"], key)
                 )
             )
-        print("===", match["truth"]["perovskite_composition"])
         perovskite_composition_distances.append(
             distance(
                 match["truth"]["perovskite_composition"],
