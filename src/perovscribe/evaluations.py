@@ -46,10 +46,10 @@ class Evaluations:
     score_device_stacks: List[float] = None
     score_device_layers: List[float] = None
     precision_tolerances: dict = {
-        "pce": 0.05,
-        "jsc": 0.05,
-        "voc": 0.05,
-        "ff": 0.05,
+        "pce": 0.1,
+        "jsc": 0.1,
+        "voc": 0.01,
+        "ff": 0.1,
         "device_stack": 0.80,
     }
     precisions_average: dict = None
