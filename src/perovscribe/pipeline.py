@@ -46,8 +46,8 @@ class ExtractionPipeline:
     def run(
         self, filepath: Union[Path, str], truth: str, output: Union[Path, str] = "./"
     ):
-        output = output + os.path.split(filepath)[1][:-4] + ".json"
         if ".pdf" in filepath:
+            output = output + os.path.splitext(os.path.basename(filepath))[0] + ".json"
             pdf_text = self.preprocessor.pdf_to_text(filepath)
             results = llm_call.create_text_completion(self.model_name, pdf_text)
             to_json(results, output)
@@ -71,9 +71,9 @@ class ExtractionPipeline:
 
 def extract(
     filepath: str,
-    truth: str,
+    truth: str = "",
     model_name: str = "claude-3-5-sonnet-20240620",
-    preprocessor: str = "marker",
+    preprocessor: str = "pymupdf",
     postprocessor: str = "NONE",
     cache_dir: str = "",
     use_cache: bool = True,
