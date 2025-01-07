@@ -7,8 +7,6 @@ from munkres import Munkres
 import numpy as np
 from Levenshtein import distance
 
-# import gensim.downloader as gensimapi
-# gensim_model = gensimapi.load('word2vec-google-news-300') # This is of course slow but do we need this. Maybe have a better vec2word model
 
 
 class Matches(TypedDict):
