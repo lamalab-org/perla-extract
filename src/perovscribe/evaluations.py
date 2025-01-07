@@ -78,6 +78,7 @@ def score_cells_detailed(matches: List[Matches]) -> dict:
                     - safe_get_value(match["extraction"], key)
                 )
             )
+        print("===", match["truth"]["perovskite_composition"])
         perovskite_composition_distances.append(
             distance(
                 match["truth"]["perovskite_composition"],
@@ -168,7 +169,7 @@ def safe_get_value(d: Any, key: str):
         warnings.warn(
             f"Couldn't evaluate {key} because it is missing in one of the cells."
         )
-        return 0
+        return np.nan
     try:
         return d[key]["value"]
     except TypeError:

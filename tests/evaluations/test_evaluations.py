@@ -1,5 +1,6 @@
 from perovscribe.evaluations import Evaluations, match_cells
 import pytest
+from copy import deepcopy
 
 
 def test_evaluations(
@@ -29,8 +30,15 @@ def test_matching(matching_1, matching_2):
         assert str(match["truth"]) == str(match["extraction"])
 
 
-def test_missing_layers_in_truth(matching_1, matching_2):
-    del matching_1["cells"][0]["layers"]
+def test_missing_layers_in_truth(truth):
+    truth_copy = deepcopy(truth)
+    del truth["cells"][0]["layers"]
     with pytest.raises(KeyError) as excinfo:
-        Evaluations(matching_1, matching_2)
+        Evaluations(truth, truth_copy)
     assert str(excinfo.value) == "'layers'"
+
+
+def test_important_missing_key_in_cell(truth):
+    truth_copy = deepcopy(truth)
+    del truth_copy["cells"][0]["ff"]
+    Evaluations(truth, truth_copy)
