@@ -63,6 +63,45 @@ def worst_extraction():
 
 
 @pytest.fixture()
+def postprocessed_best_extraction():
+    return json.load(
+        open(
+            os.path.join(
+                THIS_DIR,
+                "test_files",
+                "postprocessed_extraction_best_test_file_10.1016--j.orgel.2017.01.022.json",
+            )
+        )
+    )
+
+
+@pytest.fixture()
+def postprocessed_mid_extraction():
+    return json.load(
+        open(
+            os.path.join(
+                THIS_DIR,
+                "test_files",
+                "postprocessed_extraction_mid_test_file_10.1016--j.orgel.2017.01.022.json",
+            )
+        )
+    )
+
+
+@pytest.fixture()
+def postprocessed_worst_extraction():
+    return json.load(
+        open(
+            os.path.join(
+                THIS_DIR,
+                "test_files",
+                "postprocessed_extraction_worst_test_file_10.1016--j.orgel.2017.01.022.json",
+            )
+        )
+    )
+
+
+@pytest.fixture()
 def matching_1():
     return json.load(open(os.path.join(THIS_DIR, "test_files", "matching_1.json")))
 
