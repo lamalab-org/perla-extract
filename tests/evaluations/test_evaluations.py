@@ -1,4 +1,5 @@
 from perovscribe.evaluations import Evaluations, match_cells
+import pytest
 
 
 def test_evaluations(
@@ -26,3 +27,10 @@ def test_matching(matching_1, matching_2):
 
     for match in match_cells(matching_1["cells"], matching_2["cells"]):
         assert str(match["truth"]) == str(match["extraction"])
+
+
+def test_missing_layers_in_truth(matching_1, matching_2):
+    del matching_1["cells"][0]["layers"]
+    with pytest.raises(KeyError) as excinfo:
+        Evaluations(matching_1, matching_2)
+    assert str(excinfo.value) == "'layers'"

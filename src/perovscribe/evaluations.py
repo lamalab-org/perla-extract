@@ -116,7 +116,7 @@ def score_device_layers(matches: List[Matches]) -> List[float]:
     for match in matches:
         scores.append(
             inverted_deepdiff(
-                match["truth"].get("layers", []), match["extraction"].get("layers", [])
+                match["truth"]["layers"], match["extraction"].get("layers", [])
             )
         )
     return scores
