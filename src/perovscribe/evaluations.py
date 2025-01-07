@@ -63,7 +63,7 @@ class Evaluations:
         self.score = inverted_deepdiff(truth["cells"], extraction["cells"])
         self.matches = match_cells(truth["cells"], extraction["cells"])
         self.devices_found = len(extraction["cells"])
-        self.recall_devices = max(self.devices_found / len(truth["cells"]), 1)
+        self.recall_devices = min(self.devices_found / len(truth["cells"]), 1)
         self.devices_matched = len(self.matches)
         self.score_device_stacks = score_device_stacks(self.matches)
         self.score_device_layers = score_device_layers(self.matches)
