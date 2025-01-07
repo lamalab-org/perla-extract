@@ -8,7 +8,6 @@ import numpy as np
 from Levenshtein import distance
 
 
-
 class Matches(TypedDict):
     truth: dict
     extraction: dict
@@ -45,13 +44,7 @@ class Evaluations:
     score: float = None
     score_device_stacks: List[float] = None
     score_device_layers: List[float] = None
-    precision_tolerances: dict = {
-        "pce": 0.1,
-        "jsc": 0.1,
-        "voc": 0.01,
-        "ff": 0.1,
-        "device_stack": 0.80,
-    }
+    precision_tolerances: dict = {"pce": 0.1, "jsc": 0.1, "voc": 0.01, "ff": 0.1}
     precisions_average: dict = None
     devices_found: int = 0
     recall_devices: float = None
@@ -108,11 +101,11 @@ def score_precisions(matches: List[Matches], precision_tolerances: dict):
         found = []
         for key, tolerance in precision_tolerances.items():
             found.append(
-                inverted_deepdiff(
-                    safe_get_value(match["truth"], key),
-                    safe_get_value(match["extraction"], key),
+                abs(
+                    safe_get_value(match["truth"], key)
+                    - safe_get_value(match["extraction"], key),
                 )
-                > precision_tolerances[key]
+                < precision_tolerances[key]
             )
         precisions.append(sum(found) / len(found))
     return precisions
