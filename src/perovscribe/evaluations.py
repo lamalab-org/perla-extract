@@ -31,6 +31,7 @@ class Evaluations:
         score_device_layers (List[float]):
         precision_tolerances (dict):
         precisions_average (dict):
+        devices_in_truth (int):
         devices_found (int):
         recall_devices (float):
         devices_matched (int):
@@ -48,6 +49,7 @@ class Evaluations:
     score_device_layers: List[float] = None
     precision_tolerances: dict = {"pce": 0.1, "jsc": 0.1, "voc": 0.01, "ff": 0.1}
     precisions_average: dict = None
+    devices_in_truth: int = 0
     devices_found: int = 0
     recall_devices: float = None
     devices_matched: int = None
@@ -57,6 +59,7 @@ class Evaluations:
     def __init__(self, truth: dict, extraction: dict):
         self.score = inverted_deepdiff(truth["cells"], extraction["cells"])
         self.matches = match_cells(truth["cells"], extraction["cells"])
+        self.devices_in_truth = len(truth["cells"])
         self.devices_found = len(extraction["cells"])
         self.recall_devices = min(self.devices_found / len(truth["cells"]), 1)
         self.devices_matched = len(self.matches)
@@ -69,23 +72,37 @@ class Evaluations:
         self.detailed_score = score_cells_detailed(self.matches)
 
 
+def score_multiple_extractions(truth_extraction_pairs: tuple[dict, dict, str]):
+    evals = []
+
+    for truth, extraction in truth_extraction_pairs:
+        evals.append(Evaluations(truth, extraction))
+    return evals
+
+
 def score_cells_detailed(matches: List[Matches]) -> dict:
     maes = {"pce": [], "ff": [], "voc": [], "jsc": []}  # TODO: stability
     perovskite_composition_distances = []
     for match in matches:
         for key in maes:
-            maes[key].append(
-                abs(
-                    safe_get_value(match["truth"], key)
-                    - safe_get_value(match["extraction"], key)
+            if safe_get_value(match["extraction"], key) is not None:
+                maes[key].append(
+                    abs(
+                        safe_get_value(match["truth"], key)
+                        - safe_get_value(match["extraction"], key)
+                    )
+                )
+        if (
+            match["extraction"].get("perovskite_composition") is not None
+            and match["extraction"].get("perovskite_composition").get("formula", None)
+            is not None
+        ):
+            perovskite_composition_distances.append(
+                distance(
+                    match["truth"]["perovskite_composition"]["formula"],
+                    match["extraction"]["perovskite_composition"]["formula"],
                 )
             )
-        perovskite_composition_distances.append(
-            distance(
-                match["truth"]["perovskite_composition"],
-                match["extraction"]["perovskite_composition"],
-            )
-        )
 
     for key in maes:
         maes[key] = float(np.mean(maes[key]))
@@ -104,8 +121,8 @@ def score_precisions(matches: List[Matches], precision_tolerances: dict):
         for key, tolerance in precision_tolerances.items():
             found.append(
                 abs(
-                    safe_get_value(match["truth"], key)
-                    - safe_get_value(match["extraction"], key),
+                    (safe_get_value(match["truth"], key))
+                    - (safe_get_value(match["extraction"], key) or 0.0),
                 )
                 < precision_tolerances[key]
             )
@@ -220,4 +237,5 @@ def match_cells(truth_cells: List[dict], extracted_cells: List[dict]) -> List[di
         }
         for row, col in indexes
     ]
+
     return matches

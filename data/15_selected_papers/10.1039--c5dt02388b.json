@@ -1,0 +1,1143 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "value": 0.09
+      },
+      "averaged_quantites": true,
+      "device_architecture": "nip",
+      "encapsulated": false,
+      "ff": {
+        "value": 67.6
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 19.1
+      },
+      "layers": [
+        {
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "temperature": 70
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2, compact",
+          "thickness": 50
+        },
+        {
+          "additional_treatment": "10 min TiCl4 treatment",
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "temperature": 70
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2, mesoporous",
+          "review_completed": true,
+          "thickness": 180
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Two-step sequential deposition",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 1,
+                    "concentration_unit": "M",
+                    "name": "PbI2"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": "PbI2 deposition",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 7200,
+              "method": "Two-step sequential deposition",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 10,
+                    "concentration_unit": "mg/L",
+                    "name": "CH3NH3I"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "2-propanol",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": "MAI reaction",
+              "temperature": null
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 72.3,
+                    "concentration_unit": "mg/L",
+                    "name": "Spiro-MeOTAD"
+                  },
+                  {
+                    "concentration": 28.8,
+                    "concentration_unit": "vol%",
+                    "name": "4-tert-butylpyridine"
+                  },
+                  {
+                    "concentration": 17.5,
+                    "concentration_unit": "vol%",
+                    "name": "Lithium bis(trifluoromethylsulphonyl)imide"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "Chlorobenzene",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "temperature": null
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "Spiro-MeOTAD",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Thermal evaporation",
+              "temperature": null
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": 200
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 11.8
+      },
+      "perovskite_composition": {
+        "a_ions": [],
+        "b_ions": [],
+        "formula": "",
+        "x_ions": []
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.91
+      }
+    },
+    {
+      "active_area": {
+        "value": 0.09
+      },
+      "averaged_quantites": true,
+      "device_architecture": "nip",
+      "encapsulated": false,
+      "ff": {
+        "value": 70.4
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 19
+      },
+      "layers": [
+        {
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "temperature": 70
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2, compact",
+          "thickness": 50
+        },
+        {
+          "additional_treatment": "60 min TiCl4 treatment",
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "temperature": 70
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2, mesoporous",
+          "review_completed": true,
+          "thickness": 180
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Two-step sequential deposition",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 1,
+                    "concentration_unit": "M",
+                    "name": "PbI2"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": "PbI2 deposition",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 7200,
+              "method": "Two-step sequential deposition",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 10,
+                    "concentration_unit": "mg/L",
+                    "name": "CH3NH3I"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "2-propanol",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": "MAI reaction",
+              "temperature": null
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 72.3,
+                    "concentration_unit": "mg/L",
+                    "name": "Spiro-MeOTAD"
+                  },
+                  {
+                    "concentration": 28.8,
+                    "concentration_unit": "vol%",
+                    "name": "4-tert-butylpyridine"
+                  },
+                  {
+                    "concentration": 17.5,
+                    "concentration_unit": "vol%",
+                    "name": "Lithium bis(trifluoromethylsulphonyl)imide"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "Chlorobenzene",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "temperature": null
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "Spiro-MeOTAD",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Thermal evaporation",
+              "temperature": null
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": 200
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 12.4
+      },
+      "perovskite_composition": {
+        "a_ions": [],
+        "b_ions": [],
+        "formula": "",
+        "x_ions": []
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.93
+      }
+    },
+    {
+      "active_area": {
+        "value": 0.09
+      },
+      "averaged_quantites": true,
+      "device_architecture": "nip",
+      "encapsulated": false,
+      "ff": {
+        "value": 73.1
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 21.3
+      },
+      "layers": [
+        {
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "temperature": 70
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2, compact",
+          "thickness": 50
+        },
+        {
+          "additional_treatment": "30 min TiCl4 treatment",
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "temperature": 70
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2, mesoporous",
+          "review_completed": true,
+          "thickness": 180
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Two-step sequential deposition",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 1,
+                    "concentration_unit": "M",
+                    "name": "PbI2"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": "PbI2 deposition",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 7200,
+              "method": "Two-step sequential deposition",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 10,
+                    "concentration_unit": "mg/L",
+                    "name": "CH3NH3I"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "2-propanol",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": "MAI reaction",
+              "temperature": null
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 72.3,
+                    "concentration_unit": "mg/L",
+                    "name": "Spiro-MeOTAD"
+                  },
+                  {
+                    "concentration": 28.8,
+                    "concentration_unit": "vol%",
+                    "name": "4-tert-butylpyridine"
+                  },
+                  {
+                    "concentration": 17.5,
+                    "concentration_unit": "vol%",
+                    "name": "Lithium bis(trifluoromethylsulphonyl)imide"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "Chlorobenzene",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "temperature": null
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "Spiro-MeOTAD",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Thermal evaporation",
+              "temperature": null
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": 200
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 14.6
+      },
+      "perovskite_composition": {
+        "a_ions": [],
+        "b_ions": [],
+        "formula": "",
+        "x_ions": []
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.94
+      }
+    },
+    {
+      "active_area": {
+        "value": 0.09
+      },
+      "averaged_quantites": true,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 53.2
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 18.3
+      },
+      "layers": [
+        {
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "temperature": 70
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2, compact",
+          "thickness": 50
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "temperature": 70
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2, mesoporous",
+          "review_completed": true,
+          "thickness": 180
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Two-step sequential deposition",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 1,
+                    "concentration_unit": "M",
+                    "name": "PbI2"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": "PbI2 deposition",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 7200,
+              "method": "Two-step sequential deposition",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 10,
+                    "concentration_unit": "mg/L",
+                    "name": "CH3NH3I"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "2-propanol",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": "MAI reaction",
+              "temperature": null
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 72.3,
+                    "concentration_unit": "mg/L",
+                    "name": "Spiro-MeOTAD"
+                  },
+                  {
+                    "concentration": 28.8,
+                    "concentration_unit": "vol%",
+                    "name": "4-tert-butylpyridine"
+                  },
+                  {
+                    "concentration": 17.5,
+                    "concentration_unit": "vol%",
+                    "name": "Lithium bis(trifluoromethylsulphonyl)imide"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "Chlorobenzene",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "temperature": null
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "Spiro-MeOTAD",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Thermal evaporation",
+              "temperature": null
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": 200
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 8.4
+      },
+      "perovskite_composition": {
+        "a_ions": [],
+        "b_ions": [],
+        "formula": "",
+        "x_ions": []
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.87
+      }
+    },
+    {
+      "active_area": {
+        "value": 0.09
+      },
+      "averaged_quantites": true,
+      "device_architecture": "nip",
+      "encapsulated": false,
+      "ff": {
+        "value": 57
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 18.8
+      },
+      "layers": [
+        {
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "temperature": 70
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2, compact",
+          "thickness": 50
+        },
+        {
+          "additional_treatment": "5 min TiCl4 treatment",
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "temperature": 70
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2, mesoporous",
+          "review_completed": true,
+          "thickness": 180
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Two-step sequential deposition",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 1,
+                    "concentration_unit": "M",
+                    "name": "PbI2"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": "PbI2 deposition",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 7200,
+              "method": "Two-step sequential deposition",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 10,
+                    "concentration_unit": "mg/L",
+                    "name": "CH3NH3I"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "2-propanol",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": "MAI reaction",
+              "temperature": null
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 72.3,
+                    "concentration_unit": "mg/L",
+                    "name": "Spiro-MeOTAD"
+                  },
+                  {
+                    "concentration": 28.8,
+                    "concentration_unit": "vol%",
+                    "name": "4-tert-butylpyridine"
+                  },
+                  {
+                    "concentration": 17.5,
+                    "concentration_unit": "vol%",
+                    "name": "Lithium bis(trifluoromethylsulphonyl)imide"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "Chlorobenzene",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "temperature": null
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "Spiro-MeOTAD",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Thermal evaporation",
+              "temperature": null
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": 200
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 9.7
+      },
+      "perovskite_composition": {
+        "a_ions": [],
+        "b_ions": [],
+        "formula": "",
+        "x_ions": []
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.87
+      }
+    },
+    {
+      "active_area": {
+        "value": 0.09
+      },
+      "averaged_quantites": true,
+      "device_architecture": "nip",
+      "encapsulated": false,
+      "ff": {
+        "value": 69.3
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 20.5
+      },
+      "layers": [
+        {
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "temperature": 70
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2, compact",
+          "thickness": 50
+        },
+        {
+          "additional_treatment": "20 min TiCl4 treatment",
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "temperature": 70
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2, mesoporous",
+          "review_completed": true,
+          "thickness": 180
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Two-step sequential deposition",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 1,
+                    "concentration_unit": "M",
+                    "name": "PbI2"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": "PbI2 deposition",
+              "temperature": null
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 7200,
+              "method": "Two-step sequential deposition",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 10,
+                    "concentration_unit": "mg/L",
+                    "name": "CH3NH3I"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "2-propanol",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": "MAI reaction",
+              "temperature": null
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "solutes": [
+                  {
+                    "concentration": 72.3,
+                    "concentration_unit": "mg/L",
+                    "name": "Spiro-MeOTAD"
+                  },
+                  {
+                    "concentration": 28.8,
+                    "concentration_unit": "vol%",
+                    "name": "4-tert-butylpyridine"
+                  },
+                  {
+                    "concentration": 17.5,
+                    "concentration_unit": "vol%",
+                    "name": "Lithium bis(trifluoromethylsulphonyl)imide"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "Chlorobenzene",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "temperature": null
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "Spiro-MeOTAD",
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Thermal evaporation",
+              "temperature": null
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": 200
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 13.1
+      },
+      "perovskite_composition": {
+        "a_ions": [],
+        "b_ions": [],
+        "formula": "",
+        "x_ions": []
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.92
+      }
+    }
+  ]
+}

@@ -1,0 +1,217 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "value": null
+      },
+      "averaged_quantites": false,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 78
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 22.51
+      },
+      "layers": [
+        {
+          "functionality": "Contact",
+          "name": "FTO",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "functionality": "Electron-transport",
+          "name": "TiO2-mp",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "additional_treatment": "ZnAl-MMOs infiltrated into mesoporous TiO2",
+          "functionality": "Electron-transport",
+          "name": "ZnAl-MMOs",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "AC-VASP",
+              "review_completed": true,
+              "step_name": "AC-VASP",
+              "temperature": null
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "Perovskite",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "functionality": "Hole-transport",
+          "name": "Spiro-MeOTAD",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "functionality": "Contact",
+          "name": "Au",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "functionality": "Substrate",
+          "name": "SLG",
+          "review_completed": true
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 18.54
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "coefficient": "1",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH6N+"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
+        "formula": "MAPbI3",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          }
+        ]
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 1.06
+      }
+    },
+    {
+      "active_area": {
+        "value": null
+      },
+      "averaged_quantites": false,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 76
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 19.9
+      },
+      "layers": [
+        {
+          "functionality": "Substrate",
+          "name": "SLG",
+          "review_completed": true
+        },
+        {
+          "functionality": "Contact",
+          "name": "FTO",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "functionality": "Electron-transport",
+          "name": "TiO2-mp",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "AC-VASP",
+              "review_completed": true,
+              "step_name": "AC-VASP",
+              "temperature": null
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "Perovskite",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "functionality": "Hole-transport",
+          "name": "Spiro-MeOTAD",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "functionality": "Contact",
+          "name": "Au",
+          "review_completed": true,
+          "thickness": null
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 13.59
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "coefficient": "1",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH6N+"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
+        "formula": "MAPbI3",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          }
+        ]
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.9
+      }
+    }
+  ]
+}

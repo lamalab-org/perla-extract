@@ -25,7 +25,10 @@ def create_text_completion(
     # Construct messages for LLM
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"{instruction}\n\nHere is the text:\n{pdf_text}"},
+        {
+            "role": "user",
+            "content": f"{instruction}\n Here is the schema: {PerovskiteSolarCells.model_json_schema} \n\nHere is the text:\n{pdf_text}",
+        },
     ]
 
     # Call with Instructor
@@ -33,7 +36,6 @@ def create_text_completion(
 
     resp = client.chat.completions.create(
         model=model_name,
-        max_tokens=8192,
         messages=messages,
         response_model=PerovskiteSolarCells,
         temperature=0,

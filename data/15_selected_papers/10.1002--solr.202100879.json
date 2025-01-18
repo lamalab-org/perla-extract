@@ -1,0 +1,294 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "value": null
+      },
+      "averaged_quantites": false,
+      "device_architecture": "nip",
+      "encapsulated": false,
+      "ff": {
+        "value": 76.3
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 24.14
+      },
+      "layers": [
+        {
+          "functionality": "Contact",
+          "name": "ITO",
+          "review_completed": true
+        },
+        {
+          "functionality": "Electron-transport",
+          "name": "SnO2",
+          "review_completed": true
+        },
+        {
+          "functionality": "Absorber",
+          "name": "3D Perovskite",
+          "review_completed": true
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "N2",
+              "method": "spin-coating",
+              "review_completed": true
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "Spiro-OMeTAD",
+          "review_completed": true
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Vacuum",
+              "method": "Evaporation",
+              "review_completed": true,
+              "step_name": "Contact Deposition"
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Au",
+          "review_completed": true
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 20.1
+      },
+      "perovskite_composition": {
+        "a_ions": [],
+        "b_ions": [],
+        "formula": "",
+        "x_ions": []
+      },
+      "stability": {
+        "PCE_after_1000_hours": 21.41,
+        "humidity": 50,
+        "potential_bias": "Open circuit",
+        "time": 3600000
+      },
+      "voc": {
+        "unit": "V",
+        "value": 1.09
+      }
+    },
+    {
+      "active_area": {
+        "value": null
+      },
+      "averaged_quantites": null,
+      "device_architecture": "nip",
+      "encapsulated": false,
+      "ff": {
+        "value": 78.57
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 24.64
+      },
+      "layers": [
+        {
+          "functionality": "Contact",
+          "name": "ITO",
+          "review_completed": true
+        },
+        {
+          "functionality": "Electron-transport",
+          "name": "SnO2",
+          "review_completed": true
+        },
+        {
+          "functionality": "Absorber",
+          "name": "1D-3D Perovskite",
+          "review_completed": true
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "N2",
+              "method": "spin-coating",
+              "review_completed": true
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "Spiro-OMeTAD",
+          "review_completed": true
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Vacuum",
+              "method": "Evaporation",
+              "review_completed": true,
+              "step_name": "Contact Deposition"
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Au",
+          "review_completed": true
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 22.07
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "Me3S",
+            "coefficient": "1",
+            "common_name": "Trimethylsulfonium",
+            "molecular_formula": "(CH3)3S"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
+        "formula": "Me3SPbI3",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          }
+        ]
+      },
+      "stability": {
+        "PCE_after_1000_hours": 21.41,
+        "humidity": 50,
+        "potential_bias": "Open circuit",
+        "time": 3600000
+      },
+      "voc": {
+        "unit": "V",
+        "value": 1.14
+      }
+    },
+    {
+      "active_area": {
+        "value": null
+      },
+      "averaged_quantites": null,
+      "device_architecture": "nip",
+      "encapsulated": false,
+      "ff": {
+        "value": 56
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 3.76
+      },
+      "layers": [
+        {
+          "functionality": "Contact",
+          "name": "ITO",
+          "review_completed": true
+        },
+        {
+          "functionality": "Electron-transport",
+          "name": "SnO2",
+          "review_completed": true
+        },
+        {
+          "functionality": "Absorber",
+          "name": "M3SPbI3",
+          "review_completed": true
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "N2",
+              "method": "spin-coating",
+              "review_completed": true
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "Spiro-OMeTAD",
+          "review_completed": true
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Vacuum",
+              "method": "Evaporation",
+              "review_completed": true,
+              "step_name": "Contact Deposition"
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Au",
+          "review_completed": true
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 2.09
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "Me3S",
+            "coefficient": "1",
+            "common_name": "Trimethylsulfonium",
+            "molecular_formula": "(CH3)3S"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
+        "formula": "Me3SPbI3",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          }
+        ]
+      },
+      "stability": {
+        "PCE_at_end": 2.09,
+        "PCE_at_start": 2.09,
+        "humidity": 50,
+        "potential_bias": "Open circuit",
+        "review_completed": true,
+        "time": 500
+      },
+      "voc": {
+        "unit": "V",
+        "value": 0.99
+      }
+    }
+  ]
+}

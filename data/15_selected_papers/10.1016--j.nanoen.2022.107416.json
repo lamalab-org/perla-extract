@@ -1,0 +1,208 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "value": null
+      },
+      "averaged_quantites": true,
+      "device_architecture": "nip",
+      "encapsulated": false,
+      "ff": {
+        "value": 71.22
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 20.98
+      },
+      "layers": [
+        {
+          "functionality": "Contact",
+          "name": "ITO",
+          "review_completed": true
+        },
+        {
+          "functionality": "Hole-transport",
+          "name": "SnO2",
+          "review_completed": true
+        },
+        {
+          "functionality": "Absorber",
+          "name": "FASnI3 with 4A3HA",
+          "review_completed": true
+        },
+        {
+          "functionality": "Electron-transport",
+          "name": "ICBA",
+          "review_completed": true
+        },
+        {
+          "functionality": "Contact",
+          "name": "Ag",
+          "review_completed": true
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": 20,
+      "pce": {
+        "unit": "%",
+        "value": 13.43
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "FA",
+            "coefficient": "0.75",
+            "common_name": "Formamidinium",
+            "molecular_formula": "CH5N2+"
+          },
+          {
+            "abbreviation": "MA",
+            "coefficient": "0.25",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH6N+"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Sn",
+            "coefficient": "1",
+            "common_name": "Tin",
+            "molecular_formula": "Sn2+"
+          }
+        ],
+        "formula": "FA0.75MA0.25SnI2.75Br0.25",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "2.75",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Br",
+            "coefficient": "0.25",
+            "common_name": "Bromide",
+            "molecular_formula": "Br-"
+          }
+        ]
+      },
+      "stability": {
+        "PCE_after_1000_hours": 10.744,
+        "humidity": 0,
+        "potential_bias": "Open circuit",
+        "review_completed": true,
+        "temperature": 85,
+        "time": 3600000
+      },
+      "voc": {
+        "unit": "V",
+        "value": 0.9
+      }
+    },
+    {
+      "active_area": {
+        "value": null
+      },
+      "averaged_quantites": true,
+      "device_architecture": "nip",
+      "encapsulated": false,
+      "ff": {
+        "value": 68.53
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 16.33
+      },
+      "layers": [
+        {
+          "functionality": "Contact",
+          "name": "ITO",
+          "review_completed": true
+        },
+        {
+          "functionality": "Hole-transport",
+          "name": "SnO2",
+          "review_completed": true
+        },
+        {
+          "functionality": "Absorber",
+          "name": "FASnI3",
+          "review_completed": true
+        },
+        {
+          "functionality": "Electron-transport",
+          "name": "ICBA",
+          "review_completed": true
+        },
+        {
+          "functionality": "Contact",
+          "name": "Ag",
+          "review_completed": true
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": 20,
+      "pce": {
+        "unit": "%",
+        "value": 9.44
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "FA",
+            "coefficient": "0.75",
+            "common_name": "Formamidinium",
+            "molecular_formula": "CH5N2+"
+          },
+          {
+            "abbreviation": "MA",
+            "coefficient": "0.25",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH6N+"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Sn",
+            "coefficient": "1",
+            "common_name": "Tin",
+            "molecular_formula": "Sn2+"
+          }
+        ],
+        "formula": "FA0.75MA0.25SnI2.75Br0.25",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "2.75",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Br",
+            "coefficient": "0.25",
+            "common_name": "Bromide",
+            "molecular_formula": "Br-"
+          }
+        ]
+      },
+      "stability": {
+        "PCE_after_1000_hours": 10.744,
+        "humidity": 0,
+        "potential_bias": "Open circuit",
+        "review_completed": true,
+        "temperature": 85,
+        "time": 3600000
+      },
+      "voc": {
+        "unit": "V",
+        "value": 0.84
+      }
+    }
+  ]
+}

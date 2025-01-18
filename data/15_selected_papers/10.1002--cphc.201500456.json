@@ -1,0 +1,215 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "value": 0.07068
+      },
+      "averaged_quantites": true,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 53.16
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 20.25
+      },
+      "layers": [
+        {
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": "TiCl4 treatment",
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": 21600,
+              "method": "Liquid-phase deposition",
+              "solution": {
+                "review_completed": true,
+                "solutes": [
+                  {
+                    "concentration": 0.075,
+                    "concentration_unit": "M",
+                    "name": "(NH4)2TiF6",
+                    "review_completed": true
+                  },
+                  {
+                    "concentration": 0.2,
+                    "concentration_unit": "M",
+                    "name": "H3BO3",
+                    "review_completed": true
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "H2O",
+                    "review_completed": true,
+                    "volume_fraction": 1
+                  }
+                ]
+              },
+              "temperature": null
+            },
+            {
+              "duration": 5400,
+              "method": "Thermal Annealing",
+              "review_completed": true,
+              "temperature": 450
+            },
+            {
+              "duration": 1800,
+              "method": "TiCl4 treatment",
+              "review_completed": true,
+              "solution": {
+                "review_completed": true,
+                "solutes": [
+                  {
+                    "concentration": 120,
+                    "concentration_unit": "mmol/L",
+                    "name": "TiCl4 ",
+                    "review_completed": true
+                  }
+                ]
+              },
+              "temperature": 70
+            },
+            {
+              "duration": 1800,
+              "method": "Thermal Annealing",
+              "review_completed": true,
+              "temperature": 500
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Two-step deposition",
+              "temperature": null
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "duration": 15,
+              "method": "Spin-coating",
+              "review_completed": true,
+              "solution": {
+                "review_completed": true,
+                "solutes": [
+                  {
+                    "concentration": 170,
+                    "concentration_unit": "mmol/L",
+                    "name": "spiro-OMeTAD",
+                    "review_completed": true
+                  },
+                  {
+                    "concentration": 180,
+                    "concentration_unit": "mmol/L",
+                    "name": "tert-butylpyridine",
+                    "review_completed": true
+                  },
+                  {
+                    "concentration": 60,
+                    "concentration_unit": "mmol/L",
+                    "name": "lithium bis(trifluoromethane)sulfonimidate ",
+                    "review_completed": true
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "chlorobenzene",
+                    "review_completed": true,
+                    "volume_fraction": 0.95
+                  },
+                  {
+                    "name": "acetonitrile",
+                    "review_completed": true,
+                    "volume_fraction": 0.05
+                  }
+                ]
+              },
+              "temperature": null
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "Spiro-OMeTAD",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Thermal evaporation",
+              "review_completed": true,
+              "temperature": null
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Ag",
+          "review_completed": true,
+          "thickness": 100
+        }
+      ],
+      "light_source": {
+        "description": "solar simulator (Abet Technology Sun 2000)",
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": 1,
+      "pce": {
+        "unit": "%",
+        "value": 9.33
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "coefficient": "1",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH6N+"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
+        "formula": "MAPbI3",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          }
+        ]
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.87
+      }
+    }
+  ]
+}

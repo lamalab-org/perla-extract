@@ -2,9 +2,10 @@ from typing import Optional
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 from typing import Union
 from pathlib import Path
+import json
 from perovscribe.preprocessing.preprocessor import Preprocessor
 from perovscribe.postprocessing import postprocess
-from perovscribe.evaluations import Evaluations
+from perovscribe.evaluations import Evaluations, score_multiple_extractions
 from perovscribe import llm_call
 from perovscribe.export import to_json
 import os
@@ -44,7 +45,10 @@ class ExtractionPipeline:
     ) -> Optional[PerovskiteSolarCells]: ...
 
     def run(
-        self, filepath: Union[Path, str], truth: str, output: Union[Path, str] = "./"
+        self,
+        filepath: Union[Path, str],
+        truthpath: Union[Path, str],
+        output: Union[Path, str] = "./",
     ):
         if ".pdf" in filepath:
             output = output + os.path.splitext(os.path.basename(filepath))[0] + ".json"
@@ -53,13 +57,12 @@ class ExtractionPipeline:
             to_json(results, output)
             postprocess(results.model_dump())
         elif ".json" in filepath:
-            import json
-
             results = json.load(open(filepath, "r"))
             results = postprocess(results)
-            evals = Evaluations(postprocess(json.load(open(truth))), results)
+            evals = Evaluations(postprocess(json.load(open(truthpath))), results)
             print("==========================================")
             print("Score:", evals.score)
+            print("Devices in truth:", evals.devices_in_truth)
             print("Devices found:", evals.devices_found)
             print("Devices matched:", evals.devices_matched)
             print("Device recall:", evals.recall_devices)
@@ -67,6 +70,32 @@ class ExtractionPipeline:
             print("Device layers score:", evals.score_device_layers)
             print("Precisions:", evals.score_precisions)
             print("Details:", evals.detailed_score)
+        elif os.path.isdir(filepath) and os.path.isdir(truthpath):
+            truth_extraction_pairs = []
+            for file in [x for x in os.listdir(filepath) if x.endswith(".json")]:
+                with open(filepath + os.sep + file) as f:
+                    extraction = json.load(f)
+                with open(truthpath + os.sep + file) as f:
+                    truth = json.load(f)
+                truth_extraction_pairs.append((truth, extraction))
+            precs = []
+            import numpy as np
+
+            for evals in score_multiple_extractions(truth_extraction_pairs):
+                print("==========================================")
+                print("Score:", evals.score)
+                print("Devices in truth:", evals.devices_in_truth)
+                print("Devices found:", evals.devices_found)
+                print("Devices matched:", evals.devices_matched)
+                print("Device recall:", evals.recall_devices)
+                print("Device stack score:", evals.score_device_stacks)
+                print("Device layers score:", evals.score_device_layers)
+                print("Precisions:", evals.score_precisions)
+                print("Details:", evals.detailed_score)
+                precs.append(np.mean(evals.score_precisions))
+            print("Overall avg precision:", np.mean(precs))
+        else:
+            print("Hmmm. This wasn't one of the expected inputs. Have a look again.")
 
 
 def extract(

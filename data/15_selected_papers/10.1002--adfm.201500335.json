@@ -1,0 +1,169 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "value": 0.045
+      },
+      "averaged_quantites": null,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 69.5
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 22.59
+      },
+      "layers": [
+        {
+          "functionality": "Substrate",
+          "name": "SLG",
+          "review_completed": true
+        },
+        {
+          "functionality": "Contact",
+          "name": "ITO",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Air",
+              "method": "Spin-coating",
+              "step_name": "Spin-coating"
+            },
+            {
+              "atmosphere": "Air",
+              "duration": 600,
+              "method": "Thermal.annealing",
+              "review_completed": true,
+              "step_name": "Annealing",
+              "temperature": 150
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "PEDOT:PSS",
+          "review_completed": true,
+          "thickness": 35
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "N2",
+              "duration": 40,
+              "method": "Spin-coating",
+              "review_completed": true,
+              "solution": {
+                "review_completed": true,
+                "solutes": [
+                  {
+                    "concentration": 2.64,
+                    "concentration_unit": "M",
+                    "name": "PbCl2",
+                    "review_completed": true
+                  },
+                  {
+                    "concentration": 0.88,
+                    "concentration_unit": "M",
+                    "name": "CH3NH3I",
+                    "review_completed": true
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "review_completed": true,
+                    "volume_fraction": 1
+                  }
+                ]
+              },
+              "step_name": "Spin-coating"
+            },
+            {
+              "atmosphere": "N2",
+              "duration": 10800,
+              "method": "Thermal-annealing",
+              "review_completed": true,
+              "step_name": "Annealing",
+              "temperature": 100
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "Perovskite",
+          "review_completed": true,
+          "thickness": null
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "N2",
+              "method": "Spin-coating",
+              "review_completed": true,
+              "step_name": "Spin-coating"
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "PCBM-60",
+          "review_completed": true,
+          "thickness": 100
+        },
+        {
+          "deposition": [
+            {
+              "atmosphere": "Vacuum",
+              "method": "Thermal-evaporation",
+              "review_completed": true,
+              "step_name": "Evaporation"
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Al",
+          "review_completed": true,
+          "thickness": 120
+        }
+      ],
+      "light_source": {
+        "light_intensity": 100,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 14.13
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "coefficient": "1",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH6N+"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
+        "formula": "MAPbI3",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          }
+        ]
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.9
+      }
+    }
+  ]
+}
