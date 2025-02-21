@@ -9,6 +9,7 @@ from perovscribe.evaluations import Evaluations, score_multiple_extractions
 from perovscribe import llm_call
 from perovscribe.export import to_json
 import os
+import csv
 
 
 class ExtractionPipeline:
@@ -54,12 +55,16 @@ class ExtractionPipeline:
             output = output + os.path.splitext(os.path.basename(filepath))[0] + ".json"
             pdf_text = self.preprocessor.pdf_to_text(filepath)
             results = llm_call.create_text_completion(self.model_name, pdf_text)
-            to_json(results, output)
-            postprocess(results.model_dump())
+            # to_json(results, output) # Add back for regular
+            with open(output, "w") as f:
+                f.write(json.dumps(results))
+            # postprocess(results.model_dump()) # TODO: Check if you want this to be done
         elif ".json" in filepath:
             results = json.load(open(filepath, "r"))
             results = postprocess(results)
-            evals = Evaluations(postprocess(json.load(open(truthpath))), results)
+            evals = Evaluations(
+                postprocess(json.load(open(truthpath))), results, filepath
+            )
             print("==========================================")
             print("Score:", evals.score)
             print("Devices in truth:", evals.devices_in_truth)
@@ -69,20 +74,32 @@ class ExtractionPipeline:
             print("Device stack score:", evals.score_device_stacks)
             print("Device layers score:", evals.score_device_layers)
             print("Precisions:", evals.score_precisions)
+            print("Recalls:", evals.score_recalls)
             print("Details:", evals.detailed_score)
         elif os.path.isdir(filepath) and os.path.isdir(truthpath):
             truth_extraction_pairs = []
-            for file in [x for x in os.listdir(filepath) if x.endswith(".json")]:
+            for file in [x for x in os.listdir(truthpath) if x.endswith(".json")]:
                 with open(filepath + os.sep + file) as f:
-                    extraction = json.load(f)
+                    extraction = postprocess(json.load(f))
                 with open(truthpath + os.sep + file) as f:
-                    truth = json.load(f)
-                truth_extraction_pairs.append((truth, extraction))
+                    # Note: Postprocessing has an effect on the llm judge call. I prefer now not to add this device stack
+                    truth = postprocess(json.load(f))
+
+                truth_extraction_pairs.append((truth, extraction, file))
             precs = []
             import numpy as np
 
-            for evals in score_multiple_extractions(truth_extraction_pairs):
+            gg = 0
+            llm_judge_calls = 0
+
+            list_of_evals, per_key_metrics = score_multiple_extractions(
+                truth_extraction_pairs
+            )
+            total_missing_devices = 0
+            for evals in list_of_evals:
                 print("==========================================")
+                print(truth_extraction_pairs[gg][2])
+                gg += 1
                 print("Score:", evals.score)
                 print("Devices in truth:", evals.devices_in_truth)
                 print("Devices found:", evals.devices_found)
@@ -91,9 +108,49 @@ class ExtractionPipeline:
                 print("Device stack score:", evals.score_device_stacks)
                 print("Device layers score:", evals.score_device_layers)
                 print("Precisions:", evals.score_precisions)
+                print("Recalls:", evals.score_recalls)
                 print("Details:", evals.detailed_score)
                 precs.append(np.mean(evals.score_precisions))
+                llm_judge_calls += evals.llm_judge_calls
+                total_missing_devices += max(
+                    0, evals.devices_in_truth - evals.devices_found
+                )
+
+            print(
+                "Total active area:",
+                per_key_metrics["active_area:value"]["FN"]
+                + per_key_metrics["active_area:value"]["TP"]
+                + per_key_metrics["active_area:value"]["FP"]
+                + total_missing_devices,
+            )
+            print(
+                "metric_keys",
+                len(per_key_metrics.keys()),
+            )
+            fields = ["Fields", "TP", "FP", "FN", "Hallucinated", "NoneInBoth"]
+            with open("per_key_metrics.csv", "w") as f:
+                f.write("Fields, TP, FP, FN, Hallucinated, NoneInBoth\n")
+                w = csv.DictWriter(f, fields)
+                for key, val in sorted(per_key_metrics.items()):
+                    row = {"Fields": key}
+                    row.update(val)
+                    w.writerow(row)
+            print("LLM Judge calls average:", llm_judge_calls / 15)
             print("Overall avg precision:", np.mean(precs))
+        elif os.path.isdir(filepath):
+            output_folder = output + os.sep + self.model_name
+            Path(output_folder).mkdir(parents=True, exist_ok=True)
+            for file in [x for x in os.listdir(filepath) if x.endswith(".pdf")]:
+                output = (
+                    output_folder
+                    + os.sep
+                    + os.path.splitext(os.path.basename(file))[0]
+                    + ".json"
+                )
+                pdf_text = self.preprocessor.pdf_to_text(filepath + os.sep + file)
+                results = llm_call.create_text_completion(self.model_name, pdf_text)
+                to_json(results, output)
+                postprocess(results.model_dump())
         else:
             print("Hmmm. This wasn't one of the expected inputs. Have a look again.")
 
@@ -106,7 +163,15 @@ def extract(
     postprocessor: str = "NONE",
     cache_dir: str = "",
     use_cache: bool = True,
+    pdf_print: bool = False,
 ):
+    if pdf_print:
+        print(
+            Preprocessor(
+                preprocessor, cache_dir_root=cache_dir, use_cache=use_cache
+            ).pdf_to_text(filepath)
+        )
+        return
     ExtractionPipeline(
         model_name, preprocessor, postprocessor, cache_dir, use_cache
     ).run(filepath, truth)
@@ -116,3 +181,7 @@ def main_cli():
     import fire
 
     fire.Fire(extract)
+
+
+if __name__ == "__main__":
+    main_cli()

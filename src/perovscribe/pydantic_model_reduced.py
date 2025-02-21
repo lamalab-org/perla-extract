@@ -57,6 +57,8 @@ class PerovskiteComposition(BaseModel):
         description="Bandgap of the perovskite material in eV. Include this field only if the bandgap has been directly measured in the experiment. Do not include estimated or literature values.",
     )
 
+    # TODO: Add additive here. It is on Nomad
+
 
 class PCE(UnitValue):
     value: Optional[confloat(ge=0, le=40)] = Field(None)
@@ -258,7 +260,7 @@ class Thickness(BaseModel):
 class Layer(BaseModel):
     name: Optional[str] = Field(
         None,
-        description="Name of the material in the layer. Use standard abbreviations if possible.",
+        description="Name of the material in the layer. Use standard abbreviations if possible. If the layer has additional modificatons done to it, include them here. For example, CH3NH3PbI3 w/ PEG or CH3NH3PbI3 w/ PCBM.",
     )
     thickness: Optional[Thickness] = Field(
         None, description="Total thickness of the deposited perovskite layer."
@@ -315,7 +317,7 @@ class PerovskiteSolarCell(BaseModel):
     ff: Optional[FF] = Field(None)
     number_devices: Optional[int] = Field(
         None,
-        description="Over how may devices the performance metrics have been averaged.",
+        description="Over how many devices the performance metrics have been averaged.",
     )
     averaged_quantities: Optional[bool] = Field(
         None,

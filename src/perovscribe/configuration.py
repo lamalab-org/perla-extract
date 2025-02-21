@@ -11,7 +11,8 @@ pint = {
             "mA cm^-2",
         ),  # Current density
         ureg.volt.dimensionality: (ureg.volt, "V"),  # Voltage
-        ureg.nanometer.dimensionality: (ureg.nanometer, "nm"),  # Thickness
+        ureg.nanometer.dimensionality: (ureg.nanometer, "nm"),  # Thickness,
+        (ureg.meter**2).dimensionality: ("cm^2", "cm^2"),
         ureg.day.dimensionality: (
             ureg.second,
             "s",
@@ -20,5 +21,6 @@ pint = {
             ureg.celsius,
             "°C",
         ),  # Temperature converted from Celsius
+        (1 * ureg.mg / ureg.mL).dimensionality: (ureg.mg / ureg.mL, "mg/mL"),
     }
 }
