@@ -1,0 +1,244 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "unit": "cm^2",
+        "value": null
+      },
+      "additional_notes": null,
+      "averaged_quantities": null,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": null
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": null
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": {
+            "unit": "nm",
+            "value": 3000.0
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "c-TiO2",
+          "thickness": {
+            "unit": "nm",
+            "value": 50.0
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Air",
+              "duration": {
+                "unit": "s",
+                "value": 2.47
+              },
+              "method": "NIR annealing",
+              "solution": null,
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 200.0
+              }
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3-xClx with 5 wt% Al2O3 nanoparticles",
+          "thickness": {
+            "unit": "nm",
+            "value": 450.0
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "spiro-OMeTAD",
+          "thickness": {
+            "unit": "nm",
+            "value": 200.0
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "Au",
+          "thickness": null
+        }
+      ],
+      "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": null
+        },
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 10.0
+      },
+      "perovskite_composition": {
+        "a_ions": null,
+        "b_ions": null,
+        "bandgap": null,
+        "dimensionality": null,
+        "formula": "CH3NH3PbI3-xClx",
+        "x_ions": null
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": null
+      }
+    },
+    {
+      "active_area": {
+        "unit": "cm^2",
+        "value": null
+      },
+      "additional_notes": null,
+      "averaged_quantities": null,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": null
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": null
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": {
+            "unit": "nm",
+            "value": 3000.0
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "c-TiO2",
+          "thickness": {
+            "unit": "nm",
+            "value": 50.0
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Air",
+              "duration": {
+                "unit": "min",
+                "value": 45.0
+              },
+              "method": "Oven annealing",
+              "solution": null,
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 100.0
+              }
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3-xClx with 5 wt% Al2O3 nanoparticles",
+          "thickness": {
+            "unit": "nm",
+            "value": 450.0
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "spiro-OMeTAD",
+          "thickness": {
+            "unit": "nm",
+            "value": 200.0
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "Au",
+          "thickness": null
+        }
+      ],
+      "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": null
+        },
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 10.9
+      },
+      "perovskite_composition": {
+        "a_ions": null,
+        "b_ions": null,
+        "bandgap": null,
+        "dimensionality": null,
+        "formula": "CH3NH3PbI3-xClx",
+        "x_ions": null
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": null
+      }
+    }
+  ]
+}

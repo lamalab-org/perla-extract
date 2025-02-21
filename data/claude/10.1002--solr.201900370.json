@@ -2,11 +2,11 @@
   "cells": [
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.06
       },
       "additional_notes": null,
-      "averaged_quantities": null,
+      "averaged_quantities": true,
       "device_architecture": "nip",
       "encapsulated": null,
       "ff": {
@@ -22,32 +22,23 @@
           "deposition": null,
           "functionality": "Substrate",
           "name": "FTO",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": null,
           "functionality": "Electron-transport",
           "name": "SnO2",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
               "additional_parameters": null,
-              "antisolvent": null,
+              "antisolvent": "toluene",
               "atmosphere": "Ambient air",
-              "duration": {
-                "unit": null,
-                "value": null
-              },
+              "duration": null,
               "method": "Spin-coating",
               "solution": {
                 "compounds": null,
@@ -84,55 +75,69 @@
                 "solvents": [
                   {
                     "name": "DMF",
-                    "volume_fraction": null
+                    "volume_fraction": 0.8
                   },
                   {
                     "name": "DMSO",
-                    "volume_fraction": null
+                    "volume_fraction": 0.2
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "min",
+                "value": 5.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 60.0
+              }
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "min",
+                "value": 10.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 120.0
               }
             }
           ],
           "functionality": "Absorber",
           "name": "FA0.85MA0.15PbI2.55Br0.45",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": null,
           "functionality": "Hole-transport",
           "name": "Spiro-OMeTAD",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": null,
           "functionality": "Contact",
           "name": "Au",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         }
       ],
       "light_source": {
@@ -144,57 +149,53 @@
         },
         "type": "AM 1.5G"
       },
-      "number_devices": null,
+      "number_devices": 40,
       "pce": {
         "unit": "%",
         "value": 20.3
       },
       "perovskite_composition": {
-        "a_ions": [],
-        "b_ions": [],
-        "bandgap": {
-          "unit": null,
-          "value": null
-        },
+        "a_ions": [
+          {
+            "abbreviation": null,
+            "coefficient": "0.85",
+            "common_name": null,
+            "molecular_formula": null
+          },
+          {
+            "abbreviation": null,
+            "coefficient": "0.15",
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": null,
+            "coefficient": "1",
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ],
+        "bandgap": null,
         "dimensionality": null,
         "formula": "FA0.85MA0.15PbI2.55Br0.45",
-        "x_ions": []
+        "x_ions": [
+          {
+            "abbreviation": null,
+            "coefficient": "2.55",
+            "common_name": null,
+            "molecular_formula": null
+          },
+          {
+            "abbreviation": null,
+            "coefficient": "0.45",
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ]
       },
-      "stability": {
-        "PCE_T80": {
-          "unit": null,
-          "value": null
-        },
-        "PCE_after_1000_hours": {
-          "unit": null,
-          "value": null
-        },
-        "PCE_at_the_end_of_description": {
-          "unit": null,
-          "value": null
-        },
-        "PCE_at_the_start_of_the_experiment": {
-          "unit": null,
-          "value": null
-        },
-        "humidity": {
-          "unit": null,
-          "value": null
-        },
-        "light_intensity": {
-          "unit": null,
-          "value": null
-        },
-        "potential_bias": null,
-        "temperature": {
-          "unit": null,
-          "value": null
-        },
-        "time": {
-          "unit": null,
-          "value": null
-        }
-      },
+      "stability": null,
       "voc": {
         "unit": "V",
         "value": 1.11

@@ -2,9 +2,11 @@
   "cells": [
     {
       "active_area": {
+        "unit": null,
         "value": null
       },
-      "averaged_quantites": false,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "nip",
       "encapsulated": false,
       "ff": {
@@ -16,48 +18,273 @@
       },
       "layers": [
         {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true
-        },
-        {
-          "functionality": "Electron-transport",
-          "name": "SnO2",
-          "review_completed": true
-        },
-        {
-          "functionality": "Absorber",
-          "name": "3D Perovskite",
-          "review_completed": true
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "SnO2",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "3D Me3SPbI3",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "spin-coating",
-              "review_completed": true
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "Spiro-OMeTAD",
-          "review_completed": true
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Evaporation",
-              "review_completed": true,
-              "step_name": "Contact Deposition"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Contact Deposition",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Au",
-          "review_completed": true
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         }
       ],
       "light_source": {
-        "light_intensity": 100,
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -68,14 +295,48 @@
       "perovskite_composition": {
         "a_ions": [],
         "b_ions": [],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "",
         "x_ions": []
       },
       "stability": {
-        "PCE_after_1000_hours": 21.41,
-        "humidity": 50,
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": "%",
+          "value": 21.41
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": "%",
+          "value": 50
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "potential_bias": "Open circuit",
-        "time": 3600000
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": "h",
+          "value": 3600000
+        }
       },
       "voc": {
         "unit": "V",
@@ -84,9 +345,11 @@
     },
     {
       "active_area": {
+        "unit": null,
         "value": null
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "nip",
       "encapsulated": false,
       "ff": {
@@ -98,48 +361,273 @@
       },
       "layers": [
         {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true
-        },
-        {
-          "functionality": "Electron-transport",
-          "name": "SnO2",
-          "review_completed": true
-        },
-        {
-          "functionality": "Absorber",
-          "name": "1D-3D Perovskite",
-          "review_completed": true
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "SnO2",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "1D-3D Me3SPbI3",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "spin-coating",
-              "review_completed": true
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "Spiro-OMeTAD",
-          "review_completed": true
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Evaporation",
-              "review_completed": true,
-              "step_name": "Contact Deposition"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Contact Deposition",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Au",
-          "review_completed": true
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         }
       ],
       "light_source": {
-        "light_intensity": 100,
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -164,6 +652,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "Me3SPbI3",
         "x_ions": [
           {
@@ -175,10 +668,39 @@
         ]
       },
       "stability": {
-        "PCE_after_1000_hours": 21.41,
-        "humidity": 50,
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": "%",
+          "value": 21.41
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": "%",
+          "value": 50
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "potential_bias": "Open circuit",
-        "time": 3600000
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": "h",
+          "value": 3600000
+        }
       },
       "voc": {
         "unit": "V",
@@ -187,9 +709,11 @@
     },
     {
       "active_area": {
+        "unit": null,
         "value": null
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "nip",
       "encapsulated": false,
       "ff": {
@@ -201,48 +725,273 @@
       },
       "layers": [
         {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true
-        },
-        {
-          "functionality": "Electron-transport",
-          "name": "SnO2",
-          "review_completed": true
-        },
-        {
-          "functionality": "Absorber",
-          "name": "M3SPbI3",
-          "review_completed": true
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "SnO2",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "Me3SPbI3",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "spin-coating",
-              "review_completed": true
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "Spiro-OMeTAD",
-          "review_completed": true
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Evaporation",
-              "review_completed": true,
-              "step_name": "Contact Deposition"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Contact Deposition",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Au",
-          "review_completed": true
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         }
       ],
       "light_source": {
-        "light_intensity": 100,
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -267,6 +1016,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "Me3SPbI3",
         "x_ions": [
           {
@@ -278,12 +1032,39 @@
         ]
       },
       "stability": {
-        "PCE_at_end": 2.09,
-        "PCE_at_start": 2.09,
-        "humidity": 50,
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": "%",
+          "value": 2.09
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": "%",
+          "value": 2.09
+        },
+        "humidity": {
+          "unit": "%",
+          "value": 50
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "potential_bias": "Open circuit",
-        "review_completed": true,
-        "time": 500
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": "h",
+          "value": 500
+        }
       },
       "voc": {
         "unit": "V",

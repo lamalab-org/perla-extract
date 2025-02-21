@@ -2,9 +2,11 @@
   "cells": [
     {
       "active_area": {
+        "unit": null,
         "value": 0.07068
       },
-      "averaged_quantites": true,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "nip",
       "encapsulated": null,
       "ff": {
@@ -16,161 +18,421 @@
       },
       "layers": [
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Substrate",
           "name": "FTO",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
           "additional_treatment": "TiCl4 treatment",
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Air",
-              "duration": 21600,
+              "duration": {
+                "unit": "s",
+                "value": 21600
+              },
               "method": "Liquid-phase deposition",
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 0.075,
-                    "concentration_unit": "M",
-                    "name": "(NH4)2TiF6",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "M",
+                      "value": 0.075
+                    },
+                    "name": "(NH4)2TiF6"
                   },
                   {
-                    "concentration": 0.2,
-                    "concentration_unit": "M",
-                    "name": "H3BO3",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "M",
+                      "value": 0.2
+                    },
+                    "name": "H3BO3"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "H2O",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "temperature": null
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             },
             {
-              "duration": 5400,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": "s",
+                "value": 5400
+              },
               "method": "Thermal Annealing",
-              "review_completed": true,
-              "temperature": 450
-            },
-            {
-              "duration": 1800,
-              "method": "TiCl4 treatment",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 120,
-                    "concentration_unit": "mmol/L",
-                    "name": "TiCl4 ",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
                   }
-                ]
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "temperature": 70
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 450
+              }
             },
             {
-              "duration": 1800,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": "s",
+                "value": 1800
+              },
+              "method": "TiCl4 treatment",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "mmol/L",
+                      "value": 120
+                    },
+                    "name": "TiCl4 "
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 70
+              }
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": "s",
+                "value": 1800
+              },
               "method": "Thermal Annealing",
-              "review_completed": true,
-              "temperature": 500
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 500
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "TiO2",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Air",
-              "duration": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Two-step deposition",
-              "temperature": null
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Absorber",
           "name": "CH3NH3PbI3",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Air",
-              "duration": 15,
+              "duration": {
+                "unit": "s",
+                "value": 15
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 170,
-                    "concentration_unit": "mmol/L",
-                    "name": "spiro-OMeTAD",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "mmol/L",
+                      "value": 170
+                    },
+                    "name": "spiro-OMeTAD"
                   },
                   {
-                    "concentration": 180,
-                    "concentration_unit": "mmol/L",
-                    "name": "tert-butylpyridine",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "mmol/L",
+                      "value": 180
+                    },
+                    "name": "tert-butylpyridine"
                   },
                   {
-                    "concentration": 60,
-                    "concentration_unit": "mmol/L",
-                    "name": "lithium bis(trifluoromethane)sulfonimidate ",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "mmol/L",
+                      "value": 60
+                    },
+                    "name": "lithium bis(trifluoromethane)sulfonimidate "
                   }
                 ],
                 "solvents": [
                   {
                     "name": "chlorobenzene",
-                    "review_completed": true,
                     "volume_fraction": 0.95
                   },
                   {
                     "name": "acetonitrile",
-                    "review_completed": true,
                     "volume_fraction": 0.05
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "temperature": null
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "Spiro-OMeTAD",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
-              "duration": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Thermal evaporation",
-              "review_completed": true,
-              "temperature": null
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Ag",
-          "review_completed": true,
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
         "description": "solar simulator (Abet Technology Sun 2000)",
-        "light_intensity": 100,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": 1,
@@ -195,6 +457,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3",
         "x_ions": [
           {
@@ -205,7 +472,41 @@
           }
         ]
       },
-      "stability": null,
+      "stability": {
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
+        "potential_bias": null,
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": null,
+          "value": null
+        }
+      },
       "voc": {
         "unit": "V",
         "value": 0.87

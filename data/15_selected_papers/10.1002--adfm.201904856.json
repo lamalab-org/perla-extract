@@ -2,9 +2,11 @@
   "cells": [
     {
       "active_area": {
+        "unit": null,
         "value": 0.1
       },
-      "averaged_quantites": true,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "nip",
       "encapsulated": null,
       "ff": {
@@ -16,38 +18,325 @@
       },
       "layers": [
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Substrate",
           "name": "FTO",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Electron-transport",
           "name": "c-TiO2",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Electron-transport",
           "name": "m-TiO2",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Absorber",
           "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Hole-transport",
           "name": "DTB(3%DEG)",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Contact",
           "name": "Au",
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
-        "light_intensity": 100,
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": 15,
@@ -58,14 +347,48 @@
       "perovskite_composition": {
         "a_ions": [],
         "b_ions": [],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "",
         "x_ions": []
       },
       "stability": {
-        "PCE_after_1000_hours": 18.63,
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": "%",
+          "value": 18.63
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "potential_bias": "Open circuit",
-        "review_completed": true,
-        "time": 720
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": "h",
+          "value": 720
+        }
       },
       "voc": {
         "unit": "V",
@@ -74,9 +397,11 @@
     },
     {
       "active_area": {
+        "unit": null,
         "value": 0.1
       },
-      "averaged_quantites": true,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "nip",
       "encapsulated": null,
       "ff": {
@@ -88,38 +413,325 @@
       },
       "layers": [
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Substrate",
           "name": "FTO",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Electron-transport",
           "name": "c-TiO2",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Electron-transport",
           "name": "m-TiO2",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Absorber",
           "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Hole-transport",
-          "name": "DTB(3%DEG)",
-          "thickness": null
+          "name": "DTB(0%DEG)",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Contact",
           "name": "Au",
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
-        "light_intensity": 100,
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": 15,
@@ -130,14 +742,48 @@
       "perovskite_composition": {
         "a_ions": [],
         "b_ions": [],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "",
         "x_ions": []
       },
       "stability": {
-        "PCE_after_1000_hours": 17.26,
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": "%",
+          "value": 17.26
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "potential_bias": "Open circuit",
-        "review_completed": true,
-        "time": 720
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": "h",
+          "value": 720
+        }
       },
       "voc": {
         "unit": "V",
@@ -146,9 +792,11 @@
     },
     {
       "active_area": {
+        "unit": null,
         "value": 0.1
       },
-      "averaged_quantites": true,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "nip",
       "encapsulated": null,
       "ff": {
@@ -160,38 +808,325 @@
       },
       "layers": [
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Substrate",
           "name": "FTO",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Electron-transport",
           "name": "c-TiO2",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Electron-transport",
           "name": "m-TiO2",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Absorber",
           "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Hole-transport",
-          "name": "DTB(3%DEG)",
-          "thickness": null
+          "name": "DTB(10%DEG)",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
           "functionality": "Contact",
           "name": "Au",
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
-        "light_intensity": 100,
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": 15,
@@ -202,18 +1137,447 @@
       "perovskite_composition": {
         "a_ions": [],
         "b_ions": [],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "",
         "x_ions": []
       },
       "stability": {
-        "PCE_after_1000_hours": 15.59,
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": "%",
+          "value": 15.59
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "potential_bias": "Open circuit",
-        "review_completed": true,
-        "time": 720
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": "h",
+          "value": 720
+        }
       },
       "voc": {
         "unit": "V",
         "value": 1.05
+      }
+    },
+    {
+      "active_area": {
+        "unit": null,
+        "value": 0.1
+      },
+      "additional_notes": null,
+      "averaged_quantities": null,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 72.2
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 25.22
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "c-TiO2",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "m-TiO2",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "DTB(3%DEG)",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Au",
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
+        }
+      ],
+      "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
+        "type": "AM 1.5G"
+      },
+      "number_devices": 1,
+      "pce": {
+        "unit": "%",
+        "value": 20.0
+      },
+      "perovskite_composition": {
+        "a_ions": [],
+        "b_ions": [],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
+        "formula": "",
+        "x_ions": []
+      },
+      "stability": {
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": "%",
+          "value": 18.63
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
+        "potential_bias": "Open circuit",
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": "h",
+          "value": 720
+        }
+      },
+      "voc": {
+        "unit": "V",
+        "value": 1.106
       }
     }
   ]

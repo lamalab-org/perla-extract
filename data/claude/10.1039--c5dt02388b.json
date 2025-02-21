@@ -1,0 +1,134 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "unit": "cm^2",
+        "value": null
+      },
+      "additional_notes": null,
+      "averaged_quantities": null,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 73.1
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 21.3
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Dip-coating",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "compact TiO2",
+          "thickness": {
+            "unit": "nm",
+            "value": 50.0
+          }
+        },
+        {
+          "additional_treatment": "TiCl4 treatment for 30 min",
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "mesoporous TiO2",
+          "thickness": {
+            "unit": "nm",
+            "value": 180.0
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Air",
+              "duration": null,
+              "method": "Two-step sequential deposition",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "Spiro-MeOTAD",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Thermal evaporation",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            }
+          ],
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": {
+            "unit": "nm",
+            "value": 200.0
+          }
+        }
+      ],
+      "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100.0
+        },
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 14.6
+      },
+      "perovskite_composition": {
+        "a_ions": null,
+        "b_ions": null,
+        "bandgap": null,
+        "dimensionality": null,
+        "formula": "CH3NH3PbI3",
+        "x_ions": null
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.94
+      }
+    }
+  ]
+}

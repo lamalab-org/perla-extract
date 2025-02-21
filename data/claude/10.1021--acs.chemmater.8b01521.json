@@ -1,0 +1,100 @@
+{
+  "cells": [
+    {
+      "active_area": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 46.5
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 15.1
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "TiO2",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Absorber",
+          "name": "MAPbI3",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": {
+                "charge_density": "10 mC cm^-2",
+                "electrolyte": "0.01 M bis-EDOT, 0.1 M Bu4NPF6 in dichloromethane",
+                "potential": "1.0 V"
+              },
+              "antisolvent": null,
+              "atmosphere": "Other",
+              "duration": null,
+              "method": "Electrodeposition",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": {
+                "duration": "10 s",
+                "potential": "-0.6 V"
+              },
+              "antisolvent": null,
+              "atmosphere": "Other",
+              "duration": null,
+              "method": "Electrochemical post-treatment",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            }
+          ],
+          "functionality": "Hole-transport",
+          "name": "PEDOT",
+          "thickness": null
+        }
+      ],
+      "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": null,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": null,
+        "value": 5.9
+      },
+      "perovskite_composition": {
+        "a_ions": null,
+        "b_ions": null,
+        "bandgap": null,
+        "dimensionality": null,
+        "formula": "MAPbI3",
+        "x_ions": null
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.84
+      }
+    }
+  ]
+}

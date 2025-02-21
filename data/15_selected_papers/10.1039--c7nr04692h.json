@@ -2,9 +2,11 @@
   "cells": [
     {
       "active_area": {
+        "unit": null,
         "value": 0.0725
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "pin",
       "encapsulated": null,
       "ff": {
@@ -16,172 +18,332 @@
       },
       "layers": [
         {
-          "functionality": "Substrate",
-          "name": "SLG",
-          "review_completed": true
-        },
-        {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true,
-          "thickness": null
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
-              "atmosphere": "Ambient air",
-              "method": "Spin-coating",
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 1,
-                    "concentration_unit": "g/L",
-                    "name": "MoO3",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 1
+                    },
+                    "name": "MoO3"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "Water",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "MoO3",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PbCl2",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PbCl2"
                   },
                   {
-                    "name": "CH3NH3I",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "CH3NH3I"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "DMF",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Absorber",
-          "name": "Perovskite",
-          "review_completed": true,
-          "thickness": null
+          "name": "CH3NH3PbIxCl3\u2212x",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 20,
-                    "concentration_unit": "g/L",
-                    "name": "PCBM-60",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 20
+                    },
+                    "name": "PCBM-60"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "chloroform",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "PCBM-60",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 0.5,
-                    "concentration_unit": "g/L",
-                    "name": "Bphen",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.5
+                    },
+                    "name": "Bphen"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "ethanol",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "Bphen",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Thermal-evaporation",
-              "review_completed": true,
-              "step_name": "Evaporation"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Evaporation",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Ag",
-          "review_completed": true,
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
+        "description": null,
         "lamp": "Newport, Class AAA, 94023A-U",
-        "light_intensity": 100,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -206,6 +368,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3",
         "x_ions": [
           {
@@ -217,8 +384,39 @@
         ]
       },
       "stability": {
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "potential_bias": "Unknown",
-        "review_completed": true
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": null,
+          "value": null
+        }
       },
       "voc": {
         "unit": "V",
@@ -227,9 +425,11 @@
     },
     {
       "active_area": {
+        "unit": null,
         "value": 0.0725
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "pin",
       "encapsulated": null,
       "ff": {
@@ -241,176 +441,339 @@
       },
       "layers": [
         {
-          "functionality": "Substrate",
-          "name": "SLG",
-          "review_completed": true
-        },
-        {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true,
-          "thickness": null
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
-              "atmosphere": "Ambient air",
-              "method": "Spin-coating",
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PEDOT:PSS",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PEDOT:PSS"
                   },
                   {
-                    "concentration": 0.25,
-                    "concentration_unit": "g/L",
-                    "name": "CrO3",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.25
+                    },
+                    "name": "CrO3"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "Water",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "PEDOT:PSS-CrO3",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PbCl2",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PbCl2"
                   },
                   {
-                    "name": "CH3NH3I",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "CH3NH3I"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "DMF",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Absorber",
-          "name": "Perovskite",
-          "review_completed": true,
-          "thickness": null
+          "name": "CH3NH3PbIxCl3\u2212x",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 20,
-                    "concentration_unit": "g/L",
-                    "name": "PCBM-60",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 20
+                    },
+                    "name": "PCBM-60"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "chloroform",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "PCBM-60",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 0.5,
-                    "concentration_unit": "g/L",
-                    "name": "Bphen",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.5
+                    },
+                    "name": "Bphen"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "ethanol",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "Bphen",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Thermal-evaporation",
-              "review_completed": true,
-              "step_name": "Evaporation"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Evaporation",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Ag",
-          "review_completed": true,
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
+        "description": null,
         "lamp": "Newport, Class AAA, 94023A-U",
-        "light_intensity": 100,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -435,6 +798,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3",
         "x_ions": [
           {
@@ -446,14 +814,39 @@
         ]
       },
       "stability": {
-        "PCE_at_end": 0.5,
-        "PCE_at_start": 1,
-        "humidity": 30,
-        "light_intensity": 100,
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": "%",
+          "value": 0.5
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": "%",
+          "value": 1
+        },
+        "humidity": {
+          "unit": "%",
+          "value": 30
+        },
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "potential_bias": "Open circuit",
-        "review_completed": true,
-        "temperature": 25,
-        "time": 360
+        "temperature": {
+          "unit": "\u00b0C",
+          "value": 25
+        },
+        "time": {
+          "unit": "h",
+          "value": 360
+        }
       },
       "voc": {
         "unit": "V",
@@ -462,9 +855,11 @@
     },
     {
       "active_area": {
+        "unit": null,
         "value": 0.0725
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "pin",
       "encapsulated": null,
       "ff": {
@@ -476,176 +871,339 @@
       },
       "layers": [
         {
-          "functionality": "Substrate",
-          "name": "SLG",
-          "review_completed": true
-        },
-        {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true,
-          "thickness": null
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
-              "atmosphere": "Ambient air",
-              "method": "Spin-coating",
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PEDOT:PSS",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PEDOT:PSS"
                   },
                   {
-                    "concentration": 0.2,
-                    "concentration_unit": "g/L",
-                    "name": "GeO2",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.2
+                    },
+                    "name": "GeO2"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "Water",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "PEDOT:PSS-GeO2",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PbCl2",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PbCl2"
                   },
                   {
-                    "name": "CH3NH3I",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "CH3NH3I"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "DMF",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Absorber",
-          "name": "Perovskite",
-          "review_completed": true,
-          "thickness": null
+          "name": "CH3NH3PbIxCl3\u2212x",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 20,
-                    "concentration_unit": "g/L",
-                    "name": "PCBM-60",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 20
+                    },
+                    "name": "PCBM-60"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "chloroform",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "PCBM-60",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 0.5,
-                    "concentration_unit": "g/L",
-                    "name": "Bphen",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.5
+                    },
+                    "name": "Bphen"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "ethanol",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "Bphen",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Thermal-evaporation",
-              "review_completed": true,
-              "step_name": "Evaporation"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Evaporation",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Ag",
-          "review_completed": true,
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
+        "description": null,
         "lamp": "Newport, Class AAA, 94023A-U",
-        "light_intensity": 100,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -670,6 +1228,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3",
         "x_ions": [
           {
@@ -681,14 +1244,39 @@
         ]
       },
       "stability": {
-        "PCE_at_end": 0.5,
-        "PCE_at_start": 1,
-        "humidity": 30,
-        "light_intensity": 100,
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": "%",
+          "value": 0.5
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": "%",
+          "value": 1
+        },
+        "humidity": {
+          "unit": "%",
+          "value": 30
+        },
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "potential_bias": "Open circuit",
-        "review_completed": true,
-        "temperature": 25,
-        "time": 360
+        "temperature": {
+          "unit": "\u00b0C",
+          "value": 25
+        },
+        "time": {
+          "unit": "h",
+          "value": 360
+        }
       },
       "voc": {
         "unit": "V",
@@ -697,9 +1285,11 @@
     },
     {
       "active_area": {
+        "unit": null,
         "value": 0.0725
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "pin",
       "encapsulated": null,
       "ff": {
@@ -711,172 +1301,332 @@
       },
       "layers": [
         {
-          "functionality": "Substrate",
-          "name": "SLG",
-          "review_completed": true
-        },
-        {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true,
-          "thickness": null
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
-              "atmosphere": "Ambient air",
-              "method": "Spin-coating",
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 1,
-                    "concentration_unit": "g/L",
-                    "name": "GeO2",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 1
+                    },
+                    "name": "GeO2"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "Water",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "GeO2",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PbCl2",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PbCl2"
                   },
                   {
-                    "name": "CH3NH3I",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "CH3NH3I"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "DMF",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Absorber",
-          "name": "Perovskite",
-          "review_completed": true,
-          "thickness": null
+          "name": "CH3NH3PbIxCl3\u2212x",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 20,
-                    "concentration_unit": "g/L",
-                    "name": "PCBM-60",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 20
+                    },
+                    "name": "PCBM-60"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "chloroform",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "PCBM-60",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 0.5,
-                    "concentration_unit": "g/L",
-                    "name": "Bphen",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.5
+                    },
+                    "name": "Bphen"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "ethanol",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "Bphen",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Thermal-evaporation",
-              "review_completed": true,
-              "step_name": "Evaporation"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Evaporation",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Ag",
-          "review_completed": true,
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
+        "description": null,
         "lamp": "Newport, Class AAA, 94023A-U",
-        "light_intensity": 100,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -901,6 +1651,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3",
         "x_ions": [
           {
@@ -912,8 +1667,39 @@
         ]
       },
       "stability": {
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "potential_bias": "Unknown",
-        "review_completed": true
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": null,
+          "value": null
+        }
       },
       "voc": {
         "unit": "V",
@@ -922,9 +1708,11 @@
     },
     {
       "active_area": {
+        "unit": null,
         "value": 0.0725
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "pin",
       "encapsulated": null,
       "ff": {
@@ -936,172 +1724,332 @@
       },
       "layers": [
         {
-          "functionality": "Substrate",
-          "name": "SLG",
-          "review_completed": true
-        },
-        {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true,
-          "thickness": null
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
-              "atmosphere": "Ambient air",
-              "method": "Spin-coating",
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 1,
-                    "concentration_unit": "g/L",
-                    "name": "V2O5",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 1
+                    },
+                    "name": "V2O5"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "Water",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "V2O5",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PbCl2",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PbCl2"
                   },
                   {
-                    "name": "CH3NH3I",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "CH3NH3I"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "DMF",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Absorber",
-          "name": "Perovskite",
-          "review_completed": true,
-          "thickness": null
+          "name": "CH3NH3PbIxCl3\u2212x",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 20,
-                    "concentration_unit": "g/L",
-                    "name": "PCBM-60",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 20
+                    },
+                    "name": "PCBM-60"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "chloroform",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "PCBM-60",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 0.5,
-                    "concentration_unit": "g/L",
-                    "name": "Bphen",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.5
+                    },
+                    "name": "Bphen"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "ethanol",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "Bphen",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Thermal-evaporation",
-              "review_completed": true,
-              "step_name": "Evaporation"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Evaporation",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Ag",
-          "review_completed": true,
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
+        "description": null,
         "lamp": "Newport, Class AAA, 94023A-U",
-        "light_intensity": 100,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -1126,6 +2074,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3",
         "x_ions": [
           {
@@ -1137,8 +2090,39 @@
         ]
       },
       "stability": {
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "potential_bias": "Unknown",
-        "review_completed": true
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": null,
+          "value": null
+        }
       },
       "voc": {
         "unit": "V",
@@ -1147,9 +2131,11 @@
     },
     {
       "active_area": {
+        "unit": null,
         "value": 0.0725
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "pin",
       "encapsulated": null,
       "ff": {
@@ -1161,170 +2147,332 @@
       },
       "layers": [
         {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true,
-          "thickness": null
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
-              "atmosphere": "Ambient air",
-              "method": "Spin-coating",
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PEDOT:PSS",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PEDOT:PSS"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "Water",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "PEDOT:PSS",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PbCl2",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PbCl2"
                   },
                   {
-                    "name": "CH3NH3I",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "CH3NH3I"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "DMF",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Absorber",
-          "name": "Perovskite",
-          "review_completed": true,
-          "thickness": null
+          "name": "CH3NH3PbIxCl3\u2212x",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 20,
-                    "concentration_unit": "g/L",
-                    "name": "PCBM-60",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 20
+                    },
+                    "name": "PCBM-60"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "chloroform",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "PCBM-60",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 0.5,
-                    "concentration_unit": "g/L",
-                    "name": "Bphen",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.5
+                    },
+                    "name": "Bphen"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "ethanol",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "Bphen",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Thermal-evaporation",
-              "review_completed": true,
-              "step_name": "Evaporation"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Evaporation",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Ag",
-          "review_completed": true,
-          "thickness": 100
-        },
-        {
-          "functionality": "Substrate",
-          "name": "SLG",
-          "review_completed": true
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
+        "description": null,
         "lamp": "Newport, Class AAA, 94023A-U",
-        "light_intensity": 100,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -1349,6 +2497,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3",
         "x_ions": [
           {
@@ -1360,14 +2513,39 @@
         ]
       },
       "stability": {
-        "PCE_at_end": 0.206,
-        "PCE_at_start": 1,
-        "humidity": 30,
-        "light_intensity": 100,
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": "%",
+          "value": 0.206
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": "%",
+          "value": 1
+        },
+        "humidity": {
+          "unit": "%",
+          "value": 30
+        },
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "potential_bias": "Open circuit",
-        "review_completed": true,
-        "temperature": 25,
-        "time": 360
+        "temperature": {
+          "unit": "\u00b0C",
+          "value": 25
+        },
+        "time": {
+          "unit": "h",
+          "value": 360
+        }
       },
       "voc": {
         "unit": "V",
@@ -1376,9 +2554,11 @@
     },
     {
       "active_area": {
+        "unit": null,
         "value": 0.0725
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "pin",
       "encapsulated": null,
       "ff": {
@@ -1390,172 +2570,332 @@
       },
       "layers": [
         {
-          "functionality": "Substrate",
-          "name": "SLG",
-          "review_completed": true
-        },
-        {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true,
-          "thickness": null
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
-              "atmosphere": "Ambient air",
-              "method": "Spin-coating",
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 1,
-                    "concentration_unit": "g/L",
-                    "name": "CrO3",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 1
+                    },
+                    "name": "CrO3"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "Water",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "CrO3",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PbCl2",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PbCl2"
                   },
                   {
-                    "name": "CH3NH3I",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "CH3NH3I"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "DMF",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Absorber",
-          "name": "Perovskite",
-          "review_completed": true,
-          "thickness": null
+          "name": "CH3NH3PbIxCl3\u2212x",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 20,
-                    "concentration_unit": "g/L",
-                    "name": "PCBM-60",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 20
+                    },
+                    "name": "PCBM-60"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "chloroform",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "PCBM-60",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 0.5,
-                    "concentration_unit": "g/L",
-                    "name": "Bphen",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.5
+                    },
+                    "name": "Bphen"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "ethanol",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "Bphen",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Thermal-evaporation",
-              "review_completed": true,
-              "step_name": "Evaporation"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Evaporation",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Ag",
-          "review_completed": true,
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
+        "description": null,
         "lamp": "Newport, Class AAA, 94023A-U",
-        "light_intensity": 100,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -1580,6 +2920,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3",
         "x_ions": [
           {
@@ -1591,8 +2936,39 @@
         ]
       },
       "stability": {
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "potential_bias": "Unknown",
-        "review_completed": true
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": null,
+          "value": null
+        }
       },
       "voc": {
         "unit": "V",
@@ -1601,9 +2977,11 @@
     },
     {
       "active_area": {
+        "unit": null,
         "value": 0.0725
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "pin",
       "encapsulated": null,
       "ff": {
@@ -1615,176 +2993,339 @@
       },
       "layers": [
         {
-          "functionality": "Substrate",
-          "name": "SLG",
-          "review_completed": true
-        },
-        {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true,
-          "thickness": null
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
-              "atmosphere": "Ambient air",
-              "method": "Spin-coating",
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PEDOT:PSS",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PEDOT:PSS"
                   },
                   {
-                    "concentration": 0.2,
-                    "concentration_unit": "g/L",
-                    "name": "MoO3",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.2
+                    },
+                    "name": "MoO3"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "Water",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "PEDOT:PSS-MoO3",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PbCl2",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PbCl2"
                   },
                   {
-                    "name": "CH3NH3I",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "CH3NH3I"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "DMF",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Absorber",
-          "name": "Perovskite",
-          "review_completed": true,
-          "thickness": null
+          "name": "CH3NH3PbIxCl3\u2212x",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 20,
-                    "concentration_unit": "g/L",
-                    "name": "PCBM-60",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 20
+                    },
+                    "name": "PCBM-60"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "chloroform",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "PCBM-60",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 0.5,
-                    "concentration_unit": "g/L",
-                    "name": "Bphen",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.5
+                    },
+                    "name": "Bphen"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "ethanol",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "Bphen",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Thermal-evaporation",
-              "review_completed": true,
-              "step_name": "Evaporation"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Evaporation",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Ag",
-          "review_completed": true,
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
+        "description": null,
         "lamp": "Newport, Class AAA, 94023A-U",
-        "light_intensity": 100,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -1809,6 +3350,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3",
         "x_ions": [
           {
@@ -1820,14 +3366,39 @@
         ]
       },
       "stability": {
-        "PCE_at_end": 0.5,
-        "PCE_at_start": 1,
-        "humidity": 30,
-        "light_intensity": 100,
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": "%",
+          "value": 0.5
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": "%",
+          "value": 1
+        },
+        "humidity": {
+          "unit": "%",
+          "value": 30
+        },
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "potential_bias": "Open circuit",
-        "review_completed": true,
-        "temperature": 25,
-        "time": 360
+        "temperature": {
+          "unit": "\u00b0C",
+          "value": 25
+        },
+        "time": {
+          "unit": "h",
+          "value": 360
+        }
       },
       "voc": {
         "unit": "V",
@@ -1836,9 +3407,11 @@
     },
     {
       "active_area": {
+        "unit": null,
         "value": 0.0725
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "pin",
       "encapsulated": null,
       "ff": {
@@ -1850,176 +3423,339 @@
       },
       "layers": [
         {
-          "functionality": "Substrate",
-          "name": "SLG",
-          "review_completed": true
-        },
-        {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true,
-          "thickness": null
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
-              "atmosphere": "Ambient air",
-              "method": "Spin-coating",
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PEDOT:PSS",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PEDOT:PSS"
                   },
                   {
-                    "concentration": 0.33,
-                    "concentration_unit": "g/L",
-                    "name": "V2O5",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.33
+                    },
+                    "name": "V2O5"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "Water",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "PEDOT:PSS-V2O5",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "name": "PbCl2",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "PbCl2"
                   },
                   {
-                    "name": "CH3NH3I",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "CH3NH3I"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "DMF",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Absorber",
-          "name": "Perovskite",
-          "review_completed": true,
-          "thickness": null
+          "name": "CH3NH3PbIxCl3\u2212x",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 20,
-                    "concentration_unit": "g/L",
-                    "name": "PCBM-60",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 20
+                    },
+                    "name": "PCBM-60"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "chloroform",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "PCBM-60",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 0.5,
-                    "concentration_unit": "g/L",
-                    "name": "Bphen",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "g/L",
+                      "value": 0.5
+                    },
+                    "name": "Bphen"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "ethanol",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
               "step_name": "Spin-coating",
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "Bphen",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Thermal-evaporation",
-              "review_completed": true,
-              "step_name": "Evaporation"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Evaporation",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Ag",
-          "review_completed": true,
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         }
       ],
       "light_source": {
+        "description": null,
         "lamp": "Newport, Class AAA, 94023A-U",
-        "light_intensity": 100,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -2044,6 +3780,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3",
         "x_ions": [
           {
@@ -2055,14 +3796,39 @@
         ]
       },
       "stability": {
-        "PCE_at_end": 0.62,
-        "PCE_at_start": 1,
-        "humidity": 30,
-        "light_intensity": 100,
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": "%",
+          "value": 0.62
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": "%",
+          "value": 1
+        },
+        "humidity": {
+          "unit": "%",
+          "value": 30
+        },
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "potential_bias": "Open circuit",
-        "review_completed": true,
-        "temperature": 25,
-        "time": 360
+        "temperature": {
+          "unit": "\u00b0C",
+          "value": 25
+        },
+        "time": {
+          "unit": "h",
+          "value": 360
+        }
       },
       "voc": {
         "unit": "V",

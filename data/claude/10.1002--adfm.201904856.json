@@ -1,0 +1,117 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "unit": "cm^2",
+        "value": 0.1
+      },
+      "additional_notes": null,
+      "averaged_quantities": null,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 75.08
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 23.64
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "c-TiO2",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "m-TiO2",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Absorber",
+          "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "DTB(3%DEG)",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "Au",
+          "thickness": {
+            "unit": "nm",
+            "value": 100.0
+          }
+        }
+      ],
+      "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100.0
+        },
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 20.19
+      },
+      "perovskite_composition": {
+        "a_ions": null,
+        "b_ions": null,
+        "bandgap": null,
+        "dimensionality": null,
+        "formula": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
+        "x_ions": null
+      },
+      "stability": {
+        "PCE_T80": null,
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": "%",
+          "value": 18.63
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": "%",
+          "value": 20.19
+        },
+        "humidity": null,
+        "light_intensity": null,
+        "potential_bias": "Open circuit",
+        "temperature": null,
+        "time": {
+          "unit": "days",
+          "value": 30.0
+        }
+      },
+      "voc": {
+        "unit": "V",
+        "value": 1.14
+      }
+    }
+  ]
+}

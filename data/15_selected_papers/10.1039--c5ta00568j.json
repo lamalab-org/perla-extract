@@ -2,138 +2,337 @@
   "cells": [
     {
       "active_area": {
+        "unit": null,
         "value": null
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "nip",
       "encapsulated": null,
       "ff": {
-        "value": 0
+        "value": null
       },
       "jsc": {
         "unit": "mA cm^-2",
-        "value": 0
+        "value": null
       },
       "layers": [
         {
-          "functionality": "Substrate",
-          "name": "FTO",
-          "review_completed": true,
-          "thickness": 3000000
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
-              "atmosphere": "Ambient air",
-              "duration": null,
-              "method": "Spin-coating",
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 0.00025,
-                    "concentration_unit": "M",
-                    "name": "titanium(IV) isopropoxide",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": {
+            "unit": "nm",
+            "value": 3000000
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "M",
+                      "value": 0.00025
+                    },
+                    "name": "titanium(IV) isopropoxide"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "ethanol",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "TiO2 deposition"
+              "step_name": "TiO2 deposition",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "TiO2",
-          "review_completed": true,
-          "thickness": 50
+          "thickness": {
+            "unit": "nm",
+            "value": 50
+          }
         },
         {
           "additional_treatment": "Al2O3 dopping",
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Air",
-              "duration": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 5,
-                    "concentration_unit": "wt%",
-                    "name": "Al2O3 nanoparticles",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "wt%",
+                      "value": 5
+                    },
+                    "name": "Al2O3 nanoparticles"
                   },
                   {
-                    "name": "CH3NH3PbI3XClX",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "CH3NH3PbI3XClX"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "DMF",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "temperature": null
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             },
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Air",
-              "duration": 2.5,
+              "duration": {
+                "unit": "s",
+                "value": 2.5
+              },
               "method": "NIR annealing",
-              "review_completed": true,
-              "temperature": 200
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 200
+              }
             }
           ],
           "functionality": "Absorber",
           "name": "CH3NH3PbI3-xClx ",
-          "review_completed": true,
-          "thickness": 450
+          "thickness": {
+            "unit": "nm",
+            "value": 450
+          }
         },
         {
           "additional_treatment": "tBP and Li-TFSI additives",
           "deposition": [
             {
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
               }
             }
           ],
           "functionality": "Hole-transport",
           "name": "Spiro-OMeTAD",
-          "review_completed": true,
-          "thickness": 200
+          "thickness": {
+            "unit": "nm",
+            "value": 200
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Evaporation",
-              "review_completed": true,
-              "step_name": "Au deposition"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Au deposition",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Au",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         }
       ],
       "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -158,6 +357,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3-xClx",
         "x_ions": [
           {
@@ -174,146 +378,379 @@
           }
         ]
       },
-      "stability": null,
+      "stability": {
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
+        "potential_bias": null,
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": null,
+          "value": null
+        }
+      },
       "voc": {
         "unit": "V",
-        "value": 0
+        "value": null
       }
     },
     {
       "active_area": {
+        "unit": null,
         "value": null
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "nip",
       "encapsulated": null,
       "ff": {
-        "value": 0
+        "value": null
       },
       "jsc": {
         "unit": "mA cm^-2",
-        "value": 0
+        "value": null
       },
       "layers": [
         {
-          "functionality": "Substrate",
-          "name": "FTO",
-          "review_completed": true,
-          "thickness": 3000000
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
-              "atmosphere": "Ambient air",
-              "duration": null,
-              "method": "Spin-coating",
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 0.00025,
-                    "concentration_unit": "M",
-                    "name": "titanium(IV) isopropoxide",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "FTO",
+          "thickness": {
+            "unit": "nm",
+            "value": 3000000
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "M",
+                      "value": 0.00025
+                    },
+                    "name": "titanium(IV) isopropoxide"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "ethanol",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "TiO2 deposition"
+              "step_name": "TiO2 deposition",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "TiO2",
-          "review_completed": true,
-          "thickness": 50
+          "thickness": {
+            "unit": "nm",
+            "value": 50
+          }
         },
         {
           "additional_treatment": "Al2O3 dopping",
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Air",
-              "duration": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 5,
-                    "concentration_unit": "wt%",
-                    "name": "Al2O3 nanoparticles",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "wt%",
+                      "value": 5
+                    },
+                    "name": "Al2O3 nanoparticles"
                   },
                   {
-                    "name": "CH3NH3PbI3XClX",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": "CH3NH3PbI3XClX"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "DMF",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
                 ],
-                "temperature": null,
-                "volume": null
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "temperature": null
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             },
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Air",
-              "duration": 2700,
+              "duration": {
+                "unit": "s",
+                "value": 2700
+              },
               "method": "Oven-Annealing",
-              "review_completed": true,
-              "temperature": 100
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 100
+              }
             }
           ],
           "functionality": "Absorber",
           "name": "CH3NH3PbI3-xClx ",
-          "review_completed": true,
-          "thickness": 450
+          "thickness": {
+            "unit": "nm",
+            "value": 450
+          }
         },
         {
           "additional_treatment": "tBP and Li-TFSI additives",
           "deposition": [
             {
-              "review_completed": true,
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
               "solution": {
-                "review_completed": true
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
               }
             }
           ],
           "functionality": "Hole-transport",
           "name": "Spiro-OMeTAD",
-          "review_completed": true,
-          "thickness": 200
+          "thickness": {
+            "unit": "nm",
+            "value": 200
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Evaporation",
-              "review_completed": true,
-              "step_name": "Au deposition"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Au deposition",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Au",
-          "review_completed": true,
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         }
       ],
       "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -338,6 +775,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3-xClx",
         "x_ions": [
           {
@@ -354,10 +796,44 @@
           }
         ]
       },
-      "stability": null,
+      "stability": {
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
+        "potential_bias": null,
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": null,
+          "value": null
+        }
+      },
       "voc": {
         "unit": "V",
-        "value": 0
+        "value": null
       }
     }
   ]

@@ -2,9 +2,11 @@
   "cells": [
     {
       "active_area": {
+        "unit": null,
         "value": 0.045
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "nip",
       "encapsulated": null,
       "ff": {
@@ -16,115 +18,362 @@
       },
       "layers": [
         {
-          "functionality": "Substrate",
-          "name": "SLG",
-          "review_completed": true
-        },
-        {
-          "functionality": "Contact",
-          "name": "ITO",
-          "review_completed": true,
-          "thickness": null
-        },
-        {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "step_name": "Spin-coating"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             },
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Air",
-              "duration": 600,
+              "duration": {
+                "unit": "s",
+                "value": 600
+              },
               "method": "Thermal.annealing",
-              "review_completed": true,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
               "step_name": "Annealing",
-              "temperature": 150
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 150
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "PEDOT:PSS",
-          "review_completed": true,
-          "thickness": 35
+          "thickness": {
+            "unit": "nm",
+            "value": 35
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 40,
+              "duration": {
+                "unit": "s",
+                "value": 40
+              },
               "method": "Spin-coating",
-              "review_completed": true,
               "solution": {
-                "review_completed": true,
+                "compounds": null,
                 "solutes": [
                   {
-                    "concentration": 2.64,
-                    "concentration_unit": "M",
-                    "name": "PbCl2",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "M",
+                      "value": 2.64
+                    },
+                    "name": "PbCl2"
                   },
                   {
-                    "concentration": 0.88,
-                    "concentration_unit": "M",
-                    "name": "CH3NH3I",
-                    "review_completed": true
+                    "concentration": {
+                      "unit": "M",
+                      "value": 0.88
+                    },
+                    "name": "CH3NH3I"
                   }
                 ],
                 "solvents": [
                   {
                     "name": "DMF",
-                    "review_completed": true,
                     "volume_fraction": 1
                   }
-                ]
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
               },
-              "step_name": "Spin-coating"
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             },
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
-              "duration": 10800,
+              "duration": {
+                "unit": "s",
+                "value": 10800
+              },
               "method": "Thermal-annealing",
-              "review_completed": true,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
               "step_name": "Annealing",
-              "temperature": 100
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 100
+              }
             }
           ],
           "functionality": "Absorber",
-          "name": "Perovskite",
-          "review_completed": true,
-          "thickness": null
+          "name": "CH3NH3PbI3-xClx",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "N2",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Spin-coating",
-              "review_completed": true,
-              "step_name": "Spin-coating"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Spin-coating",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Electron-transport",
           "name": "PCBM-60",
-          "review_completed": true,
-          "thickness": 100
+          "thickness": {
+            "unit": "nm",
+            "value": 100
+          }
         },
         {
+          "additional_treatment": null,
           "deposition": [
             {
+              "additional_parameters": null,
+              "antisolvent": null,
               "atmosphere": "Vacuum",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Thermal-evaporation",
-              "review_completed": true,
-              "step_name": "Evaporation"
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": "Evaporation",
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Contact",
           "name": "Al",
-          "review_completed": true,
-          "thickness": 120
+          "thickness": {
+            "unit": "nm",
+            "value": 120
+          }
         }
       ],
       "light_source": {
-        "light_intensity": 100,
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100
+        },
         "type": "AM 1.5G"
       },
       "number_devices": null,
@@ -149,6 +398,11 @@
             "molecular_formula": "Pb2+"
           }
         ],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3",
         "x_ions": [
           {
@@ -159,7 +413,41 @@
           }
         ]
       },
-      "stability": null,
+      "stability": {
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
+        "potential_bias": null,
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": null,
+          "value": null
+        }
+      },
       "voc": {
         "unit": "V",
         "value": 0.9

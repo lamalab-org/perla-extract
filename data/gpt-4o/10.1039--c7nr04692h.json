@@ -1,0 +1,174 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "unit": "mm^2",
+        "value": 7.25
+      },
+      "additional_notes": null,
+      "averaged_quantities": null,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 71.0
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 19.46
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "sV2O5",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Absorber",
+          "name": "CH3NH3PbIxCl3\u2212x",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "PC61BM",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Other",
+          "name": "Bphen",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": null
+        }
+      ],
+      "light_source": {
+        "description": "AM 1.5 G solar irradiation at 100 mW cm^-2",
+        "lamp": "Newport, Class AAA solar simulator, 94023A-U",
+        "light_intensity": null,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 13.26
+      },
+      "perovskite_composition": {
+        "a_ions": null,
+        "b_ions": null,
+        "bandgap": null,
+        "dimensionality": null,
+        "formula": "CH3NH3PbIxCl3\u2212x",
+        "x_ions": null
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.96
+      }
+    },
+    {
+      "active_area": {
+        "unit": "mm^2",
+        "value": 7.25
+      },
+      "additional_notes": null,
+      "averaged_quantities": null,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 79.0
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 22.38
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "PEDOT:PSS\u2013V2O5 (2 : 1)",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Absorber",
+          "name": "CH3NH3PbIxCl3\u2212x",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "PC61BM",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Other",
+          "name": "Bphen",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": null
+        }
+      ],
+      "light_source": {
+        "description": "AM 1.5 G solar irradiation at 100 mW cm^-2",
+        "lamp": "Newport, Class AAA solar simulator, 94023A-U",
+        "light_intensity": null,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 18.03
+      },
+      "perovskite_composition": {
+        "a_ions": null,
+        "b_ions": null,
+        "bandgap": null,
+        "dimensionality": null,
+        "formula": "CH3NH3PbIxCl3\u2212x",
+        "x_ions": null
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 1.02
+      }
+    }
+  ]
+}

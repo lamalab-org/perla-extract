@@ -1,0 +1,79 @@
+{
+  "cells": [
+    {
+      "active_area": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 69.5
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 22.59
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "PEDOT:PSS",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3-xClx",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "PC61BM",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "Al",
+          "thickness": null
+        }
+      ],
+      "light_source": {
+        "description": "AM 1.5 illumination at the light intensity of 100 mW cm^-2",
+        "lamp": "300 W steady-state xenon lamp",
+        "light_intensity": null,
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 14.13
+      },
+      "perovskite_composition": {
+        "a_ions": null,
+        "b_ions": null,
+        "bandgap": null,
+        "dimensionality": null,
+        "formula": "CH3NH3PbI3-xClx",
+        "x_ions": null
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 0.9
+      }
+    }
+  ]
+}

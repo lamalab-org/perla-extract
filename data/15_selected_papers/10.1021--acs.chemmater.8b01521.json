@@ -2,17 +2,19 @@
   "cells": [
     {
       "active_area": {
+        "unit": null,
         "value": null
       },
-      "averaged_quantites": null,
+      "additional_notes": null,
+      "averaged_quantities": null,
       "device_architecture": "nip",
       "encapsulated": null,
       "ff": {
-        "value": 48.0
+        "value": null
       },
       "jsc": {
-        "unit": "mA cm^-2",
-        "value": 14.5
+        "unit": null,
+        "value": null
       },
       "layers": [
         {
@@ -20,21 +22,30 @@
           "deposition": null,
           "functionality": "Substrate",
           "name": "FTO",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
           "additional_treatment": null,
           "deposition": null,
           "functionality": "Electron-transport",
           "name": "TiO2",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
           "additional_treatment": null,
           "deposition": null,
           "functionality": "Absorber",
           "name": "MAPbI3",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         },
         {
           "additional_treatment": "Rapid reduction at -0.6 V for 10 s",
@@ -46,19 +57,59 @@
               },
               "antisolvent": null,
               "atmosphere": "Other",
-              "duration": null,
+              "duration": {
+                "unit": null,
+                "value": null
+              },
               "method": "Electrodeposition",
-              "solution": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
               "step_name": null,
-              "temperature": null
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
             }
           ],
           "functionality": "Hole-transport",
           "name": "PEDOT",
-          "thickness": null
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
         }
       ],
       "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
         "type": "Other"
       },
       "number_devices": null,
@@ -69,13 +120,52 @@
       "perovskite_composition": {
         "a_ions": [],
         "b_ions": [],
+        "bandgap": {
+          "unit": null,
+          "value": null
+        },
+        "dimensionality": null,
         "formula": "MAPbI3",
         "x_ions": []
       },
-      "stability": null,
+      "stability": {
+        "PCE_T80": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_after_1000_hours": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_end_of_description": {
+          "unit": null,
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": null,
+          "value": null
+        },
+        "humidity": {
+          "unit": null,
+          "value": null
+        },
+        "light_intensity": {
+          "unit": null,
+          "value": null
+        },
+        "potential_bias": null,
+        "temperature": {
+          "unit": null,
+          "value": null
+        },
+        "time": {
+          "unit": null,
+          "value": null
+        }
+      },
       "voc": {
-        "unit": "V",
-        "value": 0.85
+        "unit": null,
+        "value": null
       }
     }
   ]
