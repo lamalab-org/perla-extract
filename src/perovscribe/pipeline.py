@@ -87,19 +87,18 @@ class ExtractionPipeline:
 
                 truth_extraction_pairs.append((truth, extraction, file))
             precs = []
+            recalls = []
             import numpy as np
 
-            gg = 0
             llm_judge_calls = 0
 
             list_of_evals, per_key_metrics = score_multiple_extractions(
                 truth_extraction_pairs
             )
             total_missing_devices = 0
-            for evals in list_of_evals:
+            for index, evals in enumerate(list_of_evals):
                 print("==========================================")
-                print(truth_extraction_pairs[gg][2])
-                gg += 1
+                print(truth_extraction_pairs[index][2])
                 print("Score:", evals.score)
                 print("Devices in truth:", evals.devices_in_truth)
                 print("Devices found:", evals.devices_found)
@@ -111,6 +110,7 @@ class ExtractionPipeline:
                 print("Recalls:", evals.score_recalls)
                 print("Details:", evals.detailed_score)
                 precs.append(np.mean(evals.score_precisions))
+                recalls.append(np.mean(evals.score_recalls))
                 llm_judge_calls += evals.llm_judge_calls
                 total_missing_devices += max(
                     0, evals.devices_in_truth - evals.devices_found
@@ -135,7 +135,11 @@ class ExtractionPipeline:
                     row = {"Fields": key}
                     row.update(val)
                     w.writerow(row)
-            print("LLM Judge calls average:", llm_judge_calls / 15)
+            print(
+                "LLM Judge calls average:",
+                llm_judge_calls / len(truth_extraction_pairs),
+            )
+            print("Overall avg recalls:", np.mean(recalls))
             print("Overall avg precision:", np.mean(precs))
         elif os.path.isdir(filepath):
             output_folder = output + os.sep + self.model_name

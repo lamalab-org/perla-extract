@@ -12,8 +12,6 @@ from perovscribe.llm_call import llm_as_judge
 
 from collections import defaultdict
 
-per_key_metrics = defaultdict(dict)
-
 
 class Matches(TypedDict):
     truth: dict
@@ -50,6 +48,7 @@ class Evaluations:
         truth (dict): The reference dataset (ground truth).
         extraction (dict): The dataset to evaluate against the truth.
         file (str): Name of the extraction file being checked.
+        per_key_metrics (dict[dict[float]]): An external variable to store important metrics per extraction key.
     """
 
     score: float = None
@@ -70,13 +69,19 @@ class Evaluations:
     matches: List[Matches] = None
     detailed_score: dict = None
 
-    def __init__(self, truth: dict, extraction: dict, file: str):
+    def __init__(
+        self,
+        truth: dict,
+        extraction: dict,
+        file: str,
+        per_key_metrics: dict[dict[float]],
+    ):
         self.score = inverted_deepdiff(truth["cells"], extraction["cells"])
         self.matches = match_cells(truth["cells"], extraction["cells"], file)
         self.devices_in_truth = len(truth["cells"])
         self.devices_found = len(extraction["cells"])
-        self.recall_devices = min(self.devices_found / len(truth["cells"]), 1)
         self.devices_matched = len(self.matches)
+        self.recall_devices = min(self.devices_matched / len(truth["cells"]), 1)
         self.score_device_stacks = score_device_stacks(
             self.matches
         )  # These two should be the same
@@ -84,22 +89,31 @@ class Evaluations:
             self.matches
         )  # These two. maybe replace with str_similarity too?
         self.score_precisions, self.llm_judge_calls = score_precisions(
-            self.matches, self.precision_tolerances
+            self.matches, self.precision_tolerances, per_key_metrics
         )
         self.precisions_average = float(np.mean(self.score_precisions))
         self.detailed_score = score_cells_detailed(self.matches)
-        self.score_recalls = score_recalls(self.matches) + [0] * max(
-            0, self.devices_in_truth - self.devices_found
+        self.score_recalls = pad_missing_devices(
+            score_recalls(self.matches, per_key_metrics),
+            self.devices_in_truth,
+            self.devices_found,
         )
         self.recalls_average = float(np.mean(self.score_recalls))
 
 
+def pad_missing_devices(
+    score: List[float], devices_in_truth, devices_found
+) -> List[float]:
+    """Adds as many 0's as there are devices missing in the extraction."""
+    return score + [0] * max(0, devices_in_truth - devices_found)
+
+
 def score_multiple_extractions(truth_extraction_pairs: tuple[dict, dict, str]):
-    global per_key_metrics
     evals = []
+    per_key_metrics = defaultdict(lambda: defaultdict(float))
 
     for truth, extraction, file in truth_extraction_pairs:
-        evals.append(Evaluations(truth, extraction, file))
+        evals.append(Evaluations(truth, extraction, file, per_key_metrics))
     print(
         "Total missing devices",
         sum([max(eval.devices_in_truth - eval.devices_found, 0) for eval in evals]),
@@ -158,9 +172,18 @@ def score_cells_detailed(matches: List[Matches]) -> dict:
     }
 
 
-def score_recalls(matches: List[Matches]) -> List[float]:
+def regularize_repeated_key(key):
+    """
+    When using FlatDict, children of lists get digits in the flat_key. We remove this digits to make the keys treated as the same.
+    For example: layers:1:name -> layers::name, layers:0:name -> layers::name
+    """
+    return "".join([i for i in key if not i.isdigit()])
+
+
+def score_recalls(
+    matches: List[Matches], per_key_metrics: dict[dict[float]]
+) -> List[float]:
     """Recalls"""
-    global per_key_metrics
     recalls = []
     for match in matches:
         found = []
@@ -175,7 +198,7 @@ def score_recalls(matches: List[Matches]) -> List[float]:
         flat_extraction = flatdict.FlatterDict(match["extraction"])
 
         for key in flat_truth.keys():
-            key_for_stats = "".join([i for i in key if not i.isdigit()])
+            key_for_stats = regularize_repeated_key(key)
 
             if key not in flat_extraction.keys() or (
                 key in flat_extraction.keys()
@@ -186,8 +209,6 @@ def score_recalls(matches: List[Matches]) -> List[float]:
             else:
                 found.append(True)
 
-            if "FN" not in per_key_metrics[key_for_stats]:
-                per_key_metrics[key_for_stats]["FN"] = 0
             if not found[-1]:
                 per_key_metrics[key_for_stats]["FN"] += 1
         recalls.append(sum(found) / len(found))
@@ -202,8 +223,8 @@ def match_layers(truth: List[dict], extraction: List[dict]):
     scores = [
         [
             distance(
-                t.get("functionality", "") + t.get("name", ""),
-                e.get("functionality", "") + e.get("name", ""),
+                t.get("functionality", "NOTRUTH") + t.get("name", "NOTRUTH"),
+                e.get("functionality", "NOEXTRACT") + e.get("name", "NOEXTRACT"),
             )
             for eid, e in enumerate(extraction)
             if len(extraction) != 0
@@ -220,9 +241,22 @@ def match_layers(truth: List[dict], extraction: List[dict]):
     ]
 
 
-def score_precisions(matches: List[Matches], precision_tolerances: dict) -> List[float]:
+def score_precisions(
+    matches: List[Matches],
+    precision_tolerances: dict,
+    per_key_metrics: dict[dict[float]],
+) -> List[float]:
     """Gets the overall precision for all keys listed in precision_tolerances for every cell"""
-    global per_key_metrics
+
+    def fix_precision_tolerances_keys(precision_tolerances: dict) -> dict:
+        """Adds the string 'value' to all keys in precision_tolerances to access the values in the actual data dicts."""
+        fixed_tolerances = {}
+        for key in precision_tolerances.keys():
+            fixed_tolerances[key + ":value"] = precision_tolerances[key]
+        return fixed_tolerances
+
+    precision_tolerances = fix_precision_tolerances_keys(precision_tolerances)
+
     precisions = []
     llm_judge_calls = 0
     for match in matches:
@@ -247,7 +281,7 @@ def score_precisions(matches: List[Matches], precision_tolerances: dict) -> List
         flat_extraction = flatdict.FlatterDict(match["extraction"])
 
         for key, tolerance in precision_tolerances.items():
-            key = key + ":value"
+            # key = key + ":value"
             if "TP" not in per_key_metrics[key]:
                 per_key_metrics[key]["TP"] = 0
             if "FP" not in per_key_metrics[key]:
@@ -259,21 +293,17 @@ def score_precisions(matches: List[Matches], precision_tolerances: dict) -> List
                     abs((flat_truth[key] or 999.0) - (flat_extraction[key] or 0.0))
                     < tolerance
                 )
+                # Checks if the last element found was accepted as a positive value and increments the True Positive count.
                 if found[-1]:
                     per_key_metrics[key]["TP"] += 1
+                # If the last element was not found to be acceptable, the False Positive count is incremented.
                 else:
                     per_key_metrics[key]["FP"] += 1
 
         for key in flat_truth:
-            key_for_stats = "".join([i for i in key if not i.isdigit()])
-            if "TP" not in per_key_metrics[key_for_stats]:
-                per_key_metrics[key_for_stats]["TP"] = 0
-            if "FP" not in per_key_metrics[key_for_stats]:
-                per_key_metrics[key_for_stats]["FP"] = 0
+            key_for_stats = regularize_repeated_key(key)
 
-            if flat_extraction is None or key in [
-                x + ":value" for x in precision_tolerances.keys()
-            ]:
+            if flat_extraction is None or key in precision_tolerances.keys():
                 continue
 
             if key in flat_extraction.keys() and (
@@ -299,8 +329,10 @@ def score_precisions(matches: List[Matches], precision_tolerances: dict) -> List
                     )
                     found[-1] = judgement.judgement
 
+                # Checks if the last element found was accepted as a positive value and increments the True Positive count.
                 if found[-1]:
                     per_key_metrics[key_for_stats]["TP"] += 1
+                # If the last element was not found to be acceptable, the False Positive count is incremented.
                 else:
                     per_key_metrics[key_for_stats]["FP"] += 1
 
@@ -326,13 +358,13 @@ def score_device_stacks(matches: List[Matches]) -> List[float]:
             inverted_deepdiff(
                 " ".join(
                     [
-                        layer.get("name", "")
+                        layer.get("name", "NOTRUTH")
                         for layer in match["truth"].get("layers") or []
                     ]
                 ),
                 " ".join(
                     [
-                        layer.get("name", "")
+                        layer.get("name", "NOEXTRACT")
                         for layer in match["extraction"].get("layers") or []
                     ]
                 ),
@@ -373,7 +405,31 @@ def safe_get_value(d: Any, key: str):
         return d[key]
 
 
-def str_similarity(s1, s2) -> float:
+def str_similarity(s1: List[str], s2: List[str]) -> float:
+    """
+    Computes the similarity between two lists of strings using the Levenshtein ratio.
+
+    The function first removes occurrences of "SLG" from both lists (if present) by
+    working with copies to avoid modifying the original inputs. Then, it iterates
+    through the elements, comparing them using the Levenshtein ratio. If an element
+    contains spaces, it is split into sub-strings and compared recursively.
+
+    Args:
+        s1 (List[str]): The first list of strings.
+        s2 (List[str]): The second list of strings.
+
+    Returns:
+        float: The average similarity score between corresponding elements of s1 and s2.
+
+    Notes:
+        - Uses `Levenshtein.ratio()` to compute string similarity.
+        - If "SLG" is present in `s1` or `s2`, it is removed before comparison.
+        - Recursively processes elements containing spaces.
+        - Uses `np.mean()` to compute the final similarity score.
+        - Works with copies of `s1` and `s2` to avoid modifying the original lists.
+    """
+    s1 = s1.copy()
+    s2 = s2.copy()
     # Just remove SLG
     try:
         s1.remove("SLG")
@@ -381,16 +437,18 @@ def str_similarity(s1, s2) -> float:
     except ValueError:
         pass
 
-    disses = []
+    similarity_ratios = []
 
     for id, s1ss in enumerate(s1):
         if id < len(s2):
             if " " in s1[id] or " " in s2[id]:
-                disses.append(str_similarity(s1[id].split(" "), s2[id].split(" ")))
-                print(disses[-1], s1[id].split(" "), s2[id].split(" "))
+                similarity_ratios.append(
+                    str_similarity(s1[id].split(" "), s2[id].split(" "))
+                )
+                print(similarity_ratios[-1], s1[id].split(" "), s2[id].split(" "))
             else:
-                disses.append(ratio(s1[id], s2[id]))
-    return np.mean(disses)
+                similarity_ratios.append(ratio(s1[id], s2[id]))
+    return np.mean(similarity_ratios)
 
 
 def match_cells(
