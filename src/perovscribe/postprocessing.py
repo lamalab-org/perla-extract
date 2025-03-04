@@ -13,62 +13,6 @@ def normalize_perovskite():
     pass
 
 
-def convert_to_mg_per_L(value: float, unit_str: str) -> float:
-    """
-    Convert various concentration units to mg/L
-
-    Args:
-        value (float): The numerical value of the concentration
-        unit_str (str): The unit string, one of: 'mol/L', 'mmol/L', 'g/L',
-                       'mg/L', 'mg/mL', 'wt%', 'vol%', 'M'
-
-    Returns:
-        float: The concentration in mg/L
-
-    Raises:
-        ValueError: If the unit string is not recognized or conversion is not possible
-    """
-    # Create mapping for special cases and aliases
-    unit_mapping = {
-        "M": "mol/L",
-        "wt%": "g/100g",  # Approximate conversion assuming density = 1 g/mL
-        "vol%": "mL/100mL",
-    }
-
-    # Replace aliases with standard forms
-    unit_str = unit_mapping.get(unit_str, unit_str)
-
-    try:
-        # Handle special cases
-        if unit_str in ["g/100g", "mL/100mL"]:
-            # Convert percentage to g/L assuming density of 1 g/mL
-            value_g_per_L = value * 10  # Convert from % to g/L
-            quantity = value_g_per_L * config.ureg("g/L")
-        else:
-            # Create quantity with original units
-            quantity = value * config.ureg(unit_str)
-
-        # Handle molar concentrations
-        if str(quantity.units) in ["mol/L", "mmol/L"]:
-            # Assuming molecular weight conversion is needed
-            # You would need to specify the molecular weight for your specific compound
-            molecular_weight = (
-                100  # Example: replace with actual molecular weight in g/mol
-            )
-            if str(quantity.units) == "mol/L":
-                quantity = quantity * molecular_weight * 1000  # Convert to mg/L
-            else:  # mmol/L
-                quantity = quantity * molecular_weight  # Convert to mg/L
-
-        # Convert to mg/L
-        result = quantity.to("mg/L")
-
-        return result.magnitude
-
-    except Exception as e:
-        raise ValueError(f"Could not convert {value} {unit_str} to mg/L: {str(e)}")
-
-
 def normalize(data: dict) -> dict:
     """
     Recursively walks through a dictionary and converts 'value' and 'unit' pairs
@@ -112,8 +56,6 @@ def normalize(data: dict) -> dict:
                     # Update the dictionary
                     data["value"] = round(converted_quantity.magnitude, 2)
                     data["unit"] = default_unit_str
-                # elif quantity_type == (1 * ureg.mg / ureg.mL).dimensionality:
-                #     convert_to_mg_per_L(data["value"], data["unit"])
                 else:
                     warnings.warn(
                         f"No default unit type found for the following unit during normalization: {data['unit']}"
