@@ -108,7 +108,7 @@
           "name": "LiF",
           "thickness": {
             "unit": "nm",
-            "value": 1.0
+            "value": 0.9999999999999999
           }
         },
         {
