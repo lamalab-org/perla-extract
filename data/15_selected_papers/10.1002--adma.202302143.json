@@ -2,8 +2,8 @@
   "cells": [
     {
       "active_area": {
-        "unit": null,
-        "value": null
+        "unit": "mm^2",
+        "value": 0.09
       },
       "additional_notes": null,
       "averaged_quantities": null,
@@ -580,7 +580,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_description": {
+        "PCE_at_the_end_of_the_experiment": {
           "unit": null,
           "value": null
         },
@@ -613,8 +613,8 @@
     },
     {
       "active_area": {
-        "unit": null,
-        "value": null
+        "unit": "mm^2",
+        "value": 0.09
       },
       "additional_notes": null,
       "averaged_quantities": null,
@@ -1232,7 +1232,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_description": {
+        "PCE_at_the_end_of_the_experiment": {
           "unit": null,
           "value": null
         },

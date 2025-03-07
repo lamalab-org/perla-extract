@@ -9,7 +9,7 @@ from Levenshtein import distance, ratio
 import flatdict
 from perovscribe.postprocessing import complete_solar_cell_dict
 from perovscribe.llm_call import llm_as_judge
-
+import datetime
 from collections import defaultdict
 
 
@@ -55,10 +55,10 @@ class Evaluations:
     score_device_stacks: List[float] = None
     score_device_layers: List[float] = None
     precision_tolerances: dict = {
-        "pce": 0.1,
-        "jsc": 0.1,
+        "pce": 0.01,
+        "jsc": 0.01,
         "voc": 0.01,
-        "ff": 0.1,
+        "ff": 0.01,
         "active_area": 0.01,
     }
     precisions_average: dict = None
@@ -136,10 +136,6 @@ def score_recalls(
     for match in matches:
         found = []
 
-        match["truth"]["layers"], match["extraction"]["layers"] = match_layers(
-            match["truth"]["layers"], match["extraction"]["layers"]
-        )
-
         flat_truth = flatdict.FlatterDict(
             complete_solar_cell_dict(match["truth"])
         )  # TODO: Run normalize after complete_solar_cell dict. Add loop in the complete.. func for all cells
@@ -193,7 +189,22 @@ def match_layers(truth: List[dict], extraction: List[dict]):
     ]
 
 
-def is_value_correct(truth, extract) -> bool:
+def is_within_rel_tolerance(truth, extract, rtol) -> bool:
+    try:
+        np.testing.assert_allclose(
+            extract, truth, rtol=rtol
+        )  # We flip extract and truth to make sure we have rtol applied on truth
+    except AssertionError:
+        return False
+    return True
+
+
+def is_value_correct(truth, extract, rtol=0.01) -> bool:
+    if isinstance(truth, int):
+        truth = float(truth)
+    if isinstance(extract, int):
+        extract = float(extract)
+
     def are_equal_lower_strings(truth, extract) -> bool:
         return (
             isinstance(truth, str)
@@ -204,11 +215,7 @@ def is_value_correct(truth, extract) -> bool:
     if type(truth) is not type(extract):
         return False
     elif isinstance(truth, (int, float)):
-        try:
-            np.testing.assert_allclose(truth, extract, rtol=0.01)
-        except AssertionError:
-            return False
-        return True
+        return is_within_rel_tolerance(truth, extract, rtol)
     elif isinstance(truth, str):
         return are_equal_lower_strings(truth, extract)
     return truth == extract
@@ -263,14 +270,26 @@ def score_precisions(
                 flat_extraction[key] is not None or flat_truth[key] is None
             ):
                 found.append(
-                    abs((flat_truth[key] or 999.0) - (flat_extraction[key] or -999.0))
-                    < tolerance
+                    is_value_correct(flat_truth[key], flat_extraction[key], tolerance)
                 )
                 # Checks if the last element found was accepted as a positive value and increments the True Positive count.
                 if found[-1]:
                     per_key_metrics[key]["TP"] += 1
                 # If the last element was not found to be acceptable, the False Positive count is incremented.
                 else:
+                    print(
+                        "stack",
+                        [layer.get("name") for layer in match["truth"]["layers"]],
+                    )
+                    print(datetime.datetime.now())
+                    print(
+                        "We have",
+                        flat_truth[key],
+                        "in the ground truth and",
+                        flat_extraction[key],
+                        "in the extraction for",
+                        key,
+                    )
                     per_key_metrics[key]["FP"] += 1
 
         for key in flat_truth:
@@ -278,20 +297,6 @@ def score_precisions(
 
             if flat_extraction is None or key in precision_tolerances.keys():
                 continue
-
-            if (
-                key in flat_extraction.keys()
-                and flat_extraction[key] is None
-                and flat_truth[key] is not None
-            ):
-                print(
-                    "Ding ding ding!",
-                    "Extraction:",
-                    flat_extraction[key],
-                    key,
-                    "Truth:",
-                    flat_truth[key],
-                )
 
             if key in flat_extraction.keys() and (
                 flat_extraction[key] is not None or flat_truth[key] is None
@@ -420,18 +425,19 @@ def str_similarity(s1: List[str], s2: List[str]) -> float:
     except ValueError:
         pass
 
-    similarity_ratios = []
+    similarity_ratios = 0
 
     for id, s1ss in enumerate(s1):
         if id < len(s2):
             if " " in s1[id] or " " in s2[id]:
-                similarity_ratios.append(
-                    str_similarity(s1[id].split(" "), s2[id].split(" "))
+                similarity_ratios += str_similarity(
+                    s1[id].split(" "), s2[id].split(" ")
                 )
-                print(similarity_ratios[-1], s1[id].split(" "), s2[id].split(" "))
+
+                # print(similarity_ratios[-1], s1[id].split(" "), s2[id].split(" "))
             else:
-                similarity_ratios.append(ratio(s1[id], s2[id]))
-    return np.mean(similarity_ratios)
+                similarity_ratios += ratio(s1[id], s2[id])
+    return similarity_ratios
 
 
 def match_cells(
@@ -440,13 +446,49 @@ def match_cells(
     """Matches cells from the truth and extraction and stores them in a new object called matches."""
     m = Munkres()
 
-    truth_stacks = [
-        [layer.get("name", "") for layer in t.get("layers") or []] for t in truth_cells
+    truth_functionalites = []
+    for t in truth_cells:
+        functionalities = defaultdict(list)
+        for layer in t.get("layers", []):
+            functionalities[layer.get("functionality")].append(layer.get("name"))
+        truth_functionalites.append(functionalities)
+
+    extract_functionalites = []
+    for e in extracted_cells:
+        functionalities = defaultdict(list)
+        for layer in e.get("layers", []):
+            functionalities[layer.get("functionality")].append(layer.get("name"))
+        extract_functionalites.append(functionalities)
+
+    print("===================================================")
+    print(file)
+    print("come here")
+    print(datetime.datetime.now())
+
+    def score_functionalities(t_funcs, e_funcs) -> float:
+        distance = 0
+        for t_func in t_funcs:
+            if t_func not in e_funcs:
+                e_funcs[t_func].append("NOTFOUND")
+            distance += -str_similarity(t_funcs[t_func], e_funcs[t_func])
+        return distance
+
+    stack_scores = [
+        [
+            score_functionalities(truth_functionality, extract_functionality)
+            for extract_functionality in extract_functionalites
+        ]
+        for truth_functionality in truth_functionalites
     ]
-    extracted_stacks = [
-        [layer.get("name", "") for layer in e.get("layers") or []]
-        for e in extracted_cells
-    ]
+    for truth_functionality in truth_functionalites:
+        for extract_functionality in extract_functionalites:
+            print(
+                "SCORES:",
+                score_functionalities(truth_functionality, extract_functionality),
+                truth_functionality,
+                extract_functionality,
+            )
+
     truth_depositions = [
         [layer.get("deposition") for layer in t.get("layers") or []]
         for t in truth_cells
@@ -459,30 +501,29 @@ def match_cells(
     # rows = truth, cols = extraction
     scores = [
         [
-            (0.7 * -str_similarity(truth_stacks[tid], extracted_stacks[eid]))
+            (0.7 * stack_scores[tid][eid])
             + (
                 0.2
                 * -inverted_deepdiff(truth_depositions[tid], extracted_depositions[eid])
             )
             + (0.1 * -inverted_deepdiff(t, e))
             for eid, e in enumerate(extracted_cells)
-            if len(extracted_stacks[eid]) != 0
         ]
         for tid, t in enumerate(truth_cells)
     ]
 
-    for tid, t in enumerate(truth_cells):
-        for eid, e in enumerate(extracted_cells):
-            print("-------")
-            print(file)
-            print(truth_stacks[tid], "--", extracted_stacks[eid])
-            print(-str_similarity(truth_stacks[tid], extracted_stacks[eid]))
-            print(
-                -str_similarity(
-                    [layer.get("name", "") for layer in t.get("layers") or []],
-                    [layer.get("name", "") for layer in e.get("layers") or []],
-                )
-            )
+    # for tid, t in enumerate(truth_cells):
+    #     for eid, e in enumerate(extracted_cells):
+    #         print("-------")
+    #         print(file)
+    #         print(truth_stacks[tid], "--", extracted_stacks[eid])
+    #         print(-str_similarity(truth_stacks[tid], extracted_stacks[eid]))
+    #         print(
+    #             -str_similarity(
+    #                 [layer.get("name", "") for layer in t.get("layers") or []],
+    #                 [layer.get("name", "") for layer in e.get("layers") or []],
+    #             )
+    #         )
 
     indexes = m.compute(scores)
 

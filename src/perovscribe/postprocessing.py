@@ -54,7 +54,7 @@ def normalize(data: dict) -> dict:
                     # Convert to the default unit
                     converted_quantity = quantity.to(default_unit)
                     # Update the dictionary
-                    data["value"] = round(converted_quantity.magnitude, 2)
+                    data["value"] = converted_quantity.magnitude
                     data["unit"] = default_unit_str
                 else:
                     warnings.warn(

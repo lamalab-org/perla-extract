@@ -240,7 +240,7 @@ class Stability(BaseModel):
     )
     PCE_at_the_start_of_the_experiment: Optional[PCE]
     PCE_after_1000_hours: Optional[PCE]
-    PCE_at_the_end_of_description: Optional[
+    PCE_at_the_end_of_experiment: Optional[
         PCE
     ]  # TODO: Change this to PCE_at_the_end_of_the_experiment and rerun data.
     potential_bias: Optional[

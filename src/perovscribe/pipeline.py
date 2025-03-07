@@ -12,6 +12,12 @@ import os
 import csv
 
 
+def calc_precision(per_key_metrics, key):
+    return per_key_metrics[key]["TP"] / (
+        per_key_metrics[key]["TP"] + per_key_metrics[key]["FP"]
+    )
+
+
 class ExtractionPipeline:
     """Handle the extraction pipeline for perovskite solar cell data.
 
@@ -124,6 +130,17 @@ class ExtractionPipeline:
             print(
                 "metric_keys",
                 len(per_key_metrics.keys()),
+            )
+            print(
+                "Important Precisions:",
+                "FF:",
+                calc_precision(per_key_metrics, "ff:value"),
+                "PCE:",
+                calc_precision(per_key_metrics, "pce:value"),
+                "jsc:",
+                calc_precision(per_key_metrics, "jsc:value"),
+                "voc:",
+                calc_precision(per_key_metrics, "voc:value"),
             )
             fields = ["Fields", "TP", "FP", "FN"]
             with open("per_key_metrics.csv", "w") as f:
