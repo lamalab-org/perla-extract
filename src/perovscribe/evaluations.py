@@ -92,7 +92,6 @@ class Evaluations:
             self.matches, self.precision_tolerances, per_key_metrics
         )
         self.precisions_average = float(np.mean(self.score_precisions))
-        self.detailed_score = score_cells_detailed(self.matches)
         self.score_recalls = pad_missing_devices(
             score_recalls(self.matches, per_key_metrics),
             self.devices_in_truth,
@@ -121,57 +120,6 @@ def score_multiple_extractions(truth_extraction_pairs: tuple[dict, dict, str]):
     return evals, per_key_metrics
 
 
-# TODO: Replace the safe_get_value function below
-def score_cells_detailed(matches: List[Matches]) -> dict:
-    maes = {"pce": [], "ff": [], "voc": [], "jsc": []}  # TODO: stability
-    perovskite_composition_similarity = []
-    for match in matches:
-        for key in maes:
-            if safe_get_value(match["truth"], key) is not None:
-                maes[key].append(
-                    abs(
-                        safe_get_value(match["truth"], key)
-                        - (safe_get_value(match["extraction"], key) or 0.0)
-                    )
-                )
-            elif (
-                safe_get_value(match["extraction"], key) is not None
-                and safe_get_value(match["truth"], key) is None
-            ):
-                print("================ HALLUCINATION =================")
-                print(
-                    "For cell with layers: ",
-                    " ".join(
-                        [
-                            layer.get("name", "")
-                            for layer in match["extraction"].get("layers")
-                        ]
-                    ),
-                )
-                print(
-                    "Value hallucinated:", key, safe_get_value(match["extraction"], key)
-                )
-        if (
-            match["extraction"].get("perovskite_composition") is not None
-            and match["extraction"].get("perovskite_composition").get("formula", None)
-            is not None
-        ):
-            perovskite_composition_similarity.append(
-                str_similarity(
-                    [match["truth"]["perovskite_composition"]["formula"]],
-                    [match["extraction"]["perovskite_composition"]["formula"]],
-                )
-            )
-
-    for key in maes:
-        maes[key] = float(np.mean(maes[key]))
-
-    return {
-        "MAEs": maes,
-        "perovskite_composition_similarity": perovskite_composition_similarity,
-    }
-
-
 def regularize_repeated_key(key):
     """
     When using FlatDict, children of lists get digits in the flat_key. We remove this digits to make the keys treated as the same.
@@ -197,13 +145,17 @@ def score_recalls(
         )  # TODO: Run normalize after complete_solar_cell dict. Add loop in the complete.. func for all cells
         flat_extraction = flatdict.FlatterDict(match["extraction"])
 
-        for key in flat_truth.keys():
+        for key in flat_truth.keys():  # TODO: Make sure you mention that you loop over the flattened dict in the paper.
             key_for_stats = regularize_repeated_key(key)
 
-            if key not in flat_extraction.keys() or (
-                key in flat_extraction.keys()
-                and flat_extraction[key] is None
-                and flat_truth[key] is not None
+            if (
+                key not in flat_extraction.keys()
+                or (
+                    key in flat_extraction.keys()
+                    and flat_extraction[key] is None
+                    and flat_truth[key]
+                    is not None  # TODO: Check if there is a case where extraction is None but truth is not. Do we still have this?
+                )
             ):
                 found.append(False)
             else:
@@ -266,22 +218,29 @@ def score_precisions(
             match["truth"]["layers"], match["extraction"]["layers"]
         )
 
-        def is_key_judgable(key) -> bool:
+        def is_key_judgable(key, flat_truth, flat_extraction) -> bool:
             return (
                 isinstance(flat_extraction[key], str)
                 and isinstance(flat_truth[key], str)
-                and flat_truth[key].lower() != flat_extraction[key].lower()
+                and len(flat_truth[key]) > 0
+                and len(flat_extraction[key]) > 0
                 and (
                     key in ("perovskite_composition:formula", "light_source:lamp")
                     or key.split(":")[0] in ("device_stack", "layers")
                 )
             )
 
+        def are_equal_lower_strings(truth, extract) -> bool:
+            return (
+                isinstance(truth, str)
+                and isinstance(extract, str)
+                and flat_truth[key].lower() == flat_extraction[key].lower()
+            )
+
         flat_truth = flatdict.FlatterDict(complete_solar_cell_dict(match["truth"]))
         flat_extraction = flatdict.FlatterDict(match["extraction"])
 
         for key, tolerance in precision_tolerances.items():
-            # key = key + ":value"
             if "TP" not in per_key_metrics[key]:
                 per_key_metrics[key]["TP"] = 0
             if "FP" not in per_key_metrics[key]:
@@ -290,7 +249,7 @@ def score_precisions(
                 flat_extraction[key] is not None or flat_truth[key] is None
             ):
                 found.append(
-                    abs((flat_truth[key] or 999.0) - (flat_extraction[key] or 0.0))
+                    abs((flat_truth[key] or 999.0) - (flat_extraction[key] or -999.0))
                     < tolerance
                 )
                 # Checks if the last element found was accepted as a positive value and increments the True Positive count.
@@ -306,15 +265,34 @@ def score_precisions(
             if flat_extraction is None or key in precision_tolerances.keys():
                 continue
 
+            if (
+                key in flat_extraction.keys()
+                and flat_extraction[key] is None
+                and flat_truth[key] is not None
+            ):
+                print(
+                    "Ding ding ding!",
+                    "Extraction:",
+                    flat_extraction[key],
+                    key,
+                    "Truth:",
+                    flat_truth[key],
+                )
+
             if key in flat_extraction.keys() and (
                 flat_extraction[key] is not None or flat_truth[key] is None
             ):
                 found.append(
-                    flat_truth[key] == flat_extraction[key]
+                    (
+                        flat_truth[key] == flat_extraction[key]
+                        or are_equal_lower_strings(
+                            flat_truth[key], flat_extraction[key]
+                        )
+                    )
                     if type(flat_truth[key]) is type(flat_extraction[key])
                     else False
                 )
-                if not found[-1] and is_key_judgable(key):
+                if not found[-1] and is_key_judgable(key, flat_truth, flat_extraction):
                     judgement = llm_as_judge(
                         match["truth"], flat_truth[key], flat_extraction[key]
                     )

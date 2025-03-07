@@ -67,7 +67,7 @@ def llm_as_judge(ground_truth, value_truth, value_extraction):
     messages = [
         {
             "role": "system",
-            "content": "You are an expert scientist that judges whether two provided values match in a data extraction evaluation routine for perovskite solar cells. You will be given the whole ground truth, the value in the ground truth, and the value from the extraction. You have to check if the two values match conceptually. They do not have to be exactly the same. Formulas can be variable. For stacks/layers, glass may or may not be on one side and some layers can be named slightly differently, i.e. c-TiO2 is the same as TiO2. Only respond with either TRUE or FALSE",
+            "content": "You are an expert scientist that judges whether two provided values match in a data extraction evaluation routine for perovskite solar cells. You will be given the whole ground truth, the value in the ground truth, and the value from the extraction. You have to check if the two values match conceptually. They do not have to be exactly the same. Formulas can be variable. c-TiO2 is the same as TiO2. Only respond with either TRUE or FALSE",
         },
         {
             "role": "user",

@@ -75,7 +75,6 @@ class ExtractionPipeline:
             print("Device layers score:", evals.score_device_layers)
             print("Precisions:", evals.score_precisions)
             print("Recalls:", evals.score_recalls)
-            print("Details:", evals.detailed_score)
         elif os.path.isdir(filepath) and os.path.isdir(truthpath):
             truth_extraction_pairs = []
             for file in [x for x in os.listdir(truthpath) if x.endswith(".json")]:
@@ -108,7 +107,6 @@ class ExtractionPipeline:
                 print("Device layers score:", evals.score_device_layers)
                 print("Precisions:", evals.score_precisions)
                 print("Recalls:", evals.score_recalls)
-                print("Details:", evals.detailed_score)
                 precs.append(np.mean(evals.score_precisions))
                 recalls.append(np.mean(evals.score_recalls))
                 llm_judge_calls += evals.llm_judge_calls
@@ -127,9 +125,9 @@ class ExtractionPipeline:
                 "metric_keys",
                 len(per_key_metrics.keys()),
             )
-            fields = ["Fields", "TP", "FP", "FN", "Hallucinated", "NoneInBoth"]
+            fields = ["Fields", "TP", "FP", "FN"]
             with open("per_key_metrics.csv", "w") as f:
-                f.write("Fields, TP, FP, FN, Hallucinated, NoneInBoth\n")
+                f.write("Fields, TP, FP, FN\n")
                 w = csv.DictWriter(f, fields)
                 for key, val in sorted(per_key_metrics.items()):
                     row = {"Fields": key}
