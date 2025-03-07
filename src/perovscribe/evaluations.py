@@ -249,10 +249,6 @@ def score_precisions(
                 and isinstance(flat_truth[key], str)
                 and len(flat_truth[key]) > 0
                 and len(flat_extraction[key]) > 0
-                and (
-                    key in ("perovskite_composition:formula", "light_source:lamp")
-                    or key.split(":")[0] in ("device_stack", "layers")
-                )
             )
 
         flat_truth = flatdict.FlatterDict(complete_solar_cell_dict(match["truth"]))
