@@ -144,14 +144,10 @@ def score_recalls(
         for key in flat_truth.keys():  # TODO: Make sure you mention that you loop over the flattened dict in the paper.
             key_for_stats = regularize_repeated_key(key)
 
-            if (
-                key not in flat_extraction.keys()
-                or (
-                    key in flat_extraction.keys()
-                    and flat_extraction[key] is None
-                    and flat_truth[key]
-                    is not None  # TODO: Check if there is a case where extraction is None but truth is not. Do we still have this?
-                )
+            if key not in flat_extraction.keys() or (
+                key in flat_extraction.keys()
+                and flat_extraction[key] is None
+                and flat_truth[key] is not None
             ):
                 found.append(False)
             else:
@@ -242,6 +238,7 @@ def score_precisions(
     for match in matches:
         found = []
 
+        # TODO: Use the group implementation and add NOTFOUND for layers that don't get matched on either side.
         match["truth"]["layers"], match["extraction"]["layers"] = match_layers(
             match["truth"]["layers"], match["extraction"]["layers"]
         )
