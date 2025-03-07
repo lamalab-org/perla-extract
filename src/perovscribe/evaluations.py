@@ -512,19 +512,6 @@ def match_cells(
         for tid, t in enumerate(truth_cells)
     ]
 
-    # for tid, t in enumerate(truth_cells):
-    #     for eid, e in enumerate(extracted_cells):
-    #         print("-------")
-    #         print(file)
-    #         print(truth_stacks[tid], "--", extracted_stacks[eid])
-    #         print(-str_similarity(truth_stacks[tid], extracted_stacks[eid]))
-    #         print(
-    #             -str_similarity(
-    #                 [layer.get("name", "") for layer in t.get("layers") or []],
-    #                 [layer.get("name", "") for layer in e.get("layers") or []],
-    #             )
-    #         )
-
     indexes = m.compute(scores)
 
     matches = [
