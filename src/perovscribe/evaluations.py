@@ -193,6 +193,27 @@ def match_layers(truth: List[dict], extraction: List[dict]):
     ]
 
 
+def is_value_correct(truth, extract) -> bool:
+    def are_equal_lower_strings(truth, extract) -> bool:
+        return (
+            isinstance(truth, str)
+            and isinstance(extract, str)
+            and truth.lower() == extract.lower()
+        )
+
+    if type(truth) is not type(extract):
+        return False
+    elif isinstance(truth, (int, float)):
+        try:
+            np.testing.assert_allclose(truth, extract, rtol=0.01)
+        except AssertionError:
+            return False
+        return True
+    elif isinstance(truth, str):
+        return are_equal_lower_strings(truth, extract)
+    return truth == extract
+
+
 def score_precisions(
     matches: List[Matches],
     precision_tolerances: dict,
@@ -228,13 +249,6 @@ def score_precisions(
                     key in ("perovskite_composition:formula", "light_source:lamp")
                     or key.split(":")[0] in ("device_stack", "layers")
                 )
-            )
-
-        def are_equal_lower_strings(truth, extract) -> bool:
-            return (
-                isinstance(truth, str)
-                and isinstance(extract, str)
-                and flat_truth[key].lower() == flat_extraction[key].lower()
             )
 
         flat_truth = flatdict.FlatterDict(complete_solar_cell_dict(match["truth"]))
@@ -282,16 +296,7 @@ def score_precisions(
             if key in flat_extraction.keys() and (
                 flat_extraction[key] is not None or flat_truth[key] is None
             ):
-                found.append(
-                    (
-                        flat_truth[key] == flat_extraction[key]
-                        or are_equal_lower_strings(
-                            flat_truth[key], flat_extraction[key]
-                        )
-                    )
-                    if type(flat_truth[key]) is type(flat_extraction[key])
-                    else False
-                )
+                found.append(is_value_correct(flat_truth[key], flat_extraction[key]))
                 if not found[-1] and is_key_judgable(key, flat_truth, flat_extraction):
                     judgement = llm_as_judge(
                         match["truth"], flat_truth[key], flat_extraction[key]
