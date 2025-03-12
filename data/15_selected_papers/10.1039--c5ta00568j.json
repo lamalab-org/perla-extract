@@ -65,8 +65,8 @@
           "functionality": "Substrate",
           "name": "FTO",
           "thickness": {
-            "unit": "nm",
-            "value": 3000000
+            "unit": null,
+            "value": null
           }
         },
         {

@@ -3,18 +3,18 @@
     {
       "active_area": {
         "unit": null,
-        "value": null
+        "value": 0.07068
       },
       "additional_notes": null,
       "averaged_quantities": null,
       "device_architecture": "nip",
-      "encapsulated": false,
+      "encapsulated": null,
       "ff": {
-        "value": 71.22
+        "value": 53.16
       },
       "jsc": {
         "unit": "mA cm^-2",
-        "value": 20.98
+        "value": 20.25
       },
       "layers": [
         {
@@ -63,24 +63,72 @@
             }
           ],
           "functionality": "Substrate",
-          "name": "ITO",
+          "name": "FTO",
           "thickness": {
             "unit": null,
             "value": null
           }
         },
         {
-          "additional_treatment": null,
+          "additional_treatment": "TiCl4 treatment",
           "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Air",
+              "duration": {
+                "unit": "s",
+                "value": 21600
+              },
+              "method": "Liquid-phase deposition",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "M",
+                      "value": 0.075
+                    },
+                    "name": "(NH4)2TiF6"
+                  },
+                  {
+                    "concentration": {
+                      "unit": "M",
+                      "value": 0.2
+                    },
+                    "name": "H3BO3"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "H2O",
+                    "volume_fraction": 1
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            },
             {
               "additional_parameters": null,
               "antisolvent": null,
               "atmosphere": null,
               "duration": {
-                "unit": null,
-                "value": null
+                "unit": "s",
+                "value": 5400
               },
-              "method": null,
+              "method": "Thermal Annealing",
               "solution": {
                 "compounds": null,
                 "solutes": [
@@ -96,6 +144,210 @@
                   {
                     "name": null,
                     "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 450
+              }
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": "s",
+                "value": 1800
+              },
+              "method": "TiCl4 treatment",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "mmol/L",
+                      "value": 120
+                    },
+                    "name": "TiCl4 "
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 70
+              }
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": null,
+              "duration": {
+                "unit": "s",
+                "value": 1800
+              },
+              "method": "Thermal Annealing",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 500
+              }
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "TiO2",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Air",
+              "duration": {
+                "unit": null,
+                "value": null
+              },
+              "method": "Two-step deposition",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": null,
+                      "value": null
+                    },
+                    "name": null
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": null,
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": {
+                  "unit": null,
+                  "value": null
+                },
+                "volume": {
+                  "unit": null,
+                  "value": null
+                }
+              },
+              "step_name": null,
+              "temperature": {
+                "unit": null,
+                "value": null
+              }
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "CH3NH3PbI3",
+          "thickness": {
+            "unit": null,
+            "value": null
+          }
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Air",
+              "duration": {
+                "unit": "s",
+                "value": 15
+              },
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "mmol/L",
+                      "value": 170
+                    },
+                    "name": "spiro-OMeTAD"
+                  },
+                  {
+                    "concentration": {
+                      "unit": "mmol/L",
+                      "value": 180
+                    },
+                    "name": "tert-butylpyridine"
+                  },
+                  {
+                    "concentration": {
+                      "unit": "mmol/L",
+                      "value": 60
+                    },
+                    "name": "lithium bis(trifluoromethane)sulfonimidate "
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "chlorobenzene",
+                    "volume_fraction": 0.95
+                  },
+                  {
+                    "name": "acetonitrile",
+                    "volume_fraction": 0.05
                   }
                 ],
                 "temperature": {
@@ -115,7 +367,7 @@
             }
           ],
           "functionality": "Hole-transport",
-          "name": "SnO2",
+          "name": "Spiro-OMeTAD",
           "thickness": {
             "unit": null,
             "value": null
@@ -127,116 +379,12 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": null,
+              "atmosphere": "Vacuum",
               "duration": {
                 "unit": null,
                 "value": null
               },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
-            }
-          ],
-          "functionality": "Absorber",
-          "name": "FASnI3 with 4A3HA",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
-        },
-        {
-          "additional_treatment": null,
-          "deposition": [
-            {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
-            }
-          ],
-          "functionality": "Electron-transport",
-          "name": "ICBA",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
-        },
-        {
-          "additional_treatment": null,
-          "deposition": [
-            {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
+              "method": "Thermal evaporation",
               "solution": {
                 "compounds": null,
                 "solutes": [
@@ -273,13 +421,13 @@
           "functionality": "Contact",
           "name": "Ag",
           "thickness": {
-            "unit": null,
-            "value": null
+            "unit": "nm",
+            "value": 100
           }
         }
       ],
       "light_source": {
-        "description": null,
+        "description": "solar simulator (Abet Technology Sun 2000)",
         "lamp": null,
         "light_intensity": {
           "unit": "mW cm^-2",
@@ -287,32 +435,26 @@
         },
         "type": "AM 1.5G"
       },
-      "number_devices": 20,
+      "number_devices": 1,
       "pce": {
         "unit": "%",
-        "value": 13.43
+        "value": 9.33
       },
       "perovskite_composition": {
         "a_ions": [
           {
-            "abbreviation": "FA",
-            "coefficient": "0.75",
-            "common_name": "Formamidinium",
-            "molecular_formula": "CH5N2+"
-          },
-          {
             "abbreviation": "MA",
-            "coefficient": "0.25",
+            "coefficient": "1",
             "common_name": "Methylammonium",
             "molecular_formula": "CH6N+"
           }
         ],
         "b_ions": [
           {
-            "abbreviation": "Sn",
+            "abbreviation": "Pb",
             "coefficient": "1",
-            "common_name": "Tin",
-            "molecular_formula": "Sn2+"
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
           }
         ],
         "bandgap": {
@@ -320,19 +462,13 @@
           "value": null
         },
         "dimensionality": null,
-        "formula": "FA0.75MA0.25SnI2.75Br0.25",
+        "formula": "MAPbI3",
         "x_ions": [
           {
             "abbreviation": "I",
-            "coefficient": "2.75",
+            "coefficient": "3",
             "common_name": "Iodide",
             "molecular_formula": "I-"
-          },
-          {
-            "abbreviation": "Br",
-            "coefficient": "0.25",
-            "common_name": "Bromide",
-            "molecular_formula": "Br-"
           }
         ]
       },
@@ -342,414 +478,38 @@
           "value": null
         },
         "PCE_after_1000_hours": {
-          "unit": "%",
-          "value": 10.74
+          "unit": null,
+          "value": null
         },
         "PCE_at_the_end_of_the_experiment": {
           "unit": null,
           "value": null
         },
         "PCE_at_the_start_of_the_experiment": {
-          "unit": "%",
-          "value": 13.43
+          "unit": null,
+          "value": null
         },
         "humidity": {
-          "unit": "%",
-          "value": 0
+          "unit": null,
+          "value": null
         },
         "light_intensity": {
           "unit": null,
           "value": null
         },
-        "potential_bias": "Open circuit",
+        "potential_bias": null,
         "temperature": {
-          "unit": "\u00b0C",
-          "value": 85
+          "unit": null,
+          "value": null
         },
         "time": {
-          "unit": "h",
-          "value": 1000
+          "unit": null,
+          "value": null
         }
       },
       "voc": {
         "unit": "V",
-        "value": 0.9
-      }
-    },
-    {
-      "active_area": {
-        "unit": null,
-        "value": null
-      },
-      "additional_notes": null,
-      "averaged_quantities": null,
-      "device_architecture": "nip",
-      "encapsulated": false,
-      "ff": {
-        "value": 68.53
-      },
-      "jsc": {
-        "unit": "mA cm^-2",
-        "value": 16.33
-      },
-      "layers": [
-        {
-          "additional_treatment": null,
-          "deposition": [
-            {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
-            }
-          ],
-          "functionality": "Substrate",
-          "name": "ITO",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
-        },
-        {
-          "additional_treatment": null,
-          "deposition": [
-            {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
-            }
-          ],
-          "functionality": "Electron-transport",
-          "name": "SnO2",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
-        },
-        {
-          "additional_treatment": null,
-          "deposition": [
-            {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
-            }
-          ],
-          "functionality": "Absorber",
-          "name": "FASnI3",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
-        },
-        {
-          "additional_treatment": null,
-          "deposition": [
-            {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
-            }
-          ],
-          "functionality": "Other",
-          "name": "ICBA",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
-        },
-        {
-          "additional_treatment": null,
-          "deposition": [
-            {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
-            }
-          ],
-          "functionality": "Contact",
-          "name": "Ag",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
-        }
-      ],
-      "light_source": {
-        "description": null,
-        "lamp": null,
-        "light_intensity": {
-          "unit": "mW cm^-2",
-          "value": 100
-        },
-        "type": "AM 1.5G"
-      },
-      "number_devices": 20,
-      "pce": {
-        "unit": "%",
-        "value": 9.44
-      },
-      "perovskite_composition": {
-        "a_ions": [
-          {
-            "abbreviation": "FA",
-            "coefficient": "0.75",
-            "common_name": "Formamidinium",
-            "molecular_formula": "CH5N2+"
-          },
-          {
-            "abbreviation": "MA",
-            "coefficient": "0.25",
-            "common_name": "Methylammonium",
-            "molecular_formula": "CH6N+"
-          }
-        ],
-        "b_ions": [
-          {
-            "abbreviation": "Sn",
-            "coefficient": "1",
-            "common_name": "Tin",
-            "molecular_formula": "Sn2+"
-          }
-        ],
-        "bandgap": {
-          "unit": null,
-          "value": null
-        },
-        "dimensionality": null,
-        "formula": "FA0.75MA0.25SnI2.75Br0.25",
-        "x_ions": [
-          {
-            "abbreviation": "I",
-            "coefficient": "2.75",
-            "common_name": "Iodide",
-            "molecular_formula": "I-"
-          },
-          {
-            "abbreviation": "Br",
-            "coefficient": "0.25",
-            "common_name": "Bromide",
-            "molecular_formula": "Br-"
-          }
-        ]
-      },
-      "stability": {
-        "PCE_T80": {
-          "unit": null,
-          "value": null
-        },
-        "PCE_after_1000_hours": {
-          "unit": "%",
-          "value": 7.55
-        },
-        "PCE_at_the_end_of_the_experiment": {
-          "unit": null,
-          "value": null
-        },
-        "PCE_at_the_start_of_the_experiment": {
-          "unit": "%",
-          "value": 9.44
-        },
-        "humidity": {
-          "unit": "%",
-          "value": 0
-        },
-        "light_intensity": {
-          "unit": null,
-          "value": null
-        },
-        "potential_bias": "Open circuit",
-        "temperature": {
-          "unit": "\u00b0C",
-          "value": 85
-        },
-        "time": {
-          "unit": "h",
-          "value": 1000
-        }
-      },
-      "voc": {
-        "unit": "V",
-        "value": 0.84
+        "value": 0.87
       }
     }
   ]

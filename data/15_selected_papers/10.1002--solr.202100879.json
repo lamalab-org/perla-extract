@@ -335,7 +335,7 @@
         },
         "time": {
           "unit": "h",
-          "value": 3600000
+          "value": 1000
         }
       },
       "voc": {
@@ -673,16 +673,16 @@
           "value": null
         },
         "PCE_after_1000_hours": {
-          "unit": "%",
-          "value": 21.41
+          "unit": null,
+          "value": null
         },
         "PCE_at_the_end_of_the_experiment": {
           "unit": null,
           "value": null
         },
         "PCE_at_the_start_of_the_experiment": {
-          "unit": null,
-          "value": null
+          "unit": "%",
+          "value": 22.06
         },
         "humidity": {
           "unit": "%",
@@ -699,7 +699,7 @@
         },
         "time": {
           "unit": "h",
-          "value": 3600000
+          "value": 1000
         }
       },
       "voc": {

@@ -2,7 +2,7 @@
   "cells": [
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.09
       },
       "additional_notes": null,
@@ -77,8 +77,8 @@
               "antisolvent": null,
               "atmosphere": "Air",
               "duration": {
-                "unit": null,
-                "value": null
+                "unit": "s",
+                "value": 1800.0
               },
               "method": "Spin-coating",
               "solution": {
@@ -109,8 +109,8 @@
               },
               "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 450
               }
             }
           ],
@@ -372,7 +372,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.09
       },
       "additional_notes": null,
@@ -447,8 +447,8 @@
               "antisolvent": null,
               "atmosphere": "Air",
               "duration": {
-                "unit": null,
-                "value": null
+                "unit": "s",
+                "value": 1800.0
               },
               "method": "Spin-coating",
               "solution": {
@@ -479,8 +479,8 @@
               },
               "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 450
               }
             }
           ],
@@ -742,7 +742,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.09
       },
       "additional_notes": null,
@@ -817,8 +817,8 @@
               "antisolvent": null,
               "atmosphere": "Air",
               "duration": {
-                "unit": null,
-                "value": null
+                "unit": "s",
+                "value": 1800.0
               },
               "method": "Spin-coating",
               "solution": {
@@ -849,8 +849,8 @@
               },
               "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 450
               }
             }
           ],
@@ -1112,7 +1112,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.09
       },
       "additional_notes": null,
@@ -1187,8 +1187,8 @@
               "antisolvent": null,
               "atmosphere": "Air",
               "duration": {
-                "unit": null,
-                "value": null
+                "unit": "s",
+                "value": 1800.0
               },
               "method": "Spin-coating",
               "solution": {
@@ -1219,8 +1219,8 @@
               },
               "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 450
               }
             }
           ],

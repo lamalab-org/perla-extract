@@ -3,7 +3,7 @@
     {
       "active_area": {
         "unit": null,
-        "value": 0.09
+        "value": null
       },
       "additional_notes": null,
       "averaged_quantities": null,
@@ -80,7 +80,7 @@
                 "unit": null,
                 "value": null
               },
-              "method": "Spin-coating",
+              "method": "Dip-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
@@ -535,7 +535,7 @@
     {
       "active_area": {
         "unit": null,
-        "value": 0.09
+        "value": null
       },
       "additional_notes": null,
       "averaged_quantities": null,
@@ -1067,7 +1067,7 @@
     {
       "active_area": {
         "unit": null,
-        "value": 0.09
+        "value": null
       },
       "additional_notes": null,
       "averaged_quantities": null,
@@ -1599,7 +1599,7 @@
     {
       "active_area": {
         "unit": null,
-        "value": 0.09
+        "value": null
       },
       "additional_notes": null,
       "averaged_quantities": null,
@@ -2131,7 +2131,7 @@
     {
       "active_area": {
         "unit": null,
-        "value": 0.09
+        "value": null
       },
       "additional_notes": null,
       "averaged_quantities": null,
@@ -2663,7 +2663,7 @@
     {
       "active_area": {
         "unit": null,
-        "value": 0.09
+        "value": null
       },
       "additional_notes": null,
       "averaged_quantities": null,

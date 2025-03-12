@@ -2,7 +2,7 @@
   "cells": [
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.09
       },
       "additional_notes": null,
@@ -314,8 +314,8 @@
         "a_ions": [],
         "b_ions": [],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.54
         },
         "dimensionality": null,
         "formula": "(FAPbI3)0.95(MAPbBr3)0.05",
@@ -363,7 +363,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.09
       },
       "additional_notes": null,
@@ -831,8 +831,8 @@
         "a_ions": [],
         "b_ions": [],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.54
         },
         "dimensionality": null,
         "formula": "(FAPbI3)0.95(MAPbBr3)0.05",
@@ -880,7 +880,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.09
       },
       "additional_notes": null,
@@ -1348,8 +1348,8 @@
         "a_ions": [],
         "b_ions": [],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.54
         },
         "dimensionality": null,
         "formula": "(FAPbI3)0.95(MAPbBr3)0.05",
@@ -1361,16 +1361,16 @@
           "value": null
         },
         "PCE_after_1000_hours": {
-          "unit": "%",
-          "value": 19.84
+          "unit": null,
+          "value": null
         },
         "PCE_at_the_end_of_the_experiment": {
           "unit": null,
           "value": null
         },
         "PCE_at_the_start_of_the_experiment": {
-          "unit": null,
-          "value": null
+          "unit": "%",
+          "value": 22.04
         },
         "humidity": {
           "unit": null,

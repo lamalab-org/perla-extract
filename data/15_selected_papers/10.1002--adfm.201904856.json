@@ -369,8 +369,8 @@
           "value": null
         },
         "PCE_at_the_start_of_the_experiment": {
-          "unit": null,
-          "value": null
+          "unit": 20.19,
+          "value": "%"
         },
         "humidity": {
           "unit": null,
@@ -397,7 +397,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.1
       },
       "additional_notes": null,
