@@ -12,6 +12,7 @@ from perovscribe.export import to_json
 import os
 import csv
 from collections import defaultdict
+import glob
 
 
 def calc_precision(per_key_metrics, key):
@@ -57,7 +58,7 @@ class ExtractionPipeline:
         self,
         filepath: Union[Path, str],
         truthpath: Union[Path, str],
-        output: Union[Path, str] = "./",
+        output: Union[Path, str] = "./extractions",
     ):
         if ".pdf" in filepath:
             output = output + os.path.splitext(os.path.basename(filepath))[0] + ".json"
@@ -353,11 +354,25 @@ class CLI:
 
     def __call__(self, *args, **kwargs):
         """Default behavior when no command is specified."""
-        return extract(*args, **kwargs)
+        Path("./downloaded_papers/").mkdir(parents=True, exist_ok=True)
+        # Download PDFs
+        papersbot()
+        # Extract them
+        extract("./downloaded_papers")
+        # Delete all PDFs
+        files = glob.glob("./download_papers/*.pdf")
+        for f in files:
+            os.remove(f)
 
 
 def main_cli():
     import fire
+
+    if "UNPAYWALL_EMAIL" not in os.environ:
+        print(
+            "You need to provide your email for unpaywall API. Set this env variable: export UNPAYWALL_EMAIL=<your-email>"
+        )
+        return
 
     fire.Fire(CLI)
 
