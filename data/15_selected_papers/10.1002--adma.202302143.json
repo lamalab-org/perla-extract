@@ -560,7 +560,7 @@
           "unit": null,
           "value": null
         },
-        "dimensionality": null,
+        "dimensionality": "2D/3D",
         "formula": "PEA2MA4Pb5I16",
         "x_ions": [
           {
@@ -578,15 +578,15 @@
         },
         "PCE_after_1000_hours": {
           "unit": "%",
-          "value": 17.64
+          "value": 15.4
         },
         "PCE_at_the_end_of_the_experiment": {
           "unit": "%",
-          "value": 17.64
+          "value": 15.4
         },
         "PCE_at_the_start_of_the_experiment": {
           "unit": "%",
-          "value": 20.05
+          "value": 17.53
         },
         "humidity": {
           "unit": null,
@@ -602,8 +602,8 @@
           "value": null
         },
         "time": {
-          "unit": "h",
-          "value": 1000
+          "unit": null,
+          "value": null
         }
       },
       "voc": {
@@ -1212,7 +1212,7 @@
           "unit": null,
           "value": null
         },
-        "dimensionality": null,
+        "dimensionality": "2D/3D",
         "formula": "PEA2MA4Pb5I16",
         "x_ions": [
           {
@@ -1229,16 +1229,16 @@
           "value": null
         },
         "PCE_after_1000_hours": {
-          "unit": null,
-          "value": null
+          "unit": "%",
+          "value": 17.64
         },
         "PCE_at_the_end_of_the_experiment": {
-          "unit": null,
-          "value": null
+          "unit": "%",
+          "value": 17.64
         },
         "PCE_at_the_start_of_the_experiment": {
-          "unit": null,
-          "value": null
+          "unit": "%",
+          "value": 20.05
         },
         "humidity": {
           "unit": null,
@@ -1254,8 +1254,8 @@
           "value": null
         },
         "time": {
-          "unit": null,
-          "value": null
+          "unit": "h",
+          "value": 1000
         }
       },
       "voc": {

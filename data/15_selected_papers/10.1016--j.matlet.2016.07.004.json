@@ -2,7 +2,7 @@
   "cells": [
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.1
       },
       "additional_notes": null,
@@ -894,7 +894,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.1
       },
       "additional_notes": null,
@@ -1786,7 +1786,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.1
       },
       "additional_notes": null,
@@ -2678,7 +2678,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.1
       },
       "additional_notes": null,
@@ -3570,7 +3570,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.1
       },
       "additional_notes": null,

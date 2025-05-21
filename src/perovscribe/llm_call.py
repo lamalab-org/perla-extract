@@ -1,3 +1,4 @@
+import os
 from litellm import completion
 import instructor
 from pydantic import BaseModel, Field
@@ -16,9 +17,15 @@ litellm.cache = Cache(
 )
 
 
+os.environ["REDIS_HOST"] = "127.0.0.1"
+os.environ["REDIS_PORT"] = "6379"
+os.environ["REDIS_PASSWORD"] = "foobared"
+os.environ["REDIS_TTL"] = "1000000"
+
+
 def create_text_completion(
     model_name: str,
-    pdf_text: str,
+    pdf_text: str = "",
     system_prompt: str = SYSTEM_PROMPT,
     instruction: str = INSTRUCTION_TEXT,
 ) -> PerovskiteSolarCells:
@@ -36,12 +43,30 @@ def create_text_completion(
     """
     # Construct messages for LLM
     messages = [
-        {"role": "system", "content": system_prompt},
+        # {"role": "system", "content": system_prompt}, #Choose one here!!
+        # {"role": "user", "content": instruction}
         {
             "role": "user",
             "content": f"{instruction}\n Here is the schema: {str(PerovskiteSolarCells.model_json_schema())} \n\nHere is the text:\n{pdf_text}",
         },
+        # {
+        #     "role": "user",
+        #     "content": BEST_PROMPT.replace("[schema]", str(PerovskiteSolarCells.model_json_schema())).replace("[text]", pdf_text)
+        # }
     ]
+
+    # # Call with groq instructor
+    # client = instructor.from_provider("groq/llama-3.3-70b-versatile", mode=instructor.Mode.JSON)
+
+    # resp = client.chat.completions.create(
+    #     # model="qwen-qwq-32b",
+    #     messages=messages,
+    #     response_model=PerovskiteSolarCells,
+    #     temperature=0
+    # )
+    # print(resp)
+
+    # return resp
 
     # Call with Instructor
     client = instructor.from_litellm(completion)
@@ -52,6 +77,7 @@ def create_text_completion(
         response_model=PerovskiteSolarCells,
         temperature=0,
     )
+    print(resp)
 
     return resp
 
@@ -74,13 +100,6 @@ def llm_as_judge(ground_truth, value_truth, value_extraction):
             "content": f"Complete ground truth: {str(ground_truth)}\n Truth value: {str(value_truth)} \n Extraction value: {str(value_extraction)}",
         },
     ]
-
-    import os
-
-    os.environ["REDIS_HOST"] = "127.0.0.1"
-    os.environ["REDIS_PORT"] = "6379"
-    os.environ["REDIS_PASSWORD"] = "foobared"
-    os.environ["REDIS_TTL"] = "1000000"
 
     client = instructor.from_litellm(completion)
 

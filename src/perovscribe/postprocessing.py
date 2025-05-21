@@ -182,6 +182,7 @@ def merge_dicts(template, data, parent_key=""):
         "humidity": "%",
         "PCE_at_the_start_of_the_experiment": "%",
         "PCE_at_the_end_of_description": "%",
+        "PCE_T80": "%",
     }
 
     if isinstance(template, dict) and isinstance(data, dict):

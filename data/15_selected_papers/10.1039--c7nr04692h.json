@@ -2,7 +2,7 @@
   "cells": [
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.0725
       },
       "additional_notes": null,
@@ -425,7 +425,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.0725
       },
       "additional_notes": null,
@@ -855,7 +855,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.0725
       },
       "additional_notes": null,
@@ -1285,7 +1285,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.0725
       },
       "additional_notes": null,
@@ -1708,7 +1708,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.0725
       },
       "additional_notes": null,
@@ -2131,7 +2131,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.0725
       },
       "additional_notes": null,
@@ -2523,11 +2523,11 @@
         },
         "PCE_at_the_end_of_the_experiment": {
           "unit": "%",
-          "value": 0.206
+          "value": 3.11
         },
         "PCE_at_the_start_of_the_experiment": {
           "unit": "%",
-          "value": 1
+          "value": 14.13
         },
         "humidity": {
           "unit": "%",
@@ -2544,7 +2544,7 @@
         },
         "time": {
           "unit": "h",
-          "value": 360
+          "value": 300
         }
       },
       "voc": {
@@ -2554,7 +2554,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.0725
       },
       "additional_notes": null,
@@ -2977,7 +2977,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.0725
       },
       "additional_notes": null,
@@ -3407,7 +3407,7 @@
     },
     {
       "active_area": {
-        "unit": null,
+        "unit": "cm^2",
         "value": 0.0725
       },
       "additional_notes": null,
@@ -3806,11 +3806,11 @@
         },
         "PCE_at_the_end_of_the_experiment": {
           "unit": "%",
-          "value": 0.62
+          "value": 10.82
         },
         "PCE_at_the_start_of_the_experiment": {
           "unit": "%",
-          "value": 1
+          "value": 18.03
         },
         "humidity": {
           "unit": "%",

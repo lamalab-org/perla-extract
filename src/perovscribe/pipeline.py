@@ -1,5 +1,6 @@
 from typing import Optional
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
+from instructor.exceptions import InstructorRetryException
 from typing import Union
 from pathlib import Path
 import json
@@ -10,6 +11,7 @@ from perovscribe import llm_call
 from perovscribe.export import to_json
 import os
 import csv
+from collections import defaultdict
 
 
 def calc_precision(per_key_metrics, key):
@@ -61,15 +63,16 @@ class ExtractionPipeline:
             output = output + os.path.splitext(os.path.basename(filepath))[0] + ".json"
             pdf_text = self.preprocessor.pdf_to_text(filepath)
             results = llm_call.create_text_completion(self.model_name, pdf_text)
-            # to_json(results, output) # Add back for regular
-            with open(output, "w") as f:
-                f.write(json.dumps(results))
+            to_json(results, output)  # Add back for regular
             # postprocess(results.model_dump()) # TODO: Check if you want this to be done
         elif ".json" in filepath:
             results = json.load(open(filepath, "r"))
             results = postprocess(results)
             evals = Evaluations(
-                postprocess(json.load(open(truthpath))), results, filepath
+                postprocess(json.load(open(truthpath))),
+                results,
+                filepath,
+                defaultdict(lambda: defaultdict(float)),
             )
             print("==========================================")
             print("Score:", evals.score)
@@ -84,13 +87,16 @@ class ExtractionPipeline:
         elif os.path.isdir(filepath) and os.path.isdir(truthpath):
             truth_extraction_pairs = []
             for file in [x for x in os.listdir(truthpath) if x.endswith(".json")]:
-                with open(filepath + os.sep + file) as f:
-                    extraction = postprocess(json.load(f))
-                with open(truthpath + os.sep + file) as f:
-                    # Note: Postprocessing has an effect on the llm judge call. I prefer now not to add this device stack
-                    truth = postprocess(json.load(f))
+                try:
+                    with open(filepath + os.sep + file) as f:
+                        extraction = postprocess(json.load(f))
+                    with open(truthpath + os.sep + file) as f:
+                        # Note: Postprocessing has an effect on the llm judge call. I prefer now not to add this device stack
+                        truth = postprocess(json.load(f))
 
-                truth_extraction_pairs.append((truth, extraction, file))
+                    truth_extraction_pairs.append((truth, extraction, file))
+                except FileNotFoundError:
+                    pass
             precs = []
             recalls = []
             import numpy as np
@@ -142,6 +148,128 @@ class ExtractionPipeline:
                 "voc:",
                 calc_precision(per_key_metrics, "voc:value"),
             )
+
+            # Calculate values for plot
+            def calculate_value_for_plot(metrics_dict):
+                def calculate_and_aggregate_precision(metrics_dict):
+                    # First calculate precision for all keys
+                    precision_results = {}
+
+                    for key, values in metrics_dict.items():
+                        tp = values.get("TP", 0.0)
+                        fp = values.get("FP", 0.0)
+
+                        # Calculate precision, handling division by zero
+                        if tp + fp > 0:
+                            precision = tp / (tp + fp)
+                            precision_results[key] = precision
+                        else:
+                            continue
+
+                    # Initialize our aggregated results dictionary
+                    aggregated_results = {}
+
+                    # Find and aggregate keys ending with ":unit"
+                    unit_keys = [
+                        key for key in precision_results if key.endswith(":unit")
+                    ]
+                    if unit_keys:
+                        unit_values = [precision_results[key] for key in unit_keys]
+                        aggregated_results["units"] = sum(unit_values) / len(
+                            unit_values
+                        )
+
+                    # Find and aggregate keys containing "composition"
+                    composition_keys = [
+                        key for key in precision_results if "composition" in key.lower()
+                    ]
+                    if composition_keys:
+                        composition_values = [
+                            precision_results[key] for key in composition_keys
+                        ]
+                        print(
+                            [(key, precision_results[key]) for key in composition_keys]
+                        )
+                        aggregated_results["composition"] = sum(
+                            composition_values
+                        ) / len(composition_values)
+
+                    # Find and aggregate keys containing "stability"
+                    stability_keys = [
+                        key for key in precision_results if "stability" in key.lower()
+                    ]
+                    if stability_keys:
+                        stability_values = [
+                            precision_results[key] for key in stability_keys
+                        ]
+                        aggregated_results["stability"] = sum(stability_values) / len(
+                            stability_values
+                        )
+
+                    # Find and aggregate keys containing "deposition"
+                    deposition_keys = [
+                        key for key in precision_results if "deposition" in key.lower()
+                    ]
+                    if deposition_keys:
+                        deposition_values = [
+                            precision_results[key] for key in deposition_keys
+                        ]
+                        aggregated_results["deposition"] = sum(deposition_values) / len(
+                            deposition_values
+                        )
+
+                    # Find and aggregate keys containing "layers"
+                    layers_keys = [
+                        key for key in precision_results if "layers" in key.lower()
+                    ]
+                    if layers_keys:
+                        layers_values = [precision_results[key] for key in layers_keys]
+                        aggregated_results["layers"] = sum(layers_values) / len(
+                            layers_values
+                        )
+
+                    # Find and aggregate keys containing "layers"
+                    light_keys = [
+                        key for key in precision_results if "light" in key.lower()
+                    ]
+                    if light_keys:
+                        light_values = [precision_results[key] for key in light_keys]
+                        aggregated_results["light"] = sum(light_values) / len(
+                            light_values
+                        )
+
+                    # Add keys that don't match any of our aggregation rules, except "averaged_quantities"
+                    keys_to_exclude = set(
+                        unit_keys
+                        + composition_keys
+                        + stability_keys
+                        + deposition_keys
+                        + layers_keys
+                        + light_keys
+                    )
+                    for key in precision_results:
+                        if (
+                            key not in keys_to_exclude
+                            and "averaged_quantities" not in key
+                            and "number_devices" not in key
+                            and "encapsulated" not in key
+                        ):
+                            key_lhs = key.replace("_", " ")
+                            if ":value" in key:
+                                aggregated_results[
+                                    key_lhs[0 : key_lhs.rfind(":value")]
+                                ] = precision_results[key]
+                            else:
+                                aggregated_results[key_lhs] = precision_results[key]
+
+                    return aggregated_results
+
+                # Example usage with your sample data
+                precision_results = calculate_and_aggregate_precision(metrics_dict)
+                print(precision_results)
+
+            calculate_value_for_plot(per_key_metrics)
+
             fields = ["Fields", "TP", "FP", "FN"]
             with open("per_key_metrics.csv", "w") as f:
                 f.write("Fields, TP, FP, FN\n")
@@ -153,6 +281,8 @@ class ExtractionPipeline:
             print(
                 "LLM Judge calls average:",
                 llm_judge_calls / len(truth_extraction_pairs),
+                "Total:",
+                llm_judge_calls,
             )
             print("Overall avg recalls:", np.mean(recalls))
             print("Overall avg precision:", np.mean(precs))
@@ -167,9 +297,13 @@ class ExtractionPipeline:
                     + ".json"
                 )
                 pdf_text = self.preprocessor.pdf_to_text(filepath + os.sep + file)
-                results = llm_call.create_text_completion(self.model_name, pdf_text)
-                to_json(results, output)
-                postprocess(results.model_dump())
+                try:
+                    results = llm_call.create_text_completion(self.model_name, pdf_text)
+                    print(results)
+                    to_json(results, output)
+                    postprocess(results.model_dump())
+                except InstructorRetryException as e:
+                    print(e, file + " failed!!!!!!")
         else:
             print("Hmmm. This wasn't one of the expected inputs. Have a look again.")
 
@@ -196,10 +330,36 @@ def extract(
     ).run(filepath, truth)
 
 
+def optimizer(model_name: str = "claude-3-5-sonnet-20240620", output: str = "./"):
+    from perovscribe.optimizer import run
+
+    run(model_name, output)
+    # OptimizationPipeline(model_name).run(filepath)
+
+
+def papersbot():
+    from perovscribe.papersbot import main as papersbot
+
+    papersbot()
+
+
+class CLI:
+    """Command line interface for extraction and optimization."""
+
+    def __init__(self):
+        self.extract = extract
+        self.optimizer = optimizer
+        self.papersbot = papersbot
+
+    def __call__(self, *args, **kwargs):
+        """Default behavior when no command is specified."""
+        return extract(*args, **kwargs)
+
+
 def main_cli():
     import fire
 
-    fire.Fire(extract)
+    fire.Fire(CLI)
 
 
 if __name__ == "__main__":

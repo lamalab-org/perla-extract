@@ -138,15 +138,40 @@
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "wt%",
+                      "value": 35.0
                     },
-                    "name": null
+                    "name": "CH3NH3I"
+                  },
+                  {
+                    "concentration": {
+                      "unit": "wt%",
+                      "value": 35.0
+                    },
+                    "name": "PbCl2"
+                  },
+                  {
+                    "concentration": {
+                      "unit": "mg/mL",
+                      "value": 5.4
+                    },
+                    "name": "PCBM"
+                  },
+                  {
+                    "concentration": {
+                      "unit": "mg/mL",
+                      "value": 1.1
+                    },
+                    "name": "PEG"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "DMF",
+                    "volume_fraction": null
+                  },
+                  {
+                    "name": "Chlorobenzene",
                     "volume_fraction": null
                   }
                 ],

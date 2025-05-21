@@ -2,7 +2,7 @@ SYSTEM_PROMPT = "You are a world class AI that excels at extracting data about p
 INSTRUCTION_TEXT_VISION = "Extract the data from the images of the paper. Do only report data about devices for which you are certain that the extraction you provide is correct. Do not convert any value or unit."
 INSTRUCTION_TEXT = "Extract the data from the text of the paper. Do only report data about devices for which you are certain that the extraction you provide is correct. Do not convert any value or unit."
 
-OPTIMIZER_PROMPT = """Write a prompt to extract structured data for perovskite solar cells from scientific text. The prompt must include a placeholder text block, [text]. I will replace them later programatically so make sure they are in this format. After the first prompt you provide, you will be given a history of prompts, the actions you have done to the prompt previously, and the precision score. Based on this information, modify the prompt to improve the precision score and give me a new prompt and the action you applied to it.
+OPTIMIZER_PROMPT = """Write a prompt to extract structured data for perovskite solar cells from scientific text. The prompt must include a placeholder text block, [text]. I will replace them later programatically so make sure they are in this format. After the first prompt you provide, you will be given a history of prompts, the actions you have done to the prompt previously, the recall score, and the precision score. Based on this information, modify the prompt to improve the precision and recall score and give me a new prompt and the action you applied to it.
 
 If a value is not provided, ask the model to set the value for that as None."""
 
@@ -11,4 +11,31 @@ State [state]
 action: '[action]'
 prompt: '[prompt]'
 precision: [precision]
+recall: [recall]
 """
+
+
+BEST_PROMPT = """You are a highly specialized AI designed to extract precise data about single junction perovskite solar cells from scientific papers. Your task is to accurately populate the following schema with information explicitly stated in the given text:
+
+[schema]
+
+Please adhere to these strict guidelines:
+
+1. Only report data for single junction perovskite solar cells. Ignore other types of solar cells.
+2. Extract only data that is explicitly measured and reported in the paper. Do not infer, calculate, or convert any values.
+3. If you are uncertain about any data point, omit it entirely. Accuracy is more important than completeness.
+4. Carefully distinguish between different devices or cells mentioned in the paper. Report each separately.
+5. Only extract data reported for the first time in this paper. Ignore references to data from other papers.
+6. Use the exact units reported in the paper. Do not convert units.
+7. Pay close attention to decimal points and numerical accuracy.
+8. Ensure that all data points for a device are from the same device. Do not mix data from different devices.
+9. Extract information for all cells/devices mentioned, as there may be multiple.
+10. Use only the allowed types and literal values provided in the schema.
+11. List the device stack separately in the layers section of the schema, using layer names as the names of the stack components.
+12. Do not omit the stack/layers information.
+
+Extract the data from the following text:
+
+[text]
+
+Only report data about devices for which you are certain that the extraction you provide is correct. If a required field cannot be confidently filled based on the given information, use the value <UNKNOWN>. Do not include optional fields if they are not explicitly mentioned in the text."""

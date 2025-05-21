@@ -240,7 +240,9 @@ class Stability(BaseModel):
     )
     PCE_at_the_start_of_the_experiment: Optional[PCE]
     PCE_after_1000_hours: Optional[PCE]
-    PCE_at_the_end_of_experiment: Optional[PCE]
+    PCE_at_the_end_of_experiment: Optional[
+        PCE
+    ]  # TODO: We should have percentage of original PCE as that is more reported in the papers. Also keep a field for the value at the end of the stability test. Also add original_pce or pce_at_start like field with actual value.
     potential_bias: Optional[
         Literal[
             "Open circuit",

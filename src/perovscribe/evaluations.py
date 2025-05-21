@@ -142,6 +142,9 @@ def score_recalls(
         flat_extraction = flatdict.FlatterDict(match["extraction"])
 
         for key in flat_truth.keys():  # TODO: Make sure you mention that you loop over the flattened dict in the paper.
+            if key == "additional_notes":
+                continue
+
             key_for_stats = regularize_repeated_key(key)
 
             if key not in flat_extraction.keys() or (
@@ -162,6 +165,11 @@ def score_recalls(
 def match_layers(truth: List[dict], extraction: List[dict]):
     """Just match layer elements within a match"""
     scores = []
+
+    if (
+        truth is None or len(truth) == 0
+    ):  # NOTE: I had to do a lot of .get("layers", []) or [] type stuff. dunno if it breaks something like crazy.
+        truth = [{}]
 
     # rows = truth, cols = extraction
     scores = [
@@ -255,10 +263,6 @@ def score_precisions(
         flat_extraction = flatdict.FlatterDict(match["extraction"])
 
         for key, tolerance in precision_tolerances.items():
-            if "TP" not in per_key_metrics[key]:
-                per_key_metrics[key]["TP"] = 0
-            if "FP" not in per_key_metrics[key]:
-                per_key_metrics[key]["FP"] = 0
             if key in flat_extraction.keys() and (
                 flat_extraction[key] is not None or flat_truth[key] is None
             ):
@@ -274,7 +278,6 @@ def score_precisions(
                         "stack",
                         [layer.get("name") for layer in match["truth"]["layers"]],
                     )
-                    print(datetime.datetime.now())
                     print(
                         "We have",
                         flat_truth[key],
@@ -288,7 +291,11 @@ def score_precisions(
         for key in flat_truth:
             key_for_stats = regularize_repeated_key(key)
 
-            if flat_extraction is None or key in precision_tolerances.keys():
+            if (
+                flat_extraction is None
+                or key in precision_tolerances.keys()
+                or key == "additional_notes"
+            ):
                 continue
 
             if key in flat_extraction.keys() and (
@@ -315,6 +322,18 @@ def score_precisions(
                     per_key_metrics[key_for_stats]["TP"] += 1
                 # If the last element was not found to be acceptable, the False Positive count is incremented.
                 else:
+                    print(
+                        "stack",
+                        [layer.get("name") for layer in match["truth"]["layers"]],
+                    )
+                    print(
+                        "We have",
+                        flat_truth[key],
+                        "in the ground truth and",
+                        flat_extraction[key],
+                        "in the extraction for",
+                        key,
+                    )
                     per_key_metrics[key_for_stats]["FP"] += 1
 
         precisions.append(sum(found) / len(found))
@@ -442,7 +461,7 @@ def match_cells(
     truth_functionalites = []
     for t in truth_cells:
         functionalities = defaultdict(list)
-        for layer in t.get("layers", []):
+        for layer in t.get("layers", []) or []:
             functionalities[layer.get("functionality")].append(layer.get("name"))
         truth_functionalites.append(functionalities)
 
@@ -520,7 +539,9 @@ def match_cells(
         print("------------------------------------------------")
         print(file)
         print(
-            " ".join([layer.get("name", "") for layer in match["truth"].get("layers")])
+            " ".join(
+                [layer.get("name", "") for layer in match["truth"].get("layers", [])]
+            )
         )
         if match["extraction"].get("layers") is not None:
             print(
