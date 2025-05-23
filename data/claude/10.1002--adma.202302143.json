@@ -1,0 +1,306 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "unit": "cm^2",
+        "value": 0.09
+      },
+      "additional_notes": null,
+      "averaged_quantities": true,
+      "device_architecture": "pin",
+      "encapsulated": false,
+      "ff": {
+        "value": 79.36
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 20.71
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "ITO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "2PACz",
+          "thickness": null
+        },
+        {
+          "additional_treatment": "PBN surface passivation",
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "N2",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "(PEA)2MA4Pb5I16 w/ PBN",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "PC60BM",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "PEI",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": null
+        }
+      ],
+      "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100.0
+        },
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 20.05
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "PEA",
+            "coefficient": null,
+            "common_name": "phenylethylammonium",
+            "molecular_formula": null
+          },
+          {
+            "abbreviation": "MA",
+            "coefficient": null,
+            "common_name": "methylammonium",
+            "molecular_formula": null
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": null,
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ],
+        "bandgap": null,
+        "dimensionality": "2D/3D",
+        "formula": "(PEA)2MA4Pb5I16",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": null,
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ]
+      },
+      "stability": {
+        "PCE_T80": null,
+        "PCE_after_1000_hours": {
+          "unit": "%",
+          "value": 17.644
+        },
+        "PCE_at_the_end_of_the_experiment": {
+          "unit": "%",
+          "value": 17.644
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": "%",
+          "value": 20.05
+        },
+        "humidity": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100.0
+        },
+        "potential_bias": "MPPT",
+        "temperature": null,
+        "time": {
+          "unit": "h",
+          "value": 1000.0
+        }
+      },
+      "voc": {
+        "unit": "V",
+        "value": 1.22
+      }
+    },
+    {
+      "active_area": {
+        "unit": "cm^2",
+        "value": 0.09
+      },
+      "additional_notes": null,
+      "averaged_quantities": true,
+      "device_architecture": "pin",
+      "encapsulated": false,
+      "ff": {
+        "value": 78.52
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 18.44
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "ITO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "2PACz",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "N2",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            }
+          ],
+          "functionality": "Absorber",
+          "name": "(PEA)2MA4Pb5I16",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "PC60BM",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "PEI",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": null
+        }
+      ],
+      "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100.0
+        },
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 17.53
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "PEA",
+            "coefficient": null,
+            "common_name": "phenylethylammonium",
+            "molecular_formula": null
+          },
+          {
+            "abbreviation": "MA",
+            "coefficient": null,
+            "common_name": "methylammonium",
+            "molecular_formula": null
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": null,
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ],
+        "bandgap": null,
+        "dimensionality": "2D/3D",
+        "formula": "(PEA)2MA4Pb5I16",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": null,
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ]
+      },
+      "stability": {
+        "PCE_T80": null,
+        "PCE_after_1000_hours": {
+          "unit": "%",
+          "value": 14.024
+        },
+        "PCE_at_the_end_of_the_experiment": {
+          "unit": "%",
+          "value": 14.024
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": "%",
+          "value": 17.53
+        },
+        "humidity": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100.0
+        },
+        "potential_bias": "MPPT",
+        "temperature": null,
+        "time": {
+          "unit": "h",
+          "value": 340.0
+        }
+      },
+      "voc": {
+        "unit": "V",
+        "value": 1.21
+      }
+    }
+  ]
+}

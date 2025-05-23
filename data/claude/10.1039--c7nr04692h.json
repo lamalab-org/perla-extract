@@ -1,0 +1,144 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "unit": "mm^2",
+        "value": 7.25
+      },
+      "additional_notes": null,
+      "averaged_quantities": null,
+      "device_architecture": "pin",
+      "encapsulated": null,
+      "ff": {
+        "value": 79.0
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 22.38
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "PEDOT:PSS-V2O5 (2:1)",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Absorber",
+          "name": "CH3NH3PbIxCl3-x",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "N2",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "mg/mL",
+                      "value": 20.0
+                    },
+                    "name": "PC61BM"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "chloroform",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": null,
+              "temperature": null
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "PC61BM",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": [
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "N2",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "mg/mL",
+                      "value": 0.5
+                    },
+                    "name": "Bphen"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "ethanol",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": null,
+              "temperature": null
+            }
+          ],
+          "functionality": "Electron-transport",
+          "name": "Bphen",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "Ag",
+          "thickness": null
+        }
+      ],
+      "light_source": null,
+      "number_devices": null,
+      "pce": {
+        "unit": null,
+        "value": 18.03
+      },
+      "perovskite_composition": {
+        "a_ions": null,
+        "b_ions": null,
+        "bandgap": null,
+        "dimensionality": null,
+        "formula": "CH3NH3PbIxCl3-x",
+        "x_ions": null
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 1.02
+      }
+    }
+  ]
+}

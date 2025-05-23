@@ -1,0 +1,339 @@
+{
+  "cells": [
+    {
+      "active_area": {
+        "unit": null,
+        "value": null
+      },
+      "additional_notes": null,
+      "averaged_quantities": false,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 78.57
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 24.64
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "SnO2",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Absorber",
+          "name": "1D/3D perovskite",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "Spiro-OMeTAD",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "Au",
+          "thickness": null
+        }
+      ],
+      "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100.0
+        },
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 22.07
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "Me3S",
+            "coefficient": null,
+            "common_name": "Trimethylsulfonium",
+            "molecular_formula": null
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": null,
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ],
+        "bandgap": null,
+        "dimensionality": null,
+        "formula": null,
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": null,
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ]
+      },
+      "stability": {
+        "PCE_T80": null,
+        "PCE_after_1000_hours": {
+          "unit": "%",
+          "value": 21.41
+        },
+        "PCE_at_the_end_of_the_experiment": {
+          "unit": "%",
+          "value": 21.41
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": "%",
+          "value": 22.07
+        },
+        "humidity": {
+          "unit": "%",
+          "value": 50.0
+        },
+        "light_intensity": null,
+        "potential_bias": "Open circuit",
+        "temperature": null,
+        "time": {
+          "unit": "h",
+          "value": 1000.0
+        }
+      },
+      "voc": {
+        "unit": "V",
+        "value": 1.14
+      }
+    },
+    {
+      "active_area": {
+        "unit": null,
+        "value": null
+      },
+      "additional_notes": null,
+      "averaged_quantities": false,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 76.3
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 24.14
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "SnO2",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Absorber",
+          "name": "3D perovskite",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "Spiro-OMeTAD",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "Au",
+          "thickness": null
+        }
+      ],
+      "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100.0
+        },
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 20.1
+      },
+      "perovskite_composition": {
+        "a_ions": null,
+        "b_ions": null,
+        "bandgap": null,
+        "dimensionality": null,
+        "formula": null,
+        "x_ions": null
+      },
+      "stability": null,
+      "voc": {
+        "unit": "V",
+        "value": 1.09
+      }
+    },
+    {
+      "active_area": {
+        "unit": null,
+        "value": null
+      },
+      "additional_notes": null,
+      "averaged_quantities": false,
+      "device_architecture": "nip",
+      "encapsulated": null,
+      "ff": {
+        "value": 56.0
+      },
+      "jsc": {
+        "unit": "mA cm^-2",
+        "value": 3.76
+      },
+      "layers": [
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Substrate",
+          "name": "ITO",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Electron-transport",
+          "name": "SnO2",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Absorber",
+          "name": "Me3SPbI3",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Hole-transport",
+          "name": "Spiro-OMeTAD",
+          "thickness": null
+        },
+        {
+          "additional_treatment": null,
+          "deposition": null,
+          "functionality": "Contact",
+          "name": "Au",
+          "thickness": null
+        }
+      ],
+      "light_source": {
+        "description": null,
+        "lamp": null,
+        "light_intensity": {
+          "unit": "mW cm^-2",
+          "value": 100.0
+        },
+        "type": "AM 1.5G"
+      },
+      "number_devices": null,
+      "pce": {
+        "unit": "%",
+        "value": 2.09
+      },
+      "perovskite_composition": {
+        "a_ions": [
+          {
+            "abbreviation": "Me3S",
+            "coefficient": null,
+            "common_name": "Trimethylsulfonium",
+            "molecular_formula": null
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": null,
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ],
+        "bandgap": null,
+        "dimensionality": "1D",
+        "formula": "Me3SPbI3",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": null,
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ]
+      },
+      "stability": {
+        "PCE_T80": null,
+        "PCE_after_1000_hours": {
+          "unit": "%",
+          "value": null
+        },
+        "PCE_at_the_end_of_the_experiment": {
+          "unit": "%",
+          "value": null
+        },
+        "PCE_at_the_start_of_the_experiment": {
+          "unit": "%",
+          "value": 2.09
+        },
+        "humidity": {
+          "unit": "%",
+          "value": 50.0
+        },
+        "light_intensity": null,
+        "potential_bias": "Open circuit",
+        "temperature": null,
+        "time": {
+          "unit": "h",
+          "value": 500.0
+        }
+      },
+      "voc": {
+        "unit": "V",
+        "value": 0.99
+      }
+    }
+  ]
+}
