@@ -208,7 +208,7 @@ def merge_dicts(template, data, parent_key=""):
         template_item = template[0]
         return [merge_dicts(template_item, item) for item in data]
     else:
-        if isinstance(template, dict):
+        if isinstance(template, dict) and "unit" in template.keys():
             print(
                 data, "=================================", parent_key
             ) if data is not None else print("")

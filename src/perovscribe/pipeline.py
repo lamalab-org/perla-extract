@@ -339,6 +339,11 @@ def optimizer(model_name: str = "claude-3-5-sonnet-20240620", output: str = "./"
 
 
 def papersbot():
+    if "UNPAYWALL_EMAIL" not in os.environ:
+        print(
+            "You need to provide your email for unpaywall API. Set this env variable: export UNPAYWALL_EMAIL=<your-email>"
+        )
+        return
     from perovscribe.papersbot import main as papersbot
 
     papersbot()
@@ -367,12 +372,6 @@ class CLI:
 
 def main_cli():
     import fire
-
-    if "UNPAYWALL_EMAIL" not in os.environ:
-        print(
-            "You need to provide your email for unpaywall API. Set this env variable: export UNPAYWALL_EMAIL=<your-email>"
-        )
-        return
 
     fire.Fire(CLI)
 
