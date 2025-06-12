@@ -48,7 +48,7 @@ def create_text_completion(
         # {"role": "user", "content": instruction}
         {
             "role": "user",
-            "content": f"{instruction}\n Here is the schema: {str(PerovskiteSolarCells.model_json_schema())} \n\nHere is the text:\n{pdf_text}",
+            "content": f"{system_prompt}\n{instruction}\n Here is the schema: {str(PerovskiteSolarCells.model_json_schema())} \n\nHere is the text:\n{pdf_text}",
         },
         # {
         #     "role": "user",

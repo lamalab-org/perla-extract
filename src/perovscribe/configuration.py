@@ -3,6 +3,8 @@ from pint import UnitRegistry
 # Initialize the UnitRegistry
 ureg = UnitRegistry()
 
+ureg.define("sun = 1 kW/m^2")
+
 pint = {
     "default_units_by_type": {
         ureg.percent.dimensionality: (ureg.percent, "%"),  # Efficiency, humidity, etc.
@@ -22,5 +24,9 @@ pint = {
             "°C",
         ),  # Temperature converted from Celsius
         (1 * ureg.mg / ureg.mL).dimensionality: (ureg.mg / ureg.mL, "mg/mL"),
+        (ureg.mW / ureg.cm**2).dimensionality: ((ureg.mW / ureg.cm**2), "mW cm^-2"),
+        (ureg.mW / ureg.cm**2).dimensionality: ((ureg.mW / ureg.cm**2), "mW cm^-2"),
+        (ureg.mol / ureg.L).dimensionality: ((ureg.mol / ureg.L), "mol/L"),
+        (ureg.eV).dimensionality: ((ureg.eV), "eV"),
     }
 }

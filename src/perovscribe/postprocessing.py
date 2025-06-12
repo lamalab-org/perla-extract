@@ -6,6 +6,14 @@ from perovscribe import configuration as config
 def postprocess(data: dict) -> dict:
     # data = add_device_stack(data)
     data = normalize(data)
+    data = filter_unwanted(data)
+    return data
+
+
+def filter_unwanted(data: dict) -> dict:
+    for i, cell in enumerate(data["cells"]):
+        if ((cell.get("pce") or {"value": 0}).get("value") or 0) > 27:
+            del data["cells"][i]
     return data
 
 
@@ -183,6 +191,7 @@ def merge_dicts(template, data, parent_key=""):
         "PCE_at_the_start_of_the_experiment": "%",
         "PCE_at_the_end_of_description": "%",
         "PCE_T80": "%",
+        "bandgap": "eV",
     }
 
     if isinstance(template, dict) and isinstance(data, dict):

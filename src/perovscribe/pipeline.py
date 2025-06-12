@@ -64,8 +64,8 @@ class ExtractionPipeline:
             output = output + os.path.splitext(os.path.basename(filepath))[0] + ".json"
             pdf_text = self.preprocessor.pdf_to_text(filepath)
             results = llm_call.create_text_completion(self.model_name, pdf_text)
+            results = PerovskiteSolarCells(**postprocess(results.model_dump()))
             to_json(results, output)  # Add back for regular
-            # postprocess(results.model_dump()) # TODO: Check if you want this to be done
         elif ".json" in filepath:
             results = json.load(open(filepath, "r"))
             results = postprocess(results)
@@ -301,10 +301,24 @@ class ExtractionPipeline:
                 try:
                     results = llm_call.create_text_completion(self.model_name, pdf_text)
                     print(results)
+                    results = PerovskiteSolarCells(**postprocess(results.model_dump()))
                     to_json(results, output)
-                    postprocess(results.model_dump())
                 except InstructorRetryException as e:
-                    print(e, file + " failed!!!!!!")
+                    print(
+                        e,
+                        file + " failed!!!!!!",
+                        type(
+                            e.last_completion.choices[0]
+                            .message.tool_calls[0]
+                            .function.arguments
+                        ),
+                    )
+                    with open(output, "w") as f:
+                        f.write(
+                            e.last_completion.choices[0]
+                            .message.tool_calls[0]
+                            .function.arguments
+                        )
         else:
             print("Hmmm. This wasn't one of the expected inputs. Have a look again.")
 
