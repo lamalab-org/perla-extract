@@ -1,4 +1,5 @@
 import warnings
+import math
 
 from perovscribe import configuration as config
 
@@ -6,15 +7,40 @@ from perovscribe import configuration as config
 def postprocess(data: dict) -> dict:
     # data = add_device_stack(data)
     data = normalize(data)
-    data = filter_unwanted(data)
+    # data = filter_unwanted(data)
     return data
 
 
 def filter_unwanted(data: dict) -> dict:
+    new_data = {"cells": []}
     for i, cell in enumerate(data["cells"]):
-        if ((cell.get("pce") or {"value": 0}).get("value") or 0) > 27:
-            del data["cells"][i]
-    return data
+        if (
+            ((cell.get("pce") or {"value": 28}).get("value") or 28) < 27
+            or cell.get("pce") is None
+            or cell.get("pce").get("value") is None
+        ):
+            print(
+                ((cell.get("pce") or {"value": 99}).get("value") or 99),
+                (
+                    ((cell.get("jsc") or {"value": 0}).get("value") or 0)
+                    * ((cell.get("voc") or {"value": 0}).get("value") or 0)
+                    * ((cell.get("ff") or {"value": 0}).get("value") or 0)
+                )
+                / 100,
+                "rrr",
+            )
+            if math.isclose(
+                ((cell.get("pce") or {"value": 99}).get("value") or 99),
+                (
+                    ((cell.get("jsc") or {"value": 0}).get("value") or 0)
+                    * ((cell.get("voc") or {"value": 0}).get("value") or 0)
+                    * ((cell.get("ff") or {"value": 0}).get("value") or 0)
+                )
+                / 100,
+                abs_tol=0.2,
+            ):
+                new_data["cells"].append(data["cells"][i])
+    return new_data
 
 
 def normalize_perovskite():

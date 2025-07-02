@@ -60,6 +60,18 @@ class ExtractionPipeline:
         truthpath: Union[Path, str],
         output: Union[Path, str] = "./extractions",
     ):
+        def sorted_listing_by_creation_time(directory):
+            def get_creation_time(item):
+                item_path = os.path.join(directory, item)
+                return os.path.getctime(item_path)
+
+            items = os.listdir(directory)
+            sorted_items = sorted(items, key=get_creation_time, reverse=True)
+            return sorted_items
+
+        directory = "./"
+        print(sorted_listing_by_creation_time(directory)[:10])
+        # return
         if ".pdf" in filepath:
             output = output + os.path.splitext(os.path.basename(filepath))[0] + ".json"
             pdf_text = self.preprocessor.pdf_to_text(filepath)
@@ -152,20 +164,28 @@ class ExtractionPipeline:
 
             # Calculate values for plot
             def calculate_value_for_plot(metrics_dict):
-                def calculate_and_aggregate_precision(metrics_dict):
+                def calculate_and_aggregate_precision(metrics_dict, recall=False):
                     # First calculate precision for all keys
                     precision_results = {}
 
                     for key, values in metrics_dict.items():
                         tp = values.get("TP", 0.0)
                         fp = values.get("FP", 0.0)
+                        fn = values.get("FN", 0.0)
 
-                        # Calculate precision, handling division by zero
-                        if tp + fp > 0:
-                            precision = tp / (tp + fp)
-                            precision_results[key] = precision
+                        if recall:
+                            if tp + fn > 0:
+                                recall = tp / (tp + fn)
+                                precision_results[key] = recall
+                            else:
+                                continue
                         else:
-                            continue
+                            # Calculate precision, handling division by zero
+                            if tp + fp > 0:
+                                precision = tp / (tp + fp)
+                                precision_results[key] = precision
+                            else:
+                                continue
 
                     # Initialize our aggregated results dictionary
                     aggregated_results = {}
@@ -267,7 +287,12 @@ class ExtractionPipeline:
 
                 # Example usage with your sample data
                 precision_results = calculate_and_aggregate_precision(metrics_dict)
-                print(precision_results)
+                print("Precision:", precision_results)
+
+                recall_results = calculate_and_aggregate_precision(
+                    metrics_dict, recall=True
+                )
+                print("Recall:", recall_results)
 
             calculate_value_for_plot(per_key_metrics)
 
@@ -290,7 +315,9 @@ class ExtractionPipeline:
         elif os.path.isdir(filepath):
             output_folder = output + os.sep + self.model_name
             Path(output_folder).mkdir(parents=True, exist_ok=True)
+            # for file in [x for x in sorted_listing_by_creation_time(directory) if x.endswith(".pdf")]:
             for file in [x for x in os.listdir(filepath) if x.endswith(".pdf")]:
+                print("Filename: ", file)
                 output = (
                     output_folder
                     + os.sep
@@ -300,8 +327,8 @@ class ExtractionPipeline:
                 pdf_text = self.preprocessor.pdf_to_text(filepath + os.sep + file)
                 try:
                     results = llm_call.create_text_completion(self.model_name, pdf_text)
-                    print(results)
                     results = PerovskiteSolarCells(**postprocess(results.model_dump()))
+                    print(results)
                     to_json(results, output)
                 except InstructorRetryException as e:
                     print(
@@ -315,10 +342,16 @@ class ExtractionPipeline:
                     )
                     with open(output, "w") as f:
                         f.write(
-                            e.last_completion.choices[0]
-                            .message.tool_calls[0]
-                            .function.arguments
-                        )
+                            json.dumps(
+                                postprocess(
+                                    json.loads(
+                                        e.last_completion.choices[0]
+                                        .message.tool_calls[0]
+                                        .function.arguments
+                                    )
+                                )
+                            )
+                        )  # Make sure postprocessing is triggered when it fails
         else:
             print("Hmmm. This wasn't one of the expected inputs. Have a look again.")
 

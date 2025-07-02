@@ -77,6 +77,7 @@ def create_text_completion(
         messages=messages,
         response_model=PerovskiteSolarCells,
         temperature=0,
+        # max_tokens=32000
     )
     print(resp)
 
