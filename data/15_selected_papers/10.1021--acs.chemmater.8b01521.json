@@ -67,15 +67,22 @@
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mol/L",
+                      "value": 0.010000000000000002
                     },
-                    "name": null
+                    "name": "bis-EDOT"
+                  },
+                  {
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 0.10000000000000003
+                    },
+                    "name": "Bu4NPF6"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "dichloromethane",
                     "volume_fraction": null
                   }
                 ],

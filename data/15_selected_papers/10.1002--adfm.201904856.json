@@ -19,319 +19,370 @@
       "layers": [
         {
           "additional_treatment": null,
-          "deposition": [
-            {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
-            }
-          ],
+          "deposition": null,
           "functionality": "Substrate",
           "name": "FTO",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_duration": "60 s",
+                "spin_speed": "2000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mol/L",
+                      "value": 0.15000000000000002
                     },
-                    "name": null
+                    "name": "titanium diisopropoxide bis(acetylacetonate)"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "1-butanol",
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 300.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 125.0
+              }
+            },
+            {
+              "additional_parameters": {
+                "spin_duration": "60 s",
+                "spin_speed": "2000 rpm"
+              },
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 0.15000000000000002
+                    },
+                    "name": "titanium diisopropoxide bis(acetylacetonate)"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "1-butanol",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 450.0
               }
             }
           ],
           "functionality": "Electron-transport",
           "name": "c-TiO2",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_duration": "20 s",
+                "spin_speed": "4000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "wt%",
+                      "value": 14.3
                     },
-                    "name": null
+                    "name": "TiO2"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "ethanol",
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 500.0
               }
             }
           ],
           "functionality": "Electron-transport",
           "name": "m-TiO2",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "step1_duration": "10 s",
+                "step1_speed": "1000 rpm",
+                "step2_duration": "35 s",
+                "step2_speed": "4000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1000.174\n}",
+                    "name": "FAI"
+                  },
+                  {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1099.76\n}",
+                    "name": "PbI2"
+                  },
+                  {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 200.0536\n}",
+                    "name": "MABr"
+                  },
+                  {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 199.9946\n}",
+                    "name": "PbBr2"
+                  },
+                  {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mol/L",
+                      "value": 1.5000000000000004
                     },
-                    "name": null
+                    "name": "CsI"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
-                    "volume_fraction": null
+                    "name": "DMF",
+                    "volume_fraction": 0.9
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.1
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": {
+                "acceleration": "500 rpm/s",
+                "speed": "1000 rpm"
+              },
+              "antisolvent": "",
+              "atmosphere": "",
+              "duration": "10s",
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": "",
+                "solutes": [],
+                "solvents": [],
+                "temperature": "",
+                "volume": ""
+              },
+              "step_name": "Spin coating",
+              "temperature": ""
+            },
+            {
+              "additional_parameters": {
+                "acceleration": "2000 rpm/s",
+                "speed": "1000 rpm"
+              },
+              "antisolvent": "",
+              "atmosphere": "",
+              "duration": "35s",
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": "",
+                "solutes": [],
+                "solvents": [],
+                "temperature": "",
+                "volume": ""
+              },
+              "step_name": "Spin coating",
+              "temperature": ""
+            },
+            {
+              "additional_parameters": {
+                "timing": "15 s before end",
+                "volume": "100 \u00b5L"
+              },
+              "antisolvent": "chlorobenzene",
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Antisolvent-quenching",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 7200.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 100.0
               }
             }
           ],
           "functionality": "Absorber",
           "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_duration": "30 s",
+                "spin_speed": "4000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mg/mL",
+                      "value": 30.0
                     },
-                    "name": null
+                    "name": "DTB(0%DEG)"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "chlorobenzene",
                     "volume_fraction": null
                   }
                 ],
                 "temperature": {
-                  "unit": null,
-                  "value": null
+                  "unit": "\u00b0C",
+                  "value": 60.0
                 },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "volume": null
               },
               "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "temperature": null
             }
           ],
           "functionality": "Hole-transport",
-          "name": "DTB(3%DEG)",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "name": "DTB(0%DEG)",
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
+              "additional_parameters": {
+                "pressure": "4 \u00d7 10^-5 Torr",
+                "rate": "0.05 nm s^-1"
+              },
               "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Evaporation",
+              "solution": null,
               "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "temperature": null
             }
           ],
           "functionality": "Contact",
           "name": "Au",
           "thickness": {
             "unit": "nm",
-            "value": 100
+            "value": 100.0
           }
         }
       ],
       "light_source": {
-        "description": null,
+        "description": "Enlitech Solar Simulator SS-F7-3A",
         "lamp": null,
         "light_intensity": {
           "unit": "mW cm^-2",
@@ -345,15 +396,57 @@
         "value": 20.19
       },
       "perovskite_composition": {
-        "a_ions": [],
-        "b_ions": [],
+        "a_ions": [
+          {
+            "abbreviation": "Cs",
+            "coefficient": "0.05",
+            "common_name": "Cesium",
+            "molecular_formula": "Cs+"
+          },
+          {
+            "abbreviation": "FA",
+            "coefficient": "0.81",
+            "common_name": "Formamidinium",
+            "molecular_formula": "CH6N+"
+          },
+          {
+            "abbreviation": "MA",
+            "coefficient": "0.14",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH5N+"
+          }
+        ],
+        "additives": null,
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
-        "x_ions": []
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "2.55",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Br",
+            "coefficient": "0.45",
+            "common_name": "Bromide",
+            "molecular_formula": "Br-"
+          }
+        ]
       },
       "stability": {
         "PCE_T80": {
@@ -414,314 +507,365 @@
       "layers": [
         {
           "additional_treatment": null,
-          "deposition": [
-            {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
-            }
-          ],
+          "deposition": null,
           "functionality": "Substrate",
           "name": "FTO",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_duration": "60 s",
+                "spin_speed": "2000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mol/L",
+                      "value": 0.15000000000000002
                     },
-                    "name": null
+                    "name": "titanium diisopropoxide bis(acetylacetonate)"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "1-butanol",
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 300.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 125.0
+              }
+            },
+            {
+              "additional_parameters": {
+                "spin_duration": "60 s",
+                "spin_speed": "2000 rpm"
+              },
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 0.15000000000000002
+                    },
+                    "name": "titanium diisopropoxide bis(acetylacetonate)"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "1-butanol",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 450.0
               }
             }
           ],
           "functionality": "Electron-transport",
           "name": "c-TiO2",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_duration": "20 s",
+                "spin_speed": "4000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "wt%",
+                      "value": 14.3
                     },
-                    "name": null
+                    "name": "TiO2"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "ethanol",
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 500.0
               }
             }
           ],
           "functionality": "Electron-transport",
           "name": "m-TiO2",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "step1_duration": "10 s",
+                "step1_speed": "1000 rpm",
+                "step2_duration": "35 s",
+                "step2_speed": "4000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1000.174\n}",
+                    "name": "FAI"
+                  },
+                  {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1099.76\n}",
+                    "name": "PbI2"
+                  },
+                  {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 200.0536\n}",
+                    "name": "MABr"
+                  },
+                  {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 199.9946\n}",
+                    "name": "PbBr2"
+                  },
+                  {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mol/L",
+                      "value": 1.5000000000000004
                     },
-                    "name": null
+                    "name": "CsI"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
-                    "volume_fraction": null
+                    "name": "DMF",
+                    "volume_fraction": 0.9
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.1
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": {
+                "acceleration": "500 rpm/s",
+                "speed": "1000 rpm"
+              },
+              "antisolvent": "",
+              "atmosphere": "",
+              "duration": "10s",
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": "",
+                "solutes": [],
+                "solvents": [],
+                "temperature": "",
+                "volume": ""
+              },
+              "step_name": "Spin coating",
+              "temperature": ""
+            },
+            {
+              "additional_parameters": {
+                "acceleration": "2000 rpm/s",
+                "speed": "1000 rpm"
+              },
+              "antisolvent": "",
+              "atmosphere": "",
+              "duration": "35s",
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": "",
+                "solutes": [],
+                "solvents": [],
+                "temperature": "",
+                "volume": ""
+              },
+              "step_name": "Spin coating",
+              "temperature": ""
+            },
+            {
+              "additional_parameters": {
+                "timing": "15 s before end",
+                "volume": "100 \u00b5L"
+              },
+              "antisolvent": "chlorobenzene",
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Antisolvent-quenching",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 7200.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 100.0
               }
             }
           ],
           "functionality": "Absorber",
           "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_duration": "30 s",
+                "spin_speed": "4000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mg/mL",
+                      "value": 30.0
                     },
-                    "name": null
+                    "name": "DTB(0%DEG)"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "chlorobenzene",
                     "volume_fraction": null
                   }
                 ],
                 "temperature": {
-                  "unit": null,
-                  "value": null
+                  "unit": "\u00b0C",
+                  "value": 60.0
                 },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "volume": null
               },
               "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "temperature": null
             }
           ],
           "functionality": "Hole-transport",
           "name": "DTB(0%DEG)",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
+              "additional_parameters": {
+                "pressure": "4 \u00d7 10^-5 Torr",
+                "rate": "0.05 nm s^-1"
+              },
               "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Evaporation",
+              "solution": null,
               "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "temperature": null
             }
           ],
           "functionality": "Contact",
           "name": "Au",
           "thickness": {
             "unit": "nm",
-            "value": 100
+            "value": 100.0
           }
         }
       ],
@@ -740,15 +884,57 @@
         "value": 19.65
       },
       "perovskite_composition": {
-        "a_ions": [],
-        "b_ions": [],
+        "a_ions": [
+          {
+            "abbreviation": "Cs",
+            "coefficient": "0.05",
+            "common_name": "Cesium",
+            "molecular_formula": "Cs+"
+          },
+          {
+            "abbreviation": "FA",
+            "coefficient": "0.81",
+            "common_name": "Formamidinium",
+            "molecular_formula": "CH6N+"
+          },
+          {
+            "abbreviation": "MA",
+            "coefficient": "0.14",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH5N+"
+          }
+        ],
+        "additives": null,
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
-        "x_ions": []
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "2.55",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Br",
+            "coefficient": "0.45",
+            "common_name": "Bromide",
+            "molecular_formula": "Br-"
+          }
+        ]
       },
       "stability": {
         "PCE_T80": {
@@ -809,319 +995,370 @@
       "layers": [
         {
           "additional_treatment": null,
-          "deposition": [
-            {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
-            }
-          ],
+          "deposition": null,
           "functionality": "Substrate",
           "name": "FTO",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_duration": "60 s",
+                "spin_speed": "2000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mol/L",
+                      "value": 0.15000000000000002
                     },
-                    "name": null
+                    "name": "titanium diisopropoxide bis(acetylacetonate)"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "1-butanol",
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 300.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 125.0
+              }
+            },
+            {
+              "additional_parameters": {
+                "spin_duration": "60 s",
+                "spin_speed": "2000 rpm"
+              },
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 0.15000000000000002
+                    },
+                    "name": "titanium diisopropoxide bis(acetylacetonate)"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "1-butanol",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 450.0
               }
             }
           ],
           "functionality": "Electron-transport",
           "name": "c-TiO2",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_duration": "20 s",
+                "spin_speed": "4000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "wt%",
+                      "value": 14.3
                     },
-                    "name": null
+                    "name": "TiO2"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "ethanol",
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 500.0
               }
             }
           ],
           "functionality": "Electron-transport",
           "name": "m-TiO2",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "step1_duration": "10 s",
+                "step1_speed": "1000 rpm",
+                "step2_duration": "35 s",
+                "step2_speed": "4000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1000.174\n}",
+                    "name": "FAI"
+                  },
+                  {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1099.76\n}",
+                    "name": "PbI2"
+                  },
+                  {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 200.0536\n}",
+                    "name": "MABr"
+                  },
+                  {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 199.9946\n}",
+                    "name": "PbBr2"
+                  },
+                  {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mol/L",
+                      "value": 1.5000000000000004
                     },
-                    "name": null
+                    "name": "CsI"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
-                    "volume_fraction": null
+                    "name": "DMF",
+                    "volume_fraction": 0.9
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.1
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": {
+                "acceleration": "500 rpm/s",
+                "speed": "1000 rpm"
+              },
+              "antisolvent": "",
+              "atmosphere": "",
+              "duration": "10s",
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": "",
+                "solutes": [],
+                "solvents": [],
+                "temperature": "",
+                "volume": ""
+              },
+              "step_name": "Spin coating",
+              "temperature": ""
+            },
+            {
+              "additional_parameters": {
+                "acceleration": "2000 rpm/s",
+                "speed": "1000 rpm"
+              },
+              "antisolvent": "",
+              "atmosphere": "",
+              "duration": "35s",
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": "",
+                "solutes": [],
+                "solvents": [],
+                "temperature": "",
+                "volume": ""
+              },
+              "step_name": "Spin coating",
+              "temperature": ""
+            },
+            {
+              "additional_parameters": {
+                "timing": "15 s before end",
+                "volume": "100 \u00b5L"
+              },
+              "antisolvent": "chlorobenzene",
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Antisolvent-quenching",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 7200.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 100.0
               }
             }
           ],
           "functionality": "Absorber",
           "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_duration": "30 s",
+                "spin_speed": "4000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mg/mL",
+                      "value": 30.0
                     },
-                    "name": null
+                    "name": "DTB(0%DEG)"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "chlorobenzene",
                     "volume_fraction": null
                   }
                 ],
                 "temperature": {
-                  "unit": null,
-                  "value": null
+                  "unit": "\u00b0C",
+                  "value": 60.0
                 },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "volume": null
               },
               "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "temperature": null
             }
           ],
           "functionality": "Hole-transport",
-          "name": "DTB(10%DEG)",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "name": "DTB(0%DEG)",
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
+              "additional_parameters": {
+                "pressure": "4 \u00d7 10^-5 Torr",
+                "rate": "0.05 nm s^-1"
+              },
               "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Evaporation",
+              "solution": null,
               "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "temperature": null
             }
           ],
           "functionality": "Contact",
           "name": "Au",
           "thickness": {
             "unit": "nm",
-            "value": 100
+            "value": 100.0
           }
         }
       ],
       "light_source": {
-        "description": null,
+        "description": "Enlitech Solar Simulator SS-F7-3A",
         "lamp": null,
         "light_intensity": {
           "unit": "mW cm^-2",
@@ -1135,15 +1372,57 @@
         "value": 17.82
       },
       "perovskite_composition": {
-        "a_ions": [],
-        "b_ions": [],
+        "a_ions": [
+          {
+            "abbreviation": "Cs",
+            "coefficient": "0.05",
+            "common_name": "Cesium",
+            "molecular_formula": "Cs+"
+          },
+          {
+            "abbreviation": "FA",
+            "coefficient": "0.81",
+            "common_name": "Formamidinium",
+            "molecular_formula": "CH6N+"
+          },
+          {
+            "abbreviation": "MA",
+            "coefficient": "0.14",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH5N+"
+          }
+        ],
+        "additives": null,
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
-        "x_ions": []
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "2.55",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Br",
+            "coefficient": "0.45",
+            "common_name": "Bromide",
+            "molecular_formula": "Br-"
+          }
+        ]
       },
       "stability": {
         "PCE_T80": {
@@ -1204,314 +1483,365 @@
       "layers": [
         {
           "additional_treatment": null,
-          "deposition": [
-            {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
-            }
-          ],
+          "deposition": null,
           "functionality": "Substrate",
           "name": "FTO",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_duration": "60 s",
+                "spin_speed": "2000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mol/L",
+                      "value": 0.15000000000000002
                     },
-                    "name": null
+                    "name": "titanium diisopropoxide bis(acetylacetonate)"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "1-butanol",
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 300.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 125.0
+              }
+            },
+            {
+              "additional_parameters": {
+                "spin_duration": "60 s",
+                "spin_speed": "2000 rpm"
+              },
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 0.15000000000000002
+                    },
+                    "name": "titanium diisopropoxide bis(acetylacetonate)"
+                  }
+                ],
+                "solvents": [
+                  {
+                    "name": "1-butanol",
+                    "volume_fraction": null
+                  }
+                ],
+                "temperature": null,
+                "volume": null
+              },
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
+              "temperature": {
+                "unit": "\u00b0C",
+                "value": 450.0
               }
             }
           ],
           "functionality": "Electron-transport",
           "name": "c-TiO2",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_duration": "20 s",
+                "spin_speed": "4000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "wt%",
+                      "value": 14.3
                     },
-                    "name": null
+                    "name": "TiO2"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "ethanol",
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 500.0
               }
             }
           ],
           "functionality": "Electron-transport",
           "name": "m-TiO2",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "step1_duration": "10 s",
+                "step1_speed": "1000 rpm",
+                "step2_duration": "35 s",
+                "step2_speed": "4000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1000.174\n}",
+                    "name": "FAI"
+                  },
+                  {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1099.76\n}",
+                    "name": "PbI2"
+                  },
+                  {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 200.0536\n}",
+                    "name": "MABr"
+                  },
+                  {
+                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 199.9946\n}",
+                    "name": "PbBr2"
+                  },
+                  {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mol/L",
+                      "value": 1.5000000000000004
                     },
-                    "name": null
+                    "name": "CsI"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
-                    "volume_fraction": null
+                    "name": "DMF",
+                    "volume_fraction": 0.9
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.1
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": {
+                "acceleration": "500 rpm/s",
+                "speed": "1000 rpm"
+              },
+              "antisolvent": "",
+              "atmosphere": "",
+              "duration": "10s",
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": "",
+                "solutes": [],
+                "solvents": [],
+                "temperature": "",
+                "volume": ""
+              },
+              "step_name": "Spin coating",
+              "temperature": ""
+            },
+            {
+              "additional_parameters": {
+                "acceleration": "2000 rpm/s",
+                "speed": "1000 rpm"
+              },
+              "antisolvent": "",
+              "atmosphere": "",
+              "duration": "35s",
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": "",
+                "solutes": [],
+                "solvents": [],
+                "temperature": "",
+                "volume": ""
+              },
+              "step_name": "Spin coating",
+              "temperature": ""
+            },
+            {
+              "additional_parameters": {
+                "timing": "15 s before end",
+                "volume": "100 \u00b5L"
+              },
+              "antisolvent": "chlorobenzene",
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Antisolvent-quenching",
+              "solution": null,
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 7200.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 100.0
               }
             }
           ],
           "functionality": "Absorber",
           "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_duration": "30 s",
+                "spin_speed": "4000 rpm"
               },
-              "method": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mg/mL",
+                      "value": 30.0
                     },
-                    "name": null
+                    "name": "DTB(0%DEG)"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "chlorobenzene",
                     "volume_fraction": null
                   }
                 ],
                 "temperature": {
-                  "unit": null,
-                  "value": null
+                  "unit": "\u00b0C",
+                  "value": 60.0
                 },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "volume": null
               },
               "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "temperature": null
             }
           ],
           "functionality": "Hole-transport",
-          "name": "DTB(3%DEG)",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "name": "DTB(0%DEG)",
+          "thickness": null
         },
         {
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
+              "additional_parameters": {
+                "pressure": "4 \u00d7 10^-5 Torr",
+                "rate": "0.05 nm s^-1"
+              },
               "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
-              },
-              "method": null,
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
+              "atmosphere": "Vacuum",
+              "duration": null,
+              "method": "Evaporation",
+              "solution": null,
               "step_name": null,
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "temperature": null
             }
           ],
           "functionality": "Contact",
           "name": "Au",
           "thickness": {
             "unit": "nm",
-            "value": 100
+            "value": 100.0
           }
         }
       ],

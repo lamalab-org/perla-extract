@@ -357,9 +357,10 @@
             "abbreviation": "MA",
             "coefficient": "1",
             "common_name": "Methylammonium",
-            "molecular_formula": "CH6N+"
+            "molecular_formula": "CH3NH3+"
           }
         ],
+        "additives": null,
         "b_ions": [
           {
             "abbreviation": "Pb",
@@ -369,17 +370,25 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
-        "formula": "MAPbI3",
+        "dimensionality": "3D",
+        "formula": "CH3NH3PbIxCl3-x",
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
         "x_ions": [
           {
             "abbreviation": "I",
-            "coefficient": "3",
+            "coefficient": "x",
             "common_name": "Iodide",
             "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Cl",
+            "coefficient": "3-x",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-"
           }
         ]
       },
@@ -787,9 +796,10 @@
             "abbreviation": "MA",
             "coefficient": "1",
             "common_name": "Methylammonium",
-            "molecular_formula": "CH6N+"
+            "molecular_formula": "CH3NH3+"
           }
         ],
+        "additives": null,
         "b_ions": [
           {
             "abbreviation": "Pb",
@@ -799,17 +809,25 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
-        "formula": "MAPbI3",
+        "dimensionality": "3D",
+        "formula": "CH3NH3PbIxCl3-x",
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
         "x_ions": [
           {
             "abbreviation": "I",
-            "coefficient": "3",
+            "coefficient": "x",
             "common_name": "Iodide",
             "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Cl",
+            "coefficient": "3-x",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-"
           }
         ]
       },
@@ -1217,9 +1235,10 @@
             "abbreviation": "MA",
             "coefficient": "1",
             "common_name": "Methylammonium",
-            "molecular_formula": "CH6N+"
+            "molecular_formula": "CH3NH3+"
           }
         ],
+        "additives": null,
         "b_ions": [
           {
             "abbreviation": "Pb",
@@ -1229,17 +1248,25 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
-        "formula": "MAPbI3",
+        "dimensionality": "3D",
+        "formula": "CH3NH3PbIxCl3-x",
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
         "x_ions": [
           {
             "abbreviation": "I",
-            "coefficient": "3",
+            "coefficient": "x",
             "common_name": "Iodide",
             "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Cl",
+            "coefficient": "3-x",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-"
           }
         ]
       },
@@ -1640,9 +1667,10 @@
             "abbreviation": "MA",
             "coefficient": "1",
             "common_name": "Methylammonium",
-            "molecular_formula": "CH6N+"
+            "molecular_formula": "CH3NH3+"
           }
         ],
+        "additives": null,
         "b_ions": [
           {
             "abbreviation": "Pb",
@@ -1652,17 +1680,25 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
-        "formula": "MAPbI3",
+        "dimensionality": "3D",
+        "formula": "CH3NH3PbIxCl3-x",
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
         "x_ions": [
           {
             "abbreviation": "I",
-            "coefficient": "3",
+            "coefficient": "x",
             "common_name": "Iodide",
             "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Cl",
+            "coefficient": "3-x",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-"
           }
         ]
       },
@@ -2063,9 +2099,10 @@
             "abbreviation": "MA",
             "coefficient": "1",
             "common_name": "Methylammonium",
-            "molecular_formula": "CH6N+"
+            "molecular_formula": "CH3NH3+"
           }
         ],
+        "additives": null,
         "b_ions": [
           {
             "abbreviation": "Pb",
@@ -2075,17 +2112,25 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
-        "formula": "MAPbI3",
+        "dimensionality": "3D",
+        "formula": "CH3NH3PbIxCl3-x",
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
         "x_ions": [
           {
             "abbreviation": "I",
-            "coefficient": "3",
+            "coefficient": "x",
             "common_name": "Iodide",
             "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Cl",
+            "coefficient": "3-x",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-"
           }
         ]
       },
@@ -2486,9 +2531,10 @@
             "abbreviation": "MA",
             "coefficient": "1",
             "common_name": "Methylammonium",
-            "molecular_formula": "CH6N+"
+            "molecular_formula": "CH3NH3+"
           }
         ],
+        "additives": null,
         "b_ions": [
           {
             "abbreviation": "Pb",
@@ -2498,17 +2544,25 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
-        "formula": "MAPbI3",
+        "dimensionality": "3D",
+        "formula": "CH3NH3PbIxCl3-x",
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
         "x_ions": [
           {
             "abbreviation": "I",
-            "coefficient": "3",
+            "coefficient": "x",
             "common_name": "Iodide",
             "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Cl",
+            "coefficient": "3-x",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-"
           }
         ]
       },
@@ -2909,9 +2963,10 @@
             "abbreviation": "MA",
             "coefficient": "1",
             "common_name": "Methylammonium",
-            "molecular_formula": "CH6N+"
+            "molecular_formula": "CH3NH3+"
           }
         ],
+        "additives": null,
         "b_ions": [
           {
             "abbreviation": "Pb",
@@ -2921,17 +2976,25 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
-        "formula": "MAPbI3",
+        "dimensionality": "3D",
+        "formula": "CH3NH3PbIxCl3-x",
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
         "x_ions": [
           {
             "abbreviation": "I",
-            "coefficient": "3",
+            "coefficient": "x",
             "common_name": "Iodide",
             "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Cl",
+            "coefficient": "3-x",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-"
           }
         ]
       },
@@ -3339,9 +3402,10 @@
             "abbreviation": "MA",
             "coefficient": "1",
             "common_name": "Methylammonium",
-            "molecular_formula": "CH6N+"
+            "molecular_formula": "CH3NH3+"
           }
         ],
+        "additives": null,
         "b_ions": [
           {
             "abbreviation": "Pb",
@@ -3351,17 +3415,25 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
-        "formula": "MAPbI3",
+        "dimensionality": "3D",
+        "formula": "CH3NH3PbIxCl3-x",
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
         "x_ions": [
           {
             "abbreviation": "I",
-            "coefficient": "3",
+            "coefficient": "x",
             "common_name": "Iodide",
             "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Cl",
+            "coefficient": "3-x",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-"
           }
         ]
       },
@@ -3769,9 +3841,10 @@
             "abbreviation": "MA",
             "coefficient": "1",
             "common_name": "Methylammonium",
-            "molecular_formula": "CH6N+"
+            "molecular_formula": "CH3NH3+"
           }
         ],
+        "additives": null,
         "b_ions": [
           {
             "abbreviation": "Pb",
@@ -3781,17 +3854,25 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
-        "formula": "MAPbI3",
+        "dimensionality": "3D",
+        "formula": "CH3NH3PbIxCl3-x",
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
         "x_ions": [
           {
             "abbreviation": "I",
-            "coefficient": "3",
+            "coefficient": "x",
             "common_name": "Iodide",
             "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Cl",
+            "coefficient": "3-x",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-"
           }
         ]
       },

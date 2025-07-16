@@ -75,7 +75,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -116,7 +116,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -168,7 +168,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -209,7 +209,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -259,21 +259,21 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": "Air",
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_speed": "6500 r.p.m.",
+                "spin_time": "5s"
               },
-              "method": "Two-step sequential deposition",
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "M",
-                      "value": 1
+                      "unit": "mg/mL",
+                      "value": 462.0
                     },
                     "name": "PbI2"
                   }
@@ -284,37 +284,28 @@
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "PbI2 deposition",
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "step_name": null,
+              "temperature": null
             },
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
-                "value": 7200
+                "value": 7200.0
               },
-              "method": "Two-step sequential deposition",
+              "method": "Dipping",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "mg/L",
-                      "value": 10
+                      "unit": "mg/mL",
+                      "value": 10.0
                     },
                     "name": "CH3NH3I"
                   }
@@ -325,19 +316,26 @@
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "MAI reaction",
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 70.0
               }
             }
           ],
@@ -354,7 +352,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -482,15 +480,39 @@
         "value": 11.8
       },
       "perovskite_composition": {
-        "a_ions": [],
-        "b_ions": [],
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "coefficient": "1",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH3NH3+"
+          }
+        ],
+        "additives": null,
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "CH3NH3PbI3",
-        "x_ions": []
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          }
+        ]
       },
       "stability": {
         "PCE_T80": {
@@ -607,7 +629,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -648,7 +670,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -700,7 +722,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -741,7 +763,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -791,21 +813,21 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": "Air",
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_speed": "6500 r.p.m.",
+                "spin_time": "5s"
               },
-              "method": "Two-step sequential deposition",
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "M",
-                      "value": 1
+                      "unit": "mg/mL",
+                      "value": 462.0
                     },
                     "name": "PbI2"
                   }
@@ -816,37 +838,28 @@
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "PbI2 deposition",
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "step_name": null,
+              "temperature": null
             },
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
-                "value": 7200
+                "value": 7200.0
               },
-              "method": "Two-step sequential deposition",
+              "method": "Dipping",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "mg/L",
-                      "value": 10
+                      "unit": "mg/mL",
+                      "value": 10.0
                     },
                     "name": "CH3NH3I"
                   }
@@ -857,19 +870,26 @@
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "MAI reaction",
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 70.0
               }
             }
           ],
@@ -886,7 +906,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -1014,15 +1034,39 @@
         "value": 12.4
       },
       "perovskite_composition": {
-        "a_ions": [],
-        "b_ions": [],
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "coefficient": "1",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH3NH3+"
+          }
+        ],
+        "additives": null,
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "CH3NH3PbI3",
-        "x_ions": []
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          }
+        ]
       },
       "stability": {
         "PCE_T80": {
@@ -1139,7 +1183,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -1180,7 +1224,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -1232,7 +1276,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -1273,7 +1317,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -1323,21 +1367,21 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": "Air",
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_speed": "6500 r.p.m.",
+                "spin_time": "5s"
               },
-              "method": "Two-step sequential deposition",
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "M",
-                      "value": 1
+                      "unit": "mg/mL",
+                      "value": 462.0
                     },
                     "name": "PbI2"
                   }
@@ -1348,37 +1392,28 @@
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "PbI2 deposition",
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "step_name": null,
+              "temperature": null
             },
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
-                "value": 7200
+                "value": 7200.0
               },
-              "method": "Two-step sequential deposition",
+              "method": "Dipping",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "mg/L",
-                      "value": 10
+                      "unit": "mg/mL",
+                      "value": 10.0
                     },
                     "name": "CH3NH3I"
                   }
@@ -1389,19 +1424,26 @@
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "MAI reaction",
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 70.0
               }
             }
           ],
@@ -1418,7 +1460,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -1546,15 +1588,39 @@
         "value": 14.6
       },
       "perovskite_composition": {
-        "a_ions": [],
-        "b_ions": [],
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "coefficient": "1",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH3NH3+"
+          }
+        ],
+        "additives": null,
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "CH3NH3PbI3",
-        "x_ions": []
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          }
+        ]
       },
       "stability": {
         "PCE_T80": {
@@ -1671,7 +1737,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -1712,7 +1778,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -1764,7 +1830,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -1805,7 +1871,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -1855,21 +1921,21 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": "Air",
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_speed": "6500 r.p.m.",
+                "spin_time": "5s"
               },
-              "method": "Two-step sequential deposition",
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "M",
-                      "value": 1
+                      "unit": "mg/mL",
+                      "value": 462.0
                     },
                     "name": "PbI2"
                   }
@@ -1880,37 +1946,28 @@
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "PbI2 deposition",
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "step_name": null,
+              "temperature": null
             },
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
-                "value": 7200
+                "value": 7200.0
               },
-              "method": "Two-step sequential deposition",
+              "method": "Dipping",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "mg/L",
-                      "value": 10
+                      "unit": "mg/mL",
+                      "value": 10.0
                     },
                     "name": "CH3NH3I"
                   }
@@ -1921,19 +1978,26 @@
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "MAI reaction",
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 70.0
               }
             }
           ],
@@ -1950,7 +2014,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -2203,7 +2267,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -2244,7 +2308,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -2296,7 +2360,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -2337,7 +2401,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -2387,21 +2451,21 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": "Air",
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_speed": "6500 r.p.m.",
+                "spin_time": "5s"
               },
-              "method": "Two-step sequential deposition",
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "M",
-                      "value": 1
+                      "unit": "mg/mL",
+                      "value": 462.0
                     },
                     "name": "PbI2"
                   }
@@ -2412,37 +2476,28 @@
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "PbI2 deposition",
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "step_name": null,
+              "temperature": null
             },
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
-                "value": 7200
+                "value": 7200.0
               },
-              "method": "Two-step sequential deposition",
+              "method": "Dipping",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "mg/L",
-                      "value": 10
+                      "unit": "mg/mL",
+                      "value": 10.0
                     },
                     "name": "CH3NH3I"
                   }
@@ -2453,19 +2508,26 @@
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "MAI reaction",
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 70.0
               }
             }
           ],
@@ -2482,7 +2544,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -2735,7 +2797,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -2776,7 +2838,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -2828,7 +2890,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -2869,7 +2931,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -2919,21 +2981,21 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
-              "antisolvent": null,
-              "atmosphere": "Air",
-              "duration": {
-                "unit": null,
-                "value": null
+              "additional_parameters": {
+                "spin_speed": "6500 r.p.m.",
+                "spin_time": "5s"
               },
-              "method": "Two-step sequential deposition",
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "M",
-                      "value": 1
+                      "unit": "mg/mL",
+                      "value": 462.0
                     },
                     "name": "PbI2"
                   }
@@ -2944,37 +3006,28 @@
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "PbI2 deposition",
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "step_name": null,
+              "temperature": null
             },
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
-                "value": 7200
+                "value": 7200.0
               },
-              "method": "Two-step sequential deposition",
+              "method": "Dipping",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "mg/L",
-                      "value": 10
+                      "unit": "mg/mL",
+                      "value": 10.0
                     },
                     "name": "CH3NH3I"
                   }
@@ -2985,19 +3038,26 @@
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "MAI reaction",
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": {
+                "unit": "s",
+                "value": 1800.0
+              },
+              "method": "Thermal-annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 70.0
               }
             }
           ],
@@ -3014,7 +3074,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
