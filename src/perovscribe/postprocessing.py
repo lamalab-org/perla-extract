@@ -206,19 +206,7 @@ def merge_dicts(template, data, parent_key=""):
     Recursively merges a data dictionary into a template, filling in missing keys with None.
     Handles lists and nested dictionaries.
     """
-    default_units = {
-        "thickness": "nm",
-        "light_intensity": "mW cm^-2",
-        "duration": "s",
-        "temperature": "°C",
-        "time": "h",
-        "PCE_after_1000_hours": "%",
-        "humidity": "%",
-        "PCE_at_the_start_of_the_experiment": "%",
-        "PCE_at_the_end_of_description": "%",
-        "PCE_T80": "%",
-        "bandgap": "eV",
-    }
+    default_units = config.default_units
 
     if isinstance(template, dict) and isinstance(data, dict):
         result = {}
@@ -244,9 +232,6 @@ def merge_dicts(template, data, parent_key=""):
         return [merge_dicts(template_item, item) for item in data]
     else:
         if isinstance(template, dict) and "unit" in template.keys():
-            print(
-                data, "=================================", parent_key
-            ) if data is not None else print("")
             if data is not None:
                 return {"value": data, "unit": default_units[parent_key]}
             return template

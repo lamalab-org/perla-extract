@@ -9,7 +9,6 @@ from Levenshtein import distance, ratio
 import flatdict
 from perovscribe.postprocessing import complete_solar_cell_dict
 from perovscribe.llm_call import llm_as_judge
-import datetime
 from collections import defaultdict
 
 
@@ -55,11 +54,10 @@ class Evaluations:
     score_device_stacks: List[float] = None
     score_device_layers: List[float] = None
     precision_tolerances: dict = {
-        "pce": 0.01,
-        "jsc": 0.01,
-        "voc": 0.01,
-        "ff": 0.01,
-        "active_area": 0.01,
+        "pce": 0.1,  # 0.1 abs
+        "jsc": 0.1,  # 0.1 abs
+        "voc": 0.01,  # 0.01 abs
+        "ff": 0.1,  # 0.1 abs
     }
     precisions_average: dict = None
     devices_in_truth: int = 0
@@ -107,12 +105,33 @@ def pad_missing_devices(
     return score + [0] * max(0, devices_in_truth - devices_found)
 
 
+# Remove
+def calc_precision(per_key_metrics, key):
+    if per_key_metrics[key]["TP"] + per_key_metrics[key]["FP"] > 0:
+        return per_key_metrics[key]["TP"] / (
+            per_key_metrics[key]["TP"] + per_key_metrics[key]["FP"]
+        )
+    return None
+
+
 def score_multiple_extractions(truth_extraction_pairs: tuple[dict, dict, str]):
     evals = []
     per_key_metrics = defaultdict(lambda: defaultdict(float))
 
     for truth, extraction, file in truth_extraction_pairs:
+        layer_scores = []
+        print("File:", file)
+        per_key_metrics = defaultdict(lambda: defaultdict(float))
         evals.append(Evaluations(truth, extraction, file, per_key_metrics))
+        layers_keys = [key for key in per_key_metrics if "layers" in key.lower()]
+
+        for key in layers_keys:
+            layer_scores.append(calc_precision(per_key_metrics, key))
+        print(
+            "Layers:",
+            np.mean([i for i in layer_scores if i is not None]),
+            "-------------------------------------",
+        )
     print(
         "Total missing devices",
         sum([max(eval.devices_in_truth - eval.devices_found, 0) for eval in evals]),
@@ -162,6 +181,39 @@ def score_recalls(
     return recalls
 
 
+def match_depositions(truth: List[dict], extraction: List[dict]):
+    """Just match deposition elements within layers"""
+    scores = []
+
+    if (
+        truth is None or len(truth) == 0
+    ):  # NOTE: I had to do a lot of .get("layers", []) or [] type stuff. dunno if it breaks something like crazy.
+        truth = []
+
+    # rows = truth, cols = extraction
+    scores = [
+        [
+            distance(
+                (t.get("method", "NOTRUTH") or "NOTRUTH")
+                + str(((t.get("temperature", {}) or {}).get("value") or "NOEXTRACT")),
+                (e.get("method", "NOEXTRACT") or "NOEXTRACT")
+                + str(((e.get("temperature", {}) or {}).get("value") or "NOEXTRACT")),
+            )
+            for eid, e in enumerate(extraction)
+            if len(extraction) != 0
+        ]
+        for tid, t in enumerate(truth)
+    ]
+
+    m = Munkres()
+
+    indexes = m.compute(scores)
+
+    return [truth[row] for row, col in indexes], [
+        extraction[col] for row, col in indexes
+    ]
+
+
 def match_layers(truth: List[dict], extraction: List[dict]):
     """Just match layer elements within a match"""
     scores = []
@@ -188,13 +240,22 @@ def match_layers(truth: List[dict], extraction: List[dict]):
 
     indexes = m.compute(scores)
 
+    for row, col in indexes:
+        # print("krrr", truth[row]["deposition"], extraction[col]["deposition"])
+        truth[row]["deposition"], extraction[col]["deposition"] = match_depositions(
+            truth[row]["deposition"] or [{}], extraction[col]["deposition"] or [{}]
+        )
+        # print("krrr --", truth[row]["deposition"], extraction[col]["deposition"])
+
     return [truth[row] for row, col in indexes], [
         extraction[col] for row, col in indexes
     ]
 
 
-def is_within_rel_tolerance(truth, extract, rtol) -> bool:
+def is_within_rel_tolerance(truth, extract, rtol, abs=False) -> bool:
     try:
+        if abs:
+            np.testing.assert_allclose(extract, truth, atol=rtol)
         np.testing.assert_allclose(
             extract, truth, rtol=rtol
         )  # We flip extract and truth to make sure we have rtol applied on truth
@@ -203,7 +264,7 @@ def is_within_rel_tolerance(truth, extract, rtol) -> bool:
     return True
 
 
-def is_value_correct(truth, extract, rtol=0.01) -> bool:
+def is_value_correct(truth, extract, rtol=0.01, abs=False) -> bool:
     if isinstance(truth, int):
         truth = float(truth)
     if isinstance(extract, int):
@@ -219,7 +280,7 @@ def is_value_correct(truth, extract, rtol=0.01) -> bool:
     if type(truth) is not type(extract):
         return False
     elif isinstance(truth, (int, float)):
-        return is_within_rel_tolerance(truth, extract, rtol)
+        return is_within_rel_tolerance(truth, extract, rtol, abs)
     elif isinstance(truth, str):
         return are_equal_lower_strings(truth, extract)
     return truth == extract
@@ -248,8 +309,15 @@ def score_precisions(
 
         # TODO: Use the group implementation and add NOTFOUND for layers that don't get matched on either side.
         match["truth"]["layers"], match["extraction"]["layers"] = match_layers(
-            match["truth"]["layers"], match["extraction"]["layers"]
+            match["truth"].get("layers", []), match["extraction"].get("layers", [])
         )
+
+        # TODO: Remove this
+        # for layer_id, layer in enumerate(match["truth"]["layers"]):
+        #     if layer.get("deposition") is not None:
+        #         match["truth"]["layers"][layer_id]["deposition"], match["extraction"]["layers"][layer_id]["deposition"] = match_depositions(
+        #             match["truth"].get("layers", [])[layer_id].get("deposition") or [], match["extraction"].get("layers")[layer_id].get("deposition") or []
+        #         )
 
         def is_key_judgable(key, flat_truth, flat_extraction) -> bool:
             return (
@@ -267,25 +335,27 @@ def score_precisions(
                 flat_extraction[key] is not None or flat_truth[key] is None
             ):
                 found.append(
-                    is_value_correct(flat_truth[key], flat_extraction[key], tolerance)
+                    is_value_correct(
+                        flat_truth[key], flat_extraction[key], tolerance, abs=True
+                    )
                 )
                 # Checks if the last element found was accepted as a positive value and increments the True Positive count.
                 if found[-1]:
                     per_key_metrics[key]["TP"] += 1
                 # If the last element was not found to be acceptable, the False Positive count is incremented.
                 else:
-                    print(
-                        "stack",
-                        [layer.get("name") for layer in match["truth"]["layers"]],
-                    )
-                    print(
-                        "We have",
-                        flat_truth[key],
-                        "in the ground truth and",
-                        flat_extraction[key],
-                        "in the extraction for",
-                        key,
-                    )
+                    # print(
+                    #     "stack",
+                    #     [layer.get("name") for layer in match["truth"]["layers"]],
+                    # )
+                    # print(
+                    #     "We have",
+                    #     flat_truth[key],
+                    #     "in the ground truth and",
+                    #     flat_extraction[key],
+                    #     "in the extraction for",
+                    #     key,
+                    # )
                     per_key_metrics[key]["FP"] += 1
 
         for key in flat_truth:
@@ -322,18 +392,20 @@ def score_precisions(
                     per_key_metrics[key_for_stats]["TP"] += 1
                 # If the last element was not found to be acceptable, the False Positive count is incremented.
                 else:
-                    print(
-                        "stack",
-                        [layer.get("name") for layer in match["truth"]["layers"]],
-                    )
-                    print(
-                        "We have",
-                        flat_truth[key],
-                        "in the ground truth and",
-                        flat_extraction[key],
-                        "in the extraction for",
-                        key,
-                    )
+                    if "layers" in key:
+                        print(
+                            "stack",
+                            [layer.get("name") for layer in match["truth"]["layers"]],
+                        )
+                        print(
+                            "We have",
+                            flat_truth[key],
+                            "in the ground truth and",
+                            flat_extraction[key],
+                            "in the extraction for",
+                            key,
+                        )
+
                     per_key_metrics[key_for_stats]["FP"] += 1
 
         precisions.append(sum(found) / len(found))
@@ -462,20 +534,24 @@ def match_cells(
     for t in truth_cells:
         functionalities = defaultdict(list)
         for layer in t.get("layers", []) or []:
-            functionalities[layer.get("functionality")].append(layer.get("name"))
+            functionalities[layer.get("functionality")].append(
+                layer.get("name", "incorrect")
+            )
         truth_functionalites.append(functionalities)
 
     extract_functionalites = []
     for e in extracted_cells:
         functionalities = defaultdict(list)
         for layer in e.get("layers", []):
-            functionalities[layer.get("functionality")].append(layer.get("name"))
+            functionalities[layer.get("functionality")].append(
+                layer.get("name", "incorrect")
+            )
         extract_functionalites.append(functionalities)
 
-    print("===================================================")
-    print(file)
-    print("come here")
-    print(datetime.datetime.now())
+    # print("===================================================")
+    # print(file)
+    # print("come here")
+    # print(datetime.datetime.now())
 
     def score_functionalities(t_funcs, e_funcs) -> float:
         distance = 0
@@ -492,14 +568,14 @@ def match_cells(
         ]
         for truth_functionality in truth_functionalites
     ]
-    for truth_functionality in truth_functionalites:
-        for extract_functionality in extract_functionalites:
-            print(
-                "SCORES:",
-                score_functionalities(truth_functionality, extract_functionality),
-                truth_functionality,
-                extract_functionality,
-            )
+    # for truth_functionality in truth_functionalites:
+    #     for extract_functionality in extract_functionalites:
+    #         print(
+    #             "SCORES:",
+    #             score_functionalities(truth_functionality, extract_functionality),
+    #             truth_functionality,
+    #             extract_functionality,
+    #         )
 
     truth_depositions = [
         [layer.get("deposition") for layer in t.get("layers") or []]
@@ -534,23 +610,23 @@ def match_cells(
         for row, col in indexes
     ]
 
-    print("===================================================")
-    for match in matches:
-        print("------------------------------------------------")
-        print(file)
-        print(
-            " ".join(
-                [layer.get("name", "") for layer in match["truth"].get("layers", [])]
-            )
-        )
-        if match["extraction"].get("layers") is not None:
-            print(
-                " ".join(
-                    [
-                        layer.get("name", "")
-                        for layer in match["extraction"].get("layers")
-                    ]
-                )
-            )
+    # print("===================================================")
+    # for match in matches:
+    #     print("------------------------------------------------")
+    #     print(file)
+    #     print(
+    #         " ".join(
+    #             [layer.get("name", "") for layer in match["truth"].get("layers", [])]
+    #         )
+    #     )
+    #     if match["extraction"].get("layers") is not None:
+    #         print(
+    #             " ".join(
+    #                 [
+    #                     layer.get("name", "")
+    #                     for layer in match["extraction"].get("layers")
+    #                 ]
+    #             )
+    #         )
 
     return matches

@@ -96,6 +96,7 @@ class ExtractionPipeline:
             print("Device stack score:", evals.score_device_stacks)
             print("Device layers score:", evals.score_device_layers)
             print("Precisions:", evals.score_precisions)
+            print("Precision Avg:", evals.precisions_average)
             print("Recalls:", evals.score_recalls)
         elif os.path.isdir(filepath) and os.path.isdir(truthpath):
             truth_extraction_pairs = []
@@ -131,6 +132,7 @@ class ExtractionPipeline:
                 print("Device stack score:", evals.score_device_stacks)
                 print("Device layers score:", evals.score_device_layers)
                 print("Precisions:", evals.score_precisions)
+                print("Precision Avg:", evals.precisions_average)
                 print("Recalls:", evals.score_recalls)
                 precs.append(np.mean(evals.score_precisions))
                 recalls.append(np.mean(evals.score_recalls))
@@ -150,17 +152,17 @@ class ExtractionPipeline:
                 "metric_keys",
                 len(per_key_metrics.keys()),
             )
-            print(
-                "Important Precisions:",
-                "FF:",
-                calc_precision(per_key_metrics, "ff:value"),
-                "PCE:",
-                calc_precision(per_key_metrics, "pce:value"),
-                "jsc:",
-                calc_precision(per_key_metrics, "jsc:value"),
-                "voc:",
-                calc_precision(per_key_metrics, "voc:value"),
-            )
+            # print(
+            #     "Important Precisions:",
+            #     "FF:",
+            #     calc_precision(per_key_metrics, "ff:value"),
+            #     "PCE:",
+            #     calc_precision(per_key_metrics, "pce:value"),
+            #     "jsc:",
+            #     calc_precision(per_key_metrics, "jsc:value"),
+            #     "voc:",
+            #     calc_precision(per_key_metrics, "voc:value"),
+            # )
 
             # Calculate values for plot
             def calculate_value_for_plot(metrics_dict):
@@ -238,6 +240,11 @@ class ExtractionPipeline:
                         aggregated_results["deposition"] = sum(deposition_values) / len(
                             deposition_values
                         )
+                    print(
+                        "222222222222",
+                        deposition_keys,
+                        "5555555555555555555555555555555555555555",
+                    )
 
                     # Find and aggregate keys containing "layers"
                     layers_keys = [
@@ -258,6 +265,7 @@ class ExtractionPipeline:
                         aggregated_results["light"] = sum(light_values) / len(
                             light_values
                         )
+                    print(precision_results, aggregated_results)
 
                     # Add keys that don't match any of our aggregation rules, except "averaged_quantities"
                     keys_to_exclude = set(
@@ -311,6 +319,9 @@ class ExtractionPipeline:
                 llm_judge_calls,
             )
             print("Overall avg recalls:", np.mean(recalls))
+            import math
+
+            precs = [value for value in precs if not math.isnan(value)]
             print("Overall avg precision:", np.mean(precs))
         elif os.path.isdir(filepath):
             output_folder = output + os.sep + self.model_name

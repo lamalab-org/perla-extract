@@ -4,6 +4,7 @@ from pint import UnitRegistry
 ureg = UnitRegistry()
 
 ureg.define("sun = 1 kW/m^2")
+ureg.define("vol = 1 m^3")
 
 pint = {
     "default_units_by_type": {
@@ -28,5 +29,22 @@ pint = {
         (ureg.mW / ureg.cm**2).dimensionality: ((ureg.mW / ureg.cm**2), "mW cm^-2"),
         (ureg.mol / ureg.L).dimensionality: ((ureg.mol / ureg.L), "mol/L"),
         (ureg.eV).dimensionality: ((ureg.eV), "eV"),
+        (ureg.meter**3).dimensionality: (ureg.milliliter, "mL"),
     }
+}
+
+default_units = {
+    "thickness": "nm",
+    "light_intensity": "mW cm^-2",
+    "duration": "s",
+    "temperature": "°C",
+    "time": "h",
+    "PCE_after_1000_hours": "%",
+    "humidity": "%",
+    "PCE_at_the_start_of_the_experiment": "%",
+    "PCE_at_the_end_of_description": "%",
+    "PCE_T80": "%",
+    "bandgap": "eV",
+    "concentration": "mol/L",
+    "volume": "mL",
 }

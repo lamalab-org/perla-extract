@@ -191,6 +191,7 @@ class PapersBot:
                 if entry.id in self.posted:
                     continue
                 if entryMatches(entry):
+                    print("found", entry)
                     if "prism_doi" in entry:
                         doi = entry["prism_doi"]
                     elif "summary" in entry:
