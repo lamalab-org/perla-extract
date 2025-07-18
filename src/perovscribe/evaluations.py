@@ -74,10 +74,43 @@ class Evaluations:
         file: str,
         per_key_metrics: dict[dict[float]],
     ):
-        self.score = inverted_deepdiff(truth["cells"], extraction["cells"])
-        self.matches = match_cells(truth["cells"], extraction["cells"], file)
         self.devices_in_truth = len(truth["cells"])
         self.devices_found = len(extraction["cells"])
+
+        # Add missing empty devices for FN
+        if self.devices_in_truth > self.devices_found:
+            extraction["cells"] += [
+                {"layers": []}
+                for i in range(self.devices_in_truth - self.devices_found)
+            ]
+
+        # Add missing FN for sections I match. Like layers and deposition. This should be done before matching.
+        # no_layers_to_add = 0
+        # no_depositions_to_add = 0
+        # no_of_truth_layers = 0
+        # no_of_truth_depositions = 0
+        # no_of_extract_layers = 0
+        # no_of_extract_depositions = 0
+        # for cell in truth["cells"]:
+        #     no_of_truth_layers += len(cell["layers"])
+        #     for layer in cell["layers"]:
+        #         no_of_truth_depositions += len(layer["deposition"] or [])
+        # for cell in extraction["cells"]:
+        #     no_of_extract_layers += len(cell["layers"])
+        #     for layer in cell["layers"]:
+        #         no_of_extract_depositions += len(layer["deposition"] or [])
+        # # for match in self.matches:
+        # #     no_layers_to_add += max(len(match["truth"]["layers"]) - len(match["extraction"]["layers"]), 0)
+        # #     no_truth_depositions = 0
+        # #     no_extract_depositions = 0
+        # #     for layer in match["truth"]["layers"]:
+        # #         no_truth_depositions += len(layer["deposition"] or [])
+        # #     for layer in match["extraction"]["layers"]:
+        # #         no_extract_depositions += len(layer["deposition"] or [])
+        # #     no_depositions_to_add += max(no_truth_depositions - no_extract_depositions, 0)
+
+        self.score = inverted_deepdiff(truth["cells"], extraction["cells"])
+        self.matches = match_cells(truth["cells"], extraction["cells"], file)
         self.devices_matched = len(self.matches)
         self.recall_devices = min(self.devices_matched / len(truth["cells"]), 1)
         self.score_device_stacks = score_device_stacks(
@@ -96,6 +129,14 @@ class Evaluations:
             self.devices_found,
         )
         self.recalls_average = float(np.mean(self.score_recalls))
+
+        # Add FN for missing devices - this also adds the numbers calculated above for matched sections
+        # for key in per_key_metrics:
+        #     per_key_metrics[key]["FN"] += max(self.devices_in_truth - self.devices_found, 0)
+        #     if "layers::deposition" in key:
+        #         per_key_metrics[key]["FN"] += max(no_of_truth_depositions-no_of_extract_depositions, 0)
+        #     elif "layers" in key:
+        #         per_key_metrics[key]["FN"] += max(no_of_truth_layers-no_of_extract_layers, 0)
 
 
 def pad_missing_devices(
@@ -121,21 +162,23 @@ def score_multiple_extractions(truth_extraction_pairs: tuple[dict, dict, str]):
     for truth, extraction, file in truth_extraction_pairs:
         layer_scores = []
         print("File:", file)
-        per_key_metrics = defaultdict(lambda: defaultdict(float))
-        evals.append(Evaluations(truth, extraction, file, per_key_metrics))
-        layers_keys = [key for key in per_key_metrics if "layers" in key.lower()]
+        paper_per_key_metrics = defaultdict(lambda: defaultdict(float))
+        evals.append(Evaluations(truth, extraction, file, paper_per_key_metrics))
+        layers_keys = [key for key in paper_per_key_metrics if "layers" in key.lower()]
 
         for key in layers_keys:
-            layer_scores.append(calc_precision(per_key_metrics, key))
-        print(
-            "Layers:",
-            np.mean([i for i in layer_scores if i is not None]),
-            "-------------------------------------",
-        )
+            layer_scores.append(calc_precision(paper_per_key_metrics, key))
+        per_key_metrics[file] = paper_per_key_metrics
+
+    total_missing_devices = sum(
+        [max(eval.devices_in_truth - eval.devices_found, 0) for eval in evals]
+    )
     print(
         "Total missing devices",
-        sum([max(eval.devices_in_truth - eval.devices_found, 0) for eval in evals]),
+        total_missing_devices,
+        sum(eval.devices_in_truth for eval in evals),
     )
+
     return evals, per_key_metrics
 
 
@@ -154,6 +197,10 @@ def score_recalls(
     recalls = []
     for match in matches:
         found = []
+        # TODO: Use the group implementation and add NOTFOUND for layers that don't get matched on either side.
+        match["truth"]["layers"], match["extraction"]["layers"] = match_layers(
+            match["truth"].get("layers", []), match["extraction"].get("layers", [])
+        )
 
         flat_truth = flatdict.FlatterDict(
             complete_solar_cell_dict(match["truth"])
@@ -177,6 +224,17 @@ def score_recalls(
 
             if not found[-1]:
                 per_key_metrics[key_for_stats]["FN"] += 1
+                if "active_area" in key_for_stats:
+                    print(
+                        per_key_metrics[key_for_stats]["FN"],
+                        "adding FN for",
+                        flat_truth[key],
+                        key in flat_extraction.keys(),
+                        (
+                            key not in flat_extraction.keys()
+                            and flat_truth[key] is not None
+                        ),
+                    )
         recalls.append(sum(found) / len(found))
     return recalls
 
@@ -189,6 +247,12 @@ def match_depositions(truth: List[dict], extraction: List[dict]):
         truth is None or len(truth) == 0
     ):  # NOTE: I had to do a lot of .get("layers", []) or [] type stuff. dunno if it breaks something like crazy.
         truth = []
+
+    if extraction is None:
+        extraction = []
+
+    if len(truth) > len(extraction):
+        extraction += [{} for i in range(len(truth) - len(extraction))]
 
     # rows = truth, cols = extraction
     scores = [
@@ -223,12 +287,25 @@ def match_layers(truth: List[dict], extraction: List[dict]):
     ):  # NOTE: I had to do a lot of .get("layers", []) or [] type stuff. dunno if it breaks something like crazy.
         truth = [{}]
 
+    if extraction is None:
+        extraction = [{}]
+
+    if len(truth) > len(extraction):
+        extraction += [
+            {
+                "deposition": None,
+            }
+            for i in range(len(truth) - len(extraction))
+        ]
+
     # rows = truth, cols = extraction
     scores = [
         [
             distance(
-                t.get("functionality", "NOTRUTH") + t.get("name", "NOTRUTH"),
-                e.get("functionality", "NOEXTRACT") + e.get("name", "NOEXTRACT"),
+                (t.get("functionality", "NOTRUTH") or "NOTRUTH")
+                + (t.get("name", "NOTRUTH") or "NOTRUTH"),
+                (e.get("functionality", "NOEXTRACT") or "NOEXTRACT")
+                + (e.get("name", "NOEXTRACT") or "NOEXTRACT"),
             )
             for eid, e in enumerate(extraction)
             if len(extraction) != 0
@@ -241,11 +318,10 @@ def match_layers(truth: List[dict], extraction: List[dict]):
     indexes = m.compute(scores)
 
     for row, col in indexes:
-        # print("krrr", truth[row]["deposition"], extraction[col]["deposition"])
         truth[row]["deposition"], extraction[col]["deposition"] = match_depositions(
-            truth[row]["deposition"] or [{}], extraction[col]["deposition"] or [{}]
+            truth[row].get("deposition") or [{}],
+            extraction[col].get("deposition") or [{}],
         )
-        # print("krrr --", truth[row]["deposition"], extraction[col]["deposition"])
 
     return [truth[row] for row, col in indexes], [
         extraction[col] for row, col in indexes
@@ -311,13 +387,6 @@ def score_precisions(
         match["truth"]["layers"], match["extraction"]["layers"] = match_layers(
             match["truth"].get("layers", []), match["extraction"].get("layers", [])
         )
-
-        # TODO: Remove this
-        # for layer_id, layer in enumerate(match["truth"]["layers"]):
-        #     if layer.get("deposition") is not None:
-        #         match["truth"]["layers"][layer_id]["deposition"], match["extraction"]["layers"][layer_id]["deposition"] = match_depositions(
-        #             match["truth"].get("layers", [])[layer_id].get("deposition") or [], match["extraction"].get("layers")[layer_id].get("deposition") or []
-        #         )
 
         def is_key_judgable(key, flat_truth, flat_extraction) -> bool:
             return (
@@ -390,6 +459,13 @@ def score_precisions(
                 # Checks if the last element found was accepted as a positive value and increments the True Positive count.
                 if found[-1]:
                     per_key_metrics[key_for_stats]["TP"] += 1
+                    if "active_area" in key:
+                        print(
+                            per_key_metrics[key_for_stats]["TP"],
+                            "adding TP for",
+                            flat_truth[key],
+                            flat_extraction[key],
+                        )
                 # If the last element was not found to be acceptable, the False Positive count is incremented.
                 else:
                     if "layers" in key:
@@ -397,18 +473,24 @@ def score_precisions(
                             "stack",
                             [layer.get("name") for layer in match["truth"]["layers"]],
                         )
+                    print(
+                        "We have",
+                        flat_truth[key],
+                        "in the ground truth and",
+                        flat_extraction[key],
+                        "in the extraction for",
+                        key,
+                    )
+                    if "active_area" in key:
                         print(
-                            "We have",
+                            per_key_metrics[key_for_stats]["FP"],
+                            "adding FP for",
                             flat_truth[key],
-                            "in the ground truth and",
                             flat_extraction[key],
-                            "in the extraction for",
-                            key,
                         )
-
                     per_key_metrics[key_for_stats]["FP"] += 1
 
-        precisions.append(sum(found) / len(found))
+        precisions.append(sum(found) / max(len(found), 1))
     return precisions, llm_judge_calls
 
 
@@ -436,7 +518,7 @@ def score_device_stacks(matches: List[Matches]) -> List[float]:
                 ),
                 " ".join(
                     [
-                        layer.get("name", "NOEXTRACT")
+                        layer.get("name", "NOEXTRACT") or "NOEXTRACT"
                         for layer in match["extraction"].get("layers") or []
                     ]
                 ),
@@ -517,8 +599,6 @@ def str_similarity(s1: List[str], s2: List[str]) -> float:
                 similarity_ratios += str_similarity(
                     s1[id].split(" "), s2[id].split(" ")
                 )
-
-                # print(similarity_ratios[-1], s1[id].split(" "), s2[id].split(" "))
             else:
                 similarity_ratios += ratio(s1[id], s2[id])
     return similarity_ratios
@@ -535,23 +615,18 @@ def match_cells(
         functionalities = defaultdict(list)
         for layer in t.get("layers", []) or []:
             functionalities[layer.get("functionality")].append(
-                layer.get("name", "incorrect")
+                layer.get("name", "incorrect") or "incorrect"
             )
         truth_functionalites.append(functionalities)
 
     extract_functionalites = []
     for e in extracted_cells:
         functionalities = defaultdict(list)
-        for layer in e.get("layers", []):
+        for layer in e.get("layers", []) or []:
             functionalities[layer.get("functionality")].append(
-                layer.get("name", "incorrect")
+                layer.get("name", "incorrect") or "incorrect"
             )
         extract_functionalites.append(functionalities)
-
-    # print("===================================================")
-    # print(file)
-    # print("come here")
-    # print(datetime.datetime.now())
 
     def score_functionalities(t_funcs, e_funcs) -> float:
         distance = 0

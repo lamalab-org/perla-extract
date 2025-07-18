@@ -1,6 +1,7 @@
 from typing import Optional
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 from instructor.exceptions import InstructorRetryException
+from pydantic import ValidationError
 from typing import Union
 from pathlib import Path
 import json
@@ -8,9 +9,8 @@ from perovscribe.preprocessing.preprocessor import Preprocessor
 from perovscribe.postprocessing import postprocess
 from perovscribe.evaluations import Evaluations, score_multiple_extractions
 from perovscribe import llm_call
-from perovscribe.export import to_json
+from perovscribe.export import to_json, convert_to_extraction_to_nomad_entries
 import os
-import csv
 from collections import defaultdict
 import glob
 
@@ -50,9 +50,14 @@ class ExtractionPipeline:
         self.cache_dir = cache_dir
         self.use_cache = use_cache
 
-    def extract_from_pdf(
-        self, filepath: Union[Path, str]
-    ) -> Optional[PerovskiteSolarCells]: ...
+    def extract_from_pdf_nomad(self, filepath, doi) -> Optional[PerovskiteSolarCells]:
+        # We can use this in Nomad
+        pdf_text = self.preprocessor.pdf_to_text(filepath)
+        results = llm_call.create_text_completion(self.model_name, pdf_text)
+        results = PerovskiteSolarCells(**postprocess(results.model_dump()))
+        return convert_to_extraction_to_nomad_entries(
+            results, os.path.splitext(os.path.basename(filepath))[0]
+        )
 
     def run(
         self,
@@ -60,24 +65,18 @@ class ExtractionPipeline:
         truthpath: Union[Path, str],
         output: Union[Path, str] = "./extractions",
     ):
-        def sorted_listing_by_creation_time(directory):
-            def get_creation_time(item):
-                item_path = os.path.join(directory, item)
-                return os.path.getctime(item_path)
-
-            items = os.listdir(directory)
-            sorted_items = sorted(items, key=get_creation_time, reverse=True)
-            return sorted_items
-
-        directory = "./"
-        print(sorted_listing_by_creation_time(directory)[:10])
-        # return
         if ".pdf" in filepath:
             output = output + os.path.splitext(os.path.basename(filepath))[0] + ".json"
             pdf_text = self.preprocessor.pdf_to_text(filepath)
             results = llm_call.create_text_completion(self.model_name, pdf_text)
             results = PerovskiteSolarCells(**postprocess(results.model_dump()))
-            to_json(results, output)  # Add back for regular
+            # to_json(results, output)  # Add back for regular
+            # Test Nomad conversion:
+            print(
+                convert_to_extraction_to_nomad_entries(
+                    results, os.path.splitext(os.path.basename(filepath))[0]
+                )
+            )
         elif ".json" in filepath:
             results = json.load(open(filepath, "r"))
             results = postprocess(results)
@@ -141,29 +140,6 @@ class ExtractionPipeline:
                     0, evals.devices_in_truth - evals.devices_found
                 )
 
-            print(
-                "Total active area:",
-                per_key_metrics["active_area:value"]["FN"]
-                + per_key_metrics["active_area:value"]["TP"]
-                + per_key_metrics["active_area:value"]["FP"]
-                + total_missing_devices,
-            )
-            print(
-                "metric_keys",
-                len(per_key_metrics.keys()),
-            )
-            # print(
-            #     "Important Precisions:",
-            #     "FF:",
-            #     calc_precision(per_key_metrics, "ff:value"),
-            #     "PCE:",
-            #     calc_precision(per_key_metrics, "pce:value"),
-            #     "jsc:",
-            #     calc_precision(per_key_metrics, "jsc:value"),
-            #     "voc:",
-            #     calc_precision(per_key_metrics, "voc:value"),
-            # )
-
             # Calculate values for plot
             def calculate_value_for_plot(metrics_dict):
                 def calculate_and_aggregate_precision(metrics_dict, recall=False):
@@ -210,9 +186,6 @@ class ExtractionPipeline:
                         composition_values = [
                             precision_results[key] for key in composition_keys
                         ]
-                        print(
-                            [(key, precision_results[key]) for key in composition_keys]
-                        )
                         aggregated_results["composition"] = sum(
                             composition_values
                         ) / len(composition_values)
@@ -240,11 +213,6 @@ class ExtractionPipeline:
                         aggregated_results["deposition"] = sum(deposition_values) / len(
                             deposition_values
                         )
-                    print(
-                        "222222222222",
-                        deposition_keys,
-                        "5555555555555555555555555555555555555555",
-                    )
 
                     # Find and aggregate keys containing "layers"
                     layers_keys = [
@@ -265,7 +233,6 @@ class ExtractionPipeline:
                         aggregated_results["light"] = sum(light_values) / len(
                             light_values
                         )
-                    print(precision_results, aggregated_results)
 
                     # Add keys that don't match any of our aggregation rules, except "averaged_quantities"
                     keys_to_exclude = set(
@@ -294,24 +261,24 @@ class ExtractionPipeline:
                     return aggregated_results
 
                 # Example usage with your sample data
-                precision_results = calculate_and_aggregate_precision(metrics_dict)
+                precision_results = {}
+                for index, evals in enumerate(list_of_evals):
+                    precision_results[truth_extraction_pairs[index][2]] = (
+                        calculate_and_aggregate_precision(
+                            metrics_dict[truth_extraction_pairs[index][2]]
+                        )
+                    )
+                # precision_results = calculate_and_aggregate_precision(metrics_dict)
                 print("Precision:", precision_results)
 
-                recall_results = calculate_and_aggregate_precision(
-                    metrics_dict, recall=True
-                )
-                print("Recall:", recall_results)
+                # recall_results = calculate_and_aggregate_precision(
+                #     metrics_dict, recall=True
+                # )
+                # print("Recall:", recall_results)
 
+            print(json.dumps(per_key_metrics))
             calculate_value_for_plot(per_key_metrics)
 
-            fields = ["Fields", "TP", "FP", "FN"]
-            with open("per_key_metrics.csv", "w") as f:
-                f.write("Fields, TP, FP, FN\n")
-                w = csv.DictWriter(f, fields)
-                for key, val in sorted(per_key_metrics.items()):
-                    row = {"Fields": key}
-                    row.update(val)
-                    w.writerow(row)
             print(
                 "LLM Judge calls average:",
                 llm_judge_calls / len(truth_extraction_pairs),
@@ -319,6 +286,7 @@ class ExtractionPipeline:
                 llm_judge_calls,
             )
             print("Overall avg recalls:", np.mean(recalls))
+
             import math
 
             precs = [value for value in precs if not math.isnan(value)]
@@ -326,7 +294,6 @@ class ExtractionPipeline:
         elif os.path.isdir(filepath):
             output_folder = output + os.sep + self.model_name
             Path(output_folder).mkdir(parents=True, exist_ok=True)
-            # for file in [x for x in sorted_listing_by_creation_time(directory) if x.endswith(".pdf")]:
             for file in [x for x in os.listdir(filepath) if x.endswith(".pdf")]:
                 print("Filename: ", file)
                 output = (
@@ -339,17 +306,14 @@ class ExtractionPipeline:
                 try:
                     results = llm_call.create_text_completion(self.model_name, pdf_text)
                     results = PerovskiteSolarCells(**postprocess(results.model_dump()))
+                    # results = PerovskiteSolarCells(**postprocess(json.loads(results.choices[0].message.content)))
                     print(results)
                     to_json(results, output)
-                except InstructorRetryException as e:
+                except (InstructorRetryException, ValidationError) as e:
                     print(
                         e,
                         file + " failed!!!!!!",
-                        type(
-                            e.last_completion.choices[0]
-                            .message.tool_calls[0]
-                            .function.arguments
-                        ),
+                        # results.model_dump()
                     )
                     with open(output, "w") as f:
                         f.write(

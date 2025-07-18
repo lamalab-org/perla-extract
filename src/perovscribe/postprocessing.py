@@ -1,4 +1,3 @@
-import warnings
 import math
 
 from perovscribe import configuration as config
@@ -91,7 +90,7 @@ def normalize(data: dict) -> dict:
                     data["value"] = converted_quantity.magnitude
                     data["unit"] = default_unit_str
                 else:
-                    warnings.warn(
+                    print(
                         f"No default unit type found for the following unit during normalization: {data['unit']}"
                     )
             except Exception as e:

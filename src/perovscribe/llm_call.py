@@ -72,14 +72,13 @@ def create_text_completion(
     # Call with Instructor
     client = instructor.from_litellm(completion)
 
-    resp = client.chat.completions.create(
+    resp, compll = client.chat.completions.create_with_completion(
         model=model_name,
         messages=messages,
         response_model=PerovskiteSolarCells,
         temperature=0,
-        max_tokens=32000,
+        # max_tokens=32000,
     )
-    print(resp)
 
     return resp
 
