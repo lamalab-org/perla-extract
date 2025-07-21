@@ -6,7 +6,7 @@ from perovscribe import configuration as config
 def postprocess(data: dict) -> dict:
     # data = add_device_stack(data)
     data = normalize(data)
-    # data = filter_unwanted(data)
+    data = filter_unwanted(data)
     return data
 
 
