@@ -142,7 +142,7 @@ class ExtractionPipeline:
 
             # Calculate values for plot
             def calculate_value_for_plot(metrics_dict):
-                def calculate_and_aggregate_precision(metrics_dict, recall=False):
+                def calculate_and_aggregate_precision(metrics_dict, compute_recall=False):
                     # First calculate precision for all keys
                     precision_results = {}
 
