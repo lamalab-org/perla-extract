@@ -1,6 +1,6 @@
 from typing import Optional
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
-from instructor.exceptions import InstructorRetryException
+from instructor.exceptions import InstructorRetryException, IncompleteOutputException
 from pydantic import ValidationError
 from typing import Union
 from pathlib import Path
@@ -315,18 +315,28 @@ class ExtractionPipeline:
                         file + " failed!!!!!!",
                         # results.model_dump()
                     )
-                    with open(output, "w") as f:
-                        f.write(
-                            json.dumps(
-                                postprocess(
-                                    json.loads(
-                                        e.last_completion.choices[0]
-                                        .message.tool_calls[0]
-                                        .function.arguments
+                    if (
+                        str(e)
+                        != "The output is incomplete due to a max_tokens length limit."
+                    ):
+                        with open(output, "w") as f:
+                            try:
+                                f.write(
+                                    json.dumps(postprocess(results.model_dump()))
+                                )  # Make sure postprocessing is triggered when it fails
+                            except Exception:
+                                f.write(
+                                    json.dumps(
+                                        json.loads(
+                                            e.last_completion.choices[0]
+                                            .message.tool_calls[0]
+                                            .function.arguments
+                                        )
                                     )
-                                )
-                            )
-                        )  # Make sure postprocessing is triggered when it fails
+                                )  # Make sure postprocessing is triggered when it fails
+                except IncompleteOutputException:
+                    with open(output, "w") as f:
+                        f.write()
         else:
             print("Hmmm. This wasn't one of the expected inputs. Have a look again.")
 
