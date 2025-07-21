@@ -151,7 +151,7 @@ class ExtractionPipeline:
                         fp = values.get("FP", 0.0)
                         fn = values.get("FN", 0.0)
 
-                        if recall:
+                        if compute_recall:
                             if tp + fn > 0:
                                 recall = tp / (tp + fn)
                                 precision_results[key] = recall
