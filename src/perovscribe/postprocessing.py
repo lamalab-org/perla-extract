@@ -12,7 +12,7 @@ def postprocess(data: dict) -> dict:
 
 def filter_unwanted(data: dict) -> dict:
     new_data = {"cells": []}
-    for i, cell in enumerate(data["cells"]):
+    for i, cell in enumerate(data["cells"] or []):
         if (
             ((cell.get("pce") or {"value": 28}).get("value") or 28) < 27
             or cell.get("pce") is None
