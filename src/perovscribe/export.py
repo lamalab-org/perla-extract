@@ -3,6 +3,7 @@ from typing import Union
 from pathlib import Path
 from typing import Dict, Any
 from pint import UnitRegistry
+import math
 
 
 def to_json(pydantic_model: PerovskiteSolarCells, output: Union[Path, str]):
@@ -166,10 +167,43 @@ def remove_none_values(input_dict):
     }
 
 
+def filter_unwanted(data: dict) -> dict:
+    new_data = {"cells": []}
+    for i, cell in enumerate(data["cells"] or []):
+        if (
+            ((cell.get("pce") or {"value": 28}).get("value") or 28) < 27
+            or cell.get("pce") is None
+            or cell.get("pce").get("value") is None
+        ):
+            print(
+                ((cell.get("pce") or {"value": 99}).get("value") or 99),
+                (
+                    ((cell.get("jsc") or {"value": 0}).get("value") or 0)
+                    * ((cell.get("voc") or {"value": 0}).get("value") or 0)
+                    * ((cell.get("ff") or {"value": 0}).get("value") or 0)
+                )
+                / 100,
+            )
+            if math.isclose(
+                ((cell.get("pce") or {"value": 99}).get("value") or 99),
+                (
+                    ((cell.get("jsc") or {"value": 0}).get("value") or 0)
+                    * ((cell.get("voc") or {"value": 0}).get("value") or 0)
+                    * ((cell.get("ff") or {"value": 0}).get("value") or 0)
+                )
+                / 100,
+                abs_tol=0.2,
+            ):
+                new_data["cells"].append(data["cells"][i])
+    return new_data
+
+
 def convert_to_extraction_to_nomad_entries(
     pydantic_model: PerovskiteSolarCells, doi: str
 ):
-    data = convert_to_nomad_schema(pydantic_model.model_dump())
+    data = filter_unwanted(pydantic_model.model_dump())
+    data = convert_to_nomad_schema(data)
+    nomad_entries = []
     for index, cell in enumerate(data["cells"]):
         transformed_data = {"data": cell}
         transformed_data["data"]["DOI_number"] = (
@@ -179,4 +213,5 @@ def convert_to_extraction_to_nomad_entries(
             "perovskite_solar_cell_database.llm_extraction_schema.LLMExtractedPerovskiteSolarCell"
         )
         transformed_data = remove_none_values(transformed_data)
-        return transformed_data
+        nomad_entries.append(transformed_data)
+    return transformed_data
