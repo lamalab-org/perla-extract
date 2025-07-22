@@ -29,6 +29,7 @@ def create_text_completion(
     pdf_text: str = "",
     system_prompt: str = SYSTEM_PROMPT,
     instruction: str = INSTRUCTION_TEXT,
+    api_key: str = None,
 ) -> PerovskiteSolarCells:
     """
     Extract perovskite solar cell data from a PDF using preprocessing and LLM.
@@ -38,10 +39,14 @@ def create_text_completion(
         pdf_text (str): the text content from the PDF
         system_prompt (str): system prompt for the LLM (default: SYSTEM_PROMPT)
         instruction (str): instruction text for the LLM (default: INSTRUCTION_TEXT)
+        api_key (str): api key for env where you can't use env vars
 
     Returns:
         PerovskiteSolarCells: the response from the LLM containing extracted perovskite solar cell data
     """
+    if api_key:
+        litellm.api_key = api_key
+
     # Construct messages for LLM
     messages = [
         # {"role": "system", "content": system_prompt}, #Choose one here!!

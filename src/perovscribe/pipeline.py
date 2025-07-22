@@ -98,10 +98,12 @@ class ExtractionPipeline:
         self.cache_dir = cache_dir
         self.use_cache = use_cache
 
-    def extract_from_pdf_nomad(self, filepath, doi) -> Optional[PerovskiteSolarCells]:
+    def extract_from_pdf_nomad(
+        self, filepath, doi, api_key
+    ) -> Optional[PerovskiteSolarCells]:
         # We can use this in Nomad
         pdf_text = self.preprocessor.pdf_to_text(filepath)
-        results = llm_call.create_text_completion(self.model_name, pdf_text)
+        results = llm_call.create_text_completion(self.model_name, pdf_text, api_key)
         results = PerovskiteSolarCells(**postprocess(results.model_dump()))
         return convert_to_extraction_to_nomad_entries(
             results, os.path.splitext(os.path.basename(filepath))[0]
@@ -133,7 +135,8 @@ class ExtractionPipeline:
                 pred = postprocess(json.load(open(pred_path)))
                 truth = postprocess(json.load(open(file)))
                 pairs.append((truth, pred, file.name))
-            except FileNotFoundError:
+            except (FileNotFoundError, json.decoder.JSONDecodeError) as e:
+                print(e)
                 continue
 
         evals_list, key_metrics = score_multiple_extractions(pairs)
@@ -164,6 +167,8 @@ class ExtractionPipeline:
             except (InstructorRetryException, ValidationError) as e:
                 self._handle_failure(e, results, output_path)
             except IncompleteOutputException:
+                output_path.write_text("")
+            except json.decoder.JSONDecodeError:
                 output_path.write_text("")
 
     def _handle_failure(self, error, results, output_path):
