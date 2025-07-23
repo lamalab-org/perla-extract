@@ -174,6 +174,7 @@ def filter_unwanted(data: dict) -> dict:
             ((cell.get("pce") or {"value": 28}).get("value") or 28) < 27
             or cell.get("pce") is None
             or cell.get("pce").get("value") is None
+            # Voltage<4 cuz above 4 are modules
         ):
             print(
                 ((cell.get("pce") or {"value": 99}).get("value") or 99),
@@ -214,4 +215,4 @@ def convert_to_extraction_to_nomad_entries(
         )
         transformed_data = remove_none_values(transformed_data)
         nomad_entries.append(transformed_data)
-    return transformed_data
+    return nomad_entries
