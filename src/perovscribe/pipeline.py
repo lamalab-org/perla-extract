@@ -103,11 +103,11 @@ class ExtractionPipeline:
     ) -> Optional[PerovskiteSolarCells]:
         # We can use this in Nomad
         pdf_text = self.preprocessor.pdf_to_text(filepath)
-        results = llm_call.create_text_completion(self.model_name, pdf_text, api_key=api_key)
-        results = PerovskiteSolarCells(**postprocess(results.model_dump()))
-        return convert_to_extraction_to_nomad_entries(
-            results, os.path.splitext(os.path.basename(filepath))[0]
+        results = llm_call.create_text_completion(
+            self.model_name, pdf_text, api_key=api_key
         )
+        results = PerovskiteSolarCells(**postprocess(results.model_dump()))
+        return convert_to_extraction_to_nomad_entries(results, doi)
 
     def _run_single_pdf(self, filepath: Path, output_dir: Path):
         pdf_text = self.preprocessor.pdf_to_text(filepath)
