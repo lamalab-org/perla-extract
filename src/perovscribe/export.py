@@ -172,19 +172,17 @@ def filter_unwanted(data: dict) -> dict:
     for i, cell in enumerate(data["cells"] or []):
         if (
             ((cell.get("pce") or {"value": 28}).get("value") or 28) < 27
-            or cell.get("pce") is None
-            or cell.get("pce").get("value") is None
-            # Voltage<4 cuz above 4 are modules
+            and ((cell.get("voc") or {"value": 1}).get("value") or 1)
+            < 4  # Voltage<4 cuz above 4 are modules
         ):
-            print(
-                ((cell.get("pce") or {"value": 99}).get("value") or 99),
-                (
-                    ((cell.get("jsc") or {"value": 0}).get("value") or 0)
-                    * ((cell.get("voc") or {"value": 0}).get("value") or 0)
-                    * ((cell.get("ff") or {"value": 0}).get("value") or 0)
-                )
-                / 100,
-            )
+            if (
+                (cell.get("pce", {"value": 0}) or {"value": 0}).get("value", 0) == 0
+                or (cell.get("jsc", {"value": 0}) or {"value": 0}).get("value", 0) == 0
+                or (cell.get("voc", {"value": 0}) or {"value": 0}).get("value", 0) == 0
+                or (cell.get("ff", {"value": 0}) or {"value": 0}).get("value", 0) == 0
+            ):
+                new_data["cells"].append(data["cells"][i])
+                continue
             if math.isclose(
                 ((cell.get("pce") or {"value": 99}).get("value") or 99),
                 (
@@ -196,6 +194,7 @@ def filter_unwanted(data: dict) -> dict:
                 abs_tol=0.2,
             ):
                 new_data["cells"].append(data["cells"][i])
+                continue
     return new_data
 
 

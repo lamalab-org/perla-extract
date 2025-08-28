@@ -4,6 +4,8 @@ import os
 import json
 import glob
 import math
+import csv
+import requests
 from collections import defaultdict
 
 import numpy as np
@@ -16,6 +18,7 @@ from perovscribe.evaluations import Evaluations, score_multiple_extractions
 from perovscribe import llm_call
 from perovscribe.export import to_json, convert_to_extraction_to_nomad_entries
 from instructor.exceptions import InstructorRetryException, IncompleteOutputException
+from importlib.resources import files
 
 
 def calc_precision(per_key_metrics, key):
@@ -69,6 +72,26 @@ def calculate_value_for_plot(metrics_dict):
     return precision_results
 
 
+def read_csv_to_dict(filepath):
+    with open(filepath, newline="", encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        return [row for row in reader]
+
+
+def get_journal_and_publisher_from_doi(doi):
+    url = f"https://api.crossref.org/works/{doi}"
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()["message"]
+        journal = data.get("container-title", ["Unknown Journal"])[0]
+        publisher = data.get("publisher", "Unknown Publisher")
+        return journal, publisher
+    except Exception as e:
+        print(f"Error fetching DOI {doi}: {e}")
+        return None, None
+
+
 class ExtractionPipeline:
     """Handle the extraction pipeline for perovskite solar cell data.
 
@@ -109,12 +132,61 @@ class ExtractionPipeline:
         results = PerovskiteSolarCells(**postprocess(results.model_dump()))
         return convert_to_extraction_to_nomad_entries(results, doi)
 
-    def _run_single_pdf(self, filepath: Path, output_dir: Path):
+    def _extract_pdf(self, filepath: Path, output_path: Path) -> bool:
+        doi = filepath.stem.replace("--", "/")
+        if not self.is_doi_good_to_go(doi):
+            print(f"This DOI {doi} will be skipped.")
+            return False
+
+        print("Extracting:", doi)
         pdf_text = self.preprocessor.pdf_to_text(filepath)
-        results = llm_call.create_text_completion(self.model_name, pdf_text)
-        parsed = PerovskiteSolarCells(**postprocess(results.model_dump()))
-        nomad_entry = convert_to_extraction_to_nomad_entries(parsed, filepath.stem)
-        print(nomad_entry)
+        results = ""
+        try:
+            results = llm_call.create_text_completion(self.model_name, pdf_text)
+            parsed = PerovskiteSolarCells(**postprocess(results.model_dump()))
+            to_json(parsed, output_path)
+            print(f"Extracted: {filepath.name}")
+            return True
+        except (InstructorRetryException, ValidationError) as e:
+            self._handle_failure(e, results, output_path)
+        except (IncompleteOutputException, json.decoder.JSONDecodeError):
+            output_path.write_text("")
+
+        return False
+
+    def is_doi_good_to_go(self, doi) -> bool:
+        journal, publisher = get_journal_and_publisher_from_doi(doi)
+
+        if journal is None:
+            return False
+
+        words_not_allowed = [
+            "reviews",
+            "theory",
+            "computation",
+            "catalysis",
+            "review",
+            "ceramic",
+            "toxicology",
+            "bio",
+        ]
+        if any(word in journal.lower() for word in words_not_allowed):
+            return False
+
+        allowed_journals = [
+            journal_entry["Source title"]
+            for journal_entry in read_csv_to_dict(
+                files("perovscribe").joinpath("allowed_journals.csv")
+            )
+        ]
+        if journal not in allowed_journals:
+            return False
+
+        return True
+
+    def _run_single_pdf(self, filepath: Path, output_dir: Path):
+        output_path = output_dir / f"{filepath.stem}.json"
+        self._extract_pdf(filepath, output_path)
 
     def _evaluate_single_json(self, filepath: Path, truthpath: Path):
         pred = postprocess(json.load(open(filepath)))
@@ -148,28 +220,24 @@ class ExtractionPipeline:
             llm_calls += evals.llm_judge_calls
 
         print(json.dumps(key_metrics, indent=2))
-        agg_results = calculate_value_for_plot(key_metrics)
-        print("Aggregated Metrics:", json.dumps(agg_results, indent=2))
+        # agg_results = calculate_value_for_plot(key_metrics)
+        # print("Aggregated Metrics:", json.dumps(agg_results, indent=2))
         print("Average Recall:", np.nanmean(recalls))
         print("Average Precision:", np.nanmean([p for p in precs if not math.isnan(p)]))
         print("LLM Judge Calls:", llm_calls)
 
     def _extract_batch(self, input_dir: Path, output_dir: Path):
         (output_dir / self.model_name).mkdir(parents=True, exist_ok=True)
+        count = 0
+        already_extracted = [
+            x.stem for x in (input_dir / "extractions" / self.model_name).glob("*.json")
+        ]
         for pdf_file in input_dir.glob("*.pdf"):
-            output_path = output_dir / self.model_name / f"{pdf_file.stem}.json"
-            pdf_text = self.preprocessor.pdf_to_text(pdf_file)
-            try:
-                results = llm_call.create_text_completion(self.model_name, pdf_text)
-                parsed = PerovskiteSolarCells(**postprocess(results.model_dump()))
-                to_json(parsed, output_path)
-                print("Extracted:", pdf_file)
-            except (InstructorRetryException, ValidationError) as e:
-                self._handle_failure(e, results, output_path)
-            except IncompleteOutputException:
-                output_path.write_text("")
-            except json.decoder.JSONDecodeError:
-                output_path.write_text("")
+            if pdf_file.stem not in already_extracted:
+                output_path = output_dir / self.model_name / f"{pdf_file.stem}.json"
+                if self._extract_pdf(pdf_file, output_path):
+                    count += 1
+                    print(count)
 
     def _handle_failure(self, error, results, output_path):
         print(f"Extraction failed: {error}")
@@ -214,6 +282,7 @@ def extract(
     cache_dir: str = "",
     use_cache: bool = True,
     pdf_print: bool = False,
+    output: str = "./extractions",
 ):
     if pdf_print:
         print(
@@ -224,7 +293,7 @@ def extract(
         return
     ExtractionPipeline(
         model_name, preprocessor, postprocessor, cache_dir, use_cache
-    ).run(filepath, truth)
+    ).run(filepath, truth, output=output)
 
 
 def optimizer(model_name: str = "claude-3-5-sonnet-20240620", output: str = "./"):

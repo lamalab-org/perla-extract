@@ -32,58 +32,60 @@ def create_text_completion(
     api_key: str = None,
 ) -> PerovskiteSolarCells:
     """
-    Extract perovskite solar cell data from a PDF using preprocessing and LLM.
+     Extract structured perovskite solar cell data from raw PDF text using an LLM.
 
-    Arguments:
-        model_name (str): the name of the LLM to call
-        pdf_text (str): the text content from the PDF
-        system_prompt (str): system prompt for the LLM (default: SYSTEM_PROMPT)
-        instruction (str): instruction text for the LLM (default: INSTRUCTION_TEXT)
-        api_key (str): api key for env where you can't use env vars
+    This function sends a prompt to a language model (via the `instructor` library and LiteLLM backend)
+    with a specified system prompt and instruction, along with the given PDF text. It attempts to
+    deserialize the response into a `PerovskiteSolarCells` Pydantic model, automatically handling
+    context length errors by reducing `max_tokens` if needed.
+
+    Args:
+        model_name (str): Name of the LLM to use (e.g., "gpt-4", "claude-3-opus", etc.).
+        pdf_text (str): Text content extracted from a PDF document.
+        system_prompt (str): The system-level prompt guiding the LLM’s behavior (default: SYSTEM_PROMPT).
+        instruction (str): Task-specific instruction for the LLM (default: INSTRUCTION_TEXT).
+        api_key (str, optional): API key for LiteLLM if environment variables cannot be used.
 
     Returns:
-        PerovskiteSolarCells: the response from the LLM containing extracted perovskite solar cell data
+        PerovskiteSolarCells: A Pydantic model instance populated with the extracted data.
+
+    Raises:
+        instructor.exceptions.InstructorRetryException: If an unhandled error occurs during LLM interaction.
     """
     if api_key:
         litellm.api_key = api_key
 
     # Construct messages for LLM
     messages = [
-        # {"role": "system", "content": system_prompt}, #Choose one here!!
-        # {"role": "user", "content": instruction}
         {
             "role": "user",
             "content": f"{system_prompt}\n{instruction}\n Here is the schema: {str(PerovskiteSolarCells.model_json_schema())} \n\nHere is the text:\n{pdf_text}",
         },
-        # {
-        #     "role": "user",
-        #     "content": BEST_PROMPT.replace("[schema]", str(PerovskiteSolarCells.model_json_schema())).replace("[text]", pdf_text)
-        # }
     ]
-
-    # # Call with groq instructor
-    # client = instructor.from_provider("groq/llama-3.3-70b-versatile", mode=instructor.Mode.JSON)
-
-    # resp = client.chat.completions.create(
-    #     # model="qwen-qwq-32b",
-    #     messages=messages,
-    #     response_model=PerovskiteSolarCells,
-    #     temperature=0
-    # )
-    # print(resp)
-
-    # return resp
 
     # Call with Instructor
     client = instructor.from_litellm(completion)
 
-    resp, compll = client.chat.completions.create_with_completion(
-        model=model_name,
-        messages=messages,
-        response_model=PerovskiteSolarCells,
-        temperature=0,
-        # max_tokens=32000,
-    )
+    max_tokens = 64000
+    while True:
+        try:
+            resp, compll = client.chat.completions.create_with_completion(
+                model=model_name,
+                messages=messages,
+                response_model=PerovskiteSolarCells,
+                temperature=0,
+                max_tokens=max_tokens,
+            )
+        except instructor.exceptions.InstructorRetryException as e:
+            if (
+                'litellm.BadRequestError: AnthropicException - {"type":"error","error":{"type":"invalid_request_error","message":"input length and `max_tokens` exceed context limit:'
+                not in str(e)
+            ):
+                raise
+            max_tokens -= 5000
+            print("reduced max tokens")
+        else:
+            break
 
     return resp
 

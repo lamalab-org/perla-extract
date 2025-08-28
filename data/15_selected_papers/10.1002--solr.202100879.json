@@ -308,7 +308,7 @@
           "unit": null,
           "value": null
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "",
         "x_ions": []
       },
@@ -318,8 +318,8 @@
           "value": null
         },
         "PCE_after_1000_hours": {
-          "unit": "%",
-          "value": 21.41
+          "unit": null,
+          "value": null
         },
         "PCE_at_the_end_of_the_experiment": {
           "unit": null,
@@ -674,7 +674,7 @@
           "unit": null,
           "value": null
         },
-        "dimensionality": null,
+        "dimensionality": "1D/3D",
         "formula": "Me3SPbI3",
         "x_ions": [
           {
@@ -691,8 +691,8 @@
           "value": null
         },
         "PCE_after_1000_hours": {
-          "unit": null,
-          "value": null
+          "unit": "%",
+          "value": 21.41
         },
         "PCE_at_the_end_of_the_experiment": {
           "unit": null,
@@ -1047,7 +1047,7 @@
           "unit": null,
           "value": null
         },
-        "dimensionality": null,
+        "dimensionality": "1D",
         "formula": "Me3SPbI3",
         "x_ions": [
           {

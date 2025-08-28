@@ -358,8 +358,8 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
         "dimensionality": null,
         "formula": "MAPbI3-xClx",
@@ -776,8 +776,8 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
         "dimensionality": null,
         "formula": "MAPbI3-xClx",

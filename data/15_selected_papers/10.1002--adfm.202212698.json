@@ -6,7 +6,7 @@
         "value": 0.09
       },
       "additional_notes": "Flexible perovskite solar cell with BSP+TSP (buried surface passivation and top surface passivation) using MFCl. Device retained 80% of initial PCE after 10,000 bending cycles at 5 mm radius.",
-      "averaged_quantities": null,
+      "averaged_quantities": false,
       "device_architecture": "nip",
       "encapsulated": false,
       "ff": {
@@ -151,14 +151,14 @@
       ],
       "light_source": {
         "description": null,
-        "lamp": null,
+        "lamp": "Newport, Oriel Sol3A Class AAA",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100.0
         },
         "type": "AM 1.5G"
       },
-      "number_devices": null,
+      "number_devices": 1,
       "pce": {
         "unit": "%",
         "value": 22.04
@@ -229,7 +229,7 @@
           "unit": "mW cm^-2",
           "value": 100.0
         },
-        "potential_bias": null,
+        "potential_bias": "MPPT",
         "temperature": null,
         "time": {
           "unit": "s",
@@ -247,7 +247,7 @@
         "value": 0.09
       },
       "additional_notes": "Rigid perovskite solar cell with BSP+TSP using MFCl passivation.",
-      "averaged_quantities": null,
+      "averaged_quantities": false,
       "device_architecture": "nip",
       "encapsulated": false,
       "ff": {
@@ -392,14 +392,14 @@
       ],
       "light_source": {
         "description": null,
-        "lamp": null,
+        "lamp": "Newport, Oriel Sol3A Class AAA",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100.0
         },
         "type": "AM 1.5G"
       },
-      "number_devices": null,
+      "number_devices": 1,
       "pce": {
         "unit": "%",
         "value": 24.4
@@ -608,7 +608,7 @@
       ],
       "light_source": {
         "description": null,
-        "lamp": null,
+        "lamp": "Newport, Oriel Sol3A Class AAA",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100.0

@@ -3,6 +3,7 @@
 
 ### Data ###
 *.csv
+!src/perovscribe/allowed_journals.csv
 *.dat
 *.efx
 *.gbr

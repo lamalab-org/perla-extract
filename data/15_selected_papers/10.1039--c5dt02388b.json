@@ -6,7 +6,7 @@
         "value": null
       },
       "additional_notes": null,
-      "averaged_quantities": null,
+      "averaged_quantities": false,
       "device_architecture": "nip",
       "encapsulated": false,
       "ff": {
@@ -467,14 +467,14 @@
       ],
       "light_source": {
         "description": null,
-        "lamp": null,
+        "lamp": "Newport 69907",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
         },
         "type": "AM 1.5G"
       },
-      "number_devices": null,
+      "number_devices": 1,
       "pce": {
         "unit": "%",
         "value": 11.8
@@ -560,7 +560,7 @@
         "value": null
       },
       "additional_notes": null,
-      "averaged_quantities": null,
+      "averaged_quantities": false,
       "device_architecture": "nip",
       "encapsulated": false,
       "ff": {
@@ -1021,14 +1021,14 @@
       ],
       "light_source": {
         "description": null,
-        "lamp": null,
+        "lamp": "Newport 69907",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
         },
         "type": "AM 1.5G"
       },
-      "number_devices": null,
+      "number_devices": 1,
       "pce": {
         "unit": "%",
         "value": 12.4
@@ -1114,7 +1114,7 @@
         "value": null
       },
       "additional_notes": null,
-      "averaged_quantities": null,
+      "averaged_quantities": false,
       "device_architecture": "nip",
       "encapsulated": false,
       "ff": {
@@ -1575,14 +1575,14 @@
       ],
       "light_source": {
         "description": null,
-        "lamp": null,
+        "lamp": "Newport 69907",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
         },
         "type": "AM 1.5G"
       },
-      "number_devices": null,
+      "number_devices": 1,
       "pce": {
         "unit": "%",
         "value": 14.6
@@ -1668,7 +1668,7 @@
         "value": null
       },
       "additional_notes": null,
-      "averaged_quantities": null,
+      "averaged_quantities": false,
       "device_architecture": "nip",
       "encapsulated": null,
       "ff": {
@@ -2129,28 +2129,49 @@
       ],
       "light_source": {
         "description": null,
-        "lamp": null,
+        "lamp": "Newport 69907",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
         },
         "type": "AM 1.5G"
       },
-      "number_devices": null,
+      "number_devices": 1,
       "pce": {
         "unit": "%",
         "value": 8.4
       },
       "perovskite_composition": {
-        "a_ions": [],
-        "b_ions": [],
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "coefficient": "1",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH3NH3+"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "CH3NH3PbI3",
-        "x_ions": []
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          }
+        ]
       },
       "stability": {
         "PCE_T80": {
@@ -2198,7 +2219,7 @@
         "value": null
       },
       "additional_notes": null,
-      "averaged_quantities": null,
+      "averaged_quantities": false,
       "device_architecture": "nip",
       "encapsulated": false,
       "ff": {
@@ -2659,28 +2680,49 @@
       ],
       "light_source": {
         "description": null,
-        "lamp": null,
+        "lamp": "Newport 69907",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
         },
         "type": "AM 1.5G"
       },
-      "number_devices": null,
+      "number_devices": 1,
       "pce": {
         "unit": "%",
         "value": 9.7
       },
       "perovskite_composition": {
-        "a_ions": [],
-        "b_ions": [],
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "coefficient": "1",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH3NH3+"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "CH3NH3PbI3",
-        "x_ions": []
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          }
+        ]
       },
       "stability": {
         "PCE_T80": {
@@ -2728,7 +2770,7 @@
         "value": null
       },
       "additional_notes": null,
-      "averaged_quantities": null,
+      "averaged_quantities": false,
       "device_architecture": "nip",
       "encapsulated": false,
       "ff": {
@@ -3189,28 +3231,49 @@
       ],
       "light_source": {
         "description": null,
-        "lamp": null,
+        "lamp": "Newport 69907",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
         },
         "type": "AM 1.5G"
       },
-      "number_devices": null,
+      "number_devices": 1,
       "pce": {
         "unit": "%",
         "value": 13.1
       },
       "perovskite_composition": {
-        "a_ions": [],
-        "b_ions": [],
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "coefficient": "1",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH3NH3+"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+"
+          }
+        ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "CH3NH3PbI3",
-        "x_ions": []
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": "Iodide",
+            "molecular_formula": "I-"
+          }
+        ]
       },
       "stability": {
         "PCE_T80": {

@@ -411,7 +411,7 @@
                   "value": null
                 }
               },
-              "step_name": "Spin-coating",
+              "step_name": "Drop-casting",
               "temperature": {
                 "unit": null,
                 "value": null
@@ -521,7 +521,7 @@
       ],
       "light_source": {
         "description": "Sol 3A, Newport Corp",
-        "lamp": null,
+        "lamp": "Sol 3A, Newport Corp",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
@@ -1039,7 +1039,7 @@
                 "unit": "s",
                 "value": 20
               },
-              "method": "Spin-coating",
+              "method": "Drop-casting",
               "solution": {
                 "compounds": null,
                 "solutes": [
@@ -1066,7 +1066,7 @@
                   "value": null
                 }
               },
-              "step_name": "Spin-coating",
+              "step_name": "Drop-casting",
               "temperature": {
                 "unit": null,
                 "value": null
@@ -1176,7 +1176,7 @@
       ],
       "light_source": {
         "description": "Sol 3A, Newport Corp",
-        "lamp": null,
+        "lamp": "Sol 3A, Newport Corp",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100

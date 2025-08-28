@@ -382,8 +382,8 @@
         }
       ],
       "light_source": {
-        "description": "Enlitech Solar Simulator SS-F7-3A",
-        "lamp": null,
+        "description": null,
+        "lamp": "Enlitech Solar Simulator SS-F7-3A",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
@@ -427,7 +427,7 @@
         ],
         "bandgap": {
           "unit": "eV",
-          "value": 1.55
+          "value": 2.14
         },
         "dimensionality": "3D",
         "formula": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
@@ -462,8 +462,8 @@
           "value": null
         },
         "PCE_at_the_start_of_the_experiment": {
-          "unit": 20.19,
-          "value": "%"
+          "unit": "%",
+          "value": 20.19
         },
         "humidity": {
           "unit": null,
@@ -871,7 +871,7 @@
       ],
       "light_source": {
         "description": null,
-        "lamp": null,
+        "lamp": "Enlitech Solar Simulator SS-F7-3A",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
@@ -915,7 +915,7 @@
         ],
         "bandgap": {
           "unit": "eV",
-          "value": 1.55
+          "value": 2.14
         },
         "dimensionality": "3D",
         "formula": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
@@ -1358,8 +1358,8 @@
         }
       ],
       "light_source": {
-        "description": "Enlitech Solar Simulator SS-F7-3A",
-        "lamp": null,
+        "description": null,
+        "lamp": "Enlitech Solar Simulator SS-F7-3A",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
@@ -1403,7 +1403,7 @@
         ],
         "bandgap": {
           "unit": "eV",
-          "value": 1.55
+          "value": 2.14
         },
         "dimensionality": "3D",
         "formula": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
@@ -1847,7 +1847,7 @@
       ],
       "light_source": {
         "description": null,
-        "lamp": null,
+        "lamp": "Enlitech Solar Simulator SS-F7-3A",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100

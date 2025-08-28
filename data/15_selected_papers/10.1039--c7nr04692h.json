@@ -1857,7 +1857,7 @@
             }
           ],
           "functionality": "Hole-transport",
-          "name": "V2O5",
+          "name": "sV2O5",
           "thickness": {
             "unit": null,
             "value": null

@@ -9,7 +9,6 @@ readme = "README.md"
 license = { text = "MIT" }
 authors = [
     { name = "Sherjeel Shabih", email = "sherjeel.shabih@hu-berlin.de" },
-    { name = "Sreekanth Kunchapu", email = "sreekanth.kunchapu@uni-jena.de" },
     { name = "Pepe Marquez", email = "jose.marquez@physik.hu-berlin.de" },
     { name = "Kevin Jablonka", email = "mail@kjablonka.com" },
 ]
@@ -42,3 +41,6 @@ docs = [
 
 [project.scripts]
 perovscribe = "perovscribe.pipeline:main_cli"
+
+[tool.setuptools.package-data]
+"perovscribe" = ["allowed_journals.csv"]

@@ -138,7 +138,7 @@ class Evaluations:
             extraction_stack = " ".join(
                 [
                     layer.get("name", "NOEXTRACT") or "NOEXTRACT"
-                    for layer in match["extraction"].get("layers", [])
+                    for layer in match["extraction"].get("layers", []) or []
                 ]
             )
             scores.append(
@@ -321,11 +321,11 @@ class Evaluations:
 
         # Calculate deposition-based scores
         truth_depositions = [
-            [layer.get("deposition") for layer in cell.get("layers", [])]
+            [layer.get("deposition") for layer in cell.get("layers", []) or []]
             for cell in truth_cells
         ]
         extracted_depositions = [
-            [layer.get("deposition") for layer in cell.get("layers", [])]
+            [layer.get("deposition") for layer in cell.get("layers", []) or []]
             for cell in extracted_cells
         ]
 
@@ -465,7 +465,7 @@ class Evaluations:
     def _extract_functionalities(self, cell: Dict) -> Dict[str, List[str]]:
         """Extract functionality mapping from a cell."""
         functionalities = defaultdict(list)
-        for layer in cell.get("layers", []):
+        for layer in cell.get("layers", []) or []:
             functionality = layer.get("functionality")
             name = layer.get("name", "incorrect") or "incorrect"
             functionalities[functionality].append(name)
@@ -513,9 +513,6 @@ class Evaluations:
         abs_tolerance: bool = False,
     ) -> bool:
         """Check if extracted value matches truth within tolerance."""
-        if type(truth) is not type(extract):
-            return False
-
         if isinstance(truth, (int, float)):
             truth, extract = float(truth), float(extract)
             try:
@@ -527,6 +524,8 @@ class Evaluations:
             except AssertionError:
                 return False
 
+        elif type(truth) is not type(extract):
+            return False
         elif isinstance(truth, str):
             return truth.lower() == extract.lower()
 

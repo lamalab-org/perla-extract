@@ -125,15 +125,36 @@
         "value": 5.9
       },
       "perovskite_composition": {
-        "a_ions": [],
-        "b_ions": [],
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "coefficient": "1",
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "coefficient": "1",
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "MAPbI3",
-        "x_ions": []
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "coefficient": "3",
+            "common_name": null,
+            "molecular_formula": null
+          }
+        ]
       },
       "stability": {
         "PCE_T80": {
