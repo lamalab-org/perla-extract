@@ -122,7 +122,7 @@ class ExtractionPipeline:
         self.use_cache = use_cache
 
     def extract_from_pdf_nomad(
-        self, filepath, doi, api_key
+        self, filepath, doi, api_key, nomad_schema, ureg
     ) -> Optional[PerovskiteSolarCells]:
         # We can use this in Nomad
         pdf_text = self.preprocessor.pdf_to_text(filepath)
@@ -130,7 +130,7 @@ class ExtractionPipeline:
             self.model_name, pdf_text, api_key=api_key
         )
         results = PerovskiteSolarCells(**postprocess(results.model_dump()))
-        return convert_to_extraction_to_nomad_entries(results, doi)
+        return convert_to_extraction_to_nomad_entries(results, doi, nomad_schema, ureg)
 
     def _extract_pdf(self, filepath: Path, output_path: Path) -> bool:
         doi = filepath.stem.replace("--", "/")
