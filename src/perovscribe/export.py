@@ -1,39 +1,25 @@
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
-from typing import Union
+from typing import TYPE_CHECKING, Union
 from pathlib import Path
 from typing import Dict, Any
-from pint import UnitRegistry
 import math
 
+if TYPE_CHECKING:
+    from pint import UnitRegistry
 
 def to_json(pydantic_model: PerovskiteSolarCells, output: Union[Path, str]):
     with open(output, "w") as f:
         f.write(pydantic_model.model_dump_json())
 
 
-ureg = UnitRegistry()
-Q_ = ureg.Quantity
-ureg.default_preferred_units = [
-    ureg.V,
-    ureg.cm**2,
-    ureg.L,
-    ureg.degC,
-    ureg.s,
-    ureg.nm,
-    ureg.mbar,
-    ureg.eV,
-    ureg.mW / ureg.cm**2,
-    ureg.mA / ureg.cm**2,
-]
-
-
-def convert_units(parent_key: str, obj: Dict[str, Any]) -> Any:
+def convert_units(parent_key: str, obj: Dict[str, Any], ureg: 'UnitRegistry') -> Any:
     """
     Convert units of values in a nested dictionary to preferred units.
 
     Args:
         parent_key (str): Key of the parent dictionary
         obj (Dict[str, Any]): Nested dictionary containing values with units
+        ureg (UnitRegistry): Pint UnitRegistry for unit conversion
 
     Returns:
         Any: float value or Dictionary with concentration values
@@ -42,9 +28,8 @@ def convert_units(parent_key: str, obj: Dict[str, Any]) -> Any:
     if obj["value"] is None:
         return None
 
-    new_dict = {}
     if "unit" not in obj:  # For FF there is no unit
-        new_dict = obj["value"]
+        converted = obj["value"]
     else:
         try:
             if obj["unit"] == "%":  # For % values no conversion is needed
@@ -56,19 +41,12 @@ def convert_units(parent_key: str, obj: Dict[str, Any]) -> Any:
                 converted["concentration"] = obj["value"]
                 converted["concentration_unit"] = obj["unit"]
             else:
-                quantity = Q_(obj["value"], ureg(obj["unit"]))
-                if (
-                    parent_key == "PCE_T80"
-                ):  # For PCE_T80, convert to hours instead of seconds
-                    converted = quantity.to_preferred(ureg.hour)
-                else:
-                    converted = float(quantity.to_preferred().magnitude)
-            new_dict = converted
+                converted = ureg.Quantity(obj["value"], obj["unit"])
         except Exception as e:
             # Keep original if conversion fails
             print(f"Failed to convert {obj['value']} {obj['unit']} Error:{e}")
-            new_dict = obj["value"]
-    return new_dict
+            converted = obj["value"]
+    return converted
 
 
 def get_layer_order(layers: Dict[str, Any]) -> str:
@@ -86,12 +64,13 @@ def get_layer_order(layers: Dict[str, Any]) -> str:
     return layer_order[:-1]
 
 
-def convert_to_nomad_schema(data: Dict[str, Any]) -> Dict[str, Any]:
+def convert_to_nomad_schema(data: Dict[str, Any], ureg: 'UnitRegistry') -> Dict[str, Any]:
     """
     Traverse a nested dictionary and convert values with units to preferred units.
 
     Args:
         data (Dict[str, Any]): Nested dictionary containing values with units
+        ureg (UnitRegistry): Pint UnitRegistry for unit conversion
 
     Returns:
         Dict[str, Any]: Dictionary with converted values
@@ -102,7 +81,7 @@ def convert_to_nomad_schema(data: Dict[str, Any]) -> Dict[str, Any]:
             # Create a new dictionary to store modified values
             new_dict = {}
             if "value" in obj:
-                new_dict = convert_units(parent_key, obj)
+                new_dict = convert_units(parent_key, obj, ureg)
             else:
                 # Recursively process all key-value pairs
                 if parent_key == "cells" and obj["layers"] is not None:
@@ -199,19 +178,21 @@ def filter_unwanted(data: dict) -> dict:
 
 
 def convert_to_extraction_to_nomad_entries(
-    pydantic_model: PerovskiteSolarCells, doi: str
+    pydantic_model: PerovskiteSolarCells, doi: str, nomad_schema, ureg: 'UnitRegistry'
 ):
     data = filter_unwanted(pydantic_model.model_dump())
-    data = convert_to_nomad_schema(data)
+    data = convert_to_nomad_schema(data, ureg)
     nomad_entries = []
     for index, cell in enumerate(data["cells"]):
-        transformed_data = {"data": cell}
-        transformed_data["data"]["DOI_number"] = (
+        transformed_data = cell
+        transformed_data["DOI_number"] = (
             f"https://www.doi.org/{doi.replace('--', '/')}"
         )
-        transformed_data["data"]["m_def"] = (
+        transformed_data["m_def"] = (
             "perovskite_solar_cell_database.llm_extraction_schema.LLMExtractedPerovskiteSolarCell"
         )
         transformed_data = remove_none_values(transformed_data)
-        nomad_entries.append(transformed_data)
+        nomad_data_section = nomad_schema.m_from_dict(transformed_data)
+        entry_dict = {"data": nomad_data_section.m_to_dict()}
+        nomad_entries.append(entry_dict)
     return nomad_entries
