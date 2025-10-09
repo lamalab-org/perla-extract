@@ -68,12 +68,21 @@ def create_text_completion(
 
     max_tokens = 64000
     temperature = 0
-    if model_name == "gpt-4o":
-        max_tokens = 16384
-    if model_name == "gpt-5":
-        temperature = 1
-    if model_name.startswith("claude-3-5-sonnet"):
-        max_tokens = 8192
+    try:
+        model_info = litellm.get_model_info(model=model_name)
+        if not model_info:
+            max_tokens = 8192
+        else:
+            max_tokens = model_info.get("max_output_tokens")
+        
+        supported_params = litellm.get_supported_openai_params(model=model_name)
+        if "temperature" not in supported_params:
+            temperature = 1
+    except Exception as e:
+        print(f"Could not fetch model info, defaulting to max_tokens=64000 and temperature=0. Error: {e}")
+    
+    client = instructor.from_litellm(completion)
+    
     while True:
         try:
             resp, compll = client.chat.completions.create_with_completion(
