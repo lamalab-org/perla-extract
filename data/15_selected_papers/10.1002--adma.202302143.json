@@ -73,9 +73,9 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
+              "additional_parameters": "{\n\"speed\": \"3000 rpm\"}",
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 30
@@ -166,7 +166,7 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
+              "additional_parameters": "{\n  \"duration\": \"20 s\",\n  \"speed\": \"5000 rpm\",\n  \"substrate_preheating\": \"100\u00b0C for 15 min\"\n}",
               "antisolvent": null,
               "atmosphere": "N2",
               "duration": {
@@ -325,7 +325,7 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
+              "additional_parameters": "{\n  \"duration\": \"30 s\",\n  \"filter\": \"0.45 \u03bcm PTFE\",\n  \"speed\": \"2000 rpm\"\n}",
               "antisolvent": null,
               "atmosphere": null,
               "duration": {
@@ -377,9 +377,9 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
+              "additional_parameters": "{\"speed\":\"5000 rpm\"}",
               "antisolvent": null,
-              "atmosphere": null,
+              "atmosphere": "\"N2\"",
               "duration": {
                 "unit": "s",
                 "value": 20
@@ -411,7 +411,7 @@
                   "value": null
                 }
               },
-              "step_name": "Spin-coating",
+              "step_name": "Drop-casting",
               "temperature": {
                 "unit": null,
                 "value": null
@@ -420,7 +420,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": null,
+              "atmosphere": "\"N2\"",
               "duration": {
                 "unit": "s",
                 "value": 300
@@ -521,7 +521,7 @@
       ],
       "light_source": {
         "description": "Sol 3A, Newport Corp",
-        "lamp": null,
+        "lamp": "Sol 3A, Newport Corp",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
@@ -548,6 +548,7 @@
             "molecular_formula": "CH6N+"
           }
         ],
+        "additives": null,
         "b_ions": [
           {
             "abbreviation": "Pb",
@@ -557,11 +558,13 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.6
         },
-        "dimensionality": "2D/3D",
-        "formula": "PEA2MA4Pb5I16",
+        "dimensionality": "2D",
+        "formula": "(PEA)2(MA)4Pb5I16",
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
         "x_ions": [
           {
             "abbreviation": "I",
@@ -602,8 +605,8 @@
           "value": null
         },
         "time": {
-          "unit": null,
-          "value": null
+          "unit": "h",
+          "value": 1000
         }
       },
       "voc": {
@@ -1036,7 +1039,7 @@
                 "unit": "s",
                 "value": 20
               },
-              "method": "Spin-coating",
+              "method": "Drop-casting",
               "solution": {
                 "compounds": null,
                 "solutes": [
@@ -1063,7 +1066,7 @@
                   "value": null
                 }
               },
-              "step_name": "Spin-coating",
+              "step_name": "Drop-casting",
               "temperature": {
                 "unit": null,
                 "value": null
@@ -1173,7 +1176,7 @@
       ],
       "light_source": {
         "description": "Sol 3A, Newport Corp",
-        "lamp": null,
+        "lamp": "Sol 3A, Newport Corp",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
@@ -1200,6 +1203,7 @@
             "molecular_formula": "CH6N+"
           }
         ],
+        "additives": null,
         "b_ions": [
           {
             "abbreviation": "Pb",
@@ -1209,11 +1213,13 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.6
         },
-        "dimensionality": "2D/3D",
-        "formula": "PEA2MA4Pb5I16",
+        "dimensionality": "2D",
+        "formula": "(PEA)2(MA)4Pb5I16",
+        "impurities": null,
+        "sample_type": "Polycrystalline film",
         "x_ions": [
           {
             "abbreviation": "I",

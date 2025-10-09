@@ -7,7 +7,7 @@
       },
       "additional_notes": null,
       "averaged_quantities": null,
-      "device_architecture": "nip",
+      "device_architecture": "pin",
       "encapsulated": null,
       "ff": {
         "value": 69.5
@@ -75,7 +75,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -116,12 +116,12 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 600
               },
-              "method": "Thermal.annealing",
+              "method": "Thermal annealing",
               "solution": {
                 "compounds": null,
                 "solutes": [
@@ -166,52 +166,47 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": null,
+              "additional_parameters": {
+                "first_step_acceleration_time": "10 s",
+                "first_step_speed": "2500 rpm",
+                "first_step_spin_time": "20 s",
+                "second_step_acceleration_time": "8 s",
+                "second_step_speed": "2500 rpm",
+                "second_step_spin_time": "20 s"
+              },
               "antisolvent": null,
               "atmosphere": "N2",
-              "duration": {
-                "unit": "s",
-                "value": 40
-              },
+              "duration": null,
               "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": "M",
-                      "value": 2.64
+                      "unit": "mol/L",
+                      "value": 2.6400000000000006
                     },
-                    "name": "PbCl2"
+                    "name": "CH3NH3I"
                   },
                   {
                     "concentration": {
-                      "unit": "M",
-                      "value": 0.88
+                      "unit": "mol/L",
+                      "value": 0.8800000000000002
                     },
-                    "name": "CH3NH3I"
+                    "name": "PbCl2"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": "DMF",
-                    "volume_fraction": 1
+                    "name": "dimethylformamide",
+                    "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
-              "step_name": "Spin-coating",
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "step_name": null,
+              "temperature": null
             },
             {
               "additional_parameters": null,
@@ -219,48 +214,20 @@
               "atmosphere": "N2",
               "duration": {
                 "unit": "s",
-                "value": 10800
+                "value": 10800.0
               },
               "method": "Thermal-annealing",
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": "Annealing",
+              "solution": null,
+              "step_name": null,
               "temperature": {
                 "unit": "\u00b0C",
-                "value": 100
+                "value": 90.0
               }
             }
           ],
           "functionality": "Absorber",
           "name": "CH3NH3PbI3-xClx",
-          "thickness": {
-            "unit": null,
-            "value": null
-          }
+          "thickness": null
         },
         {
           "additional_treatment": null,
@@ -269,49 +236,18 @@
               "additional_parameters": null,
               "antisolvent": null,
               "atmosphere": "N2",
-              "duration": {
-                "unit": null,
-                "value": null
-              },
+              "duration": null,
               "method": "Spin-coating",
-              "solution": {
-                "compounds": null,
-                "solutes": [
-                  {
-                    "concentration": {
-                      "unit": null,
-                      "value": null
-                    },
-                    "name": null
-                  }
-                ],
-                "solvents": [
-                  {
-                    "name": null,
-                    "volume_fraction": null
-                  }
-                ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
-              },
-              "step_name": "Spin-coating",
-              "temperature": {
-                "unit": null,
-                "value": null
-              }
+              "solution": null,
+              "step_name": null,
+              "temperature": null
             }
           ],
           "functionality": "Electron-transport",
-          "name": "PCBM-60",
+          "name": "PC61BM",
           "thickness": {
             "unit": "nm",
-            "value": 100
+            "value": 100.0
           }
         },
         {
@@ -369,7 +305,7 @@
       ],
       "light_source": {
         "description": null,
-        "lamp": null,
+        "lamp": "Xenon lamp",
         "light_intensity": {
           "unit": "mW cm^-2",
           "value": 100
@@ -399,17 +335,23 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
-        "formula": "MAPbI3",
+        "dimensionality": "3D",
+        "formula": "MAPbI3-xClx",
         "x_ions": [
           {
             "abbreviation": "I",
-            "coefficient": "3",
+            "coefficient": "3-x",
             "common_name": "Iodide",
             "molecular_formula": "I-"
+          },
+          {
+            "abbreviation": "Cl",
+            "coefficient": "x",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-"
           }
         ]
       },

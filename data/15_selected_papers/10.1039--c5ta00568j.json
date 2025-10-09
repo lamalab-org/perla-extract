@@ -127,7 +127,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -175,7 +175,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 2.5
@@ -218,7 +218,7 @@
           "name": "CH3NH3PbI3-xClx ",
           "thickness": {
             "unit": "nm",
-            "value": 450
+            "value": 475
           }
         },
         {
@@ -227,12 +227,12 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": null,
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": null,
                 "value": null
               },
-              "method": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
@@ -358,8 +358,8 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
         "dimensionality": null,
         "formula": "MAPbI3-xClx",
@@ -545,7 +545,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -593,12 +593,12 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 2700
               },
-              "method": "Oven-Annealing",
+              "method": "Thermal annealing",
               "solution": {
                 "compounds": null,
                 "solutes": [
@@ -633,10 +633,10 @@
             }
           ],
           "functionality": "Absorber",
-          "name": "CH3NH3PbI3-xClx ",
+          "name": "CH3NH3PbI3-xClx",
           "thickness": {
             "unit": "nm",
-            "value": 450
+            "value": 475
           }
         },
         {
@@ -645,12 +645,12 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": null,
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": null,
                 "value": null
               },
-              "method": null,
+              "method": "Spin-coating",
               "solution": {
                 "compounds": null,
                 "solutes": [
@@ -776,8 +776,8 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
         "dimensionality": null,
         "formula": "MAPbI3-xClx",

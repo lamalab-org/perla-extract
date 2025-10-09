@@ -156,7 +156,7 @@
           "unit": null,
           "value": null
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "FA0.85MA0.15PbI2.55Br0.45",
         "x_ions": []
       },

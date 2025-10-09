@@ -127,42 +127,51 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": [
+                  "PbI2"
+                ],
+                "solutes": null,
+                "solvents": null,
+                "temperature": null,
+                "volume": null
               },
-              "method": null,
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Immersion",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mg/mL",
+                      "value": 1.0
                     },
-                    "name": null
+                    "name": "Me3SI"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "DI water",
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 60.0
               }
             }
           ],
@@ -299,7 +308,7 @@
           "unit": null,
           "value": null
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "",
         "x_ions": []
       },
@@ -309,8 +318,8 @@
           "value": null
         },
         "PCE_after_1000_hours": {
-          "unit": "%",
-          "value": 21.41
+          "unit": null,
+          "value": null
         },
         "PCE_at_the_end_of_the_experiment": {
           "unit": null,
@@ -470,42 +479,51 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": [
+                  "PbI2"
+                ],
+                "solutes": null,
+                "solvents": null,
+                "temperature": null,
+                "volume": null
               },
-              "method": null,
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Immersion",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mg/mL",
+                      "value": 1.0
                     },
-                    "name": null
+                    "name": "Me3SI"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "DI water",
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 60.0
               }
             }
           ],
@@ -641,7 +659,7 @@
             "abbreviation": "Me3S",
             "coefficient": "1",
             "common_name": "Trimethylsulfonium",
-            "molecular_formula": "(CH3)3S"
+            "molecular_formula": "(CH3)3S+"
           }
         ],
         "b_ions": [
@@ -656,7 +674,7 @@
           "unit": null,
           "value": null
         },
-        "dimensionality": null,
+        "dimensionality": "1D/3D",
         "formula": "Me3SPbI3",
         "x_ions": [
           {
@@ -673,8 +691,8 @@
           "value": null
         },
         "PCE_after_1000_hours": {
-          "unit": null,
-          "value": null
+          "unit": "%",
+          "value": 21.41
         },
         "PCE_at_the_end_of_the_experiment": {
           "unit": null,
@@ -834,42 +852,51 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": null,
-              "duration": {
-                "unit": null,
-                "value": null
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Spin-coating",
+              "solution": {
+                "compounds": [
+                  "PbI2"
+                ],
+                "solutes": null,
+                "solvents": null,
+                "temperature": null,
+                "volume": null
               },
-              "method": null,
+              "step_name": null,
+              "temperature": null
+            },
+            {
+              "additional_parameters": null,
+              "antisolvent": null,
+              "atmosphere": "Ambient air",
+              "duration": null,
+              "method": "Immersion",
               "solution": {
                 "compounds": null,
                 "solutes": [
                   {
                     "concentration": {
-                      "unit": null,
-                      "value": null
+                      "unit": "mg/mL",
+                      "value": 1.0
                     },
-                    "name": null
+                    "name": "Me3SI"
                   }
                 ],
                 "solvents": [
                   {
-                    "name": null,
+                    "name": "DI water",
                     "volume_fraction": null
                   }
                 ],
-                "temperature": {
-                  "unit": null,
-                  "value": null
-                },
-                "volume": {
-                  "unit": null,
-                  "value": null
-                }
+                "temperature": null,
+                "volume": null
               },
               "step_name": null,
               "temperature": {
-                "unit": null,
-                "value": null
+                "unit": "\u00b0C",
+                "value": 60.0
               }
             }
           ],
@@ -1005,7 +1032,7 @@
             "abbreviation": "Me3S",
             "coefficient": "1",
             "common_name": "Trimethylsulfonium",
-            "molecular_formula": "(CH3)3S"
+            "molecular_formula": "(CH3)3S+"
           }
         ],
         "b_ions": [
@@ -1020,7 +1047,7 @@
           "unit": null,
           "value": null
         },
-        "dimensionality": null,
+        "dimensionality": "1D",
         "formula": "Me3SPbI3",
         "x_ions": [
           {

@@ -131,7 +131,7 @@
           "unit": null,
           "value": null
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "CH3NH3PbI3",
         "x_ions": null
       },
@@ -296,7 +296,7 @@
           "unit": null,
           "value": null
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "CH3NH3PbI3",
         "x_ions": null
       },

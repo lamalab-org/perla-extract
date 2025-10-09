@@ -75,7 +75,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800.0
@@ -127,7 +127,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 5400
@@ -204,7 +204,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -335,10 +335,10 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "MAPbI3-xClx",
         "x_ions": [
           {
@@ -470,7 +470,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800.0
@@ -522,7 +522,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 5400
@@ -574,7 +574,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -705,10 +705,10 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "MAPbI3-xClx",
         "x_ions": [
           {
@@ -840,7 +840,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800.0
@@ -892,7 +892,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 5400
@@ -944,7 +944,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -1075,10 +1075,10 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "MAPbI3-xClx",
         "x_ions": [
           {
@@ -1210,7 +1210,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 1800.0
@@ -1262,7 +1262,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": "s",
                 "value": 5400
@@ -1314,7 +1314,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Air",
+              "atmosphere": "Ambient Air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -1445,10 +1445,10 @@
           }
         ],
         "bandgap": {
-          "unit": null,
-          "value": null
+          "unit": "eV",
+          "value": 1.55
         },
-        "dimensionality": null,
+        "dimensionality": "3D",
         "formula": "MAPbI3-xClx",
         "x_ions": [
           {

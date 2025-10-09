@@ -20,7 +20,7 @@ class Ion(BaseModel):
 
     coefficient: Optional[str] = Field(
         None,
-        description="The stoichiometric coefficient of the ion such as “0.75”, or “1-x”.",
+        description="The stoichiometric coefficient of the ion such as “0.75”, or “1-x”. You can break it down from the perovskite formula. For example: FA0.85MA0.15PbI2.55Br0.45 will fill 0.85 coefficient for FA, 0.15 for MA, 1 for Pb, and 2 for I.",
     )
 
 
@@ -34,10 +34,41 @@ class Bandgap(UnitValue):
     unit: Optional[Literal["eV"]] = Field(None)
 
 
+class Concentration(UnitValue):
+    value: Optional[float] = Field(None)
+    unit: Optional[
+        Literal["mol/L", "mmol/L", "g/L", "mg/L", "mg/mL", "wt%", "vol%", "M"]
+    ] = Field(None)
+
+
+class Impurity(BaseModel):
+    abbreviation: Optional[str] = Field(
+        default=None, description="The abbreviation used for the additive or impurity."
+    )
+    concentration: Optional[Concentration] = Field(
+        default=None,
+        description="The concentration of the additive or impurity. (unit: cm^-3)",
+    )
+
+
 class PerovskiteComposition(BaseModel):
     formula: Optional[str] = Field(
         None,
         description="The perovskite composition according to IUPAC recommendations, where standard abbreviations are used for all ions.",
+    )
+    sample_type: Optional[
+        Literal[
+            "Polycrystalline film",
+            "Single crystal",
+            "Quantum dots",
+            "Nano rods",
+            "Colloidal solution",
+            "Amorphous",
+            "Other",
+        ]
+    ] = Field(
+        None,
+        description="Type of the perovskite (e.g., Polycrystalline film, Single crystal, etc.).",
     )
     dimensionality: Optional[Literal["0D", "1D", "2D", "3D", "2D/3D"]] = Field(None)
     a_ions: Optional[List[Ion]] = Field(
@@ -52,12 +83,20 @@ class PerovskiteComposition(BaseModel):
         None,
         description="X-site ions. Only include information that is described in the paper.",
     )
+    # bandgap: Optional[Bandgap] = Field(
+    #     None,
+    #     description="Bandgap of the perovskite material in eV. Include this field only if the bandgap has been directly measured in the experiment. Do not include estimated or literature values.",
+    # )
     bandgap: Optional[Bandgap] = Field(
         None,
-        description="Bandgap of the perovskite material in eV. Include this field only if the bandgap has been directly measured in the experiment. Do not include estimated or literature values.",
+        description="Bandgap of the perovskite material being used in eV. You can also estimate the bandgap based on your knowledge if it's not mentioned in the paper.",
     )
-
-    # TODO: Add additive here. It is on Nomad
+    impurities: Optional[Impurity] = Field(
+        None, description="List any impurities added to the perovskite layer."
+    )
+    additives: Optional[Impurity] = Field(
+        None, description="List any additives added to the perovskite layer."
+    )
 
 
 class PCE(UnitValue):
@@ -171,13 +210,6 @@ class Pressure(UnitValue):
 class Humidity(UnitValue):
     value: Optional[confloat(ge=0, le=100)] = Field(None)
     unit: Optional[Literal["%"]] = Field(None)
-
-
-class Concentration(UnitValue):
-    value: Optional[float] = Field(None)
-    unit: Optional[
-        Literal["mol/L", "mmol/L", "g/L", "mg/L", "mg/mL", "wt%", "vol%", "M"]
-    ] = Field(None)
 
 
 class Solute(BaseModel):
