@@ -1,30 +1,49 @@
-name: Upload Python Package to PyPI when a Release is Created
-
 on:
   release:
-    types: [created]
+    types:
+      - published
+
+name: release
 
 jobs:
-  pypi-publish:
-    name: Publish release to PyPI
+  pypi:
+    name: upload release to PyPI
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/pervoscribe
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.x"
-      - name: Install dependencies
+
+      - name: deps
+        run: python -m pip install -U build
+
+      - name: build
+        run: python -m build
+
+      - name: mint API token
+        id: mint-token
         run: |
-          python -m pip install --upgrade pip
-          pip install setuptools wheel
-      - name: Build package
-        run: |
-          python setup.py sdist bdist_wheel 
-      - name: Publish package distributions to PyPI
+          # retrieve the ambient OIDC token
+          resp=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=pypi")
+          oidc_token=$(jq -r '.value' <<< "${resp}")
+
+          # exchange the OIDC token for an API token
+          resp=$(curl -X POST https://pypi.org/_/oidc/mint-token -d "{\"token\": \"${oidc_token}\"}")
+          api_token=$(jq -r '.token' <<< "${resp}")
+
+          # mask the newly minted API token, so that we don't accidentally leak it
+          echo "::add-mask::${api_token}"
+
+          # see the next step in the workflow for an example of using this step output
+          echo "api-token=${api_token}" >> "${GITHUB_OUTPUT}"
+
+      - name: publish
+        # gh-action-pypi-publish uses TWINE_PASSWORD automatically
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ steps.mint-token.outputs.api-token }}
