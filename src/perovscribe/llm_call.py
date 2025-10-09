@@ -72,6 +72,8 @@ def create_text_completion(
         max_tokens = 16384
     if model_name == "gpt-5":
         temperature = 1
+    if model_name.startswith("claude-3-5-sonnet"):
+        max_tokens = 8192
     while True:
         try:
             resp, compll = client.chat.completions.create_with_completion(
