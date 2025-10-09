@@ -193,6 +193,6 @@ def convert_to_extraction_to_nomad_entries(
         )
         transformed_data = remove_none_values(transformed_data)
         nomad_data_section = nomad_schema.m_from_dict(transformed_data)
-        entry_dict = {"data": nomad_data_section.m_to_dict()}
+        entry_dict = {"data": nomad_data_section.m_to_dict(with_root_def=True)}
         nomad_entries.append(entry_dict)
     return nomad_entries
