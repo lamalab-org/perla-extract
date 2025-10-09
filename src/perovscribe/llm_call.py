@@ -67,13 +67,18 @@ def create_text_completion(
     client = instructor.from_litellm(completion)
 
     max_tokens = 64000
+    temperature = 0
+    if model_name == "gpt-4o":
+        max_tokens = 16384
+    if model_name == "gpt-5":
+        temperature = 1
     while True:
         try:
             resp, compll = client.chat.completions.create_with_completion(
                 model=model_name,
                 messages=messages,
                 response_model=PerovskiteSolarCells,
-                temperature=0,
+                temperature=temperature,
                 max_tokens=max_tokens,
             )
         except instructor.exceptions.InstructorRetryException as e:
