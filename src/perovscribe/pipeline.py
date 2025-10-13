@@ -7,6 +7,7 @@ import math
 import csv
 import requests
 from collections import defaultdict
+import re
 
 import numpy as np
 from pydantic import ValidationError
@@ -155,6 +156,23 @@ class ExtractionPipeline:
         return False
 
     def is_doi_good_to_go(self, doi) -> bool:
+        def remove_conjunctions(text):
+            # Convert to lowercase
+            text = text.lower()
+
+            # Replace HTML entity &amp; with &
+            text = text.replace("&amp;", "&")
+
+            # Remove 'and' as a word and '&' symbols with optional spaces around them
+            # This also handles cases like "Tom&Jerry" or "Tom & Jerry"
+            text = re.sub(r"\b(and)\b", "", text)
+            text = re.sub(r"\s*&\s*", " ", text)
+
+            # Clean up any extra whitespace
+            text = re.sub(r"\s+", " ", text).strip()
+
+            return text
+
         journal, publisher = get_journal_and_publisher_from_doi(doi)
 
         if journal is None:
@@ -180,7 +198,9 @@ class ExtractionPipeline:
             )
         ]
         if journal not in allowed_journals:
-            return False
+            return remove_conjunctions(journal) in [
+                remove_conjunctions(j) for j in allowed_journals
+            ]
 
         return True
 
