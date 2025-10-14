@@ -8,14 +8,14 @@ from perovscribe.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
 from litellm.caching.caching import Cache
 import litellm
 
-litellm.cache = Cache(
-    type="redis",
-    host="127.0.0.1",
-    port=6379,
-    ttl=1000000,
-    password="foobared",
-    namespace="litellm",
-)
+# litellm.cache = Cache(
+#     type="redis",
+#     host="127.0.0.1",
+#     port=6379,
+#     ttl=1000000,
+#     password="foobared",
+#     namespace="litellm",
+# )
 
 
 os.environ["REDIS_HOST"] = "127.0.0.1"
