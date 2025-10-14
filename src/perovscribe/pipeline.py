@@ -300,7 +300,7 @@ def extract(
     preprocessor: str = "pymupdf",
     postprocessor: str = "NONE",
     cache_dir: str = "",
-    use_cache: bool = True,
+    use_cache: bool = False,
     pdf_print: bool = False,
     output: str = "./extractions",
 ):
