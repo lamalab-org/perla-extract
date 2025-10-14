@@ -150,9 +150,9 @@ def filter_unwanted(data: dict) -> dict:
     new_data = {"cells": []}
     for i, cell in enumerate(data["cells"] or []):
         if (
-            ((cell.get("pce") or {"value": 28}).get("value") or 28) < 27
+            ((cell.get("pce") or {"value": 28}).get("value") or 28) < 27.5
             and ((cell.get("voc") or {"value": 1}).get("value") or 1)
-            < 4  # Voltage<4 cuz above 4 are modules
+            < 1.56  # Voltage > 1.56 are tandems. Voltage<4 cuz above 4 are modules
         ):
             if (
                 (cell.get("pce", {"value": 0}) or {"value": 0}).get("value", 0) == 0
