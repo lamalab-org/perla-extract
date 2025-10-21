@@ -17,9 +17,6 @@ def main():
             file=f,
         )
     download_pdfs()
-    extract_from_pdfs()
-    export_to_nomad()
-    upload_files()
 
 
 

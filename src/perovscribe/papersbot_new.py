@@ -14,17 +14,118 @@ import random
 import re
 import time
 import yaml
+import bs4
 import feedparser
 import pickle
 import csv
-from importlib.resources import files
+from utils import get_doi
 
-from perovscribe.papersbot.utils import get_doi
-from perovscribe.papersbot.match_pdf import check_pdfs, check_matches, download_pdfs
-from perovscribe.papersbot.proc_abstracts import get_abstracts
-from perovscribe.configuration import papersbot_runs_path, RELAXED_REGEX, STRICT_REGEX
+base_path = "runs"
+os.makedirs(base_path, exist_ok=True)
 
-REGEXES = [STRICT_REGEX, RELAXED_REGEX]
+RELAXED_REGEX_1 = re.compile(
+    r"""
+    (?=.*\b(?:perovskite[s]?|PSC[s]?)\b)  # Must contain perovskite or PSC
+    (?=.*\b(?:
+        # Solar/photovoltaic terms
+        solar[\s-]?cell[s]?|photovoltaic[s]?|PV|
+        # Performance metrics
+        efficiency|PCE|power[\s-]conversion[\s-]efficiency|
+        V(?:OC|oc)|open[\s-]circuit[\s-]voltage|
+        J(?:SC|sc)|short[\s-]circuit[\s-]current|
+        fill[\s-]factor|FF|
+        # Device terms
+        device[s]?|cell[s]?|
+        # Performance indicators
+        [\d]+(?:\.\d+)?%|[\d]+(?:\.\d+)?[\s]*mA[\/\s]*cm[2²]|[\d]+(?:\.\d+)?[\s]*V|
+        mW[\s]*cm|W[\s]*g|
+        # Stability terms
+        stability|lifetime|degradation|aging|operational|
+        # Characterization terms
+        hysteresis|quantum[\s-]efficiency|EQE|IPCE|
+        # Processing terms
+        fabrication|processing|preparation|synthesis|
+        # Material terms that indicate solar cell context
+        hole[\s-]transport|electron[\s-]transport|HTL|ETL|
+        absorber|active[\s-]layer|photoactive|
+        # Electrical terms
+        conductivity|carrier|charge|recombination|extraction|
+        # Environmental terms in solar context
+        moisture|thermal|illumination|light|AM1\.5|sun|
+        # Application terms
+        commercialization|applications?|energy[\s-]conversion
+    )\b)
+    .*?
+    """,
+    re.IGNORECASE | re.VERBOSE | re.DOTALL,
+)
+
+RELAXED_REGEX_2 = re.compile(
+    r"""
+    \b(?:perovskite[s]?|PSC[s]?)\b
+    .*?
+    (?:
+        # Solar/PV terms
+        \b(?:solar|photovoltaic|PV|energy[\s-]conversion)\b|
+        # Performance metrics with numbers
+        (?:\d+(?:\.\d+)?[\s]*%)|
+        (?:\d+(?:\.\d+)?[\s]*(?:mA[\/\s]*cm|V|mW|W[\s]*g))|
+        # Key device terms
+        \b(?:efficiency|PCE|device[s]?|cell[s]?|stability|performance)\b|
+        # Transport/electrical terms
+        \b(?:transport|conductivity|carrier|charge|recombination|extraction|HTL|ETL)\b|
+        # Environmental/operational terms
+        \b(?:illumination|light|thermal|moisture|operational|aging|degradation)\b
+    )
+    """,
+    re.IGNORECASE | re.VERBOSE | re.DOTALL,
+)
+
+RELAXED_REGEX_3 = re.compile(
+    r"""
+    (?=.*\b(?:perovskite[s]?|halide|PSC[s]?|CsPb|MAPb|FAPb|CH3NH3|formamidinium)\b)
+    (?=.*\b(?:
+        solar|photovoltaic[s]?|PV|cell[s]?|device[s]?|
+        efficiency|PCE|performance|conversion|
+        [\d]+\.?\d*\s*%|
+        energy|power|voltage|current|
+        stability|degradation|
+        fabrication|synthesis|processing
+    )\b)
+    """,
+    re.IGNORECASE | re.VERBOSE | re.DOTALL,
+)
+
+# This is the regular expression that selects the papers of interest
+STRICT_REGEX = re.compile(
+    r"""
+  (
+    # Perovskite cell variations
+    \b(perovskite(?:[\s-](?:solar|photovoltaic|PV))?(?:\s*cell[s]?|\s*device[s]?)|PSC[s]?)\b
+    # Single junction specific terms
+    |single[\s-]?(?:junction|layer|absorber|heterojunction|stack)
+    # Architecture variations for single junction
+    |(?:planar|mesoscopic|inverted|flexible|rigid|printable)[\s-]?perovskite
+    # Exclude explicit mentions of tandem/multi-junction
+    (?<!tandem[\s-])(?<!multi[\s-])(?<!double[\s-])(?<!triple[\s-])
+  )
+  .*?
+  (
+    # Performance metrics
+    \b(?:efficiency|PCE|power[\s-]conversion[\s-]efficiency
+    |V(?:OC|oc)|open[\s-]circuit[\s-]voltage
+    |J(?:SC|sc)|short[\s-]circuit[\s-]current(?:[\s-]density)?
+    |fill[\s-]factor|FF
+    |stability|lifetime|degradation|performance
+    |I[- ]?V(?:[\s-]curve)?|J[- ]?V(?:[\s-]curve)?|current[\s-](?:voltage|density)
+    |hysteresis|quantum[\s-]efficiency|(?:internal|external)[\s-]quantum[\s-]efficiency|(?:IPCE|EQE)
+    |[\d]+(?:\.\d+)?%|[\d]+(?:\.\d+)?[\s]?mA\/cm2|[\d]+(?:\.\d+)?[\s]?V)\b
+  )
+""",
+    re.IGNORECASE | re.VERBOSE | re.DOTALL,
+)
+
+REGEXES = [STRICT_REGEX, RELAXED_REGEX_1, RELAXED_REGEX_2, RELAXED_REGEX_3]
 
 
 def entryMatches(entry, regex):
@@ -54,9 +155,14 @@ def entryMatches(entry, regex):
         return False, 1
 
 
+# Convert string from HTML to plain text
+def htmlToText(s):
+    return bs4.BeautifulSoup(s, "html.parser").get_text()
+
+
 # Read our list of feeds from file
 def readFeedsList():
-    with open(files("perovscribe").joinpath("papersbot/feeds.txt"), "r") as f:
+    with open("feeds.txt", "r") as f:
         feeds = [s.partition("#")[0].strip() for s in f]
         return [s for s in feeds if s]
 
@@ -64,7 +170,7 @@ def readFeedsList():
 # Read list of feed items already posted
 def readPosted():
     try:
-        with open(f"{papersbot_runs_path}/posted.dat", "r") as f:
+        with open(f"{base_path}/posted.dat", "r") as f:
             return f.read().splitlines()
     except OSError:
         return []
@@ -110,29 +216,29 @@ class PapersBot:
 
     # Add to tweets posted
     def addToPosted(self, url):
-        with open(f"{papersbot_runs_path}/posted.dat", "a+") as f:
+        with open(f"{base_path}/posted.dat", "a+") as f:
             print(url, file=f)
         self.posted.append(url)
 
     def saveEntries(self, entry):
-        with open(f"{papersbot_runs_path}/entries.pkl", "ab") as f:
+        with open(f"{base_path}/entries.pkl", "ab") as f:
             pickle.dump(entry, f)
 
     def saveEntryStats(self, entry_stats):
-        with open(f"{papersbot_runs_path}/entry_stats.csv", "a", newline="") as f:
+        with open(f"{base_path}/entry_stats.csv", "a", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=entry_stats.keys())
             writer.writerow(entry_stats)
 
     def printStats(self, update_current=True):
         if update_current:
-            with open(f"{papersbot_runs_path}/current_stats.txt", "w") as f:
+            with open(f"{base_path}/current_stats.txt", "w") as f:
                 f.write(f"Number of relevant papers: {self.n_seen}\n")
                 f.write(f"Number of papers matched: {self.total_matched}\n")
                 f.write(f"Number of papers seen before: {self.seen_before}\n")
                 f.write(f"Total number of papers processed: {self.total}\n")
         else:
             end_time = time.strftime("%Y-%m-%d %H:%M:%S %Z")
-            with open(f"{papersbot_runs_path}/stats.txt", "a") as f:
+            with open(f"{base_path}/stats.txt", "a") as f:
                 f.write(f"Run: {end_time}\n")
                 f.write(f"Number of relevant papers: {self.n_seen}\n")
                 f.write(f"Number of papers matched: {self.total_matched}\n")
@@ -168,7 +274,7 @@ class PapersBot:
                 for r in range(len(REGEXES)):
                     match, status = entryMatches(entry, REGEXES[r])
                     any_match |= match
-                    entry_stats["relaxed_regex" if r != 0 else "strict_regex"] = (
+                    entry_stats[f"relaxed_regex_{r}" if r != 0 else "strict_regex"] = (
                         status
                     )
 
@@ -182,22 +288,9 @@ class PapersBot:
 
 
 def run_papersbot():
-    if not os.path.isfile(f"{papersbot_runs_path}/summaries.pkl"):
-        with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
-            pickle.dump({}, f)
     bot = PapersBot(False)
     bot.run()
     bot.printStats(update_current=False)
-
-    get_abstracts()
-    check_matches()
-    check_pdfs()
-    with open(f"{papersbot_runs_path}/stats.txt", "a+") as f:
-        print(
-            "************************************************************\n************************************************************\n",
-            file=f,
-        )
-    download_pdfs()
 
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@ def extract_from_pdfs():
         # Define a filepath for the downloaded PDF
         if 'extraction_processed' in item and item['extraction_processed']:
             continue
-        filepath = f"downloads/{doi.replace('/', '-')}.pdf"
+        filepath = f"downloaded_papers/{doi.replace('/', '-')}.pdf"
         if os.path.isfile(filepath):
             logger.info(f"Running extraction for {doi}: {filepath}")
             try:
@@ -55,7 +55,7 @@ def export_to_nomad():
         if 'nomad_processed' in item and item['nomad_processed']:
             continue
         # Define a filepath for the downloaded PDF
-        filepath = f"downloads/{doi.replace('/', '-')}.json"
+        filepath = f"downloaded_papers/{doi.replace('/', '-')}.json"
         if os.path.isfile(filepath):
             logger.info(f"Exporting to nomad {doi} {filepath}")
             try:

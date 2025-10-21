@@ -8,6 +8,7 @@ import csv
 import requests
 from collections import defaultdict
 import re
+from importlib.resources import files
 
 import numpy as np
 from pydantic import ValidationError
@@ -17,9 +18,8 @@ from perovscribe.preprocessing.preprocessor import Preprocessor
 from perovscribe.postprocessing import postprocess
 from perovscribe.evaluations import Evaluations, score_multiple_extractions
 from perovscribe import llm_call
-from perovscribe.export import to_json, convert_to_extraction_to_nomad_entries
+from perovscribe.export import to_json, convert_to_extraction_to_nomad_entries, push_to_nomad, get_authentication_token
 from instructor.exceptions import InstructorRetryException, IncompleteOutputException
-from importlib.resources import files
 
 
 def calc_precision(per_key_metrics, key):
@@ -147,6 +147,9 @@ class ExtractionPipeline:
             parsed = PerovskiteSolarCells(**postprocess(results.model_dump()))
             to_json(parsed, output_path)
             print(f"Extracted: {filepath.name}")
+            if self.nomad:
+                converted_nomad = convert_to_extraction_to_nomad_entries(parsed)
+                push_to_nomad(doi, converted_nomad, get_authentication_token(), self.upload_id)
             return True
         except (InstructorRetryException, ValidationError) as e:
             self._handle_failure(e, results, output_path)
@@ -329,9 +332,9 @@ def papersbot():
             "You need to provide your email for unpaywall API. Set this env variable: export UNPAYWALL_EMAIL=<your-email>"
         )
         return
-    from perovscribe.papersbot import main as papersbot
+    from perovscribe.papersbot import papersbot
 
-    papersbot()
+    papersbot.run_papersbot()
 
 
 class CLI:
@@ -342,8 +345,11 @@ class CLI:
         self.optimizer = optimizer
         self.papersbot = papersbot
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, nomad=False, nomad_upload_id = None, *args, **kwargs):
         """Default behavior when no command is specified."""
+        self.nomad = nomad
+        self.nomad_upload_id = nomad_upload_id
+
         Path("./downloaded_papers/").mkdir(parents=True, exist_ok=True)
         # Download PDFs
         papersbot()
@@ -353,6 +359,8 @@ class CLI:
         files = glob.glob("./download_papers/*.pdf")
         for f in files:
             os.remove(f)
+        
+
 
 
 def main_cli():
