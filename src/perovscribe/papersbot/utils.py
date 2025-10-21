@@ -1,0 +1,289 @@
+import requests
+import os
+from wiley_tdm import TDMClient
+
+import requests
+import json
+import io
+from typing import Dict, Any
+from loguru import logger
+import os
+
+oa_email = os.environ["OA_EMAIL"]
+USERNAME = os.environ["NOMAD_USERNAME"]
+PASSWORD = os.environ["NOMAD_PASSWORD"]
+URL= os.environ['NOMAD_URL']
+tdm = TDMClient()
+
+def get_doi_summary_crossref(doi: str) -> dict:
+    """
+    Fetches paper metadata from CrossRef using its DOI.
+    Args:
+        doi: The Digital Object Identifier (DOI) of the paper.
+    Returns:
+        A dictionary with metadata or an error message string.
+    """
+    doi = doi.lower().strip()
+    url = f"https://api.crossref.org/works/{doi}"
+    headers = {"Accept": "application/json"}
+
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        try:
+            data = response.json()
+            work = data["message"]
+            return {
+                "title": work.get("title", [""])[0],
+                "abstract": work.get("abstract", ""),
+                "authors": [
+                    f"{author.get('given', '')} {author.get('family', '')}"
+                    for author in work.get("author", [])
+                ],
+                "published": work.get("published-print", {}).get("date-parts", [[]])[0],
+                "journal": work.get("container-title", [""])[0],
+                "doi": work.get("DOI", ""),
+                "source": "crossref",
+            }
+        except Exception as e:
+            return {"error": f"Error: {e}"}
+    return {"error": f"Error: Status code {response.status_code}"}
+
+
+def get_doi_summary_openalex(doi: str) -> dict:
+    doi = doi.lower().strip()
+    api_url = f"https://api.openalex.org/works/https://doi.org/{doi}"
+    response = requests.get(api_url)
+
+    if response.status_code == 200:
+        try:
+            data = response.json()
+            title = data.get("title")
+            # Abstract (reconstructed from inverted index)
+            abstract = ""
+            if data.get("abstract_inverted_index"):
+                inverted_index = data["abstract_inverted_index"]
+                word_list = [""] * (max(inverted_index.values())[0] + 1)
+                for word, positions in inverted_index.items():
+                    for pos in positions:
+                        word_list[pos] = word
+                abstract = " ".join(word_list)
+
+            # Authors
+            authors = [
+                author["author"]["display_name"]
+                for author in data.get("authorships", [])
+            ]
+
+            # Journal (called 'source' in OpenAlex)
+            journal = data.get("host_venue", {}).get("display_name")
+
+            # Publication Date
+            published_date = data.get("publication_date")
+
+            return {
+                "title": title,
+                "abstract": abstract,
+                "authors": authors,
+                "journal": journal,
+                "published_date": published_date,
+                "doi": doi,
+                "source": "openalex",
+            }
+        except Exception as e:
+            return {"error": f"Error: {e}"}
+    return {"error": f"Error: Status code {response.status_code}"}
+
+
+def get_doi_summary_semantic_scholar(doi: str, api_key: str = "") -> dict:
+    """
+    Fetches paper metadata from Semantic Scholar using its DOI.
+
+    Args:
+        doi: The Digital Object Identifier (DOI) of the paper.
+        api_key: Your Semantic Scholar API key (optional but recommended for higher rate limits).
+
+    Returns:
+        A dictionary with metadata or None if the paper isn't found.
+    """
+    # Sanitize DOI input
+    doi = doi.lower().strip()
+
+    headers = {}
+    if api_key:
+        headers["x-api-key"] = api_key
+
+    # Specify the fields we want to retrieve
+    fields = "title,abstract,authors.name,journal,publicationDate"
+    api_url = (
+        f"https://api.semanticscholar.org/graph/v1/paper/DOI:{doi}?fields={fields}"
+    )
+    response = requests.get(api_url, headers=headers)
+
+    if response.status_code == 200:
+        try:
+            data = response.json()
+            journal_info = data.get("journal")
+            journal = journal_info.get("name") if journal_info else None
+            abstract = data.get("abstract", "")
+            if abstract is None:
+                abstract = ""
+            return {
+                "title": data.get("title", ""),
+                "abstract": abstract,
+                "authors": [author["name"] for author in data.get("authors", [])],
+                "journal": journal,
+                "published_date": data.get("publicationDate", ""),
+                "doi": doi,
+                "source": "semantic_scholar",
+            }
+        except Exception as e:
+            return {"error": f"Error: {e}"}
+    return {"error": f"Error: Status code {response.status_code}"}
+
+
+def get_doi(entry):
+    try:
+        if "prism_doi" in entry:
+            doi = entry["prism_doi"]  # + '  direct'
+        elif "dc_identifier" in entry:
+            doi = entry["dc_identifier"]
+        elif "id" in entry and "arXiv" in entry["id"]:
+            doi = entry["id"]
+            doi = "10.48550/arXiv." + doi.split(":")[-1].split("v")[0]
+        elif "summary" in entry and "DOI" in entry["summary"]:
+            if "DOI</b>: " in entry["summary"]:
+                r = "DOI</b>: "
+                sep = ","
+            elif "DOI: " in entry["summary"]:
+                r = "DOI: "
+                sep = "<"
+            n = len(r)
+            doi = entry["summary"][
+                entry["summary"].find(r) + n : entry["summary"].find(
+                    sep, entry["summary"].find(r) + n
+                )
+            ]  # + '  from summary' + entry['summary']
+        elif "link" in entry and "doi/" in entry["link"]:
+            doi = entry["link"].split("doi/")[-1]  # + '  from link'
+        else:
+            doi = ""
+        return doi
+    except Exception as e:
+        return f"error getting doi: {e}"
+
+
+def get_pdf_url(doi: str):
+    """
+    Fetches the PDF URL from Unpaywall using the provided DOI.
+
+    Args:
+        doi (str): The DOI of the paper.
+
+    Returns:
+        str: The PDF URL if available, otherwise None.
+    """
+    try:
+        api_url = f"https://api.unpaywall.org/v2/{doi}?email={oa_email}"
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
+
+        # Check for Open Access and PDF URL
+        if (
+            data.get("is_oa")
+            and data.get("best_oa_location")
+            and data["best_oa_location"].get("url_for_pdf", None)
+        ):
+            return data["best_oa_location"].get("url_for_pdf")
+        else:
+            logger.error(f"No PDF available for this DOI: {doi}.")
+            return None
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching data from Unpaywall: {e}")
+        return f"Error fetching data from Unpaywall: {e}"
+
+
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Connection': 'keep-alive',
+}
+
+def download_pdf(url: str, filepath: str):
+    """
+    Downloads a PDF from a given URL and saves it to a folder.
+
+    Args:
+        url (str): The URL of the PDF to download.
+        download_folder (str): The folder to save the PDF in.
+    """
+
+    try:
+        # --- Make the request with headers, stream=True, and a timeout ---
+        with requests.get(url, headers=HEADERS, stream=True, timeout=30, allow_redirects=True) as response:
+            # Check if the request was successful
+            response.raise_for_status()
+
+            # --- Save the file in chunks ---
+            with open(filepath, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+
+            logger.info(f"Successfully downloaded and saved to {filepath}\n")
+
+    except requests.exceptions.HTTPError as e:
+        # Specifically handles HTTP errors like 404, 403, 500 etc.
+        logger.error(f"Error downloading PDF: {e} for url: {url}\n")
+    except requests.exceptions.RequestException as e:
+        # Handles other network-related errors (e.g., connection aborted, timeout)
+        logger.error(f"Error downloading PDF: {e} for url: {url}\n")
+    except Exception as e:
+        # Handles any other unexpected errors
+        logger.error(f"An unexpected error occurred: {e} for url: {url}\n")
+
+def download_pdf_wiley(doi):
+    tdm.download_pdf(doi)
+
+def get_authentication_token(nomad_url: str=URL, username: str=USERNAME, password: str=PASSWORD) -> str|None: 
+    '''Get the token for accessing your NOMAD unpublished uploads remotely'''
+    body={"username": username, "password": password}
+    try:
+        response = requests.post(
+            nomad_url + 'auth/token', data=body, timeout=10)
+        token = response.json().get('access_token')
+        if token:
+            return token
+
+        logger.error('response is missing token: ')
+        logger.error(response.json())
+        return None
+    except Exception:
+        logger.error('something went wrong trying to get authentication token')
+        return None
+
+
+def push_to_nomad(doi: str, response: Dict[str, Any], token: str, upload_id:str|None = None):
+    doi=doi.replace('/', '--')
+    if len(response)==0:
+        logger.warning(f'No extracted cells for Doi:{doi}, skipping upload to NOMAD')
+        return
+    for index, cell in enumerate(response):
+        transformed_json = json.dumps(cell, indent=4)
+        file = io.StringIO(transformed_json)
+        file_name = doi+"-cell-"+str(index)+".archive.json"
+        if upload_id is None:
+            res = requests.post(f"{URL}uploads/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},params={'wait_for_processing': 'true'},
+                 files={'file': file}, timeout=30)
+        else:
+            res = requests.put(f"{URL}uploads/{upload_id}/raw/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},params={'wait_for_processing': 'true'},
+                 files={'file': (file_name, file)}, timeout=30)
+        upload_id = res.json().get('upload_id')
+        if upload_id:
+            logger.info(f"Doi:{doi} Cell:{index} Upload Id:{upload_id} Status Code:{res.status_code}")
+        else:
+            logger.error(f'Response is missing upload_id for Doi:{doi} Cell:{index}')
+            logger.error(f"Response:{res.json()}")
+            raise Exception('Upload failed, missing upload_id in response')
