@@ -145,9 +145,11 @@ class ExtractionPipeline:
         pdf_text = self.preprocessor.pdf_to_text(filepath)
         results = ""
         try:
-            results = llm_call.create_text_completion(self.model_name, pdf_text)
+            results, completion_usage = llm_call.create_text_completion(self.model_name, pdf_text)
             parsed = PerovskiteSolarCells(**postprocess(results.model_dump()))
             to_json(parsed, output_path)
+            self.total_prompt_tokens += completion_usage.usage.prompt_tokens
+            self.total_completion_tokens += completion_usage.usage.completion_tokens
             print(f"Extracted: {filepath.name}")
             return True
         except (InstructorRetryException, ValidationError) as e:
@@ -247,6 +249,9 @@ class ExtractionPipeline:
         print("Average Recall:", np.nanmean(recalls))
         print("Average Precision:", np.nanmean([p for p in precs if not math.isnan(p)]))
         print("LLM Judge Calls:", llm_calls)
+        avg_recalls = np.nanmean(recalls)
+        avg_precisions = np.nanmean([p for p in precs if not math.isnan(p)])
+        return key_metrics, avg_recalls, avg_precisions
 
     def _extract_batch(self, input_dir: Path, output_dir: Path):
         (output_dir / self.model_name).mkdir(parents=True, exist_ok=True)
@@ -260,6 +265,8 @@ class ExtractionPipeline:
                 if self._extract_pdf(pdf_file, output_path):
                     count += 1
                     print(count)
+        print("Prompt Tokens:", self.total_prompt_tokens)
+        print("Completion Tokens:", self.total_completion_tokens)
 
     def _handle_failure(self, error, results, output_path):
         print(f"Extraction failed: {error}")
