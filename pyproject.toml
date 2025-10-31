@@ -22,7 +22,22 @@ classifiers = [
 ]
 
 
-dependencies = ["pydantic", "litellm", "diskcache", "redis", "pymupdf", "deepdiff>=8.1.0", "munkres", "pint", "numpy", "levenshtein", "instructor", "fire", "flatdict"]
+dependencies = [
+    "pydantic",
+    "litellm",
+    "diskcache",
+    "redis",
+    "pymupdf",
+    "deepdiff>=8.1.0",
+    "munkres",
+    "pint",
+    "numpy",
+    "levenshtein",
+    "instructor",
+    "fire",
+    "flatdict",
+    "mip>=1.15.0",
+]
 
 
 [project.optional-dependencies]

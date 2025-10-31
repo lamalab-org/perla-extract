@@ -72,6 +72,7 @@ class Evaluations:
         )
 
         # Initialize basic metrics
+        extraction = extraction if "cells" in extraction and extraction["cells"] is not None else {"cells":[]}
         self.devices_in_truth = len(truth["cells"])
         self.devices_found = len(extraction["cells"])
 

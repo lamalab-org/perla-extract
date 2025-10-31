@@ -28,7 +28,7 @@ def calc_precision(per_key_metrics, key):
     )
 
 
-def calculate_and_aggregate(metrics_dict, compute_recall=False):
+def calculate_and_aggregate(metrics_dict, compute_recall=True):
     result = {}
     for key, vals in metrics_dict.items():
         tp, fp, fn = vals.get("TP", 0.0), vals.get("FP", 0.0), vals.get("FN", 0.0)
@@ -121,6 +121,8 @@ class ExtractionPipeline:
         self.postprocessor = ...  # call postprocessing factory to obtain postprocessor
         self.cache_dir = cache_dir
         self.use_cache = use_cache
+        self.total_prompt_tokens = 0
+        self.total_completion_tokens = 0
 
     def extract_from_pdf_nomad(
         self, filepath, doi, api_key, nomad_schema, ureg

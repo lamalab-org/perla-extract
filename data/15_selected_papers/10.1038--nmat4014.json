@@ -1,0 +1,606 @@
+{
+  "cells": [
+    {
+      "perovskite_composition": {
+        "formula": "CH3NH3Pb(I1-xBrx)3",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "3D",
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH3NH3+",
+            "coefficient": "1"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+",
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": "Iodide",
+            "molecular_formula": "I-",
+            "coefficient": "1-x"
+          },
+          {
+            "abbreviation": "Br",
+            "common_name": "Bromide",
+            "molecular_formula": "Br-",
+            "coefficient": "x"
+          }
+        ],
+        "bandgap": null,
+        "impurities": null,
+        "additives": null
+      },
+      "device_architecture": "nip",
+      "pce": {
+        "value": 16.2,
+        "unit": "%"
+      },
+      "jsc": null,
+      "voc": null,
+      "ff": {
+                "value": null
+            },
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.094,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": null,
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": null
+      },
+      "encapsulated": false,
+      "additional_notes": "Certified power-conversion efficiency of 16.2% under standard reporting conditions",
+      "stability": null,
+      "layers": [
+        {
+          "name": "FTO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "TiO2",
+          "thickness": {
+            "value": 70.0,
+            "unit": "nm"
+          },
+          "functionality": "Electron-transport",
+          "deposition": [
+            {
+              "step_name": "Spray pyrolysis",
+              "method": "Spray coating",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 450.0,
+                "unit": "°C"
+              },
+              "duration": null,
+              "antisolvent": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "titanium diisopropoxide bis(acetylacetonate)",
+                    "concentration": {
+                      "value": 0.02,
+                      "unit": "mol/L"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": null,
+                "solvents": null
+              },
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "mp-TiO2",
+          "thickness": {
+            "value": 200.0,
+            "unit": "nm"
+          },
+          "functionality": "Electron-transport",
+          "deposition": [
+            {
+              "step_name": "Spin-coating",
+              "method": "Spin-coating",
+              "atmosphere": "Air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Calcining",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 500.0,
+                "unit": "°C"
+              },
+              "duration": {
+                "value": 3600.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "CH3NH3Pb(I1-xBrx)3",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Spin-coating",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": "toluene",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "MAI",
+                    "concentration": {
+                      "value": 0.8000000000000003,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "MABr",
+                    "concentration": {
+                      "value": 0.8000000000000003,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbI2",
+                    "concentration": {
+                      "value": 0.8000000000000003,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbBr2",
+                    "concentration": {
+                      "value": 0.8000000000000003,
+                      "unit": "mol/L"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": {
+                  "value": 60.0,
+                  "unit": "°C"
+                },
+                "solvents": [
+                  {
+                    "name": "GBL",
+                    "volume_fraction": 0.7
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.3
+                  }
+                ]
+              },
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Annealing",
+              "method": "Thermal-annealing",
+              "atmosphere": "Ambient air",
+              "temperature": {
+                "value": 100.0,
+                "unit": "°C"
+              },
+              "duration": {
+                "value": 600.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "PTAA",
+          "thickness": {
+            "value": 50.0,
+            "unit": "nm"
+          },
+          "functionality": "Hole-transport",
+          "deposition": [
+            {
+              "step_name": "Spin-coating",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "PTAA",
+                    "concentration": {
+                      "value": 10.0,
+                      "unit": "mg/mL"
+                    }
+                  },
+                  {
+                    "name": "lithium bistrifluoromethanesulphonimidate",
+                    "concentration": {
+                      "value": 170.0,
+                      "unit": "mg/mL"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": null,
+                "solvents": [
+                  {
+                    "name": "toluene",
+                    "volume_fraction": null
+                  }
+                ]
+              },
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": [
+            {
+              "step_name": "Thermal evaporation",
+              "method": "Evaporation",
+              "atmosphere": "Vacuum",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        }
+      ]
+    },
+    {
+      "perovskite_composition": {
+        "formula": "CH3NH3Pb(I1-xBrx)3",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "3D",
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH3NH3+",
+            "coefficient": "1"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+",
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": "Iodide",
+            "molecular_formula": "I-",
+            "coefficient": "1-x"
+          },
+          {
+            "abbreviation": "Br",
+            "common_name": "Bromide",
+            "molecular_formula": "Br-",
+            "coefficient": "x"
+          }
+        ],
+        "bandgap": null,
+        "impurities": null,
+        "additives": null
+      },
+      "device_architecture": "nip",
+      "pce": {
+        "value": 16.5,
+        "unit": "%"
+      },
+      "jsc": {
+        "value": 19.58,
+        "unit": "mA cm^-2"
+      },
+      "voc": {
+        "value": 1.105,
+        "unit": "V"
+      },
+      "ff": {
+        "value": 76.2
+      },
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.094,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": null,
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": null
+      },
+      "encapsulated": false,
+      "additional_notes": "Best performing solar cell with average values from forward and reverse scans",
+      "stability": null,
+      "layers": [
+        {
+          "name": "FTO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "TiO2",
+          "thickness": {
+            "value": 70.0,
+            "unit": "nm"
+          },
+          "functionality": "Electron-transport",
+          "deposition": [
+            {
+              "step_name": "Spray pyrolysis",
+              "method": "Spray coating",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 450.0,
+                "unit": "°C"
+              },
+              "duration": null,
+              "antisolvent": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "titanium diisopropoxide bis(acetylacetonate)",
+                    "concentration": {
+                      "value": 0.02,
+                      "unit": "mol/L"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": null,
+                "solvents": null
+              },
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "mp-TiO2",
+          "thickness": {
+            "value": 200.0,
+            "unit": "nm"
+          },
+          "functionality": "Electron-transport",
+          "deposition": [
+            {
+              "step_name": "Spin-coating",
+              "method": "Spin-coating",
+              "atmosphere": "Air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Calcining",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 500.0,
+                "unit": "°C"
+              },
+              "duration": {
+                "value": 3600.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "CH3NH3Pb(I1-xBrx)3",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Spin-coating",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": "toluene",
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "MAI",
+                    "concentration": {
+                      "value": 0.8000000000000003,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "MABr",
+                    "concentration": {
+                      "value": 0.8000000000000003,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbI2",
+                    "concentration": {
+                      "value": 0.8000000000000003,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbBr2",
+                    "concentration": {
+                      "value": 0.8000000000000003,
+                      "unit": "mol/L"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": {
+                  "value": 60.0,
+                  "unit": "°C"
+                },
+                "solvents": [
+                  {
+                    "name": "GBL",
+                    "volume_fraction": 0.7
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.3
+                  }
+                ]
+              },
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Annealing",
+              "method": "Thermal-annealing",
+              "atmosphere": "Ambient air",
+              "temperature": {
+                "value": 100.0,
+                "unit": "°C"
+              },
+              "duration": {
+                "value": 600.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "PTAA",
+          "thickness": {
+            "value": 50.0,
+            "unit": "nm"
+          },
+          "functionality": "Hole-transport",
+          "deposition": [
+            {
+              "step_name": "Spin-coating",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "PTAA",
+                    "concentration": {
+                      "value": 10.0,
+                      "unit": "mg/mL"
+                    }
+                  },
+                  {
+                    "name": "lithium bistrifluoromethanesulphonimidate",
+                    "concentration": {
+                      "value": 170.0,
+                      "unit": "mg/mL"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": null,
+                "solvents": [
+                  {
+                    "name": "toluene",
+                    "volume_fraction": null
+                  }
+                ]
+              },
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": [
+            {
+              "step_name": "Thermal evaporation",
+              "method": "Evaporation",
+              "atmosphere": "Vacuum",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        }
+      ]
+    }
+  ]
+}
