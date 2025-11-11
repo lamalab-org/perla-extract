@@ -105,15 +105,18 @@ def download_pdfs():
         doi = doi.lower().strip()
         pdf_url = item["pdf_url"]
         # Define a filepath for the downloaded PDF
-        filepath = f"downloaded_papers/{doi.replace('/', '-')}.pdf"
+        filepath = f"downloaded_papers/{doi.replace('/', '--')}.pdf"
         logger.info(f"Downloading PDF for {doi}: {filepath}")
         if os.path.isfile(filepath):
             logger.warning(f"File {filepath} already exists. Skipping download.")
             continue
-        if "wiley" in pdf_url:
-            download_pdf_wiley(doi)
         else:
             download_pdf(pdf_url, filepath)
+        # if "wiley" in pdf_url:
+        #     wiley_filepath = f"download/{doi.replace('/', '-')}.pdf"
+        #     download_pdf_wiley(doi)
+        #     if os.path.isfile(wiley_filepath):
+        #         os.rename(wiley_filepath, filepath)
         found_urls[i]['processed'] = True
         found_urls[i]['downloaded'] = os.path.isfile(filepath)
     with open(f"{papersbot_runs_path}/found_pdf_urls.json", "w") as f:

@@ -55,7 +55,7 @@ def export_to_nomad():
         if 'nomad_processed' in item and item['nomad_processed']:
             continue
         # Define a filepath for the downloaded PDF
-        filepath = f"downloaded_papers/{doi.replace('/', '-')}.json"
+        filepath = f"downloaded_papers/{doi.replace('/', '--')}.json"
         if os.path.isfile(filepath):
             logger.info(f"Exporting to nomad {doi} {filepath}")
             try:
