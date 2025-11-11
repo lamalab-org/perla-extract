@@ -307,7 +307,7 @@ class ExtractionPipeline:
 def extract(
     filepath: str,
     truth: str = None,
-    model_name: str = "claude-3-5-sonnet-20240620",
+    model_name: str = "claude-sonnet-4-20250514",
     preprocessor: str = "pymupdf",
     postprocessor: str = "NONE",
     cache_dir: str = "",
@@ -329,7 +329,7 @@ def extract(
     ).run(filepath, truth, output=output)
 
 
-def optimizer(model_name: str = "claude-3-5-sonnet-20240620", output: str = "./"):
+def optimizer(model_name: str = "claude-sonnet-4-20250514", output: str = "./"):
     from perovscribe.optimizer import run
 
     run(model_name, output)
