@@ -131,7 +131,7 @@ def llm_as_judge(ground_truth, value_truth, value_extraction):
     client = instructor.from_litellm(completion)
 
     resp = client.chat.completions.create(
-        model="claude-3-5-sonnet-20240620",
+        model="gpt-4o-2024-08-06",
         messages=messages,
         response_model=Judgement,
         temperature=0,
