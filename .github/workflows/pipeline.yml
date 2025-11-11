@@ -60,8 +60,9 @@ jobs:
           NOMAD_PASSWORD: ${{ secrets.NOMAD_PASSWORD }}
           TDM_API_TOKEN: ${{ secrets.TDM_API_TOKEN }}
           LLM_MODEL_NAME: ${{ vars.LLM_MODEL_NAME }}
-          ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_TOKEN }}
-
+          OPENAI_API_KEY: ${{ secrets.CLAUDE_API_TOKEN }}
+          # ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_TOKEN }}
+          
       - name: Upload PapersBot runs to Hugging Face
         run: python -u src/perovscribe/papersbot/hf_utils.py upload_files 
         env:
