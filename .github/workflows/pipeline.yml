@@ -49,7 +49,7 @@ jobs:
           REVISION: ${{ vars.HF_REVISION }}
       # Step 5: Run the main pipeline script
       - name: Run pipeline script
-        run: python -u ./src/perovscribe/pipeline.py --nomad --nomad_upload_id $UPLOAD_ID
+        run: python -u src/perovscribe/pipeline.py --nomad --nomad_upload_id $UPLOAD_ID
         # working-directory: ./src/perovscribe
         env:
           # This makes the secret available as an environment variable to your Python script.
