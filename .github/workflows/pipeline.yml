@@ -1,0 +1,77 @@
+# This workflow is named "Daily Python Pipeline"
+name: Daily Python Pipeline
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow every day at midnight UTC.
+  # schedule:
+  #   - cron: '0 0 * * *'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "run-pipeline"
+  run-pipeline:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Step 1: Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Sets up a Python 3.11 environment
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Step 3: Install uv, the fast Python installer
+      - name: Install uv
+        run: pip install uv
+
+      # Step 4: Install Python packages from requirements.txt using uv
+      # uv is used here for faster dependency installation.
+      - name: Install dependencies with uv
+        run: uv pip install --system -r pyproject.toml
+      
+      - name: Install wiley-tdm
+        run: uv pip install --system wiley-tdm structlog
+
+      - name: Download PapersBot runs from Hugging Face
+        run: python -u papersbot/hf_utils.py download_files 
+        working-directory: ./src/perovscribe
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+          REVISION: ${{ vars.HF_REVISION }}
+      # Step 5: Run the main pipeline script
+      - name: Run pipeline script
+        run: python -u pipeline.py --nomad --nomad_upload_id $UPLOAD_ID
+        working-directory: ./src/perovscribe
+        env:
+          # This makes the secret available as an environment variable to your Python script.
+          # Make sure to replace 'API_KEY' with the name you gave your secret in GitHub settings.
+          OA_EMAIL: ${{ vars.OA_EMAIL }}
+          NOMAD_URL: ${{ vars.NOMAD_URL }}
+          NOMAD_USERNAME: ${{ vars.NOMAD_USERNAME }}
+          NOMAD_PASSWORD: ${{ secrets.NOMAD_PASSWORD }}
+          TDM_API_TOKEN: ${{ secrets.TDM_API_TOKEN }}
+          LLM_MODEL_NAME: ${{ vars.LLM_MODEL_NAME }}
+          LLM_API_TOKEN: ${{ secrets.CLAUDE_API_TOKEN }}
+
+      - name: Upload PapersBot runs to Hugging Face
+        run: python -u src/perovscribe/papersbot/hf_utils.py upload_files 
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+          REVISION: ${{ vars.HF_REVISION }}
+      # Step 6: Upload the generated JSON file as an artifact
+      # This allows you to download the file from the workflow run's summary page.
+      # - name: Upload PDF URLs artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: found-pdf-urls
+      #     path: found_pdf_urls.json
