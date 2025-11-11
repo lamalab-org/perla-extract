@@ -202,7 +202,7 @@ def get_pdf_url_unpaywall(doi: str) -> str|None:
     """
     doi = doi.lower().strip()
     try:
-        api_url = f"https://api.unpaywall.org/v2/{doi}?email={oa_email}"
+        api_url = f"https://api.unpaywall.org/v2/{doi}?email={UNPAYWALL_EMAIL}"
         response = requests.get(api_url)
         response.raise_for_status()
         data = response.json()

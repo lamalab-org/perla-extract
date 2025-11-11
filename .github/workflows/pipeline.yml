@@ -54,7 +54,7 @@ jobs:
         env:
           # This makes the secret available as an environment variable to your Python script.
           # Make sure to replace 'API_KEY' with the name you gave your secret in GitHub settings.
-          OA_EMAIL: ${{ vars.OA_EMAIL }}
+          UNPAYWALL_EMAIL: ${{ vars.OA_EMAIL }}
           NOMAD_URL: ${{ vars.NOMAD_URL }}
           NOMAD_USERNAME: ${{ vars.NOMAD_USERNAME }}
           NOMAD_PASSWORD: ${{ secrets.NOMAD_PASSWORD }}
