@@ -35,7 +35,7 @@ jobs:
       # Step 4: Install Python packages from requirements.txt using uv
       # uv is used here for faster dependency installation.
       - name: Install dependencies with uv
-        run: uv pip install --system -r pyproject.toml
+        run: uv pip install --system .
       
       - name: Install wiley-tdm
         run: uv pip install --system wiley-tdm structlog
