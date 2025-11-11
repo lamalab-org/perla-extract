@@ -176,7 +176,7 @@ class PapersBot:
                 entry_stats["match"] = any_match
                 entry_stats["processed"] = False if any_match else True
                 self.addToPosted(entry.id)
-                self.saveEntries(entry)
+                # self.saveEntries(entry)
                 self.saveEntryStats(entry_stats)
                 self.printStats()
 

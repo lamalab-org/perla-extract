@@ -104,6 +104,8 @@ class ExtractionPipeline:
         postprocessor (str): the postprocessor to use
         cache_dir (Union[Path, str]): the root directory for the diskcache
         use_cache (bool): True if caching should be utilized
+        nomad (bool): True if exporting to NOMAD
+        nomad_upload_id (str): upload ID for NOMAD export
     """
 
     def __init__(
@@ -113,6 +115,8 @@ class ExtractionPipeline:
         postprocessor: str,
         cache_dir: Union[Path, str],
         use_cache: bool = True,
+        nomad: bool = False,
+        nomad_upload_id: str = None,
     ):
         self.model_name = model_name
         self.preprocessor = Preprocessor(
@@ -121,6 +125,8 @@ class ExtractionPipeline:
         self.postprocessor = ...  # call postprocessing factory to obtain postprocessor
         self.cache_dir = cache_dir
         self.use_cache = use_cache
+        self.nomad = nomad
+        self.upload_id = nomad_upload_id
 
     def extract_from_pdf_nomad(
         self, filepath, doi, api_key, nomad_schema, ureg
@@ -148,7 +154,9 @@ class ExtractionPipeline:
             to_json(parsed, output_path)
             print(f"Extracted: {filepath.name}")
             if self.nomad:
-                converted_nomad = convert_to_extraction_to_nomad_entries(parsed)
+                from nomad.units import ureg
+                from perovskite_solar_cell_database.llm_extraction_schema import LLMExtractedPerovskiteSolarCell
+                converted_nomad = convert_to_extraction_to_nomad_entries(parsed, doi, LLMExtractedPerovskiteSolarCell, ureg)
                 push_to_nomad(doi, converted_nomad, get_authentication_token(), self.upload_id)
             return True
         except (InstructorRetryException, ValidationError) as e:
@@ -306,6 +314,8 @@ def extract(
     use_cache: bool = False,
     pdf_print: bool = False,
     output: str = "./extractions",
+    nomad: bool = False,
+    nomad_upload_id: str = None,
 ):
     if pdf_print:
         print(
@@ -315,7 +325,7 @@ def extract(
         )
         return
     ExtractionPipeline(
-        model_name, preprocessor, postprocessor, cache_dir, use_cache
+        model_name, preprocessor, postprocessor, cache_dir, use_cache, nomad, nomad_upload_id
     ).run(filepath, truth, output=output)
 
 
@@ -345,18 +355,16 @@ class CLI:
         self.optimizer = optimizer
         self.papersbot = papersbot
 
-    def __call__(self, nomad=False, nomad_upload_id = None, *args, **kwargs):
+    def __call__(self, nomad=False, nomad_upload_id=None, *args, **kwargs):
         """Default behavior when no command is specified."""
-        self.nomad = nomad
-        self.nomad_upload_id = nomad_upload_id
 
         Path("./downloaded_papers/").mkdir(parents=True, exist_ok=True)
         # Download PDFs
         papersbot()
         # Extract them
-        extract("./downloaded_papers")
+        extract("./downloaded_papers",nomad=nomad, nomad_upload_id=nomad_upload_id)
         # Delete all PDFs
-        files = glob.glob("./download_papers/*.pdf")
+        files = glob.glob("./downloaded_papers/*.pdf")
         for f in files:
             os.remove(f)
         

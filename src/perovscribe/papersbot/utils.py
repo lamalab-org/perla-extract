@@ -169,7 +169,28 @@ def get_doi(entry):
         return f"error getting doi: {e}"
 
 
-def get_pdf_url(doi: str):
+def get_pdf_url(doi: str) -> str|None:
+    """
+    Fetches the PDF URL using multiple services in order: Unpaywall, OpenAlex.
+
+    Args:
+        doi (str): The DOI of the paper.
+
+    Returns:
+        str: The PDF URL if available, otherwise None.
+    """
+    pdf_url = get_pdf_url_unpaywall(doi)
+    if pdf_url and "Error fetching data" not in pdf_url:
+        return pdf_url
+    return_msg = pdf_url if pdf_url else ""
+    pdf_url = get_pdf_url_openalex(doi)
+    if pdf_url and "Error fetching data" not in pdf_url:
+        return pdf_url
+    return_msg += pdf_url if pdf_url else ""
+    logger.error(f"No PDF available for this DOI: {doi}.")
+    return return_msg if return_msg else None
+
+def get_pdf_url_unpaywall(doi: str) -> str|None:
     """
     Fetches the PDF URL from Unpaywall using the provided DOI.
 
@@ -179,8 +200,9 @@ def get_pdf_url(doi: str):
     Returns:
         str: The PDF URL if available, otherwise None.
     """
+    doi = doi.lower().strip()
     try:
-        api_url = f"https://api.unpaywall.org/v2/{doi}?email={UNPAYWALL_EMAIL}"
+        api_url = f"https://api.unpaywall.org/v2/{doi}?email={oa_email}"
         response = requests.get(api_url)
         response.raise_for_status()
         data = response.json()
@@ -193,12 +215,31 @@ def get_pdf_url(doi: str):
         ):
             return data["best_oa_location"].get("url_for_pdf")
         else:
-            logger.error(f"No PDF available for this DOI: {doi}.")
+            logger.error(f"Unpaywall:No PDF available for this DOI: {doi}.")
             return None
 
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching data from Unpaywall: {e}")
         return f"Error fetching data from Unpaywall: {e}"
+
+def get_pdf_url_openalex(doi: str) -> str|None:
+    doi = doi.lower().strip()
+    try:
+        api_url = f"https://api.openalex.org/works/https://doi.org/{doi}"
+        response = requests.get(api_url)
+        data = response.json()
+        if (
+        data.get("best_oa_location")
+        and data["best_oa_location"].get("is_oa")
+        and data["best_oa_location"].get("pdf_url", None)
+             ):
+            return data["best_oa_location"].get("pdf_url")
+        else:
+            logger.error(f"Openalex: No PDF available for this DOI : {doi}")
+            return None
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching data from Openalex: {e}")
+        return f"Error fetching data from Openalex: {e}"
 
 
 HEADERS = {

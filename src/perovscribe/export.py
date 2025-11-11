@@ -4,6 +4,10 @@ from pathlib import Path
 from typing import Dict, Any
 import math
 import os
+import requests
+from loguru import logger
+import json
+import io
 
 if TYPE_CHECKING:
     from pint import UnitRegistry
@@ -164,10 +168,10 @@ def push_to_nomad(doi: str, response: Dict[str, Any], token: str, upload_id:str|
         file = io.StringIO(transformed_json)
         file_name = doi+"-cell-"+str(index)+".archive.json"
         if upload_id is None:
-            res = requests.post(f"{URL}uploads/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},params={'wait_for_processing': 'true'},
+            res = requests.post(f"{NOMAD_URL}uploads/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},params={'wait_for_processing': 'true'},
                  files={'file': file}, timeout=30)
         else:
-            res = requests.put(f"{URL}uploads/{upload_id}/raw/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},params={'wait_for_processing': 'true'},
+            res = requests.put(f"{NOMAD_URL}uploads/{upload_id}/raw/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},params={'wait_for_processing': 'true'},
                  files={'file': (file_name, file)}, timeout=30)
         upload_id = res.json().get('upload_id')
         if upload_id:

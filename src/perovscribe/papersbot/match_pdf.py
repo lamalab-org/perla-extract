@@ -102,6 +102,7 @@ def download_pdfs():
         if 'processed' in item and item['processed']:
             continue
         doi = item["doi"]
+        doi = doi.lower().strip()
         pdf_url = item["pdf_url"]
         # Define a filepath for the downloaded PDF
         filepath = f"downloaded_papers/{doi.replace('/', '-')}.pdf"
