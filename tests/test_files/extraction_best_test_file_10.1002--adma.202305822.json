@@ -1,0 +1,721 @@
+{
+  "cells": [
+    {
+      "perovskite_composition": {
+        "formula": "Cs0.21FA0.74MA0.05Pb(I0.83Br0.12Cl0.05)3",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "3D",
+        "a_ions": [
+          {
+            "abbreviation": "Cs",
+            "coefficient": "0.21"
+          },
+          {
+            "common_name": "Formamidinium",
+            "molecular_formula": "CH6N+"
+          },
+          {
+            "abbreviation": "MA",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH5N+",
+            "coefficient": "0.05"
+          }
+        ],
+        "b_ions": [
+          {
+            "molecular_formula": "Pb2+",
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": "Iodide",
+            "molecular_formula": "I-",
+            "coefficient": "0.83"
+          },
+          {
+            "abbreviation": "Br",
+            "common_name": "Bromide",
+            "molecular_formula": "Br-",
+            "coefficient": "0.12"
+          },
+          {
+            "abbreviation": "Cl",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-",
+            "coefficient": "0.05"
+          }
+        ],
+        "bandgap": {
+          "value": 1.68,
+          "unit": "eV"
+        },
+        "impurities": null,
+        "additives": null
+      },
+      "device_architecture": "pin",
+      "pce": {
+        "value": 21.44,
+        "unit": "%"
+      },
+      "jsc": {
+        "value": 21.59,
+        "unit": "mA cm^-2"
+      },
+      "voc": {
+        "value": 1.16,
+        "unit": "V"
+      },
+      "ff": {
+        "value": 80.14
+      },
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.08,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": null,
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": null
+      },
+      "encapsulated": false,
+      "additional_notes": "Champion device fabricated by electrospray (ES) method with stabilized power output of 20.88%",
+      "stability": {
+        "time": {
+          "value": 5580000.0,
+          "unit": "s"
+        },
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "humidity": null,
+        "temperature": null,
+        "PCE_T80": null,
+        "PCE_at_the_start_of_the_experiment": {
+          "value": 21.44,
+          "unit": "%"
+        },
+        "PCE_after_1000_hours": null,
+        "PCE_at_the_end_of_experiment": {
+          "value": 19.3,
+          "unit": "%"
+        },
+        "potential_bias": "MPPT"
+      },
+      "layers": [
+        {
+          "name": "ITO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "PTAA",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "Cs0.21FA0.74MA0.05Pb(I0.83Br0.12Cl0.05)3",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Electrospray deposition",
+              "method": "Electrospraying",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "C60",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "BCP",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": null,
+          "additional_treatment": null
+        }
+      ]
+    },
+    {
+      "perovskite_composition": {
+        "formula": "Cs0.21FA0.74MA0.05Pb(I0.83Br0.12Cl0.05)3",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "3D",
+        "a_ions": [
+          {
+            "abbreviation": "Cs",
+            "common_name": "Cesium",
+            "molecular_formula": "Cs+",
+            "coefficient": "0.21"
+          },
+          {
+            "abbreviation": "FA",
+            "common_name": "Formamidinium",
+            "molecular_formula": "CH6N+",
+            "coefficient": "0.74"
+          },
+          {
+            "abbreviation": "MA",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH5N+",
+            "coefficient": "0.05"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+",
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": "Iodide",
+            "molecular_formula": "I-",
+            "coefficient": "0.83"
+          },
+          {
+            "abbreviation": "Br",
+            "common_name": "Bromide",
+            "molecular_formula": "Br-",
+            "coefficient": "0.12"
+          },
+          {
+            "abbreviation": "Cl",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-",
+            "coefficient": "0.05"
+          }
+        ],
+        "bandgap": {
+          "value": 1.68,
+          "unit": "eV"
+        },
+        "impurities": null,
+        "additives": null
+      },
+      "device_architecture": "pin",
+      "pce": {
+        "value": 20.77,
+        "unit": "%"
+      },
+      "jsc": null,
+      "voc": null,
+      "ff": null,
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 1.0,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": null,
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": null
+      },
+      "encapsulated": false,
+      "additional_notes": "Large area device fabricated by electrospray (ES) method",
+      "stability": null,
+      "layers": [
+        {
+          "name": "ITO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "PTAA",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "Cs0.21FA0.74MA0.05Pb(I0.83Br0.12Cl0.05)3",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Electrospray deposition",
+              "method": "Electrospraying",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "C60",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "BCP",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": null,
+          "additional_treatment": null
+        }
+      ]
+    },
+    {
+      "perovskite_composition": {
+        "formula": "Cs0.21FA0.74MA0.05Pb(I0.83Br0.12Cl0.05)3",
+        "a_ions": [
+          {
+            "abbreviation": "Cs",
+            "coefficient": "0.21"
+          },
+          {
+            "abbreviation": "FA",
+            "coefficient": "0.74"
+          },
+          {
+            "abbreviation": "MA",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH5N+",
+            "coefficient": "0.05"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+",
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": "Iodide",
+            "molecular_formula": "I-",
+            "coefficient": "0.83"
+          },
+          {
+            "abbreviation": "Br",
+            "common_name": "Bromide",
+            "molecular_formula": "Br-",
+            "coefficient": "0.12"
+          },
+          {
+            "abbreviation": "Cl",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-",
+            "coefficient": "0.05"
+          }
+        ],
+        "bandgap": {
+          "value": 1.68,
+          "unit": "eV"
+        },
+        "impurities": null,
+        "additives": null
+      },
+      "device_architecture": "nip",
+      "pce": {
+        "value": 20.9,
+        "unit": "%"
+      },
+      "jsc": {
+        "value": 21.62,
+        "unit": "mA cm^-2"
+      },
+      "voc": {
+        "value": 1.158,
+        "unit": "V"
+      },
+      "ff": {
+        "value": 79.04
+      },
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.08,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": null,
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": null
+      },
+      "encapsulated": false,
+      "additional_notes": "Champion n-i-p device fabricated by electrospray (ES) method with stabilized power output of 20.34%",
+      "stability": null,
+      "layers": [
+        {
+          "name": "ITO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "SnO2",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "Cs0.21FA0.74MA0.05Pb(I0.83Br0.12Cl0.05)3",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Electrospray deposition",
+              "method": "Electrospraying",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "Spiro-OMeTAD+PTAA",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": null,
+          "additional_treatment": null
+        }
+      ]
+    },
+    {
+      "perovskite_composition": {
+        "formula": "Cs0.21FA0.74MA0.05Pb(I0.83Br0.12Cl0.05)3",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "3D",
+        "a_ions": [
+          {
+            "abbreviation": "Cs",
+            "common_name": "Cesium",
+            "molecular_formula": "Cs+",
+            "coefficient": "0.21"
+          },
+          {
+            "abbreviation": "FA",
+            "common_name": "Formamidinium",
+            "molecular_formula": "CH6N+",
+            "coefficient": "0.74"
+          },
+          {
+            "abbreviation": "MA",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH5N+",
+            "coefficient": "0.05"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+",
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": "Iodide",
+            "molecular_formula": "I-",
+            "coefficient": "0.83"
+          },
+          {
+            "abbreviation": "Br",
+            "common_name": "Bromide",
+            "molecular_formula": "Br-",
+            "coefficient": "0.12"
+          },
+          {
+            "abbreviation": "Cl",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-",
+            "coefficient": "0.05"
+          }
+        ],
+        "bandgap": {
+          "value": 1.68,
+          "unit": "eV"
+        },
+        "impurities": null,
+        "additives": null
+      },
+      "device_architecture": "nip",
+      "pce": {
+        "value": 20.11,
+        "unit": "%"
+      },
+      "jsc": null,
+      "voc": null,
+      "ff": null,
+      "number_devices": null,
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": null,
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": null
+      },
+      "encapsulated": false,
+      "additional_notes": "Large area n-i-p device fabricated by electrospray (ES) method",
+      "stability": null,
+      "layers": [
+        {
+          "name": "ITO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "SnO2",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "Cs0.21FA0.74MA0.05Pb(I0.83Br0.12Cl0.05)3",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Electrospray deposition",
+              "method": "Electrospraying",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "Spiro-OMeTAD+PTAA",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": null,
+          "additional_treatment": null
+        }
+      ]
+    },
+    {
+      "perovskite_composition": {
+        "formula": "Cs0.21FA0.74MA0.05Pb(I0.83Br0.12Cl0.05)3",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "3D",
+        "a_ions": [
+          {
+            "abbreviation": "Cs",
+            "common_name": "Cesium",
+            "molecular_formula": "Cs+",
+            "coefficient": "0.21"
+          },
+          {
+            "abbreviation": "FA",
+            "common_name": "Formamidinium",
+            "molecular_formula": "CH6N+",
+            "coefficient": "0.74"
+          },
+          {
+            "abbreviation": "MA",
+            "common_name": "Methylammonium",
+            "molecular_formula": "CH5N+",
+            "coefficient": "0.05"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": "Lead",
+            "molecular_formula": "Pb2+",
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": "Iodide",
+            "molecular_formula": "I-",
+            "coefficient": "0.83"
+          },
+          {
+            "abbreviation": "Br",
+            "common_name": "Bromide",
+            "molecular_formula": "Br-",
+            "coefficient": "0.12"
+          },
+          {
+            "abbreviation": "Cl",
+            "common_name": "Chloride",
+            "molecular_formula": "Cl-",
+            "coefficient": "0.05"
+          }
+        ],
+        "bandgap": {
+          "value": 1.68,
+          "unit": "eV"
+        },
+        "impurities": null,
+        "additives": null
+      },
+      "device_architecture": "pin",
+      "pce": {
+        "value": 20.86,
+        "unit": "%"
+      },
+      "jsc": null,
+      "voc": null,
+      "ff": null,
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.08,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": null,
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": null
+      },
+      "encapsulated": false,
+      "additional_notes": "Champion SP‑based p‑i‑n device (reverse scan PCE)",
+      "stability": null,
+      "layers": [
+        {
+          "name": "ITO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "PTAA",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "Cs0.21FA0.74MA0.05Pb(I0.83Br0.12Cl0.05)3",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Electrospray deposition",
+              "method": "Electrospraying",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "C60",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "BCP",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": null,
+          "additional_treatment": null
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": null,
+          "additional_treatment": null
+        }
+      ]
+    }
+  ]
+}

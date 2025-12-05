@@ -17,7 +17,7 @@ def truth():
             os.path.join(
                 THIS_DIR,
                 "test_files",
-                "truth_test_file_10.1016--j.orgel.2017.01.022.json",
+                "truth_test_file_10.1002--adma.202305822.json",
             )
         )
     )
@@ -69,7 +69,7 @@ def postprocessed_best_extraction():
             os.path.join(
                 THIS_DIR,
                 "test_files",
-                "postprocessed_extraction_best_test_file_10.1016--j.orgel.2017.01.022.json",
+                "extraction_best_test_file_10.1002--adma.202305822.json",
             )
         )
     )
@@ -82,7 +82,7 @@ def postprocessed_mid_extraction():
             os.path.join(
                 THIS_DIR,
                 "test_files",
-                "postprocessed_extraction_mid_test_file_10.1016--j.orgel.2017.01.022.json",
+                "extraction_mid_test_file_10.1002--adma.202305822.json",
             )
         )
     )
@@ -95,7 +95,7 @@ def postprocessed_worst_extraction():
             os.path.join(
                 THIS_DIR,
                 "test_files",
-                "postprocessed_extraction_worst_test_file_10.1016--j.orgel.2017.01.022.json",
+                "extraction_worse_test_file_10.1002--adma.202305822.json",
             )
         )
     )

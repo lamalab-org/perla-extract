@@ -1,0 +1,2072 @@
+{
+  "cells": [
+    {
+      "perovskite_composition": {
+        "formula": "FA0.85MA0.15PbI2.55Br0.45",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "3D",
+        "a_ions": [
+          {
+            "abbreviation": "FA",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "0.85"
+          },
+          {
+            "abbreviation": "MA",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "0.15"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "2.55"
+          },
+          {
+            "abbreviation": "Br",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "0.45"
+          }
+        ],
+        "bandgap": null,
+        "impurities": null,
+        "additives": {
+          "abbreviation": "H2O",
+          "concentration": {
+            "value": 19999.999999999996,
+            "unit": "mL"
+          }
+        }
+      },
+      "device_architecture": "nip",
+      "pce": {
+        "value": 19.25,
+        "unit": "%"
+      },
+      "jsc": {
+        "value": 22.8,
+        "unit": "mA cm^-2"
+      },
+      "voc": {
+        "value": 1.09,
+        "unit": "V"
+      },
+      "ff": {
+        "value": 77.4
+      },
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.06,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": "Newport Oriel Sol 3A Class AAA (model 64023A); calibrated with reference Si cell",
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": "450 W Xenon lamp"
+      },
+      "encapsulated": null,
+      "additional_notes": "Device A: FAMA perovskite with 2% (vol) water; first anneal (1-A) at 40 \u00b0C for 5 min; second anneal (2-A) at 120 \u00b0C for 10 min.",
+      "stability": null,
+      "layers": [
+        {
+          "name": "FTO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": [
+            {
+              "step_name": "Plasma treatment",
+              "method": "Plasma treatment",
+              "atmosphere": "Air",
+              "temperature": null,
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "SnO2",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": [
+            {
+              "step_name": "SnO2 deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "FA0.85MA0.15PbI2.55Br0.45",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Spin-coating (1st step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 5.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "FAI",
+                    "concentration": {
+                      "value": 1.0000000000000002,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbI2",
+                    "concentration": {
+                      "value": 1.0500000000000003,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "MABr",
+                    "concentration": {
+                      "value": 0.20000000000000007,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbBr2",
+                    "concentration": {
+                      "value": 0.20000000000000007,
+                      "unit": "mol/L"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": null,
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": 0.8
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.2
+                  }
+                ]
+              },
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Spin-coating (2nd step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 40.0,
+                "unit": "s"
+              },
+              "antisolvent": "Toluene",
+              "solution": null,
+              "additional_parameters": {
+                "speed_rpm": 4000,
+                "antisolvent_volume_\u03bcL": 150,
+                "antisolvent_drip_time_before_end_s": 15
+              }
+            },
+            {
+              "step_name": "Thermal annealing (1-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 40.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Thermal annealing (2-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 120.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 600.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "Spiro-OMeTAD",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": [
+            {
+              "step_name": "HTL deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": "Spiro-OMeTAD doped with 4-tert-butylpyridine and Li-TFSI as described."
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": [
+            {
+              "step_name": "Electrode deposition",
+              "method": "Thermal-evaporation",
+              "atmosphere": "Vacuum",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        }
+      ]
+    },
+    {
+      "perovskite_composition": {
+        "formula": "FA0.85MA0.15PbI2.55Br0.45",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "3D",
+        "a_ions": [
+          {
+            "abbreviation": "FA",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "0.85"
+          },
+          {
+            "abbreviation": "MA",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "0.15"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "2.55"
+          },
+          {
+            "abbreviation": "Br",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "0.45"
+          }
+        ],
+        "bandgap": null,
+        "impurities": null,
+        "additives": {
+          "abbreviation": "H2O",
+          "concentration": {
+            "value": 19999.999999999996,
+            "unit": "mL"
+          }
+        }
+      },
+      "device_architecture": "nip",
+      "pce": {
+        "value": 20.3,
+        "unit": "%"
+      },
+      "jsc": {
+        "value": 23.5,
+        "unit": "mA cm^-2"
+      },
+      "voc": {
+        "value": 1.11,
+        "unit": "V"
+      },
+      "ff": {
+        "value": 77.8
+      },
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.06,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": "Newport Oriel Sol 3A Class AAA (model 64023A); calibrated with reference Si cell",
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": "450 W Xenon lamp"
+      },
+      "encapsulated": null,
+      "additional_notes": "Device B: FAMA perovskite with 2% (vol) water; first anneal (1-A) at 60 \u00b0C for 5 min; second anneal (2-A) at 120 \u00b0C for 10 min.",
+      "stability": null,
+      "layers": [
+        {
+          "name": "FTO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": [
+            {
+              "step_name": "Plasma treatment",
+              "method": "Plasma treatment",
+              "atmosphere": "Air",
+              "temperature": null,
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "SnO2",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": [
+            {
+              "step_name": "SnO2 deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "FA0.85MA0.15PbI2.55Br0.45",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Spin-coating (1st step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 5.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "FAI",
+                    "concentration": {
+                      "value": 1.0000000000000002,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbI2",
+                    "concentration": {
+                      "value": 1.0500000000000003,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "MABr",
+                    "concentration": {
+                      "value": 0.20000000000000007,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbBr2",
+                    "concentration": {
+                      "value": 0.20000000000000007,
+                      "unit": "mol/L"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": null,
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": 0.8
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.2
+                  }
+                ]
+              },
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Spin-coating (2nd step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 40.0,
+                "unit": "s"
+              },
+              "antisolvent": "Toluene",
+              "solution": null,
+              "additional_parameters": {
+                "speed_rpm": 4000,
+                "antisolvent_volume_\u03bcL": 150,
+                "antisolvent_drip_time_before_end_s": 15
+              }
+            },
+            {
+              "step_name": "Thermal annealing (1-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 60.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Thermal annealing (2-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 120.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 600.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "Spiro-OMeTAD",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": [
+            {
+              "step_name": "HTL deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": "Spiro-OMeTAD doped with 4-tert-butylpyridine and Li-TFSI as described."
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": [
+            {
+              "step_name": "Electrode deposition",
+              "method": "Thermal-evaporation",
+              "atmosphere": "Vacuum",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        }
+      ]
+    },
+    {
+      "perovskite_composition": {
+        "formula": "FA0.85MA0.15PbI2.55Br0.45",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "3D",
+        "a_ions": [
+          {
+            "abbreviation": "FA",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "0.85"
+          },
+          {
+            "abbreviation": "MA",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "0.15"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "2.55"
+          },
+          {
+            "abbreviation": "Br",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "0.45"
+          }
+        ],
+        "bandgap": null,
+        "impurities": null,
+        "additives": {
+          "abbreviation": "H2O",
+          "concentration": {
+            "value": 19999.999999999996,
+            "unit": "mL"
+          }
+        }
+      },
+      "device_architecture": "nip",
+      "pce": {
+        "value": 19.8,
+        "unit": "%"
+      },
+      "jsc": {
+        "value": 23.2,
+        "unit": "mA cm^-2"
+      },
+      "voc": {
+        "value": 1.1,
+        "unit": "V"
+      },
+      "ff": {
+        "value": 77.5
+      },
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.06,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": "Newport Oriel Sol 3A Class AAA (model 64023A); calibrated with reference Si cell",
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": "450 W Xenon lamp"
+      },
+      "encapsulated": null,
+      "additional_notes": "Device C: FAMA perovskite with 2% (vol) water; first anneal (1-A) at 80 \u00b0C for 5 min; second anneal (2-A) at 120 \u00b0C for 10 min.",
+      "stability": null,
+      "layers": [
+        {
+          "name": "FTO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": [
+            {
+              "step_name": "Plasma treatment",
+              "method": "Plasma treatment",
+              "atmosphere": "Air",
+              "temperature": null,
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "SnO2",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": [
+            {
+              "step_name": "SnO2 deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "FA0.85MA0.15PbI2.55Br0.45",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Spin-coating (1st step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 5.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "FAI",
+                    "concentration": {
+                      "value": 1.0000000000000002,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbI2",
+                    "concentration": {
+                      "value": 1.0500000000000003,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "MABr",
+                    "concentration": {
+                      "value": 0.20000000000000007,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbBr2",
+                    "concentration": {
+                      "value": 0.20000000000000007,
+                      "unit": "mol/L"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": null,
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": 0.8
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.2
+                  }
+                ]
+              },
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Spin-coating (2nd step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 40.0,
+                "unit": "s"
+              },
+              "antisolvent": "Toluene",
+              "solution": null,
+              "additional_parameters": {
+                "speed_rpm": 4000,
+                "antisolvent_volume_\u03bcL": 150,
+                "antisolvent_drip_time_before_end_s": 15
+              }
+            },
+            {
+              "step_name": "Thermal annealing (1-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 80.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Thermal annealing (2-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 120.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 600.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "Spiro-OMeTAD",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": [
+            {
+              "step_name": "HTL deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": "Spiro-OMeTAD doped with 4-tert-butylpyridine and Li-TFSI as described."
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": [
+            {
+              "step_name": "Electrode deposition",
+              "method": "Thermal-evaporation",
+              "atmosphere": "Vacuum",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        }
+      ]
+    },
+    {
+      "perovskite_composition": {
+        "formula": "FA0.85MA0.15PbI2.55Br0.45",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "3D",
+        "a_ions": [
+          {
+            "abbreviation": "FA",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "0.85"
+          },
+          {
+            "abbreviation": "MA",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "0.15"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "2.55"
+          },
+          {
+            "abbreviation": "Br",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "0.45"
+          }
+        ],
+        "bandgap": null,
+        "impurities": null,
+        "additives": {
+          "abbreviation": "H2O",
+          "concentration": {
+            "value": 19999.999999999996,
+            "unit": "mL"
+          }
+        }
+      },
+      "device_architecture": "nip",
+      "pce": {
+        "value": 19.4,
+        "unit": "%"
+      },
+      "jsc": {
+        "value": 23.0,
+        "unit": "mA cm^-2"
+      },
+      "voc": {
+        "value": 1.09,
+        "unit": "V"
+      },
+      "ff": {
+        "value": 77.4
+      },
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.06,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": "Newport Oriel Sol 3A Class AAA (model 64023A); calibrated with reference Si cell",
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": "450 W Xenon lamp"
+      },
+      "encapsulated": null,
+      "additional_notes": "Device D: FAMA perovskite with 2% (vol) water; first anneal (1-A) at 100 \u00b0C for 5 min; second anneal (2-A) at 120 \u00b0C for 10 min.",
+      "stability": null,
+      "layers": [
+        {
+          "name": "FTO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": [
+            {
+              "step_name": "Plasma treatment",
+              "method": "Plasma treatment",
+              "atmosphere": "Air",
+              "temperature": null,
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "SnO2",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": [
+            {
+              "step_name": "SnO2 deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "FA0.85MA0.15PbI2.55Br0.45",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Spin-coating (1st step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 5.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "FAI",
+                    "concentration": {
+                      "value": 1.0000000000000002,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbI2",
+                    "concentration": {
+                      "value": 1.0500000000000003,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "MABr",
+                    "concentration": {
+                      "value": 0.20000000000000007,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbBr2",
+                    "concentration": {
+                      "value": 0.20000000000000007,
+                      "unit": "mol/L"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": null,
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": 0.8
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.2
+                  }
+                ]
+              },
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Spin-coating (2nd step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 40.0,
+                "unit": "s"
+              },
+              "antisolvent": "Toluene",
+              "solution": null,
+              "additional_parameters": {
+                "speed_rpm": 4000,
+                "antisolvent_volume_\u03bcL": 150,
+                "antisolvent_drip_time_before_end_s": 15
+              }
+            },
+            {
+              "step_name": "Thermal annealing (1-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 100.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Thermal annealing (2-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 120.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 600.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "Spiro-OMeTAD",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": [
+            {
+              "step_name": "HTL deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": "Spiro-OMeTAD doped with 4-tert-butylpyridine and Li-TFSI as described."
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": [
+            {
+              "step_name": "Electrode deposition",
+              "method": "Thermal-evaporation",
+              "atmosphere": "Vacuum",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        }
+      ]
+    },
+    {
+      "perovskite_composition": {
+        "formula": "MAPbI3",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "3D",
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "1"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "3"
+          }
+        ],
+        "bandgap": null,
+        "impurities": null,
+        "additives": null
+      },
+      "device_architecture": "nip",
+      "pce": {
+        "value": 17.6,
+        "unit": "%"
+      },
+      "jsc": null,
+      "voc": null,
+      "ff": null,
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.06,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": "Newport Oriel Sol 3A Class AAA (model 64023A); calibrated with reference Si cell",
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": "450 W Xenon lamp"
+      },
+      "encapsulated": null,
+      "additional_notes": "MAPbI3 device without water in precursor.",
+      "stability": null,
+      "layers": [
+        {
+          "name": "FTO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": [
+            {
+              "step_name": "Plasma treatment",
+              "method": "Plasma treatment",
+              "atmosphere": "Air",
+              "temperature": null,
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "SnO2",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": [
+            {
+              "step_name": "SnO2 deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "MAPbI3",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Spin-coating (1st step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 5.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "MAI",
+                    "concentration": {
+                      "value": 1.0000000000000002,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbI2",
+                    "concentration": {
+                      "value": 1.0000000000000002,
+                      "unit": "mol/L"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": null,
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": 0.8
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.2
+                  }
+                ]
+              },
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Spin-coating (2nd step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 40.0,
+                "unit": "s"
+              },
+              "antisolvent": "Toluene",
+              "solution": null,
+              "additional_parameters": {
+                "speed_rpm": 4000,
+                "antisolvent_volume_\u03bcL": 150,
+                "antisolvent_drip_time_before_end_s": 25
+              }
+            },
+            {
+              "step_name": "Thermal annealing (1-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 60.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Thermal annealing (2-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 120.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 600.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "Spiro-OMeTAD",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": [
+            {
+              "step_name": "HTL deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": "Spiro-OMeTAD doped with 4-tert-butylpyridine and Li-TFSI as described."
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": [
+            {
+              "step_name": "Electrode deposition",
+              "method": "Thermal-evaporation",
+              "atmosphere": "Vacuum",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        }
+      ]
+    },
+    {
+      "perovskite_composition": {
+        "formula": "MAPbI3",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "3D",
+        "a_ions": [
+          {
+            "abbreviation": "MA",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "1"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "3"
+          }
+        ],
+        "bandgap": null,
+        "impurities": null,
+        "additives": {
+          "abbreviation": "H2O",
+          "concentration": {
+            "value": 19999.999999999996,
+            "unit": "mL"
+          }
+        }
+      },
+      "device_architecture": "nip",
+      "pce": {
+        "value": 18.7,
+        "unit": "%"
+      },
+      "jsc": null,
+      "voc": null,
+      "ff": null,
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.06,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": "Newport Oriel Sol 3A Class AAA (model 64023A); calibrated with reference Si cell",
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": "450 W Xenon lamp"
+      },
+      "encapsulated": null,
+      "additional_notes": "MAPbI3 device with 2% (vol) water in precursor.",
+      "stability": null,
+      "layers": [
+        {
+          "name": "FTO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": [
+            {
+              "step_name": "Plasma treatment",
+              "method": "Plasma treatment",
+              "atmosphere": "Air",
+              "temperature": null,
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "SnO2",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": [
+            {
+              "step_name": "SnO2 deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "MAPbI3",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Spin-coating (1st step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 5.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "MAI",
+                    "concentration": {
+                      "value": 1.0000000000000002,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbI2",
+                    "concentration": {
+                      "value": 1.0000000000000002,
+                      "unit": "mol/L"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": null,
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": 0.8
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.2
+                  }
+                ]
+              },
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Spin-coating (2nd step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 40.0,
+                "unit": "s"
+              },
+              "antisolvent": "Toluene",
+              "solution": null,
+              "additional_parameters": {
+                "speed_rpm": 4000,
+                "antisolvent_volume_\u03bcL": 150,
+                "antisolvent_drip_time_before_end_s": 25
+              }
+            },
+            {
+              "step_name": "Thermal annealing (1-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 60.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Thermal annealing (2-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 120.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 600.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "Spiro-OMeTAD",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": [
+            {
+              "step_name": "HTL deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": "Spiro-OMeTAD doped with 4-tert-butylpyridine and Li-TFSI as described."
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": [
+            {
+              "step_name": "Electrode deposition",
+              "method": "Thermal-evaporation",
+              "atmosphere": "Vacuum",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        }
+      ]
+    },
+    {
+      "perovskite_composition": {
+        "formula": "GAPbI3",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "1D",
+        "a_ions": [
+          {
+            "abbreviation": "GA",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "1"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "3"
+          }
+        ],
+        "bandgap": null,
+        "impurities": null,
+        "additives": null
+      },
+      "device_architecture": "nip",
+      "pce": {
+        "value": 0.31,
+        "unit": "%"
+      },
+      "jsc": null,
+      "voc": null,
+      "ff": null,
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.06,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": "Newport Oriel Sol 3A Class AAA (model 64023A); calibrated with reference Si cell",
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": "450 W Xenon lamp"
+      },
+      "encapsulated": null,
+      "additional_notes": "GAPbI3 device without water in precursor.",
+      "stability": null,
+      "layers": [
+        {
+          "name": "FTO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": [
+            {
+              "step_name": "Plasma treatment",
+              "method": "Plasma treatment",
+              "atmosphere": "Air",
+              "temperature": null,
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "SnO2",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": [
+            {
+              "step_name": "SnO2 deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "GAPbI3",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Spin-coating (1st step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 5.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "GAI",
+                    "concentration": {
+                      "value": 1.0000000000000002,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbI2",
+                    "concentration": {
+                      "value": 1.0000000000000002,
+                      "unit": "mol/L"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": null,
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": 0.8
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.2
+                  }
+                ]
+              },
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Spin-coating (2nd step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 40.0,
+                "unit": "s"
+              },
+              "antisolvent": "Toluene",
+              "solution": null,
+              "additional_parameters": {
+                "speed_rpm": 4000,
+                "antisolvent_volume_\u03bcL": 150,
+                "antisolvent_drip_time_before_end_s": 25
+              }
+            },
+            {
+              "step_name": "Thermal annealing (1-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 60.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Thermal annealing (2-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 120.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 600.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "Spiro-OMeTAD",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": [
+            {
+              "step_name": "HTL deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": "Spiro-OMeTAD doped with 4-tert-butylpyridine and Li-TFSI as described."
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": [
+            {
+              "step_name": "Electrode deposition",
+              "method": "Thermal-evaporation",
+              "atmosphere": "Vacuum",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        }
+      ]
+    },
+    {
+      "perovskite_composition": {
+        "formula": "GAPbI3",
+        "sample_type": "Polycrystalline film",
+        "dimensionality": "1D",
+        "a_ions": [
+          {
+            "abbreviation": "GA",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "1"
+          }
+        ],
+        "b_ions": [
+          {
+            "abbreviation": "Pb",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "1"
+          }
+        ],
+        "x_ions": [
+          {
+            "abbreviation": "I",
+            "common_name": null,
+            "molecular_formula": null,
+            "coefficient": "3"
+          }
+        ],
+        "bandgap": null,
+        "impurities": null,
+        "additives": {
+          "abbreviation": "H2O",
+          "concentration": {
+            "value": 19999.999999999996,
+            "unit": "mL"
+          }
+        }
+      },
+      "device_architecture": "nip",
+      "pce": {
+        "value": 0.38,
+        "unit": "%"
+      },
+      "jsc": null,
+      "voc": null,
+      "ff": null,
+      "number_devices": null,
+      "averaged_quantities": null,
+      "active_area": {
+        "value": 0.06,
+        "unit": "cm^2"
+      },
+      "light_source": {
+        "type": "AM 1.5G",
+        "description": "Newport Oriel Sol 3A Class AAA (model 64023A); calibrated with reference Si cell",
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "lamp": "450 W Xenon lamp"
+      },
+      "encapsulated": null,
+      "additional_notes": "GAPbI3 device with 2% (vol) water in precursor.",
+      "stability": null,
+      "layers": [
+        {
+          "name": "FTO",
+          "thickness": null,
+          "functionality": "Substrate",
+          "deposition": [
+            {
+              "step_name": "Plasma treatment",
+              "method": "Plasma treatment",
+              "atmosphere": "Air",
+              "temperature": null,
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "SnO2",
+          "thickness": null,
+          "functionality": "Electron-transport",
+          "deposition": [
+            {
+              "step_name": "SnO2 deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "GAPbI3",
+          "thickness": null,
+          "functionality": "Absorber",
+          "deposition": [
+            {
+              "step_name": "Spin-coating (1st step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 5.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": {
+                "compounds": null,
+                "solutes": [
+                  {
+                    "name": "GAI",
+                    "concentration": {
+                      "value": 1.0000000000000002,
+                      "unit": "mol/L"
+                    }
+                  },
+                  {
+                    "name": "PbI2",
+                    "concentration": {
+                      "value": 1.0000000000000002,
+                      "unit": "mol/L"
+                    }
+                  }
+                ],
+                "volume": null,
+                "temperature": null,
+                "solvents": [
+                  {
+                    "name": "DMF",
+                    "volume_fraction": 0.8
+                  },
+                  {
+                    "name": "DMSO",
+                    "volume_fraction": 0.2
+                  }
+                ]
+              },
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Spin-coating (2nd step)",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": {
+                "value": 40.0,
+                "unit": "s"
+              },
+              "antisolvent": "Toluene",
+              "solution": null,
+              "additional_parameters": {
+                "speed_rpm": 4000,
+                "antisolvent_volume_\u03bcL": 150,
+                "antisolvent_drip_time_before_end_s": 25
+              }
+            },
+            {
+              "step_name": "Thermal annealing (1-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 60.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 300.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            },
+            {
+              "step_name": "Thermal annealing (2-A)",
+              "method": "Thermal-annealing",
+              "atmosphere": "Air",
+              "temperature": {
+                "value": 120.0,
+                "unit": "\u00b0C"
+              },
+              "duration": {
+                "value": 600.0,
+                "unit": "s"
+              },
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        },
+        {
+          "name": "Spiro-OMeTAD",
+          "thickness": null,
+          "functionality": "Hole-transport",
+          "deposition": [
+            {
+              "step_name": "HTL deposition",
+              "method": "Spin-coating",
+              "atmosphere": "Ambient air",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": "Spiro-OMeTAD doped with 4-tert-butylpyridine and Li-TFSI as described."
+        },
+        {
+          "name": "Au",
+          "thickness": null,
+          "functionality": "Contact",
+          "deposition": [
+            {
+              "step_name": "Electrode deposition",
+              "method": "Thermal-evaporation",
+              "atmosphere": "Vacuum",
+              "temperature": null,
+              "duration": null,
+              "antisolvent": null,
+              "solution": null,
+              "additional_parameters": null
+            }
+          ],
+          "additional_treatment": null
+        }
+      ]
+    }
+  ]
+}

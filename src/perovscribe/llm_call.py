@@ -8,14 +8,14 @@ from perovscribe.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
 from litellm.caching.caching import Cache
 import litellm
 
-# litellm.cache = Cache(
-#     type="redis",
-#     host="127.0.0.1",
-#     port=6379,
-#     ttl=1000000,
-#     password="foobared",
-#     namespace="litellm",
-# )
+litellm.cache = Cache(
+    type="redis",
+    host="127.0.0.1",
+    port=6379,
+    ttl=1000000,
+    # password="foobared",
+    namespace="litellm",
+)
 
 
 os.environ["REDIS_HOST"] = "127.0.0.1"
@@ -102,8 +102,7 @@ def create_text_completion(
             print("reduced max tokens")
         else:
             break
-
-    return resp
+    return resp, compll
 
 
 def llm_as_judge(ground_truth, value_truth, value_extraction):
@@ -131,7 +130,7 @@ def llm_as_judge(ground_truth, value_truth, value_extraction):
     client = instructor.from_litellm(completion)
 
     resp = client.chat.completions.create(
-        model="claude-3-5-sonnet-20240620",
+        model="gpt-4o-2024-08-06",
         messages=messages,
         response_model=Judgement,
         temperature=0,

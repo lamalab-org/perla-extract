@@ -1,4 +1,4 @@
-from perovscribe.evaluations import Evaluations, match_cells
+from perovscribe.evaluations import Evaluations
 import pytest
 from copy import deepcopy
 from collections import defaultdict
@@ -41,13 +41,13 @@ def test_evaluations(
 
 
 def test_matching(matching_1, matching_2):
-    for match in match_cells(matching_1["cells"], matching_2["cells"], "gibberish"):
+    for match in Evaluations({"cells":{}},{"cells":{}},"gibberish",defaultdict(lambda: defaultdict(float)))._match_cells(matching_1["cells"], matching_2["cells"], "gibberish"):
         assert str(match["truth"]) == str(match["extraction"])
 
     matching_1["cells"][1]["layers"] = []
     matching_2["cells"][0]["layers"] = []
 
-    for match in match_cells(matching_1["cells"], matching_2["cells"], "gibberish"):
+    for match in Evaluations({"cells":{}},{"cells":{}},"gibberish",defaultdict(lambda: defaultdict(float)))._match_cells(matching_1["cells"], matching_2["cells"], "gibberish"):
         assert str(match["truth"]) == str(match["extraction"])
 
 
