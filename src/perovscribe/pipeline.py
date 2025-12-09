@@ -28,7 +28,7 @@ def calc_precision(per_key_metrics, key):
     )
 
 
-def calculate_and_aggregate(metrics_dict, compute_recall=True):
+def calculate_and_aggregate(metrics_dict, compute_recall=False):
     result = {}
     for key, vals in metrics_dict.items():
         tp, fp, fn = vals.get("TP", 0.0), vals.get("FP", 0.0), vals.get("FN", 0.0)
