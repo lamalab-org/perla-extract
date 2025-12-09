@@ -72,6 +72,7 @@ class Evaluations:
         )
 
         # Initialize basic metrics
+        extraction = extraction if "cells" in extraction and extraction["cells"] is not None else {"cells":[]}
         self.devices_in_truth = len(truth["cells"])
         self.devices_found = len(extraction["cells"])
 
@@ -84,7 +85,7 @@ class Evaluations:
         )
         self.matches = self._match_cells(truth["cells"], extraction["cells"], file)
         self.devices_matched = len(self.matches)
-        self.recall_devices = min(self.devices_matched / len(truth["cells"]), 1)
+        self.recall_devices = min(self.devices_matched / (len(truth["cells"]) or 1), 1)
 
         # Calculate detailed scores
         self.score_device_stacks = self._score_device_stacks()
