@@ -277,3 +277,5 @@ extraction_cache
 output
 
 !tests/test_files
+
+uv.lock

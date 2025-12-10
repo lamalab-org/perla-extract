@@ -8,6 +8,7 @@ import csv
 import requests
 from collections import defaultdict
 import re
+from importlib.resources import files
 
 import numpy as np
 from pydantic import ValidationError
@@ -17,9 +18,8 @@ from perovscribe.preprocessing.preprocessor import Preprocessor
 from perovscribe.postprocessing import postprocess
 from perovscribe.evaluations import Evaluations, score_multiple_extractions
 from perovscribe import llm_call
-from perovscribe.export import to_json, convert_to_extraction_to_nomad_entries
+from perovscribe.export import to_json, convert_to_extraction_to_nomad_entries, push_to_nomad, get_authentication_token
 from instructor.exceptions import InstructorRetryException, IncompleteOutputException
-from importlib.resources import files
 
 
 def calc_precision(per_key_metrics, key):
@@ -104,6 +104,8 @@ class ExtractionPipeline:
         postprocessor (str): the postprocessor to use
         cache_dir (Union[Path, str]): the root directory for the diskcache
         use_cache (bool): True if caching should be utilized
+        nomad (bool): True if exporting to NOMAD
+        nomad_upload_id (str): upload ID for NOMAD export
     """
 
     def __init__(
@@ -113,6 +115,8 @@ class ExtractionPipeline:
         postprocessor: str,
         cache_dir: Union[Path, str],
         use_cache: bool = True,
+        nomad: bool = False,
+        nomad_upload_id: str = None,
     ):
         self.model_name = model_name
         self.preprocessor = Preprocessor(
@@ -123,6 +127,8 @@ class ExtractionPipeline:
         self.use_cache = use_cache
         self.total_prompt_tokens = 0
         self.total_completion_tokens = 0
+        self.nomad = nomad
+        self.upload_id = nomad_upload_id
 
     def extract_from_pdf_nomad(
         self, filepath, doi, api_key, nomad_schema, ureg
@@ -151,6 +157,11 @@ class ExtractionPipeline:
             self.total_prompt_tokens += completion_usage.usage.prompt_tokens
             self.total_completion_tokens += completion_usage.usage.completion_tokens
             print(f"Extracted: {filepath.name}")
+            if self.nomad:
+                from nomad.units import ureg
+                from perovskite_solar_cell_database.llm_extraction_schema import LLMExtractedPerovskiteSolarCell
+                converted_nomad = convert_to_extraction_to_nomad_entries(parsed, doi, LLMExtractedPerovskiteSolarCell, ureg)
+                push_to_nomad(doi, converted_nomad, get_authentication_token(), self.upload_id)
             return True
         except (InstructorRetryException, ValidationError) as e:
             self._handle_failure(e, results, output_path)
@@ -305,13 +316,15 @@ class ExtractionPipeline:
 def extract(
     filepath: str,
     truth: str = None,
-    model_name: str = "claude-3-5-sonnet-20240620",
+    model_name: str = "claude-sonnet-4-20250514",
     preprocessor: str = "pymupdf",
     postprocessor: str = "NONE",
     cache_dir: str = "",
     use_cache: bool = False,
     pdf_print: bool = False,
     output: str = "./extractions",
+    nomad: bool = False,
+    nomad_upload_id: str = None,
 ):
     if pdf_print:
         print(
@@ -321,11 +334,11 @@ def extract(
         )
         return
     ExtractionPipeline(
-        model_name, preprocessor, postprocessor, cache_dir, use_cache
+        model_name, preprocessor, postprocessor, cache_dir, use_cache, nomad, nomad_upload_id
     ).run(filepath, truth, output=output)
 
 
-def optimizer(model_name: str = "claude-3-5-sonnet-20240620", output: str = "./"):
+def optimizer(model_name: str = "claude-sonnet-4-20250514", output: str = "./"):
     from perovscribe.optimizer import run
 
     run(model_name, output)
@@ -338,9 +351,9 @@ def papersbot():
             "You need to provide your email for unpaywall API. Set this env variable: export UNPAYWALL_EMAIL=<your-email>"
         )
         return
-    from perovscribe.papersbot import main as papersbot
+    from perovscribe.papersbot import papersbot
 
-    papersbot()
+    papersbot.run_papersbot()
 
 
 class CLI:
@@ -353,15 +366,18 @@ class CLI:
 
     def __call__(self, *args, **kwargs):
         """Default behavior when no command is specified."""
+
         Path("./downloaded_papers/").mkdir(parents=True, exist_ok=True)
         # Download PDFs
         papersbot()
         # Extract them
         extract("./downloaded_papers")
         # Delete all PDFs
-        files = glob.glob("./download_papers/*.pdf")
+        files = glob.glob("./downloaded_papers/*.pdf")
         for f in files:
             os.remove(f)
+        
+
 
 
 def main_cli():

@@ -3,9 +3,18 @@ from typing import TYPE_CHECKING, Union
 from pathlib import Path
 from typing import Dict, Any
 import math
+import os
+import requests
+from loguru import logger
+import json
+import io
 
 if TYPE_CHECKING:
     from pint import UnitRegistry
+
+NOMAD_USERNAME = os.environ.get("NOMAD_USERNAME")
+NOMAD_PASSWORD = os.environ.get("NOMAD_PASSWORD")
+NOMAD_URL= os.environ.get('NOMAD_URL', "https://nomad-lab.eu/prod/v1/")
 
 def to_json(pydantic_model: PerovskiteSolarCells, output: Union[Path, str]):
     with open(output, "w") as f:
@@ -129,6 +138,48 @@ def convert_to_nomad_schema(data: Dict[str, Any], ureg: 'UnitRegistry') -> Dict[
             return obj
 
     return traverse_and_convert(None, data)
+
+def get_authentication_token(nomad_url: str=NOMAD_URL, username: str=NOMAD_USERNAME, password: str=NOMAD_PASSWORD) -> str|None: 
+    '''Get the token for accessing your NOMAD unpublished uploads remotely'''
+    body={"username": username, "password": password}
+    try:
+        response = requests.post(
+            nomad_url + 'auth/token', data=body, timeout=10)
+        token = response.json().get('access_token')
+        if token:
+            return token
+
+        logger.error('response is missing token: ')
+        logger.error(response.json())
+        return None
+    except Exception:
+        logger.error('something went wrong trying to get authentication token')
+        return None
+
+
+def push_to_nomad(doi: str, response: Dict[str, Any], token: str, upload_id:str|None = None):
+    """Push extraction to Nomad"""
+    doi=doi.replace('/', '--')
+    if len(response)==0:
+        logger.warning(f'No extracted cells for Doi:{doi}, skipping upload to NOMAD')
+        return
+    for index, cell in enumerate(response):
+        transformed_json = json.dumps(cell, indent=4)
+        file = io.StringIO(transformed_json)
+        file_name = doi+"-cell-"+str(index)+".archive.json"
+        if upload_id is None:
+            res = requests.post(f"{NOMAD_URL}uploads/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},params={'wait_for_processing': 'true'},
+                 files={'file': file}, timeout=30)
+        else:
+            res = requests.put(f"{NOMAD_URL}uploads/{upload_id}/raw/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},params={'wait_for_processing': 'true'},
+                 files={'file': (file_name, file)}, timeout=30)
+        upload_id = res.json().get('upload_id')
+        if upload_id:
+            logger.info(f"Doi:{doi} Cell:{index} Upload Id:{upload_id} Status Code:{res.status_code}")
+        else:
+            logger.error(f'Response is missing upload_id for Doi:{doi} Cell:{index}')
+            logger.error(f"Response:{res.json()}")
+            raise Exception('Upload failed, missing upload_id in response')
 
 
 def remove_none_values(input_dict):
