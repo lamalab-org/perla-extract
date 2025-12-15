@@ -18,7 +18,7 @@ from perovscribe.preprocessing.preprocessor import Preprocessor
 from perovscribe.postprocessing import postprocess
 from perovscribe.evaluations import Evaluations, score_multiple_extractions
 from perovscribe import llm_call
-from perovscribe.export import to_json, convert_to_extraction_to_nomad_entries, push_to_nomad, get_authentication_token
+from perovscribe.export import to_json, convert_extraction_to_nomad_entries, push_to_nomad, get_authentication_token
 from instructor.exceptions import InstructorRetryException, IncompleteOutputException
 
 
@@ -79,7 +79,7 @@ def read_csv_to_dict(filepath):
         return [row for row in reader]
 
 
-def get_journal_and_publisher_from_doi(doi):
+def get_doi_crossref_data(doi):
     url = f"https://api.crossref.org/works/{doi}"
     try:
         response = requests.get(url, timeout=10)
@@ -87,10 +87,11 @@ def get_journal_and_publisher_from_doi(doi):
         data = response.json()["message"]
         journal = data.get("container-title", ["Unknown Journal"])[0]
         publisher = data.get("publisher", "Unknown Publisher")
-        return journal, publisher
+        title = data.get("title", "")[0]
+        return title, journal, publisher
     except Exception as e:
         print(f"Error fetching DOI {doi}: {e}")
-        return None, None
+        return None, None, None
 
 
 class ExtractionPipeline:
@@ -139,7 +140,7 @@ class ExtractionPipeline:
             self.model_name, pdf_text, api_key=api_key
         )
         results = PerovskiteSolarCells(**postprocess(results.model_dump()))
-        return convert_to_extraction_to_nomad_entries(results, doi, nomad_schema, ureg)
+        return convert_extraction_to_nomad_entries(results, doi, nomad_schema, ureg)
 
     def _extract_pdf(self, filepath: Path, output_path: Path) -> bool:
         doi = filepath.stem.replace("--", "/")
@@ -158,9 +159,7 @@ class ExtractionPipeline:
             self.total_completion_tokens += completion_usage.usage.completion_tokens
             print(f"Extracted: {filepath.name}")
             if self.nomad:
-                from nomad.units import ureg
-                from perovskite_solar_cell_database.llm_extraction_schema import LLMExtractedPerovskiteSolarCell
-                converted_nomad = convert_to_extraction_to_nomad_entries(parsed, doi, LLMExtractedPerovskiteSolarCell, ureg)
+                converted_nomad = convert_extraction_to_nomad_entries(parsed, doi)
                 push_to_nomad(doi, converted_nomad, get_authentication_token(), self.upload_id)
             return True
         except (InstructorRetryException, ValidationError) as e:
@@ -187,37 +186,91 @@ class ExtractionPipeline:
             text = re.sub(r"\s+", " ", text).strip()
 
             return text
-
-        journal, publisher = get_journal_and_publisher_from_doi(doi)
-
-        if journal is None:
-            return False
-
-        words_not_allowed = [
-            "reviews",
-            "theory",
-            "computation",
-            "catalysis",
-            "review",
-            "ceramic",
-            "toxicology",
-            "bio",
-        ]
-        if any(word in journal.lower() for word in words_not_allowed):
-            return False
-
-        allowed_journals = [
-            journal_entry["Source title"]
-            for journal_entry in read_csv_to_dict(
-                files("perovscribe").joinpath("allowed_journals.csv")
-            )
-        ]
-        if journal not in allowed_journals:
-            return remove_conjunctions(journal) in [
-                remove_conjunctions(j) for j in allowed_journals
+        
+        def journal_filter(journal, publisher):
+            words_not_allowed = [
+                "reviews",
+                "theory",
+                "computation",
+                "catalysis",
+                "review",
+                "ceramic",
+                "toxicology",
+                "bio",
             ]
+            if any(word in journal.lower() for word in words_not_allowed):
+                return False
 
-        return True
+            allowed_journals = [
+                journal_entry["Source title"]
+                for journal_entry in read_csv_to_dict(
+                    files("perovscribe").joinpath("allowed_journals.csv")
+                )
+            ]
+            if journal not in allowed_journals:
+                return remove_conjunctions(journal) in [
+                    remove_conjunctions(j) for j in allowed_journals
+                ]
+
+            return True
+        
+        def non_solar_filter(title):
+            non_solar_keywords = {
+                'LED': [r'\bLED\b', r'light.?emitting diode', r'electroluminescen'],
+                'Battery': [r'\bbattery\b', r'energy storage', r'rechargeable'],
+                'Photodetector': [r'photodetector', r'X.?ray detector'],
+                'Catalyst': [r'catalys', r'water splitting', r'hydrogen evolution'],
+                'Other': [r'sensor', r'transistor', r'laser', r'memory', r'thermoelectric', r'capacitor']
+            }
+            solar_cell_keywords = [r'solar cell', r'photovoltaic', r'\bPV\b', r'\bPSC\b', r'\bPCE\b']
+
+            # Compile patterns
+            # Flatten all exclusion lists into one big regex
+            all_exclusions = [p for sublist in non_solar_keywords.values() for p in sublist]
+            exclude_pattern = re.compile('|'.join(all_exclusions), re.IGNORECASE)
+            
+            # Compile inclusion pattern
+            include_pattern = re.compile('|'.join(solar_cell_keywords), re.IGNORECASE)
+
+            # 2. logic: (Has Bad Word) AND (Does NOT have Good Word)
+            has_bad_keyword = exclude_pattern.search(title)
+            is_solar_cell = include_pattern.search(title)
+
+            return not has_bad_keyword and is_solar_cell
+        
+        def theory_filter(title):
+            theory_keywords = [
+                r'\bDFT\b', r'\bSCAPS\b', r'\bSCAPS-1D\b', r'density functional', r'first.?principles', 
+                r'ab.?initio', r'molecular dynamics', r'\bMD\b simulation', r'VASP', r'Gaussian', 
+                r'Quantum ESPRESSO', r'CASTEP', r'SIESTA', r'computational study', r'theoretical study', 
+                r'theoretical investigation', r'numerical simulation', r'device simulation', 
+                r'theoretical analysis', r'computational analysis', r'theoretical modeling', 
+                r'computational modeling', r'simulated', r'simulation of', r'wxAMPS', r'AMPS-1D', 
+                r'PC1D', r'AFORS-HET', r'theoretical optimization', r'computational optimization',
+                r'simulated performance', r'theoretical efficiency', r'predicted efficiency',
+            ]
+            pattern = re.compile('|'.join(theory_keywords), re.IGNORECASE)
+
+            return not pattern.search(title)
+        
+        def review_article_filter(title):
+            review_patterns = [
+                r'^Review\b', r'^Perspective\b', r'^Overview\b', r'^Outlook\b', r'^Minireview\b',
+                r'^Critical [Rr]eview\b', r': [Aa] [Rr]eview\b', r': [Aa] [Pp]erspective\b',
+                r'\b[Rr]eview of\b', r'\b[Rr]eview on\b', r'^Progress in\b', r'^Recent [Aa]dvances\b',
+                r'^Advances in\b', r'^State of the art\b', r'^Current status\b'
+            ]
+            pattern = re.compile('|'.join(review_patterns), re.IGNORECASE)
+            is_review_article = pattern.search(title)
+            return not is_review_article
+
+
+        title, journal, publisher = get_doi_crossref_data(doi)
+
+        if title is None:
+            return False
+
+        return journal_filter(journal, publisher) and theory_filter(title) and non_solar_filter(title) and review_article_filter(title)
 
     def _run_single_pdf(self, filepath: Path, output_dir: Path):
         output_path = output_dir / f"{filepath.stem}.json"

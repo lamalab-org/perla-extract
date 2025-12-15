@@ -16,128 +16,196 @@ NOMAD_USERNAME = os.environ.get("NOMAD_USERNAME")
 NOMAD_PASSWORD = os.environ.get("NOMAD_PASSWORD")
 NOMAD_URL= os.environ.get('NOMAD_URL', "https://nomad-lab.eu/prod/v1/")
 
+# Mappings: "Old Key" -> "New Key"
+KEY_MAPPING = {
+    "bandgap": "band_gap",
+    "PCE_at_the_start_of_the_experiment": "PCE_at_start",
+    "PCE_at_the_end_of_experiment": "PCE_at_end",
+    "a_ions": "ions_a_site",
+    "b_ions": "ions_b_site",
+    "x_ions": "ions_x_site",
+    "time": "time", # Keep name, but used for unit check context
+}
+
+# Unit Preferences: Define target units for specific dimensions or keys
+# If not listed, it defaults to the magnitude of the original value.
+UNIT_CONVERSIONS = {
+    # Context Key : Target Unit
+    "stability": "hour",  # Convert stability time to hours
+    "PCE_T80": "hour",
+}
+
+# Keys that should be handled specially (not flattened to single float)
+PRESERVE_STRUCTURE = ["additional_parameters"]
+
+# Keys that should be split into value and unit fields
+SPLIT_VALUE_UNIT = ["concentration"]
+
+# ========== TEMPORARY: SKIP ADDITIVES (DELETE THIS SECTION LATER) ==========
+SKIP_KEYS = ["additives"]  # Keys to skip during processing
+# ============================================================================
+
 def to_json(pydantic_model: PerovskiteSolarCells, output: Union[Path, str]):
     with open(output, "w") as f:
         f.write(pydantic_model.model_dump_json())
 
 
-def convert_units(parent_key: str, obj: Dict[str, Any], ureg: 'UnitRegistry') -> Any:
-    """
-    Convert units of values in a nested dictionary to preferred units.
-
-    Args:
-        parent_key (str): Key of the parent dictionary
-        obj (Dict[str, Any]): Nested dictionary containing values with units
-        ureg (UnitRegistry): Pint UnitRegistry for unit conversion
-
-    Returns:
-        Any: float value or Dictionary with concentration values
-    """
-
-    if obj["value"] is None:
+def get_layer_order(layers):
+    """Extracts non-null layer names into a comma-separated string."""
+    if not layers or not isinstance(layers, list):
         return None
-
-    if "unit" not in obj:  # For FF there is no unit
-        converted = obj["value"]
-    else:
-        try:
-            if obj["unit"] == "%":  # For % values no conversion is needed
-                converted = obj["value"]
-            elif (
-                parent_key == "concentration"
-            ):  # For concentration values, units need to preserved
-                converted = {}
-                converted["concentration"] = obj["value"]
-                converted["concentration_unit"] = obj["unit"]
-            else:
-                converted = ureg.Quantity(obj["value"], obj["unit"])
-        except Exception as e:
-            # Keep original if conversion fails
-            print(f"Failed to convert {obj['value']} {obj['unit']} Error:{e}")
-            converted = obj["value"]
-    return converted
+    # Filter layers that have a name and join them
+    names = [l["name"] for l in layers if l.get("name")]
+    return ",".join(names)
 
 
-def get_layer_order(layers: Dict[str, Any]) -> str:
+def convert_with_pint(value_dict, parent_key, ureg=None):
+    """Converts a {value, unit} dict to a float/int in preferred units."""
+    if ureg is None:
+        from pint import UnitRegistry
+        ureg = UnitRegistry()
+
+    val = value_dict.get("value")
+    unit = value_dict.get("unit")
+
+    if val is None:
+        return None
+    
+    # If no unit exists or it's just a number
+    if not unit:
+        return val
+
+    try:
+        # 1. Handle Percentages (return as pure number, e.g. 18.24)
+        if unit == "%":
+            return val
+        
+        # 2. Create Quantity
+        q = ureg.Quantity(val, unit)
+        
+        # 3. Check if we have a specific target unit for this parent key
+        # (e.g., convert 'stability' time to hours)
+        if parent_key in UNIT_CONVERSIONS:
+            target_unit = UNIT_CONVERSIONS[parent_key]
+            # Check if dimensions match before converting (e.g. time -> time)
+            if q.check(target_unit): 
+                return float(q.to(target_unit).magnitude)
+        
+        # 4. Special case: If the specific key is 'time' inside 'stability' dict
+        # The recursive parent_key passing makes this slightly tricky, 
+        # so we handle "context" logic in the main loop or defaults here.
+        # For this specific dataset, stability time is usually hours.
+        if unit == 's' and (val > 10000): # Heuristic or explicit rule
+             return float(q.to('hour').magnitude)
+
+        # Default: Return magnitude of the original unit provided
+        return float(q.magnitude)
+
+    except Exception as e:
+        # Fallback: return original value if conversion fails
+        return val
+
+
+def traverse_and_transform(obj, parent_key=None, ureg=None):
     """
-    Get the order of layers in a cell stack.
-    Args:
-        layers (Dict[str, Any]): List of layers in a cell
-
-    Returns:
-        str: Comma-separated string of layer names
+    Recursively traverses the data structure to:
+    1. Remove None values
+    2. Convert {value, unit} objects
+    3. Rename keys
+    4. Generate derived fields (layer_order)
+    5. Split concentration into value and unit fields
     """
-    layer_order = ""
-    for layer in layers:
-        layer_order += f"{layer['name']}," if layer["name"] is not None else ""
-    return layer_order[:-1]
+    
+    # CASE 1: List -> Process items
+    if isinstance(obj, list):
+        # Process list, filter out None results
+        processed_list = [traverse_and_transform(item, parent_key) for item in obj]
+        return [i for i in processed_list if i is not None]
+
+    # CASE 2: Dictionary
+    if isinstance(obj, dict):
+        
+        # A. Check for "Value/Unit" Leaf Node
+        # Special handling for concentration: split into two fields
+        if "value" in obj and parent_key in SPLIT_VALUE_UNIT:
+            return {
+                parent_key: obj.get("value"),
+                f"{parent_key}_unit": obj.get("unit")
+            }
+        
+        # Standard value/unit conversion (flatten to single value)
+        if "value" in obj and parent_key not in PRESERVE_STRUCTURE:
+            return convert_with_pint(obj, parent_key, ureg)
+
+        # B. Standard Dictionary Processing
+        new_dict = {}
+
+        # Hook: Generate layer_order if we see a 'layers' key
+        if "layers" in obj and obj["layers"]:
+            order = get_layer_order(obj["layers"])
+            if order:
+                new_dict["layer_order"] = order
+
+        for key, value in obj.items():
+            # ========== TEMPORARY: SKIP ADDITIVES (DELETE THIS CHECK LATER) ==========
+            if key in SKIP_KEYS:
+                continue
+            # ==========================================================================
+            
+            # 1. Skip null values immediately (Cleaning)
+            if value is None:
+                continue
+                
+            # 2. Rename Key
+            new_key = KEY_MAPPING.get(key, key)
+            
+            # 3. Recursive Call
+            transformed_value = traverse_and_transform(value, key)
+            
+            # 4. Add to new dict if result is valid
+            if transformed_value is not None:
+                # Special handling for empty lists/dicts if you want to remove them:
+                if isinstance(transformed_value, (dict, list)) and not transformed_value:
+                    continue
+                
+                # If the transformed value is a dict with split fields (like concentration),
+                # merge them into the parent dict
+                if isinstance(transformed_value, dict) and key in SPLIT_VALUE_UNIT:
+                    new_dict.update(transformed_value)
+                else:
+                    new_dict[new_key] = transformed_value
+                
+        # If the resulting dict is empty (and it wasn't empty before), return None
+        if not new_dict and obj:
+            return None
+            
+        return new_dict
+
+    # CASE 3: Primitives (str, int, float, bool)
+    return obj
 
 
-def convert_to_nomad_schema(data: Dict[str, Any], ureg: 'UnitRegistry') -> Dict[str, Any]:
-    """
-    Traverse a nested dictionary and convert values with units to preferred units.
-
-    Args:
-        data (Dict[str, Any]): Nested dictionary containing values with units
-        ureg (UnitRegistry): Pint UnitRegistry for unit conversion
-
-    Returns:
-        Dict[str, Any]: Dictionary with converted values
-    """
-
-    def traverse_and_convert(parent_key: str, obj: Any) -> Any:
-        if isinstance(obj, dict):
-            # Create a new dictionary to store modified values
-            new_dict = {}
-            if "value" in obj:
-                new_dict = convert_units(parent_key, obj, ureg)
-            else:
-                # Recursively process all key-value pairs
-                if parent_key == "cells" and obj["layers"] is not None:
-                    new_dict["layer_order"] = get_layer_order(obj["layers"])
-
-                for key, value in obj.items():
-                    if (
-                        key == "additional_parameters"
-                    ):  # For additional parameters, keep JSON structure
-                        new_dict[key] = value
-                    elif key in ["a_ions", "b_ions", "x_ions"]:
-                        new_dict["ions_" + key[0] + "_site"] = traverse_and_convert(
-                            "ions_" + key[0] + "_site", value
-                        )
-                    elif key == "concentration":
-                        concentration = traverse_and_convert(key, value)
-                        if (
-                            concentration is not None
-                        ):  # For concentration values, units need to preserved
-                            new_dict["concentration"] = concentration["concentration"]
-                            new_dict["concentration_unit"] = concentration[
-                                "concentration_unit"
-                            ]
-                        else:
-                            new_dict["concentration"] = None
-                            new_dict["concentration_unit"] = None
-                    elif key in ("impurities", "additives"):
-                        converted = traverse_and_convert(key, value)
-                        new_dict[key] = [converted] if converted is not None else None
-                    else:
-                        if key == "bandgap":
-                            key = "band_gap"
-                        elif key == "PCE_at_the_start_of_the_experiment":
-                            key = "PCE_at_start"
-                        elif key == "PCE_at_the_end_of_experiment":
-                            key = "PCE_at_end"
-                        new_dict[key] = traverse_and_convert(key, value)
-
-            return new_dict
-
-        elif isinstance(obj, list):
-            return [traverse_and_convert(parent_key, item) for item in obj]
-
-        else:
-            return obj
-
-    return traverse_and_convert(None, data)
+def process_to_nomad(raw_data, doi, ureg=None):
+    """Wraps the transformed data in the specific NOMAD schema envelope."""
+    doi_url = "https://www.doi.org/"+doi
+    # Run the transformation
+    transformed = traverse_and_transform(raw_data, ureg)
+    
+    output_entries = []
+    
+    # The input is usually a dict with "cells": [...]
+    if "cells" in transformed:
+        for cell in transformed["cells"]:
+            entry = {
+                "data": {
+                    "m_def": "perovskite_solar_cell_database.llm_extraction_schema.LLMExtractedPerovskiteSolarCell",
+                    "DOI_number": doi_url,
+                    **cell # Unpack the processed cell data here
+                }
+            }
+            output_entries.append(entry)
+            
+    return output_entries
 
 def get_authentication_token(nomad_url: str=NOMAD_URL, username: str=NOMAD_USERNAME, password: str=NOMAD_PASSWORD) -> str|None: 
     '''Get the token for accessing your NOMAD unpublished uploads remotely'''
@@ -200,6 +268,31 @@ def remove_none_values(input_dict):
 def filter_unwanted(data: dict) -> dict:
     new_data = {"cells": []}
     for i, cell in enumerate(data["cells"] or []):
+        # Theory filter
+        def is_theory_cell(a_cell):
+            theory_keywords = [
+                r'\bDFT\b', r'\bSCAPS\b', r'\bSCAPS-1D\b', r'density functional', r'first.?principles', 
+                r'ab.?initio', r'molecular dynamics', r'\bMD\b simulation', r'VASP', r'Gaussian', 
+                r'Quantum ESPRESSO', r'CASTEP', r'SIESTA', r'computational study', r'theoretical study', 
+                r'theoretical investigation', r'numerical simulation', r'device simulation', 
+                r'theoretical analysis', r'computational analysis', r'theoretical modeling', 
+                r'computational modeling', r'simulated', r'simulation of', r'wxAMPS', r'AMPS-1D', 
+                r'PC1D', r'AFORS-HET', r'theoretical optimization', r'computational optimization',
+                r'simulated performance', r'theoretical efficiency', r'predicted efficiency',
+            ]
+            pattern = re.compile('|'.join(theory_keywords), re.IGNORECASE)
+            notes = a_cell.get('additional_notes', '')
+            rev_notes = a_cell.get('reviewer_additional_notes', '')
+
+            text_to_check = f"""
+                Additional notes: {notes},
+                Additional notes from reviewer: {rev_notes}
+                """
+            return pattern.search(text_to_check)
+        if is_theory_cell(cell):
+            continue
+
+        # PCE metrics filter
         if (
             ((cell.get("pce") or {"value": 28}).get("value") or 28) < 27.5
             and ((cell.get("voc") or {"value": 1}).get("value") or 1)
@@ -228,22 +321,9 @@ def filter_unwanted(data: dict) -> dict:
     return new_data
 
 
-def convert_to_extraction_to_nomad_entries(
-    pydantic_model: PerovskiteSolarCells, doi: str, nomad_schema, ureg: 'UnitRegistry'
+def convert_extraction_to_nomad_entries(
+    pydantic_model: PerovskiteSolarCells, doi: str, ureg: 'UnitRegistry' = None
 ):
     data = filter_unwanted(pydantic_model.model_dump())
-    data = convert_to_nomad_schema(data, ureg)
-    nomad_entries = []
-    for index, cell in enumerate(data["cells"]):
-        transformed_data = cell
-        transformed_data["DOI_number"] = (
-            f"https://www.doi.org/{doi.replace('--', '/')}"
-        )
-        transformed_data["m_def"] = (
-            "perovskite_solar_cell_database.llm_extraction_schema.LLMExtractedPerovskiteSolarCell"
-        )
-        transformed_data = remove_none_values(transformed_data)
-        nomad_data_section = nomad_schema.m_from_dict(transformed_data)
-        entry_dict = {"data": nomad_data_section.m_to_dict(with_root_def=True)}
-        nomad_entries.append(entry_dict)
+    nomad_entries = process_to_nomad(data, doi, ureg)
     return nomad_entries
