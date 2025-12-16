@@ -12,6 +12,28 @@ import os
 UNPAYWALL_EMAIL = os.environ["UNPAYWALL_EMAIL"]
 tdm = TDMClient()
 
+def get_doi_summary(doi: str) -> dict:
+    """
+    Fetches paper metadata from various sources using its DOI.
+    Args:
+        doi: The Digital Object Identifier (DOI) of the paper.
+    Returns:
+        A dictionary with metadata or an error message string.
+    """
+    doi = doi.lower().strip()
+    summaries = {"crossref": {}, "openalex": {}, "semantic_scholar": {}}
+    doi_summary_funcs = {
+        "crossref": get_doi_summary_crossref,
+        "openalex": get_doi_summary_openalex,
+        "semantic_scholar": get_doi_summary_semantic_scholar,
+    }
+    for source in ["crossref", "openalex", "semantic_scholar"]:
+        summary = doi_summary_funcs[source](doi)
+        summaries[source] = summary
+        if "error" not in summary and summary.get("abstract", "") != "":
+            break
+    return summaries
+
 def get_doi_summary_crossref(doi: str) -> dict:
     """
     Fetches paper metadata from CrossRef using its DOI.
@@ -174,7 +196,7 @@ def get_doi(entry):
         return f"error getting doi: {e}"
 
 
-def get_pdf_url(doi: str) -> str|None:
+def get_pdf_url(doi: str) -> tuple[bool, str|None]:
     """
     Fetches the PDF URL using multiple services in order: Unpaywall, OpenAlex.
 
@@ -186,14 +208,14 @@ def get_pdf_url(doi: str) -> str|None:
     """
     return_msg = ""
     for get_pdf_url_func in [get_pdf_url_unpaywall, get_pdf_url_openalex]:
-        pdf_url = get_pdf_url_func(doi)
-        if pdf_url and "Error fetching data" not in pdf_url:
-            return pdf_url
+        error, pdf_url = get_pdf_url_func(doi)
+        if pdf_url and not error:
+            return error, pdf_url
         return_msg += pdf_url if pdf_url else ""
     logger.error(f"No PDF available for this DOI: {doi}.")
-    return return_msg if return_msg else None
+    return error, return_msg if return_msg else None
 
-def get_pdf_url_unpaywall(doi: str) -> str|None:
+def get_pdf_url_unpaywall(doi: str) -> tuple[bool, str|None]:
     """
     Fetches the PDF URL from Unpaywall using the provided DOI.
 
@@ -216,16 +238,16 @@ def get_pdf_url_unpaywall(doi: str) -> str|None:
             and data.get("best_oa_location")
             and data["best_oa_location"].get("url_for_pdf", None)
         ):
-            return data["best_oa_location"].get("url_for_pdf")
+            return False, data["best_oa_location"].get("url_for_pdf")
         else:
             logger.error(f"Unpaywall:No PDF available for this DOI: {doi}.")
-            return None
+            return False, None
 
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching data from Unpaywall: {e}")
-        return f"Error fetching data from Unpaywall: {e}"
+        return True, f"Error fetching data from Unpaywall: {e}"
 
-def get_pdf_url_openalex(doi: str) -> str|None:
+def get_pdf_url_openalex(doi: str) -> tuple[bool, str|None]:
     doi = doi.lower().strip()
     try:
         api_url = f"https://api.openalex.org/works/https://doi.org/{doi}"
@@ -236,13 +258,13 @@ def get_pdf_url_openalex(doi: str) -> str|None:
         and data["best_oa_location"].get("is_oa")
         and data["best_oa_location"].get("pdf_url", None)
              ):
-            return data["best_oa_location"].get("pdf_url")
+            return False, data["best_oa_location"].get("pdf_url")
         else:
             logger.error(f"Openalex: No PDF available for this DOI : {doi}")
-            return None
+            return False, None
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching data from Openalex: {e}")
-        return f"Error fetching data from Openalex: {e}"
+        return True, f"Error fetching data from Openalex: {e}"
 
 
 HEADERS = {

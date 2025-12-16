@@ -1,9 +1,5 @@
 import pandas as pd
-from perovscribe.papersbot.utils import (
-    get_doi_summary_crossref,
-    get_doi_summary_openalex,
-    get_doi_summary_semantic_scholar,
-)
+from perovscribe.papersbot.utils import get_doi_summary
 from perovscribe.configuration import papersbot_runs_path
 import pickle
 import time
@@ -47,21 +43,9 @@ def get_abstracts():
             stats["missing_doi"] += 1
             stats["total"] += 1
             continue
-        s = {"crossref": {}, "openalex": {}, "semantic_scholar": {}}
-        summary = get_doi_summary_crossref(doi)
-        s["crossref"] = summary
-        get_doi_summary = {
-            "crossref": get_doi_summary_crossref,
-            "openalex": get_doi_summary_openalex,
-            "semantic_scholar": get_doi_summary_semantic_scholar,
-        }
-        for source in ["crossref", "openalex", "semantic_scholar"]:
-            summary = get_doi_summary[source](doi)
-            s[source] = summary
-            if "error" not in summary and summary["abstract"] != "":
-                break
         
-        
+        s = get_doi_summary(doi)
+                
         sample["abstract_found"] = len("".join([s[k].get("abstract", "") for k in s])) > 0
         s["rss_feed_summary"] = sample["summary"]
         s["title"] = sample["title"]
