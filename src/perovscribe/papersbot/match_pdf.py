@@ -70,10 +70,10 @@ def check_pdfs():
     for i, sample in post_proc_df.iterrows():
         if sample["pdf_checked"] or not sample["abstract_match"]:
             continue
-        pdf_url = get_pdf_url(sample["doi"])
+        error, pdf_url = get_pdf_url(sample["doi"])
         post_proc_df.at[i, "pdf_checked"] = True
         if pdf_url is not None:
-            if "Error fetching data from Unpaywall:" not in pdf_url:
+            if not error:
                 post_proc_df.at[i, "pdf_available"] = True
                 stats["urls_found"] += 1
                 found_urls.append({"doi": sample["doi"], "pdf_url": pdf_url})
