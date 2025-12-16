@@ -184,14 +184,12 @@ def get_pdf_url(doi: str) -> str|None:
     Returns:
         str: The PDF URL if available, otherwise None.
     """
-    pdf_url = get_pdf_url_unpaywall(doi)
-    if pdf_url and "Error fetching data" not in pdf_url:
-        return pdf_url
-    return_msg = pdf_url if pdf_url else ""
-    pdf_url = get_pdf_url_openalex(doi)
-    if pdf_url and "Error fetching data" not in pdf_url:
-        return pdf_url
-    return_msg += pdf_url if pdf_url else ""
+    return_msg = ""
+    for get_pdf_url_func in [get_pdf_url_unpaywall, get_pdf_url_openalex]:
+        pdf_url = get_pdf_url_func(doi)
+        if pdf_url and "Error fetching data" not in pdf_url:
+            return pdf_url
+        return_msg += pdf_url if pdf_url else ""
     logger.error(f"No PDF available for this DOI: {doi}.")
     return return_msg if return_msg else None
 
