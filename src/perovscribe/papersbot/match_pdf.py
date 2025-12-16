@@ -73,7 +73,7 @@ def check_pdfs():
         pdf_url = get_pdf_url(sample["doi"])
         post_proc_df.at[i, "pdf_checked"] = True
         if pdf_url is not None:
-            if "Error fetching data from Unpaywall:" not in pdf_url:
+            if "Error fetching data" not in pdf_url:
                 post_proc_df.at[i, "pdf_available"] = True
                 stats["urls_found"] += 1
                 found_urls.append({"doi": sample["doi"], "pdf_url": pdf_url})

@@ -50,16 +50,19 @@ def get_abstracts():
         s = {"crossref": {}, "openalex": {}, "semantic_scholar": {}}
         summary = get_doi_summary_crossref(doi)
         s["crossref"] = summary
-        if "error" in summary or summary["abstract"] == "":
-            oa_summary = get_doi_summary_openalex(doi)
-            s["openalex"] = oa_summary
-            if "error" in oa_summary or oa_summary["abstract"] == "":
-                ss_summary = get_doi_summary_semantic_scholar(doi)
-                s["semantic_scholar"] = ss_summary
-
-        stats["abstract_found"] += int(
-            len("".join([s[k].get("abstract", "") for k in s])) > 0
-        )
+        get_doi_summary = {
+            "crossref": get_doi_summary_crossref,
+            "openalex": get_doi_summary_openalex,
+            "semantic_scholar": get_doi_summary_semantic_scholar,
+        }
+        for source in ["crossref", "openalex", "semantic_scholar"]:
+            summary = get_doi_summary[source](doi)
+            s[source] = summary
+            if "error" not in summary and summary["abstract"] != "":
+                break
+        
+        
+        sample["abstract_found"] = len("".join([s[k].get("abstract", "") for k in s])) > 0
         s["rss_feed_summary"] = sample["summary"]
         s["title"] = sample["title"]
         s["doi"] = sample["doi"]
@@ -76,6 +79,7 @@ def get_abstracts():
         df_new.append(sample)
         save_summaries(summaries)
         stats["total"] += 1
+        stats["abstract_found"] += int(sample["abstract_found"])
     save_summaries(summaries, current=False)
     df.to_csv(f"{papersbot_runs_path}/entry_stats.csv", index=False)
     df_new = pd.DataFrame(df_new)

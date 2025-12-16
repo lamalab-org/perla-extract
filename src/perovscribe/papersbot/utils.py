@@ -38,6 +38,7 @@ def get_doi_summary_crossref(doi: str) -> dict:
                 ],
                 "published": work.get("published-print", {}).get("date-parts", [[]])[0],
                 "journal": work.get("container-title", [""])[0],
+                "publisher": work.get("publisher", ""),
                 "doi": work.get("DOI", ""),
                 "source": "crossref",
             }
@@ -72,7 +73,9 @@ def get_doi_summary_openalex(doi: str) -> dict:
             ]
 
             # Journal (called 'source' in OpenAlex)
-            journal = data.get("host_venue", {}).get("display_name")
+            source=data.get('primary_location',{}).get('source',{})
+            journal = source.get("display_name", "")
+            publisher = source.get("host_organization_name","")
 
             # Publication Date
             published_date = data.get("publication_date")
@@ -82,6 +85,7 @@ def get_doi_summary_openalex(doi: str) -> dict:
                 "abstract": abstract,
                 "authors": authors,
                 "journal": journal,
+                "publisher": publisher,
                 "published_date": published_date,
                 "doi": doi,
                 "source": "openalex",
@@ -129,6 +133,7 @@ def get_doi_summary_semantic_scholar(doi: str, api_key: str = "") -> dict:
                 "abstract": abstract,
                 "authors": [author["name"] for author in data.get("authors", [])],
                 "journal": journal,
+                "publisher": "",
                 "published_date": data.get("publicationDate", ""),
                 "doi": doi,
                 "source": "semantic_scholar",
