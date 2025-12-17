@@ -88,10 +88,11 @@ def get_doi_crossref_data(doi):
         journal = data.get("container-title", ["Unknown Journal"])[0]
         publisher = data.get("publisher", "Unknown Publisher")
         title = data.get("title", "")[0]
-        return title, journal, publisher
+        abstract = data.get("abstract", "")
+        return title, abstract, journal, publisher
     except Exception as e:
         print(f"Error fetching DOI {doi}: {e}")
-        return None, None, None
+        return None, None, None, None
 
 
 class ExtractionPipeline:
@@ -214,7 +215,7 @@ class ExtractionPipeline:
 
             return True
         
-        def non_solar_filter(title):
+        def non_solar_filter(title, abstract):
             non_solar_keywords = {
                 'LED': [r'\bLED\b', r'light.?emitting diode', r'electroluminescen'],
                 'Battery': [r'\bbattery\b', r'energy storage', r'rechargeable'],
@@ -233,12 +234,12 @@ class ExtractionPipeline:
             include_pattern = re.compile('|'.join(solar_cell_keywords), re.IGNORECASE)
 
             # 2. logic: (Has Bad Word) AND (Does NOT have Good Word)
-            has_bad_keyword = exclude_pattern.search(title)
-            is_solar_cell = include_pattern.search(title)
+            has_bad_keyword = exclude_pattern.search(title + " " + abstract)
+            is_solar_cell = include_pattern.search(title + " " + abstract)
 
             return not has_bad_keyword and is_solar_cell
         
-        def theory_filter(title):
+        def theory_filter(title, abstract):
             theory_keywords = [
                 r'\bDFT\b', r'\bSCAPS\b', r'\bSCAPS-1D\b', r'density functional', r'first.?principles', 
                 r'ab.?initio', r'molecular dynamics', r'\bMD\b simulation', r'VASP', r'Gaussian', 
@@ -251,9 +252,9 @@ class ExtractionPipeline:
             ]
             pattern = re.compile('|'.join(theory_keywords), re.IGNORECASE)
 
-            return not pattern.search(title)
+            return not pattern.search(title + " " + abstract)
         
-        def review_article_filter(title):
+        def review_article_filter(title, abstract):
             review_patterns = [
                 r'^Review\b', r'^Perspective\b', r'^Overview\b', r'^Outlook\b', r'^Minireview\b',
                 r'^Critical [Rr]eview\b', r': [Aa] [Rr]eview\b', r': [Aa] [Pp]erspective\b',
@@ -261,16 +262,16 @@ class ExtractionPipeline:
                 r'^Advances in\b', r'^State of the art\b', r'^Current status\b'
             ]
             pattern = re.compile('|'.join(review_patterns), re.IGNORECASE)
-            is_review_article = pattern.search(title)
+            is_review_article = pattern.search(title + " " + abstract)
             return not is_review_article
 
 
-        title, journal, publisher = get_doi_crossref_data(doi)
+        title, abstract, journal, publisher = get_doi_crossref_data(doi)
 
         if title is None:
             return False
 
-        return journal_filter(journal, publisher) and theory_filter(title) and non_solar_filter(title) and review_article_filter(title)
+        return journal_filter(journal, publisher) and theory_filter(title, abstract) and non_solar_filter(title, abstract) and review_article_filter(title, abstract)
 
     def _run_single_pdf(self, filepath: Path, output_dir: Path):
         output_path = output_dir / f"{filepath.stem}.json"

@@ -268,30 +268,6 @@ def remove_none_values(input_dict):
 def filter_unwanted(data: dict) -> dict:
     new_data = {"cells": []}
     for i, cell in enumerate(data["cells"] or []):
-        # Theory filter
-        def is_theory_cell(a_cell):
-            theory_keywords = [
-                r'\bDFT\b', r'\bSCAPS\b', r'\bSCAPS-1D\b', r'density functional', r'first.?principles', 
-                r'ab.?initio', r'molecular dynamics', r'\bMD\b simulation', r'VASP', r'Gaussian', 
-                r'Quantum ESPRESSO', r'CASTEP', r'SIESTA', r'computational study', r'theoretical study', 
-                r'theoretical investigation', r'numerical simulation', r'device simulation', 
-                r'theoretical analysis', r'computational analysis', r'theoretical modeling', 
-                r'computational modeling', r'simulated', r'simulation of', r'wxAMPS', r'AMPS-1D', 
-                r'PC1D', r'AFORS-HET', r'theoretical optimization', r'computational optimization',
-                r'simulated performance', r'theoretical efficiency', r'predicted efficiency',
-            ]
-            pattern = re.compile('|'.join(theory_keywords), re.IGNORECASE)
-            notes = a_cell.get('additional_notes', '')
-            rev_notes = a_cell.get('reviewer_additional_notes', '')
-
-            text_to_check = f"""
-                Additional notes: {notes},
-                Additional notes from reviewer: {rev_notes}
-                """
-            return pattern.search(text_to_check)
-        if is_theory_cell(cell):
-            continue
-
         # PCE metrics filter
         if (
             ((cell.get("pce") or {"value": 28}).get("value") or 28) < 27.5
