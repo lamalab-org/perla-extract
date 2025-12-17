@@ -1,1 +1,97 @@
-{"doi": "10.1039/c9se00513g", "author": "Asmin Askin", "cells": [{"perovskite_composition": {"formula": "Cs0.05(FA0.85MA0.15)0.95Pb(I0.9Br0.1)3", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 16.0, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "pin", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100.0}, "encapsulated": null, "stability": {"time": 10800000.0, "temperature": 85.0, "potential_bias": "Open circuit"}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate", "deposition": null, "additional_treatment": null}, {"name": "CL1-2", "thickness": null, "functionality": "Hole-transport", "deposition": null, "additional_treatment": null}, {"name": "Cs0.05(FA0.85MA0.15)0.95Pb(I0.9Br0.1)3", "thickness": null, "functionality": "Absorber", "deposition": null, "additional_treatment": null}, {"name": "PCBM", "thickness": null, "functionality": "Electron-transport", "deposition": null, "additional_treatment": null}, {"name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": null, "additional_treatment": null}, {"name": "Ag", "thickness": null, "functionality": "Contact", "deposition": null, "additional_treatment": null}]}]}
+{
+    "doi": "10.1039/c9se00513g",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.05(FA0.85MA0.15)0.95Pb(I0.9Br0.1)3",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 16.0,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": {
+                    "value": 10800000.0,
+                    "unit": "s"
+                },
+                "temperature": {
+                    "value": 85.0,
+                    "unit": "\u00b0C"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "CL1-2",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Cs0.05(FA0.85MA0.15)0.95Pb(I0.9Br0.1)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Ag",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

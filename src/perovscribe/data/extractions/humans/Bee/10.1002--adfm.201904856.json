@@ -1,1 +1,108 @@
-{"doi": "10.1002/adfm.201904856", "author": "Jessica helisa Hautrive rossato", "cells": [{"perovskite_composition": {"formula": "Cs0.05FA0.81MA0.14PbI2.55Br0.45", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 20.19, "unit": "%"}, "jsc": {"value": 23.64, "unit": "mA cm^-2"}, "voc": {"value": 1.14, "unit": "V"}, "ff": {"value": 75.08}, "active_area": {"value": 0.1}, "device_architecture": "nip", "number_devices": 15, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100.0}, "encapsulated": null, "stability": {"time": 2592000.0, "PCE_at_the_start_of_the_experiment": 20.19, "PCE_after_1000_hours": 18.63, "PCE_at_the_end_of_description": 18.63, "potential_bias": "Open circuit"}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate", "deposition": null, "additional_treatment": null}, {"name": "c-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": null, "additional_treatment": null}, {"name": "m-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": null, "additional_treatment": null}, {"name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45", "thickness": null, "functionality": "Absorber", "deposition": null, "additional_treatment": null}, {"name": "DTB(3%DEG)", "thickness": null, "functionality": "Hole-transport", "deposition": null, "additional_treatment": null}, {"name": "Au", "thickness": 100.0, "functionality": "Contact", "deposition": null, "additional_treatment": null}]}]}
+{
+    "doi": "10.1002/adfm.201904856",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 20.19,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.64,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.14,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 75.08
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 15,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": {
+                    "value": 2592000.0,
+                    "unit": "s"
+                },
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 20.19,
+                    "unit": "%"
+                },
+                "PCE_after_1000_hours": {
+                    "value": 18.63,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 18.63,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "DTB(3%DEG)",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Au",
+                    "thickness": {
+                        "value": 100.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

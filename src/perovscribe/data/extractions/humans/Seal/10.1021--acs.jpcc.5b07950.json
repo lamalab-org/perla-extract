@@ -1,1 +1,151 @@
-{"doi": "10.1021/acs.jpcc.5b07950", "author": "Asmin Askin", "cells": [{"perovskite_composition": {"formula": "CH3NH3PbI3", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 14.0, "unit": "%"}, "jsc": {"value": 18.7, "unit": "mA cm^-2"}, "voc": {"value": 0.979, "unit": "V"}, "ff": {"value": 76.3}, "active_area": {"value": 0.04}, "device_architecture": "nip", "number_devices": 30, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100.0}, "encapsulated": null, "stability": null, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate", "deposition": null, "additional_treatment": null}, {"name": "TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"step_name": null, "method": "Spray pyrolysis", "atmosphere": "Air", "temperature": 500.0, "duration": null, "antisolvent": null, "solution": null, "additional_parameters": null}], "additional_treatment": null}, {"name": "TiO2", "thickness": 170.0, "functionality": "Electron-transport", "deposition": [{"step_name": null, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "antisolvent": null, "solution": null, "additional_parameters": null}], "additional_treatment": "PMMA templating"}, {"name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"step_name": null, "method": "Two-step deposition", "atmosphere": "Air", "temperature": null, "duration": null, "antisolvent": null, "solution": null, "additional_parameters": null}], "additional_treatment": null}, {"name": "Spiro-MeOTAD", "thickness": null, "functionality": "Hole-transport", "deposition": [{"step_name": null, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "antisolvent": null, "solution": null, "additional_parameters": null}], "additional_treatment": null}, {"name": "Au", "thickness": 60.0, "functionality": "Contact", "deposition": [{"step_name": null, "method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null, "antisolvent": null, "solution": null, "additional_parameters": null}], "additional_treatment": null}]}]}
+{
+    "doi": "10.1021/acs.jpcc.5b07950",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "CH3NH3PbI3",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 14.0,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.7,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.979,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76.3
+            },
+            "active_area": {
+                "value": 0.04
+            },
+            "device_architecture": "nip",
+            "number_devices": 30,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spray pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": {
+                                "value": 500.0,
+                                "unit": "\u00b0C"
+                            },
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": {
+                        "value": 170.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": "PMMA templating"
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Two-step deposition",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Spiro-MeOTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Au",
+                    "thickness": {
+                        "value": 60.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

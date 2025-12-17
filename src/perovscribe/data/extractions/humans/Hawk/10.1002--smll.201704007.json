@@ -1,1 +1,1495 @@
-{"doi": "10.1002/smll.201704007", "author": "Edgar Nandayapa", "cells": [{"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 15.85, "unit": "%"}, "jsc": {"value": 20.75, "unit": "mA cm^-2"}, "voc": {"value": 1.08, "unit": "V"}, "ff": {"value": 70.9}, "active_area": {"value": 0.12}, "device_architecture": "nip", "number_devices": 8, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Zolix Sirius-SS"}, "encapsulated": false, "stability": {"review_completed": true, "time": 96, "light_intensity": 0, "humidity": 60, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "PTAA:F4-TCNQ", "thickness": null, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}], "additional_treatment": "0 wt%"}, {"review_completed": true, "name": "PMMA", "thickness": null, "functionality": "Other", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "PCBM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Bphen", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Al", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 18.47, "unit": "%"}, "jsc": {"value": 22.45, "unit": "mA cm^-2"}, "voc": {"value": 1.1, "unit": "V"}, "ff": {"value": 74.5}, "active_area": {"value": 0.12}, "device_architecture": "nip", "number_devices": 8, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Zolix Sirius-SS"}, "encapsulated": false, "stability": {"review_completed": true, "time": 96, "light_intensity": 0, "humidity": 60, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "PTAA:F4-TCNQ", "thickness": null, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}], "additional_treatment": "1 wt%"}, {"review_completed": true, "name": "PMMA", "thickness": null, "functionality": "Other", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "PCBM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Bphen", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Al", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 18.5, "unit": "%"}, "jsc": {"value": 22.87, "unit": "mA cm^-2"}, "voc": {"value": 1.08, "unit": "V"}, "ff": {"value": 74.9}, "active_area": {"value": 0.12}, "device_architecture": "nip", "number_devices": 8, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Zolix Sirius-SS"}, "encapsulated": false, "stability": {"review_completed": true, "time": 96, "light_intensity": 0, "humidity": 60, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "PTAA:F4-TCNQ", "thickness": null, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}], "additional_treatment": "5 wt%"}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "PCBM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Bphen", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Al", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 18.94, "unit": "%"}, "jsc": {"value": 22.96, "unit": "mA cm^-2"}, "voc": {"value": 1.08, "unit": "V"}, "ff": {"value": 76.2}, "active_area": {"value": 0.12}, "device_architecture": "nip", "number_devices": 8, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Zolix Sirius-SS"}, "encapsulated": false, "stability": {"review_completed": true, "time": 96, "light_intensity": 0, "humidity": 60, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "PTAA:F4-TCNQ", "thickness": null, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}], "additional_treatment": "3 wt%"}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "PCBM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Bphen", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Al", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 17.37, "unit": "%"}, "jsc": {"value": 22.7, "unit": "mA cm^-2"}, "voc": {"value": 1.07, "unit": "V"}, "ff": {"value": 71.3}, "active_area": {"value": 0.12}, "device_architecture": "nip", "number_devices": 8, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Zolix Sirius-SS"}, "encapsulated": false, "stability": {"review_completed": true, "time": 96, "light_intensity": 0, "humidity": 60, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "PTAA:F4-TCNQ", "thickness": null, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}], "additional_treatment": "10 wt%"}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "PCBM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Bphen", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Al", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 15.85, "unit": "%"}, "jsc": {"value": 23.38, "unit": "mA cm^-2"}, "voc": {"value": 1.12, "unit": "V"}, "ff": {"value": 77.1}, "active_area": {"value": 0.12}, "device_architecture": "nip", "number_devices": 8, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Zolix Sirius-SS"}, "encapsulated": false, "stability": {"review_completed": true, "time": 96, "light_intensity": 0, "humidity": 60, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "PTAA:F4-TCNQ", "thickness": null, "functionality": "Hole-transport", "additional_treatment": "5 wt%", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "PMMA", "thickness": null, "functionality": "Other", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "PCBM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Bphen", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Al", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 20.08, "unit": "%"}, "jsc": {"value": 23.36, "unit": "mA cm^-2"}, "voc": {"value": 1.12, "unit": "V"}, "ff": {"value": 76.9}, "active_area": {"value": 0.12}, "device_architecture": "nip", "number_devices": 8, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Zolix Sirius-SS"}, "encapsulated": false, "stability": {"review_completed": true, "time": 96, "light_intensity": 0, "humidity": 60, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "PTAA:F4-TCNQ", "thickness": null, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}], "additional_treatment": "3 wt%"}, {"review_completed": true, "name": "PMMA", "thickness": null, "functionality": "Other", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "PCBM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Bphen", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Al", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 16.18, "unit": "%"}, "jsc": {"value": 20.67, "unit": "mA cm^-2"}, "voc": {"value": 1.06, "unit": "V"}, "ff": {"value": 73.6}, "active_area": {"value": 0.12}, "device_architecture": "nip", "number_devices": 8, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Zolix Sirius-SS"}, "encapsulated": false, "stability": {"review_completed": true, "time": 96, "light_intensity": 0, "humidity": 60, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "PTAA:F4-TCNQ", "thickness": null, "functionality": "Hole-transport", "additional_treatment": "0 wt%", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "PCBM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Bphen", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Al", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 19.9, "unit": "%"}, "jsc": {"value": 23.38, "unit": "mA cm^-2"}, "voc": {"value": 1.12, "unit": "V"}, "ff": {"value": 75.9}, "active_area": {"value": 0.12}, "device_architecture": "nip", "number_devices": 8, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Zolix Sirius-SS"}, "encapsulated": false, "stability": {"review_completed": true, "time": 96, "light_intensity": 0, "humidity": 60, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "PTAA:F4-TCNQ", "thickness": null, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}], "additional_treatment": "10 wt%"}, {"review_completed": true, "name": "PMMA", "thickness": null, "functionality": "Other", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "PCBM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Bphen", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Al", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 18.08, "unit": "%"}, "jsc": {"value": 22.16, "unit": "mA cm^-2"}, "voc": {"value": 1.08, "unit": "V"}, "ff": {"value": 75.6}, "active_area": {"value": 0.12}, "device_architecture": "nip", "number_devices": 8, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Zolix Sirius-SS"}, "encapsulated": false, "stability": {"review_completed": true, "time": 96, "light_intensity": 0, "humidity": 60, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "PTAA:F4-TCNQ", "thickness": null, "functionality": "Hole-transport", "additional_treatment": "1 wt%", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "PCBM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Bphen", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Al", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}]}
+{
+    "doi": "10.1002/smll.201704007",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 15.85,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.75,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 70.9
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Zolix Sirius-SS"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 96,
+                "light_intensity": 0,
+                "humidity": 60,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ],
+                    "additional_treatment": "0 wt%"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "thickness": null,
+                    "functionality": "Other",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.47,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.45,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74.5
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Zolix Sirius-SS"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 96,
+                "light_intensity": 0,
+                "humidity": 60,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ],
+                    "additional_treatment": "1 wt%"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "thickness": null,
+                    "functionality": "Other",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.87,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74.9
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Zolix Sirius-SS"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 96,
+                "light_intensity": 0,
+                "humidity": 60,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ],
+                    "additional_treatment": "5 wt%"
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.94,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.96,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76.2
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Zolix Sirius-SS"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 96,
+                "light_intensity": 0,
+                "humidity": 60,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ],
+                    "additional_treatment": "3 wt%"
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 17.37,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.7,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.07,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71.3
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Zolix Sirius-SS"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 96,
+                "light_intensity": 0,
+                "humidity": 60,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ],
+                    "additional_treatment": "10 wt%"
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 15.85,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.38,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.12,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77.1
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Zolix Sirius-SS"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 96,
+                "light_intensity": 0,
+                "humidity": 60,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "5 wt%",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "thickness": null,
+                    "functionality": "Other",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.08,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.36,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.12,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76.9
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Zolix Sirius-SS"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 96,
+                "light_intensity": 0,
+                "humidity": 60,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ],
+                    "additional_treatment": "3 wt%"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "thickness": null,
+                    "functionality": "Other",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 16.18,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.67,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.06,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 73.6
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Zolix Sirius-SS"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 96,
+                "light_intensity": 0,
+                "humidity": 60,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "0 wt%",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 19.9,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.38,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.12,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 75.9
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Zolix Sirius-SS"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 96,
+                "light_intensity": 0,
+                "humidity": 60,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ],
+                    "additional_treatment": "10 wt%"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "thickness": null,
+                    "functionality": "Other",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.08,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.16,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 75.6
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Zolix Sirius-SS"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 96,
+                "light_intensity": 0,
+                "humidity": 60,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "1 wt%",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

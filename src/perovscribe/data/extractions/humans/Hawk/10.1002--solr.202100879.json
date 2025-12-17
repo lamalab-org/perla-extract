@@ -1,1 +1,142 @@
-{"doi": "10.1002/solr.202100879", "author": "Edgar Nandayapa", "cells": [{"perovskite_composition": {"formula": "", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 22.07, "unit": "%"}, "jsc": {"value": 24.64, "unit": "mA cm^-2"}, "voc": {"value": 1.14, "unit": "V"}, "ff": {"value": 78.57}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "Unknown"}, "encapsulated": false, "stability": {"review_completed": true, "time": 1200, "humidity": 50, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "functionality": "Contact"}, {"review_completed": true, "name": "SnO2", "functionality": "Electron-transport"}, {"review_completed": true, "name": "Me3SPbI3", "functionality": "Absorber"}, {"review_completed": true, "name": "3D perovksite", "functionality": "Absorber"}, {"review_completed": true, "name": "Spiro-OmeTAD", "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 20.1, "unit": "%"}, "jsc": {"value": 24.14, "unit": "mA cm^-2"}, "voc": {"value": 1.09, "unit": "V"}, "ff": {"value": 76.3}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "Unknown"}, "encapsulated": false, "stability": {"review_completed": true, "time": 1200, "humidity": 50, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "functionality": "Contact"}, {"review_completed": true, "name": "SnO2", "functionality": "Electron-transport"}, {"review_completed": true, "name": "3D perovksite", "functionality": "Absorber"}, {"review_completed": true, "name": "Spiro-OmeTAD", "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "functionality": "Contact"}]}]}
+{
+    "doi": "10.1002/solr.202100879",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 22.07,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 24.64,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.14,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 78.57
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "Unknown"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 1200,
+                "humidity": 50,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "SnO2",
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Me3SPbI3",
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "3D perovksite",
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OmeTAD",
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 20.1,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 24.14,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.09,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76.3
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "Unknown"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 1200,
+                "humidity": 50,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "SnO2",
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "3D perovksite",
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OmeTAD",
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

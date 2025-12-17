@@ -1,1 +1,512 @@
-{"doi": "10.1039/c8nr09353a", "author": "Juan jos\u00e9 Pati\u00f1o l\u00f3pez", "cells": [{"perovskite_composition": {"formula": "CsPbBr3", "a_ions": [{"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "3"}]}, "pce": {"value": 5.4, "unit": "%"}, "jsc": {"value": 5.6, "unit": "mA cm^-2"}, "voc": {"value": 1.28, "unit": "V"}, "ff": {"value": 76}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": {"potential_bias": "Open circuit", "type": "AM 1.5G", "review_completed": true, "PCE_T80": 408, "description": "ISOS O1 "}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "c-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "mp-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "CsPbBr3", "thickness": 200, "functionality": "Absorber", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "ONC1\u2022MWCNT", "thickness": null, "functionality": "Contact", "deposition": [{"review_completed": true, "method": "Film transfer", "atmosphere": "Air", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "CsPbBr3", "a_ions": [{"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "3"}]}, "pce": {"value": 1.65, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": {"review_completed": true, "type": "AM 1.5G", "potential_bias": "Unknown"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "c-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "mp-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "CsPbBr3", "thickness": 200, "functionality": "Absorber", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Carbon", "thickness": null, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "CsPbBr3", "a_ions": [{"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "3"}]}, "pce": {"value": 4.7, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": {"review_completed": true, "type": "AM 1.5G", "potential_bias": "Unknown"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "c-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "mp-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "CsPbBr3", "thickness": 200, "functionality": "Absorber", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Au", "thickness": null, "functionality": "Contact", "deposition": [{"review_completed": true, "method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "CsPbBr3", "a_ions": [{"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "3"}]}, "pce": {"value": 5.8, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": {"review_completed": true, "type": "AM 1.5G", "potential_bias": "Unknown"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "c-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "mp-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "CsPbBr3", "thickness": 200, "functionality": "Absorber", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "ONC1\u2022MWCNT", "thickness": null, "functionality": "Contact", "deposition": [{"review_completed": true, "method": "Film transfer", "atmosphere": "Air"}, {"review_completed": true, "method": "Washing PDI"}]}]}]}
+{
+    "doi": "10.1039/c8nr09353a",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "CsPbBr3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 5.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 5.6,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.28,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "potential_bias": "Open circuit",
+                "type": "AM 1.5G",
+                "review_completed": true,
+                "PCE_T80": 408,
+                "description": "ISOS O1 "
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "mp-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CsPbBr3",
+                    "thickness": 200,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "ONC1\u2022MWCNT",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Film transfer",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "CsPbBr3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 1.65,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "type": "AM 1.5G",
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "mp-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CsPbBr3",
+                    "thickness": 200,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Carbon",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "CsPbBr3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 4.7,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "type": "AM 1.5G",
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "mp-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CsPbBr3",
+                    "thickness": 200,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "CsPbBr3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 5.8,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "type": "AM 1.5G",
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "mp-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CsPbBr3",
+                    "thickness": 200,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "ONC1\u2022MWCNT",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Film transfer",
+                            "atmosphere": "Air"
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Washing PDI"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,1 +1,129 @@
-{"doi": "10.1039/c5nr05563f", "author": "Hugo Lemos", "cells": [{"perovskite_composition": {"formula": "CH3NH3PbI3", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 16.97, "unit": "%"}, "jsc": {"value": 22.48, "unit": "mA cm^-2"}, "voc": {"value": 1.063, "unit": "V"}, "ff": {"value": 71.0}, "active_area": {"value": 0.125}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100.0}, "encapsulated": null, "stability": null, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate", "deposition": null, "additional_treatment": null}, {"name": "TiO2 quantum dots", "thickness": 52.0, "functionality": "Electron-transport", "deposition": [{"step_name": null, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "antisolvent": null, "solution": null, "additional_parameters": null}], "additional_treatment": null}, {"name": "Mesoporous TiO2", "thickness": 200.0, "functionality": "Electron-transport", "deposition": null, "additional_treatment": null}, {"name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"step_name": null, "method": "Two-step spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "antisolvent": null, "solution": null, "additional_parameters": null}], "additional_treatment": null}, {"name": "Spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport", "deposition": [{"step_name": null, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "antisolvent": null, "solution": null, "additional_parameters": null}], "additional_treatment": null}, {"name": "Au", "thickness": 80.0, "functionality": "Contact", "deposition": null, "additional_treatment": null}]}]}
+{
+    "doi": "10.1039/c5nr05563f",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "CH3NH3PbI3",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 16.97,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.48,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.063,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71.0
+            },
+            "active_area": {
+                "value": 0.125
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "TiO2 quantum dots",
+                    "thickness": {
+                        "value": 52.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Mesoporous TiO2",
+                    "thickness": {
+                        "value": 200.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Electron-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Two-step spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Au",
+                    "thickness": {
+                        "value": 80.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

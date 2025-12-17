@@ -1,1 +1,117 @@
-{"doi": "10.1021/acs.chemmater.8b01521", "author": "Juan jos\u00e9 Pati\u00f1o l\u00f3pez", "cells": [{"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 5.9, "unit": "%"}, "jsc": {"value": 14.5, "unit": "mA cm^-2"}, "voc": {"value": 0.85, "unit": "V"}, "ff": {"value": 48}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": {"review_completed": true}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "TiO2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"review_completed": true, "step_name": "MAPbI3 deposition", "method": "Spin-coating", "atmosphere": "Unknown"}, {"step_name": "Antisolvent", "method": "Antisolvent quenching", "atmosphere": "Unknown"}]}, {"review_completed": true, "name": "PEDOT", "thickness": null, "functionality": "Hole-transport", "additional_treatment": "Rapid reduction at -0.6 V for 10 s", "deposition": [{"review_completed": true, "step_name": "PEDOT deposition", "method": "Electrodeposition", "atmosphere": "Unknown", "temperature": null, "duration": null, "additional_parameters": {"potential": "1.0 V", "charge_density": "10 mC cm^-2"}}]}]}]}
+{
+    "doi": "10.1021/acs.chemmater.8b01521",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 5.9,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 14.5,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.85,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 48
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "MAPbI3 deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown"
+                        },
+                        {
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent quenching",
+                            "atmosphere": "Unknown"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PEDOT",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "Rapid reduction at -0.6 V for 10 s",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "PEDOT deposition",
+                            "method": "Electrodeposition",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "potential": "1.0 V",
+                                "charge_density": "10 mC cm^-2"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

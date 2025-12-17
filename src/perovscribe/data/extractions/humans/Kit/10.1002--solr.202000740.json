@@ -1,1 +1,50 @@
-{"doi": "10.1002/solr.202000740", "author": "Keely Clements", "cells": [{"perovskite_composition": {"formula": "(FA0.79MA0.16Cs0.05)0.95Rb0.05Pb(I0.6Br0.4)3", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 17.71, "unit": "%"}, "jsc": {"value": 18.53, "unit": "mA cm^-2"}, "voc": {"value": 1.19, "unit": "V"}, "ff": {"value": 80.3}, "active_area": {"value": null}, "device_architecture": "pin", "number_devices": 30, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100.0}, "encapsulated": null, "stability": {"PCE_at_the_start_of_the_experiment": 17.71, "potential_bias": "Open circuit"}, "layers": null}]}
+{
+    "doi": "10.1002/solr.202000740",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "(FA0.79MA0.16Cs0.05)0.95Rb0.05Pb(I0.6Br0.4)3",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 17.71,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.53,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.19,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 80.3
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": 30,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": null,
+            "stability": {
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 17.71,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": null
+        }
+    ]
+}

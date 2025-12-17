@@ -1,1 +1,242 @@
-{"doi": "10.1557/s43578-021-00155-z", "author": "Jessica helisa Hautrive rossato", "cells": [{"perovskite_composition": {"formula": "Cs0.3MA2.7Bi2I9", "a_ions": [{"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "0.3"}, {"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "2.7"}], "b_ions": [{"abbreviation": "Bi", "common_name": "Bismuth\u00a0", "molecular_formula": "Bi3+", "coefficient": "2"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "9"}]}, "pce": {"value": 1.5, "unit": "%"}, "jsc": {"value": 4, "unit": "mA cm^-2"}, "voc": {"value": 0.652, "unit": "V"}, "ff": {"value": 57.43}, "active_area": {"value": 0.09}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "description": "WACOM-WXS-140S-Super-L2 class AAA solar simulator", "light_intensity": 100, "lamp": "xenon/halogen lamp-based system"}, "encapsulated": null, "stability": null, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "Compact TiO2", "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "spray pyrolysis process", "method": "spray pyrolysis process", "temperature": 480, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "titanium diisopropoxide bis(acetylacetonate)", "concentration": 0.2, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "ethanol"}]}}]}, {"name": "TiO2", "functionality": "Electron-transport", "deposition": [{"step_name": "Spin-coating", "method": "Spin-coating", "duration": 45, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "titanium dioxide paste (18NR-T)", "concentration": 1, "concentration_unit": "wt%"}], "solvents": [{"review_completed": true, "name": "ethanol", "volume_fraction": 4}]}}, {"review_completed": true, "step_name": "Thermal-annealing", "method": "Thermal-annealing", "temperature": 480, "duration": 2700}]}, {"name": "(Cs0.1MA0.9)3Bi2I9", "thickness": null, "functionality": "Absorber", "additional_treatment": "anti-solvent at 45th  second", "deposition": [{"review_completed": true, "step_name": "Spin-coating 1", "method": "Spin-coating", "duration": 10, "solution": {"solutes": [{"review_completed": true, "name": "bismuth iodide ", "concentration": 2, "concentration_unit": "wt%"}, {"review_completed": true, "name": "CsMA", "concentration": 3, "concentration_unit": "wt%"}], "solvents": [{"review_completed": true, "name": "DMF"}]}}, {"review_completed": true, "step_name": "Spin-coating 2", "method": "Spin-coating 2", "duration": 25}, {"review_completed": true, "step_name": "Spin-coating 3", "method": "Spin-coating 3", "duration": 25}, {"step_name": " Thermal-annealing", "method": " Thermal-annealing", "atmosphere": "N2", "temperature": 100, "duration": 3600}]}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport", "additional_treatment": "45 \u03bcL of lithium, 28.8 \u03bcL TBP and 17.5 \u03bcL of a solution of 52 mg LiTFSI in 100 \u03bcL acetonitrile)", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "duration": 45, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "spiro-OMeTAD", "concentration": 72.3, "concentration_unit": "g/L"}], "solvents": [{"name": "Chlorobenzene", "volume_fraction": 1}]}}]}, {"review_completed": true, "name": "Au", "thickness": null, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Evaporation", "method": "Evaporation"}]}]}]}
+{
+    "doi": "10.1557/s43578-021-00155-z",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.3MA2.7Bi2I9",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.3"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "2.7"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Bi",
+                        "common_name": "Bismuth\u00a0",
+                        "molecular_formula": "Bi3+",
+                        "coefficient": "2"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "9"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 1.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 4,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.652,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 57.43
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "WACOM-WXS-140S-Super-L2 class AAA solar simulator",
+                "light_intensity": 100,
+                "lamp": "xenon/halogen lamp-based system"
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Compact TiO2",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spray pyrolysis process",
+                            "method": "spray pyrolysis process",
+                            "temperature": 480,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "titanium diisopropoxide bis(acetylacetonate)",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "TiO2",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "titanium dioxide paste (18NR-T)",
+                                        "concentration": 1,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol",
+                                        "volume_fraction": 4
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Thermal-annealing",
+                            "method": "Thermal-annealing",
+                            "temperature": 480,
+                            "duration": 2700
+                        }
+                    ]
+                },
+                {
+                    "name": "(Cs0.1MA0.9)3Bi2I9",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "anti-solvent at 45th  second",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating 1",
+                            "method": "Spin-coating",
+                            "duration": 10,
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "bismuth iodide ",
+                                        "concentration": 2,
+                                        "concentration_unit": "wt%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CsMA",
+                                        "concentration": 3,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating 2",
+                            "method": "Spin-coating 2",
+                            "duration": 25
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating 3",
+                            "method": "Spin-coating 3",
+                            "duration": 25
+                        },
+                        {
+                            "step_name": " Thermal-annealing",
+                            "method": " Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "45 \u03bcL of lithium, 28.8 \u03bcL TBP and 17.5 \u03bcL of a solution of 52 mg LiTFSI in 100 \u03bcL acetonitrile)",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "spiro-OMeTAD",
+                                        "concentration": 72.3,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Evaporation"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,1 +1,2980 @@
-{"doi": "10.1016/j.apsusc.2019.144478", "author": "Edgar Nandayapa", "cells": [{"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 14.5, "unit": "%"}, "jsc": {"value": 18.07, "unit": "mA cm^-2"}, "voc": {"value": 1.04, "unit": "V"}, "ff": {"value": 77.15}, "active_area": {"value": 0.1}, "device_architecture": "pin", "number_devices": 5, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Enlitech simulator (AAA Class Solar Simulators)"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "time": 672, "humidity": 40, "temperature": 25, "PCE_after_1000_hours": 17.17, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "NiOx", "thickness": 20, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null}}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 250, "duration": 1800}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 300, "duration": 300}], "additional_treatment": "250-II280-30"}, {"review_completed": true, "name": "MAPbI3", "thickness": null, "functionality": "Absorber", "additional_treatment": "3 wt% urea additive", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"step1_speed": 2000, "step1_time": 10, "step2_speed": 4000, "step2_time": 20, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PbI2", "concentration": 1.2, "concentration_unit": "M"}, {"name": "MAI", "concentration": 1.2, "concentration_unit": "M"}], "solvents": [{"name": "DMF", "volume_fraction": 0.8}, {"name": "DMSO", "volume_fraction": 0.2}]}}, {"method": "Antisolvent-quenching", "atmosphere": "Ar", "temperature": null, "duration": null}, {"method": "Thermal-annealing", "atmosphere": "Ar", "temperature": 100, "duration": 600}]}, {"review_completed": true, "name": "PC61BM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PC61BM", "concentration": 20, "concentration_unit": "mg/L"}], "solvents": [{"name": "chlorobenzene", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"speed": 6000, "time": 30, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "BCP", "concentration": 2, "concentration_unit": "mg/L"}], "solvents": [{"name": "IPA", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 16.19, "unit": "%"}, "jsc": {"value": 21.31, "unit": "mA cm^-2"}, "voc": {"value": 1.06, "unit": "V"}, "ff": {"value": 71.5}, "active_area": {"value": 0.1}, "device_architecture": "pin", "number_devices": 5, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Enlitech simulator (AAA Class Solar Simulators)"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "time": 672, "humidity": 40, "temperature": 25, "PCE_after_1000_hours": 17.17, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "NiOx", "thickness": 20, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null}}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 250, "duration": 1800}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 300, "duration": 300}], "additional_treatment": "urea"}, {"review_completed": true, "name": "MAPbI3", "thickness": null, "functionality": "Absorber", "additional_treatment": "3 wt% urea additive", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"step1_speed": 2000, "step1_time": 10, "step2_speed": 4000, "step2_time": 20, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PbI2", "concentration": 1.2, "concentration_unit": "M"}, {"name": "MAI", "concentration": 1.2, "concentration_unit": "M"}], "solvents": [{"name": "DMF", "volume_fraction": 0.8}, {"name": "DMSO", "volume_fraction": 0.2}]}}, {"method": "Antisolvent-quenching", "atmosphere": "Ar", "temperature": null, "duration": null}, {"method": "Thermal-annealing", "atmosphere": "Ar", "temperature": 100, "duration": 600}]}, {"review_completed": true, "name": "PC61BM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PC61BM", "concentration": 20, "concentration_unit": "mg/L"}], "solvents": [{"name": "chlorobenzene", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"speed": 6000, "time": 30, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "BCP", "concentration": 2, "concentration_unit": "mg/L"}], "solvents": [{"name": "IPA", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 14.97, "unit": "%"}, "jsc": {"value": 18.58, "unit": "mA cm^-2"}, "voc": {"value": 1.04, "unit": "V"}, "ff": {"value": 77.5}, "active_area": {"value": 0.1}, "device_architecture": "pin", "number_devices": 5, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Enlitech simulator (AAA Class Solar Simulators)"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "time": 672, "humidity": 40, "temperature": 25, "PCE_after_1000_hours": 17.17, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "NiOx", "thickness": 20, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null}}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 250, "duration": 1800}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 300, "duration": 300}], "additional_treatment": "250-II280-15"}, {"review_completed": true, "name": "MAPbI3", "thickness": null, "functionality": "Absorber", "additional_treatment": "3 wt% urea additive", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"step1_speed": 2000, "step1_time": 10, "step2_speed": 4000, "step2_time": 20, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PbI2", "concentration": 1.2, "concentration_unit": "M"}, {"name": "MAI", "concentration": 1.2, "concentration_unit": "M"}], "solvents": [{"name": "DMF", "volume_fraction": 0.8}, {"name": "DMSO", "volume_fraction": 0.2}]}}, {"method": "Antisolvent-quenching", "atmosphere": "Ar", "temperature": null, "duration": null}, {"method": "Thermal-annealing", "atmosphere": "Ar", "temperature": 100, "duration": 600}]}, {"review_completed": true, "name": "PC61BM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PC61BM", "concentration": 20, "concentration_unit": "mg/L"}], "solvents": [{"name": "chlorobenzene", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"speed": 6000, "time": 30, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "BCP", "concentration": 2, "concentration_unit": "mg/L"}], "solvents": [{"name": "IPA", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 16.16, "unit": "%"}, "jsc": {"value": 20.44, "unit": "mA cm^-2"}, "voc": {"value": 1.06, "unit": "V"}, "ff": {"value": 74.93}, "active_area": {"value": 0.1}, "device_architecture": "pin", "number_devices": 5, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Enlitech simulator (AAA Class Solar Simulators)"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "time": 672, "humidity": 40, "temperature": 25, "PCE_after_1000_hours": 17.17, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "NiOx", "thickness": 20, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null}}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 250, "duration": 1800}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 300, "duration": 300}], "additional_treatment": "250-II300-5"}, {"review_completed": true, "name": "MAPbI3", "thickness": null, "functionality": "Absorber", "additional_treatment": "3 wt% urea additive", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"step1_speed": 2000, "step1_time": 10, "step2_speed": 4000, "step2_time": 20, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PbI2", "concentration": 1.2, "concentration_unit": "M"}, {"name": "MAI", "concentration": 1.2, "concentration_unit": "M"}], "solvents": [{"name": "DMF", "volume_fraction": 0.8}, {"name": "DMSO", "volume_fraction": 0.2}]}}, {"method": "Antisolvent-quenching", "atmosphere": "Ar", "temperature": null, "duration": null}, {"method": "Thermal-annealing", "atmosphere": "Ar", "temperature": 100, "duration": 600}]}, {"review_completed": true, "name": "PC61BM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PC61BM", "concentration": 20, "concentration_unit": "mg/L"}], "solvents": [{"name": "chlorobenzene", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"speed": 6000, "time": 30, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "BCP", "concentration": 2, "concentration_unit": "mg/L"}], "solvents": [{"name": "IPA", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 14.97, "unit": "%"}, "jsc": {"value": 18.58, "unit": "mA cm^-2"}, "voc": {"value": 1.04, "unit": "V"}, "ff": {"value": 77.5}, "active_area": {"value": 0.1}, "device_architecture": "pin", "number_devices": 5, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Enlitech simulator (AAA Class Solar Simulators)"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "time": 672, "humidity": 40, "temperature": 25, "PCE_after_1000_hours": 17.17, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "NiOx", "thickness": 20, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null}}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 250, "duration": 1800}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 300, "duration": 300}], "additional_treatment": "230-II280-15"}, {"review_completed": true, "name": "MAPbI3", "thickness": null, "functionality": "Absorber", "additional_treatment": "3 wt% urea additive", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"step1_speed": 2000, "step1_time": 10, "step2_speed": 4000, "step2_time": 20, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PbI2", "concentration": 1.2, "concentration_unit": "M"}, {"name": "MAI", "concentration": 1.2, "concentration_unit": "M"}], "solvents": [{"name": "DMF", "volume_fraction": 0.8}, {"name": "DMSO", "volume_fraction": 0.2}]}}, {"method": "Antisolvent-quenching", "atmosphere": "Ar", "temperature": null, "duration": null}, {"method": "Thermal-annealing", "atmosphere": "Ar", "temperature": 100, "duration": 600}]}, {"review_completed": true, "name": "PC61BM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PC61BM", "concentration": 20, "concentration_unit": "mg/L"}], "solvents": [{"name": "chlorobenzene", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"speed": 6000, "time": 30, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "BCP", "concentration": 2, "concentration_unit": "mg/L"}], "solvents": [{"name": "IPA", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 18.14, "unit": "%"}, "jsc": {"value": 22.37, "unit": "mA cm^-2"}, "voc": {"value": 1.06, "unit": "V"}, "ff": {"value": 76.46}, "active_area": {"value": 0.1}, "device_architecture": "pin", "number_devices": 5, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Enlitech simulator (AAA Class Solar Simulators)"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "time": 672, "humidity": 40, "temperature": 25, "PCE_after_1000_hours": 17.17, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "NiOx", "thickness": 20, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null}}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 250, "duration": 1800}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 300, "duration": 300}], "additional_treatment": "250-II300-5\u202f+\u202furea"}, {"review_completed": true, "name": "MAPbI3", "thickness": null, "functionality": "Absorber", "additional_treatment": "3 wt% urea additive", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"step1_speed": 2000, "step1_time": 10, "step2_speed": 4000, "step2_time": 20, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PbI2", "concentration": 1.2, "concentration_unit": "M"}, {"name": "MAI", "concentration": 1.2, "concentration_unit": "M"}], "solvents": [{"name": "DMF", "volume_fraction": 0.8}, {"name": "DMSO", "volume_fraction": 0.2}]}}, {"method": "Antisolvent-quenching", "atmosphere": "Ar", "temperature": null, "duration": null}, {"method": "Thermal-annealing", "atmosphere": "Ar", "temperature": 100, "duration": 600}]}, {"review_completed": true, "name": "PC61BM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PC61BM", "concentration": 20, "concentration_unit": "mg/L"}], "solvents": [{"name": "chlorobenzene", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"speed": 6000, "time": 30, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "BCP", "concentration": 2, "concentration_unit": "mg/L"}], "solvents": [{"name": "IPA", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 14.37, "unit": "%"}, "jsc": {"value": 18.08, "unit": "mA cm^-2"}, "voc": {"value": 1.04, "unit": "V"}, "ff": {"value": 76.67}, "active_area": {"value": 0.1}, "device_architecture": "pin", "number_devices": 5, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Enlitech simulator (AAA Class Solar Simulators)"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "time": 672, "humidity": 40, "temperature": 25, "PCE_after_1000_hours": 17.17, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "NiOx", "thickness": 20, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null}}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 250, "duration": 1800}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 300, "duration": 300}], "additional_treatment": "230-II280-5"}, {"review_completed": true, "name": "MAPbI3", "thickness": null, "functionality": "Absorber", "additional_treatment": "3 wt% urea additive", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"step1_speed": 2000, "step1_time": 10, "step2_speed": 4000, "step2_time": 20, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PbI2", "concentration": 1.2, "concentration_unit": "M"}, {"name": "MAI", "concentration": 1.2, "concentration_unit": "M"}], "solvents": [{"name": "DMF", "volume_fraction": 0.8}, {"name": "DMSO", "volume_fraction": 0.2}]}}, {"method": "Antisolvent-quenching", "atmosphere": "Ar", "temperature": null, "duration": null}, {"method": "Thermal-annealing", "atmosphere": "Ar", "temperature": 100, "duration": 600}]}, {"review_completed": true, "name": "PC61BM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PC61BM", "concentration": 20, "concentration_unit": "mg/L"}], "solvents": [{"name": "chlorobenzene", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"speed": 6000, "time": 30, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "BCP", "concentration": 2, "concentration_unit": "mg/L"}], "solvents": [{"name": "IPA", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 13.63, "unit": "%"}, "jsc": {"value": 18.28, "unit": "mA cm^-2"}, "voc": {"value": 1.05, "unit": "V"}, "ff": {"value": 71.25}, "active_area": {"value": 0.1}, "device_architecture": "pin", "number_devices": 5, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Enlitech simulator (AAA Class Solar Simulators)"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "time": 672, "humidity": 40, "temperature": 25, "PCE_after_1000_hours": 17.17, "potential_bias": "Open circuit"}, "layers": [{"name": "ITO", "thickness": null, "functionality": "Contact", "review_completed": true}, {"name": "NiOx", "thickness": 20, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null}}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 250, "duration": 1800}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 300, "duration": 300}], "review_completed": true}, {"name": "MAPbI3", "thickness": null, "functionality": "Absorber", "additional_treatment": "3 wt% urea additive", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"step1_speed": 2000, "step1_time": 10, "step2_speed": 4000, "step2_time": 20, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PbI2", "concentration": 1.2, "concentration_unit": "M"}, {"name": "MAI", "concentration": 1.2, "concentration_unit": "M"}], "solvents": [{"name": "DMF", "volume_fraction": 0.8}, {"name": "DMSO", "volume_fraction": 0.2}]}}, {"method": "Antisolvent-quenching", "atmosphere": "Ar", "temperature": null, "duration": null}, {"method": "Thermal-annealing", "atmosphere": "Ar", "temperature": 100, "duration": 600}], "review_completed": true}, {"name": "PC61BM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PC61BM", "concentration": 20, "concentration_unit": "mg/L"}], "solvents": [{"name": "chlorobenzene", "volume_fraction": null}]}}], "review_completed": true}, {"name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"speed": 6000, "time": 30, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "BCP", "concentration": 2, "concentration_unit": "mg/L"}], "solvents": [{"name": "IPA", "volume_fraction": null}]}}], "review_completed": true}, {"name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}], "review_completed": true}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 15.51, "unit": "%"}, "jsc": {"value": 19.4, "unit": "mA cm^-2"}, "voc": {"value": 1.05, "unit": "V"}, "ff": {"value": 76.38}, "active_area": {"value": 0.1}, "device_architecture": "pin", "number_devices": 5, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Enlitech simulator (AAA Class Solar Simulators)"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "time": 672, "humidity": 40, "temperature": 25, "PCE_after_1000_hours": 17.17, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "NiOx", "thickness": 20, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null}}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 250, "duration": 1800}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 300, "duration": 300}], "additional_treatment": "250-II300-30"}, {"review_completed": true, "name": "MAPbI3", "thickness": null, "functionality": "Absorber", "additional_treatment": "3 wt% urea additive", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"step1_speed": 2000, "step1_time": 10, "step2_speed": 4000, "step2_time": 20, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PbI2", "concentration": 1.2, "concentration_unit": "M"}, {"name": "MAI", "concentration": 1.2, "concentration_unit": "M"}], "solvents": [{"name": "DMF", "volume_fraction": 0.8}, {"name": "DMSO", "volume_fraction": 0.2}]}}, {"method": "Antisolvent-quenching", "atmosphere": "Ar", "temperature": null, "duration": null}, {"method": "Thermal-annealing", "atmosphere": "Ar", "temperature": 100, "duration": 600}]}, {"review_completed": true, "name": "PC61BM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PC61BM", "concentration": 20, "concentration_unit": "mg/L"}], "solvents": [{"name": "chlorobenzene", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"speed": 6000, "time": 30, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "BCP", "concentration": 2, "concentration_unit": "mg/L"}], "solvents": [{"name": "IPA", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 14.5, "unit": "%"}, "jsc": {"value": 18.07, "unit": "mA cm^-2"}, "voc": {"value": 1.04, "unit": "V"}, "ff": {"value": 77.15}, "active_area": {"value": 0.1}, "device_architecture": "pin", "number_devices": 5, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Enlitech simulator (AAA Class Solar Simulators)"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "time": 672, "humidity": 40, "temperature": 25, "PCE_after_1000_hours": 17.17, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "NiOx", "thickness": 20, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null}}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 250, "duration": 1800}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 300, "duration": 300}], "additional_treatment": "230-II280-30"}, {"review_completed": true, "name": "MAPbI3", "thickness": null, "functionality": "Absorber", "additional_treatment": "3 wt% urea additive", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"step1_speed": 2000, "step1_time": 10, "step2_speed": 4000, "step2_time": 20, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PbI2", "concentration": 1.2, "concentration_unit": "M"}, {"name": "MAI", "concentration": 1.2, "concentration_unit": "M"}], "solvents": [{"name": "DMF", "volume_fraction": 0.8}, {"name": "DMSO", "volume_fraction": 0.2}]}}, {"method": "Antisolvent-quenching", "atmosphere": "Ar", "temperature": null, "duration": null}, {"method": "Thermal-annealing", "atmosphere": "Ar", "temperature": 100, "duration": 600}]}, {"review_completed": true, "name": "PC61BM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PC61BM", "concentration": 20, "concentration_unit": "mg/L"}], "solvents": [{"name": "chlorobenzene", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"speed": 6000, "time": 30, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "BCP", "concentration": 2, "concentration_unit": "mg/L"}], "solvents": [{"name": "IPA", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 13.4, "unit": "%"}, "jsc": {"value": 17.47, "unit": "mA cm^-2"}, "voc": {"value": 1.05, "unit": "V"}, "ff": {"value": 73.03}, "active_area": {"value": 0.1}, "device_architecture": "pin", "number_devices": 5, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Enlitech simulator (AAA Class Solar Simulators)"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "time": 672, "humidity": 40, "temperature": 25, "PCE_after_1000_hours": 17.17, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "NiOx", "thickness": 20, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null}}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 250, "duration": 1800}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 300, "duration": 300}], "additional_treatment": "250-II280-5"}, {"review_completed": true, "name": "MAPbI3", "thickness": null, "functionality": "Absorber", "additional_treatment": "3 wt% urea additive", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"step1_speed": 2000, "step1_time": 10, "step2_speed": 4000, "step2_time": 20, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PbI2", "concentration": 1.2, "concentration_unit": "M"}, {"name": "MAI", "concentration": 1.2, "concentration_unit": "M"}], "solvents": [{"name": "DMF", "volume_fraction": 0.8}, {"name": "DMSO", "volume_fraction": 0.2}]}}, {"method": "Antisolvent-quenching", "atmosphere": "Ar", "temperature": null, "duration": null}, {"method": "Thermal-annealing", "atmosphere": "Ar", "temperature": 100, "duration": 600}]}, {"review_completed": true, "name": "PC61BM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PC61BM", "concentration": 20, "concentration_unit": "mg/L"}], "solvents": [{"name": "chlorobenzene", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"speed": 6000, "time": 30, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "BCP", "concentration": 2, "concentration_unit": "mg/L"}], "solvents": [{"name": "IPA", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 14.86, "unit": "%"}, "jsc": {"value": 18.71, "unit": "mA cm^-2"}, "voc": {"value": 1.05, "unit": "V"}, "ff": {"value": 76.03}, "active_area": {"value": 0.1}, "device_architecture": "pin", "number_devices": 5, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Enlitech simulator (AAA Class Solar Simulators)"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "time": 672, "humidity": 40, "temperature": 25, "PCE_after_1000_hours": 17.17, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "NiOx", "thickness": 20, "functionality": "Hole-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null}}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 250, "duration": 1800}, {"method": "Thermal-annealing", "atmosphere": "Air", "temperature": 300, "duration": 300}], "additional_treatment": "250-II300-15"}, {"review_completed": true, "name": "MAPbI3", "thickness": null, "functionality": "Absorber", "additional_treatment": "3 wt% urea additive", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"step1_speed": 2000, "step1_time": 10, "step2_speed": 4000, "step2_time": 20, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PbI2", "concentration": 1.2, "concentration_unit": "M"}, {"name": "MAI", "concentration": 1.2, "concentration_unit": "M"}], "solvents": [{"name": "DMF", "volume_fraction": 0.8}, {"name": "DMSO", "volume_fraction": 0.2}]}}, {"method": "Antisolvent-quenching", "atmosphere": "Ar", "temperature": null, "duration": null}, {"method": "Thermal-annealing", "atmosphere": "Ar", "temperature": 100, "duration": 600}]}, {"review_completed": true, "name": "PC61BM", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "PC61BM", "concentration": 20, "concentration_unit": "mg/L"}], "solvents": [{"name": "chlorobenzene", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "BCP", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Ar", "temperature": null, "duration": null, "additional_parameters": {"speed": 6000, "time": 30, "units": "rpm, s"}, "solution": {"volume": null, "temperature": null, "solutes": [{"name": "BCP", "concentration": 2, "concentration_unit": "mg/L"}], "solvents": [{"name": "IPA", "volume_fraction": null}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"method": "Evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}]}
+{
+    "doi": "10.1016/j.apsusc.2019.144478",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 14.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.07,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.04,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77.15
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "pin",
+            "number_devices": 5,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Enlitech simulator (AAA Class Solar Simulators)"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "time": 672,
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 17.17,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 250,
+                            "duration": 1800
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 300,
+                            "duration": 300
+                        }
+                    ],
+                    "additional_treatment": "250-II280-30"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "3 wt% urea additive",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "step1_speed": 2000,
+                                "step1_time": 10,
+                                "step2_speed": 4000,
+                                "step2_time": 20,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Ar",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PC61BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 6000,
+                                "time": 30,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "BCP",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 16.19,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.31,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.06,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71.5
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "pin",
+            "number_devices": 5,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Enlitech simulator (AAA Class Solar Simulators)"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "time": 672,
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 17.17,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 250,
+                            "duration": 1800
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 300,
+                            "duration": 300
+                        }
+                    ],
+                    "additional_treatment": "urea"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "3 wt% urea additive",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "step1_speed": 2000,
+                                "step1_time": 10,
+                                "step2_speed": 4000,
+                                "step2_time": 20,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Ar",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PC61BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 6000,
+                                "time": 30,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "BCP",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 14.97,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.58,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.04,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77.5
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "pin",
+            "number_devices": 5,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Enlitech simulator (AAA Class Solar Simulators)"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "time": 672,
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 17.17,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 250,
+                            "duration": 1800
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 300,
+                            "duration": 300
+                        }
+                    ],
+                    "additional_treatment": "250-II280-15"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "3 wt% urea additive",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "step1_speed": 2000,
+                                "step1_time": 10,
+                                "step2_speed": 4000,
+                                "step2_time": 20,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Ar",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PC61BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 6000,
+                                "time": 30,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "BCP",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 16.16,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.44,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.06,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74.93
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "pin",
+            "number_devices": 5,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Enlitech simulator (AAA Class Solar Simulators)"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "time": 672,
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 17.17,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 250,
+                            "duration": 1800
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 300,
+                            "duration": 300
+                        }
+                    ],
+                    "additional_treatment": "250-II300-5"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "3 wt% urea additive",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "step1_speed": 2000,
+                                "step1_time": 10,
+                                "step2_speed": 4000,
+                                "step2_time": 20,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Ar",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PC61BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 6000,
+                                "time": 30,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "BCP",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 14.97,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.58,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.04,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77.5
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "pin",
+            "number_devices": 5,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Enlitech simulator (AAA Class Solar Simulators)"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "time": 672,
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 17.17,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 250,
+                            "duration": 1800
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 300,
+                            "duration": 300
+                        }
+                    ],
+                    "additional_treatment": "230-II280-15"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "3 wt% urea additive",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "step1_speed": 2000,
+                                "step1_time": 10,
+                                "step2_speed": 4000,
+                                "step2_time": 20,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Ar",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PC61BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 6000,
+                                "time": 30,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "BCP",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.14,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.37,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.06,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76.46
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "pin",
+            "number_devices": 5,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Enlitech simulator (AAA Class Solar Simulators)"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "time": 672,
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 17.17,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 250,
+                            "duration": 1800
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 300,
+                            "duration": 300
+                        }
+                    ],
+                    "additional_treatment": "250-II300-5\u202f+\u202furea"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "3 wt% urea additive",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "step1_speed": 2000,
+                                "step1_time": 10,
+                                "step2_speed": 4000,
+                                "step2_time": 20,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Ar",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PC61BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 6000,
+                                "time": 30,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "BCP",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 14.37,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.08,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.04,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76.67
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "pin",
+            "number_devices": 5,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Enlitech simulator (AAA Class Solar Simulators)"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "time": 672,
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 17.17,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 250,
+                            "duration": 1800
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 300,
+                            "duration": 300
+                        }
+                    ],
+                    "additional_treatment": "230-II280-5"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "3 wt% urea additive",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "step1_speed": 2000,
+                                "step1_time": 10,
+                                "step2_speed": 4000,
+                                "step2_time": 20,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Ar",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PC61BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 6000,
+                                "time": 30,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "BCP",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 13.63,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.28,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.05,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71.25
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "pin",
+            "number_devices": 5,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Enlitech simulator (AAA Class Solar Simulators)"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "time": 672,
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 17.17,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "review_completed": true
+                },
+                {
+                    "name": "NiOx",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 250,
+                            "duration": 1800
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 300,
+                            "duration": 300
+                        }
+                    ],
+                    "review_completed": true
+                },
+                {
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "3 wt% urea additive",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "step1_speed": 2000,
+                                "step1_time": 10,
+                                "step2_speed": 4000,
+                                "step2_time": 20,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Ar",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ],
+                    "review_completed": true
+                },
+                {
+                    "name": "PC61BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "review_completed": true
+                },
+                {
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 6000,
+                                "time": 30,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "BCP",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "review_completed": true
+                },
+                {
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ],
+                    "review_completed": true
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 15.51,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 19.4,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.05,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76.38
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "pin",
+            "number_devices": 5,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Enlitech simulator (AAA Class Solar Simulators)"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "time": 672,
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 17.17,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 250,
+                            "duration": 1800
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 300,
+                            "duration": 300
+                        }
+                    ],
+                    "additional_treatment": "250-II300-30"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "3 wt% urea additive",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "step1_speed": 2000,
+                                "step1_time": 10,
+                                "step2_speed": 4000,
+                                "step2_time": 20,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Ar",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PC61BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 6000,
+                                "time": 30,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "BCP",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 14.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.07,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.04,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77.15
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "pin",
+            "number_devices": 5,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Enlitech simulator (AAA Class Solar Simulators)"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "time": 672,
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 17.17,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 250,
+                            "duration": 1800
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 300,
+                            "duration": 300
+                        }
+                    ],
+                    "additional_treatment": "230-II280-30"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "3 wt% urea additive",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "step1_speed": 2000,
+                                "step1_time": 10,
+                                "step2_speed": 4000,
+                                "step2_time": 20,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Ar",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PC61BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 6000,
+                                "time": 30,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "BCP",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 13.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 17.47,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.05,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 73.03
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "pin",
+            "number_devices": 5,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Enlitech simulator (AAA Class Solar Simulators)"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "time": 672,
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 17.17,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 250,
+                            "duration": 1800
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 300,
+                            "duration": 300
+                        }
+                    ],
+                    "additional_treatment": "250-II280-5"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "3 wt% urea additive",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "step1_speed": 2000,
+                                "step1_time": 10,
+                                "step2_speed": 4000,
+                                "step2_time": 20,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Ar",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PC61BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 6000,
+                                "time": 30,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "BCP",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 14.86,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.71,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.05,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76.03
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "pin",
+            "number_devices": 5,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Enlitech simulator (AAA Class Solar Simulators)"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "time": 672,
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 17.17,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 250,
+                            "duration": 1800
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 300,
+                            "duration": 300
+                        }
+                    ],
+                    "additional_treatment": "250-II300-15"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "3 wt% urea additive",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "step1_speed": 2000,
+                                "step1_time": 10,
+                                "step2_speed": 4000,
+                                "step2_time": 20,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Ar",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PC61BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 6000,
+                                "time": 30,
+                                "units": "rpm, s"
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "BCP",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

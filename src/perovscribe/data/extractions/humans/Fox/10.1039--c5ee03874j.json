@@ -1,1 +1,152 @@
-{"doi": "10.1039/c5ee03874j", "author": "Yuxin Liu", "cells": [{"perovskite_composition": {"formula": "", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 17.86, "unit": "%"}, "jsc": {"value": 21.06, "unit": "mA cm^-2"}, "voc": {"value": 1.146, "unit": "V"}, "ff": {"value": 69.3}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": 40, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": {"review_completed": true, "time": 250, "light_intensity": 100, "PCE_after_1000_hours": 7, "potential_bias": "MPPT"}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "Li-doped mesoporous TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "(MA0.17FA0.83)0.95Pb(I0.83Br0.17)3", "thickness": null, "functionality": "Absorber", "review_completed": true}, {"name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": null, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 21.1, "unit": "%"}, "jsc": {"value": 22.69, "unit": "mA cm^-2"}, "voc": {"value": 1.1320000000000001, "unit": "V"}, "ff": {"value": 74.8}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": 98, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": {"time": 2500, "potential_bias": "MPPT", "light_intensity": 100, "PCE_after_1000_hours": 18, "review_completed": true}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "Li-doped mesoporous TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "Cs0.05(MA0.17FA0.83)0.95Pb(I0.83Br0.17)3", "thickness": null, "functionality": "Absorber"}, {"name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": null, "functionality": "Contact"}]}]}
+{
+    "doi": "10.1039/c5ee03874j",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 17.86,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.06,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.146,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 69.3
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": 40,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 250,
+                "light_intensity": 100,
+                "PCE_after_1000_hours": 7,
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Li-doped mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "(MA0.17FA0.83)0.95Pb(I0.83Br0.17)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "review_completed": true
+                },
+                {
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 21.1,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.69,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1320000000000001,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74.8
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": 98,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": 2500,
+                "potential_bias": "MPPT",
+                "light_intensity": 100,
+                "PCE_after_1000_hours": 18,
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Li-doped mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Cs0.05(MA0.17FA0.83)0.95Pb(I0.83Br0.17)3",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

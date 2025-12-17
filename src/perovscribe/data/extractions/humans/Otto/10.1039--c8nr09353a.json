@@ -1,1 +1,669 @@
-{"doi": "10.1039/c8nr09353a", "author": "Natalia Maticiuc", "cells": [{"perovskite_composition": {"formula": "CsPbBr3", "a_ions": [{"abbreviation": "Cs", "common_name": "cesium", "molecular_formula": "Cs", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "lead", "molecular_formula": "Pb", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "bromide", "molecular_formula": "Br", "coefficient": "3"}]}, "pce": {"value": 4.67, "unit": "%"}, "jsc": {"value": 4.81, "unit": "mA cm^-2"}, "voc": {"value": 1.23, "unit": "V"}, "ff": {"value": 79}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": 1, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": null, "layers": [{"review_completed": true, "name": "SLG", "functionality": "Substrate"}, {"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "TiO2", "thickness": 450, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}, {"method": "TiCl4 treatment", "atmosphere": "Air", "temperature": 70, "duration": 1800}]}, {"name": "TiO2", "thickness": 450, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}, {"method": "TiCl4 treatment", "atmosphere": "Air", "temperature": 70, "duration": 1800}]}, {"review_completed": true, "name": "CsPbBr3", "thickness": 200, "functionality": "Absorber"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "evaporation", "method": "thermal evaporation", "atmosphere": "Vacuum"}]}]}, {"perovskite_composition": {"formula": "CsPbBr3", "a_ions": [{"abbreviation": "Cs", "common_name": "cesium", "molecular_formula": "Cs", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "lead", "molecular_formula": "Pb", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "bromide", "molecular_formula": "Br", "coefficient": "3"}]}, "pce": {"value": 5.87, "unit": "%"}, "jsc": {"value": 5.55, "unit": "mA cm^-2"}, "voc": {"value": 1.33, "unit": "V"}, "ff": {"value": 80}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": 1, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": {"review_completed": true, "time": 168, "PCE_at_start": 5.8, "PCE_at_end": 4.06}, "layers": [{"review_completed": true, "name": "SLG", "functionality": "Substrate"}, {"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "TiO2", "thickness": 450, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}, {"method": "TiCl4 treatment", "atmosphere": "Air", "temperature": 70, "duration": 1800}]}, {"name": "TiO2", "thickness": 450, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}, {"method": "TiCl4 treatment", "atmosphere": "Air", "temperature": 70, "duration": 1800}]}, {"review_completed": true, "name": "CsPbBr3", "thickness": 200, "functionality": "Absorber"}, {"review_completed": true, "name": "ONC1/MWCNT", "functionality": "Contact", "deposition": [{"step_name": "sonication", "method": "sonication", "duration": 60, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "THF", "concentration": 0.43, "concentration_unit": "vol%"}], "solvents": [{"review_completed": true, "name": "water"}]}}, {"review_completed": true, "step_name": "centrifuge", "method": "centrifuge", "duration": 300}, {"review_completed": true, "step_name": "filter", "method": "filter"}, {"review_completed": true, "step_name": "drying", "method": "dry", "atmosphere": "Vacuum", "duration": 43200}, {"review_completed": true, "step_name": "wetting", "method": "wetting in acetronitile", "atmosphere": "Unknown"}, {"review_completed": true, "step_name": "dry", "method": "dry on the perovskite", "temperature": 70, "duration": 60}, {"review_completed": true, "step_name": "washing in acetone after the vacuum dry", "method": "dipping in acetone", "atmosphere": "Air"}]}]}, {"perovskite_composition": {"formula": "CsPbBr3", "a_ions": [{"abbreviation": "Cs", "common_name": "cesium", "molecular_formula": "Cs", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "lead", "molecular_formula": "Pb", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "bromide", "molecular_formula": "Br", "coefficient": "3"}]}, "pce": {"value": 5.01, "unit": "%"}, "jsc": {"value": 5.54, "unit": "mA cm^-2"}, "voc": {"value": 1.28, "unit": "V"}, "ff": {"value": 70}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": 1, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": null, "layers": [{"review_completed": true, "name": "SLG", "functionality": "Substrate"}, {"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "TiO2", "thickness": 450, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}, {"method": "TiCl4 treatment", "atmosphere": "Air", "temperature": 70, "duration": 1800}]}, {"name": "TiO2", "thickness": 450, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}, {"method": "TiCl4 treatment", "atmosphere": "Air", "temperature": 70, "duration": 1800}]}, {"review_completed": true, "name": "CsPbBr3", "thickness": 200, "functionality": "Absorber"}, {"review_completed": true, "name": "ONC2/MWCNT", "functionality": "Contact", "deposition": [{"step_name": "sonication", "method": "sonication", "duration": 60, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "THF", "concentration": 0.43, "concentration_unit": "vol%"}], "solvents": [{"review_completed": true, "name": "water"}]}}, {"review_completed": true, "step_name": "centrifuge", "method": "centrifuge", "duration": 300}, {"review_completed": true, "step_name": "filter", "method": "filter"}, {"review_completed": true, "step_name": "drying", "method": "dry", "atmosphere": "Vacuum", "duration": 43200}, {"review_completed": true, "step_name": "wetting", "method": "wetting in acetronitile", "atmosphere": "Unknown"}, {"review_completed": true, "step_name": "dry", "method": "dry on the perovskite", "temperature": 70, "duration": 60, "atmosphere": "Unknown"}]}]}, {"perovskite_composition": {"formula": "CsPbBr3", "a_ions": [{"abbreviation": "Cs", "common_name": "cesium", "molecular_formula": "Cs", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "lead", "molecular_formula": "Pb", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "bromide", "molecular_formula": "Br", "coefficient": "3"}]}, "pce": {"value": 5.44, "unit": "%"}, "jsc": {"value": 5.63, "unit": "mA cm^-2"}, "voc": {"value": 1.28, "unit": "V"}, "ff": {"value": 76}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": 1, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": null, "layers": [{"review_completed": true, "name": "SLG", "functionality": "Substrate"}, {"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "TiO2", "thickness": 450, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}, {"method": "TiCl4 treatment", "atmosphere": "Air", "temperature": 70, "duration": 1800}]}, {"name": "TiO2", "thickness": 450, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null}, {"method": "TiCl4 treatment", "atmosphere": "Air", "temperature": 70, "duration": 1800}]}, {"review_completed": true, "name": "CsPbBr3", "thickness": 200, "functionality": "Absorber"}, {"review_completed": true, "name": "ONC1/MWCNT", "functionality": "Contact", "deposition": [{"step_name": "sonication", "method": "sonication", "duration": 60, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "THF", "concentration": 0.43, "concentration_unit": "vol%"}], "solvents": [{"review_completed": true, "name": "water"}]}}, {"review_completed": true, "step_name": "centrifuge", "method": "centrifuge", "duration": 300}, {"review_completed": true, "step_name": "filter", "method": "filter"}, {"review_completed": true, "step_name": "drying", "method": "dry", "atmosphere": "Vacuum", "duration": 43200}, {"review_completed": true, "step_name": "wetting", "method": "wetting in acetronitile", "atmosphere": "Unknown"}, {"review_completed": true, "step_name": "dry", "method": "dry on the perovskite", "temperature": 70, "duration": 60}]}]}]}
+{
+    "doi": "10.1039/c8nr09353a",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "CsPbBr3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "cesium",
+                        "molecular_formula": "Cs",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "bromide",
+                        "molecular_formula": "Br",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 4.67,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 4.81,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.23,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 79
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": 1,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 450,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "TiCl4 treatment",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 450,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "TiCl4 treatment",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CsPbBr3",
+                    "thickness": 200,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "CsPbBr3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "cesium",
+                        "molecular_formula": "Cs",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "bromide",
+                        "molecular_formula": "Br",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 5.87,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 5.55,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.33,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 80
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": 1,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 168,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 5.8,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 4.06,
+                    "unit": "%"
+                }
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 450,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "TiCl4 treatment",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 450,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "TiCl4 treatment",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CsPbBr3",
+                    "thickness": 200,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ONC1/MWCNT",
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": "sonication",
+                            "method": "sonication",
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "THF",
+                                        "concentration": 0.43,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "water"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "centrifuge",
+                            "method": "centrifuge",
+                            "duration": 300
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "filter",
+                            "method": "filter"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "dry",
+                            "atmosphere": "Vacuum",
+                            "duration": 43200
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "wetting",
+                            "method": "wetting in acetronitile",
+                            "atmosphere": "Unknown"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "dry",
+                            "method": "dry on the perovskite",
+                            "temperature": 70,
+                            "duration": 60
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "washing in acetone after the vacuum dry",
+                            "method": "dipping in acetone",
+                            "atmosphere": "Air"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "CsPbBr3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "cesium",
+                        "molecular_formula": "Cs",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "bromide",
+                        "molecular_formula": "Br",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 5.01,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 5.54,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.28,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 70
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": 1,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 450,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "TiCl4 treatment",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 450,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "TiCl4 treatment",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CsPbBr3",
+                    "thickness": 200,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ONC2/MWCNT",
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": "sonication",
+                            "method": "sonication",
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "THF",
+                                        "concentration": 0.43,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "water"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "centrifuge",
+                            "method": "centrifuge",
+                            "duration": 300
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "filter",
+                            "method": "filter"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "dry",
+                            "atmosphere": "Vacuum",
+                            "duration": 43200
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "wetting",
+                            "method": "wetting in acetronitile",
+                            "atmosphere": "Unknown"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "dry",
+                            "method": "dry on the perovskite",
+                            "temperature": 70,
+                            "duration": 60,
+                            "atmosphere": "Unknown"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "CsPbBr3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "cesium",
+                        "molecular_formula": "Cs",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "bromide",
+                        "molecular_formula": "Br",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 5.44,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 5.63,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.28,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": 1,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 450,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "TiCl4 treatment",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 450,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "TiCl4 treatment",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CsPbBr3",
+                    "thickness": 200,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ONC1/MWCNT",
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": "sonication",
+                            "method": "sonication",
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "THF",
+                                        "concentration": 0.43,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "water"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "centrifuge",
+                            "method": "centrifuge",
+                            "duration": 300
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "filter",
+                            "method": "filter"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "dry",
+                            "atmosphere": "Vacuum",
+                            "duration": 43200
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "wetting",
+                            "method": "wetting in acetronitile",
+                            "atmosphere": "Unknown"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "dry",
+                            "method": "dry on the perovskite",
+                            "temperature": 70,
+                            "duration": 60
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

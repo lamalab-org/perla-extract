@@ -1,1 +1,97 @@
-{"doi": "10.1039/c6ee02139e", "author": "Rico Meitzner", "cells": [{"perovskite_composition": {"formula": "CH3NH3PbI3", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 19.62, "unit": "%"}, "jsc": {"value": 22.75, "unit": "mA cm^-2"}, "voc": {"value": 1.12, "unit": "V"}, "ff": {"value": 77.0}, "active_area": {"value": null}, "device_architecture": "pin", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100.0}, "encapsulated": false, "stability": {"time": 14400.0, "PCE_at_the_start_of_the_experiment": 19.62, "PCE_at_the_end_of_description": 16.68, "potential_bias": "Open circuit"}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate", "deposition": null, "additional_treatment": null}, {"name": "TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": null, "additional_treatment": "Ionic liquid ([BMIM]BF4) surface modification"}, {"name": "CH3NH3PbI3", "thickness": 345.0, "functionality": "Absorber", "deposition": null, "additional_treatment": null}, {"name": "PTAA", "thickness": null, "functionality": "Hole-transport", "deposition": null, "additional_treatment": null}, {"name": "Au", "thickness": null, "functionality": "Contact", "deposition": null, "additional_treatment": null}]}]}
+{
+    "doi": "10.1039/c6ee02139e",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "CH3NH3PbI3",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 19.62,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.75,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.12,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77.0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": false,
+            "stability": {
+                "time": {
+                    "value": 14400.0,
+                    "unit": "s"
+                },
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 19.62,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 16.68,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": null,
+                    "additional_treatment": "Ionic liquid ([BMIM]BF4) surface modification"
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": {
+                        "value": 345.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Absorber",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

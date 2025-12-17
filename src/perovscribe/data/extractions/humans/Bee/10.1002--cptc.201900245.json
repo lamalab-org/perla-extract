@@ -1,1 +1,215 @@
-{"doi": "10.1002/cptc.201900245", "author": "Jessica helisa Hautrive rossato", "cells": [{"perovskite_composition": {"formula": "[Cs0.05(FA0.83MA0.17)0.95]Pb(I0.83Br0.17)3", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 15.5, "unit": "%"}, "jsc": {"value": 21.6, "unit": "mA cm^-2"}, "voc": {"value": 1.08, "unit": "V"}, "ff": {"value": 67.6}, "active_area": {"value": 0.25}, "device_architecture": "nip", "number_devices": 8, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100.0}, "encapsulated": null, "stability": null, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate", "deposition": null, "additional_treatment": null}, {"name": "c-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"step_name": null, "method": "Spray pyrolysis", "atmosphere": "Air", "temperature": 450.0, "duration": null, "antisolvent": null, "solution": null, "additional_parameters": null}], "additional_treatment": null}, {"name": "m-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"step_name": null, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "antisolvent": null, "solution": null, "additional_parameters": {"speed": 5000, "time": 15, "ramp_rate": 2000}}], "additional_treatment": null}, {"name": "[Cs0.05(FA0.83MA0.17)0.95]Pb(I0.83Br0.17)3", "thickness": null, "functionality": "Absorber", "deposition": [{"step_name": null, "method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null, "antisolvent": null, "solution": null, "additional_parameters": {"speed1": 1000, "time1": 10, "speed2": 4000, "time2": 30}}, {"step_name": null, "method": "Antisolvent-quenching", "atmosphere": "N2", "temperature": null, "duration": null, "antisolvent": "chlorobenzene", "solution": null, "additional_parameters": {"volume": 200, "unit": "\u03bcL", "time_before_end": 5}}, {"step_name": null, "method": "Thermal-annealing", "atmosphere": "N2", "temperature": 100.0, "duration": 3600.0, "antisolvent": null, "solution": null, "additional_parameters": null}], "additional_treatment": null}, {"name": "ZnPc th ZnPc 1", "thickness": 20.0, "functionality": "Hole-transport", "deposition": [{"step_name": null, "method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null, "antisolvent": null, "solution": {"compounds": null, "solutes": [{"name": "ZnPc th ZnPc 1", "concentration": 3.74, "concentration_unit": "mmol/L"}], "volume": null, "temperature": null, "solvents": [{"name": "chlorobenzene", "volume_fraction": 0.95}, {"name": "THF", "volume_fraction": 0.05}]}, "additional_parameters": {"speed": 2000, "time": 40, "acceleration": 1000}}], "additional_treatment": null}, {"name": "Au", "thickness": 80.0, "functionality": "Contact", "deposition": [{"step_name": null, "method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null, "antisolvent": null, "solution": null, "additional_parameters": null}], "additional_treatment": null}]}]}
+{
+    "doi": "10.1002/cptc.201900245",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "[Cs0.05(FA0.83MA0.17)0.95]Pb(I0.83Br0.17)3",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 15.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.6,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 67.6
+            },
+            "active_area": {
+                "value": 0.25
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spray pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": {
+                                "value": 450.0,
+                                "unit": "\u00b0C"
+                            },
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "speed": 5000,
+                                "time": 15,
+                                "ramp_rate": 2000
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "[Cs0.05(FA0.83MA0.17)0.95]Pb(I0.83Br0.17)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "speed1": 1000,
+                                "time1": 10,
+                                "speed2": 4000,
+                                "time2": 30
+                            }
+                        },
+                        {
+                            "step_name": null,
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": "chlorobenzene",
+                            "solution": null,
+                            "additional_parameters": {
+                                "volume": 200,
+                                "unit": "\u03bcL",
+                                "time_before_end": 5
+                            }
+                        },
+                        {
+                            "step_name": null,
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": {
+                                "value": 100.0,
+                                "unit": "\u00b0C"
+                            },
+                            "duration": {
+                                "value": 3600.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "ZnPc th ZnPc 1",
+                    "thickness": {
+                        "value": 20.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": {
+                                "compounds": null,
+                                "solutes": [
+                                    {
+                                        "name": "ZnPc th ZnPc 1",
+                                        "concentration": 3.74,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "volume": null,
+                                "temperature": null,
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 0.95
+                                    },
+                                    {
+                                        "name": "THF",
+                                        "volume_fraction": 0.05
+                                    }
+                                ]
+                            },
+                            "additional_parameters": {
+                                "speed": 2000,
+                                "time": 40,
+                                "acceleration": 1000
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Au",
+                    "thickness": {
+                        "value": 80.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

@@ -1,1 +1,397 @@
-{"doi": "10.1039/c7ta04225f", "author": "Natalia Maticiuc", "cells": [{"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "metyl amonium", "molecular_formula": "CH3NH3", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "lead", "molecular_formula": "Pb", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "iodide", "molecular_formula": "I", "coefficient": "3"}]}, "pce": {"value": 11.9, "unit": "%"}, "jsc": {"value": 16.1, "unit": "mA cm^-2"}, "voc": {"value": 1.08, "unit": "V"}, "ff": {"value": 63.3}, "active_area": {"value": 0.285}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": null, "layers": [{"review_completed": true, "name": "plastic foil", "functionality": "Substrate"}, {"review_completed": true, "name": "AZO", "thickness": 400, "functionality": "Contact"}, {"review_completed": true, "name": "ZnO", "thickness": 50, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "sputtering", "method": "RF sputtering", "atmosphere": "Vacuum"}]}, {"review_completed": true, "name": "C60", "thickness": 7.5, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "evaporation", "method": "thermal evaporation", "atmosphere": "Vacuum"}]}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": 280, "functionality": "Absorber"}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"name": "MoOx", "thickness": 40, "functionality": "Contact", "deposition": [{"step_name": "evaporation", "method": "thermal evaporation", "atmosphere": "Vacuum", "review_completed": true}], "review_completed": true}, {"name": "In2O3:H", "thickness": 180, "functionality": "Contact", "deposition": [{"step_name": "sputtering", "method": "RF sputtering", "atmosphere": "Vacuum", "review_completed": true}], "review_completed": true}]}, {"perovskite_composition": {"formula": "MAPb", "a_ions": [{"abbreviation": "MA", "common_name": "metyl amonium", "molecular_formula": "CH3NH3", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "lead", "molecular_formula": "Pb", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "iodide", "molecular_formula": "I", "coefficient": "3"}]}, "pce": {"value": 10.8, "unit": "%"}, "jsc": {"value": 17.2, "unit": "mA cm^-2"}, "voc": {"value": 1, "unit": "V"}, "ff": {"value": 63.3}, "active_area": {"value": 1.03}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": null, "layers": [{"review_completed": true, "name": "plastic foil", "functionality": "Substrate"}, {"review_completed": true, "name": "AZO", "thickness": 400, "functionality": "Contact"}, {"review_completed": true, "name": "ZnO", "thickness": 50, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "sputtering", "method": "RF sputtering", "atmosphere": "Vacuum"}]}, {"review_completed": true, "name": "C60", "thickness": 7.5, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "evaporation", "method": "thermal evaporation", "atmosphere": "Vacuum"}]}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": 280, "functionality": "Absorber"}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 50, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "evaporation", "method": "thermal evaporation", "atmosphere": "Vacuum"}]}]}, {"perovskite_composition": {"formula": "MAPn", "a_ions": [{"abbreviation": "MA", "common_name": "metyl amonium", "molecular_formula": "CH3NH3", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pn", "common_name": "lead", "molecular_formula": "Pb", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "iodide", "molecular_formula": "I", "coefficient": "3"}]}, "pce": {"value": 12.8, "unit": "%"}, "jsc": {"value": 17.4, "unit": "mA cm^-2"}, "voc": {"value": 1.05, "unit": "V"}, "ff": {"value": 69.8}, "active_area": {"value": 0.15}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": null, "layers": [{"review_completed": true, "name": "plastic foil", "functionality": "Substrate"}, {"review_completed": true, "name": "AZO", "thickness": 400, "functionality": "Contact"}, {"review_completed": true, "name": "ZnO", "thickness": 50, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "sputtering", "method": "RF sputtering", "atmosphere": "Vacuum"}]}, {"review_completed": true, "name": "C60", "thickness": 7.5, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "evaporation", "method": "thermal evaporation", "atmosphere": "Vacuum"}]}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": 280, "functionality": "Absorber"}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 50, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "evaporation", "method": "thermal evaporation", "atmosphere": "Vacuum"}]}]}]}
+{
+    "doi": "10.1039/c7ta04225f",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 11.9,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 16.1,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 63.3
+            },
+            "active_area": {
+                "value": 0.285
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "plastic foil",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "AZO",
+                    "thickness": 400,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ZnO",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "sputtering",
+                            "method": "RF sputtering",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": {
+                        "value": 7.5,
+                        "unit": "nm"
+                    },
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": 280,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "MoOx",
+                    "thickness": 40,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": "evaporation",
+                            "method": "thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "review_completed": true
+                        }
+                    ],
+                    "review_completed": true
+                },
+                {
+                    "name": "In2O3:H",
+                    "thickness": 180,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": "sputtering",
+                            "method": "RF sputtering",
+                            "atmosphere": "Vacuum",
+                            "review_completed": true
+                        }
+                    ],
+                    "review_completed": true
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPb",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 10.8,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 17.2,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 63.3
+            },
+            "active_area": {
+                "value": 1.03
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "plastic foil",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "AZO",
+                    "thickness": 400,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ZnO",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "sputtering",
+                            "method": "RF sputtering",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": {
+                        "value": 7.5,
+                        "unit": "nm"
+                    },
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": 280,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 50,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPn",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pn",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 12.8,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 17.4,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.05,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 69.8
+            },
+            "active_area": {
+                "value": 0.15
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "plastic foil",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "AZO",
+                    "thickness": 400,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ZnO",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "sputtering",
+                            "method": "RF sputtering",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": {
+                        "value": 7.5,
+                        "unit": "nm"
+                    },
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": 280,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 50,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,1 +1,475 @@
-{"doi": "10.1039/c5ee03874j", "author": "Juan jos\u00e9 Pati\u00f1o l\u00f3pez", "cells": [{"perovskite_composition": {"formula": "MA0.16FA0.79Cs0.05PbI2.49Br0.51", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.16"}, {"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.79"}, {"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "0.05"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "2.49"}, {"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.51"}]}, "pce": {"value": 21.17, "unit": "%"}, "jsc": {"value": 23.5, "unit": "mA cm^-2"}, "voc": {"value": 1.147, "unit": "V"}, "ff": {"value": 78.5}, "active_area": {"value": 0.16}, "device_architecture": "nip", "number_devices": 1, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "450 W xenon light source (Oriel)"}, "encapsulated": null, "stability": {"review_completed": true, "light_intensity": 100, "time": 250, "humidity": 0, "temperature": 25, "PCE_at_start": 20, "PCE_at_end": 18, "potential_bias": "MPPT"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Li-doped mesoporous TiO2", "thickness": 150, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MA0.16FA0.79Cs0.05PbI2.49Br0.51", "thickness": null, "functionality": "Absorber"}, {"review_completed": true, "name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 80, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "MA0.17FA0.83PbI2.49Br0.51", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.17"}, {"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.83"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "2.49"}, {"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.51"}]}, "pce": {"value": 16.37, "unit": "%"}, "jsc": {"value": 21.06, "unit": "mA cm^-2"}, "voc": {"value": 1.121, "unit": "V"}, "ff": {"value": 0.693}, "active_area": {"value": 0.16}, "device_architecture": "nip", "number_devices": 98, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "450 W xenon light source (Oriel)"}, "encapsulated": null, "stability": {"review_completed": true, "potential_bias": "Unknown"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Li-doped mesoporous TiO2", "thickness": 150, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MA0.17FA0.83PbI2.49Br0.51", "thickness": null, "functionality": "Absorber"}, {"review_completed": true, "name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 80, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "MA0.17FA0.83PbI2.49Br0.51", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.17"}, {"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.83"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "2.49"}, {"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.51"}]}, "pce": {"value": 17, "unit": "%"}, "jsc": {"value": 20, "unit": "mA cm^-2"}, "voc": {"value": 1.1, "unit": "V"}, "ff": {"value": 70}, "active_area": {"value": 0.16}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "450 W xenon light source (Oriel)"}, "encapsulated": null, "stability": {"review_completed": true, "light_intensity": 100, "time": 250, "humidity": 0, "temperature": 25, "PCE_at_start": 17, "PCE_at_end": 7, "potential_bias": "MPPT"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Li-doped mesoporous TiO2", "thickness": 150, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MA0.17FA0.83PbI2.49Br0.51", "thickness": null, "functionality": "Absorber"}, {"review_completed": true, "name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 80, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "MA0.16FA0.79Cs0.05PbI2.49Br0.51", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.16"}, {"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.79"}, {"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "0.05"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "2.49"}, {"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.51"}]}, "pce": {"value": 19.2, "unit": "%"}, "jsc": {"value": 22.69, "unit": "mA cm^-2"}, "voc": {"value": 1.132, "unit": "V"}, "ff": {"value": 0.748}, "active_area": {"value": 0.16}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "450 W xenon light source (Oriel)"}, "encapsulated": null, "stability": {"review_completed": true, "light_intensity": 100, "time": 250, "humidity": 0, "temperature": 25, "PCE_at_start": 20, "PCE_at_end": 18, "potential_bias": "MPPT"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Li-doped mesoporous TiO2", "thickness": 150, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MA0.16FA0.79Cs0.05PbI2.49Br0.51", "thickness": null, "functionality": "Absorber"}, {"review_completed": true, "name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 80, "functionality": "Contact"}]}]}
+{
+    "doi": "10.1039/c5ee03874j",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MA0.16FA0.79Cs0.05PbI2.49Br0.51",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.16"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.79"
+                    },
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.05"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.49"
+                    },
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.51"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 21.17,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.5,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.147,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 78.5
+            },
+            "active_area": {
+                "value": 0.16
+            },
+            "device_architecture": "nip",
+            "number_devices": 1,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "450 W xenon light source (Oriel)"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 100,
+                "time": 250,
+                "humidity": 0,
+                "temperature": 25,
+                "PCE_at_the_start_of_the_experiment": 20,
+                "PCE_at_the_end_of_experiment": 18,
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Li-doped mesoporous TiO2",
+                    "thickness": 150,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MA0.16FA0.79Cs0.05PbI2.49Br0.51",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MA0.17FA0.83PbI2.49Br0.51",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.17"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.83"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.49"
+                    },
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.51"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 16.37,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.06,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.121,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0.693
+            },
+            "active_area": {
+                "value": 0.16
+            },
+            "device_architecture": "nip",
+            "number_devices": 98,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "450 W xenon light source (Oriel)"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Li-doped mesoporous TiO2",
+                    "thickness": 150,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MA0.17FA0.83PbI2.49Br0.51",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MA0.17FA0.83PbI2.49Br0.51",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.17"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.83"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.49"
+                    },
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.51"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 17,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 70
+            },
+            "active_area": {
+                "value": 0.16
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "450 W xenon light source (Oriel)"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 100,
+                "time": 250,
+                "humidity": 0,
+                "temperature": 25,
+                "PCE_at_the_start_of_the_experiment": 17,
+                "PCE_at_the_end_of_experiment": 7,
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Li-doped mesoporous TiO2",
+                    "thickness": 150,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MA0.17FA0.83PbI2.49Br0.51",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MA0.16FA0.79Cs0.05PbI2.49Br0.51",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.16"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.79"
+                    },
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.05"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.49"
+                    },
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.51"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 19.2,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.69,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.132,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0.748
+            },
+            "active_area": {
+                "value": 0.16
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "450 W xenon light source (Oriel)"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 100,
+                "time": 250,
+                "humidity": 0,
+                "temperature": 25,
+                "PCE_at_the_start_of_the_experiment": 20,
+                "PCE_at_the_end_of_experiment": 18,
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Li-doped mesoporous TiO2",
+                    "thickness": 150,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MA0.16FA0.79Cs0.05PbI2.49Br0.51",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

@@ -1,1 +1,1289 @@
-{"doi": "10.1016/j.synthmet.2017.08.007", "author": "Edgar Nandayapa", "cells": [{"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 4.4, "unit": "%"}, "jsc": {"value": 13.1, "unit": "mA cm^-2"}, "voc": {"value": 0.794, "unit": "V"}, "ff": {"value": 43}, "active_area": {"value": 0.05}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "xenon arc lamp"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "mesoporous TiO2", "thickness": 100, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 150, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Ambient air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "X60", "thickness": 200, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "I3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 4.7, "unit": "%"}, "jsc": {"value": 9.5, "unit": "mA cm^-2"}, "voc": {"value": 0.906, "unit": "V"}, "ff": {"value": 54}, "active_area": {"value": 0.05}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "xenon arc lamp"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "mesoporous TiO2", "thickness": 100, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 150, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Ambient air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "spiro-OMeTAD", "thickness": 200, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 3.8, "unit": "%"}, "jsc": {"value": 9.7, "unit": "mA cm^-2"}, "voc": {"value": 0.764, "unit": "V"}, "ff": {"value": 51}, "active_area": {"value": 0.05}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "xenon arc lamp"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "mesoporous TiO2", "thickness": 100, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 150, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Ambient air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "X60", "thickness": 200, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "I3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 9.6, "unit": "%"}, "jsc": {"value": 16.5, "unit": "mA cm^-2"}, "voc": {"value": 0.906, "unit": "V"}, "ff": {"value": 64}, "active_area": {"value": 0.05}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "xenon arc lamp"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "mesoporous TiO2", "thickness": 100, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 150, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Ambient air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "spiro-OMeTAD", "thickness": 200, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "I3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 7.8, "unit": "%"}, "jsc": {"value": 15.8, "unit": "mA cm^-2"}, "voc": {"value": 0.98, "unit": "V"}, "ff": {"value": 62}, "active_area": {"value": 0.05}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "xenon arc lamp"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "mesoporous TiO2", "thickness": 100, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 150, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Ambient air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "spiro-OMeTAD", "thickness": 200, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "I3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 9.6, "unit": "%"}, "jsc": {"value": 16.5, "unit": "mA cm^-2"}, "voc": {"value": 0.906, "unit": "V"}, "ff": {"value": 64}, "active_area": {"value": 0.05}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "xenon arc lamp"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "mesoporous TiO2", "thickness": 100, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 150, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Ambient air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "spiro-OMeTAD", "thickness": 200, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "I3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 5.2, "unit": "%"}, "jsc": {"value": 13.6, "unit": "mA cm^-2"}, "voc": {"value": 0.755, "unit": "V"}, "ff": {"value": 51}, "active_area": {"value": 0.05}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "xenon arc lamp"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "mesoporous TiO2", "thickness": 100, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 150, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Ambient air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "spiro-OMeTAD", "thickness": 200, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 7.8, "unit": "%"}, "jsc": {"value": 17.2, "unit": "mA cm^-2"}, "voc": {"value": 0.796, "unit": "V"}, "ff": {"value": 57}, "active_area": {"value": 0.05}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "xenon arc lamp"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "mesoporous TiO2", "thickness": 100, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 150, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Ambient air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "X60", "thickness": 200, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 2.3, "unit": "%"}, "jsc": {"value": 9.6, "unit": "mA cm^-2"}, "voc": {"value": 0.669, "unit": "V"}, "ff": {"value": 36}, "active_area": {"value": 0.05}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "xenon arc lamp"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "mesoporous TiO2", "thickness": 100, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 150, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Ambient air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "X60", "thickness": 200, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "I3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 3.3, "unit": "%"}, "jsc": {"value": 9.6, "unit": "mA cm^-2"}, "voc": {"value": 0.665, "unit": "V"}, "ff": {"value": 59}, "active_area": {"value": 0.05}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "xenon arc lamp"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "mesoporous TiO2", "thickness": 100, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 150, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Ambient air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "spiro-OMeTAD", "thickness": 200, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 3.5, "unit": "%"}, "jsc": {"value": 10.5, "unit": "mA cm^-2"}, "voc": {"value": 0.656, "unit": "V"}, "ff": {"value": 51}, "active_area": {"value": 0.05}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "xenon arc lamp"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "mesoporous TiO2", "thickness": 100, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 150, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Ambient air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "X60", "thickness": 200, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 9.3, "unit": "%"}, "jsc": {"value": 17.2, "unit": "mA cm^-2"}, "voc": {"value": 0.875, "unit": "V"}, "ff": {"value": 62}, "active_area": {"value": 0.05}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "xenon arc lamp"}, "encapsulated": false, "stability": {"review_completed": true, "light_intensity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "compact TiO2", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "mesoporous TiO2", "thickness": 100, "functionality": "Electron-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 150, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Ambient air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "X60", "thickness": 200, "functionality": "Hole-transport"}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact"}]}]}
+{
+    "doi": "10.1016/j.synthmet.2017.08.007",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 4.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 13.1,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.794,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 43
+            },
+            "active_area": {
+                "value": 0.05
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "xenon arc lamp"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "mesoporous TiO2",
+                    "thickness": 100,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 150,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Ambient air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "X60",
+                    "thickness": 200,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "I3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 4.7,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 9.5,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.906,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 54
+            },
+            "active_area": {
+                "value": 0.05
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "xenon arc lamp"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "mesoporous TiO2",
+                    "thickness": 100,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 150,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Ambient air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": 200,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 3.8,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 9.7,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.764,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 51
+            },
+            "active_area": {
+                "value": 0.05
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "xenon arc lamp"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "mesoporous TiO2",
+                    "thickness": 100,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 150,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Ambient air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "X60",
+                    "thickness": 200,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "I3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 9.6,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 16.5,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.906,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 64
+            },
+            "active_area": {
+                "value": 0.05
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "xenon arc lamp"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "mesoporous TiO2",
+                    "thickness": 100,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 150,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Ambient air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": 200,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "I3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 7.8,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 15.8,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.98,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 62
+            },
+            "active_area": {
+                "value": 0.05
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "xenon arc lamp"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "mesoporous TiO2",
+                    "thickness": 100,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 150,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Ambient air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": 200,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "I3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 9.6,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 16.5,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.906,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 64
+            },
+            "active_area": {
+                "value": 0.05
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "xenon arc lamp"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "mesoporous TiO2",
+                    "thickness": 100,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 150,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Ambient air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": 200,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "I3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 5.2,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 13.6,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.755,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 51
+            },
+            "active_area": {
+                "value": 0.05
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "xenon arc lamp"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "mesoporous TiO2",
+                    "thickness": 100,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 150,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Ambient air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": 200,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 7.8,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 17.2,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.796,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 57
+            },
+            "active_area": {
+                "value": 0.05
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "xenon arc lamp"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "mesoporous TiO2",
+                    "thickness": 100,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 150,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Ambient air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "X60",
+                    "thickness": 200,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 2.3,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 9.6,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.669,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 36
+            },
+            "active_area": {
+                "value": 0.05
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "xenon arc lamp"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "mesoporous TiO2",
+                    "thickness": 100,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 150,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Ambient air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "X60",
+                    "thickness": 200,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "I3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 3.3,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 9.6,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.665,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 59
+            },
+            "active_area": {
+                "value": 0.05
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "xenon arc lamp"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "mesoporous TiO2",
+                    "thickness": 100,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 150,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Ambient air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": 200,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 3.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 10.5,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.656,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 51
+            },
+            "active_area": {
+                "value": 0.05
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "xenon arc lamp"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "mesoporous TiO2",
+                    "thickness": 100,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 150,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Ambient air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "X60",
+                    "thickness": 200,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 9.3,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 17.2,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.875,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 62
+            },
+            "active_area": {
+                "value": 0.05
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "xenon arc lamp"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "compact TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "mesoporous TiO2",
+                    "thickness": 100,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 150,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Ambient air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "X60",
+                    "thickness": 200,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

@@ -1,1 +1,216 @@
-{"doi": "10.1002/cphc.201500456", "author": "Hugo Lemos", "cells": [{"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 9.33, "unit": "%"}, "jsc": {"value": 20.25, "unit": "mA cm^-2"}, "voc": {"value": 0.87, "unit": "V"}, "ff": {"value": 53.16}, "active_area": {"value": 0.07068}, "device_architecture": "nip", "number_devices": 1, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "description": "solar simulator (Abet Technology Sun 2000)", "light_intensity": 100}, "encapsulated": null, "stability": null, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "TiO2", "thickness": null, "functionality": "Electron-transport", "additional_treatment": "TiCl4 treatment", "deposition": [{"method": "Liquid-phase deposition", "atmosphere": "Air", "temperature": null, "duration": 21600, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "(NH4)2TiF6", "concentration": 0.075, "concentration_unit": "M"}, {"review_completed": true, "name": "H3BO3", "concentration": 0.2, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "H2O", "volume_fraction": 1}]}}, {"review_completed": true, "method": "Thermal Annealing", "temperature": 450, "duration": 5400}, {"review_completed": true, "method": "TiCl4 treatment", "temperature": 70, "duration": 1800, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "TiCl4 ", "concentration": 120, "concentration_unit": "mmol/L"}]}}, {"review_completed": true, "method": "Thermal Annealing", "temperature": 500, "duration": 1800}]}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Two-step deposition", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": 15, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "spiro-OMeTAD", "concentration": 170, "concentration_unit": "mmol/L"}, {"review_completed": true, "name": "tert-butylpyridine", "concentration": 180, "concentration_unit": "mmol/L"}, {"review_completed": true, "name": "lithium bis(trifluoromethane)sulfonimidate ", "concentration": 60, "concentration_unit": "mmol/L"}], "solvents": [{"review_completed": true, "name": "chlorobenzene", "volume_fraction": 0.95}, {"review_completed": true, "name": "acetonitrile", "volume_fraction": 0.05}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"review_completed": true, "method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}]}
+{
+    "doi": "10.1002/cphc.201500456",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 9.33,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.25,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.87,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 53.16
+            },
+            "active_area": {
+                "value": 0.07068
+            },
+            "device_architecture": "nip",
+            "number_devices": 1,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "solar simulator (Abet Technology Sun 2000)",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "additional_treatment": "TiCl4 treatment",
+                    "deposition": [
+                        {
+                            "method": "Liquid-phase deposition",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 21600,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "(NH4)2TiF6",
+                                        "concentration": 0.075,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "H3BO3",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "H2O",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Thermal Annealing",
+                            "temperature": 450,
+                            "duration": 5400
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "TiCl4 treatment",
+                            "temperature": 70,
+                            "duration": 1800,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiCl4 ",
+                                        "concentration": 120,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Thermal Annealing",
+                            "temperature": 500,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step deposition",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "spiro-OMeTAD",
+                                        "concentration": 170,
+                                        "concentration_unit": "mmol/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "tert-butylpyridine",
+                                        "concentration": 180,
+                                        "concentration_unit": "mmol/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "lithium bis(trifluoromethane)sulfonimidate ",
+                                        "concentration": 60,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 0.95
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "acetonitrile",
+                                        "volume_fraction": 0.05
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

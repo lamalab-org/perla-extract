@@ -1,1 +1,349 @@
-{"doi": "10.1002/aenm.202000566", "author": "Jessica helisa Hautrive rossato", "cells": [{"perovskite_composition": {"formula": "FA0.66MA0.34Pb0.5Sn0.5I3", "a_ions": [{"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.66"}, {"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.34"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "0.5"}, {"abbreviation": "Sn", "common_name": "Tin", "molecular_formula": "Sn2+", "coefficient": "0.5"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 15.9, "unit": "%"}, "jsc": {"value": 28, "unit": "mA cm^-2"}, "voc": {"value": 0.78, "unit": "V"}, "ff": {"value": 73}, "active_area": {"value": null}, "device_architecture": "pin", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": true, "stability": {"review_completed": true, "type": "AM 1.5G", "time": 0.0833333333333333, "PCE_at_end": 16.1, "potential_bias": "Open circuit"}, "layers": [{"name": "ITO", "thickness": null, "functionality": "Contact"}, {"name": "PEDOT:PSS", "thickness": null, "functionality": "Hole-transport"}, {"review_completed": true, "name": "FA0.66MA0.34Pb0.5Sn0.5I3", "thickness": 460, "functionality": "Absorber", "additional_treatment": "NH4SCN post-treatment", "deposition": [{"step_name": "Spin-coating Sequential deposition", "method": "Sequential deposition of PbI2 + SnI2 ", "atmosphere": "Other", "temperature": null, "duration": null, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "PbI2", "concentration": 0.5}, {"name": "SnI2", "concentration": 0.5, "concentration_unit": "Unknown"}], "solvents": [{"name": "DMF:DMSO"}]}}, {"step_name": "Spin-coating Sequential deposition", "method": "Sequential deposition FAI/MAI", "solution": {"solutes": [{"review_completed": true, "name": "FAI", "concentration": 66, "concentration_unit": "M"}, {"review_completed": true, "name": "MAI", "concentration": 34, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "isopropanol"}]}}, {"step_name": " Thermal-annealing", "method": " Thermal-annealing"}]}, {"name": "C60", "thickness": null, "functionality": "Electron-transport"}, {"name": "BCP", "thickness": null, "functionality": "Electron-transport"}, {"name": "Ag", "thickness": null, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "FA0.66MA0.34Pb0.5Sn0.5I3", "a_ions": [{"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.66"}, {"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.34"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "0.5"}, {"abbreviation": "Sn", "common_name": "Tin", "molecular_formula": "Sn2+", "coefficient": "0.5"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 0, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "pin", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": true, "stability": {"review_completed": true, "type": "AM 1.5G", "time": 0.0833333333333333, "PCE_at_end": 16.1, "potential_bias": "Open circuit"}, "layers": [{"name": "ITO", "thickness": null, "functionality": "Contact"}, {"name": "PEDOT:PSS", "thickness": null, "functionality": "Hole-transport"}, {"review_completed": true, "name": "FA0.66MA0.34Pb0.5Sn0.5I3", "functionality": "Absorber", "deposition": [{"step_name": "Spin-coating Sequential deposition", "method": "Sequential deposition of PbI2 + SnI2 ", "atmosphere": "Other", "temperature": null, "duration": null, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "PbI2", "concentration": 0.5}, {"name": "SnI2", "concentration": 0.5, "concentration_unit": "Unknown"}], "solvents": [{"name": "DMF:DMSO"}]}}, {"step_name": "Spin-coating Sequential deposition", "method": "Sequential deposition FAI/MAI", "solution": {"solutes": [{"review_completed": true, "name": "FAI", "concentration": 66, "concentration_unit": "M"}, {"review_completed": true, "name": "MAI", "concentration": 34, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "isopropanol"}]}}, {"step_name": " Thermal-annealing", "method": " Thermal-annealing"}]}, {"name": "C60", "thickness": null, "functionality": "Electron-transport"}, {"name": "BCP", "thickness": null, "functionality": "Electron-transport"}, {"name": "Ag", "thickness": null, "functionality": "Contact"}]}]}
+{
+    "doi": "10.1002/aenm.202000566",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "FA0.66MA0.34Pb0.5Sn0.5I3",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.66"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.34"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "0.5"
+                    },
+                    {
+                        "abbreviation": "Sn",
+                        "common_name": "Tin",
+                        "molecular_formula": "Sn2+",
+                        "coefficient": "0.5"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 15.9,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 28,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.78,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 73
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": true,
+            "stability": {
+                "review_completed": true,
+                "type": "AM 1.5G",
+                "time": {
+                    "value": 0.0833333333333333,
+                    "unit": "s"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 16.1,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "PEDOT:PSS",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FA0.66MA0.34Pb0.5Sn0.5I3",
+                    "thickness": 460,
+                    "functionality": "Absorber",
+                    "additional_treatment": "NH4SCN post-treatment",
+                    "deposition": [
+                        {
+                            "step_name": "Spin-coating Sequential deposition",
+                            "method": "Sequential deposition of PbI2 + SnI2 ",
+                            "atmosphere": "Other",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 0.5
+                                    },
+                                    {
+                                        "name": "SnI2",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "Unknown"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF:DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "step_name": "Spin-coating Sequential deposition",
+                            "method": "Sequential deposition FAI/MAI",
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "FAI",
+                                        "concentration": 66,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI",
+                                        "concentration": 34,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "isopropanol"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "step_name": " Thermal-annealing",
+                            "method": " Thermal-annealing"
+                        }
+                    ]
+                },
+                {
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Ag",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.66MA0.34Pb0.5Sn0.5I3",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.66"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.34"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "0.5"
+                    },
+                    {
+                        "abbreviation": "Sn",
+                        "common_name": "Tin",
+                        "molecular_formula": "Sn2+",
+                        "coefficient": "0.5"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 0,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": true,
+            "stability": {
+                "review_completed": true,
+                "type": "AM 1.5G",
+                "time": {
+                    "value": 0.0833333333333333,
+                    "unit": "s"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 16.1,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "PEDOT:PSS",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FA0.66MA0.34Pb0.5Sn0.5I3",
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Spin-coating Sequential deposition",
+                            "method": "Sequential deposition of PbI2 + SnI2 ",
+                            "atmosphere": "Other",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 0.5
+                                    },
+                                    {
+                                        "name": "SnI2",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "Unknown"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMF:DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "step_name": "Spin-coating Sequential deposition",
+                            "method": "Sequential deposition FAI/MAI",
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "FAI",
+                                        "concentration": 66,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI",
+                                        "concentration": 34,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "isopropanol"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "step_name": " Thermal-annealing",
+                            "method": " Thermal-annealing"
+                        }
+                    ]
+                },
+                {
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Ag",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

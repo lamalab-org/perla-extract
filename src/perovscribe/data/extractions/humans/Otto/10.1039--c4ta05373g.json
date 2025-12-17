@@ -1,1 +1,146 @@
-{"doi": "10.1039/c4ta05373g", "author": "Natalia Maticiuc", "cells": [{"perovskite_composition": {"formula": "MAPb(I,Cl)3", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 10.49, "unit": "%"}, "jsc": {"value": 22.58, "unit": "mA cm^-2"}, "voc": {"value": 0.91, "unit": "V"}, "ff": {"value": 51.0}, "active_area": {"value": 0.04}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100.0}, "encapsulated": null, "stability": null, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate", "deposition": null, "additional_treatment": null}, {"name": "TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": null, "additional_treatment": null}, {"name": "MAPb(I,Cl)3", "thickness": null, "functionality": "Absorber", "deposition": [{"step_name": null, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "antisolvent": null, "solution": {"compounds": null, "solutes": [{"name": "PbI2", "concentration": 460.0, "concentration_unit": "mg/L"}], "volume": null, "temperature": null, "solvents": [{"name": "DMF", "volume_fraction": null}]}, "additional_parameters": null}, {"step_name": null, "method": "Dipping", "atmosphere": "Air", "temperature": null, "duration": 300.0, "antisolvent": null, "solution": {"compounds": null, "solutes": [{"name": "MAI", "concentration": 20.0, "concentration_unit": "mg/L"}, {"name": "MACl", "concentration": 2.0, "concentration_unit": "mg/L"}], "volume": null, "temperature": null, "solvents": [{"name": "IPA", "volume_fraction": null}]}, "additional_parameters": null}], "additional_treatment": null}, {"name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport", "deposition": null, "additional_treatment": null}, {"name": "Au", "thickness": 100.0, "functionality": "Contact", "deposition": null, "additional_treatment": null}]}]}
+{
+    "doi": "10.1039/c4ta05373g",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPb(I,Cl)3",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 10.49,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.58,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.91,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 51.0
+            },
+            "active_area": {
+                "value": 0.04
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "MAPb(I,Cl)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": {
+                                "compounds": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbI2",
+                                        "concentration": 460.0,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "volume": null,
+                                "temperature": null,
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            },
+                            "additional_parameters": null
+                        },
+                        {
+                            "step_name": null,
+                            "method": "Dipping",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": {
+                                "value": 300.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": {
+                                "compounds": null,
+                                "solutes": [
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 20.0,
+                                        "concentration_unit": "mg/L"
+                                    },
+                                    {
+                                        "name": "MACl",
+                                        "concentration": 2.0,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "volume": null,
+                                "temperature": null,
+                                "solvents": [
+                                    {
+                                        "name": "IPA",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            },
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Au",
+                    "thickness": {
+                        "value": 100.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

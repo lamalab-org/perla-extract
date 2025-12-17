@@ -1,1 +1,780 @@
-{"doi": "10.1016/j.jcou.2019.04.001", "author": "Jesper Jacobsson", "cells": [{"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 18.1, "unit": "%"}, "jsc": {"value": 23.18, "unit": "mA cm^-2"}, "voc": {"value": 1.06, "unit": "V"}, "ff": {"value": 73.7}, "active_area": {"value": 0.81}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": {"review_completed": true, "potential_bias": "Unknown"}, "layers": [{"review_completed": true, "name": "SLG", "functionality": "Substrate"}, {"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "TiO2", "thickness": 50, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "CBD", "method": "Chemical bath deposition", "atmosphere": "Air", "temperature": 70, "duration": 3600, "solution": {"review_completed": true, "temperature": 70, "solutes": [{"review_completed": true, "name": "TiCl4", "concentration": 2.25, "concentration_unit": "vol%"}], "solvents": [{"review_completed": true, "name": "Water", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "CO2 plasma treatment", "method": "CO2 plasma treatment", "atmosphere": "Other", "temperature": null, "duration": 90}], "additional_treatment": "Surface passivation treatments"}, {"review_completed": true, "name": "Perovskite", "thickness": 350, "functionality": "Absorber", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Unknown", "temperature": null, "duration": 30, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "PbI2", "concentration": 553, "concentration_unit": "g/L"}, {"review_completed": true, "name": "CH3NH3I", "concentration": 190, "concentration_unit": "g/L"}], "solvents": [{"review_completed": true, "name": "GBL", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "Air", "temperature": 120, "duration": 600}]}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": 250, "functionality": "Hole-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": 35}]}, {"review_completed": true, "name": "Au", "thickness": 80, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Thermal evaporation", "method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 16.47, "unit": "%"}, "jsc": {"value": 20.72, "unit": "mA cm^-2"}, "voc": {"value": 1.08, "unit": "V"}, "ff": {"value": 73.6}, "active_area": {"value": 0.81}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": {"review_completed": true, "potential_bias": "Unknown"}, "layers": [{"review_completed": true, "name": "SLG", "functionality": "Substrate"}, {"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "TiO2", "thickness": 50, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "CBD", "method": "Chemical bath deposition", "atmosphere": "Air", "temperature": 70, "duration": 3600, "solution": {"review_completed": true, "temperature": 70, "solutes": [{"review_completed": true, "name": "TiCl4", "concentration": 2.25, "concentration_unit": "vol%"}], "solvents": [{"review_completed": true, "name": "Water", "volume_fraction": 1}]}}]}, {"review_completed": true, "name": "Perovskite", "thickness": 350, "functionality": "Absorber", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Unknown", "temperature": null, "duration": 30, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "PbI2", "concentration": 553, "concentration_unit": "g/L"}, {"review_completed": true, "name": "CH3NH3I", "concentration": 190, "concentration_unit": "g/L"}], "solvents": [{"review_completed": true, "name": "GBL", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "Air", "temperature": 120, "duration": 600}]}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": 250, "functionality": "Hole-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": 35}]}, {"review_completed": true, "name": "Au", "thickness": 80, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Thermal evaporation", "method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 8.03, "unit": "%"}, "jsc": {"value": 15.72, "unit": "mA cm^-2"}, "voc": {"value": 1.06, "unit": "V"}, "ff": {"value": 48.2}, "active_area": {"value": 0.81}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": {"review_completed": true, "potential_bias": "Unknown"}, "layers": [{"review_completed": true, "name": "SLG", "functionality": "Substrate"}, {"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "TiO2", "thickness": 50, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "CBD", "method": "Chemical bath deposition", "atmosphere": "Air", "temperature": 70, "duration": 3600, "solution": {"review_completed": true, "temperature": 70, "solutes": [{"review_completed": true, "name": "TiCl4", "concentration": 2.25, "concentration_unit": "vol%"}], "solvents": [{"review_completed": true, "name": "Water", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "H2 plasma treatment", "method": "H2 plasma treatment", "atmosphere": "Other", "temperature": null, "duration": 90}], "additional_treatment": "Surface passivation treatments"}, {"review_completed": true, "name": "Perovskite", "thickness": 350, "functionality": "Absorber", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Unknown", "temperature": null, "duration": 30, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "PbI2", "concentration": 553, "concentration_unit": "g/L"}, {"review_completed": true, "name": "CH3NH3I", "concentration": 190, "concentration_unit": "g/L"}], "solvents": [{"review_completed": true, "name": "GBL", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "Air", "temperature": 120, "duration": 600}]}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": 250, "functionality": "Hole-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": 35}]}, {"review_completed": true, "name": "Au", "thickness": 80, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Thermal evaporation", "method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 14.88, "unit": "%"}, "jsc": {"value": 18.86, "unit": "mA cm^-2"}, "voc": {"value": 1.1, "unit": "V"}, "ff": {"value": 71.7}, "active_area": {"value": 0.81}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": {"review_completed": true, "potential_bias": "Unknown"}, "layers": [{"review_completed": true, "name": "SLG", "functionality": "Substrate"}, {"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Contact"}, {"review_completed": true, "name": "TiO2", "thickness": 50, "functionality": "Electron-transport", "additional_treatment": "Surface passivation treatments", "deposition": [{"review_completed": true, "step_name": "CBD", "method": "Chemical bath deposition", "atmosphere": "Air", "temperature": 70, "duration": 3600, "solution": {"review_completed": true, "temperature": 70, "solutes": [{"review_completed": true, "name": "TiCl4", "concentration": 2.25, "concentration_unit": "vol%"}], "solvents": [{"review_completed": true, "name": "Water", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "He2 plasma treatment", "method": "He2 plasma treatment", "atmosphere": "Other", "temperature": null, "duration": 90}]}, {"review_completed": true, "name": "Perovskite", "thickness": 350, "functionality": "Absorber", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Unknown", "temperature": null, "duration": 30, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "PbI2", "concentration": 553, "concentration_unit": "g/L"}, {"review_completed": true, "name": "CH3NH3I", "concentration": 190, "concentration_unit": "g/L"}], "solvents": [{"review_completed": true, "name": "GBL", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "Air", "temperature": 120, "duration": 600}]}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": 250, "functionality": "Hole-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": 35}]}, {"review_completed": true, "name": "Au", "thickness": 80, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Thermal evaporation", "method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}]}
+{
+    "doi": "10.1016/j.jcou.2019.04.001",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.1,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.18,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.06,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 73.7
+            },
+            "active_area": {
+                "value": 0.81
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "CBD",
+                            "method": "Chemical bath deposition",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 3600,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiCl4",
+                                        "concentration": 2.25,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Water",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "CO2 plasma treatment",
+                            "method": "CO2 plasma treatment",
+                            "atmosphere": "Other",
+                            "temperature": null,
+                            "duration": 90
+                        }
+                    ],
+                    "additional_treatment": "Surface passivation treatments"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 350,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 553,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 190,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "GBL",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": 250,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 35
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Thermal evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 16.47,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.72,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 73.6
+            },
+            "active_area": {
+                "value": 0.81
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "CBD",
+                            "method": "Chemical bath deposition",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 3600,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiCl4",
+                                        "concentration": 2.25,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Water",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 350,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 553,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 190,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "GBL",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": 250,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 35
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Thermal evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 8.03,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 15.72,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.06,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 48.2
+            },
+            "active_area": {
+                "value": 0.81
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "CBD",
+                            "method": "Chemical bath deposition",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 3600,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiCl4",
+                                        "concentration": 2.25,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Water",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "H2 plasma treatment",
+                            "method": "H2 plasma treatment",
+                            "atmosphere": "Other",
+                            "temperature": null,
+                            "duration": 90
+                        }
+                    ],
+                    "additional_treatment": "Surface passivation treatments"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 350,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 553,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 190,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "GBL",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": 250,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 35
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Thermal evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 14.88,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.86,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71.7
+            },
+            "active_area": {
+                "value": 0.81
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "additional_treatment": "Surface passivation treatments",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "CBD",
+                            "method": "Chemical bath deposition",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 3600,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiCl4",
+                                        "concentration": 2.25,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Water",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "He2 plasma treatment",
+                            "method": "He2 plasma treatment",
+                            "atmosphere": "Other",
+                            "temperature": null,
+                            "duration": 90
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 350,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 553,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 190,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "GBL",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": 250,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 35
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Thermal evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

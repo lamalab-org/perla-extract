@@ -1,1 +1,78 @@
-{"doi": "10.1021/acs.chemmater.8b01521", "author": "Keely Clements", "cells": [{"perovskite_composition": {"formula": "", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 5.9, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "Other"}, "encapsulated": null, "stability": null, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate", "review_completed": true}, {"name": "TiO2", "thickness": null, "functionality": "Electron-transport", "review_completed": true}, {"name": "MAPbI3", "thickness": null, "functionality": "Absorber", "review_completed": true}, {"name": "PEDOT", "thickness": null, "functionality": "Hole-transport", "additional_treatment": "Rapid reduction at -0.6 V for 10 s", "deposition": [{"method": "Electrodeposition", "atmosphere": "Other", "temperature": null, "duration": null, "additional_parameters": {"potential": "1.0 V", "charge_density": "10 mC cm^-2"}}], "review_completed": true}]}]}
+{
+    "doi": "10.1021/acs.chemmater.8b01521",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 5.9,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "Other"
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "review_completed": true
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "review_completed": true
+                },
+                {
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "review_completed": true
+                },
+                {
+                    "name": "PEDOT",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "Rapid reduction at -0.6 V for 10 s",
+                    "deposition": [
+                        {
+                            "method": "Electrodeposition",
+                            "atmosphere": "Other",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "potential": "1.0 V",
+                                "charge_density": "10 mC cm^-2"
+                            }
+                        }
+                    ],
+                    "review_completed": true
+                }
+            ]
+        }
+    ]
+}

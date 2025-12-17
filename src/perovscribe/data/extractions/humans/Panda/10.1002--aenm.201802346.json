@@ -1,1 +1,553 @@
-{"doi": "10.1002/aenm.201802346", "author": "Hugo Lemos", "cells": [{"perovskite_composition": {"formula": "CsPb0.97Sm0.03Br3", "a_ions": [{"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "0.97"}, {"abbreviation": "Sm", "common_name": "Samarium", "molecular_formula": "Sm3+", "coefficient": "0.03"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "3"}]}, "pce": {"value": 10.14, "unit": "%"}, "jsc": {"value": 7.48, "unit": "mA cm^-2"}, "voc": {"value": 1.594, "unit": "V"}, "ff": {"value": 85.1}, "active_area": {"value": 0.09}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "description": "solar simulator (Newport, Oriel Class A, 91195A)", "light_intensity": 100}, "encapsulated": null, "stability": {"time": 9504000, "humidity": 80, "temperature": 25, "potential_bias": "Open circuit"}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "c-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": 30, "solution": {"review_completed": true, "volume": null, "temperature": null, "solutes": [{"review_completed": true, "name": "titanium isopropoxide", "concentration": 0.5, "concentration_unit": "M"}, {"review_completed": true, "name": "diethanol amine", "concentration": 0.5, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "ethanol", "volume_fraction": null}]}}, {"review_completed": true, "method": "Thermal anneling", "atmosphere": "Air", "temperature": 500, "duration": 7200}]}, {"name": "m-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Unknown", "temperature": null, "duration": 30, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "TiO2 paste"}]}}, {"review_completed": true, "method": "Thermal annealing", "temperature": 450, "duration": 1800}, {"review_completed": true, "method": "Solvothermal", "temperature": 70, "duration": 1800, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "TiCl4", "concentration": 0.04, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "H2O", "volume_fraction": 1}]}}, {"review_completed": true, "method": "Thermal annealing", "atmosphere": "Air", "temperature": 450, "duration": 1800}]}, {"review_completed": true, "name": "CsPb0.97Sm0.03Br3", "thickness": 400, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": 90, "duration": 30, "solution": {"review_completed": true, "volume": null, "temperature": null, "solutes": [{"name": "PbBr2", "concentration": 1, "concentration_unit": "M"}, {"review_completed": true, "name": "SmBr3", "concentration": 0.03, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "DMF", "volume_fraction": null}]}}, {"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "duration": 30, "solution": {"review_completed": true, "volume": null, "temperature": null, "solutes": [{"review_completed": true, "name": "CsBr", "concentration": 0.07, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "methanol", "volume_fraction": null}]}}, {"review_completed": true, "method": "Thermal annealing", "temperature": 250, "duration": 300}]}, {"review_completed": true, "name": "Carbon", "thickness": null, "functionality": "Contact", "deposition": [{"review_completed": true, "method": "Doctor blading", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "carbon paste (purchased from Shanghai MaterWin New Materials Co., Ltd.)"}]}}]}]}, {"perovskite_composition": {"formula": "CsPbBr3", "a_ions": [{"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "3"}]}, "pce": {"value": 6.99, "unit": "%"}, "jsc": {"value": 6.94, "unit": "mA cm^-2"}, "voc": {"value": 1.352, "unit": "V"}, "ff": {"value": 74.5}, "active_area": {"value": 0.09}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "description": "solar simulator (Newport, Oriel Class A, 91195A)", "light_intensity": 100}, "encapsulated": null, "stability": {"review_completed": true, "time": 9504000, "humidity": 80, "temperature": 25, "PCE_T80": 1440, "PCE_at_start": 6.99, "potential_bias": "Open circuit"}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "c-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": 30, "solution": {"review_completed": true, "volume": null, "temperature": null, "solutes": [{"review_completed": true, "name": "titanium isopropoxide", "concentration": 0.5, "concentration_unit": "M"}, {"review_completed": true, "name": "diethanol amine", "concentration": 0.5, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "ethanol", "volume_fraction": null}]}}, {"review_completed": true, "method": "Thermal anneling", "atmosphere": "Air", "temperature": 500, "duration": 7200}]}, {"name": "m-TiO2", "thickness": null, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Unknown", "temperature": null, "duration": 30, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "TiO2 paste"}]}}, {"review_completed": true, "method": "Thermal annealing", "temperature": 450, "duration": 1800}, {"review_completed": true, "method": "Solvothermal", "temperature": 70, "duration": 1800, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "TiCl4", "concentration": 0.04, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "H2O", "volume_fraction": 1}]}}, {"review_completed": true, "method": "Thermal annealing", "atmosphere": "Air", "temperature": 450, "duration": 1800}]}, {"review_completed": true, "name": "CsPbBr3", "thickness": 400, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "Air", "temperature": 90, "duration": 30, "solution": {"review_completed": true, "volume": null, "temperature": null, "solutes": [{"name": "PbBr2", "concentration": 1, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "DMF", "volume_fraction": null}]}}, {"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "duration": 30, "solution": {"review_completed": true, "volume": null, "temperature": null, "solutes": [{"review_completed": true, "name": "CsBr", "concentration": 0.07, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "methanol", "volume_fraction": null}]}}, {"review_completed": true, "method": "Thermal annealing", "temperature": 250, "duration": 300}]}, {"review_completed": true, "name": "Carbon", "thickness": null, "functionality": "Contact", "deposition": [{"review_completed": true, "method": "Doctor blading", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "carbon paste (purchased from Shanghai MaterWin New Materials Co., Ltd.)"}]}}]}]}]}
+{
+    "doi": "10.1002/aenm.201802346",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "CsPb0.97Sm0.03Br3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "0.97"
+                    },
+                    {
+                        "abbreviation": "Sm",
+                        "common_name": "Samarium",
+                        "molecular_formula": "Sm3+",
+                        "coefficient": "0.03"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 10.14,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 7.48,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.594,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 85.1
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "solar simulator (Newport, Oriel Class A, 91195A)",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": 9504000,
+                "humidity": 80,
+                "temperature": 25,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "titanium isopropoxide",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "diethanol amine",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Thermal anneling",
+                            "atmosphere": "Air",
+                            "temperature": 500,
+                            "duration": 7200
+                        }
+                    ]
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiO2 paste"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Thermal annealing",
+                            "temperature": 450,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Solvothermal",
+                            "temperature": 70,
+                            "duration": 1800,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiCl4",
+                                        "concentration": 0.04,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "H2O",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Thermal annealing",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CsPb0.97Sm0.03Br3",
+                    "thickness": 400,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": 90,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbBr2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "SmBr3",
+                                        "concentration": 0.03,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "CsBr",
+                                        "concentration": 0.07,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "methanol",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Thermal annealing",
+                            "temperature": 250,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Carbon",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Doctor blading",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "carbon paste (purchased from Shanghai MaterWin New Materials Co., Ltd.)"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "CsPbBr3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 6.99,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 6.94,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.352,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74.5
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "solar simulator (Newport, Oriel Class A, 91195A)",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 9504000,
+                "humidity": 80,
+                "temperature": 25,
+                "PCE_T80": 1440,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 6.99,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "titanium isopropoxide",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "diethanol amine",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Thermal anneling",
+                            "atmosphere": "Air",
+                            "temperature": 500,
+                            "duration": 7200
+                        }
+                    ]
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiO2 paste"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Thermal annealing",
+                            "temperature": 450,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Solvothermal",
+                            "temperature": 70,
+                            "duration": 1800,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiCl4",
+                                        "concentration": 0.04,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "H2O",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Thermal annealing",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CsPbBr3",
+                    "thickness": 400,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": 90,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "PbBr2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "CsBr",
+                                        "concentration": 0.07,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "methanol",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Thermal annealing",
+                            "temperature": 250,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Carbon",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Doctor blading",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "carbon paste (purchased from Shanghai MaterWin New Materials Co., Ltd.)"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

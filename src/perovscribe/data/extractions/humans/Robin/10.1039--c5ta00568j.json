@@ -1,1 +1,368 @@
-{"doi": "10.1039/c5ta00568j", "author": "Juan jos\u00e9 Pati\u00f1o l\u00f3pez", "cells": [{"perovskite_composition": {"formula": "MAPbI3-xClx", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3-x"}, {"abbreviation": "Cl", "common_name": "Chloride", "molecular_formula": "Cl-", "coefficient": "x"}]}, "pce": {"value": 10, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G"}, "encapsulated": null, "stability": null, "layers": [{"review_completed": true, "name": "FTO", "thickness": 3000000, "functionality": "Substrate"}, {"review_completed": true, "name": "TiO2", "thickness": 50, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "TiO2 deposition", "method": "Spin-coating", "atmosphere": "Ambient air", "duration": null, "solution": {"review_completed": true, "volume": null, "temperature": null, "solutes": [{"review_completed": true, "name": "titanium(IV) isopropoxide", "concentration": 0.00025, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "ethanol", "volume_fraction": 1}]}}]}, {"review_completed": true, "name": "CH3NH3PbI3-xClx ", "thickness": 450, "functionality": "Absorber", "additional_treatment": "Al2O3 dopping", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"review_completed": true, "volume": null, "temperature": null, "solutes": [{"review_completed": true, "name": "Al2O3 nanoparticles", "concentration": 5, "concentration_unit": "wt%"}, {"review_completed": true, "name": "CH3NH3PbI3XClX"}], "solvents": [{"review_completed": true, "name": "DMF", "volume_fraction": 1}]}}, {"review_completed": true, "method": "NIR annealing", "atmosphere": "Air", "temperature": 200, "duration": 2.5}]}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": 200, "functionality": "Hole-transport", "additional_treatment": "tBP and Li-TFSI additives", "deposition": [{"review_completed": true, "solution": {"review_completed": true}}]}, {"review_completed": true, "name": "Au", "thickness": null, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Au deposition", "method": "Evaporation", "atmosphere": "Vacuum"}]}]}, {"perovskite_composition": {"formula": "MAPbI3-xClx", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3-x"}, {"abbreviation": "Cl", "common_name": "Chloride", "molecular_formula": "Cl-", "coefficient": "x"}]}, "pce": {"value": 10.9, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G"}, "encapsulated": null, "stability": null, "layers": [{"review_completed": true, "name": "FTO", "thickness": 3000000, "functionality": "Substrate"}, {"review_completed": true, "name": "TiO2", "thickness": 50, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "TiO2 deposition", "method": "Spin-coating", "atmosphere": "Ambient air", "duration": null, "solution": {"review_completed": true, "volume": null, "temperature": null, "solutes": [{"review_completed": true, "name": "titanium(IV) isopropoxide", "concentration": 0.00025, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "ethanol", "volume_fraction": 1}]}}]}, {"review_completed": true, "name": "CH3NH3PbI3-xClx ", "thickness": 450, "functionality": "Absorber", "additional_treatment": "Al2O3 dopping", "deposition": [{"review_completed": true, "method": "Spin-coating", "atmosphere": "Air", "temperature": null, "duration": null, "solution": {"review_completed": true, "volume": null, "temperature": null, "solutes": [{"review_completed": true, "name": "Al2O3 nanoparticles", "concentration": 5, "concentration_unit": "wt%"}, {"review_completed": true, "name": "CH3NH3PbI3XClX"}], "solvents": [{"review_completed": true, "name": "DMF", "volume_fraction": 1}]}}, {"review_completed": true, "method": "Oven-Annealing", "atmosphere": "Air", "temperature": 100, "duration": 2700}]}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": 200, "functionality": "Hole-transport", "additional_treatment": "tBP and Li-TFSI additives", "deposition": [{"review_completed": true, "solution": {"review_completed": true}}]}, {"review_completed": true, "name": "Au", "thickness": null, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Au deposition", "method": "Evaporation", "atmosphere": "Vacuum"}]}]}]}
+{
+    "doi": "10.1039/c5ta00568j",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3-xClx",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3-x"
+                    },
+                    {
+                        "abbreviation": "Cl",
+                        "common_name": "Chloride",
+                        "molecular_formula": "Cl-",
+                        "coefficient": "x"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 10,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G"
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": 3000000,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "TiO2 deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "Ambient air",
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "titanium(IV) isopropoxide",
+                                        "concentration": 0.00025,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3-xClx ",
+                    "thickness": 450,
+                    "functionality": "Absorber",
+                    "additional_treatment": "Al2O3 dopping",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Al2O3 nanoparticles",
+                                        "concentration": 5,
+                                        "concentration_unit": "wt%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3PbI3XClX"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "NIR annealing",
+                            "atmosphere": "Air",
+                            "temperature": 200,
+                            "duration": {
+                                "value": 2.5,
+                                "unit": "s"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": 200,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "tBP and Li-TFSI additives",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "solution": {
+                                "review_completed": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au deposition",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3-xClx",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3-x"
+                    },
+                    {
+                        "abbreviation": "Cl",
+                        "common_name": "Chloride",
+                        "molecular_formula": "Cl-",
+                        "coefficient": "x"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 10.9,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G"
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": 3000000,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "TiO2 deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "Ambient air",
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "titanium(IV) isopropoxide",
+                                        "concentration": 0.00025,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3-xClx ",
+                    "thickness": 450,
+                    "functionality": "Absorber",
+                    "additional_treatment": "Al2O3 dopping",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Al2O3 nanoparticles",
+                                        "concentration": 5,
+                                        "concentration_unit": "wt%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3PbI3XClX"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Oven-Annealing",
+                            "atmosphere": "Air",
+                            "temperature": 100,
+                            "duration": 2700
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": 200,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "tBP and Li-TFSI additives",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "solution": {
+                                "review_completed": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au deposition",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

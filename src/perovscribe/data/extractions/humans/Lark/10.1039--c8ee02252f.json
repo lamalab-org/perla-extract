@@ -1,1 +1,1110 @@
-{"doi": "10.1039/c8ee02252f", "author": "Florian Mathies", "cells": [{"perovskite_composition": {"formula": "FA0.81MA0.15PbBr0.45I2.51", "a_ions": [{"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.81"}, {"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.15"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.45"}, {"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "2.51"}]}, "pce": {"value": 20.5, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": {"review_completed": true, "time": 3600, "light_intensity": 100, "humidity": 15, "temperature": 22, "PCE_at_end": 71.6, "potential_bias": "Unknown", "description": "darkstorage"}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "mesoporous TiO2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Perovskite", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}, {"review_completed": true, "step_name": "AS drop", "method": "Spin-coating", "atmosphere": "N2", "solution": {"review_completed": true, "volume": 0.00011, "solutes": [{"review_completed": true, "name": "bis-PCBM"}], "solvents": [{"review_completed": true, "name": "Chlorobenzene"}]}}]}, {"name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": null, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "FA0.81MA0.15PbBr0.45I2.51", "a_ions": [{"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.81"}, {"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.15"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.45"}, {"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "2.51"}]}, "pce": {"value": 21.7, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": {"review_completed": true, "time": 1500, "light_intensity": 100, "humidity": 0, "temperature": 55, "PCE_at_end": 90, "potential_bias": "MPPT"}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "mesoporous TiO2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Perovskite", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}, {"review_completed": true, "step_name": "AS drop", "method": "Spin-coating", "atmosphere": "N2", "solution": {"review_completed": true, "volume": 0.00011, "solutes": [{"review_completed": true, "name": "bis-PCBM"}], "solvents": [{"review_completed": true, "name": "Chlorobenzene"}]}}]}, {"name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": null, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "FA0.81MA0.15PbBr0.45I2.51", "a_ions": [{"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.81"}, {"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.15"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.45"}, {"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "2.51"}]}, "pce": {"value": 21.7, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": {"review_completed": true, "time": 3600, "light_intensity": 100, "humidity": 15, "temperature": 22, "PCE_at_end": 93.2, "potential_bias": "Unknown", "description": "darkstorage"}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "mesoporous TiO2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Perovskite", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}, {"review_completed": true, "step_name": "AS drop", "method": "Spin-coating", "atmosphere": "N2", "solution": {"review_completed": true, "volume": 0.00011, "solutes": [{"review_completed": true, "name": "bis-PCBM"}], "solvents": [{"review_completed": true, "name": "Chlorobenzene"}]}}]}, {"name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": null, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "FA0.81MA0.15PbBr0.45I2.51", "a_ions": [{"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.81"}, {"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.15"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.45"}, {"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "2.51"}]}, "pce": {"value": 20.4, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": {"time": 1500, "light_intensity": 100, "temperature": 55, "potential_bias": "MPPT", "humidity": 0, "PCE_at_end": 67.9, "review_completed": true}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "mesoporous TiO2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Perovskite", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}, {"review_completed": true, "step_name": "AS drop", "method": "Spincoating", "atmosphere": "N2", "solution": {"review_completed": true, "volume": 0.00011, "solutes": [{"review_completed": true}], "solvents": [{"review_completed": true, "name": "Chlorobenzene"}]}}]}, {"name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": null, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "FA0.81MA0.15PbBr0.45I2.51", "a_ions": [{"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.81"}, {"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.15"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.45"}, {"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "2.51"}]}, "pce": {"value": 19.3, "unit": "%"}, "jsc": {"value": 23.13, "unit": "mA cm^-2"}, "voc": {"value": 1.1, "unit": "V"}, "ff": {"value": 73}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": {"time": 3600, "light_intensity": 100, "temperature": 22, "PCE_at_end": 32.6, "potential_bias": "Unknown", "humidity": 15, "description": "dark storage", "review_completed": true}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "mesoporous TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "Perovskite", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": null, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "FA0.81MA0.15PbBr0.45I2.51", "a_ions": [{"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.81"}, {"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.15"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.45"}, {"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "2.51"}]}, "pce": {"value": 20.5, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": {"time": 1500, "light_intensity": 100, "temperature": 55, "potential_bias": "MPPT", "humidity": 0, "PCE_at_end": 76.4, "review_completed": true}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "mesoporous TiO2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Perovskite", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}, {"review_completed": true, "step_name": "AS drop", "method": "Spin-coating", "atmosphere": "N2", "solution": {"review_completed": true, "volume": 0.00011, "solutes": [{"review_completed": true, "name": "bis-PCBM"}], "solvents": [{"review_completed": true, "name": "Chlorobenzene"}]}}]}, {"name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": null, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "FA0.81MA0.15PbBr0.45I2.51", "a_ions": [{"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.81"}, {"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.15"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.45"}, {"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "2.51"}]}, "pce": {"value": 20.4, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": {"review_completed": true, "time": 3600, "light_intensity": 100, "humidity": 15, "temperature": 22, "PCE_at_end": 67.6, "potential_bias": "Unknown", "description": "darkstorage"}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "mesoporous TiO2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Perovskite", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}, {"review_completed": true, "step_name": "AS drop", "method": "Spincoating", "atmosphere": "N2", "solution": {"review_completed": true, "volume": 0.00011, "solutes": [{"review_completed": true}], "solvents": [{"review_completed": true, "name": "Chlorobenzene"}]}}]}, {"name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": null, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "FA0.81MA0.15PbBr0.45I2.51", "a_ions": [{"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.81"}, {"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.15"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.45"}, {"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "2.51"}]}, "pce": {"value": 19.3, "unit": "%"}, "jsc": {"value": 23.13, "unit": "mA cm^-2"}, "voc": {"value": 1.1, "unit": "V"}, "ff": {"value": 73}, "active_area": {"value": null}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": false, "stability": {"time": 1500, "light_intensity": 100, "temperature": 55, "potential_bias": "MPPT", "PCE_at_end": 13.9}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "compact TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "mesoporous TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "Perovskite", "thickness": null, "functionality": "Absorber", "deposition": [{"method": "Spin-coating", "atmosphere": "N2", "temperature": null, "duration": null}]}, {"name": "spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": null, "functionality": "Contact"}]}]}
+{
+    "doi": "10.1039/c8ee02252f",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "FA0.81MA0.15PbBr0.45I2.51",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.81"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.51"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 3600,
+                "light_intensity": 100,
+                "humidity": 15,
+                "temperature": 22,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 71.6,
+                    "unit": "%"
+                },
+                "potential_bias": "Unknown",
+                "description": "darkstorage"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "AS drop",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "bis-PCBM"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.81MA0.15PbBr0.45I2.51",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.81"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.51"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 21.7,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 1500,
+                "light_intensity": 100,
+                "humidity": 0,
+                "temperature": 55,
+                "PCE_at_the_end_of_experiment": 90,
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "AS drop",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "bis-PCBM"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.81MA0.15PbBr0.45I2.51",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.81"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.51"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 21.7,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 3600,
+                "light_intensity": 100,
+                "humidity": 15,
+                "temperature": 22,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 93.2,
+                    "unit": "%"
+                },
+                "potential_bias": "Unknown",
+                "description": "darkstorage"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "AS drop",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "bis-PCBM"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.81MA0.15PbBr0.45I2.51",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.81"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.51"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "time": 1500,
+                "light_intensity": 100,
+                "temperature": 55,
+                "potential_bias": "MPPT",
+                "humidity": 0,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 67.9,
+                    "unit": "%"
+                },
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "AS drop",
+                            "method": "Spincoating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.81MA0.15PbBr0.45I2.51",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.81"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.51"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 19.3,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.13,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 73
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "time": 3600,
+                "light_intensity": 100,
+                "temperature": 22,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 32.6,
+                    "unit": "%"
+                },
+                "potential_bias": "Unknown",
+                "humidity": 15,
+                "description": "dark storage",
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.81MA0.15PbBr0.45I2.51",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.81"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.51"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "time": 1500,
+                "light_intensity": 100,
+                "temperature": 55,
+                "potential_bias": "MPPT",
+                "humidity": 0,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 76.4,
+                    "unit": "%"
+                },
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "AS drop",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "bis-PCBM"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.81MA0.15PbBr0.45I2.51",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.81"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.51"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 3600,
+                "light_intensity": 100,
+                "humidity": 15,
+                "temperature": 22,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 67.6,
+                    "unit": "%"
+                },
+                "potential_bias": "Unknown",
+                "description": "darkstorage"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "AS drop",
+                            "method": "Spincoating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.81MA0.15PbBr0.45I2.51",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.81"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.51"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 19.3,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.13,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 73
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "time": 1500,
+                "light_intensity": 100,
+                "temperature": 55,
+                "potential_bias": "MPPT",
+                "PCE_at_the_end_of_experiment": {
+                    "value": 13.9,
+                    "unit": "%"
+                }
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

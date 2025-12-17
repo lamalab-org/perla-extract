@@ -1,1 +1,209 @@
-{"doi": "10.1002/cphc.201500456", "author": "Juan jos\u00e9 Pati\u00f1o l\u00f3pez", "cells": [{"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 9.33, "unit": "%"}, "jsc": {"value": 20.25, "unit": "mA cm^-2"}, "voc": {"value": 0.87, "unit": "V"}, "ff": {"value": 53.16}, "active_area": {"value": 0.07068}, "device_architecture": "nip", "number_devices": 1, "averaged_quantites": true, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Abet Technology Sun 2000"}, "encapsulated": null, "stability": null, "layers": [{"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "TiO2", "thickness": null, "functionality": "Electron-transport", "additional_treatment": "TiCl4 treatment 1.5 h", "deposition": [{"review_completed": true, "method": "Liquid-phase deposition", "atmosphere": "Air", "temperature": null, "duration": null}]}, {"review_completed": true, "name": "ZnO NW", "functionality": "Electron-transport", "additional_treatment": "(NH4 )2TiF6 Treatment 4.5 h"}, {"review_completed": true, "name": "CH3NH3PbI3", "thickness": null, "functionality": "Absorber", "deposition": [{"review_completed": true, "step_name": "PbI2 deposition", "method": "Spin coating", "atmosphere": "Air", "temperature": 70, "duration": 15, "solution": {"review_completed": true, "volume": 7e-05, "solutes": [{"review_completed": true, "name": "PbI2", "concentration": 460, "concentration_unit": "mg/mL"}], "solvents": [{"review_completed": true, "name": "DMF", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "MAI depsotion", "method": "Dip coating", "duration": 2, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "MAI", "concentration": 10, "concentration_unit": "mg/mL"}], "solvents": [{"review_completed": true, "name": "Isopropanol", "volume_fraction": 1}]}}]}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport", "deposition": [{"review_completed": true, "step_name": "spiro-OMeTAD deposition", "method": "Spin-coating", "atmosphere": "Unknown", "temperature": null, "duration": null, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "spiro-OMeTAD", "concentration": 0.17, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "Chlorobenzene", "volume_fraction": 0.95}, {"review_completed": true, "name": "Acetonitrile", "volume_fraction": 0.05}]}}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Ag deposition", "method": "Thermal evaporation", "atmosphere": "Vacuum", "temperature": null, "duration": null}]}]}]}
+{
+    "doi": "10.1002/cphc.201500456",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 9.33,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.25,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.87,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 53.16
+            },
+            "active_area": {
+                "value": 0.07068
+            },
+            "device_architecture": "nip",
+            "number_devices": 1,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Abet Technology Sun 2000"
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "additional_treatment": "TiCl4 treatment 1.5 h",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Liquid-phase deposition",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "ZnO NW",
+                    "functionality": "Electron-transport",
+                    "additional_treatment": "(NH4 )2TiF6 Treatment 4.5 h"
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "PbI2 deposition",
+                            "method": "Spin coating",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 7e-05,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 460,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "MAI depsotion",
+                            "method": "Dip coating",
+                            "duration": 2,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI",
+                                        "concentration": 10,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Isopropanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spiro-OMeTAD deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "spiro-OMeTAD",
+                                        "concentration": 0.17,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 0.95
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Acetonitrile",
+                                        "volume_fraction": 0.05
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Ag deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

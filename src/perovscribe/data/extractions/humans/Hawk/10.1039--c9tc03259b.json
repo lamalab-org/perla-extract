@@ -1,1 +1,219 @@
-{"doi": "10.1039/c9tc03259b", "author": "Edgar Nandayapa", "cells": [{"perovskite_composition": {"formula": "FA0.85MA0.15PbI0.85Br0.15", "a_ions": [{"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.85"}, {"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "0.15"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "0.85"}, {"abbreviation": "Br", "common_name": "Bromide", "molecular_formula": "Br-", "coefficient": "0.15"}]}, "pce": {"value": 20.15, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": 0.04}, "device_architecture": "pin", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Newport, Oriel Class A, 91195A"}, "encapsulated": false, "stability": {"review_completed": true, "time": 720, "light_intensity": 0, "humidity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": 140, "functionality": "Substrate"}, {"review_completed": true, "name": "NiOx", "thickness": 40, "functionality": "Hole-transport"}, {"review_completed": true, "name": "FA0.85MA0.15Pb(I0.85Br0.15)3", "thickness": 300, "functionality": "Absorber"}, {"review_completed": true, "name": "PCBM", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Ca(acac)2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Ag", "thickness": 60, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "MAPbI3", "a_ions": [{"abbreviation": "MA", "common_name": "Methylammonium", "molecular_formula": "CH6N+", "coefficient": "1"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 18.23, "unit": "%"}, "jsc": {"value": 23.02, "unit": "mA cm^-2"}, "voc": {"value": 1.04, "unit": "V"}, "ff": {"value": 75.95}, "active_area": {"value": 0.04}, "device_architecture": "pin", "number_devices": null, "averaged_quantites": false, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": "Newport, Oriel Class A, 91195A"}, "encapsulated": false, "stability": {"review_completed": true, "time": 720, "light_intensity": 0, "humidity": 0, "potential_bias": "Open circuit"}, "layers": [{"review_completed": true, "name": "ITO", "thickness": 140, "functionality": "Substrate"}, {"review_completed": true, "name": "NiOx", "thickness": 40, "functionality": "Hole-transport"}, {"review_completed": true, "name": "MAPbI3", "thickness": 300, "functionality": "Absorber"}, {"review_completed": true, "name": "PCBM", "thickness": 50, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Ca(acac)2", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "Ag", "thickness": 60, "functionality": "Contact"}]}]}
+{
+    "doi": "10.1039/c9tc03259b",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.15PbI0.85Br0.15",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.15"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.15,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.04
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Newport, Oriel Class A, 91195A"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 720,
+                "light_intensity": 0,
+                "humidity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": 140,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 40,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FA0.85MA0.15Pb(I0.85Br0.15)3",
+                    "thickness": 300,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ca(acac)2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 60,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.23,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.02,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.04,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 75.95
+            },
+            "active_area": {
+                "value": 0.04
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Newport, Oriel Class A, 91195A"
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 720,
+                "light_intensity": 0,
+                "humidity": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": 140,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "thickness": 40,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": 300,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ca(acac)2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 60,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

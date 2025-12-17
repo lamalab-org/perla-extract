@@ -1,1 +1,1525 @@
-{"doi": "10.1038/s41467-024-53953-4", "author": "Jesper Jacobsson", "cells": [{"perovskite_composition": {"formula": "Cs0.05FA0.95PbI3", "a_ions": [{"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "0.05"}, {"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.95"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 0, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": 0.1}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": " Oriel 9600 solar simulator"}, "encapsulated": true, "stability": {"review_completed": true, "time": 1000, "light_intensity": 100, "humidity": 30, "temperature": 70, "PCE_at_start": 1, "PCE_at_end": 80, "potential_bias": "MPPT", "PCE_after_1000_hours": 80}, "layers": [{"review_completed": true, "name": "SLG", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "SnO2-np", "thickness": 30, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Air", "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "SnO2-np", "concentration": 3, "concentration_unit": "wt%"}], "solvents": [{"review_completed": true, "name": "Water", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Annealing", "atmosphere": "Air", "temperature": 165, "duration": 2100}]}, {"review_completed": true, "name": "Perovskite", "thickness": null, "functionality": "Absorber", "additional_treatment": "Interface engineering", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "duration": 40, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "PbI2", "concentration": 1.4, "concentration_unit": "M"}, {"review_completed": true, "name": "CsI", "concentration": 0.07, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "DMF", "volume_fraction": 0.94}, {"review_completed": true, "name": "DMSO", "volume_fraction": 0.06}]}}, {"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "duration": 40, "solution": {"review_completed": true, "volume": 0.001, "solutes": [{"review_completed": true, "name": "FA", "concentration": 80, "concentration_unit": "g/L"}, {"review_completed": true, "name": "MACl", "concentration": 13, "concentration_unit": "g/L"}], "solvents": [{"review_completed": true, "name": "IPA", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Pre annealing", "method": "Thermal-annealing", "atmosphere": "N2", "temperature": 90, "duration": 60}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "Air", "temperature": 150, "duration": 600}]}, {"review_completed": true, "name": "PPAm", "functionality": "Hole-transport", "additional_treatment": "Interface engineering", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "phenylpropanylammonium", "concentration": 5, "concentration_unit": "mmol/L"}], "solvents": [{"review_completed": true, "name": "IPA", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "N2", "temperature": 100, "duration": 30}]}, {"review_completed": true, "name": "PTAA", "thickness": null, "functionality": "Hole-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2"}]}, {"review_completed": true, "name": "MoO", "functionality": "Hole-transport"}, {"review_completed": true, "name": "ITO", "functionality": "Contact"}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Evaporation", "method": "Evaporation", "atmosphere": "Vacuum"}]}]}, {"perovskite_composition": {"formula": "Cs0.05FA0.95PbI3", "a_ions": [{"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "0.05"}, {"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.95"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 0, "unit": "%"}, "jsc": {"value": 0, "unit": "mA cm^-2"}, "voc": {"value": 0, "unit": "V"}, "ff": {"value": 0}, "active_area": {"value": 0.1}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": " Oriel 9600 solar simulator"}, "encapsulated": true, "stability": {"review_completed": true, "potential_bias": "MPPT", "temperature": 70, "humidity": 30, "light_intensity": 100, "PCE_at_start": 1, "PCE_at_end": 95, "time": 2000}, "layers": [{"review_completed": true, "name": "SLG", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "FTO", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "SnO2-np", "thickness": 30, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Air", "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "SnO2-np", "concentration": 3, "concentration_unit": "wt%"}], "solvents": [{"review_completed": true, "name": "Water", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Annealing", "atmosphere": "Air", "temperature": 165, "duration": 2100}]}, {"review_completed": true, "name": "Perovskite", "thickness": null, "functionality": "Absorber", "additional_treatment": "Interface engineering", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "duration": 40, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "PbI2", "concentration": 1.4, "concentration_unit": "M"}, {"review_completed": true, "name": "CsI", "concentration": 0.07, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "DMF", "volume_fraction": 0.94}, {"review_completed": true, "name": "DMSO", "volume_fraction": 0.06}]}}, {"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "duration": 40, "solution": {"review_completed": true, "volume": 0.001, "solutes": [{"review_completed": true, "name": "FA", "concentration": 80, "concentration_unit": "g/L"}, {"review_completed": true, "name": "MACl", "concentration": 13, "concentration_unit": "g/L"}], "solvents": [{"review_completed": true, "name": "IPA", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Pre annealing", "method": "Thermal-annealing", "atmosphere": "N2", "temperature": 90, "duration": 60}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "Air", "temperature": 150, "duration": 600}]}, {"review_completed": true, "name": "PPAd", "functionality": "Hole-transport", "additional_treatment": "Interface engineering", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "phenylpropany- lamidinium", "concentration": 5, "concentration_unit": "mmol/L"}], "solvents": [{"review_completed": true, "name": "IPA", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "N2", "temperature": 100, "duration": 30}]}, {"review_completed": true, "name": "PTAA", "thickness": null, "functionality": "Hole-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2"}]}, {"review_completed": true, "name": "Ag", "thickness": 100, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Evaporation", "method": "Evaporation", "atmosphere": "Vacuum"}]}, {"review_completed": true, "name": "MoO", "functionality": "Hole-transport"}, {"review_completed": true, "name": "ITO", "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "Cs0.05FA0.95PbI3", "a_ions": [{"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "0.05"}, {"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.95"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 24.2, "unit": "%"}, "jsc": {"value": 26.1, "unit": "mA cm^-2"}, "voc": {"value": 1.15, "unit": "V"}, "ff": {"value": 80.8}, "active_area": {"value": 0.1}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": " Oriel 9600 solar simulator"}, "encapsulated": null, "stability": {"review_completed": true, "potential_bias": "Unknown"}, "layers": [{"review_completed": true, "name": "SLG", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "SnO2-np", "thickness": 30, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Air", "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "SnO2-np", "concentration": 3, "concentration_unit": "wt%"}], "solvents": [{"review_completed": true, "name": "Water", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Annealing", "atmosphere": "Air", "temperature": 165, "duration": 2100}]}, {"review_completed": true, "name": "Perovskite", "thickness": null, "functionality": "Absorber", "additional_treatment": "Interface engineering", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "duration": 40, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "PbI2", "concentration": 1.4, "concentration_unit": "M"}, {"review_completed": true, "name": "CsI", "concentration": 0.07, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "DMF", "volume_fraction": 0.94}, {"review_completed": true, "name": "DMSO", "volume_fraction": 0.06}]}}, {"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "duration": 40, "solution": {"review_completed": true, "volume": 0.001, "solutes": [{"review_completed": true, "name": "FA", "concentration": 80, "concentration_unit": "g/L"}, {"review_completed": true, "name": "MACl", "concentration": 13, "concentration_unit": "g/L"}], "solvents": [{"review_completed": true, "name": "IPA", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Pre annealing", "method": "Thermal-annealing", "atmosphere": "N2", "temperature": 90, "duration": 60}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "Air", "temperature": 150, "duration": 600}]}, {"review_completed": true, "name": "PPAm", "functionality": "Hole-transport", "additional_treatment": "Interface engineering", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "phenylpropanylammonium", "concentration": 5, "concentration_unit": "mmol/L"}], "solvents": [{"review_completed": true, "name": "IPA", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "N2", "temperature": 100, "duration": 30}]}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "Spiro-MeOTAD", "concentration": 42, "concentration_unit": "g/L"}, {"review_completed": true, "name": "tBP", "concentration": 3.5, "concentration_unit": "vol%"}, {"review_completed": true, "name": "Li-TFSI", "concentration": 2.1, "concentration_unit": "vol%"}, {"review_completed": true, "name": "FK209", "concentration": 1.7, "concentration_unit": "vol%"}], "solvents": [{"review_completed": true, "name": "Chlorobenzene", "volume_fraction": 1}]}}]}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Evaporation", "method": "Evaporation", "atmosphere": "Vacuum"}]}]}, {"perovskite_composition": {"formula": "Cs0.05FA0.95PbI3", "a_ions": [{"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "0.05"}, {"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.95"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 25.5, "unit": "%"}, "jsc": {"value": 26.4, "unit": "mA cm^-2"}, "voc": {"value": 1.15, "unit": "V"}, "ff": {"value": 84}, "active_area": {"value": 0.1}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": " Oriel 9600 solar simulator"}, "encapsulated": null, "stability": {"review_completed": true, "potential_bias": "Unknown"}, "layers": [{"review_completed": true, "name": "SLG", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "SnO2-np", "thickness": 30, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Air", "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "SnO2-np", "concentration": 3, "concentration_unit": "wt%"}], "solvents": [{"review_completed": true, "name": "Water", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Annealing", "atmosphere": "Air", "temperature": 165, "duration": 2100}]}, {"review_completed": true, "name": "Perovskite", "thickness": null, "functionality": "Absorber", "additional_treatment": "Interface engineering", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "duration": 40, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "PbI2", "concentration": 1.4, "concentration_unit": "M"}, {"review_completed": true, "name": "CsI", "concentration": 0.07, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "DMF", "volume_fraction": 0.94}, {"review_completed": true, "name": "DMSO", "volume_fraction": 0.06}]}}, {"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "duration": 40, "solution": {"review_completed": true, "volume": 0.001, "solutes": [{"review_completed": true, "name": "FA", "concentration": 80, "concentration_unit": "g/L"}, {"review_completed": true, "name": "MACl", "concentration": 13, "concentration_unit": "g/L"}], "solvents": [{"review_completed": true, "name": "IPA", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Pre annealing", "method": "Thermal-annealing", "atmosphere": "N2", "temperature": 90, "duration": 60}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "Air", "temperature": 150, "duration": 600}]}, {"review_completed": true, "name": "PPAd", "functionality": "Hole-transport", "additional_treatment": "Interface engineering", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "phenylpropany- lamidinium", "concentration": 5, "concentration_unit": "mmol/L"}], "solvents": [{"review_completed": true, "name": "IPA", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "N2", "temperature": 100, "duration": 30}]}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "Spiro-MeOTAD", "concentration": 42, "concentration_unit": "g/L"}, {"review_completed": true, "name": "tBP", "concentration": 3.5, "concentration_unit": "vol%"}, {"review_completed": true, "name": "Li-TFSI", "concentration": 2.1, "concentration_unit": "vol%"}, {"review_completed": true, "name": "FK209", "concentration": 1.7, "concentration_unit": "vol%"}], "solvents": [{"review_completed": true, "name": "Chlorobenzene", "volume_fraction": 1}]}}]}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Evaporation", "method": "Evaporation", "atmosphere": "Vacuum"}]}]}, {"perovskite_composition": {"formula": "Cs0.05FA0.95PbI3", "a_ions": [{"abbreviation": "Cs", "common_name": "Cesium ion", "molecular_formula": "Cs+", "coefficient": "0.05"}, {"abbreviation": "FA", "common_name": "Formamidinium", "molecular_formula": "CH5N2+", "coefficient": "0.95"}], "b_ions": [{"abbreviation": "Pb", "common_name": "Lead", "molecular_formula": "Pb2+", "coefficient": "1"}], "x_ions": [{"abbreviation": "I", "common_name": "Iodide", "molecular_formula": "I-", "coefficient": "3"}]}, "pce": {"value": 23.8, "unit": "%"}, "jsc": {"value": 26.3, "unit": "mA cm^-2"}, "voc": {"value": 1.11, "unit": "V"}, "ff": {"value": 81.5}, "active_area": {"value": 0.1}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100, "lamp": " Oriel 9600 solar simulator"}, "encapsulated": null, "stability": {"review_completed": true, "potential_bias": "Unknown"}, "layers": [{"review_completed": true, "name": "SLG", "thickness": null, "functionality": "Substrate"}, {"review_completed": true, "name": "ITO", "thickness": null, "functionality": "Electron-transport"}, {"review_completed": true, "name": "SnO2-np", "thickness": 30, "functionality": "Electron-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "Air", "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "SnO2-np", "concentration": 3, "concentration_unit": "wt%"}], "solvents": [{"review_completed": true, "name": "Water", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Annealing", "method": "Annealing", "atmosphere": "Air", "temperature": 165, "duration": 2100}]}, {"review_completed": true, "name": "Perovskite", "thickness": null, "functionality": "Absorber", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "duration": 40, "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "PbI2", "concentration": 1.4, "concentration_unit": "M"}, {"review_completed": true, "name": "CsI", "concentration": 0.07, "concentration_unit": "M"}], "solvents": [{"review_completed": true, "name": "DMF", "volume_fraction": 0.94}, {"review_completed": true, "name": "DMSO", "volume_fraction": 0.06}]}}, {"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "duration": 40, "solution": {"review_completed": true, "volume": 0.001, "solutes": [{"review_completed": true, "name": "FA", "concentration": 80, "concentration_unit": "g/L"}, {"review_completed": true, "name": "MACl", "concentration": 13, "concentration_unit": "g/L"}], "solvents": [{"review_completed": true, "name": "IPA", "volume_fraction": 1}]}}, {"review_completed": true, "step_name": "Pre annealing", "method": "Thermal-annealing", "atmosphere": "N2", "temperature": 90, "duration": 60}, {"review_completed": true, "step_name": "Annealing", "method": "Thermal-annealing", "atmosphere": "Air", "temperature": 150, "duration": 600}]}, {"review_completed": true, "name": "Spiro-OMeTAD", "thickness": null, "functionality": "Hole-transport", "deposition": [{"review_completed": true, "step_name": "Spin-coating", "method": "Spin-coating", "atmosphere": "N2", "solution": {"review_completed": true, "solutes": [{"review_completed": true, "name": "Spiro-MeOTAD", "concentration": 42, "concentration_unit": "g/L"}, {"review_completed": true, "name": "tBP", "concentration": 3.5, "concentration_unit": "vol%"}, {"review_completed": true, "name": "Li-TFSI", "concentration": 2.1, "concentration_unit": "vol%"}, {"review_completed": true, "name": "FK209", "concentration": 1.7, "concentration_unit": "vol%"}], "solvents": [{"review_completed": true, "name": "Chlorobenzene", "volume_fraction": 1}]}}]}, {"review_completed": true, "name": "Au", "thickness": 100, "functionality": "Contact", "deposition": [{"review_completed": true, "step_name": "Evaporation", "method": "Evaporation", "atmosphere": "Vacuum"}]}]}]}
+{
+    "doi": "10.1038/s41467-024-53953-4",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.05FA0.95PbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.05"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.95"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 0,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": " Oriel 9600 solar simulator"
+            },
+            "encapsulated": true,
+            "stability": {
+                "review_completed": true,
+                "time": 1000,
+                "light_intensity": 100,
+                "humidity": 30,
+                "temperature": 70,
+                "PCE_at_the_start_of_the_experiment": 1,
+                "PCE_at_the_end_of_experiment": 80,
+                "potential_bias": "MPPT",
+                "PCE_after_1000_hours": 80
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "SnO2-np",
+                    "thickness": 30,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "SnO2-np",
+                                        "concentration": 3,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Water",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Annealing",
+                            "atmosphere": "Air",
+                            "temperature": 165,
+                            "duration": 2100
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "Interface engineering",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.4,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CsI",
+                                        "concentration": 0.07,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.94
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.06
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.001,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "FA",
+                                        "concentration": 80,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MACl",
+                                        "concentration": 13,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "IPA",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Pre annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 90,
+                            "duration": 60
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 150,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PPAm",
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "Interface engineering",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "phenylpropanylammonium",
+                                        "concentration": 5,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "IPA",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 30
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "MoO",
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.05FA0.95PbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.05"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.95"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 0,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": " Oriel 9600 solar simulator"
+            },
+            "encapsulated": true,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "MPPT",
+                "temperature": 70,
+                "humidity": 30,
+                "light_intensity": 100,
+                "PCE_at_the_start_of_the_experiment": 1,
+                "PCE_at_the_end_of_experiment": 95,
+                "time": 2000
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "SnO2-np",
+                    "thickness": 30,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "SnO2-np",
+                                        "concentration": 3,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Water",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Annealing",
+                            "atmosphere": "Air",
+                            "temperature": 165,
+                            "duration": 2100
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "Interface engineering",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.4,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CsI",
+                                        "concentration": 0.07,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.94
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.06
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.001,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "FA",
+                                        "concentration": 80,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MACl",
+                                        "concentration": 13,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "IPA",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Pre annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 90,
+                            "duration": 60
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 150,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PPAd",
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "Interface engineering",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "phenylpropany- lamidinium",
+                                        "concentration": 5,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "IPA",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 30
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "MoO",
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.05FA0.95PbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.05"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.95"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 24.2,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 26.1,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.15,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 80.8
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": " Oriel 9600 solar simulator"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "SnO2-np",
+                    "thickness": 30,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "SnO2-np",
+                                        "concentration": 3,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Water",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Annealing",
+                            "atmosphere": "Air",
+                            "temperature": 165,
+                            "duration": 2100
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "Interface engineering",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.4,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CsI",
+                                        "concentration": 0.07,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.94
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.06
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.001,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "FA",
+                                        "concentration": 80,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MACl",
+                                        "concentration": 13,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "IPA",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Pre annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 90,
+                            "duration": 60
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 150,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PPAm",
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "Interface engineering",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "phenylpropanylammonium",
+                                        "concentration": 5,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "IPA",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 30
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-MeOTAD",
+                                        "concentration": 42,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "tBP",
+                                        "concentration": 3.5,
+                                        "concentration_unit": "vol%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Li-TFSI",
+                                        "concentration": 2.1,
+                                        "concentration_unit": "vol%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "FK209",
+                                        "concentration": 1.7,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.05FA0.95PbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.05"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.95"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 25.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 26.4,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.15,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 84
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": " Oriel 9600 solar simulator"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "SnO2-np",
+                    "thickness": 30,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "SnO2-np",
+                                        "concentration": 3,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Water",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Annealing",
+                            "atmosphere": "Air",
+                            "temperature": 165,
+                            "duration": 2100
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "Interface engineering",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.4,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CsI",
+                                        "concentration": 0.07,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.94
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.06
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.001,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "FA",
+                                        "concentration": 80,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MACl",
+                                        "concentration": 13,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "IPA",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Pre annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 90,
+                            "duration": 60
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 150,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PPAd",
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "Interface engineering",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "phenylpropany- lamidinium",
+                                        "concentration": 5,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "IPA",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 30
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-MeOTAD",
+                                        "concentration": 42,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "tBP",
+                                        "concentration": 3.5,
+                                        "concentration_unit": "vol%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Li-TFSI",
+                                        "concentration": 2.1,
+                                        "concentration_unit": "vol%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "FK209",
+                                        "concentration": 1.7,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.05FA0.95PbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.05"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.95"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 23.8,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 26.3,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.11,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 81.5
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": " Oriel 9600 solar simulator"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "SnO2-np",
+                    "thickness": 30,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "SnO2-np",
+                                        "concentration": 3,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Water",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Annealing",
+                            "atmosphere": "Air",
+                            "temperature": 165,
+                            "duration": 2100
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.4,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CsI",
+                                        "concentration": 0.07,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.94
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.06
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.001,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "FA",
+                                        "concentration": 80,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MACl",
+                                        "concentration": 13,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "IPA",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Pre annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 90,
+                            "duration": 60
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 150,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-MeOTAD",
+                                        "concentration": 42,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "tBP",
+                                        "concentration": 3.5,
+                                        "concentration_unit": "vol%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Li-TFSI",
+                                        "concentration": 2.1,
+                                        "concentration_unit": "vol%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "FK209",
+                                        "concentration": 1.7,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

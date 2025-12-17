@@ -1,1 +1,313 @@
-{"doi": "10.1002/aenm.201802051", "author": "Yuxin Liu", "cells": [{"perovskite_composition": {"formula": "", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 1.2, "unit": "%"}, "jsc": {"value": 3.7, "unit": "mA cm^-2"}, "voc": {"value": 0.63, "unit": "V"}, "ff": {"value": 51.4}, "active_area": {"value": 0.2}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": {"time": 720, "humidity": 60, "temperature": 20, "PCE_after_1000_hours": 1.2, "potential_bias": "Open circuit", "review_completed": true}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "c-TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "m-TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "AgBiI4", "thickness": null, "functionality": "Absorber"}, {"name": "PTAA", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": 70, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 2.18, "unit": "%"}, "jsc": {"value": 5.24, "unit": "mA cm^-2"}, "voc": {"value": 0.67, "unit": "V"}, "ff": {"value": 62.09}, "active_area": {"value": 0.2}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": {"time": 720, "humidity": 60, "temperature": 20, "PCE_after_1000_hours": 2.18, "potential_bias": "Open circuit", "review_completed": true}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "c-TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "m-TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "AgBiI4", "thickness": null, "functionality": "Absorber"}, {"name": "PTAA", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": 70, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 1.6, "unit": "%"}, "jsc": {"value": 4.42, "unit": "mA cm^-2"}, "voc": {"value": 0.63, "unit": "V"}, "ff": {"value": 57.6}, "active_area": {"value": 0.2}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": {"time": 720, "humidity": 60, "temperature": 20, "PCE_after_1000_hours": 1.6, "potential_bias": "Open circuit", "review_completed": true}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "c-TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "m-TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "AgBiI4", "thickness": null, "functionality": "Absorber"}, {"name": "PTAA", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": 70, "functionality": "Contact"}]}, {"perovskite_composition": {"formula": "", "a_ions": [], "b_ions": [], "x_ions": []}, "pce": {"value": 2.6, "unit": "%"}, "jsc": {"value": 6.04, "unit": "mA cm^-2"}, "voc": {"value": 0.69, "unit": "V"}, "ff": {"value": 62.4}, "active_area": {"value": 0.2}, "device_architecture": "nip", "number_devices": null, "averaged_quantites": null, "light_source": {"type": "AM 1.5G", "light_intensity": 100}, "encapsulated": null, "stability": {"time": 720, "humidity": 60, "temperature": 20, "PCE_after_1000_hours": 2.6, "potential_bias": "Open circuit", "review_completed": true}, "layers": [{"name": "FTO", "thickness": null, "functionality": "Substrate"}, {"name": "c-TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "m-TiO2", "thickness": null, "functionality": "Electron-transport"}, {"name": "AgBiI4", "thickness": null, "functionality": "Absorber"}, {"name": "PTAA", "thickness": null, "functionality": "Hole-transport"}, {"name": "Au", "thickness": 70, "functionality": "Contact"}]}]}
+{
+    "doi": "10.1002/aenm.201802051",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 1.2,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 3.7,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.63,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 51.4
+            },
+            "active_area": {
+                "value": 0.2
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": 720,
+                "humidity": 60,
+                "temperature": 20,
+                "PCE_after_1000_hours": {
+                    "value": 1.2,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit",
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "AgBiI4",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 70,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 2.18,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 5.24,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.67,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 62.09
+            },
+            "active_area": {
+                "value": 0.2
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": 720,
+                "humidity": 60,
+                "temperature": 20,
+                "PCE_after_1000_hours": {
+                    "value": 2.18,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit",
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "AgBiI4",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 70,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 1.6,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 4.42,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.63,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 57.6
+            },
+            "active_area": {
+                "value": 0.2
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": 720,
+                "humidity": 60,
+                "temperature": 20,
+                "PCE_after_1000_hours": {
+                    "value": 1.6,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit",
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "AgBiI4",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 70,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 2.6,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 6.04,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.69,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 62.4
+            },
+            "active_area": {
+                "value": 0.2
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": 720,
+                "humidity": 60,
+                "temperature": 20,
+                "PCE_after_1000_hours": {
+                    "value": 2.6,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit",
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "AgBiI4",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 70,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}
