@@ -3,11 +3,9 @@ import os
 from wiley_tdm import TDMClient
 
 import requests
-import json
-import io
-from typing import Dict, Any
 from loguru import logger
 import os
+import xml.etree.ElementTree as ET
 
 UNPAYWALL_EMAIL = os.environ["UNPAYWALL_EMAIL"]
 tdm = TDMClient()
@@ -21,13 +19,14 @@ def get_doi_summary(doi: str) -> dict:
         A dictionary with metadata or an error message string.
     """
     doi = doi.lower().strip()
-    summaries = {"crossref": {}, "openalex": {}, "semantic_scholar": {}}
+    summaries = {}
     doi_summary_funcs = {
         "crossref": get_doi_summary_crossref,
         "openalex": get_doi_summary_openalex,
         "semantic_scholar": get_doi_summary_semantic_scholar,
+        "pubmed": get_doi_summary_pubmed,
     }
-    for source in ["crossref", "openalex", "semantic_scholar"]:
+    for source in doi_summary_funcs:
         summary = doi_summary_funcs[source](doi)
         summaries[source] = summary
         if "error" not in summary and summary.get("abstract", "") != "":
@@ -165,6 +164,84 @@ def get_doi_summary_semantic_scholar(doi: str, api_key: str = "") -> dict:
     return {"error": f"Error: Status code {response.status_code}"}
 
 
+def get_pmid_from_doi(doi: str) -> dict:
+    """
+    Fetches the PubMed ID (PMID) for a given DOI using the NCBI E-utilities API.
+
+    Args:
+        doi (str): The DOI of the paper.
+    Returns:
+        The corresponding PMID if found.
+    """
+    response=requests.get(f'https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?tool=my_tool&email=my_email@example.com&ids={doi}')
+    if response.status_code == 200:
+        try:
+            record = ET.fromstring(response.content).find('record')
+            pmid = record.attrib['pmid'] if record is not None else None 
+        except Exception as e: 
+            return {"error": f"Error: {e}"}
+        return {"pmid": pmid} if pmid else {"error": "PMID not found"}
+    return {"error": f"Error: Status code {response.status_code}"}
+    
+def get_doi_summary_pubmed(doi):
+    """
+    Fetches paper metadata from PubMed using a DOI.
+    
+    Args:
+        doi (str): The DOI of the paper.
+        email (str): Your email address (required by NCBI).
+        
+    Returns:
+        dict: A dictionary containing the paper's metadata.
+    """
+    base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+    pmid = get_pmid_from_doi(doi)
+    if "error" in pmid:
+        return {"error": pmid["error"]}
+    pmid = pmid["pmid"]
+
+    fetch_response = requests.get(f"{base_url}efetch.fcgi", params={"db": "pubmed", "id": pmid, "retmode": "xml"})
+    if fetch_response.status_code != 200:
+        return {"error": f"Error: Status code {fetch_response.status_code}"}
+    # Parse the XML
+    try:
+        root = ET.fromstring(fetch_response.content)
+        article = root.find(".//PubmedArticle/MedlineCitation/Article")
+
+        title = article.findtext("ArticleTitle")
+        journal = article.findtext("Journal/Title")
+        publisher = root.findtext(".//Publisher/PublisherName")
+
+        pub_date_node = article.find("Journal/JournalIssue/PubDate")
+        pub_date_str = "/".join([pub_date_node.findtext(i) for i in ["Day","Month","Year"]]) if pub_date_node is not None else ""
+
+        abstract_element = article.find("Abstract")
+        abstract_texts = []
+
+        if abstract_element is not None:
+            for text_node in abstract_element.findall("AbstractText"):
+                abstract_texts.append(text_node.text or "")
+            full_abstract = "\n\n".join(abstract_texts)
+        else:
+            full_abstract = ""
+
+        authors = []
+        for i in article.find('AuthorList'):
+            authors.append(f'{i.findtext("ForeName") or ""} {i.findtext("LastName") or ""}')
+
+        return {
+                "doi": pmid,
+                "title": title,
+                "abstract": full_abstract,
+                "journal": journal,
+                "publisher": publisher,
+                "published_date": pub_date_str,
+                "source": "pubmed",
+                "authors": authors
+        }
+    except Exception as e:
+        return {"error": f"Error: {e}"}
+
 def get_doi(entry):
     try:
         if "prism_doi" in entry:
@@ -213,7 +290,7 @@ def get_pdf_url(doi: str) -> tuple[bool, str|None]:
             return error, pdf_url
         return_msg += pdf_url if pdf_url else ""
     logger.error(f"No PDF available for this DOI: {doi}.")
-    return error, return_msg if return_msg else None
+    return True, return_msg if return_msg else None
 
 def get_pdf_url_unpaywall(doi: str) -> tuple[bool, str|None]:
     """
