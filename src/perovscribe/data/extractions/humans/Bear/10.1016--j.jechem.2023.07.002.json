@@ -1,0 +1,543 @@
+{
+    "doi": "10.1016/j.jechem.2023.07.002",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 22.06,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 24.28,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.12,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 83.55
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 1000,
+                "light_intensity": 100,
+                "humidity": 0,
+                "temperature": 45,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 22.06,
+                    "unit": "%"
+                },
+                "PCE_after_1000_hours": {
+                    "value": 19.3,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit",
+                "PCE_at_the_end_of_experiment": {
+                    "value": 19.3,
+                    "unit": "%"
+                }
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al2O3",
+                    "functionality": "Other"
+                },
+                {
+                    "name": "Perovskite+C-QD",
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "solution": {
+                                "solutes": [
+                                    {}
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "PC61BM + C60",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin Coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "C60"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "BCP",
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA",
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin Coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "name": "PTAA"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 20.98,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.63,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.07,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 80.21
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 1000,
+                "light_intensity": 0,
+                "humidity": 0,
+                "temperature": 85,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 20.98,
+                    "unit": "%"
+                },
+                "PCE_after_1000_hours": {
+                    "value": 8.18,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al2O3",
+                    "functionality": "Other"
+                },
+                {
+                    "name": "Perovskite",
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "PC61BM + C60",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin Coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "C60"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "BCP",
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA",
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin Coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "name": "PTAA"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 22.06,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 24.28,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.12,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 83.55
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": true,
+            "stability": {
+                "review_completed": true,
+                "time": 1000,
+                "light_intensity": 0,
+                "humidity": 0,
+                "temperature": 85,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 22.06,
+                    "unit": "%"
+                },
+                "PCE_after_1000_hours": {
+                    "value": 19.19,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit",
+                "PCE_at_the_end_of_experiment": {
+                    "value": 19.19,
+                    "unit": "%"
+                }
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al2O3",
+                    "functionality": "Other"
+                },
+                {
+                    "name": "Perovskite+C-QD",
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "solution": {
+                                "solutes": [
+                                    {}
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "PC61BM + C60",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin Coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "C60"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "BCP",
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA",
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin Coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "name": "PTAA"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 20.98,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.63,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.07,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 80.21
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": true,
+            "stability": {
+                "review_completed": true,
+                "time": 1000,
+                "light_intensity": 100,
+                "humidity": 10,
+                "temperature": 45,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 20.98,
+                    "unit": "%"
+                },
+                "potential_bias": "MPPT",
+                "PCE_at_the_end_of_experiment": {
+                    "value": 12.94,
+                    "unit": "%"
+                }
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiOx",
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al2O3",
+                    "functionality": "Other"
+                },
+                {
+                    "name": "Perovskite",
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "PC61BM + C60",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin Coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "name": "PC61BM"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "C60"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "BCP",
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA",
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin Coating",
+                            "atmosphere": "N2",
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "name": "PTAA"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

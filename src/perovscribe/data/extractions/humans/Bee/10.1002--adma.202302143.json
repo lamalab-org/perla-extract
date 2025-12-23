@@ -1,0 +1,539 @@
+{
+    "doi": "10.1002/adma.202302143",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "PEA2MA4Pb5I16",
+                "a_ions": [
+                    {
+                        "abbreviation": "PEA",
+                        "common_name": "Phenylethylammonium",
+                        "molecular_formula": "C8H12N+",
+                        "coefficient": "2"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "4"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "5"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "16"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 17.53,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.44,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.21,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 78.52
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Sol 3A, Newport Corp",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 340,
+                "light_intensity": 100,
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "2PACz",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "SC - SAM",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "name": "2-(9H-Carbazol-9-yl)ethyl]phosphonic acid",
+                                        "concentration": 1
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "Ethanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "step_name": "Annealing",
+                            "method": "Annealing",
+                            "temperature": 60,
+                            "duration": 180
+                        }
+                    ]
+                },
+                {
+                    "name": "(PEA)2MA4Pb5I16",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 20,
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PEAI",
+                                        "concentration": 0.4,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI",
+                                        "concentration": 0.9,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 0.95,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbCl2",
+                                        "concentration": 0.05,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 9
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "step_name": "Low\u2013vacuum processing",
+                            "method": "low\u2013vacuum processing",
+                            "atmosphere": "Vacuum",
+                            "duration": 480
+                        },
+                        {
+                            "step_name": "Annealing",
+                            "method": "Annealing",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "name": "PC60BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "duration": 30,
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC60BM",
+                                        "concentration": 20
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PEI",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "duration": 20,
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Polyethylenimine",
+                                        "concentration": 0.5
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Isopropyl alcohol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Thermalevaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "PEA2MA4Pb5I16",
+                "a_ions": [
+                    {
+                        "abbreviation": "PEA",
+                        "common_name": "Phenylethylammonium",
+                        "molecular_formula": "C8H12N+",
+                        "coefficient": "2"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "4"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "5"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "16"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.05,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.71,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.22,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 79.36
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Sol 3A, Newport Corp",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 340,
+                "light_intensity": 100,
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "2PACz",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "SC - SAM",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "name": "2-(9H-Carbazol-9-yl)ethyl]phosphonic acid",
+                                        "concentration": 1
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "Ethanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "step_name": "Annealing",
+                            "method": "Annealing",
+                            "temperature": 60,
+                            "duration": 180
+                        }
+                    ]
+                },
+                {
+                    "name": "(PEA)2MA4Pb5I16",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "PBN passivation solution",
+                    "deposition": [
+                        {
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 20,
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PEAI",
+                                        "concentration": 0.4,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI",
+                                        "concentration": 0.9,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 0.95,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbCl2",
+                                        "concentration": 0.05,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 9
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "step_name": "Low\u2013vacuum processing",
+                            "method": "low\u2013vacuum processing",
+                            "atmosphere": "Vacuum",
+                            "duration": 480
+                        },
+                        {
+                            "step_name": "Annealing",
+                            "method": "Annealing",
+                            "temperature": 100,
+                            "duration": 600
+                        },
+                        {
+                            "step_name": "PBN passivation solution",
+                            "method": "Spin-cast",
+                            "duration": 20,
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Zwitterionic n-tert-butyl-\ud835\udf36-phenylnitrone (PBN)",
+                                        "concentration": 5,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "IPA"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "PC60BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "duration": 30,
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC60BM",
+                                        "concentration": 20
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PEI",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "duration": 20,
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Polyethylenimine",
+                                        "concentration": 0.5
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Isopropyl alcohol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Thermalevaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

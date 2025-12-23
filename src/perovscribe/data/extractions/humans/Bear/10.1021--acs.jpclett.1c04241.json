@@ -1,0 +1,41 @@
+{
+    "doi": "10.1021/acs.jpclett.1c04241",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 25.17,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": null,
+            "layers": null
+        }
+    ]
+}

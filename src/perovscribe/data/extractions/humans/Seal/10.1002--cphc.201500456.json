@@ -1,0 +1,127 @@
+{
+    "doi": "10.1002/cphc.201500456",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "CH3NH3PbI3",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 9.33,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.25,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.87,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 53.16
+            },
+            "active_area": {
+                "value": 0.07068
+            },
+            "device_architecture": "nip",
+            "number_devices": 1,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Liquid-phase deposition",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": "TiCl4 treatment"
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Two-step deposition",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Ag",
+                    "thickness": {
+                        "value": 100.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

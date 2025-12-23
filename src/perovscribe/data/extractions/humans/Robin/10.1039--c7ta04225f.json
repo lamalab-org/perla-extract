@@ -1,0 +1,789 @@
+{
+    "doi": "10.1039/c7ta04225f",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 11.9,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 16.1,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 68.5
+            },
+            "active_area": {
+                "value": 1.03
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "AZO",
+                    "thickness": 400,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "ZnO:Al deposition",
+                            "method": "radiofrequency (RF) sputtering",
+                            "atmosphere": "Ar"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "ZnO",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "ZnO deposition",
+                            "method": "radiofrequency (RF) sputtering",
+                            "atmosphere": "Ar"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": {
+                        "value": 7.5,
+                        "unit": "nm"
+                    },
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "C60 deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": 280,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "PbI2 deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "CH3NH3I deposition",
+                            "method": "Spin coating",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "name": "CH3NH3I ",
+                                        "concentration": 50,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Isopropanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spiro-OMeTAD deposition",
+                            "method": "Spin coating",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-OMeTAD",
+                                        "concentration": 78.2,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "MoO3",
+                    "thickness": 40,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "In2O3 :H",
+                    "thickness": 180,
+                    "functionality": "Other"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ni/Al grid",
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Ni/Al grid deposition",
+                            "method": "e-beam evaporation"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.2,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "AZO",
+                    "thickness": 400,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "ZnO:Al deposition",
+                            "method": "radiofrequency (RF) sputtering",
+                            "atmosphere": "Ar"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "ZnO",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "ZnO deposition",
+                            "method": "radiofrequency (RF) sputtering",
+                            "atmosphere": "Ar"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": {
+                        "value": 7.5,
+                        "unit": "nm"
+                    },
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "C60 deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": 280,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "PbI2 deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "CH3NH3I deposition",
+                            "method": "Spin coating",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "name": "CH3NH3I ",
+                                        "concentration": 50,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Isopropanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spiro-OMeTAD deposition",
+                            "method": "Spin coating",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-OMeTAD",
+                                        "concentration": 78.2,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "MoO3",
+                    "thickness": 40,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "In2O3 :H",
+                    "thickness": 180,
+                    "functionality": "Other"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ni/Al grid",
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Ni/Al grid deposition",
+                            "method": "e-beam evaporation"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CIGS flexible solar cell"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 10.9,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 17.3,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 63
+            },
+            "active_area": {
+                "value": 1.03
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "AZO",
+                    "thickness": 400,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "ZnO:Al deposition",
+                            "method": "radiofrequency (RF) sputtering",
+                            "atmosphere": "Ar"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "ZnO",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "ZnO deposition",
+                            "method": "radiofrequency (RF) sputtering",
+                            "atmosphere": "Ar"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": {
+                        "value": 7.5,
+                        "unit": "nm"
+                    },
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "C60 deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": 280,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "PbI2 deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "CH3NH3I deposition",
+                            "method": "Spin coating",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "name": "CH3NH3I ",
+                                        "concentration": 50,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Isopropanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spiro-OMeTAD deposition",
+                            "method": "Spin coating",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-OMeTAD",
+                                        "concentration": 78.2,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 50,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 13.2,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 17.8,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.06,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 68.5
+            },
+            "active_area": {
+                "value": 0.15
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "AZO",
+                    "thickness": 400,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "ZnO:Al deposition",
+                            "method": "radiofrequency (RF) sputtering",
+                            "atmosphere": "Ar"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "ZnO",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "ZnO deposition",
+                            "method": "radiofrequency (RF) sputtering",
+                            "atmosphere": "Ar"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": {
+                        "value": 7.5,
+                        "unit": "nm"
+                    },
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "C60 deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": 280,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "PbI2 deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "CH3NH3I deposition",
+                            "method": "Spin coating",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "name": "CH3NH3I ",
+                                        "concentration": 50,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Isopropanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spiro-OMeTAD deposition",
+                            "method": "Spin coating",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-OMeTAD",
+                                        "concentration": 78.2,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 50,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

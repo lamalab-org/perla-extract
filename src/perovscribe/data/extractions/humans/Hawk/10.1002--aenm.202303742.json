@@ -1,0 +1,213 @@
+{
+    "doi": "10.1002/aenm.202303742",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "FAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 23.29,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 24.62,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.13,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 83.45
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": true,
+            "stability": {
+                "review_completed": true,
+                "time": 1000,
+                "light_intensity": 100,
+                "temperature": 65,
+                "PCE_after_1000_hours": {
+                    "value": 22.93,
+                    "unit": "%"
+                },
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MeO-2PACz",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 24.53,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 24.87,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.16,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 85.28
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": true,
+            "stability": {
+                "review_completed": true,
+                "light_intensity": 100,
+                "time": 1000,
+                "temperature": 65,
+                "PCE_after_1000_hours": {
+                    "value": 22.93,
+                    "unit": "%"
+                },
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MeO-BTBT",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

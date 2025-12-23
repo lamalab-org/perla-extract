@@ -1,0 +1,3851 @@
+{
+    "doi": "10.1002/smll.201704007",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 16.18,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.67,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.06,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 73.6
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 0wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 0,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            },
+                            "review_completed": true
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 0,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.13,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 72.9
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 5wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 5,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "functionality": "Other",
+                    "additional_treatment": "Passivation layer",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 1.5e-06,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PMMA",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethyl acetate"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 30
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 0,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76.4
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 5wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 5,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "functionality": "Other",
+                    "additional_treatment": "Passivation layer",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 1.5e-06,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PMMA",
+                                        "concentration": 0.25,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethyl acetate"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 30
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.08,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.36,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.12,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76.9
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 3wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 3,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "functionality": "Other",
+                    "additional_treatment": "Passivation layer",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 1.5e-06,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PMMA",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethyl acetate"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 30
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.08,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.16,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 75.6
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 1wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 1,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 17.37,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.7,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.07,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71.3
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 10wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 10,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.47,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.45,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74.5
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 1wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 1,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "functionality": "Other",
+                    "additional_treatment": "Passivation layer",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 1.5e-06,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PMMA",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethyl acetate"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 30
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 15.85,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.75,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 70.9
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 0wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 0,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "functionality": "Other",
+                    "additional_treatment": "Passivation layer",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 1.5e-06,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PMMA",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethyl acetate"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 30
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 19.9,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.38,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.12,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 75.9
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 10wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 10,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "functionality": "Other",
+                    "additional_treatment": "Passivation layer",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 1.5e-06,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PMMA",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethyl acetate"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 30
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.94,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.96,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76.2
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 3wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 3,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.16,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.38,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.12,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77.1
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 5wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 5,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "functionality": "Other",
+                    "additional_treatment": "Passivation layer",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 1.5e-06,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PMMA",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethyl acetate"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 30
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.87,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74.9
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 5wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 5,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "iodide",
+                        "molecular_formula": "I",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 0,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.14,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 65.1
+            },
+            "active_area": {
+                "value": 0.12
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Keithley 2400 source meter. The output of the light source was adjusted using a calibrated silicon photodiode (ABET technology",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "cleaning in DIW, acetone, IPA",
+                            "method": "ultrasonication",
+                            "atmosphere": "Ambient air",
+                            "duration": 10
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "drying",
+                            "method": "UV-ozone treatment",
+                            "atmosphere": "Other",
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PTAA:F4-TCNQ",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "doping with 5wt%F4-TCN",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PTAA",
+                                        "concentration": 5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "F4-TCN",
+                                        "concentration": 5,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzone"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing on hot plate",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 300
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PMMA",
+                    "functionality": "Other",
+                    "additional_treatment": "Passivation layer",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 1.5e-06,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PMMA",
+                                        "concentration": 1,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethyl acetate"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "temperature": 100,
+                            "duration": 30
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "temperature": 70,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1152.5,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 417.375,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF+DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing on hot plate",
+                            "method": "annealing in air",
+                            "atmosphere": "Ambient air",
+                            "temperature": 100,
+                            "duration": 1800
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing in DMSO atmosphere",
+                            "method": "annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzone"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Bphen",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PC61BM",
+                                        "concentration": 0.7,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Al",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

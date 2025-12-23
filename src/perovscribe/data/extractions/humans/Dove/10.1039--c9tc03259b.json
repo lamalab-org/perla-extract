@@ -1,0 +1,1043 @@
+{
+    "doi": "10.1039/c9tc03259b",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.15PbBr0.45I2.55",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.55"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 17.37,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.04
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Newport, Oriel Class A, 91195A"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": 140,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiO",
+                    "thickness": 40,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Ambient air",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "nickel(II) acetate tetrahydrate",
+                                        "concentration": 50,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanlo",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal.annealing",
+                            "atmosphere": "Ambient air",
+                            "temperature": 300,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 300,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "duration": 50,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.02,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH5IN2",
+                                        "concentration": 1.02,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 0.18,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3Br",
+                                        "concentration": 0.18,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent",
+                            "atmosphere": "Unknown",
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Unknown",
+                            "temperature": 100,
+                            "duration": 2700
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PCBM-60",
+                                        "concentration": 20,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Unknown",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 60,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 14.53,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.49,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.02,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 66.29
+            },
+            "active_area": {
+                "value": 0.04
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Newport, Oriel Class A, 91195A"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 720,
+                "light_intensity": 0,
+                "humidity": 0,
+                "temperature": 25,
+                "PCE_at_the_start_of_the_experiment": 1,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 0.4,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": 140,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiO",
+                    "thickness": 40,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Ambient air",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "nickel(II) acetate tetrahydrate",
+                                        "concentration": 50,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanlo",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal.annealing",
+                            "atmosphere": "Ambient air",
+                            "temperature": 300,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 300,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "duration": 50,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent",
+                            "atmosphere": "Unknown",
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Unknown",
+                            "temperature": 100,
+                            "duration": 2700
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PCBM-60",
+                                        "concentration": 20,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Unknown",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 60,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.15PbBr0.45I2.55",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.55"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.15,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.04
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Newport, Oriel Class A, 91195A"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": 140,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiO",
+                    "thickness": 40,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Ambient air",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "nickel(II) acetate tetrahydrate",
+                                        "concentration": 50,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanlo",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal.annealing",
+                            "atmosphere": "Ambient air",
+                            "temperature": 300,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 300,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "duration": 50,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.02,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH5IN2",
+                                        "concentration": 1.02,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 0.18,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3Br",
+                                        "concentration": 0.18,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent",
+                            "atmosphere": "Unknown",
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Unknown",
+                            "temperature": 100,
+                            "duration": 2700
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PCBM-60",
+                                        "concentration": 20,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Unknown",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ca(acac)2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 60,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.23,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.02,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.04,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 75.95
+            },
+            "active_area": {
+                "value": 0.04
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Newport, Oriel Class A, 91195A"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 720,
+                "light_intensity": 0,
+                "humidity": 0,
+                "temperature": 25,
+                "PCE_at_the_start_of_the_experiment": 1,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 0.85,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": 140,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiO",
+                    "thickness": 40,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Ambient air",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "nickel(II) acetate tetrahydrate",
+                                        "concentration": 50,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanlo",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal.annealing",
+                            "atmosphere": "Ambient air",
+                            "temperature": 300,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 300,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "duration": 50,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 1.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent",
+                            "atmosphere": "Unknown",
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Unknown",
+                            "temperature": 100,
+                            "duration": 2700
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown",
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PCBM-60",
+                                        "concentration": 20,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Unknown",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ca(acac)2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Unknown"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 60,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

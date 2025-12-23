@@ -1,0 +1,44 @@
+{
+    "doi": "10.1246/cl.150984",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "CH3NH3PbI3",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 6.56,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 17.0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.758,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 50.9
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "nip",
+            "number_devices": 4,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": null
+        }
+    ]
+}

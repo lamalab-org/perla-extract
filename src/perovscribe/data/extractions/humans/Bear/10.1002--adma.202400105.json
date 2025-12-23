@@ -1,0 +1,557 @@
+{
+    "doi": "10.1002/adma.202400105",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": null
+                    }
+                ],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 17.51,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.82,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.13,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74.54
+            },
+            "active_area": {
+                "value": 0.07
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "name": "SLG#"
+                },
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "NiOx",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Me-4PACz",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FA0.7Cs0.25MA0.05Pb(I0.8Br0.2)3",
+                    "thickness": 700,
+                    "functionality": "Absorber",
+                    "additional_treatment": "Gas Quenching with Nitrogen via an Air Knife",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Blade coating",
+                            "method": "Blade coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "PVD",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "PVD",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Cu",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "PVD",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": null
+                    }
+                ],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 21.71,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.95,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.24,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 83.31
+            },
+            "active_area": {
+                "value": 0.07
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "MPPT",
+                "time": 500,
+                "PCE_at_the_start_of_the_experiment": 1,
+                "temperature": 40,
+                "light_intensity": 100,
+                "PCE_at_the_end_of_experiment": 1
+            },
+            "layers": [
+                {
+                    "name": "SLG#"
+                },
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "NiOx",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Me-4PACz",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FA0.7Cs0.25MA0.05Pb(I0.8Br0.2)3",
+                    "thickness": 700,
+                    "functionality": "Absorber",
+                    "additional_treatment": "Gas Quenching with Nitrogen via an Air Knife",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Blade coating",
+                            "method": "Blade coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "PVD",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "PVD",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Cu",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "PVD",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": null
+                    }
+                ],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 20.06,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 19.96,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.23,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 81.84
+            },
+            "active_area": {
+                "value": 0.07
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": 500,
+                "light_intensity": 100,
+                "temperature": 40,
+                "PCE_at_the_start_of_the_experiment": 1,
+                "PCE_at_the_end_of_experiment": 1,
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "name": "SLG#"
+                },
+                {
+                    "name": "ITO",
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "NiOx",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Me-4PACz",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FA0.7Cs0.25MA0.05Pb(I0.8Br0.2)3",
+                    "thickness": 700,
+                    "functionality": "Absorber",
+                    "additional_treatment": "Gas Quenching with Nitrogen via an Air Knife",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Blade coating",
+                            "method": "Blade coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "PVD",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "name": "SnO2",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": "ALD",
+                            "method": "Atomic Layer Deposition",
+                            "atmosphere": "Other"
+                        }
+                    ]
+                },
+                {
+                    "name": "ITO",
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Sputtering",
+                            "atmosphere": "Unknown"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": null
+                    }
+                ],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 20.79,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.88,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.23,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 81.16
+            },
+            "active_area": {
+                "value": 0.07
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "name": "SLG#"
+                },
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "NiOx",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Me-4PACz",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FA0.7Cs0.25MA0.05Pb(I0.8Br0.2)3",
+                    "thickness": 700,
+                    "functionality": "Absorber",
+                    "additional_treatment": "Gas Quenching with Nitrogen via an Air Knife",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Blade coating",
+                            "method": "Blade coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "PVD",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "PVD",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Cu",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "PVD",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

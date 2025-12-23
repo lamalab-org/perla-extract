@@ -1,0 +1,170 @@
+{
+    "doi": "10.1039/c5nr05563f",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": null
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": null
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodine",
+                        "molecular_formula": "I2",
+                        "coefficient": null
+                    }
+                ]
+            },
+            "pce": {
+                "value": 16.97,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.48,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.063,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71
+            },
+            "active_area": {
+                "value": 0.125
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "Keithley 2401 "
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2 quantum dots",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Mesoporous TiO2",
+                    "thickness": 200,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "TiO2 paste drying",
+                            "temperature": 100,
+                            "duration": 5
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Film annealing",
+                            "temperature": 450,
+                            "duration": 1800
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Two-step spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.001,
+                                    "unit": "L"
+                                },
+                                "temperature": 70,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00104602,
+                                    "unit": "L"
+                                },
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "4-tert-butyl pyridine "
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Acetonitrile "
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

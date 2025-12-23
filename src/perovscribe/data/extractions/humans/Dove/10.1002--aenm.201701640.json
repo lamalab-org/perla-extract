@@ -1,0 +1,1690 @@
+{
+    "doi": "10.1002/aenm.201701640",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 13.8,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 19.5,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.943,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 75.1
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "XES-40S1, SAN-E1"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 1000,
+                "light_intensity": 0,
+                "humidity": 30,
+                "temperature": 25,
+                "PCE_at_the_start_of_the_experiment": 1,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 0.5,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit",
+                "PCE_after_1000_hours": {
+                    "value": 0.5,
+                    "unit": "%"
+                }
+            },
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "review_completed": true
+                },
+                {
+                    "name": "GO",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "review_completed": true,
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ],
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "GO",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "duration": 900,
+                            "temperature": 120
+                        }
+                    ]
+                },
+                {
+                    "name": "Perovskite",
+                    "thickness": 330,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 15,
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ],
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Anisolvent",
+                            "method": "Anisolvent",
+                            "atmosphere": "N2",
+                            "duration": 10,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "duration": 120,
+                            "temperature": 100
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Solvent annealing",
+                            "method": "Solvent annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 600,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "review_completed": true
+                },
+                {
+                    "name": "PCBM",
+                    "thickness": 70,
+                    "functionality": "Electron-transport",
+                    "review_completed": true,
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ],
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PCBM-60",
+                                        "concentration": 20,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "review_completed": true,
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 15.3,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.4,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.965,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74.2
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "XES-40S1, SAN-E1"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "rGO-BH",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "rGO-BH",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 330,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Anisolvent",
+                            "method": "Anisolvent",
+                            "atmosphere": "N2",
+                            "duration": 10,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 120
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Solvent annealing",
+                            "method": "Solvent annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 600,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": 70,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PCBM-60",
+                                        "concentration": 20,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 16,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.3,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.963,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 78.7
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "XES-40S1, SAN-E1"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "rGO-NH",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "rGO-NH",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 330,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Anisolvent",
+                            "method": "Anisolvent",
+                            "atmosphere": "N2",
+                            "duration": 10,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 120
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Solvent annealing",
+                            "method": "Solvent annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 600,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": 70,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PCBM-60",
+                                        "concentration": 20,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 16.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.1,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.962,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "XES-40S1, SAN-E1"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 1000,
+                "light_intensity": 0,
+                "humidity": 30,
+                "temperature": 25,
+                "PCE_at_the_start_of_the_experiment": 1,
+                "PCE_after_1000_hours": {
+                    "value": 0.5,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 0.5,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "rGO-HBS",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "rGO-HBS",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 330,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Anisolvent",
+                            "method": "Anisolvent",
+                            "atmosphere": "N2",
+                            "duration": 10,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 120
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Solvent annealing",
+                            "method": "Solvent annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 600,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": 70,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PCBM-60",
+                                        "concentration": 20,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 14.8,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.4,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.872,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 83.1
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "XES-40S1, SAN-E1"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 650,
+                "light_intensity": 0,
+                "humidity": 30,
+                "temperature": 25,
+                "PCE_at_the_start_of_the_experiment": 1,
+                "PCE_at_the_end_of_experiment": 0,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "PEDOT:PSS",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 330,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Anisolvent",
+                            "method": "Anisolvent",
+                            "atmosphere": "N2",
+                            "duration": 10,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 120
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Solvent annealing",
+                            "method": "Solvent annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 600,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": 70,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PCBM-60",
+                                        "concentration": 20,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 13.8,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "XES-40S1, SAN-E1"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "PEN",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "rGO-NH",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "rGO-NH",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 330,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Anisolvent",
+                            "method": "Anisolvent",
+                            "atmosphere": "N2",
+                            "duration": 10,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 120
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Solvent annealing",
+                            "method": "Solvent annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 600,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": 70,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PCBM-60",
+                                        "concentration": 20,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 16,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.3,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.963,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 78.7
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100,
+                "lamp": "XES-40S1, SAN-E1"
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "rGO-NH",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "duration": 40,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "rGO-NH",
+                                        "concentration": 0.5,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": 330,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Anisolvent",
+                            "method": "Anisolvent",
+                            "atmosphere": "N2",
+                            "duration": 10,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 120
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Solvent annealing",
+                            "method": "Solvent annealing",
+                            "atmosphere": "Other",
+                            "temperature": 100,
+                            "duration": 600,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "PCBM",
+                    "thickness": 70,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PCBM-60",
+                                        "concentration": 20,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

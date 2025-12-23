@@ -1,0 +1,1083 @@
+{
+    "doi": "10.1557/s43578-021-00155-z",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.3FA2.7Bi2I9",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.3"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "2.7"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Bi",
+                        "common_name": "Bismuth\u00a0",
+                        "molecular_formula": "Bi3+",
+                        "coefficient": "2"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "9"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 1.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 4,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.15
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Xenon/halogen",
+                "light_intensity": 100,
+                "lamp": "WACOM\u2011WXS\u2011140S\u2011Super\u2011L2"
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-c",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spray-pyrolysis",
+                            "method": "Spray-pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": 480,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "titanium diisopropoxide bis(acetylacetonate",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-mp",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiO2-paste",
+                                        "concentration": 20,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 480,
+                            "duration": 2700
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "BiI3"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CsI"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Anti-solvent",
+                            "method": "Anti-solvent",
+                            "atmosphere": "N2",
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Toluene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 4.5e-05,
+                                    "unit": "L"
+                                },
+                                "temperature": 25,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-MeOTAD",
+                                        "concentration": 72.3,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "tBP",
+                                        "concentration": 0.0288,
+                                        "concentration_unit": "vol%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Li-TFSI",
+                                        "concentration": 9.1,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA3Bi2I9",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "3"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Bi",
+                        "common_name": "Bismuth\u00a0",
+                        "molecular_formula": "Bi3+",
+                        "coefficient": "2"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "9"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 0.02,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.51,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.15
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Xenon/halogen",
+                "light_intensity": 100,
+                "lamp": "WACOM\u2011WXS\u2011140S\u2011Super\u2011L2"
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-c",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spray-pyrolysis",
+                            "method": "Spray-pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": 480,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "titanium diisopropoxide bis(acetylacetonate",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-mp",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiO2-paste",
+                                        "concentration": 20,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 480,
+                            "duration": 2700
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "BiI3"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "FAI"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Anti-solvent",
+                            "method": "Anti-solvent",
+                            "atmosphere": "N2",
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Toluene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 4.5e-05,
+                                    "unit": "L"
+                                },
+                                "temperature": 25,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-MeOTAD",
+                                        "concentration": 72.3,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "tBP",
+                                        "concentration": 0.0288,
+                                        "concentration_unit": "vol%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Li-TFSI",
+                                        "concentration": 9.1,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "Cs3Bi2I9",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "3"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Bi",
+                        "common_name": "Bismuth\u00a0",
+                        "molecular_formula": "Bi3+",
+                        "coefficient": "2"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "9"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 0.24,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.15
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Xenon/halogen",
+                "light_intensity": 100,
+                "lamp": "WACOM\u2011WXS\u2011140S\u2011Super\u2011L2"
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-c",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spray-pyrolysis",
+                            "method": "Spray-pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": 480,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "titanium diisopropoxide bis(acetylacetonate",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-mp",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiO2-paste",
+                                        "concentration": 20,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 480,
+                            "duration": 2700
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "BiI3"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CsI"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Anti-solvent",
+                            "method": "Anti-solvent",
+                            "atmosphere": "N2",
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Toluene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 4.5e-05,
+                                    "unit": "L"
+                                },
+                                "temperature": 25,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-MeOTAD",
+                                        "concentration": 72.3,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "tBP",
+                                        "concentration": 0.0288,
+                                        "concentration_unit": "vol%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Li-TFSI",
+                                        "concentration": 9.1,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MA3Bi2I9",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "3"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Bi",
+                        "common_name": "Bismuth\u00a0",
+                        "molecular_formula": "Bi3+",
+                        "coefficient": "2"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "9"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 0.22,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.15
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "Xenon/halogen",
+                "light_intensity": 100,
+                "lamp": "WACOM\u2011WXS\u2011140S\u2011Super\u2011L2"
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-c",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spray-pyrolysis",
+                            "method": "Spray-pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": 480,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "titanium diisopropoxide bis(acetylacetonate",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-mp",
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "TiO2-paste",
+                                        "concentration": 20,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 480,
+                            "duration": 2700
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "BiI3"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MAI"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Anti-solvent",
+                            "method": "Anti-solvent",
+                            "atmosphere": "N2",
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Toluene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 45,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 4.5e-05,
+                                    "unit": "L"
+                                },
+                                "temperature": 25,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-MeOTAD",
+                                        "concentration": 72.3,
+                                        "concentration_unit": "g/L"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "tBP",
+                                        "concentration": 0.0288,
+                                        "concentration_unit": "vol%"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Li-TFSI",
+                                        "concentration": 9.1,
+                                        "concentration_unit": "g/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

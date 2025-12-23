@@ -1,0 +1,1797 @@
+{
+    "doi": "10.1039/c8ee02252f",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.15PbBr0.45I2.55",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.55"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 21.6,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.88,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.13,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 1500,
+                "light_intensity": 100,
+                "humidity": 0,
+                "temperature": 55,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 21.6,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 19.4,
+                    "unit": "%"
+                },
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-c",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-mp",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH5IN2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "(4-bromophenyl)thiourea"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "bis-PCBM"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.15PbBr0.45I2.55",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.55"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.3,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.59,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.11,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 1500,
+                "light_intensity": 100,
+                "humidity": 0,
+                "temperature": 55,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 20.3,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 13.8,
+                    "unit": "%"
+                },
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-c",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-mp",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH5IN2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "(4-bromophenyl)thiourea"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.15PbBr0.45I2.55",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.55"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.9,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.12,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 3500,
+                "light_intensity": 0,
+                "humidity": 15,
+                "temperature": 25,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 19.3,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 6.3,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-c",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-mp",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH5IN2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.15PbBr0.45I2.55",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.55"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.62,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.12,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 3600,
+                "light_intensity": 0,
+                "humidity": 15,
+                "temperature": 25,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 20.4,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 14.6,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-c",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-mp",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH5IN2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "bis-PCBM"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.15PbBr0.45I2.55",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.55"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.3,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.59,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.11,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 3600,
+                "light_intensity": 0,
+                "humidity": 15,
+                "temperature": 25,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 20.3,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 13.7,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-c",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-mp",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH5IN2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "(4-bromophenyl)thiourea"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.15PbBr0.45I2.55",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.55"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 21.6,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.88,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.13,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 3600,
+                "light_intensity": 0,
+                "humidity": 15,
+                "temperature": 25,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 21.6,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 20.1,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-c",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-mp",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH5IN2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "(4-bromophenyl)thiourea"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "bis-PCBM"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.15PbBr0.45I2.55",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.55"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.62,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.12,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 74
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 1500,
+                "light_intensity": 100,
+                "humidity": 0,
+                "temperature": 55,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 20.4,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 15.6,
+                    "unit": "%"
+                },
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-c",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-mp",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH5IN2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "bis-PCBM"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.15PbBr0.45I2.55",
+                "a_ions": [
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.15"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.45"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.55"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.9,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.12,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 1500,
+                "light_intensity": 100,
+                "humidity": 0,
+                "temperature": 55,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 19.3,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 2.7,
+                    "unit": "%"
+                },
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-c",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2-mp",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH3NH3I",
+                                        "concentration": 0.2,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CH5IN2",
+                                        "concentration": 1.15,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 0.8
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 0.2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "duration": 15,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.00011,
+                                    "unit": "L"
+                                },
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Annealing",
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spin-coating",
+                            "method": "Spin-coating"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Evaporation",
+                            "method": "Thermal-evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

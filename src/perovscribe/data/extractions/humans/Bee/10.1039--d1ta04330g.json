@@ -1,0 +1,77 @@
+{
+    "doi": "10.1039/d1ta04330g",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 19.02,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 19.45,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.21,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 79
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": 3600000,
+                "light_intensity": 100,
+                "temperature": 25,
+                "PCE_after_1000_hours": {
+                    "value": 15.74,
+                    "unit": "%"
+                },
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 65,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Cs0.15FA0.85Pb(I0.7Br0.3)3",
+                    "thickness": 500,
+                    "functionality": "Absorber",
+                    "additional_treatment": "GuaBr passivation"
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": 250,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

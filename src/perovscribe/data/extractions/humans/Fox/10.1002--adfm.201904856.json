@@ -1,0 +1,230 @@
+{
+    "doi": "10.1002/adfm.201904856",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 20.19,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.64,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.14,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 75.08
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 15,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": 720,
+                "PCE_after_1000_hours": {
+                    "value": 18.63,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit",
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "DTB(3%DEG)",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 19.65,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 25.01,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71.48
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 15,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": 720,
+                "PCE_after_1000_hours": {
+                    "value": 17.26,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit",
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "DTB(3%DEG)",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 17.82,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.53,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.05,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 72.42
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 15,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": 720,
+                "PCE_after_1000_hours": {
+                    "value": 15.59,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit",
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Cs0.05FA0.81MA0.14PbI2.55Br0.45",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "DTB(3%DEG)",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

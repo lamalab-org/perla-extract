@@ -1,0 +1,201 @@
+{
+    "doi": "10.1016/j.nanoen.2016.05.023",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MA3Pb2I3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "3"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "2"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    },
+                    {
+                        "abbreviation": "Cl",
+                        "common_name": "Chloride",
+                        "molecular_formula": "Cl-",
+                        "coefficient": null
+                    }
+                ]
+            },
+            "pce": {
+                "value": 17.1,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.03,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 67.3
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": "solar simulator (Solar IV-150A, Zolix)",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "type": "AM 1.5G",
+                "description": "The devices were tested every 12 h ",
+                "time": 1200,
+                "humidity": 50,
+                "temperature": 30,
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 16.1,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 13.685,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "titanium diisopropoxide bis(acetylacetonate)",
+                                        "concentration_unit": "Unknown"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": " 2-propanol",
+                                        "volume_fraction": 0.0625
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "ethanol",
+                                        "volume_fraction": 0.9375
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Thermal annealing",
+                            "temperature": 450,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite with PCBM/PEG network",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "PCBM (5.4\u2030 mole ratio to perovskite), PEG (1.1\u2030 mole ratio to perovskite)",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": 100,
+                            "duration": 5400
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Thermal annealing",
+                            "temperature": 100,
+                            "duration": 5400
+                        }
+                    ]
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "4-tert-butylpyridine (tBP, 29.5 \u03bcl) and a stock solution of lithium bis(trifluoromethylsulphonyl)imide(Li-TFSI, 520 mg ml\u22121) in acetonitrile (18.5 \u03bcl)",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "spiro-OMeTAD",
+                                        "concentration": 73,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

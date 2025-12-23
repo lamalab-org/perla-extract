@@ -1,0 +1,618 @@
+{
+    "doi": "10.1002/adfm.202212698",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 22.65,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 25.43,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.092,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 81.58
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "SnO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "(FAPbI3)0.95(MAPbBr3)0.05",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 120,
+                            "duration": 1800,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solvents": [
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": null
+                                    },
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "Spiro-OMeTAD",
+                                        "concentration": 72.3,
+                                        "concentration_unit": "mg/L"
+                                    },
+                                    {
+                                        "name": "Li-TFSi",
+                                        "concentration": 260,
+                                        "concentration_unit": "mg/L"
+                                    },
+                                    {
+                                        "name": "tBP",
+                                        "concentration": 29,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 22.04,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 24.11,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.134,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 80.47
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "time": 1000,
+                "light_intensity": 100,
+                "PCE_after_1000_hours": {
+                    "value": 19.84,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "SnO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "MFCl",
+                    "thickness": null,
+                    "functionality": "Other",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 300,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "MFCl",
+                                        "concentration": 0.75,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "isopropanol",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "(FAPbI3)0.95(MAPbBr3)0.05",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 120,
+                            "duration": 1800,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solvents": [
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": null
+                                    },
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "MFCl",
+                    "thickness": null,
+                    "functionality": "Other",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 300,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "MFCl",
+                                        "concentration": 0.75,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "isopropanol",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "Spiro-OMeTAD",
+                                        "concentration": 72.3,
+                                        "concentration_unit": "mg/L"
+                                    },
+                                    {
+                                        "name": "Li-TFSi",
+                                        "concentration": 260,
+                                        "concentration_unit": "mg/L"
+                                    },
+                                    {
+                                        "name": "tBP",
+                                        "concentration": 29,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 24.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 25.36,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.158,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 83.1
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "SnO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "MFCl",
+                    "thickness": null,
+                    "functionality": "Other",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 300,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "MFCl",
+                                        "concentration": 0.75,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "isopropanol",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "(FAPbI3)0.95(MAPbBr3)0.05",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 120,
+                            "duration": 1800,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solvents": [
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": null
+                                    },
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "MFCl",
+                    "thickness": null,
+                    "functionality": "Other",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 300,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "MFCl",
+                                        "concentration": 0.75,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "isopropanol",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "Spiro-OMeTAD",
+                                        "concentration": 72.3,
+                                        "concentration_unit": "mg/L"
+                                    },
+                                    {
+                                        "name": "Li-TFSi",
+                                        "concentration": 260,
+                                        "concentration_unit": "mg/L"
+                                    },
+                                    {
+                                        "name": "tBP",
+                                        "concentration": 29,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 20.01,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.77,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.086,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77.43
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "time": 1000,
+                "light_intensity": 100,
+                "PCE_after_1000_hours": 10,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "SnO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "(FAPbI3)0.95(MAPbBr3)0.05",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 120,
+                            "duration": 1800,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solvents": [
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": null
+                                    },
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "Spiro-OMeTAD",
+                                        "concentration": 72.3,
+                                        "concentration_unit": "mg/L"
+                                    },
+                                    {
+                                        "name": "Li-TFSi",
+                                        "concentration": 260,
+                                        "concentration_unit": "mg/L"
+                                    },
+                                    {
+                                        "name": "tBP",
+                                        "concentration": 29,
+                                        "concentration_unit": "mg/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

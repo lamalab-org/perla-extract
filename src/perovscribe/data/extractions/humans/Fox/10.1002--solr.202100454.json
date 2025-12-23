@@ -1,0 +1,230 @@
+{
+    "doi": "10.1002/solr.202100454",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 15.1,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 28.1,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.77,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G"
+            },
+            "encapsulated": null,
+            "stability": {
+                "potential_bias": "Open circuit",
+                "PCE_after_1000_hours": 14,
+                "time": 1000,
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "PDAI",
+                    "thickness": 10,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "name": "FA0.66MA0.34Pb0.5Sn0.5I3",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Ag",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 16,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 28.8,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.78,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G"
+            },
+            "encapsulated": null,
+            "stability": {
+                "potential_bias": "Open circuit",
+                "time": 1000,
+                "PCE_after_1000_hours": 12,
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "PDAI",
+                    "thickness": 10,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "name": "FA0.66MA0.34Pb0.5Sn0.5I3",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Ag",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 16.1,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 29.1,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.77,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 72
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G"
+            },
+            "encapsulated": null,
+            "stability": {
+                "potential_bias": "Open circuit",
+                "time": 1000,
+                "PCE_after_1000_hours": {
+                    "value": 16.1,
+                    "unit": "%"
+                },
+                "review_completed": true
+            },
+            "layers": [
+                {
+                    "name": "PDAI",
+                    "thickness": 10,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "name": "FA0.66MA0.34Pb0.5Sn0.5I3",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Ag",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

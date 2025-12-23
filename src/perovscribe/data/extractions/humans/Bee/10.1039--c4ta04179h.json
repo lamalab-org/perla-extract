@@ -1,0 +1,113 @@
+{
+    "doi": "10.1039/c4ta04179h",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "CH3NH3PbI3",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 11.86,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.39,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.924,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 69.8
+            },
+            "active_area": {
+                "value": 0.16
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": {
+                    "value": 900000.0,
+                    "unit": "s"
+                },
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 11.24,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 8.42,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "compact TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "mesoporous TiO2",
+                    "thickness": {
+                        "value": 260.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Electron-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": {
+                        "value": 140.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Absorber",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "FA-MeOPh",
+                    "thickness": {
+                        "value": 150.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Hole-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Au",
+                    "thickness": {
+                        "value": 60.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

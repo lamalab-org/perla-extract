@@ -1,0 +1,405 @@
+{
+    "doi": "10.1002/advs.201903009",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.05",
+                "a_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": "Cesium",
+                        "molecular_formula": "Cs",
+                        "coefficient": "0.1"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5IN2",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium ",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.05"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": null
+                    },
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": null
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodine",
+                        "molecular_formula": "I_2",
+                        "coefficient": null
+                    },
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br2",
+                        "coefficient": null
+                    }
+                ]
+            },
+            "pce": {
+                "value": 21.14,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.91,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.112,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 79.52
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 96,
+                "light_intensity": 100,
+                "humidity": 30,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Nb-doped TiO2",
+                    "thickness": 30,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Chemical bath deposition",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 4560
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 10,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "TMSO",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Vacuum quenching",
+                            "atmosphere": "N2"
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 130,
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 20,
+                            "solution": {
+                                "volume": {
+                                    "value": 0.001085,
+                                    "unit": "L"
+                                },
+                                "temperature": null,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Li-TFSI/acetonitrile"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "KF209/acetonitrile"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "FA0.85MA0.05",
+                "a_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": "Cesium",
+                        "molecular_formula": "Cs",
+                        "coefficient": "0.1"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5IN2",
+                        "coefficient": "0.85"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium ",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.05"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": null
+                    },
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": null
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodine",
+                        "molecular_formula": "I_2",
+                        "coefficient": null
+                    },
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br2",
+                        "coefficient": null
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.02,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.34,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.098,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 78.14
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 96,
+                "light_intensity": 100,
+                "humidity": 30,
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Nb-doped TiO2",
+                    "thickness": 30,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Chemical bath deposition",
+                            "atmosphere": "Air",
+                            "temperature": 70,
+                            "duration": 4560
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 10,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO",
+                                        "volume_fraction": 1
+                                    }
+                                ],
+                                "review_completed": true
+                            },
+                            "review_completed": true
+                        },
+                        {
+                            "review_completed": true,
+                            "method": "Vacuum quenching",
+                            "atmosphere": "N2"
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 130,
+                            "duration": 900
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 20,
+                            "solution": {
+                                "volume": {
+                                    "value": 0.001085,
+                                    "unit": "L"
+                                },
+                                "temperature": null,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Li-TFSI/acetonitrile"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "KF209/acetonitrile"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

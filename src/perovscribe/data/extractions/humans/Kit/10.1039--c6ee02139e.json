@@ -1,0 +1,71 @@
+{
+    "doi": "10.1039/c6ee02139e",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 19.42,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.44,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.0994,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 78.72
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "additional_treatment": "Ionic liquid ([BMIM]BF4) surface modification",
+                    "review_completed": true
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": 345,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

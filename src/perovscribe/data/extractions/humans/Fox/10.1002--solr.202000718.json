@@ -1,0 +1,495 @@
+{
+    "doi": "10.1002/solr.202000718",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 2.27,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 2.5,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.4,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 10,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "Cl:TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "MAPbBr2Cl1",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 600,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "MABr",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "PbBr2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "review_completed": true
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 20,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "Ag",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 0.57,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 1,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.4,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 75
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 10,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "Cl:TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "MAPbBr1Cl2",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 600,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "MABr",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "PbBr2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "review_completed": true
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 20,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "Ag",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 6.92,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 6.31,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.4,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 78.3
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 1,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "Cl:TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "MAPbBr3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 600,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "MABr",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "PbBr2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "review_completed": true
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 20,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "Ag",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 0.32,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0.28,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.65,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 69.44
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 1,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "Cl:TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "MAPbCl3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 600,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "MABr",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "PbBr2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "review_completed": true
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 20,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "Ag",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 1.08,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.4,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 70
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 10,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "Cl:TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "MAPbBr1.5Cl1.5",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 600,
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "MABr",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "name": "PbBr2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "review_completed": true
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 20,
+                    "functionality": "Contact"
+                },
+                {
+                    "name": "Ag",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

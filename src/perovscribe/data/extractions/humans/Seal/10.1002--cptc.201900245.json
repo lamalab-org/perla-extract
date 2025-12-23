@@ -1,0 +1,1534 @@
+{
+    "doi": "10.1002/cptc.201900245",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 15.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.6,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 67.6
+            },
+            "active_area": {
+                "value": 0.25
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "c-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spray pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "name": "m-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 5000,
+                                "time": 15,
+                                "ramp_rate": 2000
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "[Cs0.05(FA0.83MA0.17)0.95]Pb(I0.83Br0.17)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed1": 1000,
+                                "time1": 10,
+                                "speed2": 4000,
+                                "time2": 30
+                            }
+                        },
+                        {
+                            "method": "Antisolvent-quenching",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "volume": 200,
+                                "unit": "\u03bcL",
+                                "time_before_end": 5
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "name": "ZnPc th ZnPc 1",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "additional_parameters": {
+                                "speed": 2000,
+                                "time": 40,
+                                "acceleration": 1000
+                            },
+                            "solution": {
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "ZnPc th ZnPc 1",
+                                        "concentration": 3.74,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 0.95
+                                    },
+                                    {
+                                        "name": "THF",
+                                        "volume_fraction": 0.05
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": null
+                    }
+                ],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 15.6,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.6,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.09,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 66.1
+            },
+            "active_area": {
+                "value": 0.25
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "additional_treatment": "FTO glass (NSG-10) was etched by a chemical method using zinc powder and HCI solution (4M) and substrates cleaned by 15 min sanitation in four steps ",
+                    "deposition": [
+                        {
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {}
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "compact TiO2 ",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spray pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol"
+                                    }
+                                ]
+                            }
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "name": "Mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800,
+                            "additional_parameters": {
+                                "speed": 5000,
+                                "time": 15,
+                                "ramp_rate": 2000
+                            },
+                            "solution": {
+                                "review_completed": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "[Cs0.05(FA0.83MA0.17)0.95]Pb(I0.83Br0.17)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Spin Coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 40,
+                            "additional_parameters": {
+                                "speed1": 1000,
+                                "time1": 10,
+                                "speed2": 4000,
+                                "time2": 30
+                            },
+                            "solution": {
+                                "solvents": [
+                                    {
+                                        "review_completed": true
+                                    },
+                                    {},
+                                    {}
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent dripping",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 5,
+                            "additional_parameters": {
+                                "volume": 200,
+                                "unit": "\u03bcL",
+                                "time_before_end": 5
+                            },
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.0002,
+                                    "unit": "L"
+                                },
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene (CB)"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "ZnPc -flu-ZnPc 2",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "HTL deposition ",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 40,
+                            "additional_parameters": {
+                                "speed": 2000,
+                                "time": 40,
+                                "acceleration": 1000
+                            },
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "ZnPc th ZnPc 1",
+                                        "concentration": 3.74,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 95
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "THF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": null
+                    }
+                ],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 15.7,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.3,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.06,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 69.1
+            },
+            "active_area": {
+                "value": 0.25
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "additional_treatment": "FTO glass (NSG-10) was etched by a chemical method using zinc powder and HCI solution (4M) and substrates cleaned by 15 min sanitation in four steps ",
+                    "deposition": [
+                        {
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {}
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "compact TiO2 ",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spray pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol"
+                                    }
+                                ]
+                            }
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "name": "Mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800,
+                            "additional_parameters": {
+                                "speed": 5000,
+                                "time": 15,
+                                "ramp_rate": 2000
+                            },
+                            "solution": {
+                                "review_completed": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "[Cs0.05(FA0.83MA0.17)0.95]Pb(I0.83Br0.17)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Spin Coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 40,
+                            "additional_parameters": {
+                                "speed1": 1000,
+                                "time1": 10,
+                                "speed2": 4000,
+                                "time2": 30
+                            },
+                            "solution": {
+                                "solvents": [
+                                    {
+                                        "review_completed": true
+                                    },
+                                    {},
+                                    {}
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent dripping",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 5,
+                            "additional_parameters": {
+                                "volume": 200,
+                                "unit": "\u03bcL",
+                                "time_before_end": 5
+                            },
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.0002,
+                                    "unit": "L"
+                                },
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene (CB)"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "ZnPc-p-ZnPc 4",
+                    "thickness": 15,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "HTL deposition ",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "additional_parameters": {
+                                "speed": 2000,
+                                "time": 40,
+                                "acceleration": 1000
+                            },
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "ZnPc th ZnPc 1",
+                                        "concentration": 3.74,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 95
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "THF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": null
+                    }
+                ],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 16.6,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.4,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 68.5
+            },
+            "active_area": {
+                "value": 0.25
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "additional_treatment": "FTO glass (NSG-10) was etched by a chemical method using zinc powder and HCI solution (4M) and substrates cleaned by 15 min sanitation in four steps ",
+                    "deposition": [
+                        {
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {}
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "compact TiO2 ",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spray pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol"
+                                    }
+                                ]
+                            }
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "name": "Mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800,
+                            "additional_parameters": {
+                                "speed": 5000,
+                                "time": 15,
+                                "ramp_rate": 2000
+                            },
+                            "solution": {
+                                "review_completed": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "[Cs0.05(FA0.83MA0.17)0.95]Pb(I0.83Br0.17)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Spin Coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 40,
+                            "additional_parameters": {
+                                "speed1": 1000,
+                                "time1": 10,
+                                "speed2": 4000,
+                                "time2": 30
+                            },
+                            "solution": {
+                                "solvents": [
+                                    {
+                                        "review_completed": true
+                                    },
+                                    {},
+                                    {}
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent dripping",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 5,
+                            "additional_parameters": {
+                                "volume": 200,
+                                "unit": "\u03bcL",
+                                "time_before_end": 5
+                            },
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.0002,
+                                    "unit": "L"
+                                },
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene (CB)"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "TB_4-ZnPc",
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "HTL deposition ",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "additional_parameters": {
+                                "speed": 2000,
+                                "time": 40,
+                                "acceleration": 1000
+                            },
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "ZnPc th ZnPc 1",
+                                        "concentration": 3.74,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 95
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "THF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": null
+                    }
+                ],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 16.8,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.6,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 73.8
+            },
+            "active_area": {
+                "value": 0.25
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "additional_treatment": "FTO glass (NSG-10) was etched by a chemical method using zinc powder and HCI solution (4M) and substrates cleaned by 15 min sanitation in four steps ",
+                    "deposition": [
+                        {
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {}
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "compact TiO2 ",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spray pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol"
+                                    }
+                                ]
+                            }
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "name": "Mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800,
+                            "additional_parameters": {
+                                "speed": 5000,
+                                "time": 15,
+                                "ramp_rate": 2000
+                            },
+                            "solution": {
+                                "review_completed": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "[Cs0.05(FA0.83MA0.17)0.95]Pb(I0.83Br0.17)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Spin Coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 40,
+                            "additional_parameters": {
+                                "speed1": 1000,
+                                "time1": 10,
+                                "speed2": 4000,
+                                "time2": 30
+                            },
+                            "solution": {
+                                "solvents": [
+                                    {
+                                        "review_completed": true
+                                    },
+                                    {},
+                                    {}
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent dripping",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 5,
+                            "additional_parameters": {
+                                "volume": 200,
+                                "unit": "\u03bcL",
+                                "time_before_end": 5
+                            },
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.0002,
+                                    "unit": "L"
+                                },
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene (CB)"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "ZnPc -DPP-ZnPc 3",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "HTL deposition ",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "additional_parameters": {
+                                "speed": 2000,
+                                "time": 40,
+                                "acceleration": 1000
+                            },
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "ZnPc th ZnPc 1",
+                                        "concentration": 3.74,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 95
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "THF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 15.5,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.6,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 67.6
+            },
+            "active_area": {
+                "value": 0.25
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {},
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "additional_treatment": "FTO glass (NSG-10) was etched by a chemical method using zinc powder and HCI solution (4M) and substrates cleaned by 15 min sanitation in four steps ",
+                    "deposition": [
+                        {
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {}
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "compact TiO2 ",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spray pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol"
+                                    }
+                                ]
+                            }
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "name": "Mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800,
+                            "additional_parameters": {
+                                "speed": 5000,
+                                "time": 15,
+                                "ramp_rate": 2000
+                            },
+                            "solution": {
+                                "review_completed": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "[Cs0.05(FA0.83MA0.17)0.95]Pb(I0.83Br0.17)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Spin Coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 40,
+                            "additional_parameters": {
+                                "speed1": 1000,
+                                "time1": 10,
+                                "speed2": 4000,
+                                "time2": 30
+                            },
+                            "solution": {
+                                "solvents": [
+                                    {
+                                        "review_completed": true
+                                    },
+                                    {},
+                                    {}
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent dripping",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 5,
+                            "additional_parameters": {
+                                "volume": 200,
+                                "unit": "\u03bcL",
+                                "time_before_end": 5
+                            },
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.0002,
+                                    "unit": "L"
+                                },
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene (CB)"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "ZnPc -tc-ZnPc 1",
+                    "thickness": 20,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "HTL deposition ",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 40,
+                            "additional_parameters": {
+                                "speed": 2000,
+                                "time": 40,
+                                "acceleration": 1000
+                            },
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "ZnPc th ZnPc 1",
+                                        "concentration": 3.74,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "chlorobenzene",
+                                        "volume_fraction": 95
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "THF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [
+                    {
+                        "abbreviation": null,
+                        "common_name": null,
+                        "molecular_formula": null,
+                        "coefficient": null
+                    }
+                ],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 20.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.3,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.12,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 78
+            },
+            "active_area": {
+                "value": 0.25
+            },
+            "device_architecture": "nip",
+            "number_devices": 8,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "additional_treatment": "FTO glass (NSG-10) was etched by a chemical method using zinc powder and HCI solution (4M) and substrates cleaned by 15 min sanitation in four steps ",
+                    "deposition": [
+                        {
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {}
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "compact TiO2 ",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "method": "Spray pyrolysis",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800,
+                            "solution": {
+                                "review_completed": true,
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Ethanol"
+                                    }
+                                ]
+                            }
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "name": "Mesoporous TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": 450,
+                            "duration": 1800,
+                            "additional_parameters": {
+                                "speed": 5000,
+                                "time": 15,
+                                "ramp_rate": 2000
+                            },
+                            "solution": {
+                                "review_completed": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "[Cs0.05(FA0.83MA0.17)0.95]Pb(I0.83Br0.17)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Spin Coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 40,
+                            "additional_parameters": {
+                                "speed1": 1000,
+                                "time1": 10,
+                                "speed2": 4000,
+                                "time2": 30
+                            },
+                            "solution": {
+                                "solvents": [
+                                    {
+                                        "review_completed": true
+                                    },
+                                    {},
+                                    {}
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "Antisolvent dripping",
+                            "method": "Antisolvent",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": 5,
+                            "additional_parameters": {
+                                "volume": 200,
+                                "unit": "\u03bcL",
+                                "time_before_end": 5
+                            },
+                            "solution": {
+                                "review_completed": true,
+                                "volume": {
+                                    "value": 0.0002,
+                                    "unit": "L"
+                                },
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene (CB)"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 3600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": 200,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "HTL deposition ",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "duration": 20,
+                            "additional_parameters": {
+                                "speed": 2000,
+                                "time": 40,
+                                "acceleration": 1000
+                            },
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "ZnPc th ZnPc 1",
+                                        "concentration": 3.74,
+                                        "concentration_unit": "mmol/L"
+                                    }
+                                ],
+                                "solvents": []
+                            }
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

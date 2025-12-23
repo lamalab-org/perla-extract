@@ -1,0 +1,114 @@
+{
+    "doi": "10.1186/s11671-017-1992-1",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "CH3NH3PbI3",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 12.1,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 19.4,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.03,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 58.0
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Al-doped SnO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": {
+                                "value": 190.0,
+                                "unit": "\u00b0C"
+                            },
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": {
+                                "value": 100.0,
+                                "unit": "\u00b0C"
+                            },
+                            "duration": {
+                                "value": 600.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": "chlorobenzene",
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Au",
+                    "thickness": {
+                        "value": 100.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,379 @@
+{
+    "doi": "10.1039/c4ta05373g",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3Cl3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    },
+                    {
+                        "abbreviation": "Cl",
+                        "common_name": "Chloride",
+                        "molecular_formula": "Cl-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 10.49,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 22.58,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.91,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 51
+            },
+            "active_area": {
+                "value": 0.04
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPb(I,Cl)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "PbI2",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "MAI Deposition",
+                            "method": "Dipping",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 300,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L",
+                                        "review_completed": true
+                                    },
+                                    {
+                                        "name": "MACl",
+                                        "concentration": 2,
+                                        "concentration_unit": "mg/L",
+                                        "review_completed": true
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "IPA",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spiro-OMeTAD",
+                            "method": "Spin coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-OMeTAD",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3Cl3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 8.29,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 17.6,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.9,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 52
+            },
+            "active_area": {
+                "value": 0.04
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "PbI2",
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbI2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMF",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "MAI Deposition",
+                            "method": "Dipping",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": 300,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": null,
+                                "solutes": [
+                                    {
+                                        "name": "MAI",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/L",
+                                        "review_completed": true
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "IPA",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Spiro-OMeTAD",
+                            "method": "Spin coating",
+                            "atmosphere": "N2",
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-OMeTAD",
+                                        "concentration": 20,
+                                        "concentration_unit": "mg/mL"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Chlorobenzene",
+                                        "volume_fraction": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 100,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Au deposition",
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

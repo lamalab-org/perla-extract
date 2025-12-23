@@ -1,0 +1,569 @@
+{
+    "doi": "10.1016/j.jcou.2019.04.001",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 16.47,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.72,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.08,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 73.6
+            },
+            "active_area": {
+                "value": 0.81
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": {
+                    "value": 0.166666666666667,
+                    "unit": "s"
+                },
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 17.25,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "additional_treatment": "As-fabricated",
+                    "deposition": [
+                        {
+                            "method": "Chemical bath deposition",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "CO2 plasma treatment",
+                            "atmosphere": "Other",
+                            "temperature": null,
+                            "duration": 90
+                        }
+                    ]
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": 350,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": 250,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 18.1,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.18,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.06,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 73.7
+            },
+            "active_area": {
+                "value": 0.81
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": {
+                    "value": 0.166666666666667,
+                    "unit": "s"
+                },
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 17.25,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "method": "Chemical bath deposition",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "CO2 plasma treatment",
+                            "atmosphere": "Other",
+                            "temperature": null,
+                            "duration": 90
+                        }
+                    ],
+                    "additional_treatment": "CO2 plasma"
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": 350,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": 250,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 8.03,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 15.72,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.06,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 48.2
+            },
+            "active_area": {
+                "value": 0.81
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": {
+                    "value": 0.166666666666667,
+                    "unit": "s"
+                },
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 17.25,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "additional_treatment": "H2 plasma",
+                    "deposition": [
+                        {
+                            "method": "Chemical bath deposition",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "CO2 plasma treatment",
+                            "atmosphere": "Other",
+                            "temperature": null,
+                            "duration": 90
+                        }
+                    ]
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": 350,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": 250,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbI3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 14.88,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.86,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 71.7
+            },
+            "active_area": {
+                "value": 0.81
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": false,
+            "stability": {
+                "review_completed": true,
+                "time": {
+                    "value": 0.166666666666667,
+                    "unit": "s"
+                },
+                "humidity": 40,
+                "temperature": 25,
+                "PCE_at_the_end_of_experiment": {
+                    "value": 17.25,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "additional_treatment": "He plasma",
+                    "deposition": [
+                        {
+                            "method": "Chemical bath deposition",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "CO2 plasma treatment",
+                            "atmosphere": "Other",
+                            "temperature": null,
+                            "duration": 90
+                        }
+                    ]
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": 350,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        },
+                        {
+                            "method": "Thermal-annealing",
+                            "atmosphere": "Air",
+                            "temperature": 120,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": 250,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "method": "Thermal evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

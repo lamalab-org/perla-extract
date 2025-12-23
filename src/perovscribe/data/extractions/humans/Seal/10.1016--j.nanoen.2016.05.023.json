@@ -1,0 +1,155 @@
+{
+    "doi": "10.1016/j.nanoen.2016.05.023",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "CH3NH3PbI3-xClx",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 17.1,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 23.03,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 67.3
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "nip",
+            "number_devices": 100,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": {
+                    "value": 4320000.0,
+                    "unit": "s"
+                },
+                "humidity": {
+                    "value": 50.0,
+                    "unit": "%"
+                },
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 17.1,
+                    "unit": "%"
+                },
+                "PCE_after_1000_hours": {
+                    "value": 14.535,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 14.535,
+                    "unit": "%"
+                },
+                "potential_bias": "Open circuit"
+            },
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Perovskite with PCBM/PEG network",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": {
+                                "value": 100.0,
+                                "unit": "\u00b0C"
+                            },
+                            "duration": {
+                                "value": 5400.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Air",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Au",
+                    "thickness": {
+                        "value": 80.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

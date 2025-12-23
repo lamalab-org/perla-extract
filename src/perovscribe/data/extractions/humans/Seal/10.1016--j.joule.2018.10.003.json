@@ -1,0 +1,173 @@
+{
+    "doi": "10.1016/j.joule.2018.10.003",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.15(FA0.83MA0.17)0.85Pb(I0.8Br0.2)3",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 25.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 17.8,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.8,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 79.4
+            },
+            "active_area": {
+                "value": 0.065
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": true,
+            "stability": {
+                "time": {
+                    "value": 900000.0,
+                    "unit": "s"
+                },
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                },
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 25.4,
+                    "unit": "%"
+                },
+                "PCE_after_1000_hours": {
+                    "value": 23.2,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 23.2,
+                    "unit": "%"
+                },
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "PTAA",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Cs0.15(FA0.83MA0.17)0.85Pb(I0.8Br0.2)3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": null,
+                            "method": "Spin-coating",
+                            "atmosphere": "Other",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": "toluene",
+                            "solution": {
+                                "compounds": [
+                                    "CsI",
+                                    "FAI",
+                                    "MAI",
+                                    "PbI2",
+                                    "PbBr2"
+                                ],
+                                "solutes": [
+                                    {
+                                        "name": "MACl",
+                                        "concentration": 3.0,
+                                        "concentration_unit": "wt%"
+                                    },
+                                    {
+                                        "name": "MAH2PO2",
+                                        "concentration": 0.3,
+                                        "concentration_unit": "wt%"
+                                    }
+                                ],
+                                "volume": null,
+                                "temperature": null,
+                                "solvents": [
+                                    {
+                                        "name": "DMF",
+                                        "volume_fraction": null
+                                    },
+                                    {
+                                        "name": "DMSO",
+                                        "volume_fraction": null
+                                    }
+                                ]
+                            },
+                            "additional_parameters": null
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "ICBA",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "SnO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "IZO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Cu",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "MgF2",
+                    "thickness": null,
+                    "functionality": "Other",
+                    "deposition": null,
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

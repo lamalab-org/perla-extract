@@ -1,0 +1,157 @@
+{
+    "doi": "10.1002/aenm.202303742",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 23.29,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 24.62,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.13,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 83.45
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": 1000,
+                "light_intensity": 100,
+                "temperature": 40,
+                "PCE_after_1000_hours": {
+                    "value": 18.632,
+                    "unit": "%"
+                },
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "MeO-BTBT",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Ag",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 24.53,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 24.87,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.16,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 85.28
+            },
+            "active_area": {
+                "value": 0.09
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "time": 1000,
+                "light_intensity": 100,
+                "PCE_after_1000_hours": {
+                    "value": 23.1,
+                    "unit": "%"
+                },
+                "potential_bias": "MPPT",
+                "temperature": 40
+            },
+            "layers": [
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "MeO-BTBT",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "Ag",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

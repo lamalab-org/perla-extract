@@ -1,0 +1,78 @@
+{
+    "doi": "10.1021/acs.chemmater.6b02744",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 9.7,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.0708
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "review_completed": true
+                },
+                {
+                    "name": "c-TiO2",
+                    "thickness": 60,
+                    "functionality": "Electron-transport",
+                    "review_completed": true
+                },
+                {
+                    "name": "mp-TiO2",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "review_completed": true
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "review_completed": true
+                },
+                {
+                    "name": "P3HT",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "review_completed": true
+                },
+                {
+                    "name": "Ag",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "review_completed": true
+                }
+            ]
+        }
+    ]
+}

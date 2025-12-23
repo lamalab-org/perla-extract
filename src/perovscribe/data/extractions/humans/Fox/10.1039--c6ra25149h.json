@@ -1,0 +1,191 @@
+{
+    "doi": "10.1039/c6ra25149h",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 9.14,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 15.93,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.99,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 59
+            },
+            "active_area": {
+                "value": 0.16
+            },
+            "device_architecture": "nip",
+            "number_devices": 20,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 35,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": 140,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 8.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 15.83,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 0.99,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 54
+            },
+            "active_area": {
+                "value": 0.16
+            },
+            "device_architecture": "nip",
+            "number_devices": 20,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 35,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": 140,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 8.28,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 14.07,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.02,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 58
+            },
+            "active_area": {
+                "value": 0.16
+            },
+            "device_architecture": "nip",
+            "number_devices": 20,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "FTO",
+                    "thickness": null,
+                    "functionality": "Substrate"
+                },
+                {
+                    "name": "TiO2",
+                    "thickness": 35,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "name": "CH3NH3PbI3",
+                    "thickness": 140,
+                    "functionality": "Absorber"
+                },
+                {
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "name": "Au",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

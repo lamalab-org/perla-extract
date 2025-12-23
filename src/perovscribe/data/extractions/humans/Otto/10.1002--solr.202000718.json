@@ -1,0 +1,1157 @@
+{
+    "doi": "10.1002/solr.202000718",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "MAPbBr2Cl",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "bromide",
+                        "molecular_formula": "Br",
+                        "coefficient": "2"
+                    },
+                    {
+                        "abbreviation": "Cl",
+                        "common_name": "chloride",
+                        "molecular_formula": "Cl",
+                        "coefficient": "1"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 2.27,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.4,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 10,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Cl:TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "atmosphere": "Ambient air"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "atmosphere": "Ambient air",
+                            "temperature": 150,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbBr2Cl1",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "CB dripping",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 25,
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": 60,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MABr",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CB",
+                                        "concentration": 0.25,
+                                        "concentration_unit": "Unknown"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MACl"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbCl2"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "LiTFSI and Co doping",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin caoting",
+                            "method": "spin coating",
+                            "atmosphere": "Unknown",
+                            "temperature": 25,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-OMETAD",
+                                        "concentration_unit": "Unknown"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "LiTFSI",
+                                        "concentration": 520,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Cobalt (III)",
+                                        "concentration": 300,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "4-tert-butylpyridine",
+                                        "concentration": 3,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ACN"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CB"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 20,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbBrCl2",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "bromide",
+                        "molecular_formula": "Br",
+                        "coefficient": "1"
+                    },
+                    {
+                        "abbreviation": "Cl",
+                        "common_name": "chloride",
+                        "molecular_formula": "Cl",
+                        "coefficient": "2"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 0.57,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.4,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 10,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Cl:TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "atmosphere": "Ambient air"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "atmosphere": "Ambient air",
+                            "temperature": 150,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbBr1Cl2",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "CB dripping",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 25,
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": 60,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MABr",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CB",
+                                        "concentration": 0.25,
+                                        "concentration_unit": "Unknown"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MACl"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbCl2"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "LiTFSI and Co doping",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin caoting",
+                            "method": "spin coating",
+                            "atmosphere": "Unknown",
+                            "temperature": 25,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-OMETAD",
+                                        "concentration_unit": "Unknown"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "LiTFSI",
+                                        "concentration": 520,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Cobalt (III)",
+                                        "concentration": 300,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "4-tert-butylpyridine",
+                                        "concentration": 3,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ACN"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CB"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 20,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbBr3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "bromide",
+                        "molecular_formula": "Br",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 6.92,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 6.31,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.4,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 78.3
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 1,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Cl:TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "atmosphere": "Ambient air"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "atmosphere": "Ambient air",
+                            "temperature": 150,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbBr3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "CB dripping",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 25,
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": 60,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MABr",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CB",
+                                        "concentration": 0.25,
+                                        "concentration_unit": "Unknown"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "LiTFSI and Co doping",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin caoting",
+                            "method": "spin coating",
+                            "atmosphere": "Unknown",
+                            "temperature": 25,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-OMETAD",
+                                        "concentration_unit": "Unknown"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "LiTFSI",
+                                        "concentration": 520,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Cobalt (III)",
+                                        "concentration": 300,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "4-tert-butylpyridine",
+                                        "concentration": 3,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ACN"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CB"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 20,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbCl3",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Cl",
+                        "common_name": "chloride",
+                        "molecular_formula": "Cl",
+                        "coefficient": "3"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 0.32,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0.28,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.65,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 69.44
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 1,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Cl:TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "atmosphere": "Ambient air"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "atmosphere": "Ambient air",
+                            "temperature": 150,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbCl3",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "CB dripping",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 25,
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": 60,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MACl",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbCl2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CB",
+                                        "concentration": 0.25,
+                                        "concentration_unit": "Unknown"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "LiTFSI and Co doping",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin caoting",
+                            "method": "spin coating",
+                            "atmosphere": "Unknown",
+                            "temperature": 25,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-OMETAD",
+                                        "concentration_unit": "Unknown"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "LiTFSI",
+                                        "concentration": 520,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Cobalt (III)",
+                                        "concentration": 300,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "4-tert-butylpyridine",
+                                        "concentration": 3,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ACN"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CB"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 20,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "MAPbBrCl2",
+                "a_ions": [
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "metyl amonium",
+                        "molecular_formula": "CH3NH3",
+                        "coefficient": "1"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "lead",
+                        "molecular_formula": "Pb",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "bromide",
+                        "molecular_formula": "Br",
+                        "coefficient": "1.5"
+                    },
+                    {
+                        "abbreviation": "Cl",
+                        "common_name": "chloride",
+                        "molecular_formula": "Cl",
+                        "coefficient": "1.5"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 1.08,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 0,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.4,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 0
+            },
+            "active_area": {
+                "value": 0.1
+            },
+            "device_architecture": "nip",
+            "number_devices": 10,
+            "averaged_quantites": true,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": null,
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Cl:TiO2",
+                    "thickness": 50,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "spin coating",
+                            "atmosphere": "Ambient air"
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "atmosphere": "Ambient air",
+                            "temperature": 150,
+                            "duration": 1800
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "MAPbBr1.5Cl1.5",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "additional_treatment": "CB dripping",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin coating",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": 25,
+                            "duration": 60,
+                            "solution": {
+                                "review_completed": true,
+                                "volume": null,
+                                "temperature": 60,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "MABr",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbBr2",
+                                        "concentration": 1,
+                                        "concentration_unit": "M"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CB",
+                                        "concentration": 0.25,
+                                        "concentration_unit": "Unknown"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "MACl"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "PbCl2"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "DMSO"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "review_completed": true,
+                            "step_name": "annealing",
+                            "method": "annealing",
+                            "atmosphere": "N2",
+                            "temperature": 100,
+                            "duration": 600
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Spiro-OMeTAD",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "LiTFSI and Co doping",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "spin caoting",
+                            "method": "spin coating",
+                            "atmosphere": "Unknown",
+                            "temperature": 25,
+                            "duration": 30,
+                            "solution": {
+                                "review_completed": true,
+                                "solutes": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "Spiro-OMETAD",
+                                        "concentration_unit": "Unknown"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "LiTFSI",
+                                        "concentration": 520,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "Cobalt (III)",
+                                        "concentration": 300,
+                                        "concentration_unit": "mg/mL"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "4-tert-butylpyridine",
+                                        "concentration": 3,
+                                        "concentration_unit": "vol%"
+                                    }
+                                ],
+                                "solvents": [
+                                    {
+                                        "review_completed": true,
+                                        "name": "ACN"
+                                    },
+                                    {
+                                        "review_completed": true,
+                                        "name": "CB"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Au",
+                    "thickness": 20,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "evaporation",
+                            "method": "thermal evaporation",
+                            "atmosphere": "Vacuum"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "Ag",
+                    "thickness": 80,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}

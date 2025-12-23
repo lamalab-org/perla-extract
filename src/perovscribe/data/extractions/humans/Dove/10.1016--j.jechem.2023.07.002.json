@@ -1,0 +1,70 @@
+{
+    "doi": "10.1016/j.jechem.2023.07.002",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "",
+                "a_ions": [],
+                "b_ions": [],
+                "x_ions": []
+            },
+            "pce": {
+                "value": 24.02,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 24.28,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.18,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 83.55
+            },
+            "active_area": {
+                "value": null
+            },
+            "device_architecture": "nip",
+            "number_devices": null,
+            "averaged_quantites": false,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                }
+            },
+            "encapsulated": true,
+            "stability": {
+                "time": {
+                    "value": 3600000.0,
+                    "unit": "s"
+                },
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                },
+                "temperature": {
+                    "value": 45.0,
+                    "unit": "\u00b0C"
+                },
+                "PCE_at_the_start_of_the_experiment": {
+                    "value": 24.02,
+                    "unit": "%"
+                },
+                "PCE_after_1000_hours": {
+                    "value": 21.02,
+                    "unit": "%"
+                },
+                "PCE_at_the_end_of_experiment": {
+                    "value": 21.02,
+                    "unit": "%"
+                },
+                "potential_bias": "MPPT"
+            },
+            "layers": null
+        }
+    ]
+}

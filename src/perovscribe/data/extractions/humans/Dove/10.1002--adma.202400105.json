@@ -1,0 +1,717 @@
+{
+    "doi": "10.1002/adma.202400105",
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.25FA0.7MA0.05Br0.6I2.4",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.25"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.7"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.05"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": null
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.6"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.4"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.06,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 19.96,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.23,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 81.84
+            },
+            "active_area": {
+                "value": 0.07
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Sputtering",
+                            "method": "Sputtering"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiO",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Me-4PACz",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "Self-assembled monolayers (SAMs)"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Blade coating",
+                            "method": "Blade coating",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": null,
+                            "review_completed": true
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "SnO2",
+                    "thickness": 20,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "ALD",
+                            "method": "ALD"
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "review_completed": true,
+                            "step_name": "Sputtering",
+                            "method": "Sputtering"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.25FA0.7MA0.05Br0.6I2.4",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.25"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.7"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.05"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": null
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.6"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.4"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 20.8,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.95,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.24,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 83.31
+            },
+            "active_area": {
+                "value": 0.07
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "time": 500,
+                "light_intensity": 100,
+                "humidity": 30,
+                "temperature": 40,
+                "PCE_at_the_start_of_the_experiment": 1,
+                "PCE_at_the_end_of_experiment": 1,
+                "potential_bias": "MPPT"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiO",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Me-4PACz",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "Self-assembled monolayers (SAMs)"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Blade coating",
+                            "method": "Blade coating",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": null,
+                            "review_completed": true
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Cu",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.25FA0.7MA0.05Br0.6I2.4",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.25"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.7"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.05"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": null
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.6"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.4"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 19.63,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.15,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.26,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 76.98
+            },
+            "active_area": {
+                "value": 1.02
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiO",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Me-4PACz",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "Self-assembled monolayers (SAMs)"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Blade coating",
+                            "method": "Blade coating",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": null,
+                            "review_completed": true
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Cu",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.25FA0.7MA0.05Br0.6I2.4",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.25"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.7"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.05"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": null
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.6"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.4"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 22.55,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 21.05,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.25,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 84.34
+            },
+            "active_area": {
+                "value": 0.07
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiO",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Me-4PACz",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "Self-assembled monolayers (SAMs)"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Blade coating",
+                            "method": "Blade coating",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": null,
+                            "review_completed": true
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Cu",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.25FA0.7MA0.05Br0.6I2.4",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium ion",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.25"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.7"
+                    },
+                    {
+                        "abbreviation": "MA",
+                        "common_name": "Methylammonium",
+                        "molecular_formula": "CH6N+",
+                        "coefficient": "0.05"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": null
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.6"
+                    },
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.4"
+                    }
+                ]
+            },
+            "pce": {
+                "value": 19.4,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 20.88,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.22,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 77.54
+            },
+            "active_area": {
+                "value": 0.07
+            },
+            "device_architecture": "pin",
+            "number_devices": null,
+            "averaged_quantites": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "light_intensity": 100
+            },
+            "encapsulated": null,
+            "stability": {
+                "review_completed": true,
+                "potential_bias": "Unknown"
+            },
+            "layers": [
+                {
+                    "review_completed": true,
+                    "name": "SLG",
+                    "functionality": "Substrate"
+                },
+                {
+                    "review_completed": true,
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact"
+                },
+                {
+                    "review_completed": true,
+                    "name": "NiO",
+                    "thickness": null,
+                    "functionality": "Hole-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Me-4PACz",
+                    "thickness": null,
+                    "functionality": "Hole-transport",
+                    "additional_treatment": "Self-assembled monolayers (SAMs)"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Perovskite",
+                    "thickness": null,
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Blade coating",
+                            "method": "Blade coating",
+                            "atmosphere": "Unknown",
+                            "temperature": null,
+                            "duration": null,
+                            "review_completed": true
+                        }
+                    ]
+                },
+                {
+                    "review_completed": true,
+                    "name": "C60",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "BCP",
+                    "thickness": null,
+                    "functionality": "Electron-transport"
+                },
+                {
+                    "review_completed": true,
+                    "name": "Cu",
+                    "thickness": null,
+                    "functionality": "Contact"
+                }
+            ]
+        }
+    ]
+}
