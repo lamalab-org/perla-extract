@@ -14,6 +14,7 @@ import numpy as np
 from pydantic import ValidationError
 
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
+from perovscribe.papersbot.utils import get_doi_summary
 from perovscribe.preprocessing.preprocessor import Preprocessor
 from perovscribe.postprocessing import postprocess
 from perovscribe.evaluations import Evaluations, score_multiple_extractions
@@ -78,19 +79,19 @@ def read_csv_to_dict(filepath):
         reader = csv.DictReader(csvfile)
         return [row for row in reader]
 
-
 def get_doi_crossref_data(doi):
     url = f"https://api.crossref.org/works/{doi}"
     try:
         response = requests.get(url, timeout=10)
+
         response.raise_for_status()
         data = response.json()["message"]
         journal = data.get("container-title", ["Unknown Journal"])[0]
         publisher = data.get("publisher", "Unknown Publisher")
         title = data.get("title", "")[0]
-        abstract = data.get("abstract", "")
+        abstract = data.get("abstract", None) or get_doi_summary(doi).get("abstract", "")
         return title, abstract, journal, publisher
-    except Exception as e:
+    except requests.exceptions.HTTPError as e:
         print(f"Error fetching DOI {doi}: {e}")
         return None, None, None, None
 
@@ -145,12 +146,12 @@ class ExtractionPipeline:
 
     def _extract_pdf(self, filepath: Path, output_path: Path) -> bool:
         doi = filepath.stem.replace("--", "/")
-        if not self.is_doi_good_to_go(doi):
+        pdf_text = self.preprocessor.pdf_to_text(filepath)
+        if not self.is_doi_good_to_go(doi, pdf_text):
             print(f"This DOI {doi} will be skipped.")
             return False
 
         print("Extracting:", doi)
-        pdf_text = self.preprocessor.pdf_to_text(filepath)
         results = ""
         try:
             results, completion_usage = llm_call.create_text_completion(self.model_name, pdf_text)
@@ -170,7 +171,8 @@ class ExtractionPipeline:
 
         return False
 
-    def is_doi_good_to_go(self, doi) -> bool:
+
+    def is_doi_good_to_go(self, doi, pdf_text) -> bool:
         def remove_conjunctions(text):
             # Convert to lowercase
             text = text.lower()
@@ -215,63 +217,135 @@ class ExtractionPipeline:
 
             return True
         
-        def non_solar_filter(title, abstract):
+        def extract_words(text):
+            # 1. Remove HTML tags (e.g., <a href="...">)
+            text = re.sub(r"<[^>]+>", " ", text)
+
+            # 2. Normalize whitespace
+            text = re.sub(r"\s+", " ", text).strip()
+
+            # 3. Extract words (letters, numbers, underscores)
+            words = re.findall(r"\b\w+\b", text)
+
+            return words
+
+
+        def word_count(text):
+            return len(extract_words(text))
+
+        def non_solar_filter(text):
             non_solar_keywords = {
-                'LED': [r'\bLED\b', r'light.?emitting diode', r'electroluminescen'],
+                'LED': [r'\bLED\b', r'light\s*-?\s*emitting\s+diode', r'electroluminescen\w*'],
                 'Battery': [r'\bbattery\b', r'energy storage', r'rechargeable'],
-                'Photodetector': [r'photodetector', r'X.?ray detector'],
-                'Catalyst': [r'catalys', r'water splitting', r'hydrogen evolution'],
-                'Other': [r'sensor', r'transistor', r'laser', r'memory', r'thermoelectric', r'capacitor']
+                'Photodetector': [r'photodetector', r'X\s*-?\s*ray detector'],
+                'Catalyst': [r'catalys\w*',r'photocatalys\w*',r'water splitting',r'hydrogen evolution'],
+                'Other': [r'sens\w*',r'sensor',r'transistor',r'laser',r'memory',r'thermoelectric',r'capacitor']
             }
-            solar_cell_keywords = [r'solar cell', r'photovoltaic', r'\bPV\b', r'\bPSC\b', r'\bPCE\b']
+
+            solar_cell_keywords = [
+                r'solar cell',
+                r'photovoltaic',
+                r'\bPV\b',
+                r'\bPSC\b',
+                r'\bPCE\b'
+            ]
 
             # Compile patterns
-            # Flatten all exclusion lists into one big regex
-            all_exclusions = [p for sublist in non_solar_keywords.values() for p in sublist]
-            exclude_pattern = re.compile('|'.join(all_exclusions), re.IGNORECASE)
-            
-            # Compile inclusion pattern
-            include_pattern = re.compile('|'.join(solar_cell_keywords), re.IGNORECASE)
+            exclude_patterns = [
+                re.compile(p, re.IGNORECASE)
+                for sublist in non_solar_keywords.values()
+                for p in sublist
+            ]
 
-            # 2. logic: (Has Bad Word) AND (Does NOT have Good Word)
-            has_bad_keyword = exclude_pattern.search(title + " " + abstract)
-            is_solar_cell = include_pattern.search(title + " " + abstract)
+            include_patterns = [
+                re.compile(p, re.IGNORECASE)
+                for p in solar_cell_keywords
+            ]
 
-            return not has_bad_keyword and is_solar_cell
+            # Count matches
+            non_solar_count = sum(
+                len(p.findall(text)) for p in exclude_patterns
+            )
+
+            solar_count = sum(
+                len(p.findall(text)) for p in include_patterns
+            )
+
+            # Decision rule:
+            # 1. Must mention solar at least once
+            # 2. Solar mentions must be >= non-solar mentions
+            return solar_count > 0 and solar_count >= non_solar_count
         
-        def theory_filter(title, abstract):
+        def theory_filter(text):
             theory_keywords = [
                 r'\bDFT\b', r'\bSCAPS\b', r'\bSCAPS-1D\b', r'density functional', r'first.?principles', 
                 r'ab.?initio', r'molecular dynamics', r'\bMD\b simulation', r'VASP', r'Gaussian', 
                 r'Quantum ESPRESSO', r'CASTEP', r'SIESTA', r'computational study', r'theoretical study', 
-                r'theoretical investigation', r'numerical simulation', r'device simulation', 
-                r'theoretical analysis', r'computational analysis', r'theoretical modeling', 
-                r'computational modeling', r'simulated', r'simulation of', r'wxAMPS', r'AMPS-1D', 
+                r'theoretical investigation', r'numerical simulation', r'numerical investigation', r'device simulation', 
+                r'theoretical analysis', r'computational analysis', r'theoretical modell?ing', 
+                r'computational modell?ing', r'simulated', r'simulation of', r'wxAMPS', r'AMPS-1D', 
                 r'PC1D', r'AFORS-HET', r'theoretical optimization', r'computational optimization',
+                r'numerical modeling',
                 r'simulated performance', r'theoretical efficiency', r'predicted efficiency',
+                r'simulation', r'\bMD\b.*simulation', r'\bMD\b.*simulation',
+                # --- Machine Learning / AI ---
+                r'machine learning', r'\bML\b',
+                r'deep learning', r'\bDL\b',
+                r'artificial intelligence', r'\bAI\b',
+                r'neural network', r'neural networks', r'\bNN\b', r'\bANN\b',
+                r'convolutional neural network', r'\bCNN\b',
+                r'recurrent neural network', r'\bRNN\b',
+                r'graph neural network', r'\bGNN\b',
+                r'support vector machine', r'\bSVM\b',
+                r'random forest', r'decision tree',
+                r'k[- ]?nearest neighbors?', r'\bKNN\b',
+                r'Gaussian process', r'\bGP\b',
+                r'data[- ]?driven',
+                r'surrogate model', r'meta[- ]?model',
+                r'predictive model', r'statistical learning',
+                r'learning[- ]?based',
+                r'model training', r'model prediction',
+                r'feature engineering', r'dimensionality reduction',
             ]
             pattern = re.compile('|'.join(theory_keywords), re.IGNORECASE)
-
-            return not pattern.search(title + " " + abstract)
+            match = pattern.search(text)
+            return match is None
         
-        def review_article_filter(title, abstract):
+        def review_article_filter(text):
             review_patterns = [
                 r'^Review\b', r'^Perspective\b', r'^Overview\b', r'^Outlook\b', r'^Minireview\b',
                 r'^Critical [Rr]eview\b', r': [Aa] [Rr]eview\b', r': [Aa] [Pp]erspective\b',
                 r'\b[Rr]eview of\b', r'\b[Rr]eview on\b', r'^Progress in\b', r'^Recent [Aa]dvances\b',
-                r'^Advances in\b', r'^State of the art\b', r'^Current status\b'
+                r'^Advances in\b', r'^State of the art\b', r'^Current status\b',
+                # Explicit review types
+                r'\b(review|minireview|perspective|overview)\b',
+                r'\bcritical review\b',
+                r'\bstate[- ]of[- ]the[- ]art\b',
+                r'\bis (discussed|reviewed|summarized|outlined)\b',
+                r'\bare reviewed\b',
+                r'\bwe review\b',
+                r'\bthis (review|work) reviews\b',
             ]
             pattern = re.compile('|'.join(review_patterns), re.IGNORECASE)
-            is_review_article = pattern.search(title + " " + abstract)
+            is_review_article = pattern.search(text)
             return not is_review_article
 
 
         title, abstract, journal, publisher = get_doi_crossref_data(doi)
 
-        if title is None:
-            return False
+        if abstract is None:
+            abstract = ""
 
-        return journal_filter(journal, publisher) and theory_filter(title, abstract) and non_solar_filter(title, abstract) and review_article_filter(title, abstract)
+        if word_count(abstract) < 100:
+            
+            text_to_filter = pdf_text[:int(len(pdf_text) * 0.05)]
+        else:
+            text_to_filter = title+" "+abstract   
+
+        if journal is None:
+            return theory_filter(text_to_filter) and non_solar_filter(text_to_filter) and review_article_filter(text_to_filter)
+        
+        return journal_filter(journal, publisher) and theory_filter(text_to_filter) and non_solar_filter(text_to_filter) and review_article_filter(text_to_filter)
 
     def _run_single_pdf(self, filepath: Path, output_dir: Path):
         output_path = output_dir / f"{filepath.stem}.json"

@@ -1,6 +1,5 @@
 import requests
 import os
-from wiley_tdm import TDMClient
 
 import requests
 import json
@@ -9,8 +8,28 @@ from typing import Dict, Any
 from loguru import logger
 import os
 
-UNPAYWALL_EMAIL = os.environ["UNPAYWALL_EMAIL"]
-tdm = TDMClient()
+
+def get_doi_summary(doi: str) -> dict:
+    """
+    Fetches paper metadata from various sources using its DOI.
+    Args:
+        doi: The Digital Object Identifier (DOI) of the paper.
+    Returns:
+        A dictionary with metadata or an error message string.
+    """
+    doi = doi.lower().strip()
+    summaries = {"crossref": {}, "openalex": {}, "semantic_scholar": {}}
+    doi_summary_funcs = {
+        "crossref": get_doi_summary_crossref,
+        "openalex": get_doi_summary_openalex,
+        "semantic_scholar": get_doi_summary_semantic_scholar,
+    }
+    for source in ["crossref", "openalex", "semantic_scholar"]:
+        summary = doi_summary_funcs[source](doi)
+        summaries[source] = summary
+        if "error" not in summary and summary.get("abstract", "") != "":
+            return summary
+    return {}
 
 def get_doi_summary_crossref(doi: str) -> dict:
     """
@@ -38,6 +57,7 @@ def get_doi_summary_crossref(doi: str) -> dict:
                 ],
                 "published": work.get("published-print", {}).get("date-parts", [[]])[0],
                 "journal": work.get("container-title", [""])[0],
+                "publisher": work.get("publisher", ""),
                 "doi": work.get("DOI", ""),
                 "source": "crossref",
             }
@@ -72,7 +92,9 @@ def get_doi_summary_openalex(doi: str) -> dict:
             ]
 
             # Journal (called 'source' in OpenAlex)
-            journal = data.get("host_venue", {}).get("display_name")
+            source=data.get('primary_location',{}).get('source',{})
+            journal = source.get("display_name", "")
+            publisher = source.get("host_organization_name","")
 
             # Publication Date
             published_date = data.get("publication_date")
@@ -82,6 +104,7 @@ def get_doi_summary_openalex(doi: str) -> dict:
                 "abstract": abstract,
                 "authors": authors,
                 "journal": journal,
+                "publisher": publisher,
                 "published_date": published_date,
                 "doi": doi,
                 "source": "openalex",
@@ -129,6 +152,7 @@ def get_doi_summary_semantic_scholar(doi: str, api_key: str = "") -> dict:
                 "abstract": abstract,
                 "authors": [author["name"] for author in data.get("authors", [])],
                 "journal": journal,
+                "publisher": "",
                 "published_date": data.get("publicationDate", ""),
                 "doi": doi,
                 "source": "semantic_scholar",
@@ -169,7 +193,7 @@ def get_doi(entry):
         return f"error getting doi: {e}"
 
 
-def get_pdf_url(doi: str) -> str|None:
+def get_pdf_url(doi: str) -> tuple[bool, str|None]:
     """
     Fetches the PDF URL using multiple services in order: Unpaywall, OpenAlex.
 
@@ -179,18 +203,16 @@ def get_pdf_url(doi: str) -> str|None:
     Returns:
         str: The PDF URL if available, otherwise None.
     """
-    pdf_url = get_pdf_url_unpaywall(doi)
-    if pdf_url and "Error fetching data" not in pdf_url:
-        return pdf_url
-    return_msg = pdf_url if pdf_url else ""
-    pdf_url = get_pdf_url_openalex(doi)
-    if pdf_url and "Error fetching data" not in pdf_url:
-        return pdf_url
-    return_msg += pdf_url if pdf_url else ""
+    return_msg = ""
+    for get_pdf_url_func in [get_pdf_url_unpaywall, get_pdf_url_openalex]:
+        error, pdf_url = get_pdf_url_func(doi)
+        if pdf_url and not error:
+            return error, pdf_url
+        return_msg += pdf_url if pdf_url else ""
     logger.error(f"No PDF available for this DOI: {doi}.")
-    return return_msg if return_msg else None
+    return error, return_msg if return_msg else None
 
-def get_pdf_url_unpaywall(doi: str) -> str|None:
+def get_pdf_url_unpaywall(doi: str) -> tuple[bool, str|None]:
     """
     Fetches the PDF URL from Unpaywall using the provided DOI.
 
@@ -213,16 +235,16 @@ def get_pdf_url_unpaywall(doi: str) -> str|None:
             and data.get("best_oa_location")
             and data["best_oa_location"].get("url_for_pdf", None)
         ):
-            return data["best_oa_location"].get("url_for_pdf")
+            return False, data["best_oa_location"].get("url_for_pdf")
         else:
             logger.error(f"Unpaywall:No PDF available for this DOI: {doi}.")
-            return None
+            return False, None
 
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching data from Unpaywall: {e}")
-        return f"Error fetching data from Unpaywall: {e}"
+        return True, f"Error fetching data from Unpaywall: {e}"
 
-def get_pdf_url_openalex(doi: str) -> str|None:
+def get_pdf_url_openalex(doi: str) -> tuple[bool, str|None]:
     doi = doi.lower().strip()
     try:
         api_url = f"https://api.openalex.org/works/https://doi.org/{doi}"
@@ -233,13 +255,13 @@ def get_pdf_url_openalex(doi: str) -> str|None:
         and data["best_oa_location"].get("is_oa")
         and data["best_oa_location"].get("pdf_url", None)
              ):
-            return data["best_oa_location"].get("pdf_url")
+            return False, data["best_oa_location"].get("pdf_url")
         else:
             logger.error(f"Openalex: No PDF available for this DOI : {doi}")
-            return None
+            return False, None
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching data from Openalex: {e}")
-        return f"Error fetching data from Openalex: {e}"
+        return True, f"Error fetching data from Openalex: {e}"
 
 
 HEADERS = {
@@ -281,9 +303,6 @@ def download_pdf(url: str, filepath: str):
     except Exception as e:
         # Handles any other unexpected errors
         logger.error(f"An unexpected error occurred: {e} for url: {url}\n")
-
-def download_pdf_wiley(doi):
-    tdm.download_pdf(doi)
 
 
 

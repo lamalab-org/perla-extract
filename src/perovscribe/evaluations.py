@@ -229,10 +229,11 @@ class Evaluations:
         for key, tolerance in tolerances.items():
             if self._is_key_extractable(key, flat_extraction, flat_truth):
                 is_correct = self._is_value_correct(
-                    flat_truth[key], flat_extraction[key], tolerance, abs_tolerance=True
+                    flat_truth[key], flat_extraction[key], tolerance, abs_tolerance=True, key=key, per_key_metrics=per_key_metrics
                 )
                 found.append(is_correct)
                 self._update_precision_metrics(key, is_correct, per_key_metrics)
+                per_key_metrics[key]["scoring_method"] = "float | abstol("+str(tolerance)+")"
 
         # Check all other keys
         for key in flat_truth:
@@ -243,7 +244,7 @@ class Evaluations:
 
             if self._is_key_extractable(key, flat_extraction, flat_truth):
                 is_correct = self._is_value_correct(
-                    flat_truth[key], flat_extraction[key]
+                    flat_truth[key], flat_extraction[key], key=key_for_stats, per_key_metrics=per_key_metrics
                 )
 
                 # Use LLM judge for string comparisons that failed initial check
@@ -512,6 +513,8 @@ class Evaluations:
         extract: Any,
         tolerance: float = 0.01,
         abs_tolerance: bool = False,
+        key="NO-KEY",
+        per_key_metrics=defaultdict(lambda: defaultdict(float))
     ) -> bool:
         """Check if extracted value matches truth within tolerance."""
         if isinstance(truth, (int, float)):
@@ -519,17 +522,22 @@ class Evaluations:
             try:
                 if abs_tolerance:
                     np.testing.assert_allclose(extract, truth, atol=tolerance)
+                    per_key_metrics[key]["scoring_method"] = "float | abstol("+str(tolerance)+")"
                 else:
                     np.testing.assert_allclose(extract, truth, rtol=tolerance)
+                    per_key_metrics[key]["scoring_method"] = "float | reltol("+str(tolerance)+")"
                 return True
             except AssertionError:
                 return False
 
         elif type(truth) is not type(extract):
+            per_key_metrics[key]["scoring_method"] = "type check"
             return False
         elif isinstance(truth, str):
+            per_key_metrics[key]["scoring_method"] = "exact match"
             return truth.lower() == extract.lower()
 
+        per_key_metrics[key]["scoring_method"] = "exact match"
         return truth == extract
 
     def _is_key_extractable(
