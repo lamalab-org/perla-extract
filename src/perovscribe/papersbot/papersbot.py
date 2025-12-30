@@ -181,23 +181,51 @@ class PapersBot:
                 self.printStats()
 
 
-def run_papersbot():
-    if not os.path.isfile(f"{papersbot_runs_path}/summaries.pkl"):
-        with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
-            pickle.dump({}, f)
-    bot = PapersBot(False)
-    bot.run()
-    bot.printStats(update_current=False)
+def run_papersbot(download_dir: str = "downloaded_papers"):
+    """Run the complete papersbot workflow.
+    
+    Args:
+        download_dir: Directory to download PDFs to
+        
+    Returns:
+        PapersbotResult with execution results
+    """
+    from perovscribe.pipeline import PapersbotResult
+    
+    try:
+        if not os.path.isfile(f"{papersbot_runs_path}/summaries.pkl"):
+            with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
+                pickle.dump({}, f)
+        
+        bot = PapersBot(False)
+        bot.run()
+        papers_found = bot.total_matched
+        bot.printStats(update_current=False)
 
-    get_abstracts()
-    check_matches()
-    check_pdfs()
-    with open(f"{papersbot_runs_path}/stats.txt", "a+") as f:
-        print(
-            "************************************************************\n************************************************************\n",
-            file=f,
+        get_abstracts()
+        check_matches()
+        check_pdfs()
+        with open(f"{papersbot_runs_path}/stats.txt", "a+") as f:
+            print(
+                "************************************************************\n************************************************************\n",
+                file=f,
+            )
+        
+        # Download PDFs and get results
+        downloaded_files = download_pdfs(download_dir=download_dir)
+        pdfs_downloaded = len([f for f in downloaded_files if f.exists()])
+        
+        return PapersbotResult(
+            success=True,
+            papers_found=papers_found,
+            pdfs_downloaded=pdfs_downloaded,
+            downloaded_files=downloaded_files
         )
-    download_pdfs()
+    except Exception as e:
+        return PapersbotResult(
+            success=False,
+            error=f"Papersbot workflow failed: {str(e)}"
+        )
 
 
 if __name__ == "__main__":

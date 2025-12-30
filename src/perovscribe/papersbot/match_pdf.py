@@ -5,6 +5,8 @@ import pandas as pd
 import time
 import json
 import os
+from pathlib import Path
+from typing import List
 from loguru import logger
 
 def check_matches():
@@ -91,36 +93,59 @@ def check_pdfs():
         json.dump(old_found_urls, f, indent=4)
     
 
-def download_pdfs():
+def download_pdfs(download_dir: str = "downloaded_papers") -> List[Path]:
     """
     Download PDFs from the found URLs.
+    
+    Args:
+        download_dir: Directory to download PDFs to
+        
+    Returns:
+        List of Path objects for downloaded files
     """
-    os.makedirs("downloads", exist_ok=True)
-    with open(f"{papersbot_runs_path}/found_pdf_urls.json", "r") as f:
-        found_urls = json.load(f)
+    download_path = Path(download_dir)
+    download_path.mkdir(parents=True, exist_ok=True)
+    
+    downloaded_files = []
+    
+    try:
+        with open(f"{papersbot_runs_path}/found_pdf_urls.json", "r") as f:
+            found_urls = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.error(f"Error reading found_pdf_urls.json: {e}")
+        return downloaded_files
+    
     for i, item in enumerate(found_urls):
         if 'processed' in item and item['processed']:
             continue
         doi = item["doi"]
         doi = doi.lower().strip()
         pdf_url = item["pdf_url"]
-        # Define a filepath for the downloaded PDF
-        filepath = f"downloaded_papers/{doi.replace('/', '--')}.pdf"
+        # Use consistent '--' replacement for DOI
+        filepath = download_path / f"{doi.replace('/', '--')}.pdf"
         logger.info(f"Downloading PDF for {doi}: {filepath}")
-        if os.path.isfile(filepath):
+        
+        if filepath.exists():
             logger.warning(f"File {filepath} already exists. Skipping download.")
-            continue
+            downloaded_files.append(filepath)
         else:
-            download_pdf(pdf_url, filepath)
-        # if "wiley" in pdf_url:
-        #     wiley_filepath = f"download/{doi.replace('/', '-')}.pdf"
-        #     download_pdf_wiley(doi)
-        #     if os.path.isfile(wiley_filepath):
-        #         os.rename(wiley_filepath, filepath)
+            try:
+                download_pdf(pdf_url, str(filepath))
+                if filepath.exists():
+                    downloaded_files.append(filepath)
+            except Exception as e:
+                logger.error(f"Error downloading {doi}: {e}")
+        
         found_urls[i]['processed'] = True
-        found_urls[i]['downloaded'] = os.path.isfile(filepath)
-    with open(f"{papersbot_runs_path}/found_pdf_urls.json", "w") as f:
-        json.dump(found_urls, f, indent=4)
+        found_urls[i]['downloaded'] = filepath.exists()
+    
+    try:
+        with open(f"{papersbot_runs_path}/found_pdf_urls.json", "w") as f:
+            json.dump(found_urls, f, indent=4)
+    except Exception as e:
+        logger.error(f"Error writing found_pdf_urls.json: {e}")
+    
+    return downloaded_files
 
 if __name__ == "__main__":
     check_matches()

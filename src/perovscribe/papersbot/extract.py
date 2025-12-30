@@ -26,7 +26,7 @@ def extract_from_pdfs():
         # Define a filepath for the downloaded PDF
         if 'extraction_processed' in item and item['extraction_processed']:
             continue
-        filepath = f"downloaded_papers/{doi.replace('/', '-')}.pdf"
+        filepath = f"downloaded_papers/{doi.replace('/', '--')}.pdf"
         if os.path.isfile(filepath):
             logger.info(f"Running extraction for {doi}: {filepath}")
             try:

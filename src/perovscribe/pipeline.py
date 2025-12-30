@@ -1,5 +1,6 @@
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, List
+from dataclasses import dataclass
 import os
 import json
 import glob
@@ -29,6 +30,20 @@ from perovscribe.export import (
 from instructor.exceptions import InstructorRetryException, IncompleteOutputException
 
 pdf2doi.config.set("verbose", False)
+
+
+@dataclass
+class PapersbotResult:
+    """Result from papersbot execution."""
+    success: bool
+    papers_found: int = 0
+    pdfs_downloaded: int = 0
+    downloaded_files: List[Path] = None
+    error: Optional[str] = None
+    
+    def __post_init__(self):
+        if self.downloaded_files is None:
+            self.downloaded_files = []
 
 
 def calc_precision(per_key_metrics, key):
@@ -601,15 +616,31 @@ def optimizer(model_name: str = "claude-sonnet-4-20250514", output: str = "./"):
     # OptimizationPipeline(model_name).run(filepath)
 
 
-def papersbot():
+def papersbot(download_dir: str = "./downloaded_papers") -> PapersbotResult:
+    """Run papersbot workflow to download papers.
+    
+    Args:
+        download_dir: Directory to download PDFs to (default: "./downloaded_papers")
+        
+    Returns:
+        PapersbotResult with execution status and results
+    """
     if "UNPAYWALL_EMAIL" not in os.environ:
-        print(
-            "You need to provide your email for unpaywall API. Set this env variable: export UNPAYWALL_EMAIL=<your-email>"
+        return PapersbotResult(
+            success=False,
+            error="UNPAYWALL_EMAIL environment variable not set"
         )
-        return
-    from perovscribe.papersbot import papersbot
-
-    papersbot.run_papersbot()
+    
+    try:
+        from perovscribe.papersbot import papersbot as papersbot_module
+        # Pass download_dir to the module
+        result = papersbot_module.run_papersbot(download_dir=download_dir)
+        return result
+    except Exception as e:
+        return PapersbotResult(
+            success=False,
+            error=f"Papersbot execution failed: {str(e)}"
+        )
 
 
 def evaluate(
@@ -640,14 +671,24 @@ class CLI:
 
     def __call__(self, *args, **kwargs):
         """Default behavior when no command is specified."""
-
-        Path("./downloaded_papers/").mkdir(parents=True, exist_ok=True)
-        # Download PDFs
-        papersbot()
-        # Extract them
-        extract("./downloaded_papers")
+        download_path = Path(download_dir).resolve()
+        download_path.mkdir(parents=True, exist_ok=True)
+        
+        # Run papersbot
+        result = papersbot(download_dir=str(download_path))
+        
+        if not result.success:
+            print(f"Papersbot failed: {result.error}")
+            return
+        
+        print(f"Found {result.papers_found} papers, downloaded {result.pdfs_downloaded} PDFs")
+        
+        # Extract them if PDFs were downloaded
+        if result.pdfs_downloaded > 0:
+            extract(str(download_path))
+        
         # Delete all PDFs
-        files = glob.glob("./downloaded_papers/*.pdf")
+        files = glob.glob(f"{download_path}/*.pdf")
         for f in files:
             os.remove(f)
 
