@@ -207,5 +207,4 @@ def complete_solar_cell_dict(partial_data):
     Takes a partially filled solar cell dictionary and fills in missing keys with None values.
     """
     template = get_empty_template()
-    # TODO Make loop here for all cells so normalize can be ran on this. concentration_unit needs to be handled.
     return merge_dicts(template, partial_data)

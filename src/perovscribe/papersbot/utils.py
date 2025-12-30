@@ -1,6 +1,5 @@
 import requests
 import os
-from wiley_tdm import TDMClient
 
 import requests
 import json
@@ -9,8 +8,28 @@ from typing import Dict, Any
 from loguru import logger
 import os
 
-UNPAYWALL_EMAIL = os.environ["UNPAYWALL_EMAIL"]
-tdm = TDMClient()
+
+def get_doi_summary(doi: str) -> dict:
+    """
+    Fetches paper metadata from various sources using its DOI.
+    Args:
+        doi: The Digital Object Identifier (DOI) of the paper.
+    Returns:
+        A dictionary with metadata or an error message string.
+    """
+    doi = doi.lower().strip()
+    summaries = {"crossref": {}, "openalex": {}, "semantic_scholar": {}}
+    doi_summary_funcs = {
+        "crossref": get_doi_summary_crossref,
+        "openalex": get_doi_summary_openalex,
+        "semantic_scholar": get_doi_summary_semantic_scholar,
+    }
+    for source in ["crossref", "openalex", "semantic_scholar"]:
+        summary = doi_summary_funcs[source](doi)
+        summaries[source] = summary
+        if "error" not in summary and summary.get("abstract", "") != "":
+            return summary
+    return {}
 
 def get_doi_summary(doi: str) -> dict:
     """
@@ -306,9 +325,6 @@ def download_pdf(url: str, filepath: str):
     except Exception as e:
         # Handles any other unexpected errors
         logger.error(f"An unexpected error occurred: {e} for url: {url}\n")
-
-def download_pdf_wiley(doi):
-    tdm.download_pdf(doi)
 
 
 
