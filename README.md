@@ -2,7 +2,7 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-**Perovscribe** is an AI-powered tool for extracting structured data about perovskite solar cells from scientific papers. It uses large language models (LLMs) to automatically extract device parameters, material compositions, performance metrics, and other relevant information from PDF documents.
+**Perovscribe** is a tool for extracting structured data about perovskite solar cells from scientific papers. It uses large language models (LLMs) to automatically extract device parameters, material compositions, performance metrics, and other relevant information from PDF documents.
 
 ## Features
 
