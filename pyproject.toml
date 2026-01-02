@@ -11,6 +11,7 @@ authors = [
     { name = "Sherjeel Shabih", email = "sherjeel.shabih@hu-berlin.de" },
     { name = "Pepe Marquez", email = "jose.marquez@physik.hu-berlin.de" },
     { name = "Kevin Jablonka", email = "mail@kjablonka.com" },
+    { name = "Sharat Patil", email = "sharat.patil@physik.hu-berlin.de" },
 ]
 requires-python = ">=3.10"
 classifiers = [

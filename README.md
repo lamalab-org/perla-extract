@@ -171,7 +171,7 @@ Each device/cell is uploaded as a separate NOMAD entry with automatic format con
 - **Sherjeel Shabih** - sherjeel.shabih@hu-berlin.de
 - **Pepe Marquez** - jose.marquez@physik.hu-berlin.de
 - **Kevin Jablonka** - mail@kjablonka.com
-TODO: add authors
+- **Sharat Patil** - sharat.patil@physik.hu-berlin.de
 
 ## Citation
 
