@@ -484,11 +484,29 @@ def papersbot():
     papersbot.run_papersbot()
 
 
+def evaluate(
+    extraction_dir: str,
+    truth_dir: str,
+    model_name: str = "claude-sonnet-4-20250514",
+):
+    """Evaluate extraction results against ground truth.
+    
+    Args:
+        extraction_dir: Directory containing extraction JSON files
+        truth_dir: Directory containing ground truth JSON files
+        model_name: Model name (used for consistency, not for extraction)
+    """
+    ExtractionPipeline(
+        model_name, "pymupdf", "NONE", "", False, False, None
+    ).run(extraction_dir, truth_dir)
+
+
 class CLI:
     """Command line interface for extraction and optimization."""
 
     def __init__(self):
         self.extract = extract
+        self.evaluate = evaluate
         self.optimizer = optimizer
         self.papersbot = papersbot
 
