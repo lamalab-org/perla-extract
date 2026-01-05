@@ -3,6 +3,7 @@ from litellm import completion
 import instructor
 from litellm.caching.caching import Cache
 from perovscribe.preprocessing.preprocessor import Preprocessor
+from importlib.resources import files
 from perovscribe.postprocessing import postprocess
 import json
 import os
@@ -111,7 +112,7 @@ def extract_all_for_prompt(prompt, model_name, output):
     output_folder = output + os.sep + model_name
     Path(output_folder).mkdir(parents=True, exist_ok=True)
     preprocessor = Preprocessor("pymupdf", cache_dir_root="", use_cache=True)
-    filepath = "../../../selecting_papers/15_pdfs/selected_training_set"
+    filepath = files("perovscribe").joinpath("data/dev")
     og_prompt = prompt
     for file in [x for x in os.listdir(filepath) if x.endswith(".pdf")]:
         output = (
@@ -133,7 +134,7 @@ def extract_all_for_prompt(prompt, model_name, output):
 
 def score_all(model_name, output):
     filepath = output + os.sep + model_name
-    truthpath = "../../15_selected_papers"
+    truthpath = files("perovscribe").joinpath("data/test")
     truth_extraction_pairs = []
     for file in [x for x in os.listdir(truthpath) if x.endswith(".json")]:
         with open(filepath + os.sep + file) as f:

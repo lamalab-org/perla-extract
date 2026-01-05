@@ -83,10 +83,6 @@ class PerovskiteComposition(BaseModel):
         None,
         description="X-site ions. Only include information that is described in the paper.",
     )
-    # bandgap: Optional[Bandgap] = Field(
-    #     None,
-    #     description="Bandgap of the perovskite material in eV. Include this field only if the bandgap has been directly measured in the experiment. Do not include estimated or literature values.",
-    # )
     bandgap: Optional[Bandgap] = Field(
         None,
         description="Bandgap of the perovskite material being used in eV. You can also estimate the bandgap based on your knowledge if it's not mentioned in the paper.",
@@ -272,9 +268,11 @@ class Stability(BaseModel):
     )
     PCE_at_the_start_of_the_experiment: Optional[PCE]
     PCE_after_1000_hours: Optional[PCE]
-    PCE_at_the_end_of_experiment: Optional[
-        PCE
-    ]  # TODO: We should have percentage of original PCE as that is more reported in the papers. Also keep a field for the value at the end of the stability test. Also add original_pce or pce_at_start like field with actual value.
+    # PCE_percentage_at_the_end_of_experiment: Optional[PCE] = Field(
+    #     None,
+    #     description="The percentage of starting PCE left at the end of the experiment.",
+    # )
+    PCE_at_the_end_of_experiment: Optional[PCE]
     potential_bias: Optional[
         Literal[
             "Open circuit",
