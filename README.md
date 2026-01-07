@@ -40,9 +40,14 @@ pip install perovscribe[nougat]
 # For Marker PDF processing
 pip install perovscribe[marker]
 
+# For Redis-based caching (requires Redis server)
+pip install perovscribe[cache]
+
 # For development dependencies
 pip install perovscribe[dev]
 ```
+
+**Note on Caching**: By default, Perovscribe uses in-memory caching for LLM calls. If you have a Redis server available, you can install the `cache` extra and configure Redis via environment variables (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_TTL`) for persistent caching across sessions.
 
 ## Data Directory
 
