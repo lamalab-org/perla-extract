@@ -18,7 +18,7 @@ from perovscribe.constants import (
     STATE_TEMPLATE,
 )
 
-# Try to setup Redis cache if available, otherwise use in-memory cache
+# Try to setup Redis cache if available, otherwise use disk cache
 try:
     from litellm.caching.caching import Cache
     litellm.cache = Cache(
@@ -30,13 +30,15 @@ try:
         namespace="litellm",
     )
 except ImportError:
-    # Redis package not installed, fall back to in-memory cache
-    print("Redis package not available, using in-memory cache")
-    litellm.cache = None
+    # Redis package not installed, fall back to disk cache
+    from litellm.caching.caching import Cache
+    print("Redis package not available, using disk cache")
+    litellm.cache = Cache(type="disk")
 except Exception as e:
-    # Redis connection failed or other error, fall back to in-memory cache
-    print(f"Redis cache setup failed ({e}), using in-memory cache")
-    litellm.cache = None
+    # Redis connection failed or other error, fall back to disk cache
+    from litellm.caching.caching import Cache
+    print(f"Redis cache setup failed ({e}), using disk cache")
+    litellm.cache = Cache(type="disk")
 
 
 class OptimizerStep(BaseModel):

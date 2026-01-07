@@ -47,7 +47,7 @@ pip install perovscribe[cache]
 pip install perovscribe[dev]
 ```
 
-**Note on Caching**: By default, Perovscribe uses in-memory caching for LLM calls. If you have a Redis server available, you can install the `cache` extra and configure Redis via environment variables (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_TTL`) for persistent caching across sessions.
+**Note on Caching**: By default, Perovscribe uses disk-based caching for LLM calls. If you have a Redis server available, you can install the `cache` extra and configure Redis via environment variables (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_TTL`) for persistent caching across sessions with better performance.
 
 ## Data Directory
 
