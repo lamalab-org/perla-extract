@@ -5,23 +5,29 @@ import instructor
 from pydantic import BaseModel, Field
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 from perovscribe.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
-from litellm.caching.caching import Cache
 import litellm
 
-litellm.cache = Cache(
-    type="redis",
-    host="127.0.0.1",
-    port=6379,
-    ttl=1000000,
-    # password="foobared",
-    namespace="litellm",
-)
-
-
-os.environ["REDIS_HOST"] = "127.0.0.1"
-os.environ["REDIS_PORT"] = "6379"
-os.environ["REDIS_PASSWORD"] = "foobared"
-os.environ["REDIS_TTL"] = "1000000"
+# Try to setup Redis cache if available, otherwise use disk cache
+try:
+    from litellm.caching.caching import Cache
+    litellm.cache = Cache(
+        type="redis",
+        host=os.environ.get("REDIS_HOST", "127.0.0.1"),
+        port=int(os.environ.get("REDIS_PORT", "6379")),
+        ttl=int(os.environ.get("REDIS_TTL", "1000000")),
+        password=os.environ.get("REDIS_PASSWORD"),
+        namespace="litellm",
+    )
+except ImportError:
+    # Redis package not installed, fall back to disk cache
+    from litellm.caching.caching import Cache
+    print("Redis package not available, using disk cache")
+    litellm.cache = Cache(type="disk")
+except Exception as e:
+    # Redis connection failed or other error, fall back to disk cache
+    from litellm.caching.caching import Cache
+    print(f"Redis cache setup failed ({e}), using disk cache")
+    litellm.cache = Cache(type="disk")
 
 
 def create_text_completion(

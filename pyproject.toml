@@ -27,7 +27,6 @@ dependencies = [
     "pydantic",
     "litellm",
     "diskcache",
-    "redis",
     "pymupdf",
     "deepdiff>=8.1.0",
     "munkres",
@@ -49,6 +48,7 @@ dev = ["jupyter", "docformatter", "pytest", "ruff", "bump-my-version"]
 nougat = ["nougat"]
 marker = ["marker-pdf"]
 pymupdf = ['pymupdf']
+cache = ["redis"]
 
 docs = [
     "mkdocs-material>=9.4.0",

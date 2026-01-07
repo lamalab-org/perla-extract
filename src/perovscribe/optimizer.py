@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from litellm import completion
 import instructor
-from litellm.caching.caching import Cache
 from perovscribe.preprocessing.preprocessor import Preprocessor
 from perovscribe.postprocessing import postprocess
 import json
@@ -19,14 +18,27 @@ from perovscribe.constants import (
     STATE_TEMPLATE,
 )
 
-litellm.cache = Cache(
-    type="redis",
-    host="127.0.0.1",
-    port=6379,
-    ttl=1000000,
-    password="foobared",
-    namespace="litellm",
-)
+# Try to setup Redis cache if available, otherwise use disk cache
+try:
+    from litellm.caching.caching import Cache
+    litellm.cache = Cache(
+        type="redis",
+        host=os.environ.get("REDIS_HOST", "127.0.0.1"),
+        port=int(os.environ.get("REDIS_PORT", "6379")),
+        ttl=int(os.environ.get("REDIS_TTL", "1000000")),
+        password=os.environ.get("REDIS_PASSWORD"),
+        namespace="litellm",
+    )
+except ImportError:
+    # Redis package not installed, fall back to disk cache
+    from litellm.caching.caching import Cache
+    print("Redis package not available, using disk cache")
+    litellm.cache = Cache(type="disk")
+except Exception as e:
+    # Redis connection failed or other error, fall back to disk cache
+    from litellm.caching.caching import Cache
+    print(f"Redis cache setup failed ({e}), using disk cache")
+    litellm.cache = Cache(type="disk")
 
 
 class OptimizerStep(BaseModel):

@@ -276,6 +276,9 @@ tags
 extraction_cache
 output
 
+# LiteLLM cache
+.litellm_cache/
+
 !tests/test_files
 
 uv.lock
