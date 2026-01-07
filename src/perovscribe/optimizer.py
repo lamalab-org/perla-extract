@@ -112,7 +112,7 @@ def extract_all_for_prompt(prompt, model_name, output):
     output_folder = output + os.sep + model_name
     Path(output_folder).mkdir(parents=True, exist_ok=True)
     preprocessor = Preprocessor("pymupdf", cache_dir_root="", use_cache=True)
-    filepath = files("perovscribe").joinpath("data/dev")
+    filepath = str(files("perovscribe").joinpath("data/dev"))
     og_prompt = prompt
     for file in [x for x in os.listdir(filepath) if x.endswith(".pdf")]:
         output = (
@@ -134,7 +134,7 @@ def extract_all_for_prompt(prompt, model_name, output):
 
 def score_all(model_name, output):
     filepath = output + os.sep + model_name
-    truthpath = files("perovscribe").joinpath("data/test")
+    truthpath = str(files("perovscribe").joinpath("data/test"))
     truth_extraction_pairs = []
     for file in [x for x in os.listdir(truthpath) if x.endswith(".json")]:
         with open(filepath + os.sep + file) as f:
