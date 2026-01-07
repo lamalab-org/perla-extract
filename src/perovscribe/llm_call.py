@@ -5,23 +5,24 @@ import instructor
 from pydantic import BaseModel, Field
 from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
 from perovscribe.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
-from litellm.caching.caching import Cache
 import litellm
 
-litellm.cache = Cache(
-    type="redis",
-    host="127.0.0.1",
-    port=6379,
-    ttl=1000000,
-    # password="foobared",
-    namespace="litellm",
-)
-
-
-os.environ["REDIS_HOST"] = "127.0.0.1"
-os.environ["REDIS_PORT"] = "6379"
-os.environ["REDIS_PASSWORD"] = "foobared"
-os.environ["REDIS_TTL"] = "1000000"
+# Try to setup Redis cache if available, otherwise use in-memory cache
+try:
+    from litellm.caching.caching import Cache
+    litellm.cache = Cache(
+        type="redis",
+        host=os.environ.get("REDIS_HOST", "127.0.0.1"),
+        port=int(os.environ.get("REDIS_PORT", "6379")),
+        ttl=int(os.environ.get("REDIS_TTL", "1000000")),
+        password=os.environ.get("REDIS_PASSWORD"),
+        namespace="litellm",
+    )
+except (ImportError, Exception) as e:
+    # If Redis is not available or fails to connect, fall back to in-memory cache
+    # Note: litellm will use its default in-memory cache if no cache is explicitly set
+    print(f"Redis cache not available ({e}), using in-memory cache")
+    litellm.cache = None
 
 
 def create_text_completion(
