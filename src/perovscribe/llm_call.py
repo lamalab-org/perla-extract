@@ -18,10 +18,13 @@ try:
         password=os.environ.get("REDIS_PASSWORD"),
         namespace="litellm",
     )
-except (ImportError, Exception) as e:
-    # If Redis is not available or fails to connect, fall back to in-memory cache
-    # Note: litellm will use its default in-memory cache if no cache is explicitly set
-    print(f"Redis cache not available ({e}), using in-memory cache")
+except ImportError:
+    # Redis package not installed, fall back to in-memory cache
+    print("Redis package not available, using in-memory cache")
+    litellm.cache = None
+except Exception as e:
+    # Redis connection failed or other error, fall back to in-memory cache
+    print(f"Redis cache setup failed ({e}), using in-memory cache")
     litellm.cache = None
 
 

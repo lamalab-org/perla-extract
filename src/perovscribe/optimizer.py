@@ -26,12 +26,16 @@ try:
         host=os.environ.get("REDIS_HOST", "127.0.0.1"),
         port=int(os.environ.get("REDIS_PORT", "6379")),
         ttl=int(os.environ.get("REDIS_TTL", "1000000")),
-        password=os.environ.get("REDIS_PASSWORD", "foobared"),
+        password=os.environ.get("REDIS_PASSWORD"),
         namespace="litellm",
     )
-except (ImportError, Exception) as e:
-    # If Redis is not available or fails to connect, fall back to in-memory cache
-    print(f"Redis cache not available ({e}), using in-memory cache")
+except ImportError:
+    # Redis package not installed, fall back to in-memory cache
+    print("Redis package not available, using in-memory cache")
+    litellm.cache = None
+except Exception as e:
+    # Redis connection failed or other error, fall back to in-memory cache
+    print(f"Redis cache setup failed ({e}), using in-memory cache")
     litellm.cache = None
 
 
