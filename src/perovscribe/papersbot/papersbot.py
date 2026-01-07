@@ -17,6 +17,9 @@ import yaml
 import feedparser
 import pickle
 import csv
+from pathlib import Path
+from dataclasses import dataclass
+from typing import List, Optional
 from importlib.resources import files
 
 from perovscribe.papersbot.utils import get_doi
@@ -69,6 +72,18 @@ def readPosted():
     except OSError:
         return []
 
+@dataclass
+class PapersbotResult:
+    """Result from papersbot execution."""
+    success: bool
+    papers_found: int = 0
+    pdfs_downloaded: int = 0
+    downloaded_files: List[Path] = None
+    error: Optional[str] = None
+    
+    def __post_init__(self):
+        if self.downloaded_files is None:
+            self.downloaded_files = []
 
 class PapersBot:
     posted = []
@@ -190,7 +205,6 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
     Returns:
         PapersbotResult with execution results
     """
-    from perovscribe.pipeline import PapersbotResult
     
     try:
         if not os.path.isfile(f"{papersbot_runs_path}/summaries.pkl"):
@@ -199,12 +213,12 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
         
         bot = PapersBot(False)
         bot.run()
-        papers_found = bot.total_matched
+        papers_rss_matched = bot.total_matched
         bot.printStats(update_current=False)
 
         get_abstracts()
-        check_matches()
-        check_pdfs()
+        papers_abstract_matched = check_matches()
+        pdf_urls_found = check_pdfs()
         with open(f"{papersbot_runs_path}/stats.txt", "a+") as f:
             print(
                 "************************************************************\n************************************************************\n",
@@ -217,7 +231,7 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
         
         return PapersbotResult(
             success=True,
-            papers_found=papers_found,
+            papers_found=pdf_urls_found,
             pdfs_downloaded=pdfs_downloaded,
             downloaded_files=downloaded_files
         )

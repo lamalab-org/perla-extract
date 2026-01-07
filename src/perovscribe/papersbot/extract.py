@@ -1,7 +1,6 @@
 from perovscribe.pipeline import ExtractionPipeline
 from nomad.units import ureg
 from perovskite_solar_cell_database.llm_extraction_schema import LLMExtractedPerovskiteSolarCell
-import pickle
 import json
 import os
 from utils import get_authentication_token, push_to_nomad
@@ -21,8 +20,7 @@ def extract_from_pdfs():
     """    
     with open(f"{base_path}/found_pdf_urls.json", "r") as f:
             found_urls = json.load(f)
-    for i, item in enumerate(found_urls):
-        doi = item["doi"]
+    for doi, item in found_urls.items():
         # Define a filepath for the downloaded PDF
         if 'extraction_processed' in item and item['extraction_processed']:
             continue
@@ -32,11 +30,11 @@ def extract_from_pdfs():
             try:
                 out=ExtractionPipeline('claude-4-sonnet-20250514', 'pymupdf', 'NONE', '', False).extract_from_pdf_nomad(filepath, doi, api_token, LLMExtractedPerovskiteSolarCell, ureg)
                 json.dump(out, open(f'{filepath[:-4]}.json', 'w'), indent=4)
-                found_urls[i]['extracted'] = True
+                found_urls[doi]['extracted'] = True
             except Exception as e:
                 logger.error(f"Error processing DOI:{doi} {filepath}: {e}")
-                found_urls[i]['extracted'] = False
-            found_urls[i]['extraction_processed'] = True
+                found_urls[doi]['extracted'] = False
+            found_urls[doi]['extraction_processed'] = True
     with open(f"{base_path}/found_pdf_urls.json", "w") as f:
         json.dump(found_urls, f, indent=4)
 
@@ -50,8 +48,7 @@ def export_to_nomad():
         return
     with open(f"{base_path}/found_pdf_urls.json", "r") as f:
             found_urls = json.load(f)
-    for i, item in enumerate(found_urls):
-        doi = item["doi"]
+    for doi, item in found_urls.items():
         if 'nomad_processed' in item and item['nomad_processed']:
             continue
         # Define a filepath for the downloaded PDF
@@ -61,11 +58,11 @@ def export_to_nomad():
             try:
                 response = json.load(open(filepath, 'r'))
                 push_to_nomad(doi, response, token, upload_id)
-                found_urls[i]['nomad_upload_processed'] = True
+                found_urls[doi]['nomad_upload_processed'] = True
             except Exception as e:
                 logger.error(f"Error processing {filepath}: {e}")
-                found_urls[i]['nomad_upload_processed'] = False
-            found_urls[i]['nomad_processed'] = True
+                found_urls[doi]['nomad_upload_processed'] = False
+            found_urls[doi]['nomad_processed'] = True
     with open(f"{base_path}/found_pdf_urls.json", "w") as f:
         json.dump(found_urls, f, indent=4)
 

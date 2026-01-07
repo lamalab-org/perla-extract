@@ -1,33 +1,10 @@
 import requests
 import os
 
-import requests
 from loguru import logger
-import os
 import xml.etree.ElementTree as ET
 
-
-def get_doi_summary(doi: str) -> dict:
-    """
-    Fetches paper metadata from various sources using its DOI.
-    Args:
-        doi: The Digital Object Identifier (DOI) of the paper.
-    Returns:
-        A dictionary with metadata or an error message string.
-    """
-    doi = doi.lower().strip()
-    summaries = {"crossref": {}, "openalex": {}, "semantic_scholar": {}}
-    doi_summary_funcs = {
-        "crossref": get_doi_summary_crossref,
-        "openalex": get_doi_summary_openalex,
-        "semantic_scholar": get_doi_summary_semantic_scholar,
-    }
-    for source in ["crossref", "openalex", "semantic_scholar"]:
-        summary = doi_summary_funcs[source](doi)
-        summaries[source] = summary
-        if "error" not in summary and summary.get("abstract", "") != "":
-            return summary
-    return {}
+UNPAYWALL_EMAIL = os.environ["UNPAYWALL_EMAIL"]
 
 def get_doi_summary(doi: str) -> dict:
     """
@@ -50,6 +27,16 @@ def get_doi_summary(doi: str) -> dict:
         summaries[source] = summary
         if "error" not in summary and summary.get("abstract", "") != "":
             break
+    
+    metadata = {}
+    for k in summaries:
+        abstract = summaries[k].get("abstract", "")
+        journal = summaries[k].get("journal", "")
+        publisher = summaries[k].get("publisher", "")
+        metadata["abstract"] = abstract if abstract else metadata.get("abstract", "")
+        metadata["journal"] = journal if journal else metadata.get("journal", "")
+        metadata["publisher"] = publisher if publisher else metadata.get("publisher", "")
+    summaries["consolidated"] = metadata
     return summaries
 
 def get_doi_summary_crossref(doi: str) -> dict:
@@ -249,7 +236,7 @@ def get_doi_summary_pubmed(doi):
             authors.append(f'{i.findtext("ForeName") or ""} {i.findtext("LastName") or ""}')
 
         return {
-                "doi": pmid,
+                "doi": doi,
                 "title": title,
                 "abstract": full_abstract,
                 "journal": journal,

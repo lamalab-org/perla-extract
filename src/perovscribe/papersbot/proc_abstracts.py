@@ -55,6 +55,7 @@ def get_abstracts():
         df.at[i, "processed"] = True
         sample["match_checked"] = False
         sample["abstract_match"] = False
+        sample["doi_good_to_go"] = False
         sample["pdf_checked"] = False
         sample["pdf_available"] = False
         sample["pdf_url"] = ""

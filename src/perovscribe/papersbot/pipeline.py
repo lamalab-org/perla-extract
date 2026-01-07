@@ -1,8 +1,7 @@
 from papersbot_new import run_papersbot, base_path
 from proc_abstracts import get_abstracts
 from match_pdf import check_pdfs, check_matches, download_pdfs
-from hf_utils import download_files, upload_files
-from extract import extract_from_pdfs, export_to_nomad
+from hf_utils import download_files
 
 
 def main():

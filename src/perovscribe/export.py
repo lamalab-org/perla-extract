@@ -103,7 +103,7 @@ def convert_with_pint(value_dict, parent_key, ureg=None):
         # Default: Return magnitude of the original unit provided
         return float(q.magnitude)
 
-    except Exception as e:
+    except Exception:
         # Fallback: return original value if conversion fails
         return val
 
@@ -192,11 +192,10 @@ def process_to_nomad(raw_data, doi, ureg=None):
     doi_url = "https://www.doi.org/"+doi
     # Run the transformation
     transformed = traverse_and_transform(raw_data, ureg)
-    
     output_entries = []
     
     # The input is usually a dict with "cells": [...]
-    if "cells" in transformed:
+    if transformed and "cells" in transformed:
         for cell in transformed["cells"]:
             entry = {
                 "data": {
@@ -297,11 +296,10 @@ def remove_pce_check(data: dict) -> dict:
                 continue
     return new_data
 
-def filter_unwanted(data: dict, pdf_text) -> dict:
+def filter_unwanted(data: dict, pdf_text: str) -> dict:
     p_data = remove_pce_check(data)
     return remove_hallucinated_big_four_area(p_data, pdf_text)
 
-from collections import defaultdict
 
 results = []
 total_found = total_hallucinated = total_missing = total_expected = 0
