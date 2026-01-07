@@ -1,7 +1,6 @@
 """Test that data files are accessible when package is installed."""
 
 import importlib.resources
-import os
 
 
 def test_data_dir_exists():
@@ -23,7 +22,7 @@ def test_ground_truth_test_dir_exists():
     ground_truth_dir = data_dir / "ground_truth" / "test"
     assert ground_truth_dir.is_dir(), "Ground truth test directory should exist"
     # Verify it contains files
-    files = os.listdir(ground_truth_dir)
+    files = list(ground_truth_dir.iterdir())
     assert len(files) > 0, "Ground truth test directory should contain files"
 
 
@@ -33,7 +32,7 @@ def test_experts_dir_exists():
     experts_dir = data_dir / "extractions" / "humans" / "Consensus"
     assert experts_dir.is_dir(), "Experts (humans/Consensus) directory should exist"
     # Verify it contains files
-    files = os.listdir(experts_dir)
+    files = list(experts_dir.iterdir())
     assert len(files) > 0, "Experts directory should contain JSON files"
 
 
@@ -57,5 +56,5 @@ def test_all_extraction_dirs_exist():
         dir_path = extractions_dir / dir_name
         assert dir_path.is_dir(), f"Extraction directory {dir_name} should exist"
         # Verify each directory contains files
-        files = os.listdir(dir_path)
+        files = list(dir_path.iterdir())
         assert len(files) > 0, f"Extraction directory {dir_name} should contain files"
