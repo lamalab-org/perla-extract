@@ -1,3 +1,4 @@
+import copy
 from perovscribe import configuration as config
 
 
