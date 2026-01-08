@@ -138,7 +138,7 @@ class ExtractionPipeline:
     ) -> Optional[PerovskiteSolarCells]:
         # We can use this in Nomad
         pdf_text = self.preprocessor.pdf_to_text(filepath)
-        results = llm_call.create_text_completion(
+        results, completion_usage = llm_call.create_text_completion(
             self.model_name, pdf_text, api_key=api_key
         )
         results = PerovskiteSolarCells(**postprocess(results.model_dump()))
