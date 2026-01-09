@@ -72,15 +72,15 @@ def normalize(data: dict) -> dict:
         ):
             try:
                 quantity = config.ureg.Quantity(value, config.ureg.Unit(data["unit"]))
-
+        
                 # Determine the quantity type (e.g., length, speed)
                 quantity_type = quantity.dimensionality
                 if quantity_type in default_units_by_type:
                     default_unit, default_unit_str = default_units_by_type[
                         quantity_type
                     ]
-                    # Convert to the default unit
-                    converted_quantity = quantity.to(default_unit)
+                    if quantity.dimensionality == default_unit.dimensionality:
+                        converted_quantity = quantity.to(default_unit)
                     # Update the dictionary
                     data["value"] = converted_quantity.magnitude
                     data["unit"] = default_unit_str

@@ -6,18 +6,17 @@ import re
 ureg = UnitRegistry()
 
 ureg.define("sun = 1 kW/m^2")
-ureg.define("vol = 1 m^3")
 
 pint = {
     "default_units_by_type": {
         ureg.percent.dimensionality: (ureg.percent, "%"),  # Efficiency, humidity, etc.
         (ureg.ampere / (ureg.centimeter**2)).dimensionality: (
-            "mA cm^-2",
+            ureg.milliampere / (ureg.centimeter**2),
             "mA cm^-2",
         ),  # Current density
         ureg.volt.dimensionality: (ureg.volt, "V"),  # Voltage
         ureg.nanometer.dimensionality: (ureg.nanometer, "nm"),  # Thickness,
-        (ureg.meter**2).dimensionality: ("cm^2", "cm^2"),
+        (ureg.meter**2).dimensionality: (ureg.centimeter**2, "cm^2"),
         ureg.day.dimensionality: (
             ureg.second,
             "s",
