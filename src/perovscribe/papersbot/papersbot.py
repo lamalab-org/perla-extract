@@ -24,7 +24,7 @@ from importlib.resources import files
 
 from perovscribe.papersbot.utils import get_doi
 from perovscribe.papersbot.match_pdf import check_pdfs, check_matches, download_pdfs
-from perovscribe.papersbot.proc_abstracts import get_abstracts
+from perovscribe.papersbot.proc_abstracts import get_abstracts, update_for_retry, check_relaxed_match_doi
 from perovscribe.configuration import papersbot_runs_path, RELAXED_REGEX, STRICT_REGEX
 
 REGEXES = [STRICT_REGEX, RELAXED_REGEX]
@@ -216,6 +216,8 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
         papers_rss_matched = bot.total_matched
         bot.printStats(update_current=False)
 
+        check_relaxed_match_doi()
+        update_for_retry()
         get_abstracts()
         papers_abstract_matched = check_matches()
         pdf_urls_found = check_pdfs()

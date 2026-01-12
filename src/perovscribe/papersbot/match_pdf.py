@@ -138,9 +138,7 @@ def download_pdfs(download_dir: str = "downloaded_papers") -> List[Path]:
                     downloaded_files.append(filepath)
             except Exception as e:
                 logger.error(f"Error downloading {doi}: {e}")
-        print("here")
         found_urls[doi]['tries'] += 1
-        print("here2")
         if found_urls[doi]['tries'] >= 3:
             logger.warning(f"Max tries reached for {doi}.")
             found_urls[doi]['processed'] = True
