@@ -297,9 +297,9 @@ def remove_pce_check(data: dict) -> dict:
                 continue
     return new_data
 
-def filter_unwanted(data: dict) -> dict:
+def filter_unwanted(data: dict, pdf_text) -> dict:
     p_data = remove_pce_check(data)
-    return remove_hallucinated_big_four_area(p_data)
+    return remove_hallucinated_big_four_area(p_data, pdf_text)
 
 from collections import defaultdict
 
@@ -417,8 +417,8 @@ def remove_hallucinated_big_four_area(data, pdf_text):
 
 
 def convert_extraction_to_nomad_entries(
-    pydantic_model: PerovskiteSolarCells, doi: str, ureg: 'UnitRegistry' = None
+    pydantic_model: PerovskiteSolarCells, doi: str, pdf_text: str, ureg: 'UnitRegistry' = None
 ):
-    data = filter_unwanted(pydantic_model.model_dump())
+    data = filter_unwanted(pydantic_model.model_dump(), pdf_text)
     nomad_entries = process_to_nomad(data, doi, ureg)
     return nomad_entries
