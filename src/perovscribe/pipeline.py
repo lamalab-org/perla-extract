@@ -161,7 +161,7 @@ class ExtractionPipeline:
             self.total_completion_tokens += completion_usage.usage.completion_tokens
             print(f"Extracted: {filepath.name}")
             if self.nomad:
-                converted_nomad = convert_extraction_to_nomad_entries(parsed, doi)
+                converted_nomad = convert_extraction_to_nomad_entries(parsed, doi, pdf_text)
                 push_to_nomad(doi, converted_nomad, get_authentication_token(), self.upload_id)
             return True
         except (InstructorRetryException, ValidationError) as e:
