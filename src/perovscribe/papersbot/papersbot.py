@@ -10,10 +10,7 @@
 #
 
 import os
-import random
-import re
 import time
-import yaml
 import feedparser
 import pickle
 import csv
@@ -24,7 +21,11 @@ from importlib.resources import files
 
 from perovscribe.papersbot.utils import get_doi
 from perovscribe.papersbot.match_pdf import check_pdfs, check_matches, download_pdfs
-from perovscribe.papersbot.proc_abstracts import get_abstracts, update_for_retry, check_relaxed_match_doi
+from perovscribe.papersbot.proc_abstracts import (
+    get_abstracts,
+    update_for_retry,
+    check_relaxed_match_doi,
+)
 from perovscribe.configuration import papersbot_runs_path, RELAXED_REGEX, STRICT_REGEX
 
 REGEXES = [STRICT_REGEX, RELAXED_REGEX]
@@ -72,18 +73,21 @@ def readPosted():
     except OSError:
         return []
 
+
 @dataclass
 class PapersbotResult:
     """Result from papersbot execution."""
+
     success: bool
     papers_found: int = 0
     pdfs_downloaded: int = 0
     downloaded_files: List[Path] = None
     error: Optional[str] = None
-    
+
     def __post_init__(self):
         if self.downloaded_files is None:
             self.downloaded_files = []
+
 
 class PapersBot:
     posted = []
@@ -92,32 +96,9 @@ class PapersBot:
     total = 0
     total_matched = 0
 
-    def __init__(self, doTweet=True):
+    def __init__(self):
         self.feeds = readFeedsList()
         self.posted = readPosted()
-
-        # Read parameters from configuration file
-        try:
-            with open("config.yml", "r") as f:
-                config = yaml.safe_load(f)
-        except OSError:
-            config = {}
-        self.throttle = config.get("throttle", 0)
-        self.wait_time = config.get("wait_time", 5)
-        self.shuffle_feeds = config.get("shuffle_feeds", True)
-        self.blacklist = config.get("blacklist", [])
-        self.blacklist = [re.compile(s) for s in self.blacklist]
-
-        # Shuffle feeds list
-        if self.shuffle_feeds:
-            random.shuffle(self.feeds)
-
-        # Maximum shortened URL length (previously short_url_length_https)
-        urllen = 23
-        # Maximum URL length for media (previously characters_reserved_per_media)
-        imglen = 24
-        # Determine maximum tweet length
-        self.maxlength = 280 - (urllen + 1) - imglen
 
         # Start-up banner
         print(f"This is PapersBot running at {time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
@@ -139,21 +120,17 @@ class PapersBot:
             writer.writerow(entry_stats)
 
     def printStats(self, update_current=True):
-        if update_current:
-            with open(f"{papersbot_runs_path}/current_stats.txt", "w") as f:
-                f.write(f"Number of relevant papers: {self.n_seen}\n")
-                f.write(f"Number of papers matched: {self.total_matched}\n")
-                f.write(f"Number of papers seen before: {self.seen_before}\n")
-                f.write(f"Total number of papers processed: {self.total}\n")
-        else:
-            end_time = time.strftime("%Y-%m-%d %H:%M:%S %Z")
-            with open(f"{papersbot_runs_path}/stats.txt", "a") as f:
+        file_name = "current_stats.txt" if update_current else "stats.txt"
+        setting = "w" if update_current else "a"
+        with open(f"{papersbot_runs_path}/{file_name}", setting) as f:
+            if not update_current:
+                end_time = time.strftime("%Y-%m-%d %H:%M:%S %Z")
                 f.write(f"Run: {end_time}\n")
-                f.write(f"Number of relevant papers: {self.n_seen}\n")
-                f.write(f"Number of papers matched: {self.total_matched}\n")
-                f.write(f"Number of papers seen before: {self.seen_before}\n")
-                f.write(f"Total number of papers processed: {self.total}\n\n\n")
-                print("\n\n")
+            f.write(f"Number of relevant papers: {self.n_seen}\n")
+            f.write(f"Number of papers matched: {self.total_matched}\n")
+            f.write(f"Number of papers seen before: {self.seen_before}\n")
+            f.write(f"Total number of papers processed: {self.total}\n")
+            print("\n\n")
 
     # Main function, iterating over feeds and posting new items
     def run(self):
@@ -176,42 +153,40 @@ class PapersBot:
                 entry_stats = {
                     "id": entry.get("id", ""),
                     "title": entry.get("title", ""),
-                    "summary": entry.get("summary", ""),
+                    # "summary": entry.get("summary", ""),
                     "parsed_time": time.time(),
                     "doi": get_doi(entry),
                 }
                 for r in range(len(REGEXES)):
                     match, status = entryMatches(entry, REGEXES[r])
                     any_match |= match
-                    entry_stats["relaxed_regex" if r != 0 else "strict_regex"] = (
-                        status
-                    )
+                    entry_stats["relaxed_regex" if r != 0 else "strict_regex"] = status
 
                 self.total_matched += any_match
                 entry_stats["match"] = any_match
                 entry_stats["processed"] = False if any_match else True
+                self.saveEntryStats(entry_stats)
                 self.addToPosted(entry.id)
                 # self.saveEntries(entry)
-                self.saveEntryStats(entry_stats)
                 self.printStats()
 
 
 def run_papersbot(download_dir: str = "downloaded_papers"):
     """Run the complete papersbot workflow.
-    
+
     Args:
         download_dir: Directory to download PDFs to
-        
+
     Returns:
         PapersbotResult with execution results
     """
-    
+
     try:
         if not os.path.isfile(f"{papersbot_runs_path}/summaries.pkl"):
             with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
                 pickle.dump({}, f)
-        
-        bot = PapersBot(False)
+
+        bot = PapersBot()
         bot.run()
         papers_rss_matched = bot.total_matched
         bot.printStats(update_current=False)
@@ -226,21 +201,20 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
                 "************************************************************\n************************************************************\n",
                 file=f,
             )
-        
+
         # Download PDFs and get results
         downloaded_files = download_pdfs(download_dir=download_dir)
         pdfs_downloaded = len([f for f in downloaded_files if f.exists()])
-        
+
         return PapersbotResult(
             success=True,
             papers_found=pdf_urls_found,
             pdfs_downloaded=pdfs_downloaded,
-            downloaded_files=downloaded_files
+            downloaded_files=downloaded_files,
         )
     except Exception as e:
         return PapersbotResult(
-            success=False,
-            error=f"Papersbot workflow failed: {str(e)}"
+            success=False, error=f"Papersbot workflow failed: {str(e)}"
         )
 
 
