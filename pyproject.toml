@@ -39,7 +39,8 @@ dependencies = [
     "mip",
     "loguru",
     "pandas",
-    "feedparser"
+    "feedparser",
+    "pdf2doi>=1.7"
 ]
 
 
