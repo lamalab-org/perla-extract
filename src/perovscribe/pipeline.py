@@ -134,15 +134,15 @@ class ExtractionPipeline:
         self.upload_id = nomad_upload_id
 
     def extract_from_pdf_nomad(
-        self, filepath, doi, api_key, nomad_schema, ureg
+        self, filepath, doi, api_key, ureg=None
     ) -> Optional[PerovskiteSolarCells]:
         # We can use this in Nomad
         pdf_text = self.preprocessor.pdf_to_text(filepath)
-        results = llm_call.create_text_completion(
+        results, completion_usage = llm_call.create_text_completion(
             self.model_name, pdf_text, api_key=api_key
         )
         results = PerovskiteSolarCells(**postprocess(results.model_dump()))
-        return convert_extraction_to_nomad_entries(results, doi, nomad_schema, ureg)
+        return convert_extraction_to_nomad_entries(results, doi, pdf_text, ureg=ureg)
 
     def _extract_pdf(self, filepath: Path, output_path: Path) -> bool:
         doi = filepath.stem.replace("--", "/")
@@ -161,7 +161,7 @@ class ExtractionPipeline:
             self.total_completion_tokens += completion_usage.usage.completion_tokens
             print(f"Extracted: {filepath.name}")
             if self.nomad:
-                converted_nomad = convert_extraction_to_nomad_entries(parsed, doi)
+                converted_nomad = convert_extraction_to_nomad_entries(parsed, doi, pdf_text)
                 push_to_nomad(doi, converted_nomad, get_authentication_token(), self.upload_id)
             return True
         except (InstructorRetryException, ValidationError) as e:

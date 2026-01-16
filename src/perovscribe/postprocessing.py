@@ -1,14 +1,44 @@
+import copy
 from perovscribe import configuration as config
 
 
 def postprocess(data: dict) -> dict:
     # data = add_device_stack(data)
+    data = remove_ml_concentrations(data)
     data = normalize(data)
     return data
 
 
 def normalize_perovskite():
     pass
+
+def remove_ml_concentrations(data: dict) -> dict:
+    """
+    Returns a deep-copied version of `data` where any solute with
+    concentration.unit == "mL" has its 'concentration' field removed.
+    Only under: cells[*].layers[*].deposition[*].solution.solutes
+    """
+
+    # Work on a deep copy so original data stays unchanged
+    data = copy.deepcopy(data)
+
+    for cell in data.get("cells", []):
+        for layer in cell.get("layers", []) or []:
+            for dep in layer.get("deposition", []) or []:
+                solution = dep.get("solution", []) or []
+                if not solution:
+                    continue
+
+                solutes = solution.get("solutes")
+                if not isinstance(solutes, list):
+                    continue
+
+                for solute in solutes:
+                    conc = solute.get("concentration")
+                    if isinstance(conc, dict) and conc.get("unit") == "mL":
+                        solute.pop("concentration", None)
+
+    return data
 
 
 def normalize(data: dict) -> dict:
@@ -42,15 +72,15 @@ def normalize(data: dict) -> dict:
         ):
             try:
                 quantity = config.ureg.Quantity(value, config.ureg.Unit(data["unit"]))
-
+        
                 # Determine the quantity type (e.g., length, speed)
                 quantity_type = quantity.dimensionality
                 if quantity_type in default_units_by_type:
                     default_unit, default_unit_str = default_units_by_type[
                         quantity_type
                     ]
-                    # Convert to the default unit
-                    converted_quantity = quantity.to(default_unit)
+                    if quantity.dimensionality == default_unit.dimensionality:
+                        converted_quantity = quantity.to(default_unit)
                     # Update the dictionary
                     data["value"] = converted_quantity.magnitude
                     data["unit"] = default_unit_str
