@@ -296,7 +296,7 @@ def remove_pce_check(data: dict) -> dict:
                 continue
     return new_data
 
-def filter_unwanted(data: dict, pdf_text: str) -> dict:
+def filter_unwanted(data: dict, pdf_text) -> dict:
     p_data = remove_pce_check(data)
     return remove_hallucinated_big_four_area(p_data, pdf_text)
 

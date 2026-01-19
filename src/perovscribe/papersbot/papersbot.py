@@ -90,13 +90,11 @@ class PapersbotResult:
 
 
 class PapersBot:
-    posted = []
-    n_seen = 0
-    seen_before = 0
-    total = 0
-    total_matched = 0
-
     def __init__(self):
+        self.n_seen = 0
+        self.seen_before = 0
+        self.total = 0
+        self.total_matched = 0
         self.feeds = read_feeds_list()
         self.posted = read_posted()
 
