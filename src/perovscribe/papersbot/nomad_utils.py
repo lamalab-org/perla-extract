@@ -1,6 +1,5 @@
 import os
 import requests
-import sys
 from loguru import logger
 import io
 import zipfile
@@ -18,12 +17,15 @@ def download_archive(
     upload_id: str = NOMAD_STATS_ID, dest_path: str = papersbot_runs_path
 ):
     token = get_authentication_token(NOMAD_URL, NOMAD_USERNAME, NOMAD_PASSWORD)
+    if not token:
+        raise RuntimeError("Failed to authenticate with NOMAD")
     res = requests.get(
         f"{NOMAD_URL}uploads/{upload_id}/raw/runs?offset=0&length=-1&decompress=false&ignore_mime_type=false&compress=true",
         headers={
             "Authorization": f"Bearer {token}",
             "Accept": "application/octet-stream",
         },
+        timeout=120,
     )
     res.raise_for_status()
     zip_in_memory = io.BytesIO(res.content)
@@ -36,20 +38,33 @@ def upload_archive(
     upload_id: str = NOMAD_STATS_ID, source_path: str = papersbot_runs_path
 ):
     token = get_authentication_token(NOMAD_URL, NOMAD_USERNAME, NOMAD_PASSWORD)
-    shutil.make_archive("runs", "zip", source_path)
-    with open("runs.zip", "rb") as zip_buffer:
+    if not token:
+        raise RuntimeError("Failed to authenticate with NOMAD")
+    shutil.make_archive("temp_runs", "zip", source_path)
+    with open("temp_runs.zip", "rb") as zip_buffer:
         zip_buffer.seek(0)
         res = requests.put(
             f"{NOMAD_URL}uploads/{upload_id}/raw/runs/",
             headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
             files={"file": ("runs.zip", zip_buffer, "application/zip")},
-            timeout=60,
+            timeout=120,
         )
-        os.remove("runs.zip")
+        os.remove("temp_runs.zip")
     res.raise_for_status()
     logger.info(f"Uploaded archive from {source_path} to NOMAD upload ID {upload_id}")
 
 
+class CLI:
+    def __init__(self):
+        self.download = download_archive
+        self.upload = upload_archive
+
+
+def main_cli():
+    import fire
+
+    fire.Fire(CLI)
+
+
 if __name__ == "__main__":
-    args = sys.argv
-    globals()[args[1]]()
+    main_cli()

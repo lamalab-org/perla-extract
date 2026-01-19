@@ -267,8 +267,7 @@ def is_doi_good_to_go(doi, pdf_text, metadata=None) -> bool:
     journal = metadata.get("journal", "")
     publisher = metadata.get("publisher", "")
 
-    if word_count(abstract) < 100:
-        
+    if word_count(abstract) < 100 and pdf_text:
         text_to_filter = pdf_text[:int(len(pdf_text) * 0.05)]
     else:
         text_to_filter = title+" "+abstract   

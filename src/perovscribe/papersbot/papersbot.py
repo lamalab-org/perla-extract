@@ -7,7 +7,6 @@
 # license:  MIT License
 # author:   François-Xavier Coudert
 # e-mail:   fxcoudert@gmail.com
-#
 
 import os
 import time
@@ -18,8 +17,9 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Optional
 from importlib.resources import files
-
-from perovscribe.papersbot.utils import get_doi
+from loguru import logger
+from tqdm import tqdm
+from perovscribe.papersbot.utils import get_doi, save_summaries
 from perovscribe.papersbot.match_pdf import check_pdfs, check_matches, download_pdfs
 from perovscribe.papersbot.proc_abstracts import (
     get_abstracts,
@@ -31,7 +31,7 @@ from perovscribe.configuration import papersbot_runs_path, RELAXED_REGEX, STRICT
 REGEXES = [STRICT_REGEX, RELAXED_REGEX]
 
 
-def entryMatches(entry, regex):
+def entry_matches(entry, regex):
     # Malformed entry
     if "title" not in entry:
         return False, 0
@@ -59,14 +59,14 @@ def entryMatches(entry, regex):
 
 
 # Read our list of feeds from file
-def readFeedsList():
+def read_feeds_list():
     with open(files("perovscribe").joinpath("papersbot/feeds.txt"), "r") as f:
         feeds = [s.partition("#")[0].strip() for s in f]
         return [s for s in feeds if s]
 
 
 # Read list of feed items already posted
-def readPosted():
+def read_posted():
     try:
         with open(f"{papersbot_runs_path}/posted.dat", "r") as f:
             return f.read().splitlines()
@@ -97,29 +97,27 @@ class PapersBot:
     total_matched = 0
 
     def __init__(self):
-        self.feeds = readFeedsList()
-        self.posted = readPosted()
+        self.feeds = read_feeds_list()
+        self.posted = read_posted()
 
         # Start-up banner
-        print(f"This is PapersBot running at {time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
-        print(f"Feed list has {len(self.feeds)} feeds\n")
+        logger.info(
+            f"This is PapersBot running at {time.strftime('%Y-%m-%d %H:%M:%S %Z')}"
+        )
+        logger.info(f"Feed list has {len(self.feeds)} feeds\n")
 
-    # Add to tweets posted
-    def addToPosted(self, url):
+    # Add to list of seen items
+    def add_to_posted(self, url):
         with open(f"{papersbot_runs_path}/posted.dat", "a+") as f:
             print(url, file=f)
         self.posted.append(url)
 
-    def saveEntries(self, entry):
-        with open(f"{papersbot_runs_path}/entries.pkl", "ab") as f:
-            pickle.dump(entry, f)
-
-    def saveEntryStats(self, entry_stats):
+    def save_entry_stats(self, entry_stats):
         with open(f"{papersbot_runs_path}/entry_stats.csv", "a", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=entry_stats.keys())
             writer.writerow(entry_stats)
 
-    def printStats(self, update_current=True):
+    def print_stats(self, update_current=True):
         file_name = "current_stats.txt" if update_current else "stats.txt"
         setting = "w" if update_current else "a"
         with open(f"{papersbot_runs_path}/{file_name}", setting) as f:
@@ -130,18 +128,17 @@ class PapersBot:
             f.write(f"Number of papers matched: {self.total_matched}\n")
             f.write(f"Number of papers seen before: {self.seen_before}\n")
             f.write(f"Total number of papers processed: {self.total}\n")
-            print("\n\n")
+            f.write("\n")
 
     # Main function, iterating over feeds and posting new items
     def run(self):
-        for feed in self.feeds:
+        for feed in tqdm(self.feeds):
             try:
                 parsed_feed = feedparser.parse(feed)
             except ConnectionResetError as e:
                 # Print information about which feed is failing, and what is the error
-                print("Failure to load feed at URL", feed)
-                print("Exception info:", str(e))
-                # sys.exit(1)
+                logger.error(f"Failure to load feed at URL {feed}")
+                logger.error(f"Exception info: {str(e)}")
 
             for entry in parsed_feed.entries:
                 any_match = 0
@@ -153,22 +150,33 @@ class PapersBot:
                 entry_stats = {
                     "id": entry.get("id", ""),
                     "title": entry.get("title", ""),
-                    # "summary": entry.get("summary", ""),
                     "parsed_time": time.time(),
                     "doi": get_doi(entry),
                 }
                 for r in range(len(REGEXES)):
-                    match, status = entryMatches(entry, REGEXES[r])
+                    match, status = entry_matches(entry, REGEXES[r])
                     any_match |= match
                     entry_stats["relaxed_regex" if r != 0 else "strict_regex"] = status
 
                 self.total_matched += any_match
                 entry_stats["match"] = any_match
                 entry_stats["processed"] = False if any_match else True
-                self.saveEntryStats(entry_stats)
-                self.addToPosted(entry.id)
-                # self.saveEntries(entry)
-                self.printStats()
+                if any_match and (
+                    entry_stats["doi"] and "error" not in entry_stats["doi"]
+                ):
+                    save_summaries(
+                        {
+                            entry_stats["id"]: {
+                                "title": entry_stats["title"],
+                                "rss_feed_summary": entry.get("summary", ""),
+                                "doi": entry_stats["doi"],
+                            }
+                        },
+                        current=False,
+                    )
+                self.save_entry_stats(entry_stats)
+                self.add_to_posted(entry.id)
+                self.print_stats()
 
 
 def run_papersbot(download_dir: str = "downloaded_papers"):
@@ -187,15 +195,18 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
                 pickle.dump({}, f)
 
         bot = PapersBot()
-        bot.run()
-        papers_rss_matched = bot.total_matched
-        bot.printStats(update_current=False)
 
-        check_relaxed_match_doi()
-        update_for_retry()
-        get_abstracts()
-        papers_abstract_matched = check_matches()
-        pdf_urls_found = check_pdfs()
+        # Run the bot to process feeds
+        bot.run()
+        bot.print_stats(update_current=False)
+
+        # Process the matched papers
+        check_relaxed_match_doi()  # Checks if DOI is correct
+        update_for_retry()  # Update entries for retrying processing
+        get_abstracts()  # Get abstracts for matched entries
+        check_matches()  # Check matches after getting abstracts
+        pdf_urls_found = check_pdfs()  # Check for Open access PDF URLs
+
         with open(f"{papersbot_runs_path}/stats.txt", "a+") as f:
             print(
                 "************************************************************\n************************************************************\n",

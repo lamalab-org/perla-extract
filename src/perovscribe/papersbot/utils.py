@@ -1,10 +1,23 @@
+import pickle
 import requests
 import os
-
+from perovscribe.configuration import papersbot_runs_path
 from loguru import logger
 import xml.etree.ElementTree as ET
 
-UNPAYWALL_EMAIL = os.environ["UNPAYWALL_EMAIL"]
+UNPAYWALL_EMAIL = os.environ.get("UNPAYWALL_EMAIL")
+
+
+def save_summaries(summaries, current=True):
+    if current:
+        with open(f"{papersbot_runs_path}/curr_summaries.pkl", "wb") as f:
+            pickle.dump(summaries, f)
+    else:
+        old_summaries = pickle.load(open(f"{papersbot_runs_path}/summaries.pkl", "rb"))
+        old_summaries.update(summaries)
+        with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
+            pickle.dump(old_summaries, f)
+
 
 def get_doi_summary(doi: str) -> dict:
     """
@@ -27,7 +40,7 @@ def get_doi_summary(doi: str) -> dict:
         summaries[source] = summary
         if "error" not in summary and summary.get("abstract", "") != "":
             break
-    
+
     metadata = {}
     for k in summaries:
         abstract = summaries[k].get("abstract", "")
@@ -35,9 +48,12 @@ def get_doi_summary(doi: str) -> dict:
         publisher = summaries[k].get("publisher", "")
         metadata["abstract"] = abstract if abstract else metadata.get("abstract", "")
         metadata["journal"] = journal if journal else metadata.get("journal", "")
-        metadata["publisher"] = publisher if publisher else metadata.get("publisher", "")
+        metadata["publisher"] = (
+            publisher if publisher else metadata.get("publisher", "")
+        )
     summaries["consolidated"] = metadata
     return summaries
+
 
 def get_doi_summary_crossref(doi: str) -> dict:
     """
@@ -100,9 +116,9 @@ def get_doi_summary_openalex(doi: str) -> dict:
             ]
 
             # Journal (called 'source' in OpenAlex)
-            source=data.get('primary_location',{}).get('source',{})
+            source = data.get("primary_location", {}).get("source", {})
             journal = source.get("display_name", "")
-            publisher = source.get("host_organization_name","")
+            publisher = source.get("host_organization_name", "")
 
             # Publication Date
             published_date = data.get("publication_date")
@@ -179,24 +195,27 @@ def get_pmid_from_doi(doi: str) -> dict:
     Returns:
         The corresponding PMID if found.
     """
-    response=requests.get(f'https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?tool=my_tool&email=my_email@example.com&ids={doi}')
+    response = requests.get(
+        f"https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?tool=my_tool&email=my_email@example.com&ids={doi}"
+    )
     if response.status_code == 200:
         try:
-            record = ET.fromstring(response.content).find('record')
-            pmid = record.attrib['pmid'] if record is not None else None 
-        except Exception as e: 
+            record = ET.fromstring(response.content).find("record")
+            pmid = record.attrib["pmid"] if record is not None else None
+        except Exception as e:
             return {"error": f"Error: {e}"}
         return {"pmid": pmid} if pmid else {"error": "PMID not found"}
     return {"error": f"Error: Status code {response.status_code}"}
-    
+
+
 def get_doi_summary_pubmed(doi):
     """
     Fetches paper metadata from PubMed using a DOI.
-    
+
     Args:
         doi (str): The DOI of the paper.
         email (str): Your email address (required by NCBI).
-        
+
     Returns:
         dict: A dictionary containing the paper's metadata.
     """
@@ -206,7 +225,9 @@ def get_doi_summary_pubmed(doi):
         return {"error": pmid["error"]}
     pmid = pmid["pmid"]
 
-    fetch_response = requests.get(f"{base_url}efetch.fcgi", params={"db": "pubmed", "id": pmid, "retmode": "xml"})
+    fetch_response = requests.get(
+        f"{base_url}efetch.fcgi", params={"db": "pubmed", "id": pmid, "retmode": "xml"}
+    )
     if fetch_response.status_code != 200:
         return {"error": f"Error: Status code {fetch_response.status_code}"}
     # Parse the XML
@@ -219,7 +240,11 @@ def get_doi_summary_pubmed(doi):
         publisher = root.findtext(".//Publisher/PublisherName")
 
         pub_date_node = article.find("Journal/JournalIssue/PubDate")
-        pub_date_str = "/".join([pub_date_node.findtext(i) for i in ["Day","Month","Year"]]) if pub_date_node is not None else ""
+        pub_date_str = (
+            "/".join([pub_date_node.findtext(i) for i in ["Day", "Month", "Year"]])
+            if pub_date_node is not None
+            else ""
+        )
 
         abstract_element = article.find("Abstract")
         abstract_texts = []
@@ -232,21 +257,24 @@ def get_doi_summary_pubmed(doi):
             full_abstract = ""
 
         authors = []
-        for i in article.find('AuthorList'):
-            authors.append(f'{i.findtext("ForeName") or ""} {i.findtext("LastName") or ""}')
+        for i in article.find("AuthorList"):
+            authors.append(
+                f"{i.findtext('ForeName') or ''} {i.findtext('LastName') or ''}"
+            )
 
         return {
-                "doi": doi,
-                "title": title,
-                "abstract": full_abstract,
-                "journal": journal,
-                "publisher": publisher,
-                "published_date": pub_date_str,
-                "source": "pubmed",
-                "authors": authors
+            "doi": doi,
+            "title": title,
+            "abstract": full_abstract,
+            "journal": journal,
+            "publisher": publisher,
+            "published_date": pub_date_str,
+            "source": "pubmed",
+            "authors": authors,
         }
     except Exception as e:
         return {"error": f"Error: {e}"}
+
 
 def get_doi(entry):
     try:
@@ -279,7 +307,7 @@ def get_doi(entry):
         return f"error getting doi: {e}"
 
 
-def get_pdf_url(doi: str) -> tuple[bool, str|None]:
+def get_pdf_url(doi: str) -> tuple[bool, str | None]:
     """
     Fetches the PDF URL using multiple services in order: Unpaywall, OpenAlex.
 
@@ -298,7 +326,8 @@ def get_pdf_url(doi: str) -> tuple[bool, str|None]:
     logger.error(f"No PDF available for this DOI: {doi}.")
     return True, return_msg if return_msg else None
 
-def get_pdf_url_unpaywall(doi: str) -> tuple[bool, str|None]:
+
+def get_pdf_url_unpaywall(doi: str) -> tuple[bool, str | None]:
     """
     Fetches the PDF URL from Unpaywall using the provided DOI.
 
@@ -330,17 +359,18 @@ def get_pdf_url_unpaywall(doi: str) -> tuple[bool, str|None]:
         logger.error(f"Error fetching data from Unpaywall: {e}")
         return True, f"Error fetching data from Unpaywall: {e}"
 
-def get_pdf_url_openalex(doi: str) -> tuple[bool, str|None]:
+
+def get_pdf_url_openalex(doi: str) -> tuple[bool, str | None]:
     doi = doi.lower().strip()
     try:
         api_url = f"https://api.openalex.org/works/https://doi.org/{doi}"
         response = requests.get(api_url)
         data = response.json()
         if (
-        data.get("best_oa_location")
-        and data["best_oa_location"].get("is_oa")
-        and data["best_oa_location"].get("pdf_url", None)
-             ):
+            data.get("best_oa_location")
+            and data["best_oa_location"].get("is_oa")
+            and data["best_oa_location"].get("pdf_url", None)
+        ):
             return False, data["best_oa_location"].get("pdf_url")
         else:
             logger.error(f"Openalex: No PDF available for this DOI : {doi}")
@@ -351,12 +381,13 @@ def get_pdf_url_openalex(doi: str) -> tuple[bool, str|None]:
 
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Connection': 'keep-alive',
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
 }
+
 
 def download_pdf(url: str, filepath: str):
     """
@@ -369,12 +400,14 @@ def download_pdf(url: str, filepath: str):
 
     try:
         # --- Make the request with headers, stream=True, and a timeout ---
-        with requests.get(url, headers=HEADERS, stream=True, timeout=30, allow_redirects=True) as response:
+        with requests.get(
+            url, headers=HEADERS, stream=True, timeout=30, allow_redirects=True
+        ) as response:
             # Check if the request was successful
             response.raise_for_status()
 
             # --- Save the file in chunks ---
-            with open(filepath, 'wb') as f:
+            with open(filepath, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
 
@@ -389,6 +422,3 @@ def download_pdf(url: str, filepath: str):
     except Exception as e:
         # Handles any other unexpected errors
         logger.error(f"An unexpected error occurred: {e} for url: {url}\n")
-
-
-
