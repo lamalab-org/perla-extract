@@ -434,10 +434,22 @@ class ExtractionPipeline:
             is_review_article = pattern.search(text)
             return not is_review_article
 
+        # If DOI could not be extracted, skip Crossref lookup and use only text-based filters
+        if doi == "NOT_FOUND":
+            text_to_filter = pdf_text[: int(len(pdf_text) * 0.05)]
+            return (
+                theory_filter(text_to_filter)
+                and non_solar_filter(text_to_filter)
+                and review_article_filter(text_to_filter)
+            )
+
         title, abstract, journal, publisher = get_doi_crossref_data(doi)
 
         if abstract is None:
             abstract = ""
+        
+        if title is None:
+            title = ""
 
         if word_count(abstract) < 100:
             text_to_filter = pdf_text[: int(len(pdf_text) * 0.05)]
