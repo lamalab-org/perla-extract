@@ -363,7 +363,6 @@ class ExtractionPipeline:
                 r"predicted efficiency",
                 r"simulation",
                 r"\bMD\b.*simulation",
-                r"\bMD\b.*simulation",
                 # --- Machine Learning / AI ---
                 r"machine learning",
                 r"\bML\b",
