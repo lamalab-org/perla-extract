@@ -1,6 +1,6 @@
 # Data Directory
 
-This directory contains extraction results and ground truth data used for training, optimization, and evaluation of the Perovscribe pipeline.
+This directory contains extraction results and ground truth data used for training, optimization, and evaluation of the Perla Extract pipeline.
 
 ## Directory Structure
 
@@ -52,7 +52,7 @@ The `ground_truth/` directory contains manually checked and corrected extraction
 
 ## File Format
 
-All extraction files are JSON files following the Perovscribe data schema. Each file is named using the paper's DOI (e.g., `10.1002--adfm.201500335.json`).
+All extraction files are JSON files following the Perla Extract data schema. Each file is named using the paper's DOI (e.g., `10.1002--adfm.201500335.json`).
 
 ## Usage
 
@@ -61,7 +61,7 @@ All extraction files are JSON files following the Perovscribe data schema. Each 
 Compare model extractions against the test set:
 
 ```bash
-perovscribe evaluate src/perovscribe/data/extractions/claude-opus-4-1-20250805/ src/perovscribe/data/ground_truth/test/
+perla-extract evaluate src/perla_extract/data/extractions/claude-opus-4-1-20250805/ src/perla_extract/data/ground_truth/test/
 ```
 
 ### Evaluating Human Performance
@@ -69,7 +69,7 @@ perovscribe evaluate src/perovscribe/data/extractions/claude-opus-4-1-20250805/ 
 Compare human consensus extractions against the test set:
 
 ```bash
-perovscribe evaluate src/perovscribe/data/extractions/humans/Consensus/ src/perovscribe/data/ground_truth/test/
+perla-extract evaluate src/perla_extract/data/extractions/humans/Consensus/ src/perla_extract/data/ground_truth/test/
 ```
 
 ### Comparing Individual Annotators
@@ -77,5 +77,5 @@ perovscribe evaluate src/perovscribe/data/extractions/humans/Consensus/ src/pero
 Compare individual human annotator extractions:
 
 ```bash
-perovscribe evaluate src/perovscribe/data/extractions/humans/Bear/ src/perovscribe/data/extractions/humans/Consensus/
+perla-extract evaluate src/perla_extract/data/extractions/humans/Bear/ src/perla_extract/data/extractions/humans/Consensus/
 ```

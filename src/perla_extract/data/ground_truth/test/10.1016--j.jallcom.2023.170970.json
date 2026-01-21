@@ -1,0 +1,956 @@
+{
+    "cells": [
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.25FA0.75PbI2.4Br0.6",
+                "sample_type": "Polycrystalline film",
+                "dimensionality": "3D",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.25"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.75"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.4"
+                    },
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.6"
+                    }
+                ],
+                "bandgap": {
+                    "value": 1.68,
+                    "unit": "eV"
+                },
+                "impurities": null,
+                "additives": null
+            },
+            "device_architecture": "pin",
+            "pce": {
+                "value": 15.95,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.56,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.1,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 78.1
+            },
+            "number_devices": null,
+            "averaged_quantities": null,
+            "active_area": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": null,
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                },
+                "lamp": null
+            },
+            "encapsulated": null,
+            "additional_notes": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "Glass",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "cp-NiOx",
+                    "thickness": {
+                        "value": 35.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "step_name": "Sol-gel compact layer",
+                            "method": "Spin-coating",
+                            "atmosphere": "Ambient air",
+                            "temperature": {
+                                "value": 350.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 1800.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spin_speed": "5000 rpm",
+                                "spin_time": "30 s"
+                            }
+                        },
+                        {
+                            "step_name": "Spray coating porous layer",
+                            "method": "Spray coating",
+                            "atmosphere": "Ambient air",
+                            "temperature": {
+                                "value": 350.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 1800.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spray_cycles": "6",
+                                "nozzle_height": "20.0 cm",
+                                "scan_speed": "1800 mm/min"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Cs0.25FA0.75PbI2.4Br0.6",
+                    "thickness": {
+                        "value": 500.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Perovskite deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": {
+                                "value": 100.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 1800.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": "CB",
+                            "solution": null,
+                            "additional_parameters": {
+                                "two_step_process": "1000 rpm for 8 s, then 5000 rpm for 45 s",
+                                "antisolvent_volume": "300 μL",
+                                "antisolvent_timing": "15 s into second step"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "PC60BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": "PC60BM deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spin_speed": "5000 rpm",
+                                "spin_time": "40 s",
+                                "concentration": "20 mg/mL in CB"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "ZnO",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": "ZnO deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": {
+                                "value": 100.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 300.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spin_speed": "2500 rpm",
+                                "spin_time": "40 s",
+                                "volume": "100 μL"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "a-ITO",
+                    "thickness": {
+                        "value": 80.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": "a-ITO sputtering",
+                            "method": "Sputtering",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "power": "100 W",
+                                "pressure": "1.0 × 10^-3 Pa",
+                                "gas_flow": "Ar:O2 (40:0.2 sccm)"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.25FA0.75PbI2.4Br0.6",
+                "sample_type": "Polycrystalline film",
+                "dimensionality": "3D",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.25"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.75"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.4"
+                    },
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.6"
+                    }
+                ],
+                "bandgap": {
+                    "value": 1.68,
+                    "unit": "eV"
+                },
+                "impurities": null,
+                "additives": null
+            },
+            "device_architecture": "pin",
+            "pce": {
+                "value": 13.93,
+                "unit": "%"
+            },
+            "jsc": {
+                "value": 18.2,
+                "unit": "mA cm^-2"
+            },
+            "voc": {
+                "value": 1.044,
+                "unit": "V"
+            },
+            "ff": {
+                "value": 73.31
+            },
+            "number_devices": null,
+            "averaged_quantities": null,
+            "active_area": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": null,
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                },
+                "lamp": null
+            },
+            "encapsulated": null,
+            "additional_notes": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "Glass",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "c-NiOx",
+                    "thickness": {
+                        "value": 20.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "step_name": "Sol-gel compact layer",
+                            "method": "Spin-coating",
+                            "atmosphere": "Ambient air",
+                            "temperature": {
+                                "value": 350.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 1800.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spin_speed": "5000 rpm",
+                                "spin_time": "30 s"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Cs0.25FA0.75PbI2.4Br0.6",
+                    "thickness": {
+                        "value": 500.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Perovskite deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": {
+                                "value": 100.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 1800.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": "CB",
+                            "solution": null,
+                            "additional_parameters": {
+                                "two_step_process": "1000 rpm for 8 s, then 5000 rpm for 45 s",
+                                "antisolvent_volume": "300 μL",
+                                "antisolvent_timing": "15 s into second step"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "PC60BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": "PC60BM deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spin_speed": "5000 rpm",
+                                "spin_time": "40 s",
+                                "concentration": "20 mg/mL in CB"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "ZnO",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": "ZnO deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": {
+                                "value": 100.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 300.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spin_speed": "2500 rpm",
+                                "spin_time": "40 s",
+                                "volume": "100 μL"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "a-ITO",
+                    "thickness": {
+                        "value": 80.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": "a-ITO sputtering",
+                            "method": "Sputtering",
+                            "atmosphere": "Ar",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "power": "100 W",
+                                "pressure": "1.0 × 10^-3 Pa",
+                                "gas_flow": "Ar:O2 (40:0.2 sccm)"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.25FA0.75PbI2.4Br0.6",
+                "sample_type": "Polycrystalline film",
+                "dimensionality": "3D",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.25"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.75"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.4"
+                    },
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.6"
+                    }
+                ],
+                "bandgap": {
+                    "value": 1.68,
+                    "unit": "eV"
+                },
+                "impurities": null,
+                "additives": null
+            },
+            "device_architecture": "pin",
+            "pce": {
+                "value": 17.8,
+                "unit": "%"
+            },
+            "jsc": null,
+            "voc": null,
+            "ff": {
+                "value": null
+            },
+            "number_devices": null,
+            "averaged_quantities": null,
+            "active_area": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": null,
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                },
+                "lamp": null
+            },
+            "encapsulated": null,
+            "additional_notes": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "Glass",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "cp-NiOx",
+                    "thickness": {
+                        "value": 35.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "step_name": "Sol-gel compact layer",
+                            "method": "Spin-coating",
+                            "atmosphere": "Ambient air",
+                            "temperature": {
+                                "value": 350.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 1800.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spin_speed": "5000 rpm",
+                                "spin_time": "30 s"
+                            }
+                        },
+                        {
+                            "step_name": "Spray coating porous layer",
+                            "method": "Spray coating",
+                            "atmosphere": "Ambient air",
+                            "temperature": {
+                                "value": 350.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 1800.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spray_cycles": "6",
+                                "nozzle_height": "20.0 cm",
+                                "scan_speed": "1800 mm/min"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Cs0.25FA0.75PbI2.4Br0.6",
+                    "thickness": {
+                        "value": 500.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Perovskite deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": {
+                                "value": 100.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 1800.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": "CB",
+                            "solution": null,
+                            "additional_parameters": {
+                                "two_step_process": "1000 rpm for 8 s, then 5000 rpm for 45 s",
+                                "antisolvent_volume": "300 μL",
+                                "antisolvent_timing": "15 s into second step"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "PC60BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": "PC60BM deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spin_speed": "5000 rpm",
+                                "spin_time": "40 s",
+                                "concentration": "20 mg/mL in CB"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "ZnO",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": "ZnO deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": {
+                                "value": 100.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 300.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spin_speed": "2500 rpm",
+                                "spin_time": "40 s",
+                                "volume": "100 μL"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Ag",
+                    "thickness": {
+                        "value": 100.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": "Ag evaporation",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "pressure": "2.0 × 10^-6 torr"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                }
+            ]
+        },
+        {
+            "perovskite_composition": {
+                "formula": "Cs0.25FA0.75PbI2.4Br0.6",
+                "sample_type": "Polycrystalline film",
+                "dimensionality": "3D",
+                "a_ions": [
+                    {
+                        "abbreviation": "Cs",
+                        "common_name": "Cesium",
+                        "molecular_formula": "Cs+",
+                        "coefficient": "0.25"
+                    },
+                    {
+                        "abbreviation": "FA",
+                        "common_name": "Formamidinium",
+                        "molecular_formula": "CH5N2+",
+                        "coefficient": "0.75"
+                    }
+                ],
+                "b_ions": [
+                    {
+                        "abbreviation": "Pb",
+                        "common_name": "Lead",
+                        "molecular_formula": "Pb2+",
+                        "coefficient": "1"
+                    }
+                ],
+                "x_ions": [
+                    {
+                        "abbreviation": "I",
+                        "common_name": "Iodide",
+                        "molecular_formula": "I-",
+                        "coefficient": "2.4"
+                    },
+                    {
+                        "abbreviation": "Br",
+                        "common_name": "Bromide",
+                        "molecular_formula": "Br-",
+                        "coefficient": "0.6"
+                    }
+                ],
+                "bandgap": {
+                    "value": 1.68,
+                    "unit": "eV"
+                },
+                "impurities": null,
+                "additives": null
+            },
+            "device_architecture": "pin",
+            "pce": {
+                "value": 16.1,
+                "unit": "%"
+            },
+            "jsc": null,
+            "voc": null,
+            "ff": {
+                "value": null
+            },
+            "number_devices": null,
+            "averaged_quantities": null,
+            "active_area": null,
+            "light_source": {
+                "type": "AM 1.5G",
+                "description": null,
+                "light_intensity": {
+                    "value": 100.0,
+                    "unit": "mW cm^-2"
+                },
+                "lamp": null
+            },
+            "encapsulated": null,
+            "additional_notes": null,
+            "stability": null,
+            "layers": [
+                {
+                    "name": "Glass",
+                    "thickness": null,
+                    "functionality": "Substrate",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "ITO",
+                    "thickness": null,
+                    "functionality": "Contact",
+                    "deposition": null,
+                    "additional_treatment": null
+                },
+                {
+                    "name": "c-NiOx",
+                    "thickness": {
+                        "value": 20.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Hole-transport",
+                    "deposition": [
+                        {
+                            "step_name": "Sol-gel compact layer",
+                            "method": "Spin-coating",
+                            "atmosphere": "Ambient air",
+                            "temperature": {
+                                "value": 350.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 1800.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spin_speed": "5000 rpm",
+                                "spin_time": "30 s"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Cs0.25FA0.75PbI2.4Br0.6",
+                    "thickness": {
+                        "value": 500.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Absorber",
+                    "deposition": [
+                        {
+                            "step_name": "Perovskite deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": {
+                                "value": 100.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 1800.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": "CB",
+                            "solution": null,
+                            "additional_parameters": {
+                                "two_step_process": "1000 rpm for 8 s, then 5000 rpm for 45 s",
+                                "antisolvent_volume": "300 μL",
+                                "antisolvent_timing": "15 s into second step"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "PC60BM",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": "PC60BM deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spin_speed": "5000 rpm",
+                                "spin_time": "40 s",
+                                "concentration": "20 mg/mL in CB"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "ZnO",
+                    "thickness": null,
+                    "functionality": "Electron-transport",
+                    "deposition": [
+                        {
+                            "step_name": "ZnO deposition",
+                            "method": "Spin-coating",
+                            "atmosphere": "N2",
+                            "temperature": {
+                                "value": 100.0,
+                                "unit": "°C"
+                            },
+                            "duration": {
+                                "value": 300.0,
+                                "unit": "s"
+                            },
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "spin_speed": "2500 rpm",
+                                "spin_time": "40 s",
+                                "volume": "100 μL"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                },
+                {
+                    "name": "Ag",
+                    "thickness": {
+                        "value": 100.0,
+                        "unit": "nm"
+                    },
+                    "functionality": "Contact",
+                    "deposition": [
+                        {
+                            "step_name": "Ag evaporation",
+                            "method": "Evaporation",
+                            "atmosphere": "Vacuum",
+                            "temperature": null,
+                            "duration": null,
+                            "antisolvent": null,
+                            "solution": null,
+                            "additional_parameters": {
+                                "pressure": "2.0 × 10^-6 torr"
+                            }
+                        }
+                    ],
+                    "additional_treatment": null
+                }
+            ]
+        }
+    ]
+}

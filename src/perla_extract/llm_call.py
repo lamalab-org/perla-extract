@@ -3,8 +3,8 @@ import sys
 from litellm import completion
 import instructor
 from pydantic import BaseModel, Field
-from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
-from perovscribe.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
+from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
+from perla_extract.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
 import litellm
 
 # Try to setup Redis cache if available, otherwise use disk cache

@@ -1,4 +1,4 @@
-from perovscribe.preprocessing.base import BasePreprocessor
+from perla_extract.preprocessing.base import BasePreprocessor
 from typing import Union
 from pathlib import Path
 import pymupdf

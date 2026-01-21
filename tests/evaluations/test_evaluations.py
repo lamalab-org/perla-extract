@@ -1,4 +1,4 @@
-from perovscribe.evaluations import Evaluations
+from perla_extract.evaluations import Evaluations
 import pytest
 from copy import deepcopy
 from collections import defaultdict
