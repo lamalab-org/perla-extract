@@ -5,20 +5,20 @@ import importlib.resources
 
 def test_data_dir_exists():
     """Test that the data directory exists."""
-    data_dir = importlib.resources.files("perovscribe").joinpath("data")
+    data_dir = importlib.resources.files("perla_extract").joinpath("data")
     assert data_dir.is_dir(), "Data directory should exist"
 
 
 def test_extractions_dir_exists():
     """Test that the extractions directory exists."""
-    data_dir = importlib.resources.files("perovscribe").joinpath("data")
+    data_dir = importlib.resources.files("perla_extract").joinpath("data")
     extractions_dir = data_dir / "extractions"
     assert extractions_dir.is_dir(), "Extractions directory should exist"
 
 
 def test_ground_truth_test_dir_exists():
     """Test that the ground_truth/test directory exists."""
-    data_dir = importlib.resources.files("perovscribe").joinpath("data")
+    data_dir = importlib.resources.files("perla_extract").joinpath("data")
     ground_truth_dir = data_dir / "ground_truth" / "test"
     assert ground_truth_dir.is_dir(), "Ground truth test directory should exist"
     # Verify it contains files
@@ -28,7 +28,7 @@ def test_ground_truth_test_dir_exists():
 
 def test_experts_dir_exists():
     """Test that the humans/Consensus directory exists."""
-    data_dir = importlib.resources.files("perovscribe").joinpath("data")
+    data_dir = importlib.resources.files("perla_extract").joinpath("data")
     experts_dir = data_dir / "extractions" / "humans" / "Consensus"
     assert experts_dir.is_dir(), "Experts (humans/Consensus) directory should exist"
     # Verify it contains files
@@ -38,7 +38,7 @@ def test_experts_dir_exists():
 
 def test_all_extraction_dirs_exist():
     """Test that all model extraction directories exist."""
-    data_dir = importlib.resources.files("perovscribe").joinpath("data")
+    data_dir = importlib.resources.files("perla_extract").joinpath("data")
     extractions_dir = data_dir / "extractions"
     
     # These are the directories listed in pyproject.toml

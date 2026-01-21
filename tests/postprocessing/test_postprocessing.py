@@ -1,4 +1,4 @@
-from perovscribe.postprocessing import normalize
+from perla_extract.postprocessing import normalize
 
 
 def test_normalize(normalize_input, normalize_output):
