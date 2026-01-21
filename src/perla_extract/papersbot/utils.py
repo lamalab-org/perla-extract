@@ -1,7 +1,7 @@
 import pickle
 import requests
 import os
-from perovscribe.configuration import papersbot_runs_path
+from perla_extract.configuration import papersbot_runs_path
 from loguru import logger
 import xml.etree.ElementTree as ET
 

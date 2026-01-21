@@ -15,8 +15,8 @@ from munkres import Munkres
 from Levenshtein import distance, ratio
 import flatdict
 
-from perovscribe.postprocessing import complete_solar_cell_dict
-from perovscribe.llm_call import llm_as_judge
+from perla_extract.postprocessing import complete_solar_cell_dict
+from perla_extract.llm_call import llm_as_judge
 
 
 class Match(TypedDict):
@@ -56,7 +56,7 @@ class Evaluations:
     Computes a similarity score from 0 to 1 where 1 indicates highest similarity.
     Uses DeepDiff for deep distance computation and Munkres algorithm for optimal matching.
 
-    Note: Input datasets should be normalized with perovscribe.postprocessing.
+    Note: Input datasets should be normalized with perla_extract.postprocessing.
     """
 
     def __init__(

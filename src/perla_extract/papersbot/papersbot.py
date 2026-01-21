@@ -19,14 +19,14 @@ from typing import List, Optional
 from importlib.resources import files
 from loguru import logger
 from tqdm import tqdm
-from perovscribe.papersbot.utils import get_doi, save_summaries
-from perovscribe.papersbot.match_pdf import check_pdfs, check_matches, download_pdfs
-from perovscribe.papersbot.proc_abstracts import (
+from perla_extract.papersbot.utils import get_doi, save_summaries
+from perla_extract.papersbot.match_pdf import check_pdfs, check_matches, download_pdfs
+from perla_extract.papersbot.proc_abstracts import (
     get_abstracts,
     update_for_retry,
     check_relaxed_match_doi,
 )
-from perovscribe.configuration import papersbot_runs_path, RELAXED_REGEX, STRICT_REGEX
+from perla_extract.configuration import papersbot_runs_path, RELAXED_REGEX, STRICT_REGEX
 
 REGEXES = [STRICT_REGEX, RELAXED_REGEX]
 
@@ -60,7 +60,7 @@ def entry_matches(entry, regex):
 
 # Read our list of feeds from file
 def read_feeds_list():
-    with open(files("perovscribe").joinpath("papersbot/feeds.txt"), "r") as f:
+    with open(files("perla_extract").joinpath("papersbot/feeds.txt"), "r") as f:
         feeds = [s.partition("#")[0].strip() for s in f]
         return [s for s in feeds if s]
 

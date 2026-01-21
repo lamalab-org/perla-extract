@@ -1,4 +1,4 @@
-from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
+from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
 from typing import TYPE_CHECKING, Union
 from pathlib import Path
 from typing import Dict, Any

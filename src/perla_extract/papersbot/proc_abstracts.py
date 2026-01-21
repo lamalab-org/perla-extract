@@ -1,6 +1,6 @@
 import pandas as pd
-from perovscribe.papersbot.utils import get_doi_summary, save_summaries
-from perovscribe.configuration import papersbot_runs_path, retry_dates
+from perla_extract.papersbot.utils import get_doi_summary, save_summaries
+from perla_extract.configuration import papersbot_runs_path, retry_dates
 import pickle
 import time
 from collections import defaultdict

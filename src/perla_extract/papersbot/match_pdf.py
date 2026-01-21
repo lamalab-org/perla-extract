@@ -1,6 +1,6 @@
-from perovscribe.papersbot.utils import get_pdf_url, download_pdf
+from perla_extract.papersbot.utils import get_pdf_url, download_pdf
 import pickle
-from perovscribe.configuration import papersbot_runs_path, STRICT_REGEX
+from perla_extract.configuration import papersbot_runs_path, STRICT_REGEX
 import pandas as pd
 import time
 import json
@@ -15,7 +15,7 @@ def check_matches():
     """
     Check for matches using strict regex on abstracts and titles
     """
-    from perovscribe.pipeline import is_doi_good_to_go
+    from perla_extract.pipeline import is_doi_good_to_go
 
     def print_stats(stats: dict):
         end_time = time.strftime("%Y-%m-%d %H:%M:%S %Z")

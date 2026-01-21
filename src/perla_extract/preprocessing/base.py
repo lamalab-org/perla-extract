@@ -3,7 +3,7 @@ from typing import Union
 from pathlib import Path
 from diskcache import Cache
 import os
-from perovscribe.preprocessing.utils import get_hash
+from perla_extract.preprocessing.utils import get_hash
 
 
 class BasePreprocessor:

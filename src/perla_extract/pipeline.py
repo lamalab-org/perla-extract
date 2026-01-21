@@ -13,15 +13,15 @@ import numpy as np
 from pydantic import ValidationError
 import pdf2doi
 
-from perovscribe.configuration import papersbot_runs_path
-from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
-from perovscribe.papersbot.utils import get_doi_summary
-from perovscribe.papersbot.papersbot import PapersbotResult
-from perovscribe.preprocessing.preprocessor import Preprocessor
-from perovscribe.postprocessing import postprocess
-from perovscribe.evaluations import Evaluations, score_multiple_extractions
-from perovscribe import llm_call
-from perovscribe.export import (
+from perla_extract.configuration import papersbot_runs_path
+from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
+from perla_extract.papersbot.utils import get_doi_summary
+from perla_extract.papersbot.papersbot import PapersbotResult
+from perla_extract.preprocessing.preprocessor import Preprocessor
+from perla_extract.postprocessing import postprocess
+from perla_extract.evaluations import Evaluations, score_multiple_extractions
+from perla_extract import llm_call
+from perla_extract.export import (
     to_json,
     convert_extraction_to_nomad_entries,
     push_to_nomad,
@@ -138,7 +138,7 @@ def is_doi_good_to_go(doi, pdf_text, metadata=None) -> bool:
         allowed_journals = [
             journal_entry["Source title"]
             for journal_entry in read_csv_to_dict(
-                files("perovscribe").joinpath("allowed_journals.csv")
+                files("perla_extract").joinpath("allowed_journals.csv")
             )
         ]
         if journal not in allowed_journals:
@@ -506,7 +506,7 @@ def extract(
 
 
 def optimizer(model_name: str = "claude-sonnet-4-20250514", output: str = "./"):
-    from perovscribe.optimizer import run
+    from perla_extract.optimizer import run
 
     run(model_name, output)
     # OptimizationPipeline(model_name).run(filepath)
@@ -528,7 +528,7 @@ def papersbot(download_dir: str = "./downloaded_papers") -> PapersbotResult:
         )
     
     try:
-        from perovscribe.papersbot import papersbot as papersbot_module
+        from perla_extract.papersbot import papersbot as papersbot_module
         # Pass download_dir to the module
         result = papersbot_module.run_papersbot(download_dir=download_dir)
         return result

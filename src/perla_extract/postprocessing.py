@@ -1,5 +1,5 @@
 import copy
-from perovscribe import configuration as config
+from perla_extract import configuration as config
 
 
 def postprocess(data: dict) -> dict:

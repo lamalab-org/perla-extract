@@ -1,8 +1,8 @@
-# Perovscribe
+# Perla Extract
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-**Perovscribe** is a tool for extracting structured data about perovskite solar cells from scientific papers. It uses large language models (LLMs) to automatically extract device parameters, material compositions, performance metrics, and other relevant information from PDF documents.
+**Perla Extract** is an automated data extraction tool that uses large language models (LLMs) to identify and structure key information on perovskite solar cells from scientific papers. This includes device parameters, material compositions, and performance metrics, all of which are collected and stored in the **Perla** database.
 
 ## Features
 
@@ -26,7 +26,7 @@
 ### Basic Installation
 
 ```bash
-pip install perovscribe
+pip install perla-extract
 ```
 
 ### Optional Dependencies
@@ -35,27 +35,27 @@ For specific PDF processors:
 
 ```bash
 # For Nougat OCR processing
-pip install perovscribe[nougat]
+pip install perla-extract[nougat]
 
 # For Marker PDF processing
-pip install perovscribe[marker]
+pip install perla-extract[marker]
 
 # For Redis-based caching (requires Redis server)
-pip install perovscribe[cache]
+pip install perla-extract[cache]
 
 # For development dependencies
-pip install perovscribe[dev]
+pip install perla-extract[dev]
 ```
 
-**Note on Caching**: By default, Perovscribe uses disk-based caching for LLM calls. If you have a Redis server available, you can install the `cache` extra and configure Redis via environment variables (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_TTL`) for persistent caching across sessions with better performance.
+**Note on Caching**: By default, Perla Extract uses disk-based caching for LLM calls. If you have a Redis server available, you can install the `cache` extra and configure Redis via environment variables (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_TTL`) for persistent caching across sessions with better performance.
 
 ## Data Directory
 
-The data directory (`src/perovscribe/data/`) contains:
+The data directory (`src/perla_extract/data/`) contains:
 - **Extractions**: Results from multiple LLM models and human annotators (including consensus annotations)
 - **Ground Truth**: Manually checked and corrected datasets (dev set for optimization, test set for evaluation)
 
-See [`src/perovscribe/data/README.md`](src/perovscribe/data/README.md) for detailed information about the data structure and organization.
+See [`src/perla_extract/data/README.md`](src/perla_extract/data/README.md) for detailed information about the data structure and organization.
 
 ## Quick Start
 
@@ -82,10 +82,10 @@ LiteLLM supports many providers. Set the appropriate API key environment variabl
 
 ### Run the Default Pipeline
 
-The simplest way to see Perovscribe in action:
+The simplest way to see Perla Extract in action:
 
 ```bash
-perovscribe
+perla_extract
 ```
 
 This will:
@@ -97,33 +97,33 @@ This will:
 
 ```bash
 # Single PDF
-perovscribe extract pdfs/paper.pdf
+perla-extract extract pdfs/paper.pdf
 
 # With specific model
-perovscribe extract --model_name=gpt-4o-mini pdfs/paper.pdf --output results/
+perla-extract extract --model_name=gpt-4o-mini pdfs/paper.pdf --output results/
 
 # Directory of PDFs
-perovscribe extract pdfs/ --output extractions/
+perla-extract extract pdfs/ --output extractions/
 ```
 
 ### Evaluate Extractions
 
 ```bash
 # Evaluate model against ground truth
-perovscribe evaluate src/perovscribe/data/extractions/claude-opus-4-1-20250805/ src/perovscribe/data/ground_truth/test/
+perla-extract evaluate src/perla_extract/data/extractions/claude-opus-4-1-20250805/ src/perla_extract/data/ground_truth/test/
 
 # Evaluate human performance
-perovscribe evaluate src/perovscribe/data/extractions/humans/Consensus/ src/perovscribe/data/ground_truth/test/
+perla-extract evaluate src/perla_extract/data/extractions/humans/Consensus/ src/perla_extract/data/ground_truth/test/
 ```
 
 ## Command Reference
 
-### `perovscribe extract`
+### `perla-extract extract`
 
 Extract data from PDF files.
 
 ```bash
-perovscribe extract <filepath> [--model_name=MODEL] [--preprocessor=PROCESSOR] [--output=DIR] [--nomad] [--nomad_upload_id=ID]
+perla-extract extract <filepath> [--model_name=MODEL] [--preprocessor=PROCESSOR] [--output=DIR] [--nomad] [--nomad_upload_id=ID]
 ```
 
 **Key options:**
@@ -133,25 +133,25 @@ perovscribe extract <filepath> [--model_name=MODEL] [--preprocessor=PROCESSOR] [
 - `--nomad`: Upload to NOMAD repository
 - `--use_cache`: Enable API call caching
 
-### `perovscribe evaluate`
+### `perla-extract evaluate`
 
 Evaluate extraction results against ground truth.
 
 ```bash
-perovscribe evaluate <extraction_dir> <truth_dir>
+perla-extract evaluate <extraction_dir> <truth_dir>
 ```
 
-### `perovscribe papersbot`
+### `perla-extract papersbot`
 
 Download papers automatically. Requires `UNPAYWALL_EMAIL` environment variable (see Quick Start for setup).
 
-### `perovscribe optimizer`
+### `perla-extract optimizer`
 
 Run prompt optimization pipeline.
 
 ## Uploading to NOMAD
 
-Perovscribe can automatically upload extraction results to [NOMAD](https://nomad-lab.eu/), a materials science data repository.
+Perla Extract can automatically upload extraction results to [NOMAD](https://nomad-lab.eu/), a materials science data repository.
 
 **Setup:**
 ```bash
@@ -163,10 +163,10 @@ export NOMAD_URL="https://nomad-lab.eu/prod/v1/"  # Optional
 **Usage:**
 ```bash
 # Upload to new upload
-perovscribe extract --nomad pdfs/paper.pdf
+perla-extract extract --nomad pdfs/paper.pdf
 
 # Append to existing upload
-perovscribe extract --nomad --nomad_upload_id="upload-id" pdfs/paper.pdf
+perla-extract extract --nomad --nomad_upload_id="upload-id" pdfs/paper.pdf
 ```
 
 Each device/cell is uploaded as a separate NOMAD entry with automatic format conversion.
@@ -180,7 +180,7 @@ Each device/cell is uploaded as a separate NOMAD entry with automatic format con
 
 ## Citation
 
-If you use Perovscribe in your research, please cite:
+If you use Perla Extract in your research, please cite:
 
 ```bibtex
 TODO:

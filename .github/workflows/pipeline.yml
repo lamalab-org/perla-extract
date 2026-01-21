@@ -41,16 +41,16 @@ jobs:
         run: uv pip install --system wiley-tdm structlog
 
       - name: Download PapersBot runs from Hugging Face
-        run: python -u src/perovscribe/papersbot/hf_utils.py download_files 
-        # working-directory: ./src/perovscribe
+        run: python -u src/perla_extract/papersbot/hf_utils.py download_files 
+        # working-directory: ./src/perla_extract
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_REPO_ID: ${{ vars.HF_REPO_ID }}
           REVISION: ${{ vars.HF_REVISION }}
       # Step 5: Run the main pipeline script
       - name: Run pipeline script
-        run: uv run perovscribe extract ./downloaded_papers --nomad --nomad_upload_id $UPLOAD_ID
-        # working-directory: ./src/perovscribe
+        run: uv run perla-extract extract ./downloaded_papers --nomad --nomad_upload_id $UPLOAD_ID
+        # working-directory: ./src/perla_extract
         env:
           # This makes the secret available as an environment variable to your Python script.
           # Make sure to replace 'API_KEY' with the name you gave your secret in GitHub settings.
@@ -65,7 +65,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_TOKEN }}
           
       - name: Upload PapersBot runs to Hugging Face
-        run: python -u src/perovscribe/papersbot/hf_utils.py upload_files 
+        run: python -u src/perla_extract/papersbot/hf_utils.py upload_files 
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_REPO_ID: ${{ vars.HF_REPO_ID }}

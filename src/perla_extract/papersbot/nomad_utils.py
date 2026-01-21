@@ -4,8 +4,8 @@ from loguru import logger
 import io
 import zipfile
 import shutil
-from perovscribe.configuration import papersbot_runs_path
-from perovscribe.export import get_authentication_token
+from perla_extract.configuration import papersbot_runs_path
+from perla_extract.export import get_authentication_token
 
 NOMAD_USERNAME = os.environ.get("NOMAD_USERNAME")
 NOMAD_PASSWORD = os.environ.get("NOMAD_PASSWORD")

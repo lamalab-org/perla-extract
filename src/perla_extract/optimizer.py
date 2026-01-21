@@ -1,19 +1,19 @@
 from pydantic import BaseModel, Field
 from litellm import completion
 import instructor
-from perovscribe.preprocessing.preprocessor import Preprocessor
-from perovscribe.postprocessing import postprocess
+from perla_extract.preprocessing.preprocessor import Preprocessor
+from perla_extract.postprocessing import postprocess
 import json
 import os
 from pathlib import Path
-from perovscribe import llm_call
-from perovscribe.export import to_json
-from perovscribe.evaluations import score_multiple_extractions
+from perla_extract import llm_call
+from perla_extract.export import to_json
+from perla_extract.evaluations import score_multiple_extractions
 import litellm
-from perovscribe.pydantic_model_reduced import PerovskiteSolarCells
+from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
 import numpy as np
 
-from perovscribe.constants import (
+from perla_extract.constants import (
     OPTIMIZER_PROMPT,
     STATE_TEMPLATE,
 )
