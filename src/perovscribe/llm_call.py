@@ -9,6 +9,12 @@ import litellm
 
 # Try to setup Redis cache if available, otherwise use disk cache
 try:
+    # Disable litellm error output
+    litellm.suppress_debug_info = True
+    litellm.set_verbose = False
+    import logging
+
+    logging.getLogger("LiteLLM").setLevel(logging.CRITICAL)
     from litellm.caching.caching import Cache
     litellm.cache = Cache(
         type="redis",
