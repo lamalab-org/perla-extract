@@ -147,7 +147,6 @@ class PapersBot:
                 self.n_seen += 1
                 entry_stats = {
                     "id": entry.get("id", ""),
-                    "title": entry.get("title", ""),
                     "parsed_time": time.time(),
                     "doi": get_doi(entry),
                 }
@@ -165,7 +164,7 @@ class PapersBot:
                     save_summaries(
                         {
                             entry_stats["id"]: {
-                                "title": entry_stats["title"],
+                                "title": entry.get("title", ""),
                                 "rss_feed_summary": entry.get("summary", ""),
                                 "doi": entry_stats["doi"],
                             }
