@@ -1,8 +1,8 @@
-# Perla Extract
+# PERLA Extract
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-**Perla Extract** is an automated data extraction tool that uses large language models (LLMs) to identify and structure key information on perovskite solar cells from scientific papers. This includes device parameters, material compositions, and performance metrics, all of which are collected and stored in the **Perla** database.
+**PERLA Extract** is an automated data extraction tool that uses large language models (LLMs) to identify and structure key information on perovskite solar cells from scientific papers. This includes device parameters, material compositions, and performance metrics, all of which are collected and stored in the **[PERLA](https://fairmat-nfdi.github.io/perla/)** database.
 
 ## Features
 
