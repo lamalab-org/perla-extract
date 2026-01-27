@@ -85,7 +85,7 @@ LiteLLM supports many providers. Set the appropriate API key environment variabl
 The simplest way to see Perla Extract in action:
 
 ```bash
-perla_extract
+perla-extract
 ```
 
 This will:
