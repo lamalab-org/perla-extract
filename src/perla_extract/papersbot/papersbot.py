@@ -98,6 +98,8 @@ class PapersBot:
         self.feeds = read_feeds_list()
         self.posted = read_posted()
 
+        os.makedirs(papersbot_runs_path, exist_ok=True)
+
         # Start-up banner
         logger.info(
             f"This is PapersBot running at {time.strftime('%Y-%m-%d %H:%M:%S %Z')}"
@@ -187,11 +189,11 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
     """
 
     try:
+        bot = PapersBot()
+
         if not os.path.isfile(f"{papersbot_runs_path}/summaries.pkl"):
             with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
                 pickle.dump({}, f)
-
-        bot = PapersBot()
 
         # Run the bot to process feeds
         bot.run()

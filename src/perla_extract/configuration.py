@@ -52,7 +52,6 @@ default_units = {
 
 
 papersbot_runs_path = "papersbot_run"
-os.makedirs(papersbot_runs_path, exist_ok=True)
 
 retry_dates = [30, 90, 180, 360]  # days
 
