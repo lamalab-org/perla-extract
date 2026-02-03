@@ -24,17 +24,8 @@ try:
         password=os.environ.get("REDIS_PASSWORD"),
         namespace="litellm",
     )
-except ImportError:
-    # Redis package not installed, fall back to disk cache
-    from litellm.caching.caching import Cache
-    print("Redis package not available, using disk cache")
-    litellm.cache = Cache(type="disk")
 except Exception as e:
-    # Redis connection failed or other error, fall back to disk cache
-    from litellm.caching.caching import Cache
-    print(f"Redis cache setup failed ({e}), using disk cache")
-    litellm.cache = Cache(type="disk")
-
+    pass
 
 def create_text_completion(
     model_name: str,
