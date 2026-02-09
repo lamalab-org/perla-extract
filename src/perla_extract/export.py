@@ -210,7 +210,7 @@ def process_to_nomad(raw_data, doi, ureg=None):
 
 def get_authentication_token(nomad_url: str=NOMAD_URL, username: str=NOMAD_USERNAME, password: str=NOMAD_PASSWORD) -> str|None: 
     '''Get the token for accessing your NOMAD unpublished uploads remotely'''
-    body={"username": username, "password": password}
+    body={"username": username, "password": password, "grant_type": "password"}
     try:
         response = requests.post(
             nomad_url + 'auth/token', data=body, timeout=10)
