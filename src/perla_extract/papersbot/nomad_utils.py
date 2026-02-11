@@ -1,5 +1,6 @@
 import os
 import requests
+from pathlib import Path
 from loguru import logger
 import io
 import zipfile
@@ -34,6 +35,7 @@ def download_archive(upload_id: str = NOMAD_STATS_ID, dest_path=papersbot_runs_p
 
 def upload_archive(upload_id: str = NOMAD_STATS_ID, source_path=papersbot_runs_path):
     token = get_authentication_token(NOMAD_URL, NOMAD_USERNAME, NOMAD_PASSWORD)
+    source_path = Path(source_path)
     zip_path = f"{source_path.parent}/temp_runs"
     if not token:
         raise RuntimeError("Failed to authenticate with NOMAD")
@@ -58,6 +60,7 @@ def upload_archive(upload_id: str = NOMAD_STATS_ID, source_path=papersbot_runs_p
 
 
 def clear_local_runs(path=papersbot_runs_path):
+    path = Path(path)
     if os.path.exists(path.parent):
         shutil.rmtree(path.parent)
 
