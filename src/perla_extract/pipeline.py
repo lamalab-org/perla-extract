@@ -91,6 +91,9 @@ def read_csv_to_dict(filepath):
 
 def log_processing(doi, key, value):
     log_path =Path(f"{papersbot_runs_path}/found_pdf_urls.json")
+    folder_path = log_path.parent
+    if not folder_path.exists():
+        return
     if log_path.exists():
         with open(log_path, "r") as f:
                 log_json = json.load(f)

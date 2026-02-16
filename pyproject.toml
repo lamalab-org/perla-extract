@@ -35,7 +35,7 @@ dependencies = [
     "levenshtein",
     "instructor",
     "fire",
-    "flatdict",
+    "flatdict==4.0.0",
     "mip",
     "loguru",
     "pandas",
@@ -43,6 +43,8 @@ dependencies = [
     "pdf2doi>=1.7"
 ]
 
+[tool.uv.extra-build-dependencies]
+flatdict = ["setuptools<82.0.0"]
 
 [project.optional-dependencies]
 dev = ["jupyter", "docformatter", "pytest", "ruff", "bump-my-version"]

@@ -113,9 +113,15 @@ class PapersBot:
         self.posted.append(url)
 
     def save_entry_stats(self, entry_stats):
-        with open(f"{papersbot_runs_path}/entry_stats.csv", "a", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=entry_stats.keys())
-            writer.writerow(entry_stats)
+        if not os.path.isfile(f"{papersbot_runs_path}/entry_stats.csv"):
+            with open(f"{papersbot_runs_path}/entry_stats.csv", "a", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=entry_stats.keys())
+                writer.writeheader()
+                writer.writerow(entry_stats)
+        else:
+            with open(f"{papersbot_runs_path}/entry_stats.csv", "a", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=entry_stats.keys())
+                writer.writerow(entry_stats)
 
     def print_stats(self, update_current=True):
         file_name = "current_stats.txt" if update_current else "stats.txt"
