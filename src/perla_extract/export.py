@@ -187,7 +187,7 @@ def traverse_and_transform(obj, parent_key=None, ureg=None):
     return obj
 
 
-def process_to_nomad(raw_data, doi, ureg=None):
+def process_to_nomad(raw_data, doi, model_name, ureg=None):
     """Wraps the transformed data in the specific NOMAD schema envelope."""
     doi_url = "https://doi.org/"+doi
     # Run the transformation
@@ -201,6 +201,9 @@ def process_to_nomad(raw_data, doi, ureg=None):
                 "data": {
                     "m_def": "perovskite_solar_cell_database.llm_extraction_schema.LLMExtractedPerovskiteSolarCell",
                     "DOI_number": doi_url,
+                    "extraction_metadata": {
+                        "model": model_name,
+                        "model_version": model_name,},
                     **cell # Unpack the processed cell data here
                 }
             }
@@ -415,8 +418,8 @@ def remove_hallucinated_big_four_area(data, pdf_text):
 
 
 def convert_extraction_to_nomad_entries(
-    pydantic_model: PerovskiteSolarCells, doi: str, pdf_text: str, ureg: 'UnitRegistry' = None
+    pydantic_model: PerovskiteSolarCells, doi: str, pdf_text: str, model_name: str, ureg: 'UnitRegistry' = None
 ):
     data = filter_unwanted(pydantic_model.model_dump(), pdf_text)
-    nomad_entries = process_to_nomad(data, doi, ureg)
+    nomad_entries = process_to_nomad(data, doi, model_name,ureg)
     return nomad_entries

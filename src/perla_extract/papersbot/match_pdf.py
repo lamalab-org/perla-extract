@@ -1,6 +1,15 @@
-from perla_extract.papersbot.utils import get_pdf_url, download_pdf
+from perla_extract.papersbot.utils import (
+    get_pdf_url,
+    download_pdf,
+    playwright_download_pdf,
+)
 import pickle
-from perla_extract.configuration import papersbot_runs_path, STRICT_REGEX
+import asyncio
+from perla_extract.configuration import (
+    papersbot_runs_path,
+    playwright_installed,
+    STRICT_REGEX,
+)
 import pandas as pd
 import time
 import json
@@ -84,14 +93,15 @@ def check_pdfs():
     found_urls = {}
     logger.info(f"Checking for PDF URLs for {len(r_df)} strict matched papers.")
     for i, sample in tqdm(r_df.iterrows(), total=len(r_df)):
-        error, pdf_url = get_pdf_url(sample["doi"])
+        doi = sample["doi"].strip().lower()
+        error, pdf_url = get_pdf_url(doi)
         post_proc_df.at[i, "pdf_checked"] = True
         if pdf_url is not None:
             if not error:
                 post_proc_df.at[i, "pdf_available"] = True
                 stats["urls_found"] += 1
-                found_urls[sample["doi"]] = {
-                    "doi": sample["doi"],
+                found_urls[doi] = {
+                    "doi": doi,
                     "pdf_url": pdf_url,
                     "tries": 0,
                 }
@@ -149,9 +159,15 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> List[Path]:
             downloaded_files.append(filepath)
         else:
             try:
-                download_pdf(pdf_url, str(filepath))
+                download_success = download_pdf(pdf_url, str(filepath))
+                if not download_success and playwright_installed:
+                    download_success = asyncio.run(
+                        playwright_download_pdf(pdf_url, str(filepath))
+                    )
                 if filepath.exists():
                     downloaded_files.append(filepath)
+                else:
+                    logger.error(f"Failed to download PDF for {doi} from {pdf_url}")
             except Exception as e:
                 logger.error(f"Error downloading {doi}: {e}")
         found_urls[doi]["tries"] += 1

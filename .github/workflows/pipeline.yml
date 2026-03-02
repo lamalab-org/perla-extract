@@ -45,7 +45,10 @@ jobs:
       
       # Step 4: Install project dependencies
       - name: Install dependencies with uv
-        run: uv pip install --system .
+        run: uv pip install --system ".[playwright]"
+      
+      - name: Install playwright browsers
+        run: playwright install firefox
      
       # Step 5: Download PapersBot run
       - name: Download PapersBot run stats from Nomad

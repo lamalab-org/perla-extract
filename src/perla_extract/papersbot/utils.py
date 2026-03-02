@@ -1,6 +1,6 @@
+import os
 import pickle
 import requests
-import os
 from perla_extract.configuration import papersbot_runs_path
 from loguru import logger
 import xml.etree.ElementTree as ET
@@ -389,13 +389,13 @@ HEADERS = {
 }
 
 
-def download_pdf(url: str, filepath: str):
+def download_pdf(url: str, filepath: str) -> bool:
     """
     Downloads a PDF from a given URL and saves it to a folder.
 
     Args:
         url (str): The URL of the PDF to download.
-        download_folder (str): The folder to save the PDF in.
+        filepath (str): The path where the PDF should be saved.
     """
 
     try:
@@ -412,6 +412,7 @@ def download_pdf(url: str, filepath: str):
                     f.write(chunk)
 
             logger.info(f"Successfully downloaded and saved to {filepath}\n")
+            return True
 
     except requests.exceptions.HTTPError as e:
         # Specifically handles HTTP errors like 404, 403, 500 etc.
@@ -422,3 +423,36 @@ def download_pdf(url: str, filepath: str):
     except Exception as e:
         # Handles any other unexpected errors
         logger.error(f"An unexpected error occurred: {e} for url: {url}\n")
+    return False
+
+
+async def playwright_download_pdf(url: str, filepath: str) -> bool:
+    from playwright.async_api import async_playwright
+
+    async with async_playwright() as p:
+        browser = await p.firefox.launch(headless=False)
+        context = await browser.new_context(accept_downloads=True)
+        page = await context.new_page()
+
+        async with page.expect_download() as download_info:
+            try:
+                # 2. Go to the URL (this will trigger the download and the error)
+                await page.goto(url)
+            except Exception as e:
+                # 3. Catch the specific error you got and let the script continue
+                if "Download is starting" in str(e):
+                    logger.info(
+                        f"Playwright download started successfully for url: {url}"
+                    )
+                else:
+                    logger.error(f"Playwright error navigating to {url}: {e}")
+                    await browser.close()
+                    return False
+        download = await download_info.value
+
+        await download.save_as(filepath)
+
+        logger.info(f"Playwright download completed. File saved to: {filepath}")
+
+        await browser.close()
+        return True

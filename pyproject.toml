@@ -50,6 +50,7 @@ nougat = ["nougat"]
 marker = ["marker-pdf"]
 pymupdf = ['pymupdf']
 cache = ["redis"]
+playwright = ["playwright"]
 
 docs = [
     "mkdocs-material>=9.4.0",

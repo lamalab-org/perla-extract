@@ -3,6 +3,7 @@ import re
 from platformdirs import user_data_dir
 from pathlib import Path
 from typing import Literal
+import importlib.util
 
 MAX_RETRIES = 3
 MAX_TOKENS = 64000
@@ -61,6 +62,7 @@ default_units = {
 
 papersbot_runs_path = Path(user_data_dir("papersbot_run","perla-extractor")+"/runs")
 
+playwright_installed = importlib.util.find_spec("playwright") is not None
 
 retry_dates = [30, 90, 180, 360]  # days
 
