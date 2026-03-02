@@ -1,0 +1,803 @@
+{
+    "10.1002/adfm.202507934": {
+        "doi": "10.1002/adfm.202507934",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202507934",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202425979": {
+        "doi": "10.1002/adfm.202425979",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202425979",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202501561": {
+        "doi": "10.1002/adfm.202501561",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202501561",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202502152": {
+        "doi": "10.1002/adfm.202502152",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202502152",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202502170": {
+        "doi": "10.1002/adfm.202502170",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202502170",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/aenm.202504734": {
+        "doi": "10.1002/aenm.202504734",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202504734",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1039/D5TA06002H": {
+        "doi": "10.1039/D5TA06002H",
+        "pdf_url": "https://pubs.rsc.org/en/content/articlepdf/2025/ta/d5ta06002h",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/smll.202510319": {
+        "doi": "10.1002/smll.202510319",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202510319",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/smll.202501876": {
+        "doi": "10.1002/smll.202501876",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202501876",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202506315": {
+        "doi": "10.1002/adfm.202506315",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202506315",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adfm.202506718": {
+        "doi": "10.1002/adfm.202506718",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202506718",
+        "tries": 1,
+        "extracted": true,
+        "processed": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202523354": {
+        "doi": "10.1002/adfm.202523354",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202523354",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adfm.202525744": {
+        "doi": "10.1002/adfm.202525744",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202525744",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adma.202512308": {
+        "doi": "10.1002/adma.202512308",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202512308",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adfm.202502970": {
+        "doi": "10.1002/adfm.202502970",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202502970",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adfm.202508262": {
+        "doi": "10.1002/adfm.202508262",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202508262",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/aenm.202501906": {
+        "doi": "10.1002/aenm.202501906",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202501906",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/aenm.202502346": {
+        "doi": "10.1002/aenm.202502346",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202502346",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/aenm.202501855": {
+        "doi": "10.1002/aenm.202501855",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202501855",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202501563": {
+        "doi": "10.1002/adfm.202501563",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202501563",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1039/D5SC04399A": {
+        "doi": "10.1039/D5SC04399A",
+        "pdf_url": "https://pubs.rsc.org/en/content/articlepdf/2025/sc/d5sc04399a",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adma.202419018": {
+        "doi": "10.1002/adma.202419018",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202419018",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/smll.202504190": {
+        "doi": "10.1002/smll.202504190",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202504190",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/smll.202505638": {
+        "doi": "10.1002/smll.202505638",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202505638",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/aenm.202502864": {
+        "doi": "10.1002/aenm.202502864",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202502864",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adma.202507918": {
+        "doi": "10.1002/adma.202507918",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202507918",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202506386": {
+        "doi": "10.1002/adfm.202506386",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202506386",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1039/D5TA02678D": {
+        "doi": "10.1039/D5TA02678D",
+        "pdf_url": "https://pubs.rsc.org/en/content/articlepdf/2025/ta/d5ta02678d",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adma.202508126": {
+        "doi": "10.1002/adma.202508126",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202508126",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/aenm.202405941": {
+        "doi": "10.1002/aenm.202405941",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202405941",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1021/acsenergylett.5c02435": {
+        "doi": "10.1021/acsenergylett.5c02435",
+        "pdf_url": "https://pubs.acs.org/doi/pdf/10.1021/acsenergylett.5c02435?ref=article_openPDF",
+        "tries": 3,
+        "processed": true,
+        "skipped": true
+    },
+    "10.1002/aenm.202502409": {
+        "doi": "10.1002/aenm.202502409",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202502409",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adfm.202418611": {
+        "doi": "10.1002/adfm.202418611",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202418611",
+        "tries": 1,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202507369": {
+        "doi": "10.1002/adfm.202507369",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202507369",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adma.202504581": {
+        "doi": "10.1002/adma.202504581",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202504581",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/smll.202505858": {
+        "doi": "10.1002/smll.202505858",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202505858",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/smll.202504448": {
+        "doi": "10.1002/smll.202504448",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202504448",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adma.202507401": {
+        "doi": "10.1002/adma.202507401",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202507401",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/smll.202507718": {
+        "doi": "10.1002/smll.202507718",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202507718",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/smll.202505059": {
+        "doi": "10.1002/smll.202505059",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202505059",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/smll.202506664": {
+        "doi": "10.1002/smll.202506664",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202506664",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/smll.202506008": {
+        "doi": "10.1002/smll.202506008",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202506008",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/smll.202506393": {
+        "doi": "10.1002/smll.202506393",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202506393",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/smll.202506340": {
+        "doi": "10.1002/smll.202506340",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202506340",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.48550/arXiv.2510.08330": {
+        "doi": "10.48550/arXiv.2510.08330",
+        "pdf_url": "https://arxiv.org/pdf/2510.08330",
+        "tries": 4,
+        "skipped": true,
+        "processed": true
+    },
+    "10.1002/adma.202505694": {
+        "doi": "10.1002/adma.202505694",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202505694",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1039/D5MA00703H": {
+        "doi": "10.1039/D5MA00703H",
+        "pdf_url": "https://pubs.rsc.org/en/content/articlepdf/2025/ma/d5ma00703h",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adfm.202522596": {
+        "doi": "10.1002/adfm.202522596",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202522596",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/aenm.202503611": {
+        "doi": "10.1002/aenm.202503611",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202503611",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1039/D5SC05563F": {
+        "doi": "10.1039/D5SC05563F",
+        "pdf_url": "https://pubs.rsc.org/en/content/articlepdf/2025/sc/d5sc05563f",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adfm.202514299": {
+        "doi": "10.1002/adfm.202514299",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202514299",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/smll.202509076": {
+        "doi": "10.1002/smll.202509076",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202509076",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adfm.202523248": {
+        "doi": "10.1002/adfm.202523248",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202523248",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adma.202508740": {
+        "doi": "10.1002/adma.202508740",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202508740",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adfm.202524919": {
+        "doi": "10.1002/adfm.202524919",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202524919",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adma.202514735": {
+        "doi": "10.1002/adma.202514735",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202514735",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/smll.202511288": {
+        "doi": "10.1002/smll.202511288",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202511288",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1039/D5RA07344H": {
+        "doi": "10.1039/D5RA07344H",
+        "pdf_url": "https://pubs.rsc.org/en/content/articlepdf/2025/ra/d5ra07344h",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/aenm.202504572": {
+        "doi": "10.1002/aenm.202504572",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202504572",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adma.202517246": {
+        "doi": "10.1002/adma.202517246",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202517246",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adma.202517573": {
+        "doi": "10.1002/adma.202517573",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202517573",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adfm.202522926": {
+        "doi": "10.1002/adfm.202522926",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202522926",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/aenm.202505867": {
+        "doi": "10.1002/aenm.202505867",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202505867",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1038/s41467-025-64274-5": {
+        "doi": "10.1038/s41467-025-64274-5",
+        "pdf_url": "https://www.nature.com/articles/s41467-025-64274-5.pdf",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adma.202517139": {
+        "doi": "10.1002/adma.202517139",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202517139",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202511326": {
+        "doi": "10.1002/adfm.202511326",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202511326",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202527433": {
+        "doi": "10.1002/adfm.202527433",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202527433",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/aenm.202502789": {
+        "doi": "10.1002/aenm.202502789",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202502789",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adma.202520278": {
+        "doi": "10.1002/adma.202520278",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202520278",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adma.202520308": {
+        "doi": "10.1002/adma.202520308",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202520308",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202521635": {
+        "doi": "10.1002/adfm.202521635",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202521635",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202525359": {
+        "doi": "10.1002/adfm.202525359",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202525359",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.73680": {
+        "doi": "10.1002/adfm.73680",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.73680",
+        "tries": 3,
+        "processed": true,
+        "skipped": true
+    },
+    "10.1002/adma.202519563": {
+        "doi": "10.1002/adma.202519563",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202519563",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adma.202513600": {
+        "doi": "10.1002/adma.202513600",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202513600",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adma.202521104": {
+        "doi": "10.1002/adma.202521104",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202521104",
+        "tries": 1,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/aenm.202503429": {
+        "doi": "10.1002/aenm.202503429",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202503429",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202502847": {
+        "doi": "10.1002/adfm.202502847",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202502847",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202508510": {
+        "doi": "10.1002/adfm.202508510",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202508510",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202528728": {
+        "doi": "10.1002/adfm.202528728",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202528728",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adma.202512410": {
+        "doi": "10.1002/adma.202512410",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202512410",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202521919": {
+        "doi": "10.1002/adfm.202521919",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202521919",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adma.202518582": {
+        "doi": "10.1002/adma.202518582",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202518582",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.26434/chemrxiv-2026-bxv8r": {
+        "doi": "10.26434/chemrxiv-2026-bxv8r",
+        "pdf_url": "https://chemrxiv.org/engage/api-gateway/chemrxiv/assets/orp/resource/item/695d813a098cdc781f2b80ae/original/singlet-fission-enables-triplet-sensitization-of-narrow-gap-hybrid-perovskites.pdf",
+        "tries": 3,
+        "processed": true,
+        "skipped": true
+    },
+    "10.1002/smll.202508334": {
+        "doi": "10.1002/smll.202508334",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202508334",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/aenm.202506619": {
+        "doi": "10.1002/aenm.202506619",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202506619",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/smll.202514080": {
+        "doi": "10.1002/smll.202514080",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202514080",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adma.202520433": {
+        "doi": "10.1002/adma.202520433",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202520433",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/aenm.202506288": {
+        "doi": "10.1002/aenm.202506288",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202506288",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adfm.202515642": {
+        "doi": "10.1002/adfm.202515642",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202515642",
+        "tries": 3,
+        "processed": true,
+        "extracted": true,
+        "nomad_upload_processed": true
+    },
+    "10.1002/adma.202521878": {
+        "doi": "10.1002/adma.202521878",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202521878",
+        "tries": 0
+    },
+    "10.1002/smll.202513081": {
+        "doi": "10.1002/smll.202513081",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202513081",
+        "tries": 0
+    },
+    "10.1039/d5sc08121a": {
+        "doi": "10.1039/d5sc08121a",
+        "pdf_url": "https://pubs.rsc.org/en/content/articlepdf/2026/sc/d5sc08121a",
+        "tries": 3,
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/smll.202512942": {
+        "doi": "10.1002/smll.202512942",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202512942",
+        "tries": 0
+    },
+    "10.1002/adfm.202531852": {
+        "doi": "10.1002/adfm.202531852",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202531852",
+        "tries": 0
+    },
+    "10.1039/d5se01476j": {
+        "doi": "10.1039/D5SE01476J",
+        "pdf_url": "https://pubs.rsc.org/en/content/articlepdf/2026/se/d5se01476j",
+        "extracted": true,
+        "nomad_upload_processed": true,
+        "processed": true
+    },
+    "10.1002/adma.72026": {
+        "doi": "10.1002/adma.72026",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.72026",
+        "tries": 0
+    },
+    "10.1002/adfm.202531831": {
+        "doi": "10.1002/adfm.202531831",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adfm.202531831",
+        "tries": 0
+    },
+    "10.1002/smll.202514110": {
+        "doi": "10.1002/smll.202514110",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202514110",
+        "tries": 0
+    },
+    "10.1002/smll.202512467": {
+        "doi": "10.1002/smll.202512467",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202512467",
+        "tries": 0
+    },
+    "10.1002/adma.202511855": {
+        "doi": "10.1002/adma.202511855",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202511855",
+        "tries": 0
+    },
+    "10.1002/smll.202512937": {
+        "doi": "10.1002/smll.202512937",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202512937",
+        "tries": 0
+    },
+    "10.1002/smll.202510652": {
+        "doi": "10.1002/smll.202510652",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202510652",
+        "tries": 0
+    },
+    "10.1002/adma.202522652": {
+        "doi": "10.1002/adma.202522652",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202522652",
+        "tries": 0
+    },
+    "10.1002/smll.202513842": {
+        "doi": "10.1002/smll.202513842",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202513842",
+        "tries": 0
+    },
+    "10.1002/aenm.202506634": {
+        "doi": "10.1002/aenm.202506634",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/aenm.202506634",
+        "tries": 0
+    }
+}
