@@ -229,6 +229,7 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
             downloaded_files=downloaded_files,
         )
     except Exception as e:
+        logger.error(f"Error in papersbot workflow: {str(e)}")
         return PapersbotResult(
             success=False, error=f"Papersbot workflow failed: {str(e)}"
         )
