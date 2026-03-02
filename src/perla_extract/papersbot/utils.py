@@ -433,7 +433,7 @@ async def playwright_download_pdf(url: str, filepath: str) -> bool:
         browser = await p.firefox.launch(headless=True)
         context = await browser.new_context(accept_downloads=True)
         page = await context.new_page()
-
+        page.set_default_timeout(60000)
         async with page.expect_download() as download_info:
             try:
                 # 2. Go to the URL (this will trigger the download and the error)

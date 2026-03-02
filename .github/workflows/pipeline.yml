@@ -48,7 +48,7 @@ jobs:
         run: uv pip install --system ".[playwright]"
       
       - name: Install playwright browsers
-        run: playwright install firefox
+        run: playwright install
      
       # Step 5: Download PapersBot run
       - name: Download PapersBot run stats from Nomad
