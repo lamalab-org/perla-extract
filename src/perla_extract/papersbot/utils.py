@@ -430,7 +430,7 @@ async def playwright_download_pdf(url: str, filepath: str) -> bool:
     from playwright.async_api import async_playwright
 
     async with async_playwright() as p:
-        browser = await p.firefox.launch(headless=True)
+        browser = await p.firefox.launch(headless=False)
         context = await browser.new_context(accept_downloads=True)
         page = await context.new_page()
         page.set_default_timeout(60000)
