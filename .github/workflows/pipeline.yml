@@ -49,6 +49,9 @@ jobs:
       
       - name: Install playwright browsers
         run: playwright install
+      
+      - name: Install Xvfb
+        run: sudo apt-get install -y xvfb
      
       # Step 5: Download PapersBot run
       - name: Download PapersBot run stats from Nomad
@@ -56,7 +59,7 @@ jobs:
       
       # Step 6: Run PapersBot pipeline
       - name: Run PapersBot pipeline
-        run: perla-extract papersbot ./downloaded_papers
+        run: xvfb-run perla-extract papersbot ./downloaded_papers
       
       # Step 7: Run extraction pipeline and upload to Nomad
       - name: Run extraction pipeline
