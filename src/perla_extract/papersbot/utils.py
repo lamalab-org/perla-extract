@@ -302,7 +302,7 @@ def get_doi(entry):
             doi = entry["link"].split("doi/")[-1]  # + '  from link'
         else:
             doi = ""
-        return doi
+        return doi.strip().lower()
     except Exception as e:
         return f"error getting doi: {e}"
 
