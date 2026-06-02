@@ -12,6 +12,7 @@ import time
 import numpy as np
 from pydantic import ValidationError
 import pdf2doi
+from langfuse import propagate_attributes
 
 from perla_extract.configuration import papersbot_runs_path, EXTRACTION_METHODS
 from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
@@ -264,13 +265,15 @@ class ExtractionPipeline:
             self.model_name, pdf_text, api_key=api_key, api_base_url=api_base_url
         )
         results = PerovskiteSolarCells(**postprocess(results.model_dump()))
-        return convert_extraction_to_nomad_entries(results, doi, pdf_text, ureg=ureg)
+        return convert_extraction_to_nomad_entries(results, doi, pdf_text,model_name=self.model_name, ureg=ureg)
 
     def _extract_pdf(self, filepath: Path, output_path: Path) -> bool:
         doi = extract_doi_from_pdf(filepath)
         pdf_text = self.preprocessor.pdf_to_text(filepath)
+        # with open('text.txt', 'w') as f:
+        #     f.write(pdf_text)
         if not is_doi_good_to_go(doi, pdf_text):
-            logger.warning(f"This DOI {doi} will be skipped.")
+            print(f"This DOI {doi} ({filepath.name}) will be skipped.")
             log_processing(doi, 'skipped', True)
             log_processing(doi, 'processed', True)
             return False
@@ -279,7 +282,6 @@ class ExtractionPipeline:
             "Extracting:",
             (doi if doi != "NOT_FOUND" else filepath.stem.replace("--", "/")),
         )
-        results = ""
         try:
             session_id = f"{doi}-{self.model_name.replace('/', '_')}-{time.strftime('%Y%m%d-%H%M%S')}"
             results, completion_usage = llm_call.create_text_completion(
@@ -292,7 +294,8 @@ class ExtractionPipeline:
             logger.info(f"Extracted: {filepath.name}")    
             log_processing(doi, 'extracted', True)
             if self.nomad:
-                converted_nomad = convert_extraction_to_nomad_entries(parsed, doi, pdf_text)
+                converted_nomad = convert_extraction_to_nomad_entries(parsed, doi, pdf_text, self.model_name)
+                log_processing(doi, 'n_cells_extracted', len(converted_nomad))
                 push_to_nomad(doi, converted_nomad, get_authentication_token(), self.upload_id)
                 log_processing(doi, 'nomad_upload_processed', True)
             log_processing(doi, 'processed', True)
