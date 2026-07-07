@@ -57,7 +57,7 @@ jobs:
       
       # Step 7: Run extraction pipeline and upload to Nomad
       - name: Run extraction pipeline
-        run: perla-extract extract ./downloaded_papers --nomad --nomad_upload_id $UPLOAD_ID
+        run: perla-extract extract ./downloaded_papers --model_name $LLM_MODEL_NAME --nomad --nomad_upload_id $UPLOAD_ID
       
       # Step 8: Upload PapersBot run
       - name: Upload PapersBot runs to Nomad
