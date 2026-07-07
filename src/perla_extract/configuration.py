@@ -4,6 +4,9 @@ from platformdirs import user_data_dir
 from pathlib import Path
 from typing import Literal
 import importlib.util
+import os
+
+DEFAULT_LLM_MODEL = os.environ.get("LLM_MODEL_NAME", "claude-sonnet-5")
 
 MAX_RETRIES = 3
 MAX_TOKENS = 64000

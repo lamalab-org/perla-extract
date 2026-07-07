@@ -241,10 +241,10 @@ def push_to_nomad(doi: str, response: Dict[str, Any], token: str, upload_id:str|
         file_name = doi+"-cell-"+str(index)+".archive.json"
         if upload_id is None:
             res = requests.post(f"{NOMAD_URL}uploads/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},params={'wait_for_processing': 'true'},
-                 files={'file': file}, timeout=30)
+                 files={'file': file}, timeout=120)
         else:
             res = requests.put(f"{NOMAD_URL}uploads/{upload_id}/raw/", headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},params={'wait_for_processing': 'true'},
-                 files={'file': (file_name, file)}, timeout=30)
+                 files={'file': (file_name, file)}, timeout=120)
         upload_id = res.json().get('upload_id')
         if upload_id:
             logger.info(f"Doi:{doi} Cell:{index} Upload Id:{upload_id} Status Code:{res.status_code}")

@@ -94,7 +94,7 @@ def check_pdfs():
     logger.info(f"Checking for PDF URLs for {len(r_df)} strict matched papers.")
     for i, sample in tqdm(r_df.iterrows(), total=len(r_df)):
         doi = sample["doi"].strip().lower()
-        error, pdf_url = get_pdf_url(doi)
+        error, is_oa, key, pdf_url = get_pdf_url(doi)
         post_proc_df.at[i, "pdf_checked"] = True
         if pdf_url is not None:
             if not error:

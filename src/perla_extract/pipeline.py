@@ -14,7 +14,7 @@ from pydantic import ValidationError
 import pdf2doi
 from langfuse import propagate_attributes
 
-from perla_extract.configuration import papersbot_runs_path, EXTRACTION_METHODS
+from perla_extract.configuration import papersbot_runs_path, EXTRACTION_METHODS, DEFAULT_LLM_MODEL
 from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
 from perla_extract.papersbot.utils import get_doi_summary
 from perla_extract.papersbot.papersbot import PapersbotResult
@@ -270,8 +270,6 @@ class ExtractionPipeline:
     def _extract_pdf(self, filepath: Path, output_path: Path) -> bool:
         doi = extract_doi_from_pdf(filepath)
         pdf_text = self.preprocessor.pdf_to_text(filepath)
-        # with open('text.txt', 'w') as f:
-        #     f.write(pdf_text)
         if not is_doi_good_to_go(doi, pdf_text):
             print(f"This DOI {doi} ({filepath.name}) will be skipped.")
             log_processing(doi, 'skipped', True)
@@ -295,6 +293,7 @@ class ExtractionPipeline:
             log_processing(doi, 'extracted', True)
             if self.nomad:
                 converted_nomad = convert_extraction_to_nomad_entries(parsed, doi, pdf_text, self.model_name)
+                json.dump(converted_nomad, open(str(output_path).replace(".json", "_nomad.json"), "w"), indent=2)
                 log_processing(doi, 'n_cells_extracted', len(converted_nomad))
                 push_to_nomad(doi, converted_nomad, get_authentication_token(), self.upload_id)
                 log_processing(doi, 'nomad_upload_processed', True)
@@ -403,7 +402,7 @@ class ExtractionPipeline:
 def extract(
     filepath: str,
     truth: str = None,
-    model_name: str = "claude-sonnet-4-20250514",
+    model_name: str = DEFAULT_LLM_MODEL,
     preprocessor: str = "pymupdf",
     postprocessor: str = "NONE",
     cache_dir: str = "",
