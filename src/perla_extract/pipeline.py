@@ -293,7 +293,8 @@ class ExtractionPipeline:
             log_processing(doi, 'extracted', True)
             if self.nomad:
                 converted_nomad = convert_extraction_to_nomad_entries(parsed, doi, pdf_text, self.model_name)
-                json.dump(converted_nomad, open(str(output_path).replace(".json", "_nomad.json"), "w"), indent=2)
+                with open(str(output_path).replace(".json", "_nomad.json"), "w") as f:
+                    json.dump(converted_nomad, f, indent=2)
                 log_processing(doi, 'n_cells_extracted', len(converted_nomad))
                 push_to_nomad(doi, converted_nomad, get_authentication_token(), self.upload_id)
                 log_processing(doi, 'nomad_upload_processed', True)
