@@ -341,9 +341,9 @@ def fetch_openalex_works_by_date(start_date: str, end_date: str, email: str = No
     }
     
     all_results = []
-    
-    print(f"Fetching works from {start_date} to {end_date}...")
-    
+
+    logger.info("Fetching works from %s to %s...", start_date, end_date)
+
     while True:
         response = requests.get(base_url, params=params, headers=headers)
         response.raise_for_status()  # Stop and raise an error if the request fails
