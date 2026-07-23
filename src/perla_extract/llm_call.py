@@ -33,6 +33,7 @@ def create_text_completion(
     system_prompt: str = SYSTEM_PROMPT,
     instruction: str = INSTRUCTION_TEXT,
     api_key: str = None,
+    api_base_url: str = None
 ) -> PerovskiteSolarCells:
     """
      Extract structured perovskite solar cell data from raw PDF text using an LLM.
@@ -57,6 +58,9 @@ def create_text_completion(
     """
     if api_key:
         litellm.api_key = api_key
+
+    if api_base_url:
+        litellm.api_base = api_base_url
 
     # Construct messages for LLM
     messages = [
