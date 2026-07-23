@@ -57,6 +57,12 @@ def create_text_completion(
     Raises:
         instructor.exceptions.InstructorRetryException: If an unhandled error occurs during LLM interaction.
     """
+    if api_key:
+        litellm.api_key = api_key
+
+    if api_base_url:
+        litellm.api_base = api_base_url
+
     # Construct messages for LLM
     messages = [
         {
