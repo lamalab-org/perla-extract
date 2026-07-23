@@ -57,12 +57,6 @@ def create_text_completion(
     Raises:
         instructor.exceptions.InstructorRetryException: If an unhandled error occurs during LLM interaction.
     """
-    if api_key:
-        litellm.api_key = api_key
-
-    if api_base_url:
-        litellm.api_base = api_base_url
-
     # Construct messages for LLM
     messages = [
         {
@@ -87,7 +81,7 @@ def create_text_completion(
             litellm.get_supported_openai_params(model=model_name) or []
         )
     except Exception as e:
-        logger.error(f"Could not fetch model info, defaulting to max_tokens={max_tokens}. Error: {e}")
+        print(f"Could not fetch model info, defaulting to max_tokens={max_tokens}. Error: {e}")
 
     while True:
         try:
