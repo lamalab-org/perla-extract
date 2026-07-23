@@ -65,12 +65,6 @@ def create_text_completion(
     Raises:
         MaxRetriesExceededError: If the maximum number of retries is exceeded due to validation errors.
     """
-    if api_key:
-        litellm.api_key = api_key
-
-    if api_base_url:
-        litellm.api_base = api_base_url
-
     # Construct messages for LLM
     messages = [
         {
