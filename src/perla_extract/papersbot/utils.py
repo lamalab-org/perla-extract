@@ -1,10 +1,10 @@
 import os
 import pickle
 import requests
-from perla_extract.configuration import papersbot_runs_path
+from perla_extract.configuration import papersbot_runs_path, playwright_installed
 from loguru import logger
 import xml.etree.ElementTree as ET
-
+import asyncio
 UNPAYWALL_EMAIL = os.environ.get("UNPAYWALL_EMAIL")
 
 
@@ -623,12 +623,25 @@ async def playwright_get_pdf_links(url):
             logger.error(f"Playwright error interacting with {url}: {e}")
             await browser.close()
             return
-        filtered_links = []
-        logger.info(f"Links found before filtering: {links}")
-        for link in links:
-            if not any(phrase in link.lower() for phrase in ["suppl","static-content","/epdf","/pb-assets/"]):
-                if  "wiley.com/doi/pdf/" in link.lower():
-                    link = link.replace("pdf","pdfdirect") + "?download=true"
-                filtered_links.append(link)
-        logger.info(f"Filtered down to {len(filtered_links)} PDF links after removing unwanted phrases.")
-        return filtered_links[0] if filtered_links else None
+        logger.info(f"Found {len(links)} PDF links on the page.")
+        return links
+
+def filter_links(links):
+    filtered_links = []
+    for link in links:
+        if not any(phrase in link.lower() for phrase in ["suppl","static-content","/epdf","/pb-assets/"]):
+            if  "wiley.com/doi/pdf/" in link.lower():
+                link = link.replace("pdf","pdfdirect") + "?download=true"
+            filtered_links.append(link)
+    return filtered_links[0] if filtered_links else None
+
+def get_links(url):
+    if playwright_installed:
+        try:
+            links = asyncio.run(playwright_get_pdf_links(url))
+            if links:
+                filtered_link = filter_links(links)
+                return filtered_link, links
+        except Exception as e:
+            logger.error(f"Error extracting PDF links from landing page for {url}: {e}")
+    return None, None

@@ -65,13 +65,14 @@ def check_relaxed_match_doi():
         sample["abstract_match"] = False
         sample["doi_good_to_go"] = False
         sample["pdf_checked"] = False
+        sample["is_oa"] = False
         sample["pdf_available"] = False
         sample["pdf_url"] = ""
+        sample["landing_page_url"] = ""
+        sample["pdf_url_type"] = ""
         sample["main_index"] = i
         sample["processed"] = False
         sample["retry_count"] = 0
-        sample["is_oa"] = False
-        sample["pdf_url_type"] = ""
         df_new.append(sample)
     df.to_csv(f"{papersbot_runs_path}/entry_stats.csv", index=False)
     df_new = pd.DataFrame(df_new)
