@@ -32,6 +32,8 @@ jobs:
       # Step 1: Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       # Step 2: Sets up a Python 3.11 environment
       - name: Set up Python

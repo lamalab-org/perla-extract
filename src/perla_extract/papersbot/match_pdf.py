@@ -2,6 +2,7 @@ from perla_extract.papersbot.utils import (
     get_pdf_url,
     download_pdf,
     playwright_download_pdf,
+    playwright_get_pdf_links,
 )
 import pickle
 import asyncio
@@ -94,22 +95,26 @@ def check_pdfs():
     logger.info(f"Checking for PDF URLs for {len(r_df)} strict matched papers.")
     for i, sample in tqdm(r_df.iterrows(), total=len(r_df)):
         doi = sample["doi"].strip().lower()
-        error, is_oa, key, pdf_url = get_pdf_url(doi)
+        error, is_oa, pdf_url = get_pdf_url(doi)
         post_proc_df.at[i, "pdf_checked"] = True
-        if pdf_url is not None:
-            if not error:
-                post_proc_df.at[i, "pdf_available"] = True
-                stats["urls_found"] += 1
-                found_urls[doi] = {
-                    "doi": doi,
-                    "pdf_url": pdf_url,
-                    "tries": 0,
-                }
-            else:
-                stats["error"] += 1
+        if 'msg' not in pdf_url and len(pdf_url) > 0:
+            post_proc_df.at[i, "pdf_available"] = True
+            stats["urls_found"] += 1
+            found_urls[doi] = {
+                "doi": doi,
+                "tries": 0,
+            }
+            found_urls[doi].update(pdf_url)
+            print(doi,pdf_url)
+            msg = list(pdf_url.values())[0]
+            url_type = list(pdf_url.keys())[0]
         else:
-            stats["none"] += 1
-        post_proc_df.at[i, "pdf_url"] = pdf_url if pdf_url is not None else ""
+            url_type = "none" if not error else "error"
+            stats[url_type] += 1
+            msg=pdf_url['msg']
+        post_proc_df.at[i, "pdf_url"] = msg
+        post_proc_df.at[i, "pdf_url_type"] = url_type
+        post_proc_df.at[i,"is_oa"] = is_oa
         stats["total"] += 1
     print_stats(stats)
     old_found_urls = (
@@ -123,6 +128,22 @@ def check_pdfs():
     post_proc_df.to_csv(f"{papersbot_runs_path}/post_proc.csv", index=False)
     return stats["urls_found"]
 
+def download(pdf_url: str, doi: str, filepath: str | Path) -> bool:
+    filepath = Path(filepath)
+    logger.info(f"Downloading PDF for {doi}: {filepath} from {pdf_url}")
+    try:
+        download_success = download_pdf(pdf_url, str(filepath))
+        if not download_success and playwright_installed:
+            download_success = asyncio.run(
+                playwright_download_pdf(pdf_url, str(filepath))
+            )
+        if filepath.exists():
+            return True
+        else:
+            logger.error(f"Failed to download PDF for {doi} from {pdf_url}")
+    except Exception as e:
+        logger.error(f"Error downloading {doi}: {e}")
+    return False
 
 def download_pdfs(download_dir: str | Path = "downloaded_papers") -> List[Path]:
     """
@@ -137,7 +158,7 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> List[Path]:
     download_path = Path(download_dir)
     download_path.mkdir(parents=True, exist_ok=True)
 
-    downloaded_files = []
+    downloaded_files: List[Path] = []
 
     try:
         with open(f"{papersbot_runs_path}/found_pdf_urls.json", "r") as f:
@@ -149,27 +170,43 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> List[Path]:
     for doi, item in found_urls.items():
         if "processed" in item and item["processed"]:
             continue
-        pdf_url = item["pdf_url"]
-        # Use consistent '--' replacement for DOI
-        filepath = download_path / f"{doi.replace('/', '--')}.pdf"
-        logger.info(f"Downloading PDF for {doi}: {filepath}")
 
+        filepath = download_path / f"{doi.replace('/', '--')}.pdf"
         if filepath.exists():
-            logger.warning(f"File {filepath} already exists. Skipping download.")
-            downloaded_files.append(filepath)
-        else:
+                logger.warning(f"File {filepath} already exists. Skipping download.")
+                downloaded_files.append(filepath)
+                continue
+        
+        if 'pdf_url' not in item and 'landing_page_url' in item and playwright_installed:
+            landing_page_url = item["landing_page_url"]
+            logger.info(f"Attempting to download PDF from landing page for {doi}: {landing_page_url}")
             try:
-                download_success = download_pdf(pdf_url, str(filepath))
-                if not download_success and playwright_installed:
-                    download_success = asyncio.run(
-                        playwright_download_pdf(pdf_url, str(filepath))
-                    )
-                if filepath.exists():
+                if landing_page_url[:-4].lower() == ".pdf":
+                    download_success = download(landing_page_url, doi, filepath)
+                    if download_success and filepath.exists():
+                        found_urls[doi]["pdf_url"] = landing_page_url
+                        downloaded_files.append(filepath)
+                        continue
+                pdf_url = asyncio.run(playwright_get_pdf_links(landing_page_url))
+                if pdf_url:
+                    item["pdf_url"] = pdf_url
+                    logger.info(f"Found PDF URL for {doi}: {pdf_url}")
+                else:
+                    logger.warning(f"No PDF URL found on landing page for {doi}.")
+            except Exception as e:
+                logger.error(f"Error extracting PDF URL from landing page for {doi}: {e}")
+        
+        if "pdf_url" in item:
+            pdf_url = item["pdf_url"]
+            try:
+                download_success = download(pdf_url, doi, filepath)
+                if download_success and filepath.exists():
                     downloaded_files.append(filepath)
                 else:
                     logger.error(f"Failed to download PDF for {doi} from {pdf_url}")
             except Exception as e:
                 logger.error(f"Error downloading {doi}: {e}")
+                
         found_urls[doi]["tries"] += 1
         if found_urls[doi]["tries"] >= 3:
             logger.warning(f"Max tries reached for {doi}.")

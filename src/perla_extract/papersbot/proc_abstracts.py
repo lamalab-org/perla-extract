@@ -70,6 +70,8 @@ def check_relaxed_match_doi():
         sample["main_index"] = i
         sample["processed"] = False
         sample["retry_count"] = 0
+        sample["is_oa"] = False
+        sample["pdf_url_type"] = ""
         df_new.append(sample)
     df.to_csv(f"{papersbot_runs_path}/entry_stats.csv", index=False)
     df_new = pd.DataFrame(df_new)

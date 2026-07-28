@@ -10,6 +10,7 @@ from loguru import logger
 import json
 import io
 import re
+import subprocess
 
 if TYPE_CHECKING:
     from pint import UnitRegistry
@@ -51,6 +52,37 @@ def to_json(pydantic_model: PerovskiteSolarCells, output: Union[Path, str]):
     with open(output, "w") as f:
         f.write(pydantic_model.model_dump_json())
 
+
+def get_repo_metadata():
+    try:
+        commit_hash = subprocess.check_output(
+            ['git', 'rev-parse', 'HEAD'],
+            stderr=subprocess.STDOUT,
+            text=True
+        ).strip()
+        
+        remote_url = subprocess.check_output(
+            ['git', 'config', '--get', 'remote.origin.url'],
+            stderr=subprocess.STDOUT,
+            text=True
+        ).strip()
+        
+        if remote_url.startswith('git@github.com:'):
+            base_url = remote_url.replace('git@github.com:', 'https://github.com/')
+        else:
+            base_url = remote_url
+            
+        if base_url.endswith('.git'):
+            base_url = base_url[:-4]
+        
+        return commit_hash, f"{base_url}/tree/{commit_hash}"
+        
+    except subprocess.CalledProcessError as e:
+        logger.error("Error: Make sure you are in a git repository and 'origin' is set. message: %s", e.output)
+        return None, None
+    except FileNotFoundError:
+        logger.error("Git is not installed or not found in the system PATH.")
+        return None, None
 
 def get_layer_order(layers):
     """Extracts non-null layer names into a comma-separated string."""
@@ -193,7 +225,9 @@ def process_to_nomad(raw_data, doi, model_name, ureg=None):
     # Run the transformation
     transformed = traverse_and_transform(raw_data, ureg)
     output_entries = []
-    
+    commit_hash, commit_url = get_repo_metadata()
+    if commit_hash is None or commit_url is None:
+        logger.warning("Could not retrieve git commit metadata. Proceeding without it.")
     # The input is usually a dict with "cells": [...]
     if transformed and "cells" in transformed:
         for cell in transformed["cells"]:
@@ -203,7 +237,10 @@ def process_to_nomad(raw_data, doi, model_name, ureg=None):
                     "DOI_number": doi_url,
                     "extraction_metadata": {
                         "model": model_name,
-                        "model_version": model_name,},
+                        "model_version": model_name,
+                        "commit_hash": commit_hash,
+                        "commit_url": commit_url
+                    },
                     **cell # Unpack the processed cell data here
                 }
             }

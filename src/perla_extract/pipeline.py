@@ -234,6 +234,7 @@ class ExtractionPipeline:
         postprocessor: str,
         cache_dir: Union[Path, str],
         use_cache: bool = True,
+        infer_doi: bool = False,
         nomad: bool = False,
         nomad_upload_id: str = None,
         extraction_method: EXTRACTION_METHODS = "tool_call",
@@ -250,6 +251,7 @@ class ExtractionPipeline:
         self.total_completion_tokens = 0
         self.nomad = nomad
         self.upload_id = nomad_upload_id
+        self.infer_doi = infer_doi
         self.extraction_method = extraction_method
         self.additional_params = additional_params
 
@@ -268,7 +270,10 @@ class ExtractionPipeline:
         return convert_extraction_to_nomad_entries(results, doi, pdf_text,model_name=self.model_name, ureg=ureg)
 
     def _extract_pdf(self, filepath: Path, output_path: Path) -> bool:
-        doi = extract_doi_from_pdf(filepath)
+        if not self.infer_doi:
+            doi = extract_doi_from_pdf(filepath)
+        else:
+            doi = filepath.stem.replace("--", "/")
         pdf_text = self.preprocessor.pdf_to_text(filepath)
         if not is_doi_good_to_go(doi, pdf_text):
             print(f"This DOI {doi} ({filepath.name}) will be skipped.")
@@ -280,6 +285,7 @@ class ExtractionPipeline:
             "Extracting:",
             (doi if doi != "NOT_FOUND" else filepath.stem.replace("--", "/")),
         )
+
         try:
             session_id = f"{doi}-{self.model_name.replace('/', '_')}-{time.strftime('%Y%m%d-%H%M%S')}"
             results, completion_usage = llm_call.create_text_completion(
@@ -410,6 +416,7 @@ def extract(
     use_cache: bool = False,
     pdf_print: bool = False,
     output: str = "./extractions",
+    infer_doi: bool = False,
     nomad: bool = False,
     nomad_upload_id: str = None,
     extraction_method: EXTRACTION_METHODS = "tool_call",
@@ -428,6 +435,7 @@ def extract(
         postprocessor,
         cache_dir,
         use_cache,
+        infer_doi,
         nomad,
         nomad_upload_id,
         extraction_method,

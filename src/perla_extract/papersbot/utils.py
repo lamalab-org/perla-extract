@@ -89,7 +89,30 @@ def get_doi_summary_crossref(doi: str) -> dict:
             return {"error": f"Error: {e}"}
     return {"error": f"Error: Status code {response.status_code}"}
 
-
+def inverted_index_to_text(inverted_index: dict) -> str:
+    """
+    Converts an inverted index to a text string.
+    Args:
+        inverted_index: A dictionary where keys are words and values are lists of positions.
+    Returns:
+        A string reconstructed from the inverted index.
+    """
+    if not inverted_index:
+        return ""
+    
+    # Find the maximum position to determine the length of the text
+    max_position = max(max(positions) for positions in inverted_index.values())
+    
+    # Create a list of empty strings with length equal to max_position + 1
+    word_list = [""] * (max_position + 1)
+    
+    # Fill the word_list with words at their respective positions
+    for word, positions in inverted_index.items():
+        for pos in positions:
+            word_list[pos] = word
+    
+    # Join the list into a single string
+    return " ".join(word_list)
 def get_doi_summary_openalex(doi: str) -> dict:
     doi = doi.lower().strip()
     api_url = f"https://api.openalex.org/works/https://doi.org/{doi}"
@@ -102,12 +125,7 @@ def get_doi_summary_openalex(doi: str) -> dict:
             # Abstract (reconstructed from inverted index)
             abstract = ""
             if data.get("abstract_inverted_index"):
-                inverted_index = data["abstract_inverted_index"]
-                word_list = [""] * (max(inverted_index.values())[0] + 1)
-                for word, positions in inverted_index.items():
-                    for pos in positions:
-                        word_list[pos] = word
-                abstract = " ".join(word_list)
+                abstract = inverted_index_to_text(data["abstract_inverted_index"])
 
             # Authors
             authors = [
@@ -380,11 +398,7 @@ def fetch_openalex_works_by_date(start_date: str, end_date: str, email: str = No
         # Reconstruct the abstract from the inverted index
         abstract = ""
         if abstract_inverted_index:
-            word_list = [""] * (max(abstract_inverted_index.values())[0] + 1)
-            for word, positions in abstract_inverted_index.items():
-                for pos in positions:
-                    word_list[pos] = word
-            abstract = " ".join(word_list)
+            abstract = inverted_index_to_text(abstract_inverted_index)
         
         results.append({
             "doi": doi,
@@ -395,7 +409,7 @@ def fetch_openalex_works_by_date(start_date: str, end_date: str, email: str = No
         })
     return results
 
-def get_pdf_url(doi: str):
+def get_pdf_url(doi: str) -> tuple[bool, bool, dict[str, str]]:
     """
     Fetches the PDF URL using multiple services in order: Unpaywall, OpenAlex.
 
@@ -403,19 +417,22 @@ def get_pdf_url(doi: str):
         doi (str): The DOI of the paper.
 
     Returns:
-        tuple[bool, str | None]: A tuple containing an error flag and the PDF URL if available, otherwise None.
+        tuple[bool, bool, dict[str, str] | None]: A tuple containing an error flag, OA status, key, and the PDF URL if available, otherwise None.
     """
-    return_msg = ""
+    error_msg = ""
     for get_pdf_url_func in [get_pdf_url_unpaywall, get_pdf_url_openalex]:
-        error, is_oa, key, pdf_url = get_pdf_url_func(doi)
-        if pdf_url and not error:
-            return error, is_oa, key, pdf_url
-        return_msg += pdf_url if pdf_url else ""
-    logger.error(f"No PDF available for this DOI: {doi}. OA status: {is_oa}. Details: {return_msg}")
-    return error, is_oa, key, return_msg if return_msg else None
+        error, is_oa, pdf_url = get_pdf_url_func(doi)
+        if 'msg' not in pdf_url and len(pdf_url) > 0:
+            return error, is_oa, pdf_url
+        elif error:
+            error_msg += pdf_url['msg']
+    
+    return_msg = {'msg': error_msg if error_msg else "No PDF available from any source."}
+    logger.error(f"No PDF available for this DOI: {doi}. OA status: {is_oa}. Details: {return_msg['msg']}")
+    return error, is_oa, return_msg
 
 
-def get_pdf_url_unpaywall(doi: str) -> tuple[bool, bool, str | None, str | None]:
+def get_pdf_url_unpaywall(doi: str) -> tuple[bool, bool, dict[str, str]]:
     """
     Fetches the PDF URL from Unpaywall using the provided DOI.
 
@@ -423,55 +440,61 @@ def get_pdf_url_unpaywall(doi: str) -> tuple[bool, bool, str | None, str | None]
         doi (str): The DOI of the paper.
 
     Returns:
-        str: The PDF URL if available, otherwise None.
+        tuple[bool, bool, dict[str, str] | None]: A tuple containing an error flag, OA status, and the PDF URL if available, otherwise None.
     """
     doi = doi.lower().strip()
     try:
         api_url = f"https://api.unpaywall.org/v2/{doi}?email={UNPAYWALL_EMAIL}"
-        response = requests.get(api_url)
+        response = requests.get(api_url,timeout=30)
         response.raise_for_status()
         data = response.json()
         is_oa = data.get("is_oa", False)
+        keys_to_check = {"url_for_pdf": "pdf_url", "url": "landing_page_url", "url_for_landing_page": "landing_page_url"}
         if (
             is_oa
             and data.get("best_oa_location")
         ):
-            for key in ["url_for_pdf", "url", "url_for_landing_page"]:
+            for key in keys_to_check:
                 url = data["best_oa_location"].get(key, None)
                 if url:
                     break
-            return False, is_oa, key, url
+            return False, is_oa, {keys_to_check[key]: url}
         else:
             logger.error(f"Unpaywall:No PDF available for this DOI: {doi}.")
-            return False, is_oa, None, None
+            return False, is_oa, {'msg': f"No PDF available for this DOI: {doi}."}
 
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         logger.error(f"Error fetching data from Unpaywall: {e}")
-        return True, False, None, f"Error fetching data from Unpaywall: {e}"
+        return True, False, {'msg': f"Error fetching data from Unpaywall: {e}"}
 
 
-def get_pdf_url_openalex(doi: str) -> tuple[bool, bool, str| None, str | None]:
+def get_pdf_url_openalex(doi: str) -> tuple[bool, bool, dict[str, str]]:
+    """
+    Fetches the PDF URL from OpenAlex using the provided DOI.
+    """
     doi = doi.lower().strip()
     try:
         api_url = f"https://api.openalex.org/works/https://doi.org/{doi}"
-        response = requests.get(api_url)
+        response = requests.get(api_url,timeout=30)
+        response.raise_for_status()
         data = response.json()
-        is_oa = data.get("best_oa_location", {}).get("is_oa", False)
+        is_oa = (data.get("best_oa_location") is not None) and data.get("best_oa_location", {}).get("is_oa", False)
+        keys_to_check = {"pdf_url": "pdf_url", "landing_page_url": "landing_page_url"}
         if (
             is_oa
             and data.get("best_oa_location")
         ):
-            for key in ["pdf_url", "landing_page_url"]:
+            for key in keys_to_check:
                 url = data["best_oa_location"].get(key, None)
                 if url:
                     break
-            return False, is_oa, key, url
+            return False, is_oa, {keys_to_check[key]: url}
         else:
             logger.error(f"Openalex: No PDF available for this DOI : {doi}")
-            return False, is_oa, None, None
-    except requests.exceptions.RequestException as e:
+            return False, is_oa, {'msg': f"No PDF available for this DOI: {doi}."}
+    except Exception as e:
         logger.error(f"Error fetching data from Openalex: {e}")
-        return True, False, None, f"Error fetching data from Openalex: {e}"
+        return True, False, {'msg': f"Error fetching data from Openalex: {e}"}
 
 
 HEADERS = {
@@ -528,21 +551,24 @@ async def playwright_download_pdf(url: str, filepath: str) -> bool:
         context = await browser.new_context(accept_downloads=True)
         page = await context.new_page()
         page.set_default_timeout(60000)
-        async with page.expect_download() as download_info:
-            try:
-                # 2. Go to the URL (this will trigger the download and the error)
-                await page.goto(url)
-            except Exception as e:
-                # 3. Catch the specific error you got and let the script continue
-                if "Download is starting" in str(e):
-                    logger.info(
-                        f"Playwright download started successfully for url: {url}"
-                    )
-                else:
-                    logger.error(f"Playwright error navigating to {url}: {e}")
-                    await browser.close()
-                    return False
-        download = await download_info.value
+        try:
+            async with page.expect_download() as download_info:
+                try:
+                    # 2. Go to the URL (this will trigger the download and the error)
+                    await page.goto(url)
+                except Exception as e:
+                    # 3. Catch the specific error you got and let the script continue
+                    if "Download is starting" in str(e):
+                        logger.info(
+                            f"Playwright download started successfully for url: {url}"
+                        )
+                    else:
+                        raise e
+                download = await download_info.value
+        except Exception as e:
+             logger.error(f"Playwright error downloading {url}: {e}")
+             await browser.close()
+             return False
 
         await download.save_as(filepath)
 
@@ -552,49 +578,57 @@ async def playwright_download_pdf(url: str, filepath: str) -> bool:
         return True
 
 
-async def interact_with_pdf_links(url):
-    from playwright.sync_api import sync_playwright
+async def playwright_get_pdf_links(url):
     from playwright.async_api import async_playwright
 
     async with async_playwright() as p:
         # Launch browser (headless=False so you can see the action)
-        browser =  await p.firefox.launch(headless=False)
+        browser =  await p.chromium.launch(headless=False)
         context = await browser.new_context()
         page = await context.new_page()
         page.set_default_timeout(60000)
-        await page.goto(url)
+        try:
+            await page.goto(url)
 
-        pdf_locator = await page.locator('a[href*="pdf" i]:visible')
+            pdf_locator = page.locator('a[href*="pdf" i]:visible')
 
-        # 2. Count how many matching links were found
-        max_attempts = 5
-        wait_time_ms = 2000  # 2 seconds
+            # 2. Count how many matching links were found
+            max_attempts = 5
+            wait_time_ms = 2000  # 2 seconds
 
-        for attempt in range(max_attempts):
-            count = await pdf_locator.count()
-            
-            if count > 0:
-                print(f"Success! Found {count} links on attempt {attempt + 1}.")
-                break  # Exit the loop once we find them
+            for attempt in range(max_attempts):
+                count = await pdf_locator.count()
+                
+                if count > 0:
+                    print(f"Success! Found {count} links on attempt {attempt + 1}.")
+                    break  # Exit the loop once we find them
+                else:
+                    print(f"Attempt {attempt + 1}: No links found. Sleeping...")
+                    await page.wait_for_timeout(wait_time_ms)
             else:
-                print(f"Attempt {attempt + 1}: No links found. Sleeping...")
-                await page.wait_for_timeout(wait_time_ms)
-        else:
-            # This 'else' triggers if the loop finishes without hitting 'break'
-            print("Gave up! Links never appeared after maximum attempts.")
+                # This 'else' triggers if the loop finishes without hitting 'break'
+                print("Gave up! Links never appeared after maximum attempts.")
+                await browser.close()
+                return
+            links=[]
+            # 3. Iterate through and print the href of each link
+            for i in range(count):
+                link = pdf_locator.nth(i)
+                full_url = await link.evaluate("node => node.href")
+                links.append(full_url)
+            logger.info(f"Found {len(links)} PDF links on the page.")
+            await browser.close()
+
+        except Exception as e:
+            logger.error(f"Playwright error interacting with {url}: {e}")
             await browser.close()
             return
-        links=[]
-        # 3. Iterate through and print the href of each link
-        for i in range(count):
-            link = await pdf_locator.nth(i)
-            full_url = await link.evaluate("node => node.href")
-            links.append(full_url)
-        logger.info(f"Found {len(links)} PDF links on the page.")
-        await browser.close()
         filtered_links = []
+        logger.info(f"Links found before filtering: {links}")
         for link in links:
             if not any(phrase in link.lower() for phrase in ["suppl","static-content","/epdf","/pb-assets/"]):
-               filtered_links.append(link)
+                if  "wiley.com/doi/pdf/" in link.lower():
+                    link = link.replace("pdf","pdfdirect") + "?download=true"
+                filtered_links.append(link)
         logger.info(f"Filtered down to {len(filtered_links)} PDF links after removing unwanted phrases.")
         return filtered_links[0] if filtered_links else None
