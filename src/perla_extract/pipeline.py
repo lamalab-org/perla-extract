@@ -29,6 +29,7 @@ from perla_extract.export import (
     get_authentication_token,
 )
 from loguru import logger
+from perla_extract.llm_classifier import classify_paper
 pdf2doi.config.set("verbose", False)
 
 
@@ -265,20 +266,24 @@ def is_doi_good_to_go(doi, pdf_text, metadata=None) -> bool:
         return not is_review_article
 
     metadata = metadata or get_doi_summary(doi)['consolidated']
-    title = metadata.get("title", "")
+    print(f"Metadata for DOI {doi}: {metadata}")
     abstract = metadata.get("abstract", "")
     journal = metadata.get("journal", "")
     publisher = metadata.get("publisher", "")
 
+    if journal and not journal_filter(journal, publisher):
+        return False
+        
     if word_count(abstract) < 100 and pdf_text:
-        text_to_filter = pdf_text[:int(len(pdf_text) * 0.05)]
-    else:
-        text_to_filter = title+" "+abstract   
-
-    if not journal:
-        return theory_filter(text_to_filter) and non_solar_filter(text_to_filter) and review_article_filter(text_to_filter)
+        metadata['abstract'] = pdf_text[:int(len(pdf_text) * 0.05)]
+    classification_result = classify_paper(metadata)
+    if classification_result is None:
+        return False
+    elif not classification_result.label:
+        print(f"Paper classified as not relevant: {classification_result.reason}")
+        return False
     
-    return journal_filter(journal, publisher) and theory_filter(text_to_filter) and non_solar_filter(text_to_filter) and review_article_filter(text_to_filter)
+    return True
 
 def extract_doi_from_pdf(filepath) -> str:
     doi = "NOT_FOUND"

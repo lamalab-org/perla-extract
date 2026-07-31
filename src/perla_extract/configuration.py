@@ -10,6 +10,8 @@ ureg = UnitRegistry()
 
 ureg.define("sun = 1 kW/m^2")
 
+clasifier_model = "openrouter/gpt-oss-120b"
+
 pint = {
     "default_units_by_type": {
         ureg.percent.dimensionality: (ureg.percent, "%"),  # Efficiency, humidity, etc.
