@@ -1,7 +1,6 @@
 import os
 import sys
 from litellm import completion
-import instructor
 from pydantic import BaseModel, Field, ValidationError
 from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
 from perla_extract.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
@@ -39,7 +38,8 @@ def create_text_completion(
     system_prompt: str = SYSTEM_PROMPT,
     instruction: str = INSTRUCTION_TEXT,
     api_key: str = None,
-    api_base_url: str = None
+    api_base_url: str = None,
+    additional_params: dict = {}
 ) -> tuple[PerovskiteSolarCells, Any]:
     """
      Extract structured perovskite solar cell data from raw PDF text using an LLM.
@@ -93,11 +93,17 @@ def create_text_completion(
             logger.warning(
                 f'Model {model_name} does not support json schema response for structured output.'
             )
+        for param in additional_params:
+            if param not in supported_params:
+                logger.warning(
+                    f"Model {model_name} does not support parameter '{param}'. It will be ignored."
+                )
+                additional_params.pop(param, None)
     except Exception as e:
         print(f"Could not fetch model info, defaulting to max_tokens={max_tokens}. Error: {e}")
 
+    retry_count = 0
     while True:
-        retry_count = 0
         try:
             resp = completion(
                 model=model_name,
@@ -107,6 +113,7 @@ def create_text_completion(
                 messages=messages,
                 response_format=PerovskiteSolarCells,
                 drop_params=True,
+                **(additional_params),
             )
         except litellm.exceptions.BadRequestError as e:
             if (
@@ -116,14 +123,15 @@ def create_text_completion(
                 raise
             max_tokens -= 5000
             logger.info("reduced max tokens")
-        else:
+            continue
+        try:
+            extracted_data = PerovskiteSolarCells.model_validate_json(resp.choices[0].message.content,strict=True,extra="forbid")
             break
         except ValidationError as e:
             logger.error(f"Validation error: {e}. Attempting to correct the output.")
             if retry_count >= max_retries:
                 logger.error(f"Max retries reached ({max_retries}). Raising MaxRetriesExceededError.")
                 raise MaxRetriesExceededError(resp)
-                break
             retry_count += 1
             retry_prompt = f'\n\nThe previous attempt resulted in a validation error: {e}. Correct the output to match the expected schema.'
             messages.extend([{'role':'assistant','content':resp.choices[0].message.content}, {"role":"user","content": retry_prompt}])

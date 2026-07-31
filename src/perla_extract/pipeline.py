@@ -28,7 +28,6 @@ from perla_extract.export import (
     push_to_nomad,
     get_authentication_token,
 )
-from instructor.exceptions import InstructorRetryException, IncompleteOutputException
 
 pdf2doi.config.set("verbose", False)
 
@@ -381,7 +380,7 @@ class ExtractionPipeline:
             self._handle_failure(e, results, output_path)
         except MaxRetriesExceededError as e:
             self._handle_failure(e, e.args[0], output_path)
-        except (IncompleteOutputException, json.decoder.JSONDecodeError):
+        except json.decoder.JSONDecodeError as e:
             output_path.write_text("")
 
         return False
@@ -450,10 +449,13 @@ class ExtractionPipeline:
         print(f"Extraction failed: {error}")
         try:
             processed = postprocess(results.model_dump())
-        except Exception:
-            processed = json.loads(
-                results.choices[0].message.content
-            )
+        except Exception as e:
+            try:
+                processed = json.loads(
+                    results.choices[0].message.content
+                )
+            except Exception as e:
+                processed = {"raw_output": str(results.choices[0].message.content)}
         output_path.write_text(json.dumps(processed, indent=2))
 
     def run(

@@ -139,7 +139,7 @@ def extract_all_for_prompt(prompt, model_name, output):
             if "[schema]" in prompt
             else prompt
         )
-        results = llm_call.create_text_completion(model_name, instruction=prompt)
+        results, completion = llm_call.create_text_completion(model_name, instruction=prompt)
         to_json(results, output)
 
 
