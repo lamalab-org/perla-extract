@@ -266,7 +266,6 @@ def is_doi_good_to_go(doi, pdf_text, metadata=None) -> bool:
         return not is_review_article
 
     metadata = metadata or get_doi_summary(doi)['consolidated']
-    print(f"Metadata for DOI {doi}: {metadata}")
     abstract = metadata.get("abstract", "")
     journal = metadata.get("journal", "")
     publisher = metadata.get("publisher", "")
