@@ -320,6 +320,7 @@ class ExtractionPipeline:
         use_cache: bool = True,
         nomad: bool = False,
         nomad_upload_id: str = None,
+        additional_params: dict = None,
     ):
         self.model_name = model_name
         self.preprocessor = Preprocessor(
@@ -332,6 +333,8 @@ class ExtractionPipeline:
         self.total_completion_tokens = 0
         self.nomad = nomad
         self.upload_id = nomad_upload_id
+        self.additional_params = additional_params
+
 
     def extract_from_pdf_nomad(
         self, filepath, api_key, doi=None, ureg=None, api_base_url=None
@@ -362,7 +365,7 @@ class ExtractionPipeline:
         results = ""
         try:
             results, completion_usage = llm_call.create_text_completion(
-                self.model_name, pdf_text
+                self.model_name, pdf_text, additional_params=self.additional_params 
             )
             parsed = PerovskiteSolarCells(**postprocess(results.model_dump()))
             to_json(parsed, output_path)
@@ -492,6 +495,7 @@ def extract(
     output: str = "./extractions",
     nomad: bool = False,
     nomad_upload_id: str = None,
+    additional_params: dict = None,
 ):
     if pdf_print:
         print(
@@ -508,6 +512,7 @@ def extract(
         use_cache,
         nomad,
         nomad_upload_id,
+        additional_params
     ).run(filepath, truth, output=output)
 
 
