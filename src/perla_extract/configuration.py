@@ -3,6 +3,7 @@ import re
 from platformdirs import user_data_dir
 from pathlib import Path
 
+max_retries = 3
 # Initialize the UnitRegistry
 ureg = UnitRegistry()
 

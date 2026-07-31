@@ -21,6 +21,7 @@ from perla_extract.preprocessing.preprocessor import Preprocessor
 from perla_extract.postprocessing import postprocess
 from perla_extract.evaluations import Evaluations, score_multiple_extractions
 from perla_extract import llm_call
+from perla_extract.llm_call import MaxRetriesExceededError
 from perla_extract.export import (
     to_json,
     convert_extraction_to_nomad_entries,
@@ -376,8 +377,10 @@ class ExtractionPipeline:
                 log_processing(doi, 'nomad_upload_processed', True)
             log_processing(doi, 'processed', True)
             return True
-        except (InstructorRetryException, ValidationError) as e:
+        except ValidationError as e:
             self._handle_failure(e, results, output_path)
+        except MaxRetriesExceededError as e:
+            self._handle_failure(e, e.args[0], output_path)
         except (IncompleteOutputException, json.decoder.JSONDecodeError):
             output_path.write_text("")
 
@@ -449,9 +452,7 @@ class ExtractionPipeline:
             processed = postprocess(results.model_dump())
         except Exception:
             processed = json.loads(
-                error.last_completion.choices[0]
-                .message.tool_calls[0]
-                .function.arguments
+                results.choices[0].message.content
             )
         output_path.write_text(json.dumps(processed, indent=2))
 

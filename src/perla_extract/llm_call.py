@@ -2,12 +2,13 @@ import os
 import sys
 from litellm import completion
 import instructor
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
 from perla_extract.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
 import litellm
 from loguru import logger
-
+from typing import Any
+from perla_extract.configuration import max_retries
 # Try to setup Redis cache if available, otherwise use disk cache
 try:
     # Disable litellm error output
@@ -28,6 +29,10 @@ try:
 except Exception as e:
     pass
 
+class MaxRetriesExceededError(Exception):
+    """Custom exception to indicate that the maximum number of retries has been exceeded."""
+    pass
+
 def create_text_completion(
     model_name: str,
     pdf_text: str = "",
@@ -35,7 +40,7 @@ def create_text_completion(
     instruction: str = INSTRUCTION_TEXT,
     api_key: str = None,
     api_base_url: str = None
-) -> PerovskiteSolarCells:
+) -> tuple[PerovskiteSolarCells, Any]:
     """
      Extract structured perovskite solar cell data from raw PDF text using an LLM.
 
@@ -66,11 +71,9 @@ def create_text_completion(
     ]
 
     # Call with Instructor
-    client = instructor.from_litellm(litellm.completion)
 
     supported_params = set()
     max_tokens = 64000
-    temperature=0
 
     try:
         model_info = litellm.get_model_info(model=model_name)
@@ -80,24 +83,34 @@ def create_text_completion(
         supported_params = set(
             litellm.get_supported_openai_params(model=model_name) or []
         )
+       
+        if 'response_format' not in supported_params:
+            logger.warning(
+                f'Model {model_name} does not support response_format parameter.'
+            )
+
+        if not litellm.supports_response_schema(model=model_name):
+            logger.warning(
+                f'Model {model_name} does not support json schema response for structured output.'
+            )
     except Exception as e:
         print(f"Could not fetch model info, defaulting to max_tokens={max_tokens}. Error: {e}")
 
     while True:
+        retry_count = 0
         try:
-            resp, compll = client.chat.completions.create_with_completion(
+            resp = completion(
                 model=model_name,
-                messages=messages,
-                response_model=PerovskiteSolarCells,
-                temperature=temperature,
-                max_tokens=max_tokens,
+                base_url=api_base_url,
                 api_key=api_key,
-                api_base=api_base_url,
-                drop_params=True
+                max_tokens=max_tokens,
+                messages=messages,
+                response_format=PerovskiteSolarCells,
+                drop_params=True,
             )
-        except instructor.exceptions.InstructorRetryException as e:
+        except litellm.exceptions.BadRequestError as e:
             if (
-                'litellm.BadRequestError: AnthropicException - {"type":"error","error":{"type":"invalid_request_error","message":"input length and `max_tokens` exceed context limit:'
+                'AnthropicException - {"type":"error","error":{"type":"invalid_request_error","message":"input length and `max_tokens` exceed context limit:'
                 not in str(e)
             ):
                 raise
@@ -105,7 +118,16 @@ def create_text_completion(
             logger.info("reduced max tokens")
         else:
             break
-    return resp, compll
+        except ValidationError as e:
+            logger.error(f"Validation error: {e}. Attempting to correct the output.")
+            if retry_count >= max_retries:
+                logger.error(f"Max retries reached ({max_retries}). Raising MaxRetriesExceededError.")
+                raise MaxRetriesExceededError(resp)
+                break
+            retry_count += 1
+            retry_prompt = f'\n\nThe previous attempt resulted in a validation error: {e}. Correct the output to match the expected schema.'
+            messages.extend([{'role':'assistant','content':resp.choices[0].message.content}, {"role":"user","content": retry_prompt}])
+    return extracted_data, resp
 
 
 def llm_as_judge(ground_truth, value_truth, value_extraction):

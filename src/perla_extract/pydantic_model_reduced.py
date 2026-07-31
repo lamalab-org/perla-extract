@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, validator, confloat
-from typing import List, Literal, Optional
+from pydantic import BaseModel, Field, validator, confloat, ConfigDict
+from typing import List, Literal, Optional,Union
 
 
 class Ion(BaseModel):
@@ -240,6 +240,11 @@ class ReactionSolution(BaseModel):
     temperature: Optional[Temperature] = Field(None)
     solvents: Optional[List[Solvent]] = Field(None)
 
+class AdditionalParameter(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    
+    name: Optional[str] = Field(None, description="The name of the parameter (e.g., 'spin_coating_speed')")
+    value: Optional[str | float] = Field(None, description="The value of the parameter")
 
 class ProcessingStep(BaseModel):
     step_name: Optional[str] = Field(None)
@@ -256,7 +261,7 @@ class ProcessingStep(BaseModel):
     duration: Optional[Time] = Field(None)
     antisolvent: Optional[str] = Field(None)
     solution: Optional[ReactionSolution] = Field(None)
-    additional_parameters: Optional[dict] = Field(
+    additional_parameters: Optional[List[AdditionalParameter]] = Field(
         None, description="Any additional parameters specific to this processing step"
     )
 
