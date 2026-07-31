@@ -6,13 +6,22 @@ never publish an experimental study on perovskite solar cells. This module asks
 an LLM, journal by journal, whether the journal could plausibly publish such a
 paper and writes a reduced whitelist.
 
-The decision for every journal is cached in a JSONL file, so a run can be
-interrupted and resumed without paying for the same calls twice.
+This is a one-off maintenance tool rather than part of the pipeline, so it lives
+outside the installed package. It reads the whitelist from the ``perla_extract``
+package and writes its outputs next to this file.
+
+The decision for every journal is cached in ``journal_decisions.jsonl``, so a run
+can be interrupted and resumed without paying for the same calls twice, and
+re-filtering at a different ``--min_confidence`` costs no API calls at all.
 
 Usage::
 
-    python -m perla_extract.filter_journals run
-    python -m perla_extract.filter_journals run --model_name gpt-4o-2024-08-06 --max_workers 16
+    python scripts/filter_journals.py run
+    python scripts/filter_journals.py run --min_confidence 0.8
+    python scripts/filter_journals.py run --model_name gpt-4o-2024-08-06 --max_workers 16
+
+The filtered whitelist is written to ``allowed_journals_filtered.csv``; copy it
+over ``src/perla_extract/allowed_journals.csv`` once the removals look right.
 """
 
 from __future__ import annotations
@@ -232,7 +241,8 @@ def run(
         overwrite: Ignore the existing decision cache and re-query every journal.
     """
     whitelist_path = Path(whitelist) if whitelist else _default_whitelist()
-    out_dir = Path(output_dir) if output_dir else whitelist_path.parent
+    # artifacts live next to this script, not inside the installed package
+    out_dir = Path(output_dir) if output_dir else Path(__file__).parent
     out_dir.mkdir(parents=True, exist_ok=True)
 
     decisions_path = out_dir / "journal_decisions.jsonl"
