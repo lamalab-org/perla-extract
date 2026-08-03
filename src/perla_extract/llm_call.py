@@ -7,7 +7,7 @@ from perla_extract.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
 import litellm
 from loguru import logger
 from typing import Any
-from perla_extract.configuration import max_retries
+from perla_extract.configuration import MAX_RETRIES, MAX_TOKENS
 # Try to setup Redis cache if available, otherwise use disk cache
 try:
     # Disable litellm error output
@@ -50,17 +50,20 @@ def create_text_completion(
     context length errors by reducing `max_tokens` if needed.
 
     Args:
-        model_name (str): Name of the LLM to use (e.g., "gpt-4", "claude-3-opus", etc.).
+        model_name (str): Name of the LLM to use.
         pdf_text (str): Text content extracted from a PDF document.
         system_prompt (str): The system-level prompt guiding the LLM’s behavior (default: SYSTEM_PROMPT).
         instruction (str): Task-specific instruction for the LLM (default: INSTRUCTION_TEXT).
         api_key (str, optional): API key for LiteLLM if environment variables cannot be used.
+        api_base_url (str, optional): Base URL for the LiteLLM API if environment variables cannot be used.
+        additional_params (dict, optional): Additional parameters to pass to the LLM call.
 
     Returns:
         PerovskiteSolarCells: A Pydantic model instance populated with the extracted data.
+        The raw response from the LLM call, which may contain additional metadata.
 
     Raises:
-        instructor.exceptions.InstructorRetryException: If an unhandled error occurs during LLM interaction.
+        MaxRetriesExceededError: If the maximum number of retries is exceeded due to validation errors.
     """
     # Construct messages for LLM
     messages = [
@@ -73,7 +76,8 @@ def create_text_completion(
     # Call with LiteLLM
 
     supported_params = set()
-    max_tokens = 64000
+    max_tokens = MAX_TOKENS
+    filtered_params = {}
 
     try:
         model_info = litellm.get_model_info(model=model_name)
@@ -93,7 +97,6 @@ def create_text_completion(
             logger.warning(
                 f'Model {model_name} does not support json schema response for structured output.'
             )
-        filtered_params = {}
         for param, value in additional_params.items():
             if param not in supported_params:
                 logger.warning(
@@ -102,7 +105,7 @@ def create_text_completion(
             else:
                 filtered_params[param] = value
     except Exception as e:
-        print(f"Could not fetch model info, defaulting to max_tokens={max_tokens}. Error: {e}")
+        logger.error(f"Could not fetch model info, defaulting to max_tokens={max_tokens}. Error: {e}")
 
     retry_count = 0
     while True:
@@ -122,15 +125,15 @@ def create_text_completion(
             ):
                 raise
             max_tokens -= 5000
-            logger.info("reduced max tokens")
+            logger.info(f"reduced max tokens to {max_tokens} due to context length error.")
             continue
         try:
             extracted_data = PerovskiteSolarCells.model_validate_json(resp.choices[0].message.content,strict=True,extra="forbid")
             break
         except ValidationError as e:
             logger.error(f"Validation error: {e}. Attempting to correct the output.")
-            if retry_count >= max_retries:
-                logger.error(f"Max retries reached ({max_retries}). Raising MaxRetriesExceededError.")
+            if retry_count >= MAX_RETRIES:
+                logger.error(f"Max retries reached ({MAX_RETRIES}). Raising MaxRetriesExceededError.")
                 raise MaxRetriesExceededError(resp)
             retry_count += 1
             retry_prompt = f'\n\nThe previous attempt resulted in a validation error: {e}. Correct the output to match the expected schema.'

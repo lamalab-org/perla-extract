@@ -28,7 +28,7 @@ from perla_extract.export import (
     push_to_nomad,
     get_authentication_token,
 )
-
+from loguru import logger
 pdf2doi.config.set("verbose", False)
 
 
@@ -292,7 +292,7 @@ def extract_doi_from_pdf(filepath) -> str:
         if pdf2doi_results.get("identifier_type") == "DOI":
             doi = pdf2doi_results.get("identifier", doi)
     except Exception as e:
-        print(f"Could not extract DOI from {filepath}: {e}")
+        logger.error(f"Could not extract DOI from {filepath}: {e}")
     return doi
 
 
@@ -353,12 +353,12 @@ class ExtractionPipeline:
         doi = extract_doi_from_pdf(filepath)
         pdf_text = self.preprocessor.pdf_to_text(filepath)
         if not is_doi_good_to_go(doi, pdf_text):
-            print(f"This DOI {doi} will be skipped.")
+            logger.warning(f"This DOI {doi} will be skipped.")
             log_processing(doi, 'skipped', True)
             log_processing(doi, 'processed', True)
             return False
 
-        print(
+        logger.info(
             "Extracting:",
             (doi if doi != "NOT_FOUND" else filepath.stem.replace("--", "/")),
         )
@@ -371,7 +371,7 @@ class ExtractionPipeline:
             to_json(parsed, output_path)
             self.total_prompt_tokens += completion_usage.usage.prompt_tokens
             self.total_completion_tokens += completion_usage.usage.completion_tokens
-            print(f"Extracted: {filepath.name}")
+            logger.info(f"Extracted: {filepath.name}")    
             log_processing(doi, 'extracted', True)
             if self.nomad:
                 converted_nomad = convert_extraction_to_nomad_entries(parsed, doi, pdf_text)
@@ -412,7 +412,7 @@ class ExtractionPipeline:
                 truth = postprocess(json.load(open(file)))
                 pairs.append((truth, pred, file.name))
             except (FileNotFoundError, json.decoder.JSONDecodeError) as e:
-                print(e)
+                logger.error(e)
                 continue
 
         evals_list, key_metrics = score_multiple_extractions(pairs)
@@ -444,12 +444,13 @@ class ExtractionPipeline:
                 output_path = output_dir / self.model_name / f"{pdf_file.stem}.json"
                 if self._extract_pdf(pdf_file, output_path):
                     count += 1
-                    print(count)
-        print("Prompt Tokens:", self.total_prompt_tokens)
-        print("Completion Tokens:", self.total_completion_tokens)
+                    logger.info(f"Extracted {count} PDFs so far.")
+        logger.info(f"Extraction completed. Total PDFs extracted: {count}")
+        logger.info(f"Prompt Tokens: {self.total_prompt_tokens}")
+        logger.info(f"Completion Tokens: {self.total_completion_tokens}")
 
     def _handle_failure(self, error, results, output_path):
-        print(f"Extraction failed: {error}")
+        logger.error(f"Extraction failed: {error}")
         try:
             processed = postprocess(results.model_dump())
         except Exception as e:
@@ -480,7 +481,7 @@ class ExtractionPipeline:
         elif filepath.is_dir():
             self._extract_batch(filepath, output)
         else:
-            print(f"Unsupported input: {filepath}")
+            logger.error(f"Unsupported input: {filepath}")
 
 
 def extract(
@@ -585,10 +586,10 @@ class CLI:
         result = papersbot(download_dir=str(download_path))
         
         if not result.success:
-            print(f"Papersbot failed: {result.error}")
+            logger.error(f"Papersbot failed: {result.error}")
             return
         
-        print(f"Found {result.papers_found} papers, downloaded {result.pdfs_downloaded} PDFs")
+        logger.info(f"Found {result.papers_found} papers, downloaded {result.pdfs_downloaded} PDFs")
         
         # Extract them if PDFs were downloaded
         if result.pdfs_downloaded > 0:
