@@ -93,28 +93,28 @@ def create_text_completion(
             logger.warning(
                 f'Model {model_name} does not support json schema response for structured output.'
             )
-        for param in additional_params:
+        filtered_params = {}
+        for param, value in additional_params.items():
             if param not in supported_params:
                 logger.warning(
                     f"Model {model_name} does not support parameter '{param}'. It will be ignored."
                 )
-                additional_params.pop(param, None)
+            else:
+                filtered_params[param] = value
     except Exception as e:
         print(f"Could not fetch model info, defaulting to max_tokens={max_tokens}. Error: {e}")
 
     retry_count = 0
     while True:
+        filtered_params.update({"model": model_name,
+                "api_base": api_base_url, 
+                "api_key": api_key, 
+                "max_tokens": max_tokens,
+                "messages": messages,
+                "response_format": PerovskiteSolarCells,
+                "drop_params": True})
         try:
-            resp = completion(
-                model=model_name,
-                base_url=api_base_url,
-                api_key=api_key,
-                max_tokens=max_tokens,
-                messages=messages,
-                response_format=PerovskiteSolarCells,
-                drop_params=True,
-                **(additional_params),
-            )
+            resp = completion(**filtered_params)
         except litellm.exceptions.BadRequestError as e:
             if (
                 'AnthropicException - {"type":"error","error":{"type":"invalid_request_error","message":"input length and `max_tokens` exceed context limit:'
@@ -159,14 +159,11 @@ def llm_as_judge(ground_truth, value_truth, value_extraction):
             "content": f"Complete ground truth: {str(ground_truth)}\n Truth value: {str(value_truth)} \n Extraction value: {str(value_extraction)}",
         },
     ]
-
-    client = instructor.from_litellm(completion)
-
-    resp = client.chat.completions.create(
+    resp = completion(
         model="gpt-4o-2024-08-06",
         messages=messages,
-        response_model=Judgement,
-        temperature=0,
-    )
+        response_format=Judgement,
+     )
+    
 
-    return resp
+    return Judgement.model_validate_json(resp.choices[0].message.content, strict=True)

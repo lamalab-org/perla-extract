@@ -24,7 +24,7 @@ for model in "${NORMAL_MODELS[@]}"; do
     echo "=========================================="
     
     # Run the extraction command
-    # uv run perla-extract extract ./downloads/ --model_name "$model"
+    uv run perla-extract extract ./downloads/ --model_name "$model"
     
     # Optional: check if the command succeeded
     if [ $? -eq 0 ]; then
