@@ -44,7 +44,7 @@ def create_text_completion(
     """
      Extract structured perovskite solar cell data from raw PDF text using an LLM.
 
-    This function sends a prompt to a language model (via the `instructor` library and LiteLLM backend)
+    This function sends a prompt to a language model (via the `LiteLLM` library)
     with a specified system prompt and instruction, along with the given PDF text. It attempts to
     deserialize the response into a `PerovskiteSolarCells` Pydantic model, automatically handling
     context length errors by reducing `max_tokens` if needed.
@@ -70,7 +70,7 @@ def create_text_completion(
         },
     ]
 
-    # Call with Instructor
+    # Call with LiteLLM
 
     supported_params = set()
     max_tokens = 64000
