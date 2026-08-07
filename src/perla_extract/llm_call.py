@@ -78,11 +78,12 @@ def create_text_completion(
     supported_params = set()
     max_tokens = MAX_TOKENS
     filtered_params = {}
-
+    additional_params = {} if additional_params is None else additional_params
     try:
         model_info = litellm.get_model_info(model=model_name)
         if model_info:
             max_tokens = model_info.get("max_output_tokens", max_tokens)
+            logger.info(f"Model {model_name} supports max_output_tokens={max_tokens}.")
 
         supported_params = set(
             litellm.get_supported_openai_params(model=model_name) or []
@@ -105,7 +106,8 @@ def create_text_completion(
             else:
                 filtered_params[param] = value
     except Exception as e:
-        logger.error(f"Could not fetch model info, defaulting to max_tokens={max_tokens}. Error: {e}")
+        logger.error(f"Error occurred while fetching model info for {model_name}: {e}")
+
 
     retry_count = 0
     while True:
@@ -123,6 +125,7 @@ def create_text_completion(
                 'AnthropicException - {"type":"error","error":{"type":"invalid_request_error","message":"input length and `max_tokens` exceed context limit:'
                 not in str(e)
             ):
+                logger.error(f"BadRequestError: {e}. Raising exception.")
                 raise
             max_tokens -= 5000
             logger.info(f"reduced max tokens to {max_tokens} due to context length error.")

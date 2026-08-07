@@ -264,7 +264,9 @@ class ProcessingStep(BaseModel):
     additional_parameters: Optional[List[AdditionalParameter]] = Field(
         None, description="Any additional parameters specific to this processing step"
     )
-
+     # additional_parameters: Optional[dict] = Field(
+    #     None, description="Any additional parameters specific to this processing step"
+    # )
 
 class Stability(BaseModel):
     time: Optional[Time] = Field(None)
