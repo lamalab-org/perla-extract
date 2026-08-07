@@ -395,12 +395,23 @@ function renderFigureAudit() {
 function renderIssues() {
   const open = state.issues.filter((issue) => issue.status === "open");
   renderSafeHtml($("issue-summary"), `<strong>${open.length} open issue${open.length === 1 ? "" : "s"}</strong>. Missing items remain separate from the JSON until reviewed and resolved.`);
-  renderSafeHtml($("issue-list"), state.issues.length ? state.issues.map((issue) => `<article class="issue ${issue.status}">
+  renderSafeHtml($("issue-list"), state.issues.length ? state.issues.map((issue) => {
+    const proposal = issue.schema_proposal || {};
+    const proposalParts = [proposal.value_relation, proposal.aggregation, proposal.measurement_context].filter((value) => value && value !== "unspecified");
+    return `<article class="issue ${issue.status}">
     <div class="issue-heading"><span>${escapeHtml(issueTypeLabel(issue.type))}</span><strong>${escapeHtml(issue.status)}</strong></div>
     <p>${escapeHtml(issue.description)}</p>
     <div class="issue-meta">${issue.cell_index == null ? "Paper-level" : `Cell ${issue.cell_index + 1}`}${issue.source_page ? ` · p. ${issue.source_page}` : ""}${issue.suggested_value ? ` · suggested: ${escapeHtml(issue.suggested_value)}` : ""}</div>
+    ${proposalParts.length || proposal.uncertainty ? `<div class="schema-tags">${proposalParts.map((value) => `<span>${escapeHtml(value.replaceAll("_", " "))}</span>`).join("")}${proposal.uncertainty ? `<span>${escapeHtml(proposal.uncertainty)}</span>` : ""}</div>` : ""}
+    ${issue.source_page ? `<button class="issue-jump" data-issue-jump="${issue.id}">Jump to evidence</button>` : ""}
     ${issue.status === "open" ? `<div class="issue-resolution"><input placeholder="Resolution note…" /><button data-resolve-issue="${issue.id}">Resolve</button></div>` : `<div class="issue-meta">Resolved by ${escapeHtml(reviewerName(issue.resolved_by))}: ${escapeHtml(issue.resolution || "no note")}</div>`}
-  </article>`).join("") : `<div class="empty-state">No missing-item reports yet.</div>`);
+  </article>`; }).join("") : `<div class="empty-state">No missing-item reports yet.</div>`);
+  document.querySelectorAll("[data-issue-jump]").forEach((button) => button.addEventListener("click", () => {
+    const issue = state.issues.find((item) => item.id === button.dataset.issueJump);
+    if (!issue) return;
+    if (issue.source_text) $("pdf-search").value = issue.source_text;
+    jumpToPage(issue.source_page, issue.source_text || "");
+  }));
   document.querySelectorAll("[data-resolve-issue]").forEach((button) => button.addEventListener("click", async () => {
     const resolution = button.previousElementSibling.value;
     const payload = await request(`/api/issues/${state.split}/${encodeURIComponent(state.selected)}/${button.dataset.resolveIssue}`, { method: "PUT", body: JSON.stringify({ reviewer_id: reviewerId(), resolution }) });
@@ -415,6 +426,10 @@ async function createIssue(overrides = {}) {
     cell_index: overrides.cell_index ?? ($("issue-cell").value === "" ? null : Number($("issue-cell").value)),
     suggested_value: overrides.suggested_value || $("issue-suggested-value").value,
     source_page: overrides.source_page || null, source_text: overrides.source_text || "",
+    value_relation: overrides.value_relation || $("issue-value-relation").value,
+    aggregation: overrides.aggregation || $("issue-aggregation").value,
+    measurement_context: overrides.measurement_context || $("issue-measurement-context").value,
+    uncertainty: overrides.uncertainty || $("issue-uncertainty").value,
   };
   const result = await request(`/api/issues/${state.split}/${encodeURIComponent(state.selected)}`, { method: "POST", body: JSON.stringify(payload) });
   state.issues.push(result.issue); currentPaper().open_issues = (currentPaper().open_issues || 0) + 1; renderPapers();
@@ -433,12 +448,6 @@ function renderView() {
   else { $("json-panel").hidden = false; renderJson(); }
 }
 
-function encodeTextFragment(value) {
-  return encodeURIComponent(value).replace(/[!'()*-]/g, (character) =>
-    `%${character.charCodeAt(0).toString(16).toUpperCase()}`
-  );
-}
-
 async function jumpToPage(page, text = "") {
   if (!state.selected) return;
   if (!state.pdfUrl || state.pdfPaper !== state.selected) {
@@ -455,10 +464,8 @@ async function jumpToPage(page, text = "") {
     state.pdfUrl = URL.createObjectURL(await response.blob());
     state.pdfPaper = state.selected;
   }
-  const fragment = text
-    ? `page=${page}:~:text=${encodeTextFragment(text)}`
-    : `page=${page}&view=FitH`;
-  $("pdf-frame").src = `${state.pdfUrl}#${fragment}`;
+  const targetPage = Math.max(1, Number(page) || 1);
+  $("pdf-frame").src = `${state.pdfUrl}#page=${targetPage}&view=FitH`;
 }
 
 async function searchPdf(jumpFirst = false) {
@@ -469,7 +476,7 @@ async function searchPdf(jumpFirst = false) {
   box.textContent = "Searching…";
   const payload = await request(`/api/search/${encodeURIComponent(state.selected)}?q=${encodeURIComponent(query)}`);
   if (!payload.results.length) { box.textContent = "No exact text matches found."; return; }
-  renderSafeHtml(box, payload.results.map((result, index) => `<button class="search-hit" data-page="${result.page}" data-result-index="${index}"><strong>p. ${result.page}</strong><span>${highlightedSnippet(result)}</span></button>`).join(""));
+  renderSafeHtml(box, payload.results.map((result, index) => `<button class="search-hit" data-page="${result.page}" data-result-index="${index}"><strong>Jump · p. ${result.page}</strong><span>${highlightedSnippet(result)}</span></button>`).join(""));
   box.querySelectorAll("[data-page]").forEach((hit) => hit.addEventListener("click", () => {
     const result = payload.results[Number(hit.dataset.resultIndex)];
     box.hidden = true;
@@ -521,7 +528,7 @@ $("paper-comment-form").addEventListener("submit", async (event) => {
 
 $("issue-form").addEventListener("submit", async (event) => {
   event.preventDefault(); const status = $("issue-status"); status.textContent = "Saving…";
-  try { await createIssue(); $("issue-description").value = ""; $("issue-suggested-value").value = ""; status.textContent = "Issue created"; renderIssues(); }
+  try { await createIssue(); $("issue-description").value = ""; $("issue-suggested-value").value = ""; $("issue-uncertainty").value = ""; status.textContent = "Issue created"; renderIssues(); }
   catch (error) { status.textContent = error.message; }
 });
 

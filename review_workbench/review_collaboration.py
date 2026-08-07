@@ -129,6 +129,15 @@ ISSUE_TYPES = {
     "wrong_value",
     "other",
 }
+VALUE_RELATIONS = {
+    "unspecified", "exact", "approximately", "lower_bound", "upper_bound", "range"
+}
+AGGREGATIONS = {
+    "unspecified", "single_device", "champion", "mean", "median", "stabilized", "distribution"
+}
+MEASUREMENT_CONTEXTS = {
+    "unspecified", "forward_scan", "reverse_scan", "steady_state", "certified", "other"
+}
 
 
 def _figure_audit_path(ground_truth_dir: Path, split: str, paper_id: str) -> Path:
@@ -246,6 +255,10 @@ def add_issue(
     suggested_value: str = "",
     source_page: int | None = None,
     source_text: str = "",
+    value_relation: str = "unspecified",
+    aggregation: str = "unspecified",
+    measurement_context: str = "unspecified",
+    uncertainty: str = "",
 ) -> dict[str, Any]:
     if reporter_id not in {user["id"] for user in load_users(ground_truth_dir)}:
         raise ValueError("Unknown reviewer")
@@ -258,6 +271,15 @@ def add_issue(
         raise ValueError("Cell index must be a non-negative integer")
     if source_page is not None and (not isinstance(source_page, int) or source_page < 1):
         raise ValueError("Source page must be a positive integer")
+    if value_relation not in VALUE_RELATIONS:
+        raise ValueError("Unknown value relation")
+    if aggregation not in AGGREGATIONS:
+        raise ValueError("Unknown aggregation")
+    if measurement_context not in MEASUREMENT_CONTEXTS:
+        raise ValueError("Unknown measurement context")
+    uncertainty = str(uncertainty).strip()
+    if len(uncertainty) > 500:
+        raise ValueError("Uncertainty note must contain at most 500 characters")
     issues = load_issues(ground_truth_dir, split, paper_id)
     issue = {
         "id": uuid.uuid4().hex,
@@ -270,6 +292,12 @@ def add_issue(
         "suggested_value": str(suggested_value),
         "source_page": source_page,
         "source_text": str(source_text),
+        "schema_proposal": {
+            "value_relation": value_relation,
+            "aggregation": aggregation,
+            "measurement_context": measurement_context,
+            "uncertainty": uncertainty,
+        },
         "created_at": datetime.now(timezone.utc).isoformat(),
         "resolved_by": None,
         "resolution": "",

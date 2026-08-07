@@ -319,6 +319,12 @@ class ReviewApplication:
             suggested_value=str(payload.get("suggested_value", "")),
             source_page=payload.get("source_page"),
             source_text=str(payload.get("source_text", "")),
+            value_relation=str(payload.get("value_relation", "unspecified")),
+            aggregation=str(payload.get("aggregation", "unspecified")),
+            measurement_context=str(
+                payload.get("measurement_context", "unspecified")
+            ),
+            uncertainty=str(payload.get("uncertainty", "")),
         )
 
     def resolve_missing_issue(

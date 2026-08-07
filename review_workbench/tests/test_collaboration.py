@@ -95,7 +95,17 @@ def test_schema_limitations_can_be_recorded_without_changing_ground_truth(tmp_pa
         "The paper reports FF above 80%, not an exact value.",
         field_path="/cells/0/ff/value",
         source_page=5,
+        value_relation="lower_bound",
+        aggregation="champion",
+        measurement_context="steady_state",
+        uncertainty="Reported as above 80%.",
     )
 
     assert issue["type"] == "schema_limitation"
     assert issue["status"] == "open"
+    assert issue["schema_proposal"] == {
+        "value_relation": "lower_bound",
+        "aggregation": "champion",
+        "measurement_context": "steady_state",
+        "uncertainty": "Reported as above 80%.",
+    }

@@ -158,6 +158,15 @@
             </div>
             <label>Description <textarea id="issue-description" rows="3" required placeholder="What is missing, and where is it reported?"></textarea></label>
             <label>Suggested value <input id="issue-suggested-value" placeholder="Optional value or stack" /></label>
+            <details class="schema-proposal">
+              <summary>Proposed uncertainty / provenance fields</summary>
+              <div class="field-grid schema-proposal-grid">
+                <label>Value relation <select id="issue-value-relation"><option value="unspecified">Not specified</option><option value="exact">Exact</option><option value="approximately">Approximately</option><option value="lower_bound">At least / above</option><option value="upper_bound">Up to / below</option><option value="range">Range</option></select></label>
+                <label>Aggregation <select id="issue-aggregation"><option value="unspecified">Not specified</option><option value="single_device">Single device</option><option value="champion">Champion</option><option value="mean">Mean</option><option value="median">Median</option><option value="stabilized">Stabilized</option><option value="distribution">Distribution</option></select></label>
+                <label>Measurement <select id="issue-measurement-context"><option value="unspecified">Not specified</option><option value="forward_scan">Forward scan</option><option value="reverse_scan">Reverse scan</option><option value="steady_state">Steady state</option><option value="certified">Certified</option><option value="other">Other</option></select></label>
+              </div>
+              <label>Uncertainty / range <input id="issue-uncertainty" placeholder="e.g. ±0.3%, 15–17%, or error bars only" /></label>
+            </details>
             <div class="dialog-actions"><span id="issue-status"></span><button type="submit" class="primary-button">Create issue</button></div>
           </form>
         </section>

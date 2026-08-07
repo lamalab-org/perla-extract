@@ -17,6 +17,15 @@ values, or metrics whose device linkage cannot be represented faithfully, log a
 `Schema limitation / uncertainty` issue. These examples should inform a later
 schema revision instead of being coerced into exact scalar ground truth.
 
+Seed the curated initial findings into private Vercel Blob state after pulling
+the production environment. The operation is idempotent and does not add issue
+records to Git:
+
+```bash
+PYTHONPATH=. .venv/bin/python review_workbench/seed_review_findings.py --dry-run
+PYTHONPATH=. .venv/bin/python review_workbench/seed_review_findings.py
+```
+
 This directory contains the complete local review UI and its isolated Vercel
 deployment surface. The scientific extraction and scoring code remains in
 `src/perla_extract`.

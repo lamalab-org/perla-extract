@@ -42,14 +42,15 @@ def test_review_ui_has_no_direct_html_injection_sinks():
     assert "renderSafeHtml" in javascript
 
 
-def test_pdf_search_uses_text_fragments_for_exact_match_navigation():
+def test_pdf_search_uses_reliable_page_navigation():
     javascript = (
         Path(__file__).parents[1]
         / "review_app"
         / "app.js"
     ).read_text()
 
-    assert ":~:text=${encodeTextFragment(text)}" in javascript
+    assert "#page=${targetPage}&view=FitH" in javascript
+    assert ":~:text=" not in javascript
     assert "jumpToPage(result.page, matchedText(result, query))" in javascript
 
 
@@ -62,6 +63,17 @@ def test_review_ui_has_separate_figure_audit():
     assert 'id="figure-audit-form"' in html
     assert "schema_relevant_figures" in javascript
     assert "figure_only_schema_figures" in javascript
+
+
+def test_search_and_issues_offer_explicit_pdf_jumps():
+    app_dir = Path(__file__).parents[1] / "review_app"
+    html = (app_dir / "index.html").read_text()
+    javascript = (app_dir / "app.js").read_text()
+
+    assert "Proposed uncertainty / provenance fields" in html
+    assert "Jump · p." in javascript
+    assert "Jump to evidence" in javascript
+    assert "issue.source_text" in javascript
 
 
 def test_authenticated_comment_ignores_client_supplied_author(tmp_path):
