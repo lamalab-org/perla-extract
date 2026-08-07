@@ -219,6 +219,11 @@ function highlightedSnippet(suggestion) {
   return `${escapeHtml(before)}<mark>${escapeHtml(match)}</mark>${escapeHtml(after)}`;
 }
 
+function matchedText(suggestion, fallback = "") {
+  if (!suggestion) return fallback;
+  return suggestion.snippet.slice(suggestion.match_start, suggestion.match_end) || fallback;
+}
+
 function renderFields() {
   if (!state.reviewData) return;
   const cell = $("field-cell").value;
@@ -280,7 +285,7 @@ function bindFieldEvents() {
     });
     card.querySelectorAll(".fact-status,.fact-page,.fact-quote,.fact-notes").forEach((input) => input.addEventListener("change", () => updateFactFromCard(card)));
     card.querySelector('[data-action="search-value"]').addEventListener("click", () => searchValue(fact));
-    card.querySelector('[data-action="jump-suggestion"]')?.addEventListener("click", () => jumpToPage(fact.suggestion.page));
+    card.querySelector('[data-action="jump-suggestion"]')?.addEventListener("click", () => jumpToPage(fact.suggestion.page, matchedText(fact.suggestion, fact.suggestion.query)));
     card.querySelector('[data-action="use-quote"]')?.addEventListener("click", () => {
       card.querySelector(".fact-page").value = fact.suggestion.page;
       card.querySelector(".fact-quote").value = fact.suggestion.snippet;
@@ -319,7 +324,7 @@ function renderQuantities() {
   </article>`).join("") : `<div class="empty-state">No unmatched quantities match this filter.</div>`);
   document.querySelectorAll(".quantity-jump").forEach((button) => button.addEventListener("click", async () => {
     const card = button.closest(".quantity-card");
-    jumpToPage(card.dataset.page);
+    jumpToPage(card.dataset.page, card.dataset.query);
     $("pdf-search").value = card.dataset.query;
   }));
   document.querySelectorAll(".report-quantity").forEach((button) => button.addEventListener("click", async () => {
@@ -408,7 +413,13 @@ function renderView() {
   else { $("json-panel").hidden = false; renderJson(); }
 }
 
-async function jumpToPage(page) {
+function encodeTextFragment(value) {
+  return encodeURIComponent(value).replace(/[!'()*-]/g, (character) =>
+    `%${character.charCodeAt(0).toString(16).toUpperCase()}`
+  );
+}
+
+async function jumpToPage(page, text = "") {
   if (!state.selected) return;
   if (!state.pdfUrl || state.pdfPaper !== state.selected) {
     if (state.pdfUrl) URL.revokeObjectURL(state.pdfUrl);
@@ -424,7 +435,10 @@ async function jumpToPage(page) {
     state.pdfUrl = URL.createObjectURL(await response.blob());
     state.pdfPaper = state.selected;
   }
-  $("pdf-frame").src = `${state.pdfUrl}#page=${page}&view=FitH`;
+  const fragment = text
+    ? `page=${page}:~:text=${encodeTextFragment(text)}`
+    : `page=${page}&view=FitH`;
+  $("pdf-frame").src = `${state.pdfUrl}#${fragment}`;
 }
 
 async function searchPdf(jumpFirst = false) {
@@ -435,9 +449,16 @@ async function searchPdf(jumpFirst = false) {
   box.textContent = "Searching…";
   const payload = await request(`/api/search/${encodeURIComponent(state.selected)}?q=${encodeURIComponent(query)}`);
   if (!payload.results.length) { box.textContent = "No exact text matches found."; return; }
-  renderSafeHtml(box, payload.results.map((result) => `<button class="search-hit" data-page="${result.page}"><strong>p. ${result.page}</strong><span>${highlightedSnippet(result)}</span></button>`).join(""));
-  box.querySelectorAll("[data-page]").forEach((hit) => hit.addEventListener("click", () => jumpToPage(hit.dataset.page)));
-  if (jumpFirst) jumpToPage(payload.results[0].page);
+  renderSafeHtml(box, payload.results.map((result, index) => `<button class="search-hit" data-page="${result.page}" data-result-index="${index}"><strong>p. ${result.page}</strong><span>${highlightedSnippet(result)}</span></button>`).join(""));
+  box.querySelectorAll("[data-page]").forEach((hit) => hit.addEventListener("click", () => {
+    const result = payload.results[Number(hit.dataset.resultIndex)];
+    box.hidden = true;
+    jumpToPage(result.page, matchedText(result, query));
+  }));
+  if (jumpFirst) {
+    box.hidden = true;
+    jumpToPage(payload.results[0].page, matchedText(payload.results[0], query));
+  }
 }
 
 document.querySelectorAll("[data-split]").forEach((button) => button.addEventListener("click", async () => { state.split = button.dataset.split; state.selected = null; await loadPapers(); }));

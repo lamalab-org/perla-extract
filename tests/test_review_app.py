@@ -43,6 +43,18 @@ def test_review_ui_has_no_direct_html_injection_sinks():
     assert "renderSafeHtml" in javascript
 
 
+def test_pdf_search_uses_text_fragments_for_exact_match_navigation():
+    javascript = (
+        Path(__file__).parents[1]
+        / "review_workbench"
+        / "review_app"
+        / "app.js"
+    ).read_text()
+
+    assert ":~:text=${encodeTextFragment(text)}" in javascript
+    assert "jumpToPage(result.page, matchedText(result, query))" in javascript
+
+
 def test_authenticated_comment_ignores_client_supplied_author(tmp_path):
     pdf_dir = tmp_path / "pdfs"
     ground_truth_dir = tmp_path / "ground_truth"
