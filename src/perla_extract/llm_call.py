@@ -1,13 +1,13 @@
 import os
 import sys
 from litellm import completion
-import instructor
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
 from perla_extract.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
 import litellm
 from loguru import logger
-
+from typing import Any
+from perla_extract.configuration import MAX_RETRIES, MAX_TOKENS
 # Try to setup Redis cache if available, otherwise use disk cache
 try:
     # Disable litellm error output
@@ -28,34 +28,42 @@ try:
 except Exception as e:
     pass
 
+class MaxRetriesExceededError(Exception):
+    """Custom exception to indicate that the maximum number of retries has been exceeded."""
+    pass
+
 def create_text_completion(
     model_name: str,
     pdf_text: str = "",
     system_prompt: str = SYSTEM_PROMPT,
     instruction: str = INSTRUCTION_TEXT,
     api_key: str = None,
-    api_base_url: str = None
-) -> PerovskiteSolarCells:
+    api_base_url: str = None,
+    additional_params: dict = {}
+) -> tuple[PerovskiteSolarCells, Any]:
     """
      Extract structured perovskite solar cell data from raw PDF text using an LLM.
 
-    This function sends a prompt to a language model (via the `instructor` library and LiteLLM backend)
+    This function sends a prompt to a language model (via the `LiteLLM` library)
     with a specified system prompt and instruction, along with the given PDF text. It attempts to
     deserialize the response into a `PerovskiteSolarCells` Pydantic model, automatically handling
     context length errors by reducing `max_tokens` if needed.
 
     Args:
-        model_name (str): Name of the LLM to use (e.g., "gpt-4", "claude-3-opus", etc.).
+        model_name (str): Name of the LLM to use.
         pdf_text (str): Text content extracted from a PDF document.
         system_prompt (str): The system-level prompt guiding the LLM’s behavior (default: SYSTEM_PROMPT).
         instruction (str): Task-specific instruction for the LLM (default: INSTRUCTION_TEXT).
         api_key (str, optional): API key for LiteLLM if environment variables cannot be used.
+        api_base_url (str, optional): Base URL for the LiteLLM API if environment variables cannot be used.
+        additional_params (dict, optional): Additional parameters to pass to the LLM call.
 
     Returns:
         PerovskiteSolarCells: A Pydantic model instance populated with the extracted data.
+        The raw response from the LLM call, which may contain additional metadata.
 
     Raises:
-        instructor.exceptions.InstructorRetryException: If an unhandled error occurs during LLM interaction.
+        MaxRetriesExceededError: If the maximum number of retries is exceeded due to validation errors.
     """
     # Construct messages for LLM
     messages = [
@@ -65,47 +73,75 @@ def create_text_completion(
         },
     ]
 
-    # Call with Instructor
-    client = instructor.from_litellm(litellm.completion)
+    # Call with LiteLLM
 
     supported_params = set()
-    max_tokens = 64000
-    temperature=0
-
+    max_tokens = MAX_TOKENS
+    filtered_params = {}
+    additional_params = {} if additional_params is None else additional_params
     try:
         model_info = litellm.get_model_info(model=model_name)
         if model_info:
             max_tokens = model_info.get("max_output_tokens", max_tokens)
+            logger.info(f"Model {model_name} supports max_output_tokens={max_tokens}.")
 
         supported_params = set(
             litellm.get_supported_openai_params(model=model_name) or []
         )
-    except Exception as e:
-        logger.error(f"Could not fetch model info, defaulting to max_tokens={max_tokens}. Error: {e}")
-
-    while True:
-        try:
-            resp, compll = client.chat.completions.create_with_completion(
-                model=model_name,
-                messages=messages,
-                response_model=PerovskiteSolarCells,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                api_key=api_key,
-                api_base=api_base_url,
-                drop_params=True
+       
+        if 'response_format' not in supported_params:
+            logger.warning(
+                f'Model {model_name} does not support response_format parameter.'
             )
-        except instructor.exceptions.InstructorRetryException as e:
+
+        if not litellm.supports_response_schema(model=model_name):
+            logger.warning(
+                f'Model {model_name} does not support json schema response for structured output.'
+            )
+        for param, value in additional_params.items():
+            if param not in supported_params:
+                logger.warning(
+                    f"Model {model_name} does not support parameter '{param}'. It will be ignored."
+                )
+            else:
+                filtered_params[param] = value
+    except Exception as e:
+        logger.error(f"Error occurred while fetching model info for {model_name}: {e}")
+
+
+    retry_count = 0
+    while True:
+        filtered_params.update({"model": model_name,
+                "api_base": api_base_url, 
+                "api_key": api_key, 
+                "max_tokens": max_tokens,
+                "messages": messages,
+                "response_format": PerovskiteSolarCells,
+                "drop_params": True})
+        try:
+            resp = completion(**filtered_params)
+        except litellm.exceptions.BadRequestError as e:
             if (
-                'litellm.BadRequestError: AnthropicException - {"type":"error","error":{"type":"invalid_request_error","message":"input length and `max_tokens` exceed context limit:'
+                'AnthropicException - {"type":"error","error":{"type":"invalid_request_error","message":"input length and `max_tokens` exceed context limit:'
                 not in str(e)
             ):
+                logger.error(f"BadRequestError: {e}. Raising exception.")
                 raise
             max_tokens -= 5000
-            logger.info("reduced max tokens")
-        else:
+            logger.info(f"reduced max tokens to {max_tokens} due to context length error.")
+            continue
+        try:
+            extracted_data = PerovskiteSolarCells.model_validate_json(resp.choices[0].message.content,strict=True,extra="forbid")
             break
-    return resp, compll
+        except ValidationError as e:
+            logger.error(f"Validation error: {e}. Attempting to correct the output.")
+            if retry_count >= MAX_RETRIES:
+                logger.error(f"Max retries reached ({MAX_RETRIES}). Raising MaxRetriesExceededError.")
+                raise MaxRetriesExceededError(resp)
+            retry_count += 1
+            retry_prompt = f'\n\nThe previous attempt resulted in a validation error: {e}. Correct the output to match the expected schema.'
+            messages.extend([{'role':'assistant','content':resp.choices[0].message.content}, {"role":"user","content": retry_prompt}])
+    return extracted_data, resp
 
 
 def llm_as_judge(ground_truth, value_truth, value_extraction):
@@ -129,14 +165,12 @@ def llm_as_judge(ground_truth, value_truth, value_extraction):
             "content": f"Complete ground truth: {str(ground_truth)}\n Truth value: {str(value_truth)} \n Extraction value: {str(value_extraction)}",
         },
     ]
-
-    client = instructor.from_litellm(completion)
-
-    resp = client.chat.completions.create(
+    resp = completion(
         model="gpt-4o-2024-08-06",
         messages=messages,
-        response_model=Judgement,
+        response_format=Judgement,
         temperature=0,
-    )
+     )
+    
 
-    return resp
+    return Judgement.model_validate_json(resp.choices[0].message.content, strict=True)
