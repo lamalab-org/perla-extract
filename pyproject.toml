@@ -40,7 +40,8 @@ dependencies = [
     "loguru",
     "pandas",
     "feedparser",
-    "pdf2doi>=1.7"
+    "pdf2doi>=1.7",
+    "langfuse==2.59.7"
 ]
 
 [project.optional-dependencies]
