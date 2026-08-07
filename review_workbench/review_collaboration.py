@@ -1,4 +1,4 @@
-"""Durable named-reviewer and discussion records for the local workbench."""
+"""Durable named-reviewer and discussion records for the review workbench."""
 
 from __future__ import annotations
 

@@ -32,7 +32,6 @@ def test_import_paper_creates_corpus_and_review_records(tmp_path):
 def test_review_ui_has_no_direct_html_injection_sinks():
     javascript = (
         Path(__file__).parents[1]
-        / "review_workbench"
         / "review_app"
         / "app.js"
     ).read_text()
@@ -46,7 +45,6 @@ def test_review_ui_has_no_direct_html_injection_sinks():
 def test_pdf_search_uses_text_fragments_for_exact_match_navigation():
     javascript = (
         Path(__file__).parents[1]
-        / "review_workbench"
         / "review_app"
         / "app.js"
     ).read_text()

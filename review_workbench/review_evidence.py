@@ -1,4 +1,4 @@
-"""Field-level review evidence for ground-truth paper annotations."""
+"""Field-level evidence for review-workbench paper annotations."""
 
 from __future__ import annotations
 

@@ -35,6 +35,8 @@ ipython_config.py
 .DS_Store
 .vercel
 review_workbench/.vercel-build
+src/perla_extract/data/ground_truth/collaboration/
+src/perla_extract/data/ground_truth/evidence/
 .env.vercel
 .AppleDouble
 .LSOverride

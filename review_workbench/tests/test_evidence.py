@@ -1,4 +1,4 @@
-from perla_extract.review_evidence import (
+from review_workbench.review_evidence import (
     disagreement_paths,
     fact_suggestions,
     flatten_facts,

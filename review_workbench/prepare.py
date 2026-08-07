@@ -32,11 +32,11 @@ def prepare(output: Path) -> Path:
     for relative in (
         "review_workbench/__init__.py",
         "review_workbench/auth.py",
+        "review_workbench/review_collaboration.py",
+        "review_workbench/review_evidence.py",
         "review_workbench/server.py",
         "src/perla_extract/__init__.py",
         "src/perla_extract/ground_truth.py",
-        "src/perla_extract/review_collaboration.py",
-        "src/perla_extract/review_evidence.py",
     ):
         copy_file(relative, output)
 

@@ -34,7 +34,7 @@ from perla_extract.ground_truth import (  # noqa: E402
     paper_metadata,
     review_metadata_path,
 )
-from perla_extract.review_evidence import (  # noqa: E402
+from review_workbench.review_evidence import (  # noqa: E402
     disagreement_paths,
     fact_suggestions,
     flatten_facts,
@@ -44,7 +44,7 @@ from perla_extract.review_evidence import (  # noqa: E402
     reviewer_entry,
     save_evidence,
 )
-from perla_extract.review_collaboration import (  # noqa: E402
+from review_workbench.review_collaboration import (  # noqa: E402
     add_comment,
     add_issue,
     add_user,

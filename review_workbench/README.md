@@ -20,7 +20,15 @@ vercel deploy --cwd review_workbench/.vercel-build --prebuilt
 ```
 
 PDFs and mutable collaboration state are stored in private Vercel Blob storage;
-they are not included in Git or in the deployment bundle.
+they are not included in Git or in the deployment bundle. Reviewer identities,
+comments, field evidence, and missing-item reports are runtime data and must not
+be added to the ground-truth package.
+
+Run the workbench-only tests independently with:
+
+```bash
+.venv/bin/pytest -q review_workbench/tests
+```
 
 ## Authentication
 

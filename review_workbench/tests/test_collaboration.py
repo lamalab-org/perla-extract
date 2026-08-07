@@ -1,4 +1,4 @@
-from perla_extract.review_collaboration import (
+from review_workbench.review_collaboration import (
     add_comment,
     add_issue,
     add_user,

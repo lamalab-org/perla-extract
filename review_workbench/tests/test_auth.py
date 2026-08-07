@@ -11,7 +11,7 @@ from review_workbench.auth import (
     InternalAuthenticator,
     hash_password,
 )
-from perla_extract.review_collaboration import (
+from review_workbench.review_collaboration import (
     load_users,
     upsert_authenticated_user,
 )
