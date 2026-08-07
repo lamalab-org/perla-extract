@@ -11,7 +11,13 @@
       <section class="auth-card">
         <p class="eyebrow">Perla Extract</p>
         <h1>Ground truth review</h1>
-        <p>Sign in with an invited email address to continue.</p>
+        <p id="sign-in-copy">Sign in with your review account to continue.</p>
+        <form id="internal-sign-in" class="internal-sign-in" hidden>
+          <label>Email <input id="login-email" type="email" autocomplete="username" required /></label>
+          <label>Password <input id="login-password" type="password" autocomplete="current-password" required /></label>
+          <p id="login-error" class="login-error" role="alert"></p>
+          <button type="submit" class="primary-button">Sign in</button>
+        </form>
         <div id="sign-in"></div>
       </section>
     </main>
@@ -24,6 +30,7 @@
       <div class="header-controls">
         <span id="current-user" class="current-user">Reviewer</span>
         <div id="user-button"></div>
+        <button id="internal-sign-out" class="secondary-button" type="button" hidden>Sign out</button>
         <div class="dataset-switch" aria-label="Dataset">
           <button type="button" data-split="test" class="active">Test <span id="test-count">–</span></button>
           <button type="button" data-split="dev">Development <span id="dev-count">–</span></button>

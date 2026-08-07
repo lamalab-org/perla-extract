@@ -506,7 +506,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     config = (
                         authenticator.public_config()
                         if authenticator is not None
-                        else {"enabled": False, "publishable_key": "", "frontend_api": ""}
+                        else {"enabled": False, "mode": "local", "publishable_key": "", "frontend_api": ""}
                     )
                     self.send_json(config)
                     return
@@ -641,6 +641,19 @@ def make_handler(application: ReviewApplication, authenticator=None):
             parsed = urlparse(self.path)
             parts = [unquote(part) for part in parsed.path.strip("/").split("/")]
             try:
+                if parsed.path == "/api/auth/login":
+                    if authenticator is None or not hasattr(authenticator, "login"):
+                        raise ValueError("Password login is not enabled")
+                    payload = self.read_json()
+                    if not isinstance(payload, dict):
+                        raise ValueError("Login payload must be an object")
+                    token, user = authenticator.login(
+                        str(payload.get("email", "")),
+                        str(payload.get("password", "")),
+                    )
+                    application.ensure_authenticated_user(user)
+                    self.send_json({"token": token, "user": user})
+                    return
                 user = self.current_user()
                 if parsed.path == "/api/users":
                     self.current_user(require_admin=True)

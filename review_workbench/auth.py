@@ -1,10 +1,14 @@
-"""Clerk authentication for the deployed review workbench."""
+"""Authentication providers for the deployed review workbench."""
 
 from __future__ import annotations
 
 import base64
+import hashlib
+import hmac
 import json
 import os
+import secrets
+import time
 from functools import lru_cache
 from http.cookies import SimpleCookie
 from urllib.parse import quote
@@ -19,6 +23,128 @@ class AuthenticationError(PermissionError):
     def __init__(self, message: str, status: int = 401):
         super().__init__(message)
         self.status = status
+
+
+def hash_password(password: str, *, iterations: int = 600_000) -> str:
+    """Return a portable PBKDF2 hash suitable for a Vercel environment value."""
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac(
+        "sha256", password.encode(), salt, iterations
+    )
+    return "$".join(
+        (
+            "pbkdf2_sha256",
+            str(iterations),
+            base64.urlsafe_b64encode(salt).decode().rstrip("="),
+            base64.urlsafe_b64encode(digest).decode().rstrip("="),
+        )
+    )
+
+
+def _verify_password(password: str, encoded: str) -> bool:
+    try:
+        algorithm, raw_iterations, raw_salt, raw_digest = encoded.split("$", 3)
+        if algorithm != "pbkdf2_sha256":
+            return False
+        salt = base64.urlsafe_b64decode(raw_salt + "=" * (-len(raw_salt) % 4))
+        expected = base64.urlsafe_b64decode(
+            raw_digest + "=" * (-len(raw_digest) % 4)
+        )
+        actual = hashlib.pbkdf2_hmac(
+            "sha256", password.encode(), salt, int(raw_iterations)
+        )
+    except (ValueError, TypeError):
+        return False
+    return hmac.compare_digest(actual, expected)
+
+
+class InternalAuthenticator:
+    """Authenticate a small fixed set of environment-configured accounts."""
+
+    def __init__(
+        self,
+        accounts_json: str | None = None,
+        session_secret: str | None = None,
+    ):
+        raw_accounts = (
+            accounts_json
+            if accounts_json is not None
+            else os.environ.get("REVIEW_INTERNAL_ACCOUNTS", "")
+        )
+        self.session_secret = session_secret or os.environ.get(
+            "REVIEW_SESSION_SECRET", ""
+        )
+        try:
+            loaded = json.loads(raw_accounts) if raw_accounts else {}
+        except json.JSONDecodeError as error:
+            raise ValueError("REVIEW_INTERNAL_ACCOUNTS is not valid JSON") from error
+        if not isinstance(loaded, dict):
+            raise ValueError("REVIEW_INTERNAL_ACCOUNTS must be a JSON object")
+        self.accounts = {
+            str(email).strip().lower(): account
+            for email, account in loaded.items()
+            if isinstance(account, dict)
+        }
+
+    @property
+    def configured(self) -> bool:
+        return bool(self.accounts and len(self.session_secret) >= 32)
+
+    def public_config(self) -> dict[str, object]:
+        return {"enabled": self.configured, "mode": "internal"}
+
+    @staticmethod
+    def _token(headers) -> str:
+        authorization = headers.get("Authorization", "")
+        return (
+            authorization.removeprefix("Bearer ").strip()
+            if authorization.startswith("Bearer ")
+            else ""
+        )
+
+    @staticmethod
+    def _user(email: str, account: dict) -> dict[str, str]:
+        identifier = hashlib.sha256(email.encode()).hexdigest()[:20]
+        return {
+            "id": f"internal_{identifier}",
+            "email": email,
+            "name": str(account.get("name") or email),
+            "role": "admin" if account.get("role") == "admin" else "reviewer",
+        }
+
+    def login(self, email: str, password: str) -> tuple[str, dict[str, str]]:
+        if not self.configured:
+            raise AuthenticationError("Authentication is not configured", 503)
+        normalized = email.strip().lower()
+        account = self.accounts.get(normalized)
+        encoded = str(account.get("password_hash", "")) if account else ""
+        if not account or not _verify_password(password, encoded):
+            raise AuthenticationError("Email or password is incorrect")
+        user = self._user(normalized, account)
+        now = int(time.time())
+        token = jwt.encode(
+            {"sub": user["id"], "email": normalized, "iat": now, "exp": now + 604800},
+            self.session_secret,
+            algorithm="HS256",
+        )
+        return token, user
+
+    def authenticate(self, headers) -> dict[str, str]:
+        if not self.configured:
+            raise AuthenticationError("Authentication is not configured", 503)
+        token = self._token(headers)
+        if not token:
+            raise AuthenticationError("Sign in is required")
+        try:
+            claims = jwt.decode(token, self.session_secret, algorithms=["HS256"])
+        except Exception as error:
+            raise AuthenticationError("The session is invalid or expired") from error
+        email = str(claims.get("email", "")).lower()
+        account = self.accounts.get(email)
+        user = self._user(email, account or {})
+        if not account or claims.get("sub") != user["id"]:
+            raise AuthenticationError("This account is no longer enabled", 403)
+        return user
 
 
 def _frontend_api(publishable_key: str) -> str:
@@ -81,6 +207,7 @@ class ClerkAuthenticator:
     def public_config(self) -> dict[str, object]:
         return {
             "enabled": self.configured,
+            "mode": "clerk",
             "publishable_key": self.publishable_key if self.configured else "",
             "frontend_api": self.frontend_api if self.configured else "",
         }

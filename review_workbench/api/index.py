@@ -251,7 +251,11 @@ review_application = VercelReviewApplication(
     blob_store, Path("/tmp/perla-review-workbench")
 )
 authenticator = None
-if os.environ.get("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"):
+if os.environ.get("REVIEW_INTERNAL_ACCOUNTS"):
+    from review_workbench.auth import InternalAuthenticator
+
+    authenticator = InternalAuthenticator()
+elif os.environ.get("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"):
     from review_workbench.auth import ClerkAuthenticator
 
     authenticator = ClerkAuthenticator()

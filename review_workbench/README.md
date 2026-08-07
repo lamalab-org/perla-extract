@@ -24,7 +24,19 @@ they are not included in Git or in the deployment bundle.
 
 ## Authentication
 
-The deployed workbench uses Clerk email accounts when these variables are set:
+For a small internal deployment, fixed email/password accounts can be supplied
+without putting credentials in the repository:
+
+- `REVIEW_INTERNAL_ACCOUNTS`, a JSON object keyed by normalized email address;
+  each value contains `name`, `role`, and a PBKDF2 `password_hash`
+- `REVIEW_SESSION_SECRET`, a random secret of at least 32 characters
+
+`review_workbench.auth.hash_password()` creates compatible salted hashes. When
+these variables are configured, the browser receives only a signed seven-day
+session token; plaintext passwords and hashes stay server-side.
+
+As a fallback, the deployed workbench can use Clerk email accounts when these
+variables are set:
 
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`
 - `REVIEW_ADMIN_EMAILS`, a comma-separated administrator allowlist

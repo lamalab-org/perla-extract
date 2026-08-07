@@ -3,10 +3,12 @@ const state = {
   paperData: null, reviewData: null, quantityData: null, evidenceDirty: false,
   users: [], comments: [], issues: [], corpusSummary: null, currentUser: null,
   clerk: null, pdfUrl: null, pdfPaper: null,
+  internalToken: null,
 };
 const $ = (id) => document.getElementById(id);
 
 async function authorizationHeaders(headers = {}) {
+  if (state.internalToken) return { ...headers, Authorization: `Bearer ${state.internalToken}` };
   if (!state.clerk?.session) return headers;
   const token = await state.clerk.session.getToken();
   return token ? { ...headers, Authorization: `Bearer ${token}` } : headers;
@@ -523,7 +525,19 @@ function loadScript(src, attributes = {}) {
 async function initialize() {
   const response = await fetch("/api/auth/config");
   const config = await response.json();
-  if (config.enabled) {
+  if (config.enabled && config.mode === "internal") {
+    state.internalToken = window.localStorage.getItem("perla-review-session");
+    if (state.internalToken) {
+      try { state.currentUser = (await request("/api/session")).user; }
+      catch (_) { window.localStorage.removeItem("perla-review-session"); state.internalToken = null; }
+    }
+    if (!state.currentUser) {
+      $("auth-gate").hidden = false;
+      $("internal-sign-in").hidden = false;
+      return;
+    }
+    $("internal-sign-out").hidden = false;
+  } else if (config.enabled) {
     await loadScript(`${config.frontend_api}/npm/@clerk/ui@1/dist/ui.browser.js`, { crossorigin: "anonymous" });
     await loadScript(`${config.frontend_api}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`, {
       crossorigin: "anonymous", "data-clerk-publishable-key": config.publishable_key,
@@ -544,6 +558,27 @@ async function initialize() {
   $("workbench").hidden = false;
   await loadPapers();
 }
+
+$("internal-sign-in").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const error = $("login-error");
+  error.textContent = "Signing in…";
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: $("login-email").value, password: $("login-password").value }),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Sign-in failed");
+    window.localStorage.setItem("perla-review-session", payload.token);
+    window.location.reload();
+  } catch (loginError) { error.textContent = loginError.message; }
+});
+
+$("internal-sign-out").addEventListener("click", () => {
+  window.localStorage.removeItem("perla-review-session");
+  window.location.reload();
+});
 
 initialize().catch((error) => {
   $("auth-gate").hidden = false;

@@ -1,10 +1,16 @@
 import base64
+import json
 
 import pytest
 
 pytest.importorskip("jwt", reason="JWT support is isolated to the Vercel workbench")
 
-from review_workbench.auth import AuthenticationError, ClerkAuthenticator
+from review_workbench.auth import (
+    AuthenticationError,
+    ClerkAuthenticator,
+    InternalAuthenticator,
+    hash_password,
+)
 from perla_extract.review_collaboration import (
     load_users,
     upsert_authenticated_user,
@@ -101,3 +107,36 @@ def test_authenticated_users_are_upserted_by_provider_id(tmp_path):
 
     stored = [entry for entry in load_users(tmp_path) if entry["id"] == "user_123"]
     assert stored == [{**user, "name": "Ada R."}]
+
+
+def test_internal_authenticator_logs_in_and_verifies_session():
+    accounts = json.dumps(
+        {
+            "admin@example.org": {
+                "name": "Ada Admin",
+                "role": "admin",
+                "password_hash": hash_password("correct horse", iterations=1_000),
+            }
+        }
+    )
+    auth = InternalAuthenticator(accounts, "s" * 32)
+
+    token, user = auth.login("ADMIN@example.org", "correct horse")
+
+    assert user["email"] == "admin@example.org"
+    assert user["role"] == "admin"
+    assert auth.authenticate({"Authorization": f"Bearer {token}"}) == user
+
+
+def test_internal_authenticator_rejects_bad_password():
+    accounts = json.dumps(
+        {
+            "reviewer@example.org": {
+                "password_hash": hash_password("right", iterations=1_000)
+            }
+        }
+    )
+    auth = InternalAuthenticator(accounts, "s" * 32)
+
+    with pytest.raises(AuthenticationError, match="incorrect"):
+        auth.login("reviewer@example.org", "wrong")
