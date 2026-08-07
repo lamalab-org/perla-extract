@@ -2,10 +2,13 @@
 
 # Define your list of model names here
 NORMAL_MODELS=(
-    "openrouter/gpt-oss-120b"
     "anthropic/claude-sonnet-5"
     "anthropic/claude-opus-5"
+    "openrouter/deepseek/deepseek-v4-pro"
     "openrouter/deepseek/deepseek-chat"
+    "openrouter/z-ai/glm-5.2"
+    "openrouter/moonshotai/kimi-k3"
+    "openrouter/gpt-oss-120b"
 )
 REASONING_MODELS=(
     "openai/gpt-5.6-luna"
@@ -44,7 +47,7 @@ for model in "${REASONING_MODELS[@]}"; do
                 "extract" 
                 "./downloads/" 
                 "--model_name" "$model" 
-                "--additional_parameters" "{'reasoning_effort':'$effort'}"
+                "--additional_params" "{'reasoning_effort':'$effort'}"
             )
         # Run the extraction command with reasoning effort
         uv run perla-extract "${CMD_ARGS[@]}"
