@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from perla_extract import llm_call
 from perla_extract.export import to_json
-from perla_extract.evaluations import score_multiple_extractions
+from perla_extract.evaluations import calculate_micro_metrics, score_multiple_extractions
 import litellm
 from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
 import numpy as np
@@ -155,12 +155,7 @@ def score_all(model_name, output):
 
         truth_extraction_pairs.append((truth, extraction, file))
 
-    list_of_evals, per_key_metrics = score_multiple_extractions(truth_extraction_pairs)
-    precs = []
-    recalls = []
-    for index, evals in enumerate(list_of_evals):
-        recalls.append(evals.recalls_average)
-        precs.append(evals.precisions_average)
+    _, per_key_metrics = score_multiple_extractions(truth_extraction_pairs)
 
     # Calculate values for plot
     def calculate_value_for_plot(metrics_dict):
@@ -263,7 +258,8 @@ def score_all(model_name, output):
         precision_results = calculate_and_aggregate_precision(metrics_dict)
         return precision_results
 
-    return np.mean(precs), np.mean(recalls), calculate_value_for_plot(per_key_metrics)
+    micro = calculate_micro_metrics(per_key_metrics)
+    return micro["precision"], micro["recall"], calculate_value_for_plot(per_key_metrics)
 
 
 def run(model_name, output):

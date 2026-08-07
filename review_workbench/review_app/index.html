@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Perla Ground Truth Review</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main id="auth-gate" class="auth-gate" hidden>
+      <section class="auth-card">
+        <p class="eyebrow">Perla Extract</p>
+        <h1>Ground truth review</h1>
+        <p>Sign in with an invited email address to continue.</p>
+        <div id="sign-in"></div>
+      </section>
+    </main>
+    <div id="workbench" hidden>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Perla Extract</p>
+        <h1>Ground truth review</h1>
+      </div>
+      <div class="header-controls">
+        <span id="current-user" class="current-user">Reviewer</span>
+        <div id="user-button"></div>
+        <div class="dataset-switch" aria-label="Dataset">
+          <button type="button" data-split="test" class="active">Test <span id="test-count">–</span></button>
+          <button type="button" data-split="dev">Development <span id="dev-count">–</span></button>
+        </div>
+        <label>Show <select id="filter"><option value="all">All papers</option><option value="pending">Pending review</option><option value="excluded">Excluded</option><option value="included">Included</option></select></label>
+        <button id="open-import" class="primary-button">Add paper</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="paper-rail">
+        <div class="rail-summary" id="summary">Loading papers…</div>
+        <div id="paper-list" class="paper-list"></div>
+      </aside>
+
+      <section class="document-pane">
+        <div class="searchbar">
+          <label for="pdf-search">Search inside paper</label>
+          <div class="search-row">
+            <input id="pdf-search" type="search" placeholder="Try ‘active area’, ‘tandem’, or a material name" />
+            <button id="search-button">Search</button>
+          </div>
+          <div id="search-results" class="search-results" hidden></div>
+        </div>
+        <iframe id="pdf-frame" title="Paper PDF"></iframe>
+      </section>
+
+      <section class="review-pane">
+        <div class="paper-heading">
+          <div>
+            <p class="eyebrow">Selected paper</p>
+            <h2 id="paper-title">Choose a paper</h2>
+          </div>
+          <div class="heading-badges">
+            <span id="field-progress" class="pill neutral">0/0 fields</span>
+            <span id="eligibility" class="pill neutral">Not loaded</span>
+          </div>
+        </div>
+
+        <form id="metadata-form" class="metadata-card">
+          <div class="field-grid">
+            <label>Article type
+              <select id="article-type">
+                <option value="unknown">Unknown</option><option value="research">Research</option><option value="review">Review</option><option value="perspective">Perspective</option><option value="news_and_views">News &amp; Views</option><option value="other">Other</option>
+              </select>
+            </label>
+            <label>Tandem scope
+              <select id="tandem-scope">
+                <option value="unknown">Unknown</option><option value="none">None</option><option value="mentions_only">Mentions only</option><option value="contains_tandem_devices">Contains tandem devices</option><option value="tandem_only">Tandem only</option>
+              </select>
+            </label>
+            <label>Review status
+              <select id="review-status"><option value="pending">Pending</option><option value="reviewed">Reviewed</option></select>
+            </label>
+          </div>
+          <label>Review notes <textarea id="review-notes" rows="3" placeholder="Record evidence or an ambiguity…"></textarea></label>
+          <div class="action-row"><span id="metadata-status"></span><button type="submit">Save classification</button></div>
+        </form>
+
+        <div class="data-toolbar">
+          <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="fields">Field review</button>
+            <button class="tab" data-tab="gaps">Unmapped quantities</button>
+            <button class="tab" data-tab="discussion">Discussion</button>
+            <button class="tab" data-tab="issues">Missing / issues</button>
+            <button class="tab" data-tab="truth">JSON</button>
+            <button class="tab" data-tab="extraction">Model extraction</button>
+          </div>
+          <label class="source-label">Source <select id="source"><option value="">Choose extraction…</option></select></label>
+        </div>
+        <div id="cell-summary" class="cell-summary"></div>
+
+        <section id="fields-panel" class="review-panel">
+          <div class="review-controls">
+            <label>Cell <select id="field-cell"><option value="all">All cells</option></select></label>
+            <label>Status <select id="field-status"><option value="all">All fields</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="issues">Issues / follow-up</option><option value="disagreements">Reviewer disagreements</option></select></label>
+            <label class="grow">Find field <input id="field-query" type="search" placeholder="PCE, temperature, layer name…" /></label>
+          </div>
+          <div class="review-hint">Click any JSON value to search the PDF and jump to its best page. Check it when verified; use the issue menu when it is wrong or absent.</div>
+          <div id="cell-context" class="cell-context"></div>
+          <div id="field-list" class="field-list"></div>
+          <div class="sticky-actions"><span id="evidence-status">No unsaved review changes</span><button id="save-evidence">Save field review</button></div>
+        </section>
+
+        <section id="gaps-panel" class="review-panel" hidden>
+          <div class="review-controls">
+            <label class="grow">Filter quantities <input id="quantity-query" type="search" placeholder="%, eV, temperature, 21.4…" /></label>
+          </div>
+          <div id="quantity-summary" class="review-hint">Open this view to scan unit-bearing quantities that were not matched by value to the JSON.</div>
+          <div id="quantity-list" class="quantity-list"></div>
+        </section>
+
+        <section id="discussion-panel" class="review-panel" hidden>
+          <div id="disagreement-summary" class="review-hint"></div>
+          <div id="discussion-list" class="discussion-list"></div>
+          <form id="paper-comment-form" class="comment-composer">
+            <textarea id="paper-comment" rows="3" placeholder="Comment on this paper, its ground truth, or a scoring disagreement…"></textarea>
+            <button type="submit">Add comment</button>
+          </form>
+        </section>
+
+        <section id="issues-panel" class="review-panel" hidden>
+          <div id="issue-summary" class="review-hint"></div>
+          <div id="issue-list" class="issue-list"></div>
+          <form id="issue-form" class="issue-form">
+            <h3>Report something missing or wrong</h3>
+            <div class="field-grid">
+              <label>Type <select id="issue-type"><option value="missing_cell">Missing cell</option><option value="missing_value">Missing value</option><option value="missing_layer">Missing layer</option><option value="wrong_value">Wrong value</option><option value="other">Other</option></select></label>
+              <label>Cell <select id="issue-cell"><option value="">Paper-level / unknown</option></select></label>
+            </div>
+            <label>Description <textarea id="issue-description" rows="3" required placeholder="What is missing, and where is it reported?"></textarea></label>
+            <label>Suggested value <input id="issue-suggested-value" placeholder="Optional value or stack" /></label>
+            <div class="dialog-actions"><span id="issue-status"></span><button type="submit" class="primary-button">Create issue</button></div>
+          </form>
+        </section>
+
+        <section id="json-panel" class="review-panel" hidden>
+          <textarea id="json-editor" class="json-editor" spellcheck="false" aria-label="Ground truth JSON"></textarea>
+          <div class="action-row editor-actions">
+            <span id="json-status">Ground truth is editable; model output is read-only.</span>
+            <button id="save-json">Save ground truth</button>
+          </div>
+        </section>
+      </section>
+    </main>
+    <dialog id="import-dialog">
+      <form id="import-form" class="dialog-form">
+        <div><p class="eyebrow">Benchmark corpus</p><h2>Add a paper</h2></div>
+        <label>Paper ID / DOI slug <input name="paper_id" required placeholder="10.1002--example.12345" pattern="[A-Za-z0-9.-]+--[A-Za-z0-9._-]+" /></label>
+        <label>Dataset <select name="split"><option value="test">Test</option><option value="dev">Development</option></select></label>
+        <label>PDF <input name="pdf" type="file" accept="application/pdf" required /></label>
+        <label>Initial ground truth JSON <input name="ground_truth" type="file" accept="application/json,.json" required /></label>
+        <div id="import-status" class="review-hint"></div>
+        <div class="dialog-actions"><button type="button" id="cancel-import" class="secondary-button">Cancel</button><button type="submit" class="primary-button">Import paper</button></div>
+      </form>
+    </dialog>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>

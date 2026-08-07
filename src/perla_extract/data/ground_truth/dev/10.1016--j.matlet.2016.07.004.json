@@ -75,7 +75,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 60
@@ -116,7 +116,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -157,7 +157,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -209,7 +209,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -250,7 +250,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 600
@@ -291,7 +291,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -332,7 +332,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -373,7 +373,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -414,7 +414,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -466,7 +466,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 30
@@ -507,7 +507,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -548,7 +548,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 20
@@ -589,7 +589,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -641,7 +641,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 45
@@ -707,7 +707,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 10
@@ -861,7 +861,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },
@@ -967,7 +967,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 60
@@ -1008,7 +1008,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -1049,7 +1049,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -1101,7 +1101,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -1142,7 +1142,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 600
@@ -1183,7 +1183,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -1224,7 +1224,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -1265,7 +1265,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -1306,7 +1306,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -1358,7 +1358,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 30
@@ -1399,7 +1399,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -1440,7 +1440,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 20
@@ -1481,7 +1481,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -1533,7 +1533,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 45
@@ -1753,7 +1753,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },
@@ -1859,7 +1859,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 60
@@ -1900,7 +1900,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -1941,7 +1941,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -1993,7 +1993,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -2034,7 +2034,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 600
@@ -2075,7 +2075,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -2116,7 +2116,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -2157,7 +2157,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -2198,7 +2198,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -2250,7 +2250,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 30
@@ -2291,7 +2291,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -2332,7 +2332,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 20
@@ -2373,7 +2373,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -2425,7 +2425,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 45
@@ -2491,7 +2491,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 20
@@ -2645,7 +2645,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },
@@ -2751,7 +2751,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 60
@@ -2792,7 +2792,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -2833,7 +2833,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -2885,7 +2885,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -2926,7 +2926,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 600
@@ -2967,7 +2967,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -3008,7 +3008,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -3049,7 +3049,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -3090,7 +3090,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -3142,7 +3142,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 30
@@ -3183,7 +3183,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -3224,7 +3224,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 20
@@ -3265,7 +3265,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -3317,7 +3317,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 45
@@ -3383,7 +3383,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 15
@@ -3537,7 +3537,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },
@@ -3643,7 +3643,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 60
@@ -3684,7 +3684,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -3725,7 +3725,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -3777,7 +3777,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -3818,7 +3818,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 600
@@ -3859,7 +3859,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -3900,7 +3900,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -3941,7 +3941,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -3982,7 +3982,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 900
@@ -4034,7 +4034,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 30
@@ -4075,7 +4075,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -4116,7 +4116,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 20
@@ -4157,7 +4157,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 1800
@@ -4209,7 +4209,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 45
@@ -4377,7 +4377,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },

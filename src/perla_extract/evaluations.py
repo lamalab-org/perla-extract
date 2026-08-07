@@ -8,16 +8,13 @@ using DeepDiff for deep distance computation and the Munkres algorithm for optim
 from typing import Any, Dict, List, Optional, Tuple, TypedDict
 from copy import deepcopy
 from collections import defaultdict
+from collections.abc import Mapping
 
 import numpy as np
 from deepdiff import DeepDiff
 from munkres import Munkres
 from Levenshtein import distance, ratio
 import flatdict
-
-from perla_extract.postprocessing import complete_solar_cell_dict
-from perla_extract.llm_call import llm_as_judge
-
 
 class Match(TypedDict):
     """Type definition for a matched pair of truth and extraction data."""
@@ -66,26 +63,34 @@ class Evaluations:
         file: str,
         per_key_metrics: Dict[str, Dict[str, float]],
         precision_tolerances: Optional[Dict[str, float]] = None,
+        use_llm_judge: bool = False,
     ):
         self.precision_tolerances = (
             precision_tolerances or EvaluationMetrics.DEFAULT_PRECISION_TOLERANCES
         )
+        self.use_llm_judge = use_llm_judge
 
         # Initialize basic metrics
         extraction = extraction if "cells" in extraction and extraction["cells"] is not None else {"cells":[]}
         self.devices_in_truth = len(truth["cells"])
         self.devices_found = len(extraction["cells"])
 
-        # Pad extraction with empty devices for missing ones (false negatives)
-        extraction = self._pad_extraction_for_missing_devices(extraction)
-
         # Calculate core metrics
         self.score = self._calculate_inverted_deepdiff(
             truth["cells"], extraction["cells"]
         )
-        self.matches = self._match_cells(truth["cells"], extraction["cells"], file)
+        (
+            self.matches,
+            self.unmatched_truth_cells,
+            self.unmatched_extraction_cells,
+        ) = self._match_cells_with_unmatched(
+            truth["cells"], extraction["cells"], file
+        )
         self.devices_matched = len(self.matches)
         self.recall_devices = min(self.devices_matched / (len(truth["cells"]) or 1), 1)
+        self.precision_devices = min(
+            self.devices_matched / (len(extraction["cells"]) or 1), 1
+        )
 
         # Calculate detailed scores
         self.score_device_stacks = self._score_device_stacks()
@@ -94,12 +99,14 @@ class Evaluations:
         self.score_precisions, self.llm_judge_calls = self._score_precisions(
             per_key_metrics
         )
-        self.precisions_average = float(np.mean(self.score_precisions))
-
-        self.score_recalls = self._pad_missing_devices(
-            self._score_recalls(per_key_metrics)
+        self.precisions_average = (
+            float(np.mean(self.score_precisions)) if self.score_precisions else 0.0
         )
-        self.recalls_average = float(np.mean(self.score_recalls))
+
+        self.score_recalls = self._score_recalls(per_key_metrics)
+        self.recalls_average = (
+            float(np.mean(self.score_recalls)) if self.score_recalls else 0.0
+        )
 
     def _pad_extraction_for_missing_devices(
         self, extraction: Dict[str, Any]
@@ -171,7 +178,12 @@ class Evaluations:
             for key, tolerance in self.precision_tolerances.items()
         }
 
-        for match in self._prepare_matches_for_scoring():
+        matches = self._prepare_matches_for_scoring()
+        matches.extend(
+            {"truth": {}, "extraction": deepcopy(cell)}
+            for cell in self.unmatched_extraction_cells
+        )
+        for match in matches:
             precision, judge_calls = self._calculate_match_precision(
                 match, fixed_tolerances, per_key_metrics
             )
@@ -186,7 +198,12 @@ class Evaluations:
         """Calculate recall scores for all matches."""
         recalls = []
 
-        for match in self._prepare_matches_for_scoring():
+        matches = self._prepare_matches_for_scoring()
+        matches.extend(
+            {"truth": deepcopy(cell), "extraction": {}}
+            for cell in self.unmatched_truth_cells
+        )
+        for match in matches:
             recall = self._calculate_match_recall(match, per_key_metrics)
             recalls.append(recall)
 
@@ -222,35 +239,36 @@ class Evaluations:
         found = []
         llm_judge_calls = 0
 
-        flat_truth = flatdict.FlatterDict(complete_solar_cell_dict(match["truth"]))
-        flat_extraction = flatdict.FlatterDict(match["extraction"])
+        flat_truth = self._flatten_non_null(match["truth"])
+        flat_extraction = self._flatten_non_null(match["extraction"])
 
-        # Check tolerance-based keys first
-        for key, tolerance in tolerances.items():
-            if self._is_key_extractable(key, flat_extraction, flat_truth):
-                is_correct = self._is_value_correct(
-                    flat_truth[key], flat_extraction[key], tolerance, abs_tolerance=True, key=key, per_key_metrics=per_key_metrics
-                )
-                found.append(is_correct)
-                self._update_precision_metrics(key, is_correct, per_key_metrics)
-                per_key_metrics[key]["scoring_method"] = "float | abstol("+str(tolerance)+")"
-
-        # Check all other keys
-        for key in flat_truth:
-            if self._should_skip_key(key, tolerances):
+        # Precision is evaluated over facts the extractor actually emitted. An
+        # emitted value with no corresponding ground-truth fact is a false
+        # positive, rather than being silently ignored.
+        for key, extracted_value in flat_extraction.items():
+            if self._should_skip_key(key, {}):
                 continue
-
             key_for_stats = self._regularize_repeated_key(key)
-
-            if self._is_key_extractable(key, flat_extraction, flat_truth):
+            if key in flat_truth:
+                tolerance = tolerances.get(key_for_stats)
                 is_correct = self._is_value_correct(
-                    flat_truth[key], flat_extraction[key], key=key_for_stats, per_key_metrics=per_key_metrics
+                    flat_truth[key],
+                    extracted_value,
+                    tolerance=tolerance if tolerance is not None else 0.01,
+                    abs_tolerance=tolerance is not None,
+                    key=key_for_stats,
+                    per_key_metrics=per_key_metrics,
                 )
 
                 # Use LLM judge for string comparisons that failed initial check
-                if not is_correct and self._is_key_judgable(
+                if self.use_llm_judge and not is_correct and self._is_key_judgable(
                     key, flat_truth, flat_extraction
                 ):
+                    # Keep the default evaluation deterministic and offline.
+                    # The optional semantic judge is imported only when asked
+                    # for so importing the scorer has no network side effects.
+                    from perla_extract.llm_call import llm_as_judge
+
                     judgement = llm_as_judge(
                         match["truth"], flat_truth[key], flat_extraction[key]
                     )
@@ -260,15 +278,18 @@ class Evaluations:
                         f"LLM judge for {key}: {flat_truth[key]} vs {flat_extraction[key]} -> {is_correct}"
                     )
 
-                found.append(is_correct)
-                self._update_precision_metrics(
-                    key_for_stats, is_correct, per_key_metrics
-                )
-
                 if not is_correct:
                     self._log_precision_mismatch(
-                        key, flat_truth[key], flat_extraction[key], match
+                        key, flat_truth[key], extracted_value, match
                     )
+            else:
+                is_correct = False
+                per_key_metrics[key_for_stats]["scoring_method"] = (
+                    "no ground-truth fact"
+                )
+
+            found.append(is_correct)
+            self._update_precision_metrics(key_for_stats, is_correct, per_key_metrics)
 
         return sum(found) / max(len(found), 1), llm_judge_calls
 
@@ -278,22 +299,32 @@ class Evaluations:
         """Calculate recall for a single match."""
         found = []
 
-        flat_truth = flatdict.FlatterDict(complete_solar_cell_dict(match["truth"]))
-        flat_extraction = flatdict.FlatterDict(match["extraction"])
+        flat_truth = self._flatten_non_null(match["truth"])
+        flat_extraction = self._flatten_non_null(match["extraction"])
 
-        for key in flat_truth:
-            if key == "additional_notes":
+        for key, truth_value in flat_truth.items():
+            if self._should_skip_key(key, {}):
                 continue
 
             key_for_stats = self._regularize_repeated_key(key)
+            if key in flat_extraction:
+                tolerance = self.precision_tolerances.get(
+                    key_for_stats.removesuffix(":value")
+                )
+                is_correct = self._is_value_correct(
+                    truth_value,
+                    flat_extraction[key],
+                    tolerance=tolerance if tolerance is not None else 0.01,
+                    abs_tolerance=tolerance is not None,
+                    key=key_for_stats,
+                    per_key_metrics=per_key_metrics,
+                )
+            else:
+                is_correct = False
 
-            is_found = key in flat_extraction.keys() and not (
-                flat_extraction[key] is None and flat_truth[key] is not None
-            )
+            found.append(is_correct)
 
-            found.append(is_found)
-
-            if not is_found:
+            if not is_correct:
                 per_key_metrics[key_for_stats]["FN"] += 1
 
         return sum(found) / len(found) if found else 0.0
@@ -302,8 +333,22 @@ class Evaluations:
         self, truth_cells: List[Dict], extracted_cells: List[Dict], file: str
     ) -> List[Match]:
         """Match cells using optimal assignment based on functionality and structure."""
+        matches, _, _ = self._match_cells_with_unmatched(
+            truth_cells, extracted_cells, file
+        )
+        return matches
+
+    def _match_cells_with_unmatched(
+        self, truth_cells: List[Dict], extracted_cells: List[Dict], file: str
+    ) -> Tuple[List[Match], List[Dict], List[Dict]]:
+        """Match real cells and retain both kinds of unmatched device.
+
+        Padding before assignment used to turn every missing device into a
+        nominal match. Keeping unmatched cells explicit makes device recall and
+        field-level false positives/negatives honest.
+        """
         if not truth_cells or not extracted_cells:
-            return []
+            return [], deepcopy(truth_cells), deepcopy(extracted_cells)
 
         # Calculate functionality-based scores
         truth_functionalities = [
@@ -356,30 +401,39 @@ class Evaluations:
         munkres = Munkres()
         indexes = munkres.compute(combined_scores)
 
-        return [
+        matches = [
             {
                 "truth": deepcopy(truth_cells[row]),
                 "extraction": deepcopy(extracted_cells[col]),
             }
             for row, col in indexes
         ]
+        truth_indexes = {row for row, _ in indexes}
+        extraction_indexes = {col for _, col in indexes}
+        return (
+            matches,
+            [deepcopy(cell) for i, cell in enumerate(truth_cells) if i not in truth_indexes],
+            [
+                deepcopy(cell)
+                for i, cell in enumerate(extracted_cells)
+                if i not in extraction_indexes
+            ],
+        )
 
     def _match_layers(
         self, truth_layers: List[Dict], extraction_layers: List[Dict]
     ) -> Tuple[List[Dict], List[Dict]]:
         """Match layers within a cell using functionality and name similarity."""
-        if not truth_layers:
-            truth_layers = [{}]
-        if not extraction_layers:
-            extraction_layers = [{}]
+        truth_layers = deepcopy(truth_layers or [])
+        extraction_layers = deepcopy(extraction_layers or [])
+        if not truth_layers and not extraction_layers:
+            return [], []
 
-        # Pad extraction layers if needed
-        if len(truth_layers) > len(extraction_layers):
-            padding = [
-                {"deposition": None}
-                for _ in range(len(truth_layers) - len(extraction_layers))
-            ]
-            extraction_layers.extend(padding)
+        # A square assignment retains extra extracted layers as false positives
+        # and missing truth layers as false negatives.
+        size = max(len(truth_layers), len(extraction_layers))
+        truth_layers.extend({} for _ in range(size - len(truth_layers)))
+        extraction_layers.extend({} for _ in range(size - len(extraction_layers)))
 
         # Calculate similarity scores
         scores = [
@@ -417,20 +471,16 @@ class Evaluations:
         self, truth_depositions: List[Dict], extraction_depositions: List[Dict]
     ) -> Tuple[List[Dict], List[Dict]]:
         """Match deposition elements within layers."""
-        if not truth_depositions:
-            truth_depositions = []
-        if not extraction_depositions:
-            extraction_depositions = []
-
-        # Pad extraction depositions if needed
-        if len(truth_depositions) > len(extraction_depositions):
-            padding = [
-                {} for _ in range(len(truth_depositions) - len(extraction_depositions))
-            ]
-            extraction_depositions.extend(padding)
-
-        if not truth_depositions:  # Both are empty after padding check
+        truth_depositions = deepcopy(truth_depositions or [])
+        extraction_depositions = deepcopy(extraction_depositions or [])
+        if not truth_depositions and not extraction_depositions:
             return [], []
+
+        size = max(len(truth_depositions), len(extraction_depositions))
+        truth_depositions.extend({} for _ in range(size - len(truth_depositions)))
+        extraction_depositions.extend(
+            {} for _ in range(size - len(extraction_depositions))
+        )
 
         # Calculate similarity scores based on method and temperature
         scores = [
@@ -464,6 +514,15 @@ class Evaluations:
         )
 
     # Helper methods
+    def _flatten_non_null(self, value: Dict[str, Any]) -> Dict[str, Any]:
+        """Return atomic, non-null facts using the scorer's flattened key form."""
+        flattened = flatdict.FlatterDict(value)
+        return {
+            key: item
+            for key, item in flattened.items()
+            if item is not None and not isinstance(item, (Mapping, list))
+        }
+
     def _extract_functionalities(self, cell: Dict) -> Dict[str, List[str]]:
         """Extract functionality mapping from a cell."""
         functionalities = defaultdict(list)
@@ -518,10 +577,14 @@ class Evaluations:
     ) -> bool:
         """Check if extracted value matches truth within tolerance."""
         if isinstance(truth, (int, float)):
-            truth, extract = float(truth), float(extract)
+            try:
+                truth, extract = float(truth), float(extract)
+            except (TypeError, ValueError):
+                per_key_metrics[key]["scoring_method"] = "numeric type check"
+                return False
             try:
                 if abs_tolerance:
-                    np.testing.assert_allclose(extract, truth, atol=tolerance)
+                    np.testing.assert_allclose(extract, truth, atol=tolerance, rtol=0)
                     per_key_metrics[key]["scoring_method"] = "float | abstol("+str(tolerance)+")"
                 else:
                     np.testing.assert_allclose(extract, truth, rtol=tolerance)
@@ -561,7 +624,9 @@ class Evaluations:
 
     def _should_skip_key(self, key: str, tolerances: Dict[str, float]) -> bool:
         """Check if a key should be skipped during evaluation."""
-        return key in tolerances or key == "additional_notes"
+        return key in tolerances or key == "additional_notes" or key.endswith(
+            ":additional_notes"
+        )
 
     def _regularize_repeated_key(self, key: str) -> str:
         """Remove digits from flattened keys to treat repeated elements as same type."""
@@ -625,3 +690,23 @@ def calculate_precision(per_key_metrics: Dict, key: str) -> Optional[float]:
     if tp + fp > 0:
         return tp / (tp + fp)
     return None
+
+
+def calculate_micro_metrics(per_key_metrics: Dict) -> Dict[str, float]:
+    """Aggregate fact-level counts across every paper and schema key.
+
+    This avoids a benchmark score changing merely because the same devices are
+    grouped into more or fewer papers.
+    """
+    totals = {"TP": 0.0, "FP": 0.0, "FN": 0.0}
+    for paper_metrics in per_key_metrics.values():
+        for metrics in paper_metrics.values():
+            for key in totals:
+                totals[key] += float(metrics.get(key, 0.0))
+
+    precision_denominator = totals["TP"] + totals["FP"]
+    recall_denominator = totals["TP"] + totals["FN"]
+    precision = totals["TP"] / precision_denominator if precision_denominator else 0.0
+    recall = totals["TP"] / recall_denominator if recall_denominator else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+    return {**totals, "precision": precision, "recall": recall, "f1": f1}

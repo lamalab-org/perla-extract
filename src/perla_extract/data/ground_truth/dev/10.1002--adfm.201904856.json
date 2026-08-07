@@ -202,19 +202,31 @@
                 "compounds": null,
                 "solutes": [
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1000.174\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 1000.174
+                    },
                     "name": "FAI"
                   },
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1099.76\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 1099.76
+                    },
                     "name": "PbI2"
                   },
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 200.0536\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 200.0536
+                    },
                     "name": "MABr"
                   },
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 199.9946\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 199.9946
+                    },
                     "name": "PbBr2"
                   },
                   {
@@ -247,18 +259,18 @@
                 "speed": "1000 rpm"
               },
               "antisolvent": "",
-              "atmosphere": "",
-              "duration": "10s",
+              "atmosphere": null,
+              "duration": {"value": 10, "unit": "s"},
               "method": "Spin-coating",
               "solution": {
-                "compounds": "",
+                "compounds": null,
                 "solutes": [],
                 "solvents": [],
-                "temperature": "",
-                "volume": ""
+                "temperature": null,
+                "volume": null
               },
               "step_name": "Spin coating",
-              "temperature": ""
+              "temperature": null
             },
             {
               "additional_parameters": {
@@ -266,18 +278,18 @@
                 "speed": "1000 rpm"
               },
               "antisolvent": "",
-              "atmosphere": "",
-              "duration": "35s",
+              "atmosphere": null,
+              "duration": {"value": 35, "unit": "s"},
               "method": "Spin-coating",
               "solution": {
-                "compounds": "",
+                "compounds": null,
                 "solutes": [],
                 "solvents": [],
-                "temperature": "",
-                "volume": ""
+                "temperature": null,
+                "volume": null
               },
               "step_name": "Spin coating",
-              "temperature": ""
+              "temperature": null
             },
             {
               "additional_parameters": {
@@ -457,7 +469,7 @@
           "unit": "%",
           "value": 18.63
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },
@@ -690,19 +702,31 @@
                 "compounds": null,
                 "solutes": [
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1000.174\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 1000.174
+                    },
                     "name": "FAI"
                   },
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1099.76\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 1099.76
+                    },
                     "name": "PbI2"
                   },
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 200.0536\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 200.0536
+                    },
                     "name": "MABr"
                   },
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 199.9946\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 199.9946
+                    },
                     "name": "PbBr2"
                   },
                   {
@@ -735,18 +759,18 @@
                 "speed": "1000 rpm"
               },
               "antisolvent": "",
-              "atmosphere": "",
-              "duration": "10s",
+              "atmosphere": null,
+              "duration": {"value": 10, "unit": "s"},
               "method": "Spin-coating",
               "solution": {
-                "compounds": "",
+                "compounds": null,
                 "solutes": [],
                 "solvents": [],
-                "temperature": "",
-                "volume": ""
+                "temperature": null,
+                "volume": null
               },
               "step_name": "Spin coating",
-              "temperature": ""
+              "temperature": null
             },
             {
               "additional_parameters": {
@@ -754,18 +778,18 @@
                 "speed": "1000 rpm"
               },
               "antisolvent": "",
-              "atmosphere": "",
-              "duration": "35s",
+              "atmosphere": null,
+              "duration": {"value": 35, "unit": "s"},
               "method": "Spin-coating",
               "solution": {
-                "compounds": "",
+                "compounds": null,
                 "solutes": [],
                 "solvents": [],
-                "temperature": "",
-                "volume": ""
+                "temperature": null,
+                "volume": null
               },
               "step_name": "Spin coating",
-              "temperature": ""
+              "temperature": null
             },
             {
               "additional_parameters": {
@@ -945,7 +969,7 @@
           "unit": "%",
           "value": 17.26
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },
@@ -1178,19 +1202,31 @@
                 "compounds": null,
                 "solutes": [
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1000.174\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 1000.174
+                    },
                     "name": "FAI"
                   },
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1099.76\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 1099.76
+                    },
                     "name": "PbI2"
                   },
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 200.0536\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 200.0536
+                    },
                     "name": "MABr"
                   },
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 199.9946\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 199.9946
+                    },
                     "name": "PbBr2"
                   },
                   {
@@ -1223,18 +1259,18 @@
                 "speed": "1000 rpm"
               },
               "antisolvent": "",
-              "atmosphere": "",
-              "duration": "10s",
+              "atmosphere": null,
+              "duration": {"value": 10, "unit": "s"},
               "method": "Spin-coating",
               "solution": {
-                "compounds": "",
+                "compounds": null,
                 "solutes": [],
                 "solvents": [],
-                "temperature": "",
-                "volume": ""
+                "temperature": null,
+                "volume": null
               },
               "step_name": "Spin coating",
-              "temperature": ""
+              "temperature": null
             },
             {
               "additional_parameters": {
@@ -1242,18 +1278,18 @@
                 "speed": "1000 rpm"
               },
               "antisolvent": "",
-              "atmosphere": "",
-              "duration": "35s",
+              "atmosphere": null,
+              "duration": {"value": 35, "unit": "s"},
               "method": "Spin-coating",
               "solution": {
-                "compounds": "",
+                "compounds": null,
                 "solutes": [],
                 "solvents": [],
-                "temperature": "",
-                "volume": ""
+                "temperature": null,
+                "volume": null
               },
               "step_name": "Spin coating",
-              "temperature": ""
+              "temperature": null
             },
             {
               "additional_parameters": {
@@ -1433,7 +1469,7 @@
           "unit": "%",
           "value": 15.59
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },
@@ -1666,19 +1702,31 @@
                 "compounds": null,
                 "solutes": [
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1000.174\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 1000.174
+                    },
                     "name": "FAI"
                   },
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 1099.76\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 1099.76
+                    },
                     "name": "PbI2"
                   },
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 200.0536\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 200.0536
+                    },
                     "name": "MABr"
                   },
                   {
-                    "concentration": "{\n  \"unit\": \"mol/L\",\n  \"value\": 199.9946\n}",
+                    "concentration": {
+                      "unit": "mol/L",
+                      "value": 199.9946
+                    },
                     "name": "PbBr2"
                   },
                   {
@@ -1711,18 +1759,18 @@
                 "speed": "1000 rpm"
               },
               "antisolvent": "",
-              "atmosphere": "",
-              "duration": "10s",
+              "atmosphere": null,
+              "duration": {"value": 10, "unit": "s"},
               "method": "Spin-coating",
               "solution": {
-                "compounds": "",
+                "compounds": null,
                 "solutes": [],
                 "solvents": [],
-                "temperature": "",
-                "volume": ""
+                "temperature": null,
+                "volume": null
               },
               "step_name": "Spin coating",
-              "temperature": ""
+              "temperature": null
             },
             {
               "additional_parameters": {
@@ -1730,18 +1778,18 @@
                 "speed": "1000 rpm"
               },
               "antisolvent": "",
-              "atmosphere": "",
-              "duration": "35s",
+              "atmosphere": null,
+              "duration": {"value": 35, "unit": "s"},
               "method": "Spin-coating",
               "solution": {
-                "compounds": "",
+                "compounds": null,
                 "solutes": [],
                 "solvents": [],
-                "temperature": "",
-                "volume": ""
+                "temperature": null,
+                "volume": null
               },
               "step_name": "Spin coating",
-              "temperature": ""
+              "temperature": null
             },
             {
               "additional_parameters": {
@@ -1879,7 +1927,7 @@
           "unit": "%",
           "value": 18.63
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },

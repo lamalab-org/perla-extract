@@ -56,6 +56,44 @@ All extraction files are JSON files following the Perla Extract data schema. Eac
 
 ## Usage
 
+### Reviewing ground truth against the source PDFs
+
+The shared `ground_truth/review_metadata.json` records article type, tandem
+scope, review status, and notes separately from the extraction schema. Reviews,
+perspectives, News & Views pieces, and papers that contain tandem devices are
+excluded from benchmark scoring automatically.
+
+Launch the local review workbench from the repository root:
+
+```bash
+.venv/bin/python review_workbench/server.py \
+  --pdf-dir /Users/kevinmaikjablonka/Downloads/test_eval_pdfs
+```
+
+Then open `http://127.0.0.1:8765`. The workbench shows the PDF beside the
+ground truth/model output, searches extracted PDF text with page links, edits
+ground-truth JSON, and saves review classifications. It also provides:
+
+- per-field review checkoffs with page, quote, and reviewer notes;
+- automatic page suggestions for numeric values and key material/process names;
+- a scan of unit-bearing PDF quantities not matched by value to the JSON;
+- named reviewers with independent decisions and disagreement highlighting;
+- paper-level and field-level discussion comments;
+- explicit Test/Development dataset switching and corpus counts;
+- a selected-cell context card with composition, architecture, metrics, and
+  layer stack;
+- structured missing-cell, missing-value, missing-layer, and wrong-value
+  reports with resolution notes; and
+- an **Add paper** flow for a PDF plus initial ground-truth JSON.
+
+Field evidence is stored under `ground_truth/evidence/{split}/`. Reviewer and
+discussion data is stored under `ground_truth/collaboration/`. These are
+server-side, Git-reviewable records; the reviewer selector is an identity aid
+for a trusted local team and is not password-based authentication.
+
+See `docs/ground-truth-workflow.md` for the data/scoring lifecycle and the
+recommended path from this local file-backed workbench to a Vercel deployment.
+
 ### Evaluating Model Performance
 
 Compare model extractions against the test set:

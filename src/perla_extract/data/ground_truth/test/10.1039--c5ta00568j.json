@@ -127,7 +127,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -175,7 +175,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 2.5
@@ -387,7 +387,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },
@@ -545,7 +545,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": null,
                 "value": null
@@ -593,7 +593,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Ambient Air",
+              "atmosphere": "Ambient air",
               "duration": {
                 "unit": "s",
                 "value": 2700
@@ -805,7 +805,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },

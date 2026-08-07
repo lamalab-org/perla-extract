@@ -1,0 +1,81 @@
+import json
+from io import BytesIO
+from pathlib import Path
+
+from review_workbench.server import ReviewApplication, make_handler
+
+
+def test_import_paper_creates_corpus_and_review_records(tmp_path):
+    pdf_dir = tmp_path / "pdfs"
+    ground_truth_dir = tmp_path / "data" / "ground_truth"
+    pdf_dir.mkdir()
+    (ground_truth_dir / "test").mkdir(parents=True)
+    (ground_truth_dir / "dev").mkdir()
+    app = ReviewApplication(pdf_dir, ground_truth_dir)
+    truth = {"cells": [{"pce": {"value": 20.0, "unit": "%"}, "layers": []}]}
+
+    result = app.import_paper(
+        "test",
+        "10.1234--example.1",
+        b"%PDF-1.4\n%%EOF\n",
+        json.dumps(truth).encode(),
+    )
+
+    assert result["cell_count"] == 1
+    assert app.pdf_path(result["id"]).exists()
+    assert app.paper_path("test", result["id"]).exists()
+    assert app.list_papers("test")[0]["field_review"]["total"] == 2
+    assert app.corpus_summary()["test"]["papers"] == 1
+    assert app.corpus_summary()["dev"]["papers"] == 0
+
+
+def test_review_ui_has_no_direct_html_injection_sinks():
+    javascript = (
+        Path(__file__).parents[1]
+        / "review_workbench"
+        / "review_app"
+        / "app.js"
+    ).read_text()
+
+    assert ".innerHTML" not in javascript
+    assert ".outerHTML" not in javascript
+    assert "document.write" not in javascript
+    assert "renderSafeHtml" in javascript
+
+
+def test_authenticated_comment_ignores_client_supplied_author(tmp_path):
+    pdf_dir = tmp_path / "pdfs"
+    ground_truth_dir = tmp_path / "ground_truth"
+    pdf_dir.mkdir()
+    (ground_truth_dir / "dev").mkdir(parents=True)
+    (ground_truth_dir / "test").mkdir()
+    paper_id = "10.1234--example.1"
+    (ground_truth_dir / "test" / f"{paper_id}.json").write_text(
+        json.dumps({"cells": []}), encoding="utf-8"
+    )
+    app = ReviewApplication(pdf_dir, ground_truth_dir)
+
+    class Authenticator:
+        def authenticate(self, headers):
+            return {
+                "id": "user_123",
+                "name": "Ada Reviewer",
+                "email": "ada@example.org",
+                "role": "reviewer",
+            }
+
+    handler_type = make_handler(app, Authenticator())
+    handler = object.__new__(handler_type)
+    body = json.dumps({"author_id": "attacker", "body": "Checked"}).encode()
+    handler.path = f"/api/comments/test/{paper_id}"
+    handler.headers = {"Content-Length": str(len(body))}
+    handler.rfile = BytesIO(body)
+    captured = {}
+    handler.send_json = lambda payload, status=200: captured.update(payload=payload)
+    handler.send_error = lambda status: captured.update(error=status)
+
+    handler.do_POST()
+
+    comment = captured["payload"]["comment"]
+
+    assert comment["author_id"] == "user_123"

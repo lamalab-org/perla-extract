@@ -78,7 +78,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": "%",
           "value": 15.28
         },
@@ -425,7 +425,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": "%",
           "value": 16.88
         },

@@ -33,6 +33,9 @@ ipython_config.py
 ### macOS ###
 # General
 .DS_Store
+.vercel
+review_workbench/.vercel-build
+.env.vercel
 .AppleDouble
 .LSOverride
 
@@ -282,3 +285,4 @@ output
 !tests/test_files
 
 uv.lock
+.env*

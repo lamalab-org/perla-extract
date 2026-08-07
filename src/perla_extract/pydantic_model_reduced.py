@@ -70,7 +70,9 @@ class PerovskiteComposition(BaseModel):
         None,
         description="Type of the perovskite (e.g., Polycrystalline film, Single crystal, etc.).",
     )
-    dimensionality: Optional[Literal["0D", "1D", "2D", "3D", "2D/3D"]] = Field(None)
+    dimensionality: Optional[
+        Literal["0D", "1D", "2D", "3D", "1D/3D", "2D/3D"]
+    ] = Field(None)
     a_ions: Optional[List[Ion]] = Field(
         None,
         description="A-site ions. Only include information that is described in the paper.",

@@ -401,7 +401,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },
@@ -417,7 +417,7 @@
           "unit": null,
           "value": null
         },
-        "potential_bias": "Unknown",
+        "potential_bias": null,
         "temperature": {
           "unit": null,
           "value": null
@@ -840,7 +840,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": "%",
           "value": 0.5
         },
@@ -1279,7 +1279,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": "%",
           "value": 0.5
         },
@@ -1711,7 +1711,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },
@@ -1727,7 +1727,7 @@
           "unit": null,
           "value": null
         },
-        "potential_bias": "Unknown",
+        "potential_bias": null,
         "temperature": {
           "unit": null,
           "value": null
@@ -2143,7 +2143,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },
@@ -2159,7 +2159,7 @@
           "unit": null,
           "value": null
         },
-        "potential_bias": "Unknown",
+        "potential_bias": null,
         "temperature": {
           "unit": null,
           "value": null
@@ -2575,7 +2575,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": "%",
           "value": 3.11
         },
@@ -3007,7 +3007,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": null,
           "value": null
         },
@@ -3023,7 +3023,7 @@
           "unit": null,
           "value": null
         },
-        "potential_bias": "Unknown",
+        "potential_bias": null,
         "temperature": {
           "unit": null,
           "value": null
@@ -3394,7 +3394,7 @@
       "number_devices": null,
       "pce": {
         "unit": "%",
-        "value": 0.99
+        "value": 15.66
       },
       "perovskite_composition": {
         "a_ions": [
@@ -3446,7 +3446,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": "%",
           "value": 0.5
         },
@@ -3474,7 +3474,7 @@
       },
       "voc": {
         "unit": "V",
-        "value": 0.93
+        "value": 0.99
       }
     },
     {
@@ -3885,7 +3885,7 @@
           "unit": null,
           "value": null
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": "%",
           "value": 10.82
         },

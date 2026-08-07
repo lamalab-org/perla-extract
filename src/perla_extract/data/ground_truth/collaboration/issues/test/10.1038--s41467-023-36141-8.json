@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "paper_id": "10.1038--s41467-023-36141-8",
+  "issues": [
+    {
+      "id": "f821d87c0a0241a3aeafafd53dfc9501",
+      "type": "wrong_value",
+      "status": "open",
+      "reporter_id": "reviewer",
+      "description": "The record appears to combine headline maxima (VOC up to 1.29 V, FF above 80%, JSC up to 17 mA cm−2) into one cell. The paper does not establish that all maxima belong to the same measured device.",
+      "cell_index": 0,
+      "field_path": null,
+      "suggested_value": "Use one explicit JV row/scan for the cell, or represent these as separate reported maxima rather than a coherent device.",
+      "source_page": 1,
+      "source_text": "The abstract reports VOC up to 1.29 V, FF above 80%, JSC up to 17 mA cm−2, and efficiencies of 17%.",
+      "created_at": "2026-08-07T10:26:33.758800+00:00",
+      "resolved_by": null,
+      "resolution": "",
+      "resolved_at": null
+    }
+  ]
+}

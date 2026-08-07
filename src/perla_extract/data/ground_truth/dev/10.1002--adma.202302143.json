@@ -73,7 +73,9 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": "{\n\"speed\": \"3000 rpm\"}",
+              "additional_parameters": {
+                "speed": "3000 rpm"
+              },
               "antisolvent": null,
               "atmosphere": "Ambient air",
               "duration": {
@@ -166,7 +168,11 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": "{\n  \"duration\": \"20 s\",\n  \"speed\": \"5000 rpm\",\n  \"substrate_preheating\": \"100\u00b0C for 15 min\"\n}",
+              "additional_parameters": {
+                "duration": "20 s",
+                "speed": "5000 rpm",
+                "substrate_preheating": "100\u00b0C for 15 min"
+              },
               "antisolvent": null,
               "atmosphere": "N2",
               "duration": {
@@ -325,7 +331,11 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": "{\n  \"duration\": \"30 s\",\n  \"filter\": \"0.45 \u03bcm PTFE\",\n  \"speed\": \"2000 rpm\"\n}",
+              "additional_parameters": {
+                "duration": "30 s",
+                "filter": "0.45 \u03bcm PTFE",
+                "speed": "2000 rpm"
+              },
               "antisolvent": null,
               "atmosphere": null,
               "duration": {
@@ -377,9 +387,11 @@
           "additional_treatment": null,
           "deposition": [
             {
-              "additional_parameters": "{\"speed\":\"5000 rpm\"}",
+              "additional_parameters": {
+                "speed": "5000 rpm"
+              },
               "antisolvent": null,
-              "atmosphere": "\"N2\"",
+              "atmosphere": "N2",
               "duration": {
                 "unit": "s",
                 "value": 20
@@ -420,7 +432,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "\"N2\"",
+              "atmosphere": "N2",
               "duration": {
                 "unit": "s",
                 "value": 300
@@ -583,7 +595,7 @@
           "unit": "%",
           "value": 15.4
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": "%",
           "value": 15.4
         },
@@ -689,7 +701,7 @@
             {
               "additional_parameters": null,
               "antisolvent": null,
-              "atmosphere": "Unknown",
+              "atmosphere": null,
               "duration": {
                 "unit": "s",
                 "value": 30
@@ -1238,7 +1250,7 @@
           "unit": "%",
           "value": 17.64
         },
-        "PCE_at_the_end_of_the_experiment": {
+        "PCE_at_the_end_of_experiment": {
           "unit": "%",
           "value": 17.64
         },

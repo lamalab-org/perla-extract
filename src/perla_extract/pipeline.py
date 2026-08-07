@@ -3,7 +3,6 @@ from typing import Optional, Union
 import os
 import json
 import glob
-import math
 import csv
 from collections import defaultdict
 import re
@@ -19,7 +18,12 @@ from perla_extract.papersbot.utils import get_doi_summary
 from perla_extract.papersbot.papersbot import PapersbotResult
 from perla_extract.preprocessing.preprocessor import Preprocessor
 from perla_extract.postprocessing import postprocess
-from perla_extract.evaluations import Evaluations, score_multiple_extractions
+from perla_extract.evaluations import (
+    Evaluations,
+    calculate_micro_metrics,
+    score_multiple_extractions,
+)
+from perla_extract.ground_truth import eligible_ground_truth_files
 from perla_extract import llm_call
 from perla_extract.export import (
     to_json,
@@ -400,33 +404,36 @@ class ExtractionPipeline:
 
     def _evaluate_multiple(self, pred_dir: Path, truth_dir: Path):
         pairs = []
-        for file in truth_dir.glob("*.json"):
+        truth_files, excluded_files = eligible_ground_truth_files(truth_dir)
+        for file, reasons in excluded_files:
+            print(f"Skipping {file.name}: {', '.join(reasons)}")
+        for file in truth_files:
+            with file.open(encoding="utf-8") as stream:
+                truth = postprocess(json.load(stream))
+            pred_path = pred_dir / file.name
             try:
-                pred_path = pred_dir / file.name
-                pred = postprocess(json.load(open(pred_path)))
-                truth = postprocess(json.load(open(file)))
-                pairs.append((truth, pred, file.name))
+                with pred_path.open(encoding="utf-8") as stream:
+                    pred = postprocess(json.load(stream))
             except (FileNotFoundError, json.decoder.JSONDecodeError) as e:
-                print(e)
-                continue
+                print(f"Treating {file.name} as an empty extraction: {e}")
+                pred = {"cells": []}
+            pairs.append((truth, pred, file.name))
 
         evals_list, key_metrics = score_multiple_extractions(pairs)
-        recalls, precs, llm_calls = [], [], 0
+        llm_calls = 0
 
         for evals in evals_list:
-            precs.append(np.mean(evals.score_precisions))
-            recalls.append(np.mean(evals.score_recalls))
             llm_calls += evals.llm_judge_calls
 
         print(json.dumps(key_metrics, indent=2))
         # agg_results = calculate_value_for_plot(key_metrics)
         # print("Aggregated Metrics:", json.dumps(agg_results, indent=2))
-        print("Average Recall:", np.nanmean(recalls))
-        print("Average Precision:", np.nanmean([p for p in precs if not math.isnan(p)]))
+        micro = calculate_micro_metrics(key_metrics)
+        print("Micro Recall:", micro["recall"])
+        print("Micro Precision:", micro["precision"])
+        print("Micro F1:", micro["f1"])
         print("LLM Judge Calls:", llm_calls)
-        avg_recalls = np.nanmean(recalls)
-        avg_precisions = np.nanmean([p for p in precs if not math.isnan(p)])
-        return key_metrics, avg_recalls, avg_precisions
+        return key_metrics, micro["recall"], micro["precision"]
 
     def _extract_batch(self, input_dir: Path, output_dir: Path):
         (output_dir / self.model_name).mkdir(parents=True, exist_ok=True)
