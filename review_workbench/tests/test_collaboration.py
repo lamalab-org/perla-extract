@@ -6,6 +6,8 @@ from review_workbench.review_collaboration import (
     load_issues,
     load_users,
     resolve_issue,
+    load_figure_audits,
+    save_figure_audit,
 )
 
 
@@ -45,3 +47,37 @@ def test_missing_item_issue_can_be_reported_and_resolved(tmp_path):
     )
     assert resolved["status"] == "resolved"
     assert resolved["resolution"] == "Added to cell 2"
+
+
+def test_figure_audits_are_kept_separately_per_reviewer(tmp_path):
+    first = add_user(tmp_path, "Ada")
+    second = add_user(tmp_path, "Grace")
+    save_figure_audit(
+        tmp_path,
+        "test",
+        "paper",
+        first["id"],
+        {
+            "total_figures": 6,
+            "schema_relevant_figures": 3,
+            "figure_only_schema_figures": 1,
+            "notes": "Figure 3 contains a JV curve only.",
+        },
+    )
+    save_figure_audit(
+        tmp_path,
+        "test",
+        "paper",
+        second["id"],
+        {
+            "total_figures": 6,
+            "schema_relevant_figures": 4,
+            "figure_only_schema_figures": 2,
+            "notes": "Also counted the stability plot.",
+        },
+    )
+
+    audits = load_figure_audits(tmp_path, "test", "paper")
+
+    assert audits[first["id"]]["schema_relevant_figures"] == 3
+    assert audits[second["id"]]["figure_only_schema_figures"] == 2

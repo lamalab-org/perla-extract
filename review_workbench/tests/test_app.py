@@ -53,6 +53,17 @@ def test_pdf_search_uses_text_fragments_for_exact_match_navigation():
     assert "jumpToPage(result.page, matchedText(result, query))" in javascript
 
 
+def test_review_ui_has_separate_figure_audit():
+    app_dir = Path(__file__).parents[1] / "review_app"
+    html = (app_dir / "index.html").read_text()
+    javascript = (app_dir / "app.js").read_text()
+
+    assert 'data-tab="figures"' in html
+    assert 'id="figure-audit-form"' in html
+    assert "schema_relevant_figures" in javascript
+    assert "figure_only_schema_figures" in javascript
+
+
 def test_authenticated_comment_ignores_client_supplied_author(tmp_path):
     pdf_dir = tmp_path / "pdfs"
     ground_truth_dir = tmp_path / "ground_truth"

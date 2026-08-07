@@ -119,7 +119,84 @@ def add_comment(
     return comment
 
 
-ISSUE_TYPES = {"missing_cell", "missing_value", "missing_layer", "wrong_value", "other"}
+ISSUE_TYPES = {
+    "missing_cell",
+    "missing_value",
+    "missing_layer",
+    "missing_composition",
+    "mixed_device",
+    "wrong_value",
+    "other",
+}
+
+
+def _figure_audit_path(ground_truth_dir: Path, split: str, paper_id: str) -> Path:
+    return (
+        _collaboration_dir(ground_truth_dir)
+        / "figure_audits"
+        / split
+        / f"{paper_id}.json"
+    )
+
+
+def load_figure_audits(
+    ground_truth_dir: Path, split: str, paper_id: str
+) -> dict[str, dict[str, Any]]:
+    path = _figure_audit_path(ground_truth_dir, split, paper_id)
+    if not path.exists():
+        return {}
+    with path.open(encoding="utf-8") as stream:
+        return json.load(stream).get("audits", {})
+
+
+def save_figure_audit(
+    ground_truth_dir: Path,
+    split: str,
+    paper_id: str,
+    reviewer_id: str,
+    payload: object,
+) -> dict[str, Any]:
+    if reviewer_id not in {user["id"] for user in load_users(ground_truth_dir)}:
+        raise ValueError("Unknown reviewer")
+    if not isinstance(payload, dict):
+        raise ValueError("Figure audit must be an object")
+    counts = {}
+    for key in (
+        "total_figures",
+        "schema_relevant_figures",
+        "figure_only_schema_figures",
+    ):
+        value = payload.get(key)
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise ValueError("Figure counts must be non-negative integers")
+        counts[key] = value
+    if counts["schema_relevant_figures"] > counts["total_figures"]:
+        raise ValueError("Schema-relevant figures cannot exceed total figures")
+    if counts["figure_only_schema_figures"] > counts["schema_relevant_figures"]:
+        raise ValueError("Figure-only count cannot exceed schema-relevant figures")
+    notes = str(payload.get("notes", "")).strip()
+    if len(notes) > 4000:
+        raise ValueError("Figure audit notes must contain at most 4000 characters")
+    audit = {
+        **counts,
+        "notes": notes,
+        "reviewer_id": reviewer_id,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    audits = load_figure_audits(ground_truth_dir, split, paper_id)
+    audits[reviewer_id] = audit
+    path = _figure_audit_path(ground_truth_dir, split, paper_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {"schema_version": 1, "paper_id": paper_id, "audits": audits},
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return audit
 
 
 def _issues_path(ground_truth_dir: Path, split: str, paper_id: str) -> Path:

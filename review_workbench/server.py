@@ -49,9 +49,11 @@ from review_workbench.review_collaboration import (  # noqa: E402
     add_issue,
     add_user,
     load_comments,
+    load_figure_audits,
     load_issues,
     load_users,
     resolve_issue,
+    save_figure_audit,
     upsert_authenticated_user,
 )
 
@@ -277,6 +279,26 @@ class ReviewApplication:
         if not self.paper_path(split, paper_id).exists():
             raise FileNotFoundError(self.paper_path(split, paper_id))
         return load_issues(self.ground_truth_dir, split, paper_id)
+
+    def figure_audits(self, split: str, paper_id: str) -> dict[str, dict]:
+        if not self.paper_path(split, paper_id).exists():
+            raise FileNotFoundError(self.paper_path(split, paper_id))
+        return load_figure_audits(self.ground_truth_dir, split, paper_id)
+
+    def save_paper_figure_audit(
+        self, split: str, paper_id: str, payload: object
+    ) -> dict:
+        if not self.paper_path(split, paper_id).exists():
+            raise FileNotFoundError(self.paper_path(split, paper_id))
+        if not isinstance(payload, dict):
+            raise ValueError("Figure audit must be an object")
+        return save_figure_audit(
+            self.ground_truth_dir,
+            split,
+            paper_id,
+            str(payload.get("reviewer_id", "")),
+            payload,
+        )
 
     def add_missing_issue(
         self, split: str, paper_id: str, payload: object
@@ -564,6 +586,19 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         {"issues": application.issues(parts[2], parts[3])}
                     )
                     return
+                if parsed.path.startswith("/api/figure-audits/"):
+                    parts = [
+                        unquote(part)
+                        for part in parsed.path.strip("/").split("/")
+                    ]
+                    if len(parts) != 4:
+                        raise ValueError(
+                            "Expected /api/figure-audits/<split>/<paper-id>"
+                        )
+                    self.send_json(
+                        {"audits": application.figure_audits(parts[2], parts[3])}
+                    )
+                    return
                 if parsed.path.startswith("/api/quantities/"):
                     paper_id = unquote(
                         parsed.path.removeprefix("/api/quantities/")
@@ -616,6 +651,15 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         parts[2], parts[3], payload
                     )
                     self.send_json({"saved": True, **result})
+                    return
+                if len(parts) == 4 and parts[:2] == ["api", "figure-audits"]:
+                    if not isinstance(payload, dict):
+                        raise ValueError("Figure audit must be an object")
+                    payload["reviewer_id"] = user["id"]
+                    audit = application.save_paper_figure_audit(
+                        parts[2], parts[3], payload
+                    )
+                    self.send_json({"saved": True, "audit": audit})
                     return
                 if len(parts) == 5 and parts[:2] == ["api", "issues"]:
                     if not isinstance(payload, dict):

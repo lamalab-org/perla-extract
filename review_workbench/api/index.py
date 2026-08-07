@@ -202,6 +202,13 @@ class VercelReviewApplication(ReviewApplication):
         self._sync_state()
         return result
 
+    def save_paper_figure_audit(
+        self, split: str, paper_id: str, payload: object
+    ) -> dict:
+        result = super().save_paper_figure_audit(split, paper_id, payload)
+        self._sync_state()
+        return result
+
     def add_review_comment(self, split: str, paper_id: str, payload: object) -> dict:
         result = super().add_review_comment(split, paper_id, payload)
         self._sync_state()

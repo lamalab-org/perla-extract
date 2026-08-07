@@ -36,12 +36,26 @@ def test_vercel_adapter_persists_reviewers_and_imported_pdfs(tmp_path):
         b"%PDF-1.4\n%%EOF\n",
         json.dumps(truth).encode(),
     )
+    app.save_paper_figure_audit(
+        "dev",
+        "10.1234--example.1",
+        {
+            "reviewer_id": user["id"],
+            "total_figures": 4,
+            "schema_relevant_figures": 2,
+            "figure_only_schema_figures": 1,
+            "notes": "Figure 2 contains plot-only values.",
+        },
+    )
 
     restored = VercelReviewApplication(blob, tmp_path / "second")
 
     assert user in restored.users()
     assert restored.load_ground_truth("dev", "10.1234--example.1") == truth
     assert restored.ensure_pdf("10.1234--example.1").read_bytes().startswith(b"%PDF")
+    assert restored.figure_audits("dev", "10.1234--example.1")[user["id"]][
+        "figure_only_schema_figures"
+    ] == 1
 
 
 def test_unconfigured_blob_store_hydrates_locally_and_rejects_writes(tmp_path, monkeypatch):

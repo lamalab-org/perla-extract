@@ -1,7 +1,7 @@
 const state = {
   split: "test", papers: [], selected: null, sources: [], tab: "fields",
   paperData: null, reviewData: null, quantityData: null, evidenceDirty: false,
-  users: [], comments: [], issues: [], corpusSummary: null, currentUser: null,
+  users: [], comments: [], issues: [], figureAudits: {}, corpusSummary: null, currentUser: null,
   clerk: null, pdfUrl: null, pdfPaper: null,
   internalToken: null,
 };
@@ -147,16 +147,18 @@ async function loadPaperData() {
   const source = $("source").value;
   const params = new URLSearchParams({ split: state.split });
   if (source) params.set("source", source);
-  const [paperData, reviewData, commentData, issueData] = await Promise.all([
+  const [paperData, reviewData, commentData, issueData, figureAuditData] = await Promise.all([
     request(`/api/paper/${encodeURIComponent(state.selected)}?${params}`),
     request(`/api/review/${state.split}/${encodeURIComponent(state.selected)}?reviewer=${encodeURIComponent(reviewerId())}`),
     request(`/api/comments/${state.split}/${encodeURIComponent(state.selected)}`),
     request(`/api/issues/${state.split}/${encodeURIComponent(state.selected)}`),
+    request(`/api/figure-audits/${state.split}/${encodeURIComponent(state.selected)}`),
   ]);
   state.paperData = paperData;
   state.reviewData = reviewData;
   state.comments = commentData.comments;
   state.issues = issueData.issues;
+  state.figureAudits = figureAuditData.audits;
   const meta = paperData.metadata;
   $("article-type").value = meta.article_type;
   $("tandem-scope").value = meta.tandem_scope;
@@ -370,7 +372,24 @@ async function addComment(body, fieldPath = null) {
 }
 
 function issueTypeLabel(type) {
-  return { missing_cell: "Missing cell", missing_value: "Missing value", missing_layer: "Missing layer", wrong_value: "Wrong value", other: "Other" }[type] || type;
+  return { missing_cell: "Missing cell / device", missing_value: "Missing value", missing_layer: "Missing layer", missing_composition: "Missing composition", mixed_device: "Values mixed across devices", wrong_value: "Wrong value", other: "Other" }[type] || type;
+}
+
+function renderFigureAudit() {
+  const mine = state.figureAudits[reviewerId()];
+  $("total-figures").value = mine?.total_figures ?? "";
+  $("schema-figures").value = mine?.schema_relevant_figures ?? "";
+  $("figure-only-figures").value = mine?.figure_only_schema_figures ?? "";
+  $("figure-notes").value = mine?.notes || "";
+  $("figure-audit-status").textContent = mine
+    ? `Your audit saved ${new Date(mine.updated_at).toLocaleString()}`
+    : "Not yet reviewed by you";
+  const peers = Object.values(state.figureAudits).filter((audit) => audit.reviewer_id !== reviewerId());
+  renderSafeHtml($("peer-figure-audits"), peers.length ? `<h3>Other reviewers</h3>${peers.map((audit) => `<article class="peer-figure-audit">
+    <strong>${escapeHtml(reviewerName(audit.reviewer_id))}</strong>
+    <span>${audit.total_figures} total · ${audit.schema_relevant_figures} schema-relevant · ${audit.figure_only_schema_figures} figure-only</span>
+    ${audit.notes ? `<p>${escapeHtml(audit.notes)}</p>` : ""}
+  </article>`).join("")}` : `<div class="empty-state">No other reviewer has audited the figures yet.</div>`);
 }
 
 function renderIssues() {
@@ -403,11 +422,12 @@ async function createIssue(overrides = {}) {
 }
 
 function renderView() {
-  ["fields", "gaps", "discussion", "issues", "json"].forEach((panel) => $(`${panel}-panel`).hidden = true);
+  ["fields", "gaps", "figures", "discussion", "issues", "json"].forEach((panel) => $(`${panel}-panel`).hidden = true);
   $("source").closest("label").hidden = state.tab !== "extraction";
   document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === state.tab));
   if (state.tab === "fields") { $("fields-panel").hidden = false; $("cell-summary").textContent = "Review each non-null scalar ground-truth field against the paper."; renderFields(); }
   else if (state.tab === "gaps") { $("gaps-panel").hidden = false; $("cell-summary").textContent = "Candidate quantities in the paper that may be missing from the JSON."; loadQuantities().catch((error) => $("quantity-summary").textContent = error.message); }
+  else if (state.tab === "figures") { $("figures-panel").hidden = false; $("cell-summary").textContent = "Separate accounting for schema-relevant and figure-only evidence."; renderFigureAudit(); }
   else if (state.tab === "discussion") { $("discussion-panel").hidden = false; $("cell-summary").textContent = "Compare reviewer decisions and discuss scoring differences."; renderDiscussion(); }
   else if (state.tab === "issues") { $("issues-panel").hidden = false; $("cell-summary").textContent = "Structured reports for cells, values, or layers missing from the ground truth."; renderIssues(); }
   else { $("json-panel").hidden = false; renderJson(); }
@@ -503,6 +523,23 @@ $("issue-form").addEventListener("submit", async (event) => {
   event.preventDefault(); const status = $("issue-status"); status.textContent = "Saving…";
   try { await createIssue(); $("issue-description").value = ""; $("issue-suggested-value").value = ""; status.textContent = "Issue created"; renderIssues(); }
   catch (error) { status.textContent = error.message; }
+});
+
+$("figure-audit-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const status = $("figure-audit-status");
+  status.textContent = "Saving…";
+  try {
+    const payload = {
+      total_figures: Number($("total-figures").value),
+      schema_relevant_figures: Number($("schema-figures").value),
+      figure_only_schema_figures: Number($("figure-only-figures").value),
+      notes: $("figure-notes").value,
+    };
+    const result = await request(`/api/figure-audits/${state.split}/${encodeURIComponent(state.selected)}`, { method: "PUT", body: JSON.stringify(payload) });
+    state.figureAudits[reviewerId()] = result.audit;
+    renderFigureAudit();
+  } catch (error) { status.textContent = error.message; }
 });
 
 $("open-import").addEventListener("click", () => $("import-dialog").showModal());
