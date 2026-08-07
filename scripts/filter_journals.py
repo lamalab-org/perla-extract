@@ -131,7 +131,7 @@ def _subject_area(highest_percentile: object) -> str:
 
 
 def _format_value(value: object) -> str:
-    if value is None or (isinstance(value, float) and pd.isna(value)):
+    if value is None or pd.isna(value):
         return "unknown"
     return str(value)
 
