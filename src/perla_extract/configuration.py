@@ -10,7 +10,7 @@ ureg = UnitRegistry()
 
 ureg.define("sun = 1 kW/m^2")
 
-classifier_model = "openrouter/gpt-oss-120b"
+CLASSIFIER_MODEL = "openrouter/gpt-oss-120b"
 
 pint = {
     "default_units_by_type": {
