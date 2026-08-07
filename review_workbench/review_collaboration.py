@@ -125,6 +125,7 @@ ISSUE_TYPES = {
     "missing_layer",
     "missing_composition",
     "mixed_device",
+    "schema_limitation",
     "wrong_value",
     "other",
 }

@@ -372,7 +372,7 @@ async function addComment(body, fieldPath = null) {
 }
 
 function issueTypeLabel(type) {
-  return { missing_cell: "Missing cell / device", missing_value: "Missing value", missing_layer: "Missing layer", missing_composition: "Missing composition", mixed_device: "Values mixed across devices", wrong_value: "Wrong value", other: "Other" }[type] || type;
+  return { missing_cell: "Missing cell / device", missing_value: "Missing value", missing_layer: "Missing layer", missing_composition: "Missing composition", mixed_device: "Values mixed across devices", schema_limitation: "Schema limitation / uncertainty", wrong_value: "Wrong value", other: "Other" }[type] || type;
 }
 
 function renderFigureAudit() {

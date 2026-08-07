@@ -81,3 +81,21 @@ def test_figure_audits_are_kept_separately_per_reviewer(tmp_path):
 
     assert audits[first["id"]]["schema_relevant_figures"] == 3
     assert audits[second["id"]]["figure_only_schema_figures"] == 2
+
+
+def test_schema_limitations_can_be_recorded_without_changing_ground_truth(tmp_path):
+    user = add_user(tmp_path, "Ada")
+
+    issue = add_issue(
+        tmp_path,
+        "test",
+        "paper",
+        user["id"],
+        "schema_limitation",
+        "The paper reports FF above 80%, not an exact value.",
+        field_path="/cells/0/ff/value",
+        source_page=5,
+    )
+
+    assert issue["type"] == "schema_limitation"
+    assert issue["status"] == "open"

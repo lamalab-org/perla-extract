@@ -12,6 +12,11 @@ The separate Figure audit records how much schema-relevant information is lost
 under that policy. Figure-only counts and notes are coverage analysis and must
 not be promoted into the ground-truth JSON.
 
+When the main paper explicitly reports uncertainty, bounds, ranges, approximate
+values, or metrics whose device linkage cannot be represented faithfully, log a
+`Schema limitation / uncertainty` issue. These examples should inform a later
+schema revision instead of being coerced into exact scalar ground truth.
+
 This directory contains the complete local review UI and its isolated Vercel
 deployment surface. The scientific extraction and scoring code remains in
 `src/perla_extract`.
