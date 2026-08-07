@@ -1,5 +1,17 @@
 # Ground-truth review workbench
 
+## Evidence boundary
+
+Ground-truth cells and fields must be supported by information explicitly stated
+in the main-paper prose, figure captions, or tables. Values inferred from plot
+geometry and values available only in Supporting Information are intentionally
+excluded, because the benchmark measures extraction from the main paper's
+machine-readable text and tables.
+
+The separate Figure audit records how much schema-relevant information is lost
+under that policy. Figure-only counts and notes are coverage analysis and must
+not be promoted into the ground-truth JSON.
+
 This directory contains the complete local review UI and its isolated Vercel
 deployment surface. The scientific extraction and scoring code remains in
 `src/perla_extract`.

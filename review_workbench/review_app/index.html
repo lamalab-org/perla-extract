@@ -110,7 +110,7 @@
             <label>Status <select id="field-status"><option value="all">All fields</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="issues">Issues / follow-up</option><option value="disagreements">Reviewer disagreements</option></select></label>
             <label class="grow">Find field <input id="field-query" type="search" placeholder="PCE, temperature, layer name…" /></label>
           </div>
-          <div class="review-hint">Click any JSON value to search the PDF and jump to its best page. Check it when verified; use the issue menu when it is wrong or absent.</div>
+          <div class="review-hint"><strong>Ground-truth evidence policy:</strong> verify values only when they are explicitly stated in the main-paper prose, captions, or tables. Do not promote values inferred from plots or found only in Supporting Information. Click any JSON value to search the PDF and jump to its best page.</div>
           <div id="cell-context" class="cell-context"></div>
           <div id="field-list" class="field-list"></div>
           <div class="sticky-actions"><span id="evidence-status">No unsaved review changes</span><button id="save-evidence">Save field review</button></div>
@@ -120,12 +120,12 @@
           <div class="review-controls">
             <label class="grow">Filter quantities <input id="quantity-query" type="search" placeholder="%, eV, temperature, 21.4…" /></label>
           </div>
-          <div id="quantity-summary" class="review-hint">Open this view to scan unit-bearing quantities that were not matched by value to the JSON.</div>
+          <div id="quantity-summary" class="review-hint">Open this view to scan unit-bearing quantities that were not matched by value to the JSON. Report a ground-truth gap only when the value is explicit in main-paper prose, a caption, or a table; log plot-only information under Figure audit.</div>
           <div id="quantity-list" class="quantity-list"></div>
         </section>
 
         <section id="figures-panel" class="review-panel" hidden>
-          <div class="review-hint">Count main-paper figures by figure number (not individual panels). A figure is “schema-relevant” when it reports a device, composition, layer, process, performance, stability, or measurement value represented by the extraction schema. Mark it “figure-only” when that data is not also stated in searchable text or a table.</div>
+          <div class="review-hint"><strong>This audit does not expand the ground truth.</strong> Count main-paper figures by figure number (not individual panels). A figure is “schema-relevant” when it reports a device, composition, layer, process, performance, stability, or measurement value represented by the extraction schema. Mark it “figure-only” when that information is not explicitly repeated in main-paper prose, a caption, or a table. Supporting Information is outside both the ground truth and this main-paper figure count.</div>
           <form id="figure-audit-form" class="figure-audit-form">
             <div class="figure-count-grid">
               <label>Total figures <input id="total-figures" type="number" min="0" required /></label>

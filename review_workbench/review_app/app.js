@@ -319,7 +319,7 @@ async function loadQuantities() {
 function renderQuantities() {
   const query = $("quantity-query").value.trim().toLowerCase();
   const mentions = state.quantityData.unmapped.filter((item) => !query || `${item.text} ${item.snippet}`.toLowerCase().includes(query));
-  $("quantity-summary").textContent = `${state.quantityData.unmapped_count} of ${state.quantityData.total} unit-bearing mentions were not matched by numeric value to the JSON. Repeated mentions are shown because their context can differ.`;
+  $("quantity-summary").textContent = `${state.quantityData.unmapped_count} of ${state.quantityData.total} unit-bearing mentions were not matched by numeric value to the JSON. Only explicit main-paper prose, captions, and tables qualify as ground-truth gaps; plot-only values belong in Figure audit.`;
   renderSafeHtml($("quantity-list"), mentions.length ? mentions.slice(0, 400).map((item, index) => `<article class="quantity-card" data-page="${item.page}" data-query="${escapeHtml(item.raw_value)}" data-quantity-index="${index}">
     <button class="quantity-jump"><span class="quantity-value">${escapeHtml(item.text)}</span><span class="quantity-page">p. ${item.page}</span><span class="quantity-context">${escapeHtml(item.snippet)}</span></button>
     <button class="report-quantity">Report missing</button>
