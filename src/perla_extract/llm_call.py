@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
 from perla_extract.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
 import litellm
+from loguru import logger
 
 # Try to setup Redis cache if available, otherwise use disk cache
 try:
@@ -80,7 +81,7 @@ def create_text_completion(
             litellm.get_supported_openai_params(model=model_name) or []
         )
     except Exception as e:
-        print(f"Could not fetch model info, defaulting to max_tokens={max_tokens}. Error: {e}")
+        logger.error(f"Could not fetch model info, defaulting to max_tokens={max_tokens}. Error: {e}")
 
     while True:
         try:
@@ -101,7 +102,7 @@ def create_text_completion(
             ):
                 raise
             max_tokens -= 5000
-            print("reduced max tokens")
+            logger.info("reduced max tokens")
         else:
             break
     return resp, compll
