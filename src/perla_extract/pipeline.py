@@ -334,14 +334,14 @@ class ExtractionPipeline:
         self.upload_id = nomad_upload_id
 
     def extract_from_pdf_nomad(
-        self, filepath, api_key, doi=None, ureg=None
+        self, filepath, api_key, doi=None, ureg=None, api_base_url=None
     ) -> Optional[PerovskiteSolarCells]:
         # We can use this in Nomad
         pdf_text = self.preprocessor.pdf_to_text(filepath)
         if doi is None:
             doi = extract_doi_from_pdf(filepath)
         results, completion_usage = llm_call.create_text_completion(
-            self.model_name, pdf_text, api_key=api_key
+            self.model_name, pdf_text, api_key=api_key, api_base_url=api_base_url
         )
         results = PerovskiteSolarCells(**postprocess(results.model_dump()))
         return convert_extraction_to_nomad_entries(results, doi, pdf_text, ureg=ureg)

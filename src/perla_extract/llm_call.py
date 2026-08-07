@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
 from perla_extract.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
 import litellm
+from loguru import logger
 
 # Try to setup Redis cache if available, otherwise use disk cache
 try:
@@ -33,6 +34,7 @@ def create_text_completion(
     system_prompt: str = SYSTEM_PROMPT,
     instruction: str = INSTRUCTION_TEXT,
     api_key: str = None,
+    api_base_url: str = None
 ) -> PerovskiteSolarCells:
     """
      Extract structured perovskite solar cell data from raw PDF text using an LLM.
@@ -55,9 +57,6 @@ def create_text_completion(
     Raises:
         instructor.exceptions.InstructorRetryException: If an unhandled error occurs during LLM interaction.
     """
-    if api_key:
-        litellm.api_key = api_key
-
     # Construct messages for LLM
     messages = [
         {
@@ -67,25 +66,23 @@ def create_text_completion(
     ]
 
     # Call with Instructor
-    client = instructor.from_litellm(completion)
+    client = instructor.from_litellm(litellm.completion)
 
+    supported_params = set()
     max_tokens = 64000
-    temperature = 0
+    temperature=0
+
     try:
         model_info = litellm.get_model_info(model=model_name)
-        if not model_info:
-            max_tokens = 8192
-        else:
-            max_tokens = model_info.get("max_output_tokens")
-        
-        supported_params = litellm.get_supported_openai_params(model=model_name)
-        if "temperature" not in supported_params:
-            temperature = 1
+        if model_info:
+            max_tokens = model_info.get("max_output_tokens", max_tokens)
+
+        supported_params = set(
+            litellm.get_supported_openai_params(model=model_name) or []
+        )
     except Exception as e:
-        print(f"Could not fetch model info, defaulting to max_tokens=64000 and temperature=0. Error: {e}")
-    
-    client = instructor.from_litellm(completion)
-    
+        logger.error(f"Could not fetch model info, defaulting to max_tokens={max_tokens}. Error: {e}")
+
     while True:
         try:
             resp, compll = client.chat.completions.create_with_completion(
@@ -94,6 +91,9 @@ def create_text_completion(
                 response_model=PerovskiteSolarCells,
                 temperature=temperature,
                 max_tokens=max_tokens,
+                api_key=api_key,
+                api_base=api_base_url,
+                drop_params=True
             )
         except instructor.exceptions.InstructorRetryException as e:
             if (
@@ -102,7 +102,7 @@ def create_text_completion(
             ):
                 raise
             max_tokens -= 5000
-            print("reduced max tokens")
+            logger.info("reduced max tokens")
         else:
             break
     return resp, compll
