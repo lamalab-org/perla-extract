@@ -169,6 +169,7 @@ def llm_as_judge(ground_truth, value_truth, value_extraction):
         model="gpt-4o-2024-08-06",
         messages=messages,
         response_format=Judgement,
+        temperature=0,
      )
     
 
