@@ -25,9 +25,14 @@ def prepare(output: Path) -> Path:
     git_dir = (REPO_ROOT / ".git").resolve()
     if output == REPO_ROOT or output == git_dir or git_dir in output.parents:
         raise ValueError("Refusing unsafe deployment output directory")
+    project_link = output / ".vercel" / "project.json"
+    saved_project_link = project_link.read_bytes() if project_link.exists() else None
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
+    if saved_project_link is not None:
+        project_link.parent.mkdir(parents=True)
+        project_link.write_bytes(saved_project_link)
 
     for relative in (
         "review_workbench/__init__.py",

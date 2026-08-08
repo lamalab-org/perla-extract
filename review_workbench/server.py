@@ -38,6 +38,7 @@ from review_workbench.review_evidence import (  # noqa: E402
     disagreement_paths,
     fact_suggestions,
     flatten_facts,
+    group_quantity_mentions,
     load_evidence,
     quantity_mentions,
     review_progress,
@@ -267,6 +268,7 @@ class ReviewApplication:
             "unmapped": unmapped,
             "total": len(mentions),
             "unmapped_count": len(unmapped),
+            "candidate_groups": group_quantity_mentions(unmapped),
         }
 
     def save_review_evidence(

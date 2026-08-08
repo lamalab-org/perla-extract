@@ -11,3 +11,14 @@ def test_prepare_creates_minimal_deployment_project(tmp_path):
     assert "PyMuPDF" in dependencies
     assert "vercel>=0.8" in dependencies
     assert "litellm" not in dependencies
+
+
+def test_prepare_preserves_existing_vercel_project_link(tmp_path):
+    output = tmp_path / "deployment"
+    project_link = output / ".vercel" / "project.json"
+    project_link.parent.mkdir(parents=True)
+    project_link.write_text('{"projectName":"review-workbench"}')
+
+    prepare(output)
+
+    assert project_link.read_text() == '{"projectName":"review-workbench"}'

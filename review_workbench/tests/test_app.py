@@ -138,6 +138,8 @@ def test_review_ui_has_separate_figure_audit():
     assert "schema_relevant_figures" in javascript
     assert "figure_only_schema_figures" in javascript
     assert "unlinked_device_statistic_figures" in javascript
+    assert 'id="quantity-category"' in html
+    assert "candidate_groups" in javascript
 
 
 def test_search_and_issues_offer_explicit_pdf_jumps():

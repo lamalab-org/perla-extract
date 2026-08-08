@@ -36,7 +36,7 @@ AGGREGATIONS = {
 }
 
 QUANTITY_PATTERN = re.compile(
-    r"(?<![\w.])"
+    r"(?<![\w.−–-])"
     r"(?P<value>-?\d+(?:[.,]\d+)?)"
     r"(?:\s*(?:±|\+/-)\s*\d+(?:[.,]\d+)?)?\s*"
     r"(?P<unit>mA\s*(?:cm(?:\s*\^?\s*[−-]?2|[²⁻]2?)|cm-2)|"
@@ -242,7 +242,7 @@ def _search_variants(value: Any) -> list[str]:
     if isinstance(value, bool):
         return []
     if isinstance(value, (int, float)):
-        variants = {str(value), f"{value:g}"}
+        variants = {str(value), f"{value:g}", f"{value:.2f}", f"{value:.3f}"}
         variants.update(item.replace(".", ",") for item in list(variants))
         return sorted((item for item in variants if len(item) >= 1), key=len, reverse=True)
     text = str(value).strip()
@@ -434,6 +434,28 @@ def _numbers_equal(left: float, right: float) -> bool:
     return math.isclose(left, right, rel_tol=1e-5, abs_tol=max(1e-4, abs(right) * 1e-5))
 
 
+def _quantity_category(context: str) -> tuple[str, int]:
+    lowered = context.lower()
+    categories = (
+        ("stability", 100, ("stability", "stable", "retained", "degradation", "maximum power point", "mpp", "t80", "illumination")),
+        ("device performance", 90, ("pce", "efficiency", "fill factor", "jsc", "voc", "open-circuit", "short-circuit", "champion device")),
+        ("device geometry", 65, ("active area", "aperture area", "device area", "thickness", "module area")),
+        ("composition / process", 55, ("precursor", "solution", "spin-coated", "blade coated", "anneal", "concentration", "dissolved", "rpm")),
+    )
+    for category, priority, terms in categories:
+        if any(term in lowered for term in terms):
+            return category, priority
+    if re.search(r"\b(fig(?:ure)?|table)\s*[s]?\d+", lowered):
+        return "figure / table context", 25
+    return "other quantity", 10
+
+
+def _parse_quantity_value(raw_value: str) -> float:
+    if re.fullmatch(r"-?\d{1,3}(?:,\d{3})+", raw_value):
+        return float(raw_value.replace(",", ""))
+    return float(raw_value.replace(",", "."))
+
+
 def quantity_mentions(
     pages: tuple[str, ...], facts: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -451,7 +473,7 @@ def quantity_mentions(
         for match in QUANTITY_PATTERN.finditer(normalized):
             raw_value = match.group("value")
             try:
-                value = float(raw_value.replace(",", "."))
+                value = _parse_quantity_value(raw_value)
             except ValueError:
                 continue
             unit = re.sub(r"\s+", " ", match.group("unit")).strip()
@@ -466,17 +488,58 @@ def quantity_mentions(
             ]
             start = max(0, match.start() - 85)
             end = min(len(normalized), match.end() + 115)
+            context, _, _ = _quote_window(normalized, match.start(), match.end())
+            category, priority = _quantity_category(context)
             mentions.append(
                 {
                     "page": page_number,
                     "value": value,
                     "raw_value": raw_value,
+                    "offset": match.start(),
                     "unit": unit,
                     "text": match.group(0),
                     "snippet": normalized[start:end],
+                    "context": context,
+                    "category": category,
+                    "priority": priority,
                     "match_start": match.start() - start,
                     "match_end": match.end() - start,
                     "mapped_paths": mapped_paths,
                 }
             )
     return mentions
+
+
+def group_quantity_mentions(mentions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Group nearby unmapped quantities into short, ranked review candidates."""
+    groups: list[dict[str, Any]] = []
+    for mention in sorted(mentions, key=lambda item: (item["page"], item.get("offset", 0))):
+        previous = groups[-1] if groups else None
+        same_passage = (
+            previous
+            and previous["page"] == mention["page"]
+            and mention.get("offset", 0) - previous["last_offset"] <= 240
+        )
+        if same_passage:
+            group = previous
+        else:
+            group = {
+                "page": mention["page"],
+                "context": mention.get("context") or mention["snippet"],
+                "category": mention.get("category", "other quantity"),
+                "priority": mention.get("priority", 0),
+                "last_offset": mention.get("offset", 0),
+                "mentions": [],
+            }
+            groups.append(group)
+        group["mentions"].append(mention)
+        group["last_offset"] = mention.get("offset", group["last_offset"])
+        if len(mention.get("context", "")) > len(group["context"]):
+            group["context"] = mention["context"]
+        if mention.get("priority", 0) > group["priority"]:
+            group["priority"] = mention["priority"]
+            group["category"] = mention["category"]
+    return sorted(
+        ({key: value for key, value in group.items() if key != "last_offset"} for group in groups),
+        key=lambda item: (-item["priority"], item["page"], item["context"]),
+    )

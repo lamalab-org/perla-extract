@@ -66,6 +66,7 @@
       },
       "number_devices": null,
       "averaged_quantities": null,
+      "performance_aggregation": "champion",
       "active_area": {
         "value": 0.085,
         "unit": "cm^2"
@@ -79,9 +80,28 @@
         },
         "lamp": null
       },
-      "encapsulated": false,
-      "additional_notes": null,
-      "stability": null,
+      "encapsulated": true,
+      "additional_notes": "The encapsulated PCBM control device reached T80 after 759 h under continuous MPPT. Relative-humidity uncertainty (60 ± 10%) is not representable in the current scalar field.",
+      "stability": {
+        "time": null,
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "humidity": {
+          "value": 60.0,
+          "unit": "%"
+        },
+        "temperature": null,
+        "PCE_T80": {
+          "value": 2732400.0,
+          "unit": "s"
+        },
+        "PCE_at_the_start_of_the_experiment": null,
+        "PCE_after_1000_hours": null,
+        "PCE_at_the_end_of_experiment": null,
+        "potential_bias": "MPPT"
+      },
       "layers": [
         {
           "name": "ITO",
@@ -347,10 +367,7 @@
         "value": 26.0,
         "unit": "%"
       },
-      "jsc": {
-        "value": 25.5,
-        "unit": "mA cm^-2"
-      },
+      "jsc": null,
       "voc": {
         "value": 1.179,
         "unit": "V"
@@ -360,6 +377,7 @@
       },
       "number_devices": null,
       "averaged_quantities": null,
+      "performance_aggregation": "champion",
       "active_area": {
         "value": 0.085,
         "unit": "cm^2"
@@ -374,7 +392,7 @@
         "lamp": null
       },
       "encapsulated": true,
-      "additional_notes": null,
+      "additional_notes": "The main text does not state the champion PCNI2-BTI Jsc. The previous 25.5 mA cm^-2 value appears to have been confused with the reported average PCE of 25.5 ± 0.3% or a figure-derived value. Stability humidity is 60 ± 10% RH.",
       "stability": {
         "time": {
           "value": 4608000.0,
@@ -396,18 +414,9 @@
           "value": 4608000.0,
           "unit": "s"
         },
-        "PCE_at_the_start_of_the_experiment": {
-          "value": 26.0,
-          "unit": "%"
-        },
-        "PCE_after_1000_hours": {
-          "value": 22.0,
-          "unit": "%"
-        },
-        "PCE_at_the_end_of_experiment": {
-          "value": 20.8,
-          "unit": "%"
-        },
+        "PCE_at_the_start_of_the_experiment": null,
+        "PCE_after_1000_hours": null,
+        "PCE_at_the_end_of_experiment": null,
         "potential_bias": "MPPT"
       },
       "layers": [
@@ -689,6 +698,7 @@
       },
       "number_devices": null,
       "averaged_quantities": null,
+      "performance_aggregation": "champion",
       "active_area": {
         "value": 0.085,
         "unit": "cm^2"
@@ -702,9 +712,28 @@
         },
         "lamp": null
       },
-      "encapsulated": false,
-      "additional_notes": null,
-      "stability": null,
+      "encapsulated": true,
+      "additional_notes": "The encapsulated PBTI2-BTI device retained only 60% of its initial efficiency after 700 h under continuous MPPT. Relative PCE retention and 60 ± 10% RH cannot be represented faithfully by the current scalar schema.",
+      "stability": {
+        "time": {
+          "value": 2520000.0,
+          "unit": "s"
+        },
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "humidity": {
+          "value": 60.0,
+          "unit": "%"
+        },
+        "temperature": null,
+        "PCE_T80": null,
+        "PCE_at_the_start_of_the_experiment": null,
+        "PCE_after_1000_hours": null,
+        "PCE_at_the_end_of_experiment": null,
+        "potential_bias": "MPPT"
+      },
       "layers": [
         {
           "name": "ITO",

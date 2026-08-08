@@ -137,6 +137,7 @@
         <section id="gaps-panel" class="review-panel" hidden>
           <div class="review-controls">
             <label class="grow">Filter quantities <input id="quantity-query" type="search" placeholder="%, eV, temperature, 21.4…" /></label>
+            <label>Kind <select id="quantity-category"><option value="all">Likely gaps first</option><option value="device performance">Device performance</option><option value="stability">Stability</option><option value="device geometry">Device geometry</option><option value="composition / process">Composition / process</option><option value="other quantity">Other quantities</option></select></label>
           </div>
           <div id="quantity-summary" class="review-hint">Open this view to scan unit-bearing quantities that were not matched by value to the JSON. Report a ground-truth gap only when the value is explicit in main-paper prose, a caption, or a table; log plot-only information under Figure audit.</div>
           <div id="quantity-list" class="quantity-list"></div>

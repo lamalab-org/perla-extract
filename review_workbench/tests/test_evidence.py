@@ -2,6 +2,7 @@ from review_workbench.review_evidence import (
     disagreement_paths,
     fact_suggestions,
     flatten_facts,
+    group_quantity_mentions,
     quantity_mentions,
     reconcile_evidence,
     review_progress,
@@ -60,6 +61,25 @@ def test_suggestions_and_unmapped_quantities():
     assert any(item["text"] == "20.1%" and item["mapped_paths"] for item in mentions)
     assert any(item["text"] == "1.12 V" and not item["mapped_paths"] for item in mentions)
     assert any(item["text"] == "18.4%" and not item["mapped_paths"] for item in mentions)
+
+    groups = group_quantity_mentions(
+        [item for item in mentions if not item["mapped_paths"]]
+    )
+    assert groups[0]["category"] == "device performance"
+    assert {item["text"] for group in groups for item in group["mentions"]} == {
+        "1.12 V",
+        "18.4%",
+    }
+
+
+def test_quantity_mentions_parse_thousands_and_ignore_unit_exponents():
+    mentions = quantity_mentions(
+        ("The device reached T80 after 1,300 h. Mobility was 10−3 cm2 V−1 s−1.",),
+        [],
+    )
+
+    assert any(item["value"] == 1300 and item["unit"].lower() == "h" for item in mentions)
+    assert not any(item["text"] == "1 s" for item in mentions)
 
 
 def test_suggestion_prefers_field_specific_context_over_first_match():

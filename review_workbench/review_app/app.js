@@ -398,22 +398,27 @@ async function loadQuantities() {
 
 function renderQuantities() {
   const query = $("quantity-query").value.trim().toLowerCase();
-  const mentions = state.quantityData.unmapped.filter((item) => !query || `${item.text} ${item.snippet}`.toLowerCase().includes(query));
-  $("quantity-summary").textContent = `${state.quantityData.unmapped_count} of ${state.quantityData.total} unit-bearing mentions were not matched by numeric value to the JSON. Only explicit main-paper prose, captions, and tables qualify as ground-truth gaps; plot-only values belong in Figure audit.`;
-  renderSafeHtml($("quantity-list"), mentions.length ? mentions.slice(0, 400).map((item, index) => `<article class="quantity-card" data-page="${item.page}" data-query="${escapeHtml(item.raw_value)}" data-quantity-index="${index}">
-    <button class="quantity-jump"><span class="quantity-value">${escapeHtml(item.text)}</span><span class="quantity-page">p. ${item.page}</span><span class="quantity-context">${escapeHtml(item.snippet)}</span></button>
-    <button class="report-quantity">Report missing</button>
+  const category = $("quantity-category").value;
+  const groups = (state.quantityData.candidate_groups || []).filter((group) =>
+    (category === "all" || group.category === category) &&
+    (!query || `${group.category} ${group.context} ${group.mentions.map((item) => item.text).join(" ")}`.toLowerCase().includes(query))
+  );
+  $("quantity-summary").textContent = `${state.quantityData.unmapped_count} unmatched mentions are grouped into ${state.quantityData.candidate_groups.length} evidence candidates and ranked by likely schema relevance. Review grouped device tuples before isolated process quantities; plot-only values belong in Figure audit.`;
+  renderSafeHtml($("quantity-list"), groups.length ? groups.slice(0, 200).map((group, index) => `<article class="quantity-card" data-page="${group.page}" data-query="${escapeHtml(group.mentions[0].raw_value)}" data-quantity-index="${index}">
+    <button class="quantity-jump"><span class="quantity-value">${group.mentions.map((item) => escapeHtml(item.text)).join(" · ")}</span><span class="schema-tags"><span>${escapeHtml(group.category)}</span></span><span class="quantity-page">p. ${group.page}</span><span class="quantity-context">${escapeHtml(group.context)}</span></button>
+    <button class="report-quantity">Propose correction</button>
   </article>`).join("") : `<div class="empty-state">No unmatched quantities match this filter.</div>`);
   document.querySelectorAll(".quantity-jump").forEach((button) => button.addEventListener("click", async () => {
     const card = button.closest(".quantity-card");
-    const item = mentions[Number(card.dataset.quantityIndex)];
-    jumpToPage(card.dataset.page, card.dataset.query, null, item.snippet);
+    const group = groups[Number(card.dataset.quantityIndex)];
+    jumpToPage(card.dataset.page, card.dataset.query, null, group.context);
     $("pdf-search").value = card.dataset.query;
   }));
   document.querySelectorAll(".report-quantity").forEach((button) => button.addEventListener("click", async () => {
     const card = button.closest(".quantity-card");
-    const item = mentions[Number(card.dataset.quantityIndex)];
-    await createIssue({ type: "missing_value", description: `Quantity ${item.text} appears in the PDF but is not matched to a ground-truth value.`, suggested_value: item.text, source_page: item.page, source_text: item.snippet });
+    const group = groups[Number(card.dataset.quantityIndex)];
+    const values = group.mentions.map((item) => item.text).join(", ");
+    await createIssue({ type: "missing_value", description: `${group.category} candidate (${values}) appears in one evidence passage but is not matched to ground truth. Verify device linkage and eligibility before applying.`, suggested_value: values, source_page: group.page, source_text: group.context });
     state.tab = "issues"; renderView();
   }));
 }
@@ -706,6 +711,7 @@ $("field-cell").addEventListener("change", renderFields);
 $("field-status").addEventListener("change", renderFields);
 $("field-query").addEventListener("input", renderFields);
 $("quantity-query").addEventListener("input", renderQuantities);
+$("quantity-category").addEventListener("change", renderQuantities);
 document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click", () => { state.tab = tab.dataset.tab; renderView(); }));
 
 $("metadata-form").addEventListener("submit", async (event) => {
