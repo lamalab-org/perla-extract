@@ -2,6 +2,7 @@ const state = {
   split: "test", papers: [], selected: null, sources: [], tab: "fields",
   paperData: null, reviewData: null, quantityData: null, evidenceDirty: false,
   users: [], reviewerProgress: [], comments: [], issues: [], figureAudits: {}, corpusSummary: null, currentUser: null,
+  revision: null, truthDraft: null,
   clerk: null, pdfPage: 1, pdfPageCount: 0, pdfImageUrl: null,
   pdfNavigationId: 0, pdfPageText: "", pdfTextLines: [], pdfQuote: "", pendingCursor: null,
   internalToken: null,
@@ -159,6 +160,8 @@ async function selectPaper(paperId) {
   if (state.evidenceDirty && !window.confirm("Discard unsaved field-review changes?")) return;
   state.selected = paperId;
   state.quantityData = null;
+  state.revision = null;
+  state.truthDraft = null;
   state.evidenceDirty = false;
   state.pendingCursor = null;
   $("paper-title").textContent = paperId.replace("--", "/");
@@ -173,18 +176,20 @@ async function loadPaperData() {
   const source = $("source").value;
   const params = new URLSearchParams({ split: state.split });
   if (source) params.set("source", source);
-  const [paperData, reviewData, commentData, issueData, figureAuditData] = await Promise.all([
+  const [paperData, reviewData, commentData, issueData, figureAuditData, revisionData] = await Promise.all([
     request(`/api/paper/${encodeURIComponent(state.selected)}?${params}`),
     request(`/api/review/${state.split}/${encodeURIComponent(state.selected)}?reviewer=${encodeURIComponent(reviewerId())}`),
     request(`/api/comments/${state.split}/${encodeURIComponent(state.selected)}`),
     request(`/api/issues/${state.split}/${encodeURIComponent(state.selected)}`),
     request(`/api/figure-audits/${state.split}/${encodeURIComponent(state.selected)}`),
+    request(`/api/proposed-ground-truth/${state.split}/${encodeURIComponent(state.selected)}`),
   ]);
   state.paperData = paperData;
   state.reviewData = reviewData;
   state.comments = commentData.comments;
   state.issues = issueData.issues;
   state.figureAudits = figureAuditData.audits;
+  state.revision = revisionData;
   const meta = paperData.metadata;
   $("article-type").value = meta.article_type;
   $("tandem-scope").value = meta.tandem_scope;
@@ -424,11 +429,39 @@ function renderQuantities() {
 }
 
 function renderJson() {
-  const data = state.tab === "truth" ? state.paperData?.ground_truth : state.paperData?.extraction;
+  const data = state.tab === "truth" ? (state.truthDraft || state.paperData?.ground_truth) : state.paperData?.extraction;
   $("json-editor").value = data ? JSON.stringify(data, null, 2) : "";
   $("json-editor").readOnly = state.tab !== "truth";
   $("save-json").disabled = state.tab !== "truth";
   $("cell-summary").textContent = summarizeCells(data);
+}
+
+function revisionValue(value, exists) {
+  return exists ? JSON.stringify(value, null, 2) : "(not present)";
+}
+
+function renderRevision() {
+  const revision = state.revision || { changes: [], conflicts: [], applied_issue_ids: [] };
+  const changes = revision.changes || [];
+  const conflicts = revision.conflicts || [];
+  renderSafeHtml($("revision-summary"), changes.length
+    ? `<strong>${changes.length} proposed field change${changes.length === 1 ? "" : "s"}</strong> from ${revision.applied_issue_ids.length} open correction proposal${revision.applied_issue_ids.length === 1 ? "" : "s"}. Review the evidence before promoting this draft.`
+    : `<strong>No applicable proposed changes.</strong> Add a valid JSON Patch to an open issue to build a reviewable revision.`);
+  renderSafeHtml($("revision-conflicts"), conflicts.map((conflict) => `<article class="revision-conflict"><strong>Patch conflict</strong><p>${escapeHtml(conflict.description)}</p><code>${escapeHtml(conflict.error)}</code></article>`).join(""));
+  renderSafeHtml($("revision-list"), changes.map((change) => `<article class="revision-change ${escapeHtml(change.op)}">
+    <div class="revision-heading"><span>${escapeHtml(change.op)}</span><code>${escapeHtml(change.path)}</code></div>
+    <p>${escapeHtml(change.description)}</p>
+    <div class="revision-values"><div><strong>Current</strong><pre><code>${escapeHtml(revisionValue(change.before, change.before_exists))}</code></pre></div><div><strong>Proposed</strong><pre><code>${escapeHtml(revisionValue(change.after, change.after_exists))}</code></pre></div></div>
+    <div class="issue-meta">${change.source_page ? `Evidence on p. ${change.source_page}` : "No evidence page recorded"}</div>
+    ${change.source_page ? `<button type="button" data-revision-jump="${escapeHtml(change.issue_id)}">Jump to evidence</button>` : ""}
+  </article>`).join(""));
+  document.querySelectorAll("[data-revision-jump]").forEach((button) => button.addEventListener("click", () => {
+    const change = changes.find((item) => item.issue_id === button.dataset.revisionJump);
+    if (!change) return;
+    $("pdf-search").value = change.source_text || "";
+    jumpToPage(change.source_page, change.source_text || "", null, change.source_text || "");
+  }));
+  $("review-proposed-json").disabled = !changes.length || conflicts.length > 0;
 }
 
 function renderDiscussion() {
@@ -547,7 +580,7 @@ async function createIssue(overrides = {}) {
 }
 
 function renderView() {
-  ["fields", "gaps", "figures", "discussion", "issues", "json"].forEach((panel) => $(`${panel}-panel`).hidden = true);
+  ["fields", "gaps", "figures", "discussion", "issues", "revision", "json"].forEach((panel) => $(`${panel}-panel`).hidden = true);
   $("source").closest("label").hidden = state.tab !== "extraction";
   document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === state.tab));
   if (state.tab === "fields") { $("fields-panel").hidden = false; $("cell-summary").textContent = "Review each non-null scalar ground-truth field against the paper."; renderFields(); }
@@ -555,6 +588,7 @@ function renderView() {
   else if (state.tab === "figures") { $("figures-panel").hidden = false; $("cell-summary").textContent = "Separate accounting for schema-relevant and figure-only evidence."; renderFigureAudit(); }
   else if (state.tab === "discussion") { $("discussion-panel").hidden = false; $("cell-summary").textContent = "Compare reviewer decisions and discuss scoring differences."; renderDiscussion(); }
   else if (state.tab === "issues") { $("issues-panel").hidden = false; $("cell-summary").textContent = "Structured reports for cells, values, or layers missing from the ground truth."; renderIssues(); }
+  else if (state.tab === "revision") { $("revision-panel").hidden = false; $("cell-summary").textContent = "Non-destructive preview of open, structured correction proposals."; renderRevision(); }
   else { $("json-panel").hidden = false; renderJson(); }
 }
 
@@ -714,6 +748,14 @@ $("quantity-query").addEventListener("input", renderQuantities);
 $("quantity-category").addEventListener("change", renderQuantities);
 document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click", () => { state.tab = tab.dataset.tab; renderView(); }));
 
+$("review-proposed-json").addEventListener("click", () => {
+  if (!state.revision?.proposed_ground_truth) return;
+  state.truthDraft = structuredClone(state.revision.proposed_ground_truth);
+  state.tab = "truth";
+  $("json-status").textContent = "Proposed revision loaded as an unsaved draft. Review it, then save explicitly.";
+  renderView();
+});
+
 $("metadata-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const status = $("metadata-status"); status.textContent = "Saving…";
@@ -786,7 +828,7 @@ $("save-json").addEventListener("click", async () => {
   try {
     const parsed = JSON.parse($("json-editor").value); status.textContent = "Saving…";
     await request(`/api/ground-truth/${state.split}/${encodeURIComponent(state.selected)}`, { method: "PUT", body: JSON.stringify(parsed) });
-    state.paperData.ground_truth = parsed; status.textContent = "Ground truth saved"; await loadPaperData();
+    state.paperData.ground_truth = parsed; state.truthDraft = null; status.textContent = "Ground truth saved"; await loadPaperData();
   } catch (error) { status.textContent = `Not saved: ${error.message}`; }
 });
 

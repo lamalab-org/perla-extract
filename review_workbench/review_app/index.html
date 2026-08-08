@@ -115,6 +115,7 @@
             <button class="tab" data-tab="figures">Figure audit</button>
             <button class="tab" data-tab="discussion">Discussion</button>
             <button class="tab" data-tab="issues">Missing / issues</button>
+            <button class="tab" data-tab="revision">Proposed revision</button>
             <button class="tab" data-tab="truth">JSON</button>
             <button class="tab" data-tab="extraction">Model extraction</button>
           </div>
@@ -190,6 +191,16 @@
             </details>
             <div class="dialog-actions"><span id="issue-status"></span><button type="submit" class="primary-button">Create issue</button></div>
           </form>
+        </section>
+
+        <section id="revision-panel" class="review-panel" hidden>
+          <div id="revision-summary" class="review-hint"></div>
+          <div id="revision-conflicts" class="revision-conflicts"></div>
+          <div id="revision-list" class="revision-list"></div>
+          <div class="action-row revision-actions">
+            <span>Nothing is written to the benchmark until you review the complete JSON and save it.</span>
+            <button id="review-proposed-json" type="button">Review proposed JSON</button>
+          </div>
         </section>
 
         <section id="json-panel" class="review-panel" hidden>

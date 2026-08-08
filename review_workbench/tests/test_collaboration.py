@@ -2,6 +2,7 @@ from review_workbench.review_collaboration import (
     add_comment,
     add_issue,
     add_user,
+    apply_proposed_patches,
     load_comments,
     load_issues,
     load_users,
@@ -126,6 +127,47 @@ def test_issue_can_store_a_reviewable_json_patch(tmp_path):
     )
 
     assert issue["proposed_patch"] == patch
+
+
+def test_open_issue_patches_build_non_destructive_revision():
+    truth = {"cells": [{"pce": {"value": 20.0}}]}
+    issues = [{
+        "id": "fix-pce", "status": "open", "type": "wrong_value",
+        "description": "The prose reports the champion value.",
+        "source_page": 3, "source_text": "champion efficiency of 21.4%",
+        "proposed_patch": [
+            {"op": "test", "path": "/cells/0/pce/value", "value": 20.0},
+            {"op": "replace", "path": "/cells/0/pce/value", "value": 21.4},
+            {"op": "add", "path": "/cells/-", "value": {"pce": {"value": 19.2}}},
+        ],
+    }]
+
+    preview = apply_proposed_patches(truth, issues)
+
+    assert truth == {"cells": [{"pce": {"value": 20.0}}]}
+    assert preview["proposed_ground_truth"]["cells"][0]["pce"]["value"] == 21.4
+    assert len(preview["proposed_ground_truth"]["cells"]) == 2
+    assert [change["path"] for change in preview["changes"]] == [
+        "/cells/0/pce/value", "/cells/1"
+    ]
+    assert preview["conflicts"] == []
+
+
+def test_stale_patch_is_reported_and_not_partially_applied():
+    truth = {"cells": [{"pce": {"value": 20.0}}]}
+    issues = [{
+        "id": "stale", "status": "open", "description": "Stale proposal",
+        "proposed_patch": [
+            {"op": "replace", "path": "/cells/0/pce/value", "value": 21.4},
+            {"op": "test", "path": "/cells/0/pce/value", "value": 20.0},
+        ],
+    }]
+
+    preview = apply_proposed_patches(truth, issues)
+
+    assert preview["proposed_ground_truth"] == truth
+    assert preview["changes"] == []
+    assert preview["conflicts"][0]["issue_id"] == "stale"
 
 
 def test_tandem_device_can_be_reported_as_out_of_scope(tmp_path):

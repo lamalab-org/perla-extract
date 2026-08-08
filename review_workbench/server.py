@@ -49,6 +49,7 @@ from review_workbench.review_collaboration import (  # noqa: E402
     add_comment,
     add_issue,
     add_user,
+    apply_proposed_patches,
     load_comments,
     load_figure_audits,
     load_issues,
@@ -334,6 +335,10 @@ class ReviewApplication:
         if not self.paper_path(split, paper_id).exists():
             raise FileNotFoundError(self.paper_path(split, paper_id))
         return load_issues(self.ground_truth_dir, split, paper_id)
+
+    def proposed_ground_truth(self, split: str, paper_id: str) -> dict:
+        truth = self.load_ground_truth(split, paper_id)
+        return apply_proposed_patches(truth, self.issues(split, paper_id))
 
     def figure_audits(self, split: str, paper_id: str) -> dict[str, dict]:
         if not self.paper_path(split, paper_id).exists():
@@ -762,6 +767,19 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         raise ValueError("Expected /api/issues/<split>/<paper-id>")
                     self.send_json(
                         {"issues": application.issues(parts[2], parts[3])}
+                    )
+                    return
+                if parsed.path.startswith("/api/proposed-ground-truth/"):
+                    parts = [
+                        unquote(part)
+                        for part in parsed.path.strip("/").split("/")
+                    ]
+                    if len(parts) != 4:
+                        raise ValueError(
+                            "Expected /api/proposed-ground-truth/<split>/<paper-id>"
+                        )
+                    self.send_json(
+                        application.proposed_ground_truth(parts[2], parts[3])
                     )
                     return
                 if parsed.path.startswith("/api/figure-audits/"):

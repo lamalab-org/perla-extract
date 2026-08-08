@@ -142,6 +142,44 @@ def test_review_ui_has_separate_figure_audit():
     assert "candidate_groups" in javascript
 
 
+def test_review_ui_previews_proposed_ground_truth_before_saving():
+    app_dir = Path(__file__).parents[1] / "review_app"
+    html = (app_dir / "index.html").read_text()
+    javascript = (app_dir / "app.js").read_text()
+
+    assert 'data-tab="revision"' in html
+    assert 'id="revision-list"' in html
+    assert "/api/proposed-ground-truth/" in javascript
+    assert "change.before" in javascript
+    assert "change.after" in javascript
+    assert "state.truthDraft" in javascript
+
+
+def test_proposed_ground_truth_endpoint_returns_preview(tmp_path):
+    pdf_dir = tmp_path / "pdfs"
+    ground_truth_dir = tmp_path / "ground_truth"
+    pdf_dir.mkdir()
+    (ground_truth_dir / "dev").mkdir(parents=True)
+    (ground_truth_dir / "test").mkdir()
+    paper_id = "10.1234--revision"
+    (ground_truth_dir / "test" / f"{paper_id}.json").write_text(
+        json.dumps({"cells": []}), encoding="utf-8"
+    )
+    handler_type = make_handler(ReviewApplication(pdf_dir, ground_truth_dir))
+    handler = object.__new__(handler_type)
+    handler.path = f"/api/proposed-ground-truth/test/{paper_id}"
+    handler.headers = {}
+    captured = {}
+    handler.send_json = lambda payload, status=200: captured.update(payload=payload)
+    handler.send_error = lambda status: captured.update(error=status)
+
+    handler.do_GET()
+
+    assert captured["payload"]["current_ground_truth"] == {"cells": []}
+    assert captured["payload"]["proposed_ground_truth"] == {"cells": []}
+    assert captured["payload"]["changes"] == []
+
+
 def test_search_and_issues_offer_explicit_pdf_jumps():
     app_dir = Path(__file__).parents[1] / "review_app"
     html = (app_dir / "index.html").read_text()

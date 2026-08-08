@@ -55,8 +55,20 @@ and ancestor context such as composition, layer, and processing-step names.
 Suggestions never mark a field as verified without reviewer action.
 Missing/wrong-item reports can also carry a validated JSON Patch proposal. The
 proposal is review data, not an automatic mutation: reviewers inspect the old
-JSON and cited PDF evidence, then explicitly resolve and apply accepted changes.
+and proposed values in **Proposed revision**, jump to the cited PDF evidence,
+and then explicitly load the complete draft into the JSON editor before saving.
+A stale or conflicting patch is rejected atomically and shown as a conflict.
 Use the **Open correction proposals** paper filter to work through this queue.
+
+Rerun the stored model extractions against any number of named ground-truth
+revisions with the workbench-local scoring script. It emits fact-level micro
+precision, recall, and F1 together with device coverage:
+
+```bash
+.venv/bin/python review_workbench/score_revisions.py \
+  src/perla_extract/data/extractions \
+  current=src/perla_extract/data/ground_truth/test
+```
 
 Run the workbench locally from the repository root:
 

@@ -3,11 +3,139 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+
+def _pointer_parts(pointer: str) -> list[str]:
+    if not pointer.startswith("/"):
+        raise ValueError("JSON Patch paths must be JSON pointers")
+    return [part.replace("~1", "/").replace("~0", "~") for part in pointer[1:].split("/")]
+
+
+def _patch_parent(document: object, pointer: str) -> tuple[object, str]:
+    parts = _pointer_parts(pointer)
+    if not parts:
+        raise ValueError("Root-level patch operations are not supported")
+    parent = document
+    for part in parts[:-1]:
+        if isinstance(parent, list):
+            try:
+                parent = parent[int(part)]
+            except (ValueError, IndexError) as error:
+                raise ValueError(f"Patch path does not exist: {pointer}") from error
+        elif isinstance(parent, dict) and part in parent:
+            parent = parent[part]
+        else:
+            raise ValueError(f"Patch path does not exist: {pointer}")
+    return parent, parts[-1]
+
+
+def _patch_value(parent: object, key: str, pointer: str) -> object:
+    if isinstance(parent, list):
+        if key == "-":
+            raise ValueError(f"Patch path does not exist: {pointer}")
+        try:
+            return parent[int(key)]
+        except (ValueError, IndexError) as error:
+            raise ValueError(f"Patch path does not exist: {pointer}") from error
+    if isinstance(parent, dict) and key in parent:
+        return parent[key]
+    raise ValueError(f"Patch path does not exist: {pointer}")
+
+
+def apply_proposed_patches(
+    ground_truth: dict[str, Any], issues: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Preview open issue patches without mutating the benchmark or issue records."""
+    proposed = deepcopy(ground_truth)
+    changes: list[dict[str, Any]] = []
+    conflicts: list[dict[str, str]] = []
+    applied_issue_ids: list[str] = []
+    for issue in issues:
+        operations = issue.get("proposed_patch") or []
+        if issue.get("status") != "open" or not operations:
+            continue
+        candidate = deepcopy(proposed)
+        issue_changes: list[dict[str, Any]] = []
+        try:
+            for operation in operations:
+                op = operation["op"]
+                pointer = operation["path"]
+                parent, key = _patch_parent(candidate, pointer)
+                if op == "test":
+                    if _patch_value(parent, key, pointer) != operation["value"]:
+                        raise ValueError(f"Test operation failed at {pointer}")
+                    continue
+                before_exists = not (
+                    op == "add"
+                    and ((isinstance(parent, list) and key == "-") or (isinstance(parent, dict) and key not in parent))
+                )
+                before = deepcopy(_patch_value(parent, key, pointer)) if before_exists else None
+                actual_pointer = pointer
+                if isinstance(parent, list):
+                    if key == "-":
+                        index = len(parent)
+                        parent.append(deepcopy(operation["value"]))
+                        actual_pointer = f"{pointer[:-1]}{index}"
+                    else:
+                        try:
+                            index = int(key)
+                        except ValueError as error:
+                            raise ValueError(f"Invalid array index at {pointer}") from error
+                        if op == "add":
+                            if not 0 <= index <= len(parent):
+                                raise ValueError(f"Patch path does not exist: {pointer}")
+                            parent.insert(index, deepcopy(operation["value"]))
+                        elif op == "remove":
+                            del parent[index]
+                        else:
+                            parent[index] = deepcopy(operation["value"])
+                elif isinstance(parent, dict):
+                    if op == "remove":
+                        del parent[key]
+                    else:
+                        parent[key] = deepcopy(operation["value"])
+                else:
+                    raise ValueError(f"Patch parent is not a container: {pointer}")
+                issue_changes.append(
+                    {
+                        "op": op,
+                        "path": actual_pointer,
+                        "before": before,
+                        "before_exists": before_exists,
+                        "after": None if op == "remove" else deepcopy(operation["value"]),
+                        "after_exists": op != "remove",
+                        "issue_id": str(issue.get("id", "")),
+                        "issue_type": str(issue.get("type", "other")),
+                        "description": str(issue.get("description", "")),
+                        "source_page": issue.get("source_page"),
+                        "source_text": str(issue.get("source_text", "")),
+                    }
+                )
+        except (KeyError, TypeError, ValueError, IndexError) as error:
+            conflicts.append(
+                {
+                    "issue_id": str(issue.get("id", "")),
+                    "description": str(issue.get("description", "")),
+                    "error": str(error),
+                }
+            )
+            continue
+        proposed = candidate
+        changes.extend(issue_changes)
+        applied_issue_ids.append(str(issue.get("id", "")))
+    return {
+        "current_ground_truth": ground_truth,
+        "proposed_ground_truth": proposed,
+        "changes": changes,
+        "conflicts": conflicts,
+        "applied_issue_ids": applied_issue_ids,
+    }
 
 
 def _collaboration_dir(ground_truth_dir: Path) -> Path:
