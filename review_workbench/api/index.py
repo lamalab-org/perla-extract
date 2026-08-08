@@ -240,6 +240,15 @@ class VercelReviewApplication(ReviewApplication):
         self._sync_state()
         return result
 
+    def decide_proposal_changes(
+        self, split: str, paper_id: str, payload: object, reviewer_id: str
+    ) -> dict:
+        result = super().decide_proposal_changes(
+            split, paper_id, payload, reviewer_id
+        )
+        self._sync_state()
+        return result
+
     def save_ground_truth(self, split: str, paper_id: str, payload: object) -> None:
         super().save_ground_truth(split, paper_id, payload)
         self._sync_state()

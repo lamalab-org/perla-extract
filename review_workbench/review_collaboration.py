@@ -48,6 +48,33 @@ def _patch_value(parent: object, key: str, pointer: str) -> object:
     raise ValueError(f"Patch path does not exist: {pointer}")
 
 
+def expand_atomic_change_ids(
+    issue: dict[str, Any], requested_ids: set[str]
+) -> set[str]:
+    """Expand selected mutation IDs so a coupled edit is never split."""
+    issue_id = str(issue.get("id", ""))
+    operations = issue.get("proposed_patch") or []
+    decided = set(issue.get("accepted_change_ids") or []) | set(
+        issue.get("rejected_change_ids") or []
+    )
+    valid = {
+        f"{issue_id}:{index}"
+        for index, operation in enumerate(operations)
+        if operation.get("op") != "test"
+    } - decided
+    expanded = requested_ids.intersection(valid)
+    for group in issue.get("atomic_groups") or []:
+        members = {
+            f"{issue_id}:{index}"
+            for index in group.get("operation_indexes") or []
+            if 0 <= index < len(operations)
+            and operations[index].get("op") != "test"
+        } - decided
+        if expanded.intersection(members):
+            expanded.update(members)
+    return expanded
+
+
 def apply_proposed_patches(
     ground_truth: dict[str, Any],
     issues: list[dict[str, Any]],
@@ -63,19 +90,54 @@ def apply_proposed_patches(
         if issue.get("status") != "open" or not operations:
             continue
         issue_id = str(issue.get("id", ""))
+        decided_ids = set(issue.get("accepted_change_ids") or []) | set(
+            issue.get("rejected_change_ids") or []
+        )
         mutation_ids = {
             f"{issue_id}:{index}"
             for index, operation in enumerate(operations)
             if operation.get("op") != "test"
-        }
-        if selected_change_ids is not None and not mutation_ids.intersection(
-            selected_change_ids
-        ):
+        } - decided_ids
+        requested_ids = expand_atomic_change_ids(issue, (
+            mutation_ids
+            if selected_change_ids is None
+            else mutation_ids.intersection(selected_change_ids)
+        ))
+        if not requested_ids:
             continue
+        groups = issue.get("atomic_groups") or []
+        active_indexes: set[int] = set()
+        active_group_by_index: dict[int, tuple[str, str]] = {}
+        for group in groups:
+            group_indexes = set(group.get("operation_indexes") or [])
+            group_mutation_ids = {
+                f"{issue_id}:{index}"
+                for index in group_indexes
+                if 0 <= index < len(operations)
+                and operations[index].get("op") != "test"
+                and f"{issue_id}:{index}" not in decided_ids
+            }
+            if requested_ids.intersection(group_mutation_ids):
+                active_indexes.update(group_indexes)
+            for index in group_indexes:
+                active_group_by_index[index] = (
+                    str(group.get("id", "")), str(group.get("label", ""))
+                )
+        active_indexes.update(
+            int(change_id.rsplit(":", 1)[1]) for change_id in requested_ids
+        )
+        if not groups:
+            active_indexes.update(
+                index
+                for index, operation in enumerate(operations)
+                if operation.get("op") == "test"
+            )
         candidate = deepcopy(proposed)
         issue_changes: list[dict[str, Any]] = []
         try:
             for operation_index, operation in enumerate(operations):
+                if operation_index not in active_indexes:
+                    continue
                 op = operation["op"]
                 pointer = operation["path"]
                 parent, key = _patch_parent(candidate, pointer)
@@ -84,10 +146,7 @@ def apply_proposed_patches(
                         raise ValueError(f"Test operation failed at {pointer}")
                     continue
                 change_id = f"{issue_id}:{operation_index}"
-                if (
-                    selected_change_ids is not None
-                    and change_id not in selected_change_ids
-                ):
+                if change_id not in requested_ids:
                     continue
                 before_exists = not (
                     op == "add"
@@ -120,6 +179,9 @@ def apply_proposed_patches(
                         parent[key] = deepcopy(operation["value"])
                 else:
                     raise ValueError(f"Patch parent is not a container: {pointer}")
+                group_id, group_label = active_group_by_index.get(
+                    operation_index, (f"change-{operation_index}", "Independent change")
+                )
                 issue_changes.append(
                     {
                         "op": op,
@@ -135,6 +197,9 @@ def apply_proposed_patches(
                         "description": str(issue.get("description", "")),
                         "source_page": issue.get("source_page"),
                         "source_text": str(issue.get("source_text", "")),
+                        "atomic_group_id": group_id,
+                        "atomic_group_label": group_label,
+                        "atomic_group_key": f"{issue_id}:{group_id}",
                     }
                 )
         except (KeyError, TypeError, ValueError, IndexError) as error:
@@ -156,6 +221,30 @@ def apply_proposed_patches(
         "conflicts": conflicts,
         "applied_issue_ids": applied_issue_ids,
     }
+
+
+def proposal_strength(issue: dict[str, Any]) -> dict[str, Any]:
+    """Score whether a finding is sufficiently evidenced to be safely executable."""
+    operations = issue.get("proposed_patch") or []
+    present = lambda key: bool(str(issue.get(key, "")).strip())
+    checks = [
+        ("Exact quote and page", 2, present("source_text") and bool(issue.get("source_page"))),
+        ("Eligible main-text/table source", 1, issue.get("source_type") in {"main_text", "table"}),
+        ("Device identity established", 2, present("device_identity")),
+        ("Measurement linkage explained", 2, present("measurement_identity") and present("linkage_rationale")),
+        ("Counterevidence checked", 1, present("counterevidence")),
+        ("Benchmark scope checked", 1, present("scope_notes")),
+        ("Patch guarded by current-value test", 1, bool(operations) and any(op.get("op") == "test" for op in operations)),
+    ]
+    criteria = [
+        {"label": label, "points": points if passed else 0, "max_points": points, "passed": passed}
+        for label, points, passed in checks
+    ]
+    score = sum(item["points"] for item in criteria)
+    has_mutation = any(op.get("op") != "test" for op in operations)
+    guarded = bool(operations) and any(op.get("op") == "test" for op in operations)
+    level = "ready" if score >= 9 and has_mutation and guarded else "review" if score >= 7 else "finding"
+    return {"score": score, "max_score": 10, "level": level, "criteria": criteria}
 
 
 def _collaboration_dir(ground_truth_dir: Path) -> Path:
@@ -413,6 +502,13 @@ def add_issue(
     uncertainty: str = "",
     proposal_confidence: str = "needs_review",
     proposed_patch: object = None,
+    source_type: str = "unknown",
+    device_identity: str = "",
+    measurement_identity: str = "",
+    linkage_rationale: str = "",
+    counterevidence: str = "",
+    scope_notes: str = "",
+    atomic_groups: object = None,
 ) -> dict[str, Any]:
     if reporter_id not in {user["id"] for user in load_users(ground_truth_dir)}:
         raise ValueError("Unknown reviewer")
@@ -433,6 +529,8 @@ def add_issue(
         raise ValueError("Unknown measurement context")
     if proposal_confidence not in {"high", "medium", "low", "needs_review"}:
         raise ValueError("Unknown proposal confidence")
+    if source_type not in {"main_text", "table", "caption", "unknown"}:
+        raise ValueError("Unknown source type")
     uncertainty = str(uncertainty).strip()
     if len(uncertainty) > 500:
         raise ValueError("Uncertainty note must contain at most 500 characters")
@@ -449,6 +547,34 @@ def add_issue(
             raise ValueError("Proposed patch paths must be JSON pointers")
         if operation["op"] != "remove" and "value" not in operation:
             raise ValueError("Proposed patch operation requires a value")
+    if atomic_groups is None:
+        atomic_groups = []
+    if not isinstance(atomic_groups, list):
+        raise ValueError("Atomic groups must be a list")
+    grouped_mutations: set[int] = set()
+    for group in atomic_groups:
+        if not isinstance(group, dict) or not str(group.get("id", "")).strip():
+            raise ValueError("Each atomic group requires an ID")
+        indexes = group.get("operation_indexes")
+        if not isinstance(indexes, list) or not indexes:
+            raise ValueError("Each atomic group requires operation indexes")
+        for index in indexes:
+            if not isinstance(index, int) or not 0 <= index < len(proposed_patch):
+                raise ValueError("Atomic group operation index is invalid")
+            if proposed_patch[index].get("op") != "test":
+                if index in grouped_mutations:
+                    raise ValueError("A mutation cannot belong to multiple atomic groups")
+                grouped_mutations.add(index)
+    evidence_fields = {
+        "device_identity": device_identity,
+        "measurement_identity": measurement_identity,
+        "linkage_rationale": linkage_rationale,
+        "counterevidence": counterevidence,
+        "scope_notes": scope_notes,
+    }
+    evidence_fields = {key: str(value).strip() for key, value in evidence_fields.items()}
+    if any(len(value) > 4000 for value in evidence_fields.values()):
+        raise ValueError("Proposal evidence fields must contain at most 4000 characters")
     issues = load_issues(ground_truth_dir, split, paper_id)
     issue = {
         "id": uuid.uuid4().hex,
@@ -461,6 +587,8 @@ def add_issue(
         "suggested_value": str(suggested_value),
         "source_page": source_page,
         "source_text": str(source_text),
+        "source_type": source_type,
+        **evidence_fields,
         "schema_proposal": {
             "value_relation": value_relation,
             "aggregation": aggregation,
@@ -469,6 +597,10 @@ def add_issue(
         },
         "proposal_confidence": proposal_confidence,
         "proposed_patch": proposed_patch,
+        "atomic_groups": atomic_groups,
+        "accepted_change_ids": [],
+        "rejected_change_ids": [],
+        "proposal_decisions": [],
         "created_at": datetime.now(timezone.utc).isoformat(),
         "resolved_by": None,
         "resolution": "",

@@ -28,15 +28,18 @@ PDF / paper record
 
 ## Review gates
 
-1. Classify the paper and exclude reviews, perspectives, News & Views articles,
-   and records containing tandem devices.
+1. Classify the paper and exclude reviews, perspectives, and News & Views
+   articles. Tandem papers remain eligible, but complete tandem-device records
+   do not belong in this single-junction ground truth.
 2. Review each included cell's identity first: composition, architecture, layer
    stack, and whether separate device variants have separate cell records.
 3. Verify non-null scalar fields with a page and a short evidence quote.
-4. Scan unmatched PDF quantities and report plausible omissions as structured
-   issues.
-5. Resolve reviewer disagreements and missing-item reports before marking the
-   paper reviewed.
+4. Turn plausible omissions or corrections into evidence packets: exact quote
+   and page, source type, device identity, measurement linkage, counterevidence,
+   scope check, and a guarded JSON Patch when the change is unambiguous.
+5. Accept, reject, or defer atomic proposal groups. Schema validation and the
+   durable decision record are mandatory before an accepted correction becomes
+   benchmark truth.
 6. Freeze a ground-truth revision, then score. Never tune on the test results.
 
 The scorer treats missing ground-truth facts as false negatives and extra model

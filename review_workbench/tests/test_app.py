@@ -4,7 +4,7 @@ from pathlib import Path
 
 import fitz
 
-from review_workbench.review_collaboration import add_user
+from review_workbench.review_collaboration import add_issue, add_user, load_issues
 from review_workbench.server import ReviewApplication, make_handler
 
 
@@ -156,8 +156,14 @@ def test_review_ui_previews_proposed_ground_truth_before_saving():
     assert 'data-tab="gaps"' not in html
     assert 'id="open-quantity-scanner"' in html
     assert 'id="select-all-changes"' in html
+    assert 'id="accept-proposal"' in html
+    assert 'id="reject-proposal"' in html
+    assert 'id="defer-proposal"' in html
+    assert 'id="use-pdf-selection"' in html
     assert "selectedRevisionChanges" in javascript
     assert "/preview" in javascript
+    assert "/decision" in javascript
+    assert "atomic_group_key" in javascript
 
 
 def test_proposed_ground_truth_endpoint_returns_preview(tmp_path):
@@ -183,6 +189,83 @@ def test_proposed_ground_truth_endpoint_returns_preview(tmp_path):
     assert captured["payload"]["current_ground_truth"] == {"cells": []}
     assert captured["payload"]["proposed_ground_truth"] == {"cells": []}
     assert captured["payload"]["changes"] == []
+
+
+def test_accepting_atomic_proposal_validates_saves_and_records_decision(tmp_path):
+    pdf_dir = tmp_path / "pdfs"
+    ground_truth_dir = tmp_path / "ground_truth"
+    pdf_dir.mkdir()
+    (ground_truth_dir / "dev").mkdir(parents=True)
+    (ground_truth_dir / "test").mkdir()
+    paper_id = "10.1234--decision"
+    (ground_truth_dir / "test" / f"{paper_id}.json").write_text(
+        json.dumps({"cells": []}), encoding="utf-8"
+    )
+    reviewer = add_user(ground_truth_dir, "Ada")
+    issue = add_issue(
+        ground_truth_dir, "test", paper_id, reviewer["id"], "missing_cell",
+        "Add the explicitly reported device.",
+        proposed_patch=[
+            {"op": "test", "path": "/cells", "value": []},
+            {"op": "add", "path": "/cells/-", "value": {}},
+        ],
+        source_page=3, source_text="The treated device was fabricated.",
+        source_type="main_text", device_identity="Treated device",
+        measurement_identity="Complete device record",
+        linkage_rationale="The paragraph describes this one device.",
+        counterevidence="Control device was checked separately.",
+        scope_notes="Eligible main text and single-junction device.",
+        atomic_groups=[{"id": "device", "label": "Complete device", "operation_indexes": [0, 1]}],
+    )
+    app = ReviewApplication(pdf_dir, ground_truth_dir)
+
+    result = app.decide_proposal_changes(
+        "test", paper_id,
+        {"action": "accept", "change_ids": [f"{issue['id']}:1"], "note": "Verified."},
+        reviewer["id"],
+    )
+
+    assert app.load_ground_truth("test", paper_id) == {"cells": [{}]}
+    saved_issue = load_issues(ground_truth_dir, "test", paper_id)[0]
+    assert saved_issue["status"] == "resolved"
+    assert saved_issue["accepted_change_ids"] == [f"{issue['id']}:1"]
+    assert saved_issue["proposal_decisions"][0]["note"] == "Verified."
+    assert result["action"] == "accept"
+
+
+def test_accepting_a_patch_without_evidence_packet_is_blocked(tmp_path):
+    pdf_dir = tmp_path / "pdfs"
+    ground_truth_dir = tmp_path / "ground_truth"
+    pdf_dir.mkdir()
+    (ground_truth_dir / "dev").mkdir(parents=True)
+    (ground_truth_dir / "test").mkdir()
+    paper_id = "10.1234--weak-proposal"
+    (ground_truth_dir / "test" / f"{paper_id}.json").write_text(
+        json.dumps({"cells": []}), encoding="utf-8"
+    )
+    reviewer = add_user(ground_truth_dir, "Ada")
+    issue = add_issue(
+        ground_truth_dir, "test", paper_id, reviewer["id"], "missing_cell",
+        "Plausible but uncited.",
+        proposed_patch=[
+            {"op": "test", "path": "/cells", "value": []},
+            {"op": "add", "path": "/cells/-", "value": {}},
+        ],
+    )
+    app = ReviewApplication(pdf_dir, ground_truth_dir)
+
+    try:
+        app.decide_proposal_changes(
+            "test", paper_id,
+            {"action": "accept", "change_ids": [f"{issue['id']}:1"]},
+            reviewer["id"],
+        )
+    except ValueError as error:
+        assert "evidence-readiness gate" in str(error)
+    else:
+        raise AssertionError("Weak proposal was accepted")
+
+    assert app.load_ground_truth("test", paper_id) == {"cells": []}
 
 
 def test_search_and_issues_offer_explicit_pdf_jumps():

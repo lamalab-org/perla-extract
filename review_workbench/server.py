@@ -15,6 +15,8 @@ import json
 import mimetypes
 import re
 import sys
+import uuid
+from datetime import datetime, timezone
 from email.parser import BytesParser
 from functools import lru_cache
 from http import HTTPStatus
@@ -34,6 +36,7 @@ from perla_extract.ground_truth import (  # noqa: E402
     paper_metadata,
     review_metadata_path,
 )
+from perla_extract.pydantic_model_reduced import PerovskiteSolarCells  # noqa: E402
 from review_workbench.review_evidence import (  # noqa: E402
     disagreement_paths,
     fact_suggestions,
@@ -50,11 +53,14 @@ from review_workbench.review_collaboration import (  # noqa: E402
     add_issue,
     add_user,
     apply_proposed_patches,
+    expand_atomic_change_ids,
     load_comments,
     load_figure_audits,
     load_issues,
     load_users,
+    proposal_strength,
     resolve_issue,
+    save_issues,
     save_figure_audit,
     upsert_authenticated_user,
 )
@@ -334,7 +340,10 @@ class ReviewApplication:
     def issues(self, split: str, paper_id: str) -> list[dict]:
         if not self.paper_path(split, paper_id).exists():
             raise FileNotFoundError(self.paper_path(split, paper_id))
-        return load_issues(self.ground_truth_dir, split, paper_id)
+        return [
+            {**issue, "proposal_strength": proposal_strength(issue)}
+            for issue in load_issues(self.ground_truth_dir, split, paper_id)
+        ]
 
     def proposed_ground_truth(
         self,
@@ -343,8 +352,13 @@ class ReviewApplication:
         selected_change_ids: set[str] | None = None,
     ) -> dict:
         truth = self.load_ground_truth(split, paper_id)
+        ready_issues = [
+            issue
+            for issue in self.issues(split, paper_id)
+            if issue["proposal_strength"]["level"] == "ready"
+        ]
         return apply_proposed_patches(
-            truth, self.issues(split, paper_id), selected_change_ids
+            truth, ready_issues, selected_change_ids
         )
 
     def figure_audits(self, split: str, paper_id: str) -> dict[str, dict]:
@@ -374,7 +388,7 @@ class ReviewApplication:
             raise ValueError("Issue payload must be an object")
         if not self.paper_path(split, paper_id).exists():
             raise FileNotFoundError(self.paper_path(split, paper_id))
-        return add_issue(
+        issue = add_issue(
             self.ground_truth_dir,
             split,
             paper_id,
@@ -396,7 +410,90 @@ class ReviewApplication:
                 payload.get("proposal_confidence", "needs_review")
             ),
             proposed_patch=payload.get("proposed_patch"),
+            source_type=str(payload.get("source_type", "unknown")),
+            device_identity=str(payload.get("device_identity", "")),
+            measurement_identity=str(payload.get("measurement_identity", "")),
+            linkage_rationale=str(payload.get("linkage_rationale", "")),
+            counterevidence=str(payload.get("counterevidence", "")),
+            scope_notes=str(payload.get("scope_notes", "")),
+            atomic_groups=payload.get("atomic_groups"),
         )
+        return {**issue, "proposal_strength": proposal_strength(issue)}
+
+    def decide_proposal_changes(
+        self, split: str, paper_id: str, payload: object, reviewer_id: str
+    ) -> dict:
+        """Accept, reject, or defer atomic proposal changes with an audit record."""
+        if not isinstance(payload, dict):
+            raise ValueError("Proposal decision must be an object")
+        action = str(payload.get("action", ""))
+        if action not in {"accept", "reject", "defer"}:
+            raise ValueError("Proposal action must be accept, reject, or defer")
+        submitted = payload.get("change_ids")
+        if not isinstance(submitted, list) or not submitted or not all(
+            isinstance(item, str) for item in submitted
+        ):
+            raise ValueError("Proposal decision requires change_ids")
+        if reviewer_id not in {user["id"] for user in load_users(self.ground_truth_dir)}:
+            raise ValueError("Unknown reviewer")
+        issues = load_issues(self.ground_truth_dir, split, paper_id)
+        requested = set(submitted)
+        selected: set[str] = set()
+        affected: list[dict] = []
+        for issue in issues:
+            expanded = expand_atomic_change_ids(issue, requested)
+            if expanded:
+                selected.update(expanded)
+                affected.append(issue)
+        if not selected or not requested.issubset(selected):
+            raise ValueError("One or more proposal changes are unknown or already decided")
+        preview = None
+        if action == "accept":
+            if any(proposal_strength(issue)["level"] != "ready" for issue in affected):
+                raise ValueError("Only proposals that pass the evidence-readiness gate can be accepted")
+            truth = self.load_ground_truth(split, paper_id)
+            preview = apply_proposed_patches(truth, issues, selected)
+            applied = {change["change_id"] for change in preview["changes"]}
+            if preview["conflicts"] or applied != selected:
+                detail = preview["conflicts"][0]["error"] if preview["conflicts"] else "not all changes applied"
+                raise ValueError(f"Proposal cannot be accepted: {detail}")
+            self.validate_ground_truth(preview["proposed_ground_truth"])
+            self._write_ground_truth(split, paper_id, preview["proposed_ground_truth"])
+        now = datetime.now(timezone.utc).isoformat()
+        note = str(payload.get("note", "")).strip()
+        decision_id = uuid.uuid4().hex
+        for issue in affected:
+            issue_ids = expand_atomic_change_ids(issue, selected)
+            decision = {
+                "id": decision_id,
+                "action": action,
+                "change_ids": sorted(issue_ids),
+                "reviewer_id": reviewer_id,
+                "note": note,
+                "created_at": now,
+            }
+            issue.setdefault("proposal_decisions", []).append(decision)
+            if action in {"accept", "reject"}:
+                key = f"{action}ed_change_ids"
+                issue[key] = sorted(set(issue.get(key) or []).union(issue_ids))
+                remaining = {
+                    f"{issue['id']}:{index}"
+                    for index, operation in enumerate(issue.get("proposed_patch") or [])
+                    if operation.get("op") != "test"
+                } - set(issue.get("accepted_change_ids") or []) - set(issue.get("rejected_change_ids") or [])
+                if not remaining:
+                    issue.update(
+                        status="resolved", resolved_by=reviewer_id,
+                        resolution="All proposed changes were decided.", resolved_at=now,
+                    )
+        save_issues(self.ground_truth_dir, split, paper_id, issues)
+        return {
+            "action": action,
+            "change_ids": sorted(selected),
+            "decision_id": decision_id,
+            "ground_truth": preview["proposed_ground_truth"] if preview else None,
+            "issues": [{**issue, "proposal_strength": proposal_strength(issue)} for issue in issues],
+        }
 
     def resolve_missing_issue(
         self, split: str, paper_id: str, issue_id: str, payload: object
@@ -472,12 +569,24 @@ class ReviewApplication:
         return count
 
     def save_ground_truth(self, split: str, paper_id: str, payload: object) -> None:
-        if not isinstance(payload, dict) or not isinstance(payload.get("cells"), list):
-            raise ValueError("Ground truth must be an object containing a 'cells' list")
+        self.validate_ground_truth(payload)
+        self._write_ground_truth(split, paper_id, payload)
+
+    def _write_ground_truth(self, split: str, paper_id: str, payload: object) -> None:
+        """Write an already validated payload; deployment adapters sync afterward."""
         path = self.paper_path(split, paper_id)
         if not path.exists():
             raise FileNotFoundError(path)
         path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    @staticmethod
+    def validate_ground_truth(payload: object) -> None:
+        if not isinstance(payload, dict) or not isinstance(payload.get("cells"), list):
+            raise ValueError("Ground truth must be an object containing a 'cells' list")
+        try:
+            PerovskiteSolarCells.model_validate(payload)
+        except Exception as error:
+            raise ValueError(f"Ground truth does not match the extraction schema: {error}") from error
 
     def save_metadata(self, split: str, paper_id: str, payload: object) -> dict:
         if not isinstance(payload, dict):
@@ -971,6 +1080,12 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     payload["reporter_id"] = user["id"]
                     issue = application.add_missing_issue(parts[2], parts[3], payload)
                     self.send_json({"issue": issue}, HTTPStatus.CREATED)
+                    return
+                if len(parts) == 5 and parts[:2] == ["api", "proposals"] and parts[4] == "decision":
+                    result = application.decide_proposal_changes(
+                        parts[2], parts[3], self.read_json(), user["id"]
+                    )
+                    self.send_json({"saved": True, **result})
                     return
                 if (
                     len(parts) == 5

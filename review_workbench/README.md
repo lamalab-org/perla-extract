@@ -53,17 +53,21 @@ citation, and the complete extracted page text remains available as a fallback.
 Automatic quote suggestions rank exact matches using field terminology, units,
 and ancestor context such as composition, layer, and processing-step names.
 Suggestions never mark a field as verified without reviewer action.
-Missing/wrong-item reports can also carry a validated JSON Patch proposal. The
-proposal is review data, not an automatic mutation: reviewers inspect the old
-and proposed values in **Proposed revision**, jump to the cited PDF evidence,
-and then explicitly load the complete draft into the JSON editor before saving.
-A stale or conflicting patch is rejected atomically and shown as a conflict.
+Missing/wrong-item reports can also carry a validated JSON Patch proposal. Each
+proposal receives a 10-point readiness score covering its exact quote and page,
+eligible source, device identity, measurement linkage, counterevidence, scope,
+and guarded patch. Reviewers inspect old and proposed values in **Review
+changes**, jump to the cited evidence, and accept, reject, defer, or load an
+editable draft. Coupled operations are decided atomically. Acceptance validates
+the complete result against the extraction schema, and all decisions retain the
+reviewer, timestamp, selected changes, and note. Stale patches remain visible as
+conflicts.
 Use the **Open correction proposals** paper filter to work through this queue.
 
 The primary queue is proposal-first: cited findings with concrete patches are
 shown as **Ready to apply**, while ambiguous findings remain under **Needs a
-stronger proposal**. Reviewers can select individual patch operations and load
-only those changes into an unsaved JSON draft. The quantity scanner is retained
+stronger proposal**. Reviewers can select independent changes or atomic change
+groups. The quantity scanner is retained
 as an optional diagnostic reached from the Proposals view; raw unmatched
 numbers are not treated as correction proposals because they lack reliable
 device and measurement linkage.

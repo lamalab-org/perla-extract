@@ -24,11 +24,17 @@ def _mfcl_passivation_patch() -> list[dict]:
             patch.extend(
                 (
                     {
+                        "op": "test",
+                        "path": f"/cells/{cell_index}/layers/{layer_index}/name",
+                        "value": "SnO2" if layer_index == 1 else "(FAPbI3)0.95(MAPbBr3)0.05",
+                    },
+                    {
                         "op": "add",
                         "path": path,
                         "value": {
                             "step_name": location,
                             "method": "Spin-coating",
+                            "atmosphere": None,
                             "duration": {"value": 30.0, "unit": "s"},
                             "solution": {
                                 "solutes": [
@@ -53,6 +59,7 @@ def _mfcl_passivation_patch() -> list[dict]:
                         "value": {
                             "step_name": f"Annealing after {location}",
                             "method": "Thermal-annealing",
+                            "atmosphere": None,
                             "temperature": {"value": 100.0, "unit": "°C"},
                             "duration": {"value": 300.0, "unit": "s"},
                         },
@@ -89,10 +96,17 @@ FINDINGS = (
         "aggregation": "champion",
         "value_relation": "lower_bound",
         "proposal_confidence": "high",
+        "source_type": "main_text",
+        "device_identity": "Champion MFCl-treated flexible PSC with PCE 22.04% and Voc 1.134 V.",
+        "measurement_identity": "Champion-device JV tuple; FF 80.47% is reported for a separate MFCl-versus-PEACl comparison device.",
+        "linkage_rationale": "The prose explicitly links PCE 22.04% and Voc 1.134 V to the champion, while the later 80.47% FF occurs with PCE 21.95% and Voc 1.14 V.",
+        "counterevidence": "The recorded FF and its surrounding passage were checked against the champion discussion; the device tuples differ.",
+        "scope_notes": "Eligible main-paper prose. No figure-only or supplementary value is used.",
         "proposed_patch": [
             {"op": "test", "path": "/cells/0/ff/value", "value": 80.47},
             {"op": "remove", "path": "/cells/0/ff"},
         ],
+        "atomic_groups": [{"id": "remove-mixed-ff", "label": "Remove FF belonging to a different device", "operation_indexes": [0, 1]}],
     },
     {
         "split": "test",
@@ -115,7 +129,19 @@ FINDINGS = (
         "source_page": 9,
         "source_text": "For BSP treatment, MFCl solution at different concentrations in DMF was added dropwise onto the SnO2 layer",
         "proposal_confidence": "high",
+        "source_type": "main_text",
+        "device_identity": "Both MFCl-treated cells already represented in cells 1 and 2; the untreated control is excluded.",
+        "measurement_identity": "Buried- and top-surface MFCl processing steps and their immediately following anneals.",
+        "linkage_rationale": "The methods identify BSP on SnO2 and TSP on perovskite, matching layer indexes 1 and 2 of each treated stack.",
+        "counterevidence": "The solvent, concentration, spin speed, duration, and anneal were checked separately for BSP and TSP; DMF and isopropanol are not interchanged.",
+        "scope_notes": "Eligible experimental-methods text in the main PDF; applied only to MFCl-treated devices.",
         "proposed_patch": _mfcl_passivation_patch(),
+        "atomic_groups": [
+            {"id": "cell-1-bsp", "label": "Cell 1 buried-surface treatment and anneal", "operation_indexes": [0, 1, 2]},
+            {"id": "cell-1-tsp", "label": "Cell 1 top-surface treatment and anneal", "operation_indexes": [3, 4, 5]},
+            {"id": "cell-2-bsp", "label": "Cell 2 buried-surface treatment and anneal", "operation_indexes": [6, 7, 8]},
+            {"id": "cell-2-tsp", "label": "Cell 2 top-surface treatment and anneal", "operation_indexes": [9, 10, 11]},
+        ],
     },
     {
         "split": "test",
@@ -151,10 +177,17 @@ FINDINGS = (
         "source_page": 6,
         "source_text": "ITO/SnO2/3D or 1D/3D perovskite/Spiro-OMeTAD/Au",
         "proposal_confidence": "high",
+        "source_type": "main_text",
+        "device_identity": "Untreated 3D control cell using the stack ITO/SnO2/3D perovskite/Spiro-OMeTAD/Au.",
+        "measurement_identity": "Absorber layer material label, not a numerical photovoltaic measurement.",
+        "linkage_rationale": "The paper distinguishes the 3D control from the 1D/3D device; Me3SPbI3 names the 1D material and cannot label the control absorber.",
+        "counterevidence": "No explicit molecular formula for the 3D control was found, so the proposal removes the false specificity without inventing a composition.",
+        "scope_notes": "Eligible main-paper device-stack description; no figure-only inference.",
         "proposed_patch": [
             {"op": "test", "path": "/cells/0/layers/2/name", "value": "3D Me3SPbI3"},
             {"op": "replace", "path": "/cells/0/layers/2/name", "value": "3D perovskite"},
         ],
+        "atomic_groups": [{"id": "rename-control-absorber", "label": "Correct the 3D control absorber label", "operation_indexes": [0, 1]}],
     },
     {
         "split": "test",
@@ -178,10 +211,17 @@ FINDINGS = (
         "source_text": "a batch of 20 independent devices for each device set",
         "aggregation": "distribution",
         "proposal_confidence": "high",
+        "source_type": "main_text",
+        "device_identity": "Complete devices represented by cell 1; the sentence states the batch size for each complete-device set.",
+        "measurement_identity": "Number of independently fabricated devices underlying the reported distribution.",
+        "linkage_rationale": "The batch-size sentence directly quantifies each complete-device set represented by this record.",
+        "counterevidence": "The count was distinguished from repeated scans and from the separate HTM-free sample count.",
+        "scope_notes": "Eligible main-text statistic and directly representable as number_devices.",
         "proposed_patch": [
             {"op": "test", "path": "/cells/0/number_devices", "value": None},
             {"op": "replace", "path": "/cells/0/number_devices", "value": 20},
         ],
+        "atomic_groups": [{"id": "set-complete-device-count", "label": "Set complete-device sample count", "operation_indexes": [0, 1]}],
     },
     {
         "split": "dev",
@@ -195,10 +235,17 @@ FINDINGS = (
         "source_text": "The PV metrics of 5 independent samples for each device set",
         "aggregation": "distribution",
         "proposal_confidence": "high",
+        "source_type": "main_text",
+        "device_identity": "HTM-free device set represented by cell 2.",
+        "measurement_identity": "Number of independent HTM-free samples underlying the photovoltaic metrics.",
+        "linkage_rationale": "The sentence explicitly assigns five independent samples to each HTM-free device set.",
+        "counterevidence": "The count was distinguished from the 20-device complete-device batch and from measurement repeats.",
+        "scope_notes": "Eligible main-text statistic and directly representable as number_devices.",
         "proposed_patch": [
             {"op": "test", "path": "/cells/1/number_devices", "value": None},
             {"op": "replace", "path": "/cells/1/number_devices", "value": 5},
         ],
+        "atomic_groups": [{"id": "set-htm-free-count", "label": "Set HTM-free sample count", "operation_indexes": [0, 1]}],
     },
     {
         "split": "test",
@@ -254,7 +301,11 @@ def seed(*, dry_run: bool = False) -> tuple[int, int]:
             if matched is not None:
                 upgrades = {
                     key: finding[key]
-                    for key in ("proposal_confidence", "proposed_patch")
+                    for key in (
+                        "proposal_confidence", "proposed_patch", "source_type",
+                        "device_identity", "measurement_identity", "linkage_rationale",
+                        "counterevidence", "scope_notes", "atomic_groups",
+                    )
                     if key in finding and matched.get(key) != finding[key]
                 }
                 if not upgrades:

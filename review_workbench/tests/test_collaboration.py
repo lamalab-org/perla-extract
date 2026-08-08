@@ -6,6 +6,7 @@ from review_workbench.review_collaboration import (
     load_comments,
     load_issues,
     load_users,
+    proposal_strength,
     resolve_issue,
     load_figure_audits,
     save_figure_audit,
@@ -170,6 +171,42 @@ def test_revision_can_apply_one_granular_change():
     assert preview["proposed_ground_truth"]["cells"][0]["pce"]["value"] == 20.0
     assert preview["proposed_ground_truth"]["cells"][0]["number_devices"] == 20
     assert [change["change_id"] for change in preview["changes"]] == ["two-fixes:1"]
+
+
+def test_atomic_group_selection_expands_to_all_coupled_mutations():
+    truth = {"cells": [{"pce": {"value": 20.0}, "number_devices": None}]}
+    issues = [{
+        "id": "coupled", "status": "open", "type": "wrong_value",
+        "description": "Coupled values.",
+        "proposed_patch": [
+            {"op": "test", "path": "/cells/0/pce/value", "value": 20.0},
+            {"op": "replace", "path": "/cells/0/pce/value", "value": 21.4},
+            {"op": "replace", "path": "/cells/0/number_devices", "value": 20},
+        ],
+        "atomic_groups": [{"id": "tuple", "label": "Coherent device tuple", "operation_indexes": [0, 1, 2]}],
+    }]
+
+    preview = apply_proposed_patches(truth, issues, {"coupled:1"})
+
+    assert {change["change_id"] for change in preview["changes"]} == {"coupled:1", "coupled:2"}
+    assert {change["atomic_group_key"] for change in preview["changes"]} == {"coupled:tuple"}
+
+
+def test_proposal_strength_requires_complete_evidence_and_guarded_patch():
+    complete = {
+        "source_text": "PCE was 21.4%.", "source_page": 3, "source_type": "main_text",
+        "device_identity": "Champion treated device", "measurement_identity": "Reverse-scan PCE",
+        "linkage_rationale": "The sentence names the same treatment.",
+        "counterevidence": "Forward scan checked separately.", "scope_notes": "Main text only.",
+        "proposed_patch": [
+            {"op": "test", "path": "/cells/0/pce/value", "value": 20.0},
+            {"op": "replace", "path": "/cells/0/pce/value", "value": 21.4},
+        ],
+    }
+
+    assert proposal_strength(complete)["level"] == "ready"
+    unguarded = {**complete, "proposed_patch": complete["proposed_patch"][1:]}
+    assert proposal_strength(unguarded)["level"] == "review"
 
 
 def test_stale_patch_is_reported_and_not_partially_applied():

@@ -180,14 +180,25 @@
             </div>
             <label>Description <textarea id="issue-description" rows="3" required placeholder="What is missing, and where is it reported?"></textarea></label>
             <label>Suggested value <input id="issue-suggested-value" placeholder="Optional value or stack" /></label>
+            <div class="field-grid">
+              <label>Evidence page <input id="issue-source-page" type="number" min="1" /></label>
+              <button id="use-pdf-selection" type="button">Use selected PDF text</button>
+            </div>
+            <label>Exact evidence quote <textarea id="issue-source-text" rows="3" placeholder="Copy the shortest passage that establishes the claim"></textarea></label>
             <details class="schema-proposal">
               <summary>Proposed uncertainty / provenance fields</summary>
               <div class="field-grid schema-proposal-grid">
                 <label>Value relation <select id="issue-value-relation"><option value="unspecified">Not specified</option><option value="exact">Exact</option><option value="approximately">Approximately</option><option value="lower_bound">At least / above</option><option value="upper_bound">Up to / below</option><option value="range">Range</option></select></label>
                 <label>Aggregation <select id="issue-aggregation"><option value="unspecified">Not specified</option><option value="single_device">Single device</option><option value="champion">Champion</option><option value="mean">Mean</option><option value="median">Median</option><option value="stabilized">Stabilized</option><option value="distribution">Distribution</option></select></label>
                 <label>Measurement <select id="issue-measurement-context"><option value="unspecified">Not specified</option><option value="forward_scan">Forward scan</option><option value="reverse_scan">Reverse scan</option><option value="steady_state">Steady state</option><option value="certified">Certified</option><option value="other">Other</option></select></label>
+                <label>Evidence source <select id="issue-source-type"><option value="unknown">Unknown</option><option value="main_text">Main text</option><option value="table">Main-text table</option><option value="caption">Caption / figure-only</option></select></label>
               </div>
               <label>Uncertainty / range <input id="issue-uncertainty" placeholder="e.g. ±0.3%, 15–17%, or error bars only" /></label>
+              <label>Device identity <textarea id="issue-device-identity" rows="2" placeholder="Which exact device, treatment, architecture, and scan does this belong to?"></textarea></label>
+              <label>Measurement identity <textarea id="issue-measurement-identity" rows="2" placeholder="What was measured, under which condition or aggregation?"></textarea></label>
+              <label>Linkage rationale <textarea id="issue-linkage-rationale" rows="2" placeholder="Why do these values belong together in one schema record?"></textarea></label>
+              <label>Counterevidence checked <textarea id="issue-counterevidence" rows="2" placeholder="Competing values/devices searched and ruled out"></textarea></label>
+              <label>Benchmark scope check <textarea id="issue-scope-notes" rows="2" placeholder="Main text/table eligibility; figure/SI/tandem exclusions"></textarea></label>
               <label>Proposed JSON Patch <textarea id="issue-proposed-patch" rows="5" spellcheck="false" placeholder='[{"op":"replace","path":"/cells/0/...","value":"corrected value"}]'></textarea></label>
             </details>
             <div class="dialog-actions"><span id="issue-status"></span><button type="submit" class="primary-button">Create issue</button></div>
@@ -200,8 +211,11 @@
           <div id="revision-conflicts" class="revision-conflicts"></div>
           <div id="revision-list" class="revision-list"></div>
           <div class="action-row revision-actions">
-            <span>Nothing is written to the benchmark until you review the complete JSON and save it.</span>
-            <button id="review-proposed-json" type="button">Review selected changes</button>
+            <input id="proposal-decision-note" placeholder="Optional decision note" />
+            <button id="defer-proposal" type="button">Defer</button>
+            <button id="reject-proposal" type="button">Reject</button>
+            <button id="review-proposed-json" type="button">Edit selected draft</button>
+            <button id="accept-proposal" type="button" class="primary-button">Accept selected</button>
           </div>
         </section>
 

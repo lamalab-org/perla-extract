@@ -454,6 +454,7 @@ function renderRevision() {
   renderSafeHtml($("revision-conflicts"), conflicts.map((conflict) => `<article class="revision-conflict"><strong>Patch conflict</strong><p>${escapeHtml(conflict.description)}</p><code>${escapeHtml(conflict.error)}</code></article>`).join(""));
   renderSafeHtml($("revision-list"), changes.map((change) => `<article class="revision-change ${escapeHtml(change.op)}">
     <div class="revision-heading"><label><input type="checkbox" data-revision-select="${escapeHtml(change.change_id)}" ${state.selectedRevisionChanges.has(change.change_id) ? "checked" : ""} /><span>${escapeHtml(change.op)}</span></label><code>${escapeHtml(change.path)}</code></div>
+    <div class="issue-meta">Atomic group: ${escapeHtml(change.atomic_group_label || "Independent change")}</div>
     <p>${escapeHtml(change.description)}</p>
     <div class="revision-values"><div><strong>Current</strong><pre><code>${escapeHtml(revisionValue(change.before, change.before_exists))}</code></pre></div><div><strong>Proposed</strong><pre><code>${escapeHtml(revisionValue(change.after, change.after_exists))}</code></pre></div></div>
     <div class="issue-meta">${change.source_page ? `Evidence on p. ${change.source_page}` : "No evidence page recorded"}</div>
@@ -466,9 +467,13 @@ function renderRevision() {
     jumpToPage(change.source_page, change.source_text || "", null, change.source_text || "");
   }));
   document.querySelectorAll("[data-revision-select]").forEach((input) => input.addEventListener("change", () => {
-    if (input.checked) state.selectedRevisionChanges.add(input.dataset.revisionSelect);
-    else state.selectedRevisionChanges.delete(input.dataset.revisionSelect);
-    updateRevisionSelection();
+    const selectedChange = changes.find((change) => change.change_id === input.dataset.revisionSelect);
+    const group = changes.filter((change) => change.atomic_group_key === selectedChange?.atomic_group_key);
+    (group.length ? group : [selectedChange]).filter(Boolean).forEach((change) => {
+      if (input.checked) state.selectedRevisionChanges.add(change.change_id);
+      else state.selectedRevisionChanges.delete(change.change_id);
+    });
+    renderRevision();
   }));
   updateRevisionSelection();
 }
@@ -478,6 +483,9 @@ function updateRevisionSelection() {
   $("selection-summary").textContent = `${count} granular change${count === 1 ? "" : "s"} selected`;
   $("review-proposed-json").textContent = `Review ${count || "selected"} change${count === 1 ? "" : "s"}`;
   $("review-proposed-json").disabled = !count;
+  $("accept-proposal").disabled = !count;
+  $("reject-proposal").disabled = !count;
+  $("defer-proposal").disabled = !count;
 }
 
 function renderDiscussion() {
@@ -541,20 +549,25 @@ function renderFigureAudit() {
 
 function renderIssues() {
   const open = state.issues.filter((issue) => issue.status === "open");
-  const ready = open.filter((issue) => issue.proposed_patch?.length);
-  const needsWork = open.filter((issue) => !issue.proposed_patch?.length);
+  const ready = open.filter((issue) => issue.proposal_strength?.level === "ready");
+  const needsWork = open.filter((issue) => issue.proposal_strength?.level !== "ready");
   const resolved = state.issues.filter((issue) => issue.status !== "open");
-  renderSafeHtml($("issue-summary"), `<strong>${ready.length} ready-to-apply proposal${ready.length === 1 ? "" : "s"}</strong> · ${needsWork.length} finding${needsWork.length === 1 ? "" : "s"} still need a stronger JSON proposal. Each ready proposal includes cited evidence and can be accepted operation by operation.`);
+  renderSafeHtml($("issue-summary"), `<strong>${ready.length} ready-to-apply proposal${ready.length === 1 ? "" : "s"}</strong> · ${needsWork.length} finding${needsWork.length === 1 ? "" : "s"} still need stronger evidence or a guarded patch. Related edits are accepted atomically and every decision is retained.`);
   const issueHtml = (issue) => {
     const proposal = issue.schema_proposal || {};
     const proposalParts = [proposal.value_relation, proposal.aggregation, proposal.measurement_context].filter((value) => value && value !== "unspecified");
+    const strength = issue.proposal_strength || { score: 0, max_score: 10, level: "finding", criteria: [] };
+    const evidence = [["Source", issue.source_type?.replaceAll("_", " ")], ["Device", issue.device_identity], ["Measurement", issue.measurement_identity], ["Linkage", issue.linkage_rationale], ["Counterevidence", issue.counterevidence], ["Scope", issue.scope_notes]].filter(([, value]) => value);
+    const decisions = issue.proposal_decisions || [];
     return `<article class="issue ${issue.status}">
-    <div class="issue-heading"><span>${escapeHtml(issueTypeLabel(issue.type))}</span><strong>${issue.proposed_patch?.length ? "READY" : escapeHtml(issue.status)}</strong></div>
+    <div class="issue-heading"><span>${escapeHtml(issueTypeLabel(issue.type))}</span><strong>${escapeHtml(strength.level.toUpperCase())} · ${strength.score}/${strength.max_score}</strong></div>
     <p>${escapeHtml(issue.description)}</p>
     <div class="issue-meta">${issue.cell_index == null ? "Paper-level" : `Cell ${issue.cell_index + 1}`}${issue.source_page ? ` · p. ${issue.source_page}` : ""}${issue.suggested_value ? ` · suggested: ${escapeHtml(issue.suggested_value)}` : ""}</div>
     <div class="schema-tags"><span>${escapeHtml((issue.proposal_confidence || (issue.proposed_patch?.length ? "high" : "needs_review")).replaceAll("_", " "))} confidence</span>${proposalParts.map((value) => `<span>${escapeHtml(value.replaceAll("_", " "))}</span>`).join("")}${proposal.uncertainty ? `<span>${escapeHtml(proposal.uncertainty)}</span>` : ""}</div>
+    <details><summary>Evidence packet and readiness checks</summary>${evidence.map(([label, value]) => `<p><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</p>`).join("")}<div class="schema-tags">${strength.criteria.map((criterion) => `<span>${criterion.passed ? "✓" : "○"} ${escapeHtml(criterion.label)} (${criterion.points}/${criterion.max_points})</span>`).join("")}</div></details>
     ${issue.proposed_patch?.length ? `<details class="proposed-patch"><summary>Proposed correction (${issue.proposed_patch.length} operation${issue.proposed_patch.length === 1 ? "" : "s"})</summary><pre><code>${escapeHtml(JSON.stringify(issue.proposed_patch, null, 2))}</code></pre><button type="button" data-copy-patch="${issue.id}">Copy patch</button></details>` : ""}
-    ${issue.status === "open" && issue.proposed_patch?.length ? `<button type="button" class="issue-jump" data-review-proposal="${issue.id}">Review granular changes</button>` : ""}
+    ${decisions.length ? `<details><summary>Decision history (${decisions.length})</summary>${decisions.map((decision) => `<p><strong>${escapeHtml(decision.action)}</strong> by ${escapeHtml(reviewerName(decision.reviewer_id))} · ${escapeHtml(new Date(decision.created_at).toLocaleString())}${decision.note ? ` — ${escapeHtml(decision.note)}` : ""}</p>`).join("")}</details>` : ""}
+    ${issue.status === "open" && strength.level === "ready" ? `<button type="button" class="issue-jump" data-review-proposal="${issue.id}">Review atomic changes</button>` : ""}
     ${issue.source_page ? `<button class="issue-jump" data-issue-jump="${issue.id}">Jump to evidence</button>` : ""}
     ${issue.status === "open" ? `<div class="issue-resolution"><input placeholder="Resolution note…" /><button data-resolve-issue="${issue.id}">Resolve</button></div>` : `<div class="issue-meta">Resolved by ${escapeHtml(reviewerName(issue.resolved_by))}: ${escapeHtml(issue.resolution || "no note")}</div>`}
   </article>`; };
@@ -595,13 +608,21 @@ async function createIssue(overrides = {}) {
     description: overrides.description || $("issue-description").value,
     cell_index: overrides.cell_index ?? ($("issue-cell").value === "" ? null : Number($("issue-cell").value)),
     suggested_value: overrides.suggested_value || $("issue-suggested-value").value,
-    source_page: overrides.source_page || null, source_text: overrides.source_text || "",
+    source_page: overrides.source_page || (Number($("issue-source-page").value) || null),
+    source_text: overrides.source_text || $("issue-source-text").value,
     value_relation: overrides.value_relation || $("issue-value-relation").value,
     aggregation: overrides.aggregation || $("issue-aggregation").value,
     measurement_context: overrides.measurement_context || $("issue-measurement-context").value,
     uncertainty: overrides.uncertainty || $("issue-uncertainty").value,
     proposal_confidence: overrides.proposal_confidence || $("issue-confidence").value,
     proposed_patch: proposedPatch,
+    source_type: overrides.source_type || $("issue-source-type").value,
+    device_identity: overrides.device_identity || $("issue-device-identity").value,
+    measurement_identity: overrides.measurement_identity || $("issue-measurement-identity").value,
+    linkage_rationale: overrides.linkage_rationale || $("issue-linkage-rationale").value,
+    counterevidence: overrides.counterevidence || $("issue-counterevidence").value,
+    scope_notes: overrides.scope_notes || $("issue-scope-notes").value,
+    atomic_groups: overrides.atomic_groups || [],
   };
   const result = await request(`/api/issues/${state.split}/${encodeURIComponent(state.selected)}`, { method: "POST", body: JSON.stringify(payload) });
   state.issues.push(result.issue); currentPaper().open_issues = (currentPaper().open_issues || 0) + 1; renderPapers();
@@ -790,6 +811,28 @@ $("review-proposed-json").addEventListener("click", () => {
   }).catch((error) => { $("revision-summary").textContent = `Could not build selected revision: ${error.message}`; });
 });
 
+async function decideSelectedProposal(action) {
+  if (!state.selectedRevisionChanges.size) return;
+  if (action === "accept" && !window.confirm("Apply the selected atomic changes to the ground truth? This decision will be recorded.")) return;
+  const selectedCount = state.selectedRevisionChanges.size;
+  $("revision-summary").textContent = `${action[0].toUpperCase() + action.slice(1)}ing ${selectedCount} selected change${selectedCount === 1 ? "" : "s"}…`;
+  try {
+    const result = await request(`/api/proposals/${state.split}/${encodeURIComponent(state.selected)}/decision`, {
+      method: "POST",
+      body: JSON.stringify({ action, change_ids: [...state.selectedRevisionChanges], note: $("proposal-decision-note").value }),
+    });
+    $("proposal-decision-note").value = "";
+    await loadPaperData();
+    $("revision-summary").textContent = `${result.change_ids.length} atomic change${result.change_ids.length === 1 ? "" : "s"} ${action === "defer" ? "deferred" : `${action}ed`} and recorded.`;
+  } catch (error) {
+    $("revision-summary").textContent = `Could not ${action} proposal: ${error.message}`;
+  }
+}
+
+$("accept-proposal").addEventListener("click", () => decideSelectedProposal("accept"));
+$("reject-proposal").addEventListener("click", () => decideSelectedProposal("reject"));
+$("defer-proposal").addEventListener("click", () => decideSelectedProposal("defer"));
+
 $("select-all-changes").addEventListener("click", () => {
   state.selectedRevisionChanges = new Set((state.revision?.changes || []).map((change) => change.change_id));
   renderRevision();
@@ -799,6 +842,11 @@ $("select-no-changes").addEventListener("click", () => {
   renderRevision();
 });
 $("open-quantity-scanner").addEventListener("click", () => { state.tab = "gaps"; renderView(); });
+$("use-pdf-selection").addEventListener("click", () => {
+  $("issue-source-page").value = state.pdfPage;
+  $("issue-source-text").value = state.pdfQuote || window.getSelection()?.toString().trim() || state.pdfPageText;
+  $("issue-status").textContent = state.pdfQuote ? `Quote captured from p. ${state.pdfPage}` : `Page ${state.pdfPage} captured; select a shorter passage if possible.`;
+});
 
 $("metadata-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -829,7 +877,7 @@ $("paper-comment-form").addEventListener("submit", async (event) => {
 
 $("issue-form").addEventListener("submit", async (event) => {
   event.preventDefault(); const status = $("issue-status"); status.textContent = "Saving…";
-  try { await createIssue(); $("issue-description").value = ""; $("issue-suggested-value").value = ""; $("issue-uncertainty").value = ""; $("issue-proposed-patch").value = ""; status.textContent = "Issue created"; renderIssues(); }
+  try { await createIssue(); ["issue-description", "issue-suggested-value", "issue-uncertainty", "issue-proposed-patch", "issue-source-page", "issue-source-text", "issue-device-identity", "issue-measurement-identity", "issue-linkage-rationale", "issue-counterevidence", "issue-scope-notes"].forEach((id) => { $(id).value = ""; }); status.textContent = "Issue created"; renderIssues(); }
   catch (error) { status.textContent = error.message; }
 });
 
