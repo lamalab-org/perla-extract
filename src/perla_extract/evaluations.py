@@ -70,6 +70,12 @@ class Evaluations:
         )
         self.use_llm_judge = use_llm_judge
 
+        # The richer aggregation field is being collected during benchmark
+        # review, but is deliberately excluded until its annotations and
+        # scoring semantics have been validated across the corpus.
+        truth = self._without_provisional_fields(truth)
+        extraction = self._without_provisional_fields(extraction)
+
         # Initialize basic metrics
         extraction = extraction if "cells" in extraction and extraction["cells"] is not None else {"cells":[]}
         self.devices_in_truth = len(truth["cells"])
@@ -107,6 +113,18 @@ class Evaluations:
         self.recalls_average = (
             float(np.mean(self.score_recalls)) if self.score_recalls else 0.0
         )
+
+    @classmethod
+    def _without_provisional_fields(cls, value: Any) -> Any:
+        if isinstance(value, dict):
+            return {
+                key: cls._without_provisional_fields(item)
+                for key, item in value.items()
+                if key != "performance_aggregation"
+            }
+        if isinstance(value, list):
+            return [cls._without_provisional_fields(item) for item in value]
+        return deepcopy(value)
 
     def _pad_extraction_for_missing_devices(
         self, extraction: Dict[str, Any]

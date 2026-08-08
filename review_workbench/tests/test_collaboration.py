@@ -61,6 +61,7 @@ def test_figure_audits_are_kept_separately_per_reviewer(tmp_path):
             "total_figures": 6,
             "schema_relevant_figures": 3,
             "figure_only_schema_figures": 1,
+            "unlinked_device_statistic_figures": 1,
             "notes": "Figure 3 contains a JV curve only.",
         },
     )
@@ -80,6 +81,7 @@ def test_figure_audits_are_kept_separately_per_reviewer(tmp_path):
     audits = load_figure_audits(tmp_path, "test", "paper")
 
     assert audits[first["id"]]["schema_relevant_figures"] == 3
+    assert audits[first["id"]]["unlinked_device_statistic_figures"] == 1
     assert audits[second["id"]]["figure_only_schema_figures"] == 2
 
 
@@ -109,6 +111,21 @@ def test_schema_limitations_can_be_recorded_without_changing_ground_truth(tmp_pa
         "measurement_context": "steady_state",
         "uncertainty": "Reported as above 80%.",
     }
+
+
+def test_issue_can_store_a_reviewable_json_patch(tmp_path):
+    user = add_user(tmp_path, "Ada")
+    patch = [
+        {"op": "test", "path": "/cells/0/layers/1/additional_treatment", "value": "MFCl treatment"},
+        {"op": "replace", "path": "/cells/0/layers/1/additional_treatment", "value": "BSP: MFCl in DMF"},
+    ]
+
+    issue = add_issue(
+        tmp_path, "test", "paper", user["id"], "wrong_value",
+        "The treatment is underspecified.", proposed_patch=patch,
+    )
+
+    assert issue["proposed_patch"] == patch
 
 
 def test_tandem_device_can_be_reported_as_out_of_scope(tmp_path):

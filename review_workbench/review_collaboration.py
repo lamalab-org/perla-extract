@@ -176,8 +176,9 @@ def save_figure_audit(
         "total_figures",
         "schema_relevant_figures",
         "figure_only_schema_figures",
+        "unlinked_device_statistic_figures",
     ):
-        value = payload.get(key)
+        value = payload.get(key, 0)
         if not isinstance(value, int) or isinstance(value, bool) or value < 0:
             raise ValueError("Figure counts must be non-negative integers")
         counts[key] = value
@@ -185,6 +186,8 @@ def save_figure_audit(
         raise ValueError("Schema-relevant figures cannot exceed total figures")
     if counts["figure_only_schema_figures"] > counts["schema_relevant_figures"]:
         raise ValueError("Figure-only count cannot exceed schema-relevant figures")
+    if counts["unlinked_device_statistic_figures"] > counts["total_figures"]:
+        raise ValueError("Unlinked-statistics count cannot exceed total figures")
     notes = str(payload.get("notes", "")).strip()
     if len(notes) > 4000:
         raise ValueError("Figure audit notes must contain at most 4000 characters")
@@ -200,7 +203,7 @@ def save_figure_audit(
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(
-            {"schema_version": 1, "paper_id": paper_id, "audits": audits},
+            {"schema_version": 2, "paper_id": paper_id, "audits": audits},
             indent=2,
             ensure_ascii=False,
         )
@@ -260,6 +263,7 @@ def add_issue(
     aggregation: str = "unspecified",
     measurement_context: str = "unspecified",
     uncertainty: str = "",
+    proposed_patch: object = None,
 ) -> dict[str, Any]:
     if reporter_id not in {user["id"] for user in load_users(ground_truth_dir)}:
         raise ValueError("Unknown reviewer")
@@ -281,6 +285,19 @@ def add_issue(
     uncertainty = str(uncertainty).strip()
     if len(uncertainty) > 500:
         raise ValueError("Uncertainty note must contain at most 500 characters")
+    if proposed_patch is None:
+        proposed_patch = []
+    if not isinstance(proposed_patch, list) or len(proposed_patch) > 100:
+        raise ValueError("Proposed patch must be a JSON Patch array of at most 100 operations")
+    for operation in proposed_patch:
+        if not isinstance(operation, dict):
+            raise ValueError("Each proposed patch operation must be an object")
+        if operation.get("op") not in {"add", "remove", "replace", "test"}:
+            raise ValueError("Unsupported proposed patch operation")
+        if not isinstance(operation.get("path"), str) or not operation["path"].startswith("/"):
+            raise ValueError("Proposed patch paths must be JSON pointers")
+        if operation["op"] != "remove" and "value" not in operation:
+            raise ValueError("Proposed patch operation requires a value")
     issues = load_issues(ground_truth_dir, split, paper_id)
     issue = {
         "id": uuid.uuid4().hex,
@@ -299,6 +316,7 @@ def add_issue(
             "measurement_context": measurement_context,
             "uncertainty": uncertainty,
         },
+        "proposed_patch": proposed_patch,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "resolved_by": None,
         "resolution": "",

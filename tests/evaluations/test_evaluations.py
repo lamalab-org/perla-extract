@@ -118,6 +118,21 @@ def test_null_placeholders_are_not_scored_as_facts():
     assert evaluation.recalls_average == 1.0
 
 
+def test_provisional_performance_aggregation_is_not_scored_yet():
+    truth_cell = {
+        "pce": {"value": 20.0, "unit": "%"},
+        "performance_aggregation": "champion",
+        "layers": [],
+    }
+    extraction_cell = {"pce": {"value": 20.0, "unit": "%"}, "layers": []}
+
+    evaluation = _evaluate_cells([truth_cell], [extraction_cell])
+
+    assert evaluation.score == 1.0
+    assert evaluation.precisions_average == 1.0
+    assert evaluation.recalls_average == 1.0
+
+
 def test_wrong_value_is_both_false_positive_and_false_negative():
     evaluation = _evaluate_cells(
         [{"pce": {"value": 20.0, "unit": "%"}, "layers": []}],

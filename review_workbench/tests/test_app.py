@@ -137,6 +137,7 @@ def test_review_ui_has_separate_figure_audit():
     assert 'id="figure-audit-form"' in html
     assert "schema_relevant_figures" in javascript
     assert "figure_only_schema_figures" in javascript
+    assert "unlinked_device_statistic_figures" in javascript
 
 
 def test_search_and_issues_offer_explicit_pdf_jumps():
@@ -151,6 +152,11 @@ def test_search_and_issues_offer_explicit_pdf_jumps():
     assert "fact-value-relation" in javascript
     assert "fact-aggregation" in javascript
     assert '"mean", "Average / mean"' in javascript
+    assert "jumpToFactEvidence(fact)" in javascript
+    assert 'data-use-figure-audit' in javascript
+    assert 'id="issue-proposed-patch"' in html
+    assert "issue.proposed_patch" in javascript
+    assert 'value="issues">Open correction proposals' in html
     assert 'id="copy-pdf-quote"' in html
     assert 'id="copy-page-text"' in html
     assert "(p. ${state.pdfPage})" in javascript

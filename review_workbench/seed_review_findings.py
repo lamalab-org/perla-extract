@@ -13,7 +13,90 @@ from review_workbench.review_collaboration import add_user
 from review_workbench.server import ReviewApplication
 
 
+def _mfcl_passivation_patch() -> list[dict]:
+    patch = []
+    for cell_index in (0, 1):
+        for layer_index, location, solvent, concentration in (
+            (1, "Buried surface passivation (BSP)", "DMF", 0.50),
+            (2, "Top surface passivation (TSP)", "isopropanol", 0.75),
+        ):
+            path = f"/cells/{cell_index}/layers/{layer_index}/deposition/-"
+            patch.extend(
+                (
+                    {
+                        "op": "add",
+                        "path": path,
+                        "value": {
+                            "step_name": location,
+                            "method": "Spin-coating",
+                            "duration": {"value": 30.0, "unit": "s"},
+                            "solution": {
+                                "solutes": [
+                                    {
+                                        "name": "MFCl",
+                                        "concentration": {
+                                            "value": concentration,
+                                            "unit": "mg/mL",
+                                        },
+                                    }
+                                ],
+                                "solvents": [
+                                    {"name": solvent, "volume_fraction": 1.0}
+                                ],
+                            },
+                            "additional_parameters": {"speed": "5000 rpm"},
+                        },
+                    },
+                    {
+                        "op": "add",
+                        "path": path,
+                        "value": {
+                            "step_name": f"Annealing after {location}",
+                            "method": "Thermal-annealing",
+                            "temperature": {"value": 100.0, "unit": "°C"},
+                            "duration": {"value": 300.0, "unit": "s"},
+                        },
+                    },
+                )
+            )
+    return patch
+
+
 FINDINGS = (
+    {
+        "split": "test",
+        "paper_id": "10.1002--adfm.202212698",
+        "type": "mixed_device",
+        "cell_index": 0,
+        "description": "Cell 1 is labelled as one champion device, but its tuple mixes differently qualified evidence: PCE 22.04% and Voc 1.134 V are in the champion discussion, Jsc is stated only as above 24.11 mA cm-2, and FF 80.47% belongs to a later MFCl-versus-PEACl comparison device (PCE 21.95%, Voc 1.14 V).",
+        "suggested_value": "Keep only a coherent, explicitly supported tuple; review Jsc as a lower bound and remove or reassign FF 80.47%.",
+        "source_page": 3,
+        "source_text": "The champion f-PSCs can achieve JSC values above 24.11 mA cm−2",
+        "aggregation": "champion",
+        "value_relation": "lower_bound",
+    },
+    {
+        "split": "test",
+        "paper_id": "10.1002--adfm.202212698",
+        "type": "missing_cell",
+        "cell_index": None,
+        "description": "Main-text prose reports two additional coherent comparison devices that are absent from the JSON: an MFCl-passivated flexible device (FF 80.47%, Voc 1.14 V, PCE 21.95%) and a PEACl-passivated flexible device (FF 77.98%, Voc 1.13 V, PCE 21.05%).",
+        "suggested_value": "Candidate A: MFCl, PCE 21.95%, Voc 1.14 V, FF 80.47%. Candidate B: PEACl, PCE 21.05%, Voc 1.13 V, FF 77.98%. Jsc is not stated in the prose and should remain null.",
+        "source_page": 5,
+        "source_text": "MFCl passivation can lead to a higher efficiency (21.95%) than PEACl passivation (21.05%)",
+        "aggregation": "single_device",
+    },
+    {
+        "split": "test",
+        "paper_id": "10.1002--adfm.202212698",
+        "type": "missing_value",
+        "cell_index": None,
+        "description": "The treated cells identify MFCl on SnO2 and the absorber, but do not encode the explicit passivation steps. BSP is 0.50 mg mL-1 MFCl in DMF on SnO2; TSP is 0.75 mg mL-1 MFCl in isopropanol on the perovskite. Both are spin-coated at 5000 rpm for 30 s and annealed at 100 °C for 5 min.",
+        "suggested_value": "Add separate BSP and TSP deposition/treatment steps to both MFCl-treated cells; do not add them to the control.",
+        "source_page": 9,
+        "source_text": "For BSP treatment, MFCl solution at different concentrations in DMF was added dropwise onto the SnO2 layer",
+        "proposed_patch": _mfcl_passivation_patch(),
+    },
     {
         "split": "test",
         "paper_id": "10.1002--adma.202305822",
@@ -97,6 +180,19 @@ FINDINGS = (
 )
 
 
+FIGURE_AUDITS = (
+    {
+        "split": "test",
+        "paper_id": "10.1002--adfm.202212698",
+        "total_figures": 6,
+        "schema_relevant_figures": 2,
+        "figure_only_schema_figures": 2,
+        "unlinked_device_statistic_figures": 1,
+        "notes": "Conservative suggested audit: Figures 2 and 3 contain data that map coherently to the current schema. Figure 2 has labelled forward/reverse JV tuples in inset tables (flexible PCE: 19.18/20.01/21.69/22.04%; rigid: 21.78/22.65/24.05/24.40%). Figure 3A has labelled MPP/stability values and conditions. Both include encodable values not fully repeated in prose. Figure 1 is counted separately as unlinked individual-device statistics: its PCE/Voc/Jsc/FF swarmplots do not identify the same device across panels. Figure 4 uses bending cycles, for which the schema lacks a meaningful independent variable; Figures 5-6 report measurements outside the schema. Verify before saving.",
+    },
+)
+
+
 def seed(*, dry_run: bool = False) -> tuple[int, int]:
     if not os.environ.get("BLOB_READ_WRITE_TOKEN"):
         raise RuntimeError("BLOB_READ_WRITE_TOKEN is not configured")
@@ -126,6 +222,20 @@ def seed(*, dry_run: bool = False) -> tuple[int, int]:
                 finding["split"],
                 finding["paper_id"],
                 {"reporter_id": reporter["id"], **finding},
+            )
+            created += 1
+        for audit in FIGURE_AUDITS:
+            existing = app.figure_audits(audit["split"], audit["paper_id"])
+            if reporter["id"] in existing:
+                skipped += 1
+                continue
+            if dry_run:
+                created += 1
+                continue
+            app.save_paper_figure_audit(
+                audit["split"],
+                audit["paper_id"],
+                {"reviewer_id": reporter["id"], **audit},
             )
             created += 1
         if not dry_run and created:

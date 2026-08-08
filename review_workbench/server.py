@@ -378,6 +378,7 @@ class ReviewApplication:
                 payload.get("measurement_context", "unspecified")
             ),
             uncertainty=str(payload.get("uncertainty", "")),
+            proposed_patch=payload.get("proposed_patch"),
         )
 
     def resolve_missing_issue(

@@ -32,8 +32,8 @@ function escapeHtml(value) {
 }
 
 const SAFE_FRAGMENT_TAGS = new Set([
-  "article", "b", "button", "div", "h3", "i", "input", "label", "mark",
-  "option", "p", "select", "span", "strong", "textarea", "time",
+  "article", "b", "button", "code", "div", "h3", "i", "input", "label", "mark",
+  "option", "p", "pre", "select", "span", "strong", "textarea", "time",
 ]);
 const SAFE_FRAGMENT_ATTRIBUTES = new Set([
   "checked", "class", "disabled", "min", "placeholder", "rows", "selected",
@@ -67,6 +67,7 @@ function renderPapers() {
   const filter = $("filter").value;
   const visible = state.papers.filter((paper) =>
     filter === "all" ||
+    (filter === "issues" && paper.open_issues > 0) ||
     (filter === "pending" && paper.metadata.review_status === "pending") ||
     (filter === "excluded" && !included(paper)) ||
     (filter === "included" && included(paper))
@@ -266,6 +267,18 @@ function matchedText(suggestion, fallback = "") {
   return suggestion.snippet.slice(suggestion.match_start, suggestion.match_end) || fallback;
 }
 
+function jumpToFactEvidence(fact) {
+  if (fact.suggestion) {
+    return jumpToPage(
+      fact.suggestion.page,
+      matchedText(fact.suggestion, fact.suggestion.query),
+      null,
+      fact.suggestion.snippet,
+    );
+  }
+  return searchValue(fact);
+}
+
 function renderFields() {
   if (!state.reviewData) return;
   const cell = $("field-cell").value;
@@ -330,8 +343,8 @@ function bindFieldEvents() {
       updateFactFromCard(card);
     });
     card.querySelectorAll(".fact-status,.fact-value-relation,.fact-aggregation,.fact-page,.fact-quote,.fact-notes").forEach((input) => input.addEventListener("change", () => updateFactFromCard(card)));
-    card.querySelector('[data-action="search-value"]').addEventListener("click", () => searchValue(fact));
-    card.querySelector('[data-action="jump-suggestion"]')?.addEventListener("click", () => jumpToPage(fact.suggestion.page, matchedText(fact.suggestion, fact.suggestion.query), null, fact.suggestion.snippet));
+    card.querySelector('[data-action="search-value"]').addEventListener("click", () => jumpToFactEvidence(fact));
+    card.querySelector('[data-action="jump-suggestion"]')?.addEventListener("click", () => jumpToFactEvidence(fact));
     card.querySelector('[data-action="use-quote"]')?.addEventListener("click", () => {
       card.querySelector(".fact-page").value = fact.suggestion.page;
       card.querySelector(".fact-quote").value = fact.suggestion.snippet;
@@ -448,16 +461,28 @@ function renderFigureAudit() {
   $("total-figures").value = mine?.total_figures ?? "";
   $("schema-figures").value = mine?.schema_relevant_figures ?? "";
   $("figure-only-figures").value = mine?.figure_only_schema_figures ?? "";
+  $("unlinked-statistic-figures").value = mine?.unlinked_device_statistic_figures ?? "";
   $("figure-notes").value = mine?.notes || "";
   $("figure-audit-status").textContent = mine
     ? `Your audit saved ${new Date(mine.updated_at).toLocaleString()}`
     : "Not yet reviewed by you";
   const peers = Object.values(state.figureAudits).filter((audit) => audit.reviewer_id !== reviewerId());
-  renderSafeHtml($("peer-figure-audits"), peers.length ? `<h3>Other reviewers</h3>${peers.map((audit) => `<article class="peer-figure-audit">
+  renderSafeHtml($("peer-figure-audits"), peers.length ? `<h3>Other reviewers and seeded suggestions</h3>${peers.map((audit) => `<article class="peer-figure-audit">
     <strong>${escapeHtml(reviewerName(audit.reviewer_id))}</strong>
-    <span>${audit.total_figures} total · ${audit.schema_relevant_figures} schema-relevant · ${audit.figure_only_schema_figures} figure-only</span>
+    <span>${audit.total_figures} total · ${audit.schema_relevant_figures} schema-relevant · ${audit.figure_only_schema_figures} figure-only · ${audit.unlinked_device_statistic_figures || 0} with unlinked device statistics</span>
     ${audit.notes ? `<p>${escapeHtml(audit.notes)}</p>` : ""}
+    <button type="button" data-use-figure-audit="${escapeHtml(audit.reviewer_id)}">Use these counts and notes</button>
   </article>`).join("")}` : `<div class="empty-state">No other reviewer has audited the figures yet.</div>`);
+  $("peer-figure-audits").querySelectorAll("[data-use-figure-audit]").forEach((button) => button.addEventListener("click", () => {
+    const audit = state.figureAudits[button.dataset.useFigureAudit];
+    if (!audit) return;
+    $("total-figures").value = audit.total_figures;
+    $("schema-figures").value = audit.schema_relevant_figures;
+    $("figure-only-figures").value = audit.figure_only_schema_figures;
+    $("unlinked-statistic-figures").value = audit.unlinked_device_statistic_figures || 0;
+    $("figure-notes").value = audit.notes || "";
+    $("figure-audit-status").textContent = "Suggestion copied — review it, then save";
+  }));
 }
 
 function renderIssues() {
@@ -471,6 +496,7 @@ function renderIssues() {
     <p>${escapeHtml(issue.description)}</p>
     <div class="issue-meta">${issue.cell_index == null ? "Paper-level" : `Cell ${issue.cell_index + 1}`}${issue.source_page ? ` · p. ${issue.source_page}` : ""}${issue.suggested_value ? ` · suggested: ${escapeHtml(issue.suggested_value)}` : ""}</div>
     ${proposalParts.length || proposal.uncertainty ? `<div class="schema-tags">${proposalParts.map((value) => `<span>${escapeHtml(value.replaceAll("_", " "))}</span>`).join("")}${proposal.uncertainty ? `<span>${escapeHtml(proposal.uncertainty)}</span>` : ""}</div>` : ""}
+    ${issue.proposed_patch?.length ? `<details class="proposed-patch"><summary>Proposed correction (${issue.proposed_patch.length} operation${issue.proposed_patch.length === 1 ? "" : "s"})</summary><pre><code>${escapeHtml(JSON.stringify(issue.proposed_patch, null, 2))}</code></pre><button type="button" data-copy-patch="${issue.id}">Copy patch</button></details>` : ""}
     ${issue.source_page ? `<button class="issue-jump" data-issue-jump="${issue.id}">Jump to evidence</button>` : ""}
     ${issue.status === "open" ? `<div class="issue-resolution"><input placeholder="Resolution note…" /><button data-resolve-issue="${issue.id}">Resolve</button></div>` : `<div class="issue-meta">Resolved by ${escapeHtml(reviewerName(issue.resolved_by))}: ${escapeHtml(issue.resolution || "no note")}</div>`}
   </article>`; }).join("") : `<div class="empty-state">No missing-item reports yet.</div>`);
@@ -480,6 +506,12 @@ function renderIssues() {
     if (issue.source_text) $("pdf-search").value = issue.source_text;
     jumpToPage(issue.source_page, issue.source_text || "", null, issue.source_text || "");
   }));
+  document.querySelectorAll("[data-copy-patch]").forEach((button) => button.addEventListener("click", async () => {
+    const issue = state.issues.find((item) => item.id === button.dataset.copyPatch);
+    if (!issue) return;
+    await navigator.clipboard.writeText(JSON.stringify(issue.proposed_patch, null, 2));
+    button.textContent = "Copied";
+  }));
   document.querySelectorAll("[data-resolve-issue]").forEach((button) => button.addEventListener("click", async () => {
     const resolution = button.previousElementSibling.value;
     const payload = await request(`/api/issues/${state.split}/${encodeURIComponent(state.selected)}/${button.dataset.resolveIssue}`, { method: "PUT", body: JSON.stringify({ reviewer_id: reviewerId(), resolution }) });
@@ -488,6 +520,10 @@ function renderIssues() {
 }
 
 async function createIssue(overrides = {}) {
+  let proposedPatch = overrides.proposed_patch || [];
+  if (!overrides.proposed_patch && $("issue-proposed-patch").value.trim()) {
+    proposedPatch = JSON.parse($("issue-proposed-patch").value);
+  }
   const payload = {
     reporter_id: reviewerId(), type: overrides.type || $("issue-type").value,
     description: overrides.description || $("issue-description").value,
@@ -498,6 +534,7 @@ async function createIssue(overrides = {}) {
     aggregation: overrides.aggregation || $("issue-aggregation").value,
     measurement_context: overrides.measurement_context || $("issue-measurement-context").value,
     uncertainty: overrides.uncertainty || $("issue-uncertainty").value,
+    proposed_patch: proposedPatch,
   };
   const result = await request(`/api/issues/${state.split}/${encodeURIComponent(state.selected)}`, { method: "POST", body: JSON.stringify(payload) });
   state.issues.push(result.issue); currentPaper().open_issues = (currentPaper().open_issues || 0) + 1; renderPapers();
@@ -700,7 +737,7 @@ $("paper-comment-form").addEventListener("submit", async (event) => {
 
 $("issue-form").addEventListener("submit", async (event) => {
   event.preventDefault(); const status = $("issue-status"); status.textContent = "Saving…";
-  try { await createIssue(); $("issue-description").value = ""; $("issue-suggested-value").value = ""; $("issue-uncertainty").value = ""; status.textContent = "Issue created"; renderIssues(); }
+  try { await createIssue(); $("issue-description").value = ""; $("issue-suggested-value").value = ""; $("issue-uncertainty").value = ""; $("issue-proposed-patch").value = ""; status.textContent = "Issue created"; renderIssues(); }
   catch (error) { status.textContent = error.message; }
 });
 
@@ -713,6 +750,7 @@ $("figure-audit-form").addEventListener("submit", async (event) => {
       total_figures: Number($("total-figures").value),
       schema_relevant_figures: Number($("schema-figures").value),
       figure_only_schema_figures: Number($("figure-only-figures").value),
+      unlinked_device_statistic_figures: Number($("unlinked-statistic-figures").value),
       notes: $("figure-notes").value,
     };
     const result = await request(`/api/figure-audits/${state.split}/${encodeURIComponent(state.selected)}`, { method: "PUT", body: JSON.stringify(payload) });

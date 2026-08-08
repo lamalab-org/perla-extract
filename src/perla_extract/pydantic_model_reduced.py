@@ -357,7 +357,21 @@ class PerovskiteSolarCell(BaseModel):
     )
     averaged_quantities: Optional[bool] = Field(
         None,
-        description="True if the reported performance metrics are reported based on an average over multiple devices. If there are additional statistics that have been reported, extract them into `additional_notes`.",
+        description="Legacy compatibility field. True if the metrics are an average over multiple devices. Prefer `performance_aggregation` for new extractions.",
+        deprecated=True,
+    )
+    performance_aggregation: Optional[
+        Literal[
+            "single_device",
+            "champion",
+            "mean",
+            "median",
+            "stabilized",
+            "distribution",
+        ]
+    ] = Field(
+        None,
+        description="How the reported performance tuple was selected or aggregated. Use `champion` for a best-performing device, `mean` or `median` for a device population, `single_device` when no selection claim is made, `stabilized` for a steady-state/MPP value, and `distribution` when only population statistics are reported.",
     )
     active_area: Optional[ActiveArea] = Field(
         None, description="Reported active area of the solar cell."

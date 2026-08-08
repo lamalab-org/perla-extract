@@ -228,7 +228,7 @@ def score_all(model_name, output):
                 light_values = [precision_results[key] for key in light_keys]
                 aggregated_results["light"] = sum(light_values) / len(light_values)
 
-            # Add keys that don't match any of our aggregation rules, except "averaged_quantities"
+            # Add keys that don't match any of our aggregation rules, except metadata
             keys_to_exclude = set(
                 unit_keys
                 + composition_keys
@@ -241,6 +241,7 @@ def score_all(model_name, output):
                 if (
                     key not in keys_to_exclude
                     and "averaged_quantities" not in key
+                    and "performance_aggregation" not in key
                     and "number_devices" not in key
                     and "encapsulated" not in key
                 ):

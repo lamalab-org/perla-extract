@@ -9,8 +9,13 @@ excluded, because the benchmark measures extraction from the main paper's
 machine-readable text and tables.
 
 The separate Figure audit records how much schema-relevant information is lost
-under that policy. Figure-only counts and notes are coverage analysis and must
-not be promoted into the ground-truth JSON.
+under that policy. Count a figure as schema-relevant only when its values can be
+encoded as a coherent record without tracing curves, estimating coordinates, or
+joining unrelated points. A labelled inset table can qualify; a bare J-V curve
+does not. Swarmplots with individual-device points but no cross-panel device
+identity are counted separately as unlinked device statistics. Figure-only
+counts and notes are coverage analysis and must not be promoted into the
+ground-truth JSON.
 
 Research papers are not excluded because they contain or focus on tandem
 devices. Tandem device records themselves are outside the current schema and
@@ -48,6 +53,10 @@ citation, and the complete extracted page text remains available as a fallback.
 Automatic quote suggestions rank exact matches using field terminology, units,
 and ancestor context such as composition, layer, and processing-step names.
 Suggestions never mark a field as verified without reviewer action.
+Missing/wrong-item reports can also carry a validated JSON Patch proposal. The
+proposal is review data, not an automatic mutation: reviewers inspect the old
+JSON and cited PDF evidence, then explicitly resolve and apply accepted changes.
+Use the **Open correction proposals** paper filter to work through this queue.
 
 Run the workbench locally from the repository root:
 

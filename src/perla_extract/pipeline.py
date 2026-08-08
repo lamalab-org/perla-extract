@@ -71,7 +71,7 @@ def calculate_and_aggregate(metrics_dict, compute_recall=True):
     excluded_keys = {k for group in aggregations.values() for k in result if group(k)}
     for k, v in result.items():
         if k not in excluded_keys and not any(
-            x in k for x in ["averaged_quantities", "number_devices", "encapsulated"]
+            x in k for x in ["averaged_quantities", "performance_aggregation", "number_devices", "encapsulated"]
         ):
             clean_key = k.replace("_", " ").split(":value")[0]
             aggregated[clean_key] = v

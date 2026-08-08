@@ -35,7 +35,7 @@
           <button type="button" data-split="test" class="active">Test <span id="test-count">–</span></button>
           <button type="button" data-split="dev">Development <span id="dev-count">–</span></button>
         </div>
-        <label>Show <select id="filter"><option value="all">All papers</option><option value="pending">Pending review</option><option value="excluded">Excluded</option><option value="included">Included</option></select></label>
+        <label>Show <select id="filter"><option value="all">All papers</option><option value="issues">Open correction proposals</option><option value="pending">Pending review</option><option value="excluded">Excluded</option><option value="included">Included</option></select></label>
         <button id="open-import" class="primary-button">Add paper</button>
       </div>
     </header>
@@ -143,12 +143,13 @@
         </section>
 
         <section id="figures-panel" class="review-panel" hidden>
-          <div class="review-hint"><strong>This audit does not expand the ground truth.</strong> Count main-paper figures by figure number (not individual panels). A figure is “schema-relevant” when it reports a device, composition, layer, process, performance, stability, or measurement value represented by the extraction schema. Mark it “figure-only” when that information is not explicitly repeated in main-paper prose, a caption, or a table. Supporting Information is outside both the ground truth and this main-paper figure count.</div>
+          <div class="review-hint"><strong>This audit does not expand the ground truth.</strong> Count main-paper figures by figure number (not individual panels). A figure is “schema-relevant” only when its data can be encoded as a coherent schema record without tracing curves, guessing values, or joining unrelated points. A bare J–V curve is not enough; a labelled inset table with linked PCE/Jsc/Voc/FF rows is. Mark it “figure-only” when such encodable information is not explicitly repeated in main-paper prose, a caption, or a table. Count “unlinked device statistics” separately—not as schema-relevant—when individual-device points are plotted but values across metric panels cannot be joined into devices. Supporting Information is outside both the ground truth and this main-paper figure count.</div>
           <form id="figure-audit-form" class="figure-audit-form">
             <div class="figure-count-grid">
               <label>Total figures <input id="total-figures" type="number" min="0" required /></label>
               <label>Schema-relevant <input id="schema-figures" type="number" min="0" required /></label>
               <label>Figure-only data <input id="figure-only-figures" type="number" min="0" required /></label>
+              <label>Unlinked device statistics <input id="unlinked-statistic-figures" type="number" min="0" required /></label>
             </div>
             <label>Figure notes <textarea id="figure-notes" rows="5" placeholder="Example: Fig. 3d — full JV curve; PCE is in text, but Jsc/Voc/FF are only readable from the plot. Fig. 5 — stability trace, T80 not stated elsewhere."></textarea></label>
             <div class="action-row"><span id="figure-audit-status">Not yet reviewed by you</span><button type="submit">Save figure audit</button></div>
@@ -184,6 +185,7 @@
                 <label>Measurement <select id="issue-measurement-context"><option value="unspecified">Not specified</option><option value="forward_scan">Forward scan</option><option value="reverse_scan">Reverse scan</option><option value="steady_state">Steady state</option><option value="certified">Certified</option><option value="other">Other</option></select></label>
               </div>
               <label>Uncertainty / range <input id="issue-uncertainty" placeholder="e.g. ±0.3%, 15–17%, or error bars only" /></label>
+              <label>Proposed JSON Patch <textarea id="issue-proposed-patch" rows="5" spellcheck="false" placeholder='[{"op":"replace","path":"/cells/0/...","value":"corrected value"}]'></textarea></label>
             </details>
             <div class="dialog-actions"><span id="issue-status"></span><button type="submit" class="primary-button">Create issue</button></div>
           </form>
