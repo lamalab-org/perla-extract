@@ -336,9 +336,16 @@ class ReviewApplication:
             raise FileNotFoundError(self.paper_path(split, paper_id))
         return load_issues(self.ground_truth_dir, split, paper_id)
 
-    def proposed_ground_truth(self, split: str, paper_id: str) -> dict:
+    def proposed_ground_truth(
+        self,
+        split: str,
+        paper_id: str,
+        selected_change_ids: set[str] | None = None,
+    ) -> dict:
         truth = self.load_ground_truth(split, paper_id)
-        return apply_proposed_patches(truth, self.issues(split, paper_id))
+        return apply_proposed_patches(
+            truth, self.issues(split, paper_id), selected_change_ids
+        )
 
     def figure_audits(self, split: str, paper_id: str) -> dict[str, dict]:
         if not self.paper_path(split, paper_id).exists():
@@ -385,6 +392,9 @@ class ReviewApplication:
                 payload.get("measurement_context", "unspecified")
             ),
             uncertainty=str(payload.get("uncertainty", "")),
+            proposal_confidence=str(
+                payload.get("proposal_confidence", "needs_review")
+            ),
             proposed_patch=payload.get("proposed_patch"),
         )
 
@@ -961,6 +971,25 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     payload["reporter_id"] = user["id"]
                     issue = application.add_missing_issue(parts[2], parts[3], payload)
                     self.send_json({"issue": issue}, HTTPStatus.CREATED)
+                    return
+                if (
+                    len(parts) == 5
+                    and parts[:2] == ["api", "proposed-ground-truth"]
+                    and parts[4] == "preview"
+                ):
+                    payload = self.read_json()
+                    if not isinstance(payload, dict) or not isinstance(
+                        payload.get("change_ids"), list
+                    ):
+                        raise ValueError("Proposal preview requires change_ids")
+                    change_ids = payload["change_ids"]
+                    if not all(isinstance(item, str) for item in change_ids):
+                        raise ValueError("Proposal change IDs must be strings")
+                    self.send_json(
+                        application.proposed_ground_truth(
+                            parts[2], parts[3], set(change_ids)
+                        )
+                    )
                     return
                 self.send_error(HTTPStatus.NOT_FOUND)
             except FileNotFoundError as error:

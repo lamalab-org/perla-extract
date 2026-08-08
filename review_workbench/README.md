@@ -60,6 +60,14 @@ and then explicitly load the complete draft into the JSON editor before saving.
 A stale or conflicting patch is rejected atomically and shown as a conflict.
 Use the **Open correction proposals** paper filter to work through this queue.
 
+The primary queue is proposal-first: cited findings with concrete patches are
+shown as **Ready to apply**, while ambiguous findings remain under **Needs a
+stronger proposal**. Reviewers can select individual patch operations and load
+only those changes into an unsaved JSON draft. The quantity scanner is retained
+as an optional diagnostic reached from the Proposals view; raw unmatched
+numbers are not treated as correction proposals because they lack reliable
+device and measurement linkage.
+
 Rerun the stored model extractions against any number of named ground-truth
 revisions with the workbench-local scoring script. It emits fact-level micro
 precision, recall, and F1 together with device coverage:

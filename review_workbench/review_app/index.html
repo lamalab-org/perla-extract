@@ -111,11 +111,10 @@
         <div class="data-toolbar">
           <div class="tabs" role="tablist">
             <button class="tab active" data-tab="fields">Field review</button>
-            <button class="tab" data-tab="gaps">Unmapped quantities</button>
             <button class="tab" data-tab="figures">Figure audit</button>
             <button class="tab" data-tab="discussion">Discussion</button>
-            <button class="tab" data-tab="issues">Missing / issues</button>
-            <button class="tab" data-tab="revision">Proposed revision</button>
+            <button class="tab" data-tab="issues">Proposals</button>
+            <button class="tab" data-tab="revision">Review changes</button>
             <button class="tab" data-tab="truth">JSON</button>
             <button class="tab" data-tab="extraction">Model extraction</button>
           </div>
@@ -170,12 +169,14 @@
 
         <section id="issues-panel" class="review-panel" hidden>
           <div id="issue-summary" class="review-hint"></div>
+          <div class="proposal-toolbar"><button id="open-quantity-scanner" type="button">Open diagnostic quantity scanner</button><span>Use only when a strong proposal is not already available.</span></div>
           <div id="issue-list" class="issue-list"></div>
           <form id="issue-form" class="issue-form">
-            <h3>Report something missing or wrong</h3>
+            <h3>Add a reviewer proposal or unresolved finding</h3>
             <div class="field-grid">
               <label>Type <select id="issue-type"><option value="missing_cell">Missing cell / device</option><option value="missing_value">Missing value</option><option value="missing_layer">Missing layer</option><option value="missing_composition">Missing composition</option><option value="mixed_device">Values mixed across devices</option><option value="out_of_scope_tandem">Out-of-scope tandem device</option><option value="schema_limitation">Schema limitation / uncertainty</option><option value="wrong_value">Wrong value</option><option value="other">Other</option></select></label>
               <label>Cell <select id="issue-cell"><option value="">Paper-level / unknown</option></select></label>
+              <label>Confidence <select id="issue-confidence"><option value="needs_review">Needs review</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
             </div>
             <label>Description <textarea id="issue-description" rows="3" required placeholder="What is missing, and where is it reported?"></textarea></label>
             <label>Suggested value <input id="issue-suggested-value" placeholder="Optional value or stack" /></label>
@@ -195,11 +196,12 @@
 
         <section id="revision-panel" class="review-panel" hidden>
           <div id="revision-summary" class="review-hint"></div>
+          <div class="proposal-toolbar"><button id="select-all-changes" type="button">Select all</button><button id="select-no-changes" type="button">Select none</button><span id="selection-summary"></span></div>
           <div id="revision-conflicts" class="revision-conflicts"></div>
           <div id="revision-list" class="revision-list"></div>
           <div class="action-row revision-actions">
             <span>Nothing is written to the benchmark until you review the complete JSON and save it.</span>
-            <button id="review-proposed-json" type="button">Review proposed JSON</button>
+            <button id="review-proposed-json" type="button">Review selected changes</button>
           </div>
         </section>
 

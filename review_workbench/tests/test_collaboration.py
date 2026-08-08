@@ -151,6 +151,25 @@ def test_open_issue_patches_build_non_destructive_revision():
         "/cells/0/pce/value", "/cells/1"
     ]
     assert preview["conflicts"] == []
+    assert preview["changes"][0]["change_id"] == "fix-pce:1"
+
+
+def test_revision_can_apply_one_granular_change():
+    truth = {"cells": [{"pce": {"value": 20.0}, "number_devices": None}]}
+    issues = [{
+        "id": "two-fixes", "status": "open", "type": "missing_value",
+        "description": "Two independent corrections.",
+        "proposed_patch": [
+            {"op": "replace", "path": "/cells/0/pce/value", "value": 21.4},
+            {"op": "replace", "path": "/cells/0/number_devices", "value": 20},
+        ],
+    }]
+
+    preview = apply_proposed_patches(truth, issues, {"two-fixes:1"})
+
+    assert preview["proposed_ground_truth"]["cells"][0]["pce"]["value"] == 20.0
+    assert preview["proposed_ground_truth"]["cells"][0]["number_devices"] == 20
+    assert [change["change_id"] for change in preview["changes"]] == ["two-fixes:1"]
 
 
 def test_stale_patch_is_reported_and_not_partially_applied():

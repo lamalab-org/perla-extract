@@ -49,7 +49,9 @@ def _patch_value(parent: object, key: str, pointer: str) -> object:
 
 
 def apply_proposed_patches(
-    ground_truth: dict[str, Any], issues: list[dict[str, Any]]
+    ground_truth: dict[str, Any],
+    issues: list[dict[str, Any]],
+    selected_change_ids: set[str] | None = None,
 ) -> dict[str, Any]:
     """Preview open issue patches without mutating the benchmark or issue records."""
     proposed = deepcopy(ground_truth)
@@ -60,16 +62,32 @@ def apply_proposed_patches(
         operations = issue.get("proposed_patch") or []
         if issue.get("status") != "open" or not operations:
             continue
+        issue_id = str(issue.get("id", ""))
+        mutation_ids = {
+            f"{issue_id}:{index}"
+            for index, operation in enumerate(operations)
+            if operation.get("op") != "test"
+        }
+        if selected_change_ids is not None and not mutation_ids.intersection(
+            selected_change_ids
+        ):
+            continue
         candidate = deepcopy(proposed)
         issue_changes: list[dict[str, Any]] = []
         try:
-            for operation in operations:
+            for operation_index, operation in enumerate(operations):
                 op = operation["op"]
                 pointer = operation["path"]
                 parent, key = _patch_parent(candidate, pointer)
                 if op == "test":
                     if _patch_value(parent, key, pointer) != operation["value"]:
                         raise ValueError(f"Test operation failed at {pointer}")
+                    continue
+                change_id = f"{issue_id}:{operation_index}"
+                if (
+                    selected_change_ids is not None
+                    and change_id not in selected_change_ids
+                ):
                     continue
                 before_exists = not (
                     op == "add"
@@ -110,7 +128,9 @@ def apply_proposed_patches(
                         "before_exists": before_exists,
                         "after": None if op == "remove" else deepcopy(operation["value"]),
                         "after_exists": op != "remove",
-                        "issue_id": str(issue.get("id", "")),
+                        "change_id": change_id,
+                        "operation_index": operation_index,
+                        "issue_id": issue_id,
                         "issue_type": str(issue.get("type", "other")),
                         "description": str(issue.get("description", "")),
                         "source_page": issue.get("source_page"),
@@ -128,7 +148,7 @@ def apply_proposed_patches(
             continue
         proposed = candidate
         changes.extend(issue_changes)
-        applied_issue_ids.append(str(issue.get("id", "")))
+        applied_issue_ids.append(issue_id)
     return {
         "current_ground_truth": ground_truth,
         "proposed_ground_truth": proposed,
@@ -391,6 +411,7 @@ def add_issue(
     aggregation: str = "unspecified",
     measurement_context: str = "unspecified",
     uncertainty: str = "",
+    proposal_confidence: str = "needs_review",
     proposed_patch: object = None,
 ) -> dict[str, Any]:
     if reporter_id not in {user["id"] for user in load_users(ground_truth_dir)}:
@@ -410,6 +431,8 @@ def add_issue(
         raise ValueError("Unknown aggregation")
     if measurement_context not in MEASUREMENT_CONTEXTS:
         raise ValueError("Unknown measurement context")
+    if proposal_confidence not in {"high", "medium", "low", "needs_review"}:
+        raise ValueError("Unknown proposal confidence")
     uncertainty = str(uncertainty).strip()
     if len(uncertainty) > 500:
         raise ValueError("Uncertainty note must contain at most 500 characters")
@@ -444,6 +467,7 @@ def add_issue(
             "measurement_context": measurement_context,
             "uncertainty": uncertainty,
         },
+        "proposal_confidence": proposal_confidence,
         "proposed_patch": proposed_patch,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "resolved_by": None,

@@ -2,7 +2,7 @@ const state = {
   split: "test", papers: [], selected: null, sources: [], tab: "fields",
   paperData: null, reviewData: null, quantityData: null, evidenceDirty: false,
   users: [], reviewerProgress: [], comments: [], issues: [], figureAudits: {}, corpusSummary: null, currentUser: null,
-  revision: null, truthDraft: null,
+  revision: null, truthDraft: null, selectedRevisionChanges: new Set(),
   clerk: null, pdfPage: 1, pdfPageCount: 0, pdfImageUrl: null,
   pdfNavigationId: 0, pdfPageText: "", pdfTextLines: [], pdfQuote: "", pendingCursor: null,
   internalToken: null,
@@ -33,8 +33,8 @@ function escapeHtml(value) {
 }
 
 const SAFE_FRAGMENT_TAGS = new Set([
-  "article", "b", "button", "code", "div", "h3", "i", "input", "label", "mark",
-  "option", "p", "pre", "select", "span", "strong", "textarea", "time",
+  "article", "b", "button", "code", "details", "div", "h3", "i", "input", "label", "mark",
+  "option", "p", "pre", "select", "span", "strong", "summary", "textarea", "time",
 ]);
 const SAFE_FRAGMENT_ATTRIBUTES = new Set([
   "checked", "class", "disabled", "min", "placeholder", "rows", "selected",
@@ -162,6 +162,7 @@ async function selectPaper(paperId) {
   state.quantityData = null;
   state.revision = null;
   state.truthDraft = null;
+  state.selectedRevisionChanges = new Set();
   state.evidenceDirty = false;
   state.pendingCursor = null;
   $("paper-title").textContent = paperId.replace("--", "/");
@@ -190,6 +191,9 @@ async function loadPaperData() {
   state.issues = issueData.issues;
   state.figureAudits = figureAuditData.audits;
   state.revision = revisionData;
+  state.selectedRevisionChanges = new Set(
+    (revisionData.changes || []).map((change) => change.change_id)
+  );
   const meta = paperData.metadata;
   $("article-type").value = meta.article_type;
   $("tandem-scope").value = meta.tandem_scope;
@@ -449,7 +453,7 @@ function renderRevision() {
     : `<strong>No applicable proposed changes.</strong> Add a valid JSON Patch to an open issue to build a reviewable revision.`);
   renderSafeHtml($("revision-conflicts"), conflicts.map((conflict) => `<article class="revision-conflict"><strong>Patch conflict</strong><p>${escapeHtml(conflict.description)}</p><code>${escapeHtml(conflict.error)}</code></article>`).join(""));
   renderSafeHtml($("revision-list"), changes.map((change) => `<article class="revision-change ${escapeHtml(change.op)}">
-    <div class="revision-heading"><span>${escapeHtml(change.op)}</span><code>${escapeHtml(change.path)}</code></div>
+    <div class="revision-heading"><label><input type="checkbox" data-revision-select="${escapeHtml(change.change_id)}" ${state.selectedRevisionChanges.has(change.change_id) ? "checked" : ""} /><span>${escapeHtml(change.op)}</span></label><code>${escapeHtml(change.path)}</code></div>
     <p>${escapeHtml(change.description)}</p>
     <div class="revision-values"><div><strong>Current</strong><pre><code>${escapeHtml(revisionValue(change.before, change.before_exists))}</code></pre></div><div><strong>Proposed</strong><pre><code>${escapeHtml(revisionValue(change.after, change.after_exists))}</code></pre></div></div>
     <div class="issue-meta">${change.source_page ? `Evidence on p. ${change.source_page}` : "No evidence page recorded"}</div>
@@ -461,7 +465,19 @@ function renderRevision() {
     $("pdf-search").value = change.source_text || "";
     jumpToPage(change.source_page, change.source_text || "", null, change.source_text || "");
   }));
-  $("review-proposed-json").disabled = !changes.length || conflicts.length > 0;
+  document.querySelectorAll("[data-revision-select]").forEach((input) => input.addEventListener("change", () => {
+    if (input.checked) state.selectedRevisionChanges.add(input.dataset.revisionSelect);
+    else state.selectedRevisionChanges.delete(input.dataset.revisionSelect);
+    updateRevisionSelection();
+  }));
+  updateRevisionSelection();
+}
+
+function updateRevisionSelection() {
+  const count = state.selectedRevisionChanges.size;
+  $("selection-summary").textContent = `${count} granular change${count === 1 ? "" : "s"} selected`;
+  $("review-proposed-json").textContent = `Review ${count || "selected"} change${count === 1 ? "" : "s"}`;
+  $("review-proposed-json").disabled = !count;
 }
 
 function renderDiscussion() {
@@ -525,19 +541,24 @@ function renderFigureAudit() {
 
 function renderIssues() {
   const open = state.issues.filter((issue) => issue.status === "open");
-  renderSafeHtml($("issue-summary"), `<strong>${open.length} open issue${open.length === 1 ? "" : "s"}</strong>. Missing items remain separate from the JSON until reviewed and resolved.`);
-  renderSafeHtml($("issue-list"), state.issues.length ? state.issues.map((issue) => {
+  const ready = open.filter((issue) => issue.proposed_patch?.length);
+  const needsWork = open.filter((issue) => !issue.proposed_patch?.length);
+  const resolved = state.issues.filter((issue) => issue.status !== "open");
+  renderSafeHtml($("issue-summary"), `<strong>${ready.length} ready-to-apply proposal${ready.length === 1 ? "" : "s"}</strong> · ${needsWork.length} finding${needsWork.length === 1 ? "" : "s"} still need a stronger JSON proposal. Each ready proposal includes cited evidence and can be accepted operation by operation.`);
+  const issueHtml = (issue) => {
     const proposal = issue.schema_proposal || {};
     const proposalParts = [proposal.value_relation, proposal.aggregation, proposal.measurement_context].filter((value) => value && value !== "unspecified");
     return `<article class="issue ${issue.status}">
-    <div class="issue-heading"><span>${escapeHtml(issueTypeLabel(issue.type))}</span><strong>${escapeHtml(issue.status)}</strong></div>
+    <div class="issue-heading"><span>${escapeHtml(issueTypeLabel(issue.type))}</span><strong>${issue.proposed_patch?.length ? "READY" : escapeHtml(issue.status)}</strong></div>
     <p>${escapeHtml(issue.description)}</p>
     <div class="issue-meta">${issue.cell_index == null ? "Paper-level" : `Cell ${issue.cell_index + 1}`}${issue.source_page ? ` · p. ${issue.source_page}` : ""}${issue.suggested_value ? ` · suggested: ${escapeHtml(issue.suggested_value)}` : ""}</div>
-    ${proposalParts.length || proposal.uncertainty ? `<div class="schema-tags">${proposalParts.map((value) => `<span>${escapeHtml(value.replaceAll("_", " "))}</span>`).join("")}${proposal.uncertainty ? `<span>${escapeHtml(proposal.uncertainty)}</span>` : ""}</div>` : ""}
+    <div class="schema-tags"><span>${escapeHtml((issue.proposal_confidence || (issue.proposed_patch?.length ? "high" : "needs_review")).replaceAll("_", " "))} confidence</span>${proposalParts.map((value) => `<span>${escapeHtml(value.replaceAll("_", " "))}</span>`).join("")}${proposal.uncertainty ? `<span>${escapeHtml(proposal.uncertainty)}</span>` : ""}</div>
     ${issue.proposed_patch?.length ? `<details class="proposed-patch"><summary>Proposed correction (${issue.proposed_patch.length} operation${issue.proposed_patch.length === 1 ? "" : "s"})</summary><pre><code>${escapeHtml(JSON.stringify(issue.proposed_patch, null, 2))}</code></pre><button type="button" data-copy-patch="${issue.id}">Copy patch</button></details>` : ""}
+    ${issue.status === "open" && issue.proposed_patch?.length ? `<button type="button" class="issue-jump" data-review-proposal="${issue.id}">Review granular changes</button>` : ""}
     ${issue.source_page ? `<button class="issue-jump" data-issue-jump="${issue.id}">Jump to evidence</button>` : ""}
     ${issue.status === "open" ? `<div class="issue-resolution"><input placeholder="Resolution note…" /><button data-resolve-issue="${issue.id}">Resolve</button></div>` : `<div class="issue-meta">Resolved by ${escapeHtml(reviewerName(issue.resolved_by))}: ${escapeHtml(issue.resolution || "no note")}</div>`}
-  </article>`; }).join("") : `<div class="empty-state">No missing-item reports yet.</div>`);
+  </article>`; };
+  renderSafeHtml($("issue-list"), state.issues.length ? `${ready.length ? `<h3>Ready to apply</h3>${ready.map(issueHtml).join("")}` : ""}${needsWork.length ? `<h3>Needs a stronger proposal</h3>${needsWork.map(issueHtml).join("")}` : ""}${resolved.length ? `<h3>Resolved</h3>${resolved.map(issueHtml).join("")}` : ""}` : `<div class="empty-state">No proposals yet.</div>`);
   document.querySelectorAll("[data-issue-jump]").forEach((button) => button.addEventListener("click", () => {
     const issue = state.issues.find((item) => item.id === button.dataset.issueJump);
     if (!issue) return;
@@ -549,6 +570,13 @@ function renderIssues() {
     if (!issue) return;
     await navigator.clipboard.writeText(JSON.stringify(issue.proposed_patch, null, 2));
     button.textContent = "Copied";
+  }));
+  document.querySelectorAll("[data-review-proposal]").forEach((button) => button.addEventListener("click", () => {
+    state.selectedRevisionChanges = new Set(
+      (state.revision?.changes || []).filter((change) => change.issue_id === button.dataset.reviewProposal).map((change) => change.change_id)
+    );
+    state.tab = "revision";
+    renderView();
   }));
   document.querySelectorAll("[data-resolve-issue]").forEach((button) => button.addEventListener("click", async () => {
     const resolution = button.previousElementSibling.value;
@@ -572,6 +600,7 @@ async function createIssue(overrides = {}) {
     aggregation: overrides.aggregation || $("issue-aggregation").value,
     measurement_context: overrides.measurement_context || $("issue-measurement-context").value,
     uncertainty: overrides.uncertainty || $("issue-uncertainty").value,
+    proposal_confidence: overrides.proposal_confidence || $("issue-confidence").value,
     proposed_patch: proposedPatch,
   };
   const result = await request(`/api/issues/${state.split}/${encodeURIComponent(state.selected)}`, { method: "POST", body: JSON.stringify(payload) });
@@ -587,7 +616,7 @@ function renderView() {
   else if (state.tab === "gaps") { $("gaps-panel").hidden = false; $("cell-summary").textContent = "Candidate quantities in the paper that may be missing from the JSON."; loadQuantities().catch((error) => $("quantity-summary").textContent = error.message); }
   else if (state.tab === "figures") { $("figures-panel").hidden = false; $("cell-summary").textContent = "Separate accounting for schema-relevant and figure-only evidence."; renderFigureAudit(); }
   else if (state.tab === "discussion") { $("discussion-panel").hidden = false; $("cell-summary").textContent = "Compare reviewer decisions and discuss scoring differences."; renderDiscussion(); }
-  else if (state.tab === "issues") { $("issues-panel").hidden = false; $("cell-summary").textContent = "Structured reports for cells, values, or layers missing from the ground truth."; renderIssues(); }
+  else if (state.tab === "issues") { $("issues-panel").hidden = false; $("cell-summary").textContent = "Cited correction proposals, prioritized by readiness to apply."; renderIssues(); }
   else if (state.tab === "revision") { $("revision-panel").hidden = false; $("cell-summary").textContent = "Non-destructive preview of open, structured correction proposals."; renderRevision(); }
   else { $("json-panel").hidden = false; renderJson(); }
 }
@@ -749,12 +778,27 @@ $("quantity-category").addEventListener("change", renderQuantities);
 document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click", () => { state.tab = tab.dataset.tab; renderView(); }));
 
 $("review-proposed-json").addEventListener("click", () => {
-  if (!state.revision?.proposed_ground_truth) return;
-  state.truthDraft = structuredClone(state.revision.proposed_ground_truth);
-  state.tab = "truth";
-  $("json-status").textContent = "Proposed revision loaded as an unsaved draft. Review it, then save explicitly.";
-  renderView();
+  if (!state.selectedRevisionChanges.size) return;
+  request(`/api/proposed-ground-truth/${state.split}/${encodeURIComponent(state.selected)}/preview`, {
+    method: "POST", body: JSON.stringify({ change_ids: [...state.selectedRevisionChanges] }),
+  }).then((preview) => {
+    if (preview.conflicts?.length) throw new Error(preview.conflicts.map((item) => item.error).join("; "));
+    state.truthDraft = structuredClone(preview.proposed_ground_truth);
+    state.tab = "truth";
+    $("json-status").textContent = `${state.selectedRevisionChanges.size} selected proposal changes loaded as an unsaved draft. Review, then save explicitly.`;
+    renderView();
+  }).catch((error) => { $("revision-summary").textContent = `Could not build selected revision: ${error.message}`; });
 });
+
+$("select-all-changes").addEventListener("click", () => {
+  state.selectedRevisionChanges = new Set((state.revision?.changes || []).map((change) => change.change_id));
+  renderRevision();
+});
+$("select-no-changes").addEventListener("click", () => {
+  state.selectedRevisionChanges = new Set();
+  renderRevision();
+});
+$("open-quantity-scanner").addEventListener("click", () => { state.tab = "gaps"; renderView(); });
 
 $("metadata-form").addEventListener("submit", async (event) => {
   event.preventDefault();

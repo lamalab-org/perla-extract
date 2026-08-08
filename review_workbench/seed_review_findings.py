@@ -9,7 +9,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from review_workbench.api.index import BlobStore, VercelReviewApplication
-from review_workbench.review_collaboration import add_user
+from review_workbench.review_collaboration import add_user, save_issues
 from review_workbench.server import ReviewApplication
 
 
@@ -88,6 +88,11 @@ FINDINGS = (
         "source_text": "The champion f-PSCs can achieve JSC values above 24.11 mA cm−2",
         "aggregation": "champion",
         "value_relation": "lower_bound",
+        "proposal_confidence": "high",
+        "proposed_patch": [
+            {"op": "test", "path": "/cells/0/ff/value", "value": 80.47},
+            {"op": "remove", "path": "/cells/0/ff"},
+        ],
     },
     {
         "split": "test",
@@ -109,6 +114,7 @@ FINDINGS = (
         "suggested_value": "Add separate BSP and TSP deposition/treatment steps to both MFCl-treated cells; do not add them to the control.",
         "source_page": 9,
         "source_text": "For BSP treatment, MFCl solution at different concentrations in DMF was added dropwise onto the SnO2 layer",
+        "proposal_confidence": "high",
         "proposed_patch": _mfcl_passivation_patch(),
     },
     {
@@ -144,6 +150,11 @@ FINDINGS = (
         "suggested_value": "Keep the exact 3D formula unknown; rename the layer to 3D perovskite.",
         "source_page": 6,
         "source_text": "ITO/SnO2/3D or 1D/3D perovskite/Spiro-OMeTAD/Au",
+        "proposal_confidence": "high",
+        "proposed_patch": [
+            {"op": "test", "path": "/cells/0/layers/2/name", "value": "3D Me3SPbI3"},
+            {"op": "replace", "path": "/cells/0/layers/2/name", "value": "3D perovskite"},
+        ],
     },
     {
         "split": "test",
@@ -166,6 +177,11 @@ FINDINGS = (
         "source_page": 8,
         "source_text": "a batch of 20 independent devices for each device set",
         "aggregation": "distribution",
+        "proposal_confidence": "high",
+        "proposed_patch": [
+            {"op": "test", "path": "/cells/0/number_devices", "value": None},
+            {"op": "replace", "path": "/cells/0/number_devices", "value": 20},
+        ],
     },
     {
         "split": "dev",
@@ -178,6 +194,11 @@ FINDINGS = (
         "source_page": 14,
         "source_text": "The PV metrics of 5 independent samples for each device set",
         "aggregation": "distribution",
+        "proposal_confidence": "high",
+        "proposed_patch": [
+            {"op": "test", "path": "/cells/1/number_devices", "value": None},
+            {"op": "replace", "path": "/cells/1/number_devices", "value": 5},
+        ],
     },
     {
         "split": "test",
@@ -222,11 +243,32 @@ def seed(*, dry_run: bool = False) -> tuple[int, int]:
         created = skipped = 0
         for finding in FINDINGS:
             existing = app.issues(finding["split"], finding["paper_id"])
-            if any(
-                issue.get("description") == finding["description"]
-                for issue in existing
-            ):
-                skipped += 1
+            matched = next(
+                (
+                    issue
+                    for issue in existing
+                    if issue.get("description") == finding["description"]
+                ),
+                None,
+            )
+            if matched is not None:
+                upgrades = {
+                    key: finding[key]
+                    for key in ("proposal_confidence", "proposed_patch")
+                    if key in finding and matched.get(key) != finding[key]
+                }
+                if not upgrades:
+                    skipped += 1
+                    continue
+                if not dry_run:
+                    matched.update(upgrades)
+                    save_issues(
+                        app.ground_truth_dir,
+                        finding["split"],
+                        finding["paper_id"],
+                        existing,
+                    )
+                created += 1
                 continue
             if dry_run:
                 created += 1

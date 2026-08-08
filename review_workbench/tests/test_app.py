@@ -153,6 +153,11 @@ def test_review_ui_previews_proposed_ground_truth_before_saving():
     assert "change.before" in javascript
     assert "change.after" in javascript
     assert "state.truthDraft" in javascript
+    assert 'data-tab="gaps"' not in html
+    assert 'id="open-quantity-scanner"' in html
+    assert 'id="select-all-changes"' in html
+    assert "selectedRevisionChanges" in javascript
+    assert "/preview" in javascript
 
 
 def test_proposed_ground_truth_endpoint_returns_preview(tmp_path):
