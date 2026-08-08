@@ -65,6 +65,20 @@ def _mfcl_passivation_patch() -> list[dict]:
 FINDINGS = (
     {
         "split": "test",
+        "paper_id": "10.1038--s41560-022-01102-w",
+        "type": "schema_limitation",
+        "cell_index": 0,
+        "field_path": "/cells/0/stability",
+        "description": "The single-junction NBG stability test is eligible main-text evidence, but the schema cannot encode 93.7% relative PCE retention, the 30-65% RH range, or the approximately 250 h / approximately 30 °C qualifiers without coercion.",
+        "suggested_value": "Record encapsulated=true, 250 h duration, 1 sun, approximately 30 °C, constant-resistance operation, and preserve 93.7% retention plus 30-65% RH in notes until qualified/range fields exist.",
+        "source_page": 3,
+        "source_text": "The photo stability of encapsulated NBG perovskite solar cells was measured in air with a relative humidity (RH) of 30–65%",
+        "value_relation": "approximately",
+        "measurement_context": "other",
+        "uncertainty": "Retained 93.7% after ~250 h; RH 30-65%; temperature ~30 °C.",
+    },
+    {
+        "split": "test",
         "paper_id": "10.1002--adfm.202212698",
         "type": "mixed_device",
         "cell_index": 0,
