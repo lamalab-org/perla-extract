@@ -18,7 +18,10 @@ def test_prepare_preserves_existing_vercel_project_link(tmp_path):
     project_link = output / ".vercel" / "project.json"
     project_link.parent.mkdir(parents=True)
     project_link.write_text('{"projectName":"review-workbench"}')
+    environment = output / ".vercel" / ".env.production.local"
+    environment.write_text("SECRET=kept-locally")
 
     prepare(output)
 
     assert project_link.read_text() == '{"projectName":"review-workbench"}'
+    assert environment.read_text() == "SECRET=kept-locally"

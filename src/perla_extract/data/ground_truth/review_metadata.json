@@ -26,7 +26,7 @@
     "10.1038--s41467-021-27740-4": {"article_type": "research", "tandem_scope": "none", "review_status": "pending", "notes": ""},
     "10.1038--s41467-023-36141-8": {"article_type": "research", "tandem_scope": "mentions_only", "review_status": "pending", "notes": "Optimizes wide-gap single-junction cells for possible later use in tandem architectures."},
     "10.1038--s41560-022-01061-2": {"article_type": "news_and_views", "tandem_scope": "tandem_only", "review_status": "reviewed", "notes": "Two-page News & Views commentary about all-perovskite tandem work."},
-    "10.1038--s41560-022-01102-w": {"article_type": "research", "tandem_scope": "tandem_only", "review_status": "reviewed", "notes": "Reports scalable blade-coated all-perovskite tandem cells and modules."},
+    "10.1038--s41560-022-01102-w": {"article_type": "research", "tandem_scope": "contains_tandem_devices", "review_status": "reviewed", "notes": "Reports tandem cells/modules plus an eligible single-junction NBG device; tandem records remain outside ground truth."},
     "10.1038--s41563-025-02163-4": {"article_type": "research", "tandem_scope": "none", "review_status": "pending", "notes": ""},
     "10.1039--c5dt02388b": {"article_type": "research", "tandem_scope": "none", "review_status": "pending", "notes": ""},
     "10.1039--c5ta00568j": {"article_type": "research", "tandem_scope": "none", "review_status": "pending", "notes": ""},
