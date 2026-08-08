@@ -112,6 +112,7 @@ class ReviewApplication:
             evidence = load_evidence(
                 self.ground_truth_dir, split, path.stem, truth
             )
+            issues = load_issues(self.ground_truth_dir, split, path.stem)
             papers.append(
                 {
                     "id": path.stem,
@@ -122,9 +123,12 @@ class ReviewApplication:
                     "field_review": review_progress(evidence),
                     "open_issues": sum(
                         issue["status"] == "open"
-                        for issue in load_issues(
-                            self.ground_truth_dir, split, path.stem
-                        )
+                        for issue in issues
+                    ),
+                    "ready_proposals": sum(
+                        issue.get("status") == "open"
+                        and proposal_strength(issue)["level"] == "ready"
+                        for issue in issues
                     ),
                 }
             )

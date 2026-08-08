@@ -297,7 +297,8 @@ def test_search_and_issues_offer_explicit_pdf_jumps():
     assert 'data-use-figure-audit' in javascript
     assert 'id="issue-proposed-patch"' in html
     assert "issue.proposed_patch" in javascript
-    assert 'value="issues">Open correction proposals' in html
+    assert 'value="ready">Ready proposal decisions' in html
+    assert 'value="issues">All open findings/proposals' in html
     assert 'id="copy-pdf-quote"' in html
     assert 'id="copy-page-text"' in html
     assert "(p. ${state.pdfPage})" in javascript

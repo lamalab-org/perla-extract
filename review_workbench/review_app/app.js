@@ -68,6 +68,7 @@ function renderPapers() {
   const filter = $("filter").value;
   const visible = state.papers.filter((paper) =>
     filter === "all" ||
+    (filter === "ready" && paper.ready_proposals > 0) ||
     (filter === "issues" && paper.open_issues > 0) ||
     (filter === "pending" && paper.metadata.review_status === "pending") ||
     (filter === "excluded" && !included(paper)) ||
@@ -82,7 +83,7 @@ function renderPapers() {
     return `
       <button class="paper-item ${paper.id === state.selected ? "selected" : ""}" data-paper="${paper.id}">
         <span class="paper-id">${paper.id.replace("--", "/")}</span>
-        <span class="paper-meta"><span class="split-tag ${state.split}">${state.split === "test" ? "test" : "dev"}</span><span>${paper.cell_count} cells</span><span class="dot">·</span><span class="${included(paper) ? "include-text" : "exclude-text"}">${included(paper) ? "include" : "exclude"}</span>${paper.open_issues ? `<span class="issue-count">${paper.open_issues} issue${paper.open_issues === 1 ? "" : "s"}</span>` : ""}</span>
+        <span class="paper-meta"><span class="split-tag ${state.split}">${state.split === "test" ? "test" : "dev"}</span><span>${paper.cell_count} cells</span><span class="dot">·</span><span class="${included(paper) ? "include-text" : "exclude-text"}">${included(paper) ? "include" : "exclude"}</span>${paper.ready_proposals ? `<span class="ready-count">${paper.ready_proposals} ready</span>` : paper.open_issues ? `<span class="issue-count">${paper.open_issues} finding${paper.open_issues === 1 ? "" : "s"}</span>` : ""}</span>
         <span class="mini-progress"><i data-progress="${percent}"></i></span>
         <span class="paper-meta">${progress.reviewed}/${progress.total} fields reviewed</span>
       </button>`;
