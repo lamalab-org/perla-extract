@@ -168,6 +168,7 @@
         </section>
 
         <section id="issues-panel" class="review-panel" hidden>
+          <div class="workflow-guide"><strong>How to apply a proposal</strong><span>1. Open a proposal marked “Ready for decision”.</span><span>2. Compare the current and proposed values and jump to the cited PDF evidence.</span><span>3. Accept it, reject it, or leave it for more investigation.</span></div>
           <div id="issue-summary" class="review-hint"></div>
           <div class="proposal-toolbar"><button id="open-quantity-scanner" type="button">Open diagnostic quantity scanner</button><span>Use only when a strong proposal is not already available.</span></div>
           <div id="issue-list" class="issue-list"></div>
@@ -206,16 +207,18 @@
         </section>
 
         <section id="revision-panel" class="review-panel" hidden>
+          <div class="workflow-guide"><strong>Review before changing the benchmark</strong><span>Select a complete change group, check its evidence, then choose one outcome below. Nothing is selected automatically.</span></div>
           <div id="revision-summary" class="review-hint"></div>
-          <div class="proposal-toolbar"><button id="select-all-changes" type="button">Select all</button><button id="select-no-changes" type="button">Select none</button><span id="selection-summary"></span></div>
+          <div class="proposal-toolbar"><button id="select-all-changes" type="button">Select all groups</button><button id="select-no-changes" type="button">Clear selection</button><span id="selection-summary"></span></div>
           <div id="revision-conflicts" class="revision-conflicts"></div>
           <div id="revision-list" class="revision-list"></div>
+          <div class="decision-help"><span><strong>Accept and apply</strong> updates ground truth and closes the selected proposal.</span><span><strong>Reject</strong> keeps the current truth and closes it.</span><span><strong>Needs more investigation</strong> changes nothing and leaves it open.</span><span><strong>Edit before accepting</strong> lets you correct the complete JSON, then records the edited acceptance.</span></div>
           <div class="action-row revision-actions">
             <input id="proposal-decision-note" placeholder="Optional decision note" />
-            <button id="defer-proposal" type="button">Defer</button>
-            <button id="reject-proposal" type="button">Reject</button>
-            <button id="review-proposed-json" type="button">Edit selected draft</button>
-            <button id="accept-proposal" type="button" class="primary-button">Accept selected</button>
+            <button id="defer-proposal" type="button" title="Keep the proposal open without changing ground truth">Needs more investigation</button>
+            <button id="reject-proposal" type="button" title="Close the proposal and keep the current ground truth">Reject — keep current truth</button>
+            <button id="review-proposed-json" type="button" title="Edit the complete JSON, then accept and record the edited result">Edit before accepting</button>
+            <button id="accept-proposal" type="button" class="primary-button" title="Apply the selected changes to ground truth and close the proposal">Accept and apply</button>
           </div>
         </section>
 

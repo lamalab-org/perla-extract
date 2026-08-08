@@ -160,7 +160,15 @@ def test_review_ui_previews_proposed_ground_truth_before_saving():
     assert 'id="reject-proposal"' in html
     assert 'id="defer-proposal"' in html
     assert 'id="use-pdf-selection"' in html
+    assert "How to apply a proposal" in html
+    assert "Accept and apply" in html
+    assert "Reject — keep current truth" in html
+    assert "Needs more investigation" in html
     assert "selectedRevisionChanges" in javascript
+    assert "Review and apply proposed change" in javascript
+    assert "This paper has no applicable proposed change yet" in javascript
+    assert "pendingProposalEdit" in javascript
+    assert "edited_ground_truth" in javascript
     assert "/preview" in javascript
     assert "/decision" in javascript
     assert "atomic_group_key" in javascript
@@ -221,15 +229,20 @@ def test_accepting_atomic_proposal_validates_saves_and_records_decision(tmp_path
 
     result = app.decide_proposal_changes(
         "test", paper_id,
-        {"action": "accept", "change_ids": [f"{issue['id']}:1"], "note": "Verified."},
+        {
+            "action": "accept", "change_ids": [f"{issue['id']}:1"],
+            "note": "Verified and clarified.",
+            "edited_ground_truth": {"cells": [{"number_devices": 3}]},
+        },
         reviewer["id"],
     )
 
-    assert app.load_ground_truth("test", paper_id) == {"cells": [{}]}
+    assert app.load_ground_truth("test", paper_id) == {"cells": [{"number_devices": 3}]}
     saved_issue = load_issues(ground_truth_dir, "test", paper_id)[0]
     assert saved_issue["status"] == "resolved"
     assert saved_issue["accepted_change_ids"] == [f"{issue['id']}:1"]
-    assert saved_issue["proposal_decisions"][0]["note"] == "Verified."
+    assert saved_issue["proposal_decisions"][0]["note"] == "Verified and clarified."
+    assert saved_issue["proposal_decisions"][0]["edited_before_accepting"] is True
     assert result["action"] == "accept"
 
 

@@ -448,6 +448,7 @@ class ReviewApplication:
         if not selected or not requested.issubset(selected):
             raise ValueError("One or more proposal changes are unknown or already decided")
         preview = None
+        edited = False
         if action == "accept":
             if any(proposal_strength(issue)["level"] != "ready" for issue in affected):
                 raise ValueError("Only proposals that pass the evidence-readiness gate can be accepted")
@@ -457,8 +458,15 @@ class ReviewApplication:
             if preview["conflicts"] or applied != selected:
                 detail = preview["conflicts"][0]["error"] if preview["conflicts"] else "not all changes applied"
                 raise ValueError(f"Proposal cannot be accepted: {detail}")
-            self.validate_ground_truth(preview["proposed_ground_truth"])
-            self._write_ground_truth(split, paper_id, preview["proposed_ground_truth"])
+            edited_ground_truth = payload.get("edited_ground_truth")
+            target_ground_truth = (
+                edited_ground_truth
+                if edited_ground_truth is not None
+                else preview["proposed_ground_truth"]
+            )
+            self.validate_ground_truth(target_ground_truth)
+            self._write_ground_truth(split, paper_id, target_ground_truth)
+            edited = edited_ground_truth is not None
         now = datetime.now(timezone.utc).isoformat()
         note = str(payload.get("note", "")).strip()
         decision_id = uuid.uuid4().hex
@@ -470,6 +478,7 @@ class ReviewApplication:
                 "change_ids": sorted(issue_ids),
                 "reviewer_id": reviewer_id,
                 "note": note,
+                "edited_before_accepting": edited,
                 "created_at": now,
             }
             issue.setdefault("proposal_decisions", []).append(decision)
@@ -491,7 +500,7 @@ class ReviewApplication:
             "action": action,
             "change_ids": sorted(selected),
             "decision_id": decision_id,
-            "ground_truth": preview["proposed_ground_truth"] if preview else None,
+            "ground_truth": target_ground_truth if preview else None,
             "issues": [{**issue, "proposal_strength": proposal_strength(issue)} for issue in issues],
         }
 

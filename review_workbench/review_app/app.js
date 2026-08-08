@@ -2,7 +2,7 @@ const state = {
   split: "test", papers: [], selected: null, sources: [], tab: "fields",
   paperData: null, reviewData: null, quantityData: null, evidenceDirty: false,
   users: [], reviewerProgress: [], comments: [], issues: [], figureAudits: {}, corpusSummary: null, currentUser: null,
-  revision: null, truthDraft: null, selectedRevisionChanges: new Set(),
+  revision: null, truthDraft: null, selectedRevisionChanges: new Set(), pendingProposalEdit: null,
   clerk: null, pdfPage: 1, pdfPageCount: 0, pdfImageUrl: null,
   pdfNavigationId: 0, pdfPageText: "", pdfTextLines: [], pdfQuote: "", pendingCursor: null,
   internalToken: null,
@@ -163,6 +163,7 @@ async function selectPaper(paperId) {
   state.revision = null;
   state.truthDraft = null;
   state.selectedRevisionChanges = new Set();
+  state.pendingProposalEdit = null;
   state.evidenceDirty = false;
   state.pendingCursor = null;
   $("paper-title").textContent = paperId.replace("--", "/");
@@ -191,9 +192,7 @@ async function loadPaperData() {
   state.issues = issueData.issues;
   state.figureAudits = figureAuditData.audits;
   state.revision = revisionData;
-  state.selectedRevisionChanges = new Set(
-    (revisionData.changes || []).map((change) => change.change_id)
-  );
+  state.selectedRevisionChanges = new Set();
   const meta = paperData.metadata;
   $("article-type").value = meta.article_type;
   $("tandem-scope").value = meta.tandem_scope;
@@ -437,6 +436,7 @@ function renderJson() {
   $("json-editor").value = data ? JSON.stringify(data, null, 2) : "";
   $("json-editor").readOnly = state.tab !== "truth";
   $("save-json").disabled = state.tab !== "truth";
+  $("save-json").textContent = state.pendingProposalEdit ? "Accept edited ground truth" : "Save ground truth";
   $("cell-summary").textContent = summarizeCells(data);
 }
 
@@ -448,28 +448,36 @@ function renderRevision() {
   const revision = state.revision || { changes: [], conflicts: [], applied_issue_ids: [] };
   const changes = revision.changes || [];
   const conflicts = revision.conflicts || [];
+  const groups = [...changes.reduce((result, change) => {
+    const key = change.atomic_group_key || change.change_id;
+    if (!result.has(key)) result.set(key, { key, label: change.atomic_group_label || "Independent change", changes: [] });
+    result.get(key).changes.push(change);
+    return result;
+  }, new Map()).values()];
   renderSafeHtml($("revision-summary"), changes.length
-    ? `<strong>${changes.length} proposed field change${changes.length === 1 ? "" : "s"}</strong> from ${revision.applied_issue_ids.length} open correction proposal${revision.applied_issue_ids.length === 1 ? "" : "s"}. Review the evidence before promoting this draft.`
+    ? `<strong>${groups.length} proposed change group${groups.length === 1 ? "" : "s"}</strong> from ${revision.applied_issue_ids.length} correction proposal${revision.applied_issue_ids.length === 1 ? "" : "s"}. Select a group only after checking its evidence.`
     : `<strong>No applicable proposed changes.</strong> Add a valid JSON Patch to an open issue to build a reviewable revision.`);
   renderSafeHtml($("revision-conflicts"), conflicts.map((conflict) => `<article class="revision-conflict"><strong>Patch conflict</strong><p>${escapeHtml(conflict.description)}</p><code>${escapeHtml(conflict.error)}</code></article>`).join(""));
-  renderSafeHtml($("revision-list"), changes.map((change) => `<article class="revision-change ${escapeHtml(change.op)}">
-    <div class="revision-heading"><label><input type="checkbox" data-revision-select="${escapeHtml(change.change_id)}" ${state.selectedRevisionChanges.has(change.change_id) ? "checked" : ""} /><span>${escapeHtml(change.op)}</span></label><code>${escapeHtml(change.path)}</code></div>
-    <div class="issue-meta">Atomic group: ${escapeHtml(change.atomic_group_label || "Independent change")}</div>
-    <p>${escapeHtml(change.description)}</p>
-    <div class="revision-values"><div><strong>Current</strong><pre><code>${escapeHtml(revisionValue(change.before, change.before_exists))}</code></pre></div><div><strong>Proposed</strong><pre><code>${escapeHtml(revisionValue(change.after, change.after_exists))}</code></pre></div></div>
-    <div class="issue-meta">${change.source_page ? `Evidence on p. ${change.source_page}` : "No evidence page recorded"}</div>
-    ${change.source_page ? `<button type="button" data-revision-jump="${escapeHtml(change.issue_id)}">Jump to evidence</button>` : ""}
-  </article>`).join(""));
+  renderSafeHtml($("revision-list"), groups.map((group) => {
+    const selected = group.changes.every((change) => state.selectedRevisionChanges.has(change.change_id));
+    const first = group.changes[0];
+    return `<article class="revision-group ${selected ? "selected" : ""}">
+      <div class="revision-heading"><label><input type="checkbox" data-revision-group="${escapeHtml(group.key)}" ${selected ? "checked" : ""} /><strong>${escapeHtml(group.label)}</strong></label><span>${group.changes.length} field change${group.changes.length === 1 ? "" : "s"}</span></div>
+      <p>${escapeHtml(first.description)}</p>
+      ${group.changes.map((change) => `<div class="revision-operation"><div class="revision-op-label"><span>${escapeHtml(change.op)}</span><code>${escapeHtml(change.path)}</code></div><div class="revision-values"><div><strong>Current</strong><pre><code>${escapeHtml(revisionValue(change.before, change.before_exists))}</code></pre></div><div><strong>Proposed</strong><pre><code>${escapeHtml(revisionValue(change.after, change.after_exists))}</code></pre></div></div></div>`).join("")}
+      <div class="issue-meta">${first.source_page ? `Evidence on p. ${first.source_page}` : "No evidence page recorded"}</div>
+      ${first.source_page ? `<button type="button" data-revision-jump="${escapeHtml(first.issue_id)}">Jump to cited evidence</button>` : ""}
+    </article>`;
+  }).join(""));
   document.querySelectorAll("[data-revision-jump]").forEach((button) => button.addEventListener("click", () => {
     const change = changes.find((item) => item.issue_id === button.dataset.revisionJump);
     if (!change) return;
     $("pdf-search").value = change.source_text || "";
     jumpToPage(change.source_page, change.source_text || "", null, change.source_text || "");
   }));
-  document.querySelectorAll("[data-revision-select]").forEach((input) => input.addEventListener("change", () => {
-    const selectedChange = changes.find((change) => change.change_id === input.dataset.revisionSelect);
-    const group = changes.filter((change) => change.atomic_group_key === selectedChange?.atomic_group_key);
-    (group.length ? group : [selectedChange]).filter(Boolean).forEach((change) => {
+  document.querySelectorAll("[data-revision-group]").forEach((input) => input.addEventListener("change", () => {
+    const group = groups.find((item) => item.key === input.dataset.revisionGroup);
+    (group?.changes || []).forEach((change) => {
       if (input.checked) state.selectedRevisionChanges.add(change.change_id);
       else state.selectedRevisionChanges.delete(change.change_id);
     });
@@ -480,8 +488,8 @@ function renderRevision() {
 
 function updateRevisionSelection() {
   const count = state.selectedRevisionChanges.size;
-  $("selection-summary").textContent = `${count} granular change${count === 1 ? "" : "s"} selected`;
-  $("review-proposed-json").textContent = `Review ${count || "selected"} change${count === 1 ? "" : "s"}`;
+  const selectedGroups = new Set((state.revision?.changes || []).filter((change) => state.selectedRevisionChanges.has(change.change_id)).map((change) => change.atomic_group_key || change.change_id)).size;
+  $("selection-summary").textContent = count ? `${selectedGroups} complete group${selectedGroups === 1 ? "" : "s"} selected (${count} fields)` : "No groups selected";
   $("review-proposed-json").disabled = !count;
   $("accept-proposal").disabled = !count;
   $("reject-proposal").disabled = !count;
@@ -552,7 +560,9 @@ function renderIssues() {
   const ready = open.filter((issue) => issue.proposal_strength?.level === "ready");
   const needsWork = open.filter((issue) => issue.proposal_strength?.level !== "ready");
   const resolved = state.issues.filter((issue) => issue.status !== "open");
-  renderSafeHtml($("issue-summary"), `<strong>${ready.length} ready-to-apply proposal${ready.length === 1 ? "" : "s"}</strong> · ${needsWork.length} finding${needsWork.length === 1 ? "" : "s"} still need stronger evidence or a guarded patch. Related edits are accepted atomically and every decision is retained.`);
+  renderSafeHtml($("issue-summary"), ready.length
+    ? `<strong>${ready.length} proposal${ready.length === 1 ? " is" : "s are"} ready for your decision.</strong> Click “Review and apply proposed change” on its card. ${needsWork.length} additional finding${needsWork.length === 1 ? "" : "s"} cannot change the benchmark yet.`
+    : `<strong>This paper has no applicable proposed change yet.</strong> Its ${needsWork.length} finding${needsWork.length === 1 ? "" : "s"} still need stronger evidence or a concrete guarded edit before anyone can apply them.`);
   const issueHtml = (issue) => {
     const proposal = issue.schema_proposal || {};
     const proposalParts = [proposal.value_relation, proposal.aggregation, proposal.measurement_context].filter((value) => value && value !== "unspecified");
@@ -560,18 +570,19 @@ function renderIssues() {
     const evidence = [["Source", issue.source_type?.replaceAll("_", " ")], ["Device", issue.device_identity], ["Measurement", issue.measurement_identity], ["Linkage", issue.linkage_rationale], ["Counterevidence", issue.counterevidence], ["Scope", issue.scope_notes]].filter(([, value]) => value);
     const decisions = issue.proposal_decisions || [];
     return `<article class="issue ${issue.status}">
-    <div class="issue-heading"><span>${escapeHtml(issueTypeLabel(issue.type))}</span><strong>${escapeHtml(strength.level.toUpperCase())} · ${strength.score}/${strength.max_score}</strong></div>
+    <div class="issue-heading"><span>${escapeHtml(issueTypeLabel(issue.type))}</span><strong>${strength.level === "ready" ? "READY FOR DECISION" : "FINDING ONLY"} · ${strength.score}/${strength.max_score}</strong></div>
     <p>${escapeHtml(issue.description)}</p>
     <div class="issue-meta">${issue.cell_index == null ? "Paper-level" : `Cell ${issue.cell_index + 1}`}${issue.source_page ? ` · p. ${issue.source_page}` : ""}${issue.suggested_value ? ` · suggested: ${escapeHtml(issue.suggested_value)}` : ""}</div>
     <div class="schema-tags"><span>${escapeHtml((issue.proposal_confidence || (issue.proposed_patch?.length ? "high" : "needs_review")).replaceAll("_", " "))} confidence</span>${proposalParts.map((value) => `<span>${escapeHtml(value.replaceAll("_", " "))}</span>`).join("")}${proposal.uncertainty ? `<span>${escapeHtml(proposal.uncertainty)}</span>` : ""}</div>
     <details><summary>Evidence packet and readiness checks</summary>${evidence.map(([label, value]) => `<p><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</p>`).join("")}<div class="schema-tags">${strength.criteria.map((criterion) => `<span>${criterion.passed ? "✓" : "○"} ${escapeHtml(criterion.label)} (${criterion.points}/${criterion.max_points})</span>`).join("")}</div></details>
     ${issue.proposed_patch?.length ? `<details class="proposed-patch"><summary>Proposed correction (${issue.proposed_patch.length} operation${issue.proposed_patch.length === 1 ? "" : "s"})</summary><pre><code>${escapeHtml(JSON.stringify(issue.proposed_patch, null, 2))}</code></pre><button type="button" data-copy-patch="${issue.id}">Copy patch</button></details>` : ""}
     ${decisions.length ? `<details><summary>Decision history (${decisions.length})</summary>${decisions.map((decision) => `<p><strong>${escapeHtml(decision.action)}</strong> by ${escapeHtml(reviewerName(decision.reviewer_id))} · ${escapeHtml(new Date(decision.created_at).toLocaleString())}${decision.note ? ` — ${escapeHtml(decision.note)}` : ""}</p>`).join("")}</details>` : ""}
-    ${issue.status === "open" && strength.level === "ready" ? `<button type="button" class="issue-jump" data-review-proposal="${issue.id}">Review atomic changes</button>` : ""}
+    ${issue.status === "open" && strength.level === "ready" ? `<button type="button" class="issue-jump primary-button" data-review-proposal="${issue.id}">Review and apply proposed change</button>` : ""}
+    ${issue.status === "open" && strength.level !== "ready" ? `<div class="review-hint"><strong>No benchmark change can be applied yet.</strong> Open the readiness checks to see which evidence or guarded edit is missing.</div>` : ""}
     ${issue.source_page ? `<button class="issue-jump" data-issue-jump="${issue.id}">Jump to evidence</button>` : ""}
-    ${issue.status === "open" ? `<div class="issue-resolution"><input placeholder="Resolution note…" /><button data-resolve-issue="${issue.id}">Resolve</button></div>` : `<div class="issue-meta">Resolved by ${escapeHtml(reviewerName(issue.resolved_by))}: ${escapeHtml(issue.resolution || "no note")}</div>`}
+    ${issue.status === "open" && !issue.proposed_patch?.length ? `<div class="issue-resolution"><input placeholder="Why can this finding be closed?" /><button data-resolve-issue="${issue.id}">Close finding</button></div>` : issue.status !== "open" ? `<div class="issue-meta">Resolved by ${escapeHtml(reviewerName(issue.resolved_by))}: ${escapeHtml(issue.resolution || "no note")}</div>` : ""}
   </article>`; };
-  renderSafeHtml($("issue-list"), state.issues.length ? `${ready.length ? `<h3>Ready to apply</h3>${ready.map(issueHtml).join("")}` : ""}${needsWork.length ? `<h3>Needs a stronger proposal</h3>${needsWork.map(issueHtml).join("")}` : ""}${resolved.length ? `<h3>Resolved</h3>${resolved.map(issueHtml).join("")}` : ""}` : `<div class="empty-state">No proposals yet.</div>`);
+  renderSafeHtml($("issue-list"), state.issues.length ? `${ready.length ? `<h3>Ready for your decision</h3>${ready.map(issueHtml).join("")}` : ""}${needsWork.length ? `<h3>Findings without an applicable change</h3>${needsWork.map(issueHtml).join("")}` : ""}${resolved.length ? `<h3>Decided or closed</h3>${resolved.map(issueHtml).join("")}` : ""}` : `<div class="empty-state">No proposals yet.</div>`);
   document.querySelectorAll("[data-issue-jump]").forEach((button) => button.addEventListener("click", () => {
     const issue = state.issues.find((item) => item.id === button.dataset.issueJump);
     if (!issue) return;
@@ -805,15 +816,16 @@ $("review-proposed-json").addEventListener("click", () => {
   }).then((preview) => {
     if (preview.conflicts?.length) throw new Error(preview.conflicts.map((item) => item.error).join("; "));
     state.truthDraft = structuredClone(preview.proposed_ground_truth);
+    state.pendingProposalEdit = [...state.selectedRevisionChanges];
     state.tab = "truth";
-    $("json-status").textContent = `${state.selectedRevisionChanges.size} selected proposal changes loaded as an unsaved draft. Review, then save explicitly.`;
+    $("json-status").textContent = `${state.selectedRevisionChanges.size} proposed field changes loaded. Edit if needed, then click “Accept edited ground truth” to save and close the proposal.`;
     renderView();
   }).catch((error) => { $("revision-summary").textContent = `Could not build selected revision: ${error.message}`; });
 });
 
 async function decideSelectedProposal(action) {
   if (!state.selectedRevisionChanges.size) return;
-  if (action === "accept" && !window.confirm("Apply the selected atomic changes to the ground truth? This decision will be recorded.")) return;
+  if (action === "accept" && !window.confirm("Accept and apply the selected change groups to ground truth? The proposal will be closed and your decision recorded.")) return;
   const selectedCount = state.selectedRevisionChanges.size;
   $("revision-summary").textContent = `${action[0].toUpperCase() + action.slice(1)}ing ${selectedCount} selected change${selectedCount === 1 ? "" : "s"}…`;
   try {
@@ -918,9 +930,26 @@ $("import-form").addEventListener("submit", async (event) => {
 $("save-json").addEventListener("click", async () => {
   const status = $("json-status");
   try {
-    const parsed = JSON.parse($("json-editor").value); status.textContent = "Saving…";
-    await request(`/api/ground-truth/${state.split}/${encodeURIComponent(state.selected)}`, { method: "PUT", body: JSON.stringify(parsed) });
-    state.paperData.ground_truth = parsed; state.truthDraft = null; status.textContent = "Ground truth saved"; await loadPaperData();
+    const parsed = JSON.parse($("json-editor").value);
+    if (state.pendingProposalEdit) {
+      if (!window.confirm("Accept this edited ground truth and close the selected proposal changes?")) return;
+      status.textContent = "Validating and accepting edited proposal…";
+      await request(`/api/proposals/${state.split}/${encodeURIComponent(state.selected)}/decision`, {
+        method: "POST",
+        body: JSON.stringify({ action: "accept", change_ids: state.pendingProposalEdit, note: $("proposal-decision-note").value || "Accepted after editing.", edited_ground_truth: parsed }),
+      });
+      state.pendingProposalEdit = null;
+      state.paperData.ground_truth = parsed;
+      state.truthDraft = null;
+      await loadPaperData();
+      state.tab = "issues";
+      renderView();
+      $("issue-summary").textContent = "Edited ground truth accepted; the proposal decision was recorded.";
+    } else {
+      status.textContent = "Saving…";
+      await request(`/api/ground-truth/${state.split}/${encodeURIComponent(state.selected)}`, { method: "PUT", body: JSON.stringify(parsed) });
+      state.paperData.ground_truth = parsed; state.truthDraft = null; status.textContent = "Ground truth saved"; await loadPaperData();
+    }
   } catch (error) { status.textContent = `Not saved: ${error.message}`; }
 });
 
