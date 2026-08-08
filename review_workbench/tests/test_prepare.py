@@ -6,10 +6,12 @@ def test_prepare_creates_minimal_deployment_project(tmp_path):
 
     assert (output / "api" / "index.py").exists()
     assert (output / "review_workbench" / "review_app" / "index.html").exists()
+    assert (output / "src" / "perla_extract" / "pydantic_model_reduced.py").exists()
     assert (output / "src" / "perla_extract" / "data" / "ground_truth" / "test").is_dir()
     dependencies = (output / "pyproject.toml").read_text()
     assert "PyMuPDF" in dependencies
     assert "vercel>=0.8" in dependencies
+    assert "pydantic>=2.0" in dependencies
     assert "litellm" not in dependencies
 
 

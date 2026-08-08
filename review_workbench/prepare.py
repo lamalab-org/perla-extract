@@ -47,6 +47,7 @@ def prepare(output: Path) -> Path:
         "review_workbench/server.py",
         "src/perla_extract/__init__.py",
         "src/perla_extract/ground_truth.py",
+        "src/perla_extract/pydantic_model_reduced.py",
     ):
         copy_file(relative, output)
 
