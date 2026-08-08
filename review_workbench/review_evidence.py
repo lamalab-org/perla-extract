@@ -57,22 +57,35 @@ def ground_truth_digest(ground_truth: dict[str, Any]) -> str:
     return hashlib.sha256(canonical).hexdigest()
 
 
-def flatten_facts(value: Any, path: str = "") -> list[dict[str, Any]]:
+def flatten_facts(
+    value: Any, path: str = "", context: tuple[str, ...] = ()
+) -> list[dict[str, Any]]:
     """Flatten non-null scalar values into stable JSON Pointer-style facts."""
     facts: list[dict[str, Any]] = []
     if isinstance(value, dict):
+        local_context = list(context)
+        for key in ("name", "formula", "method", "step_name", "functionality"):
+            candidate = value.get(key)
+            if isinstance(candidate, str) and 2 <= len(candidate.strip()) <= 80:
+                local_context.append(candidate.strip())
+        unit = value.get("unit")
+        if isinstance(unit, str) and unit.strip():
+            local_context.append(f"unit:{unit.strip()}")
         for key, child in value.items():
             escaped = str(key).replace("~", "~0").replace("/", "~1")
-            facts.extend(flatten_facts(child, f"{path}/{escaped}"))
+            facts.extend(
+                flatten_facts(child, f"{path}/{escaped}", tuple(local_context))
+            )
     elif isinstance(value, list):
         for index, child in enumerate(value):
-            facts.extend(flatten_facts(child, f"{path}/{index}"))
+            facts.extend(flatten_facts(child, f"{path}/{index}", context))
     elif value is not None:
         facts.append(
             {
                 "path": path or "/",
                 "value": value,
                 "value_type": type(value).__name__,
+                "context": list(dict.fromkeys(context)),
             }
         )
     return facts
@@ -238,10 +251,104 @@ def _search_variants(value: Any) -> list[str]:
     return []
 
 
+FIELD_CONTEXT_TERMS = {
+    "pce_at_the_start_of_the_experiment": (
+        "initial pce", "initial efficiency", "initial value", "stability",
+    ),
+    "pce_at_the_end_of_experiment": (
+        "final pce", "final efficiency", "retained", "after", "stability",
+    ),
+    "pce_after_1000_hours": ("1000 h", "1000 hours", "retained", "stability"),
+    "pce_t80": ("t80", "80%", "lifetime", "stability"),
+    "pce": (
+        "pce", "power conversion", "efficiency", "champion", "device",
+        "reverse scan", "forward scan", "stabilized", "aperture area",
+        "voc", "jsc", "fill factor",
+    ),
+    "jsc": (
+        "jsc", "short-circuit", "current density", "photocurrent", "averaged",
+    ),
+    "voc": ("voc", "open-circuit", "open circuit", "voltage", "averaged"),
+    "ff": ("fill factor", "ff", "photovoltaic"),
+    "active_area": ("active area", "aperture area", "device area", "area"),
+    "bandgap": ("bandgap", "band gap", "eg", "ev"),
+    "temperature": ("temperature", "anneal", "heated", "°c", " k"),
+    "duration": ("duration", "anneal", "time", "hours", "min", "seconds"),
+    "formula": ("composition", "perovskite", "formula", "absorber"),
+    "number_devices": ("devices", "samples", "batch", "statistics"),
+}
+
+
+def _fact_context(fact: dict[str, Any]) -> tuple[str, tuple[str, ...]]:
+    lowered = fact["path"].lower()
+    key = next(
+        (name for name in FIELD_CONTEXT_TERMS if f"/{name}" in lowered),
+        "",
+    )
+    inherited = tuple(
+        item.lower()
+        for item in fact.get("context", [])
+        if not str(item).startswith("unit:")
+    )
+    return key, (*FIELD_CONTEXT_TERMS.get(key, ()), *inherited)
+
+
+def _expected_unit(fact: dict[str, Any]) -> str:
+    return next(
+        (
+            str(item).removeprefix("unit:").lower()
+            for item in fact.get("context", [])
+            if str(item).startswith("unit:")
+        ),
+        "",
+    )
+
+
+def _context_term_present(term: str, text: str) -> bool:
+    if len(term) <= 3 and term.isalnum():
+        return bool(re.search(rf"\b{re.escape(term)}\b", text))
+    return term in text
+
+
+def _quote_window(text: str, start: int, end: int) -> tuple[str, int, int]:
+    """Return a compact sentence-like passage around one exact match."""
+    left_limit = max(0, start - 150)
+    right_limit = min(len(text), end + 320)
+    left_candidates = [text.rfind(mark, left_limit, start) for mark in (". ", "? ", "! ", "; ")]
+    left_boundary = max(left_candidates)
+    prefix = ""
+    if left_boundary >= left_limit:
+        quote_start = left_boundary + 2
+    else:
+        next_space = text.find(" ", left_limit, start)
+        quote_start = next_space + 1 if next_space >= 0 else left_limit
+        prefix = "…"
+    right_candidates = [
+        position
+        for mark in (". ", "? ", "! ", "; ")
+        if (position := text.find(mark, end, right_limit)) >= 0
+    ]
+    suffix = ""
+    if right_candidates:
+        quote_end = min(right_candidates) + 1
+    else:
+        last_space = text.rfind(" ", end, right_limit)
+        quote_end = last_space if last_space >= end else right_limit
+        suffix = "…" if quote_end < len(text) else ""
+    raw = text[quote_start:quote_end]
+    leading = len(raw) - len(raw.lstrip())
+    snippet = prefix + raw.strip() + suffix
+    offset = len(prefix) - leading
+    return snippet, start - quote_start + offset, end - quote_start + offset
+
+
 def suggestion_for_fact(
     pages: tuple[str, ...], fact: dict[str, Any]
 ) -> dict[str, Any] | None:
-    """Find a conservative first exact-text suggestion for a fact."""
+    """Rank exact-text evidence using field-specific surrounding context."""
+    context_key, context_terms = _fact_context(fact)
+    expected_unit = _expected_unit(fact)
+    candidates = []
     for variant in _search_variants(fact["value"]):
         pattern = re.compile(
             (r"(?<![\d.])" + re.escape(variant) + r"(?![\d.])")
@@ -252,18 +359,50 @@ def suggestion_for_fact(
         )
         for page_number, page in enumerate(pages, 1):
             normalized = _normalized_page_text(page)
-            match = pattern.search(normalized)
-            if match:
-                start = max(0, match.start() - 90)
-                end = min(len(normalized), match.end() + 130)
-                return {
+            for match in pattern.finditer(normalized):
+                context_start = max(0, match.start() - 180)
+                context_end = min(len(normalized), match.end() + 220)
+                nearby = normalized[context_start:context_end].lower()
+                matched_terms = [
+                    term
+                    for term in context_terms
+                    if _context_term_present(term, nearby)
+                ]
+                score = 3 * len(matched_terms)
+                immediate = normalized[
+                    max(0, match.start() - 25):min(len(normalized), match.end() + 35)
+                ].lower()
+                if expected_unit:
+                    score += 4 if expected_unit in immediate else -3
+                inherited_terms = {
+                    item.lower()
+                    for item in fact.get("context", [])
+                    if not str(item).startswith("unit:")
+                }
+                if inherited_terms and not inherited_terms.intersection(matched_terms):
+                    score -= 2
+                if re.search(r"\b(references|bibliography)\b", nearby):
+                    score -= 5
+                if re.search(r"\bdoi\b|https?://|\bet al\.?,?\s+\d{4}", nearby):
+                    score -= 2
+                snippet, snippet_start, snippet_end = _quote_window(
+                    normalized, match.start(), match.end()
+                )
+                candidates.append({
                     "page": page_number,
                     "query": variant,
-                    "snippet": normalized[start:end],
-                    "match_start": match.start() - start,
-                    "match_end": match.end() - start,
-                }
-    return None
+                    "snippet": snippet,
+                    "match_start": snippet_start,
+                    "match_end": snippet_end,
+                    "score": score,
+                    "rationale": (
+                        f"Nearby {context_key.replace('_', ' ')} context: "
+                        + ", ".join(matched_terms[:3])
+                    )
+                    if matched_terms
+                    else "Exact value match; verify its device context",
+                })
+    return max(candidates, key=lambda item: (item["score"], -item["page"])) if candidates else None
 
 
 def fact_suggestions(
@@ -280,7 +419,10 @@ def fact_suggestions(
         )
         if not (is_numeric or is_identifier):
             continue
-        cache_key = (type(value), value)
+        context_key, context_terms = _fact_context(fact)
+        cache_key = (
+            type(value), value, context_key, context_terms, _expected_unit(fact)
+        )
         if cache_key not in cache:
             cache[cache_key] = suggestion_for_fact(pages, fact)
         if cache[cache_key]:

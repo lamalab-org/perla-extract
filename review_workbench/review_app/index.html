@@ -64,12 +64,13 @@
           <label>Page <input id="pdf-page" type="number" min="1" value="1" /> <span>of <b id="pdf-page-count">–</b></span></label>
           <button id="pdf-next" type="button" aria-label="Next page">→</button>
           <span id="pdf-location">Loading paper…</span>
-          <button id="copy-pdf-quote" type="button" disabled>Copy matched quote</button>
+          <button id="copy-pdf-quote" type="button" disabled>Copy quote + page</button>
           <button id="copy-page-text" type="button" disabled>Copy page text</button>
         </div>
         <div id="pdf-scroll" class="pdf-scroll">
           <div id="pdf-page-stage" class="pdf-page-stage">
             <img id="pdf-page-image" alt="Rendered PDF page" />
+            <div id="pdf-text-layer" class="pdf-text-layer" aria-label="Selectable PDF text"></div>
             <div id="pdf-highlight" class="pdf-highlight" hidden></div>
           </div>
         </div>

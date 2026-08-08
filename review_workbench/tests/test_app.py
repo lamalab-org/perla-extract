@@ -49,12 +49,17 @@ def test_pdf_search_uses_reliable_page_navigation():
     app_dir = Path(__file__).parents[1] / "review_app"
     javascript = (app_dir / "app.js").read_text()
     html = (app_dir / "index.html").read_text()
+    styles = (app_dir / "styles.css").read_text()
 
     assert 'id="pdf-page-image"' in html
     assert 'id="pdf-highlight"' in html
+    assert 'id="pdf-text-layer"' in html
     assert "/api/pdf-page/" in javascript
     assert "result.bbox" in javascript
     assert "showPdfHighlight" in javascript
+    assert "renderPdfTextLayer" in javascript
+    assert "window.getSelection()" in javascript
+    assert "user-select: text" in styles
 
 
 def test_pdf_search_returns_coordinates_and_page_renderer(tmp_path):
@@ -81,6 +86,9 @@ def test_pdf_search_returns_coordinates_and_page_renderer(tmp_path):
     assert page_count == 2
     assert "Average efficiency" in page_text
     assert text_page_count == 2
+    lines = app.pdf_page_text_lines(paper_id, 2)
+    assert any("Average efficiency" in line["text"] for line in lines)
+    assert all(0 <= line["bbox"]["x"] <= 1 for line in lines)
 
 
 def test_reviewer_progress_is_aggregated_by_split(tmp_path):

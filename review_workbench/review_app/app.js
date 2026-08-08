@@ -3,7 +3,7 @@ const state = {
   paperData: null, reviewData: null, quantityData: null, evidenceDirty: false,
   users: [], reviewerProgress: [], comments: [], issues: [], figureAudits: {}, corpusSummary: null, currentUser: null,
   clerk: null, pdfPage: 1, pdfPageCount: 0, pdfImageUrl: null,
-  pdfNavigationId: 0, pdfPageText: "", pdfQuote: "", pendingCursor: null,
+  pdfNavigationId: 0, pdfPageText: "", pdfTextLines: [], pdfQuote: "", pendingCursor: null,
   internalToken: null,
 };
 const $ = (id) => document.getElementById(id);
@@ -288,7 +288,7 @@ function renderFields() {
         <button class="value-chip" data-action="search-value">${escapeHtml(JSON.stringify(fact.value))}</button>
       </div>
       ${peerReviews.length ? `<div class="peer-reviews">${peerReviews.map(([id, review]) => `<span class="peer-review ${review.status}">${escapeHtml(reviewerName(id))}: ${escapeHtml(statusLabel(review.status))}${review.value_relation && review.value_relation !== "unspecified" ? ` · ${escapeHtml(review.value_relation.replaceAll("_", " "))}` : ""}${review.aggregation && review.aggregation !== "unspecified" ? ` · ${escapeHtml(review.aggregation.replaceAll("_", " "))}` : ""}</span>`).join("")}${fact.disagreement ? `<strong>disagreement</strong>` : ""}</div>` : ""}
-      ${suggestion ? `<div class="suggestion"><button data-action="jump-suggestion">p. ${suggestion.page}</button><p>${highlightedSnippet(suggestion)}</p><button data-action="use-quote">Use as quote</button></div>` : `<div class="no-suggestion">No exact text match suggested — click the value to search variants.</div>`}
+      ${suggestion ? `<div class="suggestion"><button data-action="jump-suggestion">p. ${suggestion.page}</button><p>${highlightedSnippet(suggestion)}<span class="suggestion-reason">${escapeHtml(suggestion.rationale || "Exact text match")}</span></p><button data-action="use-quote">Use as quote</button></div>` : `<div class="no-suggestion">No exact text match suggested — click the value to search variants.</div>`}
       <div class="evidence-fields">
         <label>Decision <select class="fact-status">${["pending", "verified", "incorrect", "not_in_paper", "needs_followup"].map((item) => `<option value="${item}" ${fact.evidence.status === item ? "selected" : ""}>${statusLabel(item)}</option>`).join("")}</select></label>
         <label>Value relation <select class="fact-value-relation">${selectOptions(VALUE_RELATIONS, fact.evidence.value_relation || "unspecified")}</select></label>
@@ -547,6 +547,27 @@ function showPdfHighlight(bbox, text = "", quote = "") {
   $("pdf-location").textContent = text ? `Highlighted “${text}”` : `Page ${state.pdfPage}`;
 }
 
+function renderPdfTextLayer(lines = []) {
+  const layer = $("pdf-text-layer");
+  const stage = $("pdf-page-stage");
+  layer.replaceChildren();
+  lines.forEach((line) => {
+    const node = document.createElement("div");
+    node.className = "pdf-text-line";
+    node.textContent = line.text;
+    node.style.left = `${100 * line.bbox.x}%`;
+    node.style.top = `${100 * line.bbox.y}%`;
+    node.style.fontSize = `${Math.max(1, line.font_size * stage.clientHeight)}px`;
+    node.style.height = `${100 * line.bbox.height}%`;
+    layer.append(node);
+    const targetWidth = line.bbox.width * stage.clientWidth;
+    const measuredWidth = node.scrollWidth;
+    if (targetWidth > 0 && measuredWidth > 0) {
+      node.style.transform = `scaleX(${targetWidth / measuredWidth})`;
+    }
+  });
+}
+
 async function jumpToPage(page, text = "", bbox = null, quote = "") {
   if (!state.selected) return;
   const targetPage = Math.max(1, Math.min(state.pdfPageCount || Infinity, Number(page) || 1));
@@ -554,6 +575,7 @@ async function jumpToPage(page, text = "", bbox = null, quote = "") {
   const selectedPaper = state.selected;
   $("pdf-location").textContent = `Loading page ${targetPage}…`;
   $("pdf-highlight").hidden = true;
+  $("pdf-text-layer").replaceChildren();
   const highlightPromise = bbox ? Promise.resolve(bbox) : findHighlight(targetPage, text);
   const pageTextPromise = request(`/api/pdf-text/${encodeURIComponent(selectedPaper)}?page=${targetPage}`);
   const response = await fetch(
@@ -585,6 +607,8 @@ async function jumpToPage(page, text = "", bbox = null, quote = "") {
   $("pdf-next").disabled = Boolean(state.pdfPageCount && targetPage >= state.pdfPageCount);
   const pageText = await pageTextPromise;
   state.pdfPageText = pageText.text || "";
+  state.pdfTextLines = pageText.lines || [];
+  renderPdfTextLayer(state.pdfTextLines);
   $("copy-page-text").disabled = !state.pdfPageText;
   showPdfHighlight(await highlightPromise, text, quote);
 }
@@ -632,7 +656,15 @@ $("pdf-next").addEventListener("click", () => jumpToPage(state.pdfPage + 1));
 $("pdf-page").addEventListener("change", () => jumpToPage($("pdf-page").value));
 $("copy-pdf-quote").addEventListener("click", () => copyPdfText(state.pdfQuote, "quote"));
 $("copy-page-text").addEventListener("click", () => copyPdfText(state.pdfPageText, "page"));
+$("pdf-text-layer").addEventListener("mouseup", () => {
+  const selectedText = window.getSelection()?.toString().replace(/\s+/g, " ").trim();
+  if (!selectedText) return;
+  state.pdfQuote = selectedText;
+  $("copy-pdf-quote").disabled = false;
+  $("pdf-location").textContent = `Selected quote on page ${state.pdfPage}`;
+});
 $("next-pending").addEventListener("click", nextPendingField);
+window.addEventListener("resize", () => renderPdfTextLayer(state.pdfTextLines));
 $("field-cell").addEventListener("change", renderFields);
 $("field-status").addEventListener("change", renderFields);
 $("field-query").addEventListener("input", renderFields);

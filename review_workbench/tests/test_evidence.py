@@ -60,3 +60,19 @@ def test_suggestions_and_unmapped_quantities():
     assert any(item["text"] == "20.1%" and item["mapped_paths"] for item in mentions)
     assert any(item["text"] == "1.12 V" and not item["mapped_paths"] for item in mentions)
     assert any(item["text"] == "18.4%" and not item["mapped_paths"] for item in mentions)
+
+
+def test_suggestion_prefers_field_specific_context_over_first_match():
+    truth = {"cells": [{"pce": {"value": 20.1, "unit": "%"}}]}
+    facts = flatten_facts(truth)
+    pages = (
+        "The precursor was held at a temperature of 20.1 C during mixing.",
+        "The champion device reached a power conversion efficiency (PCE) of 20.1%.",
+    )
+
+    suggestion = fact_suggestions(pages, facts)["/cells/0/pce/value"]
+
+    assert suggestion["page"] == 2
+    assert suggestion["score"] > 0
+    assert "pce" in suggestion["rationale"].lower()
+    assert "champion device" in suggestion["snippet"].lower()

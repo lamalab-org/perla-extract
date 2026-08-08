@@ -42,8 +42,12 @@ deployment surface. The scientific extraction and scoring code remains in
 The paper rail shows split-wide progress for every reviewer, including fields
 reviewed and papers completed. Within a paper, **Next pending** advances through
 the current reviewer's remaining fields. PDF search results jump to and
-highlight their source coordinates; the viewer can copy either the matched
-passage with its page citation or the complete extracted text of the page.
+highlight their source coordinates. A positioned text layer makes rendered PDF
+text selectable; selected or suggested passages can be copied with their page
+citation, and the complete extracted page text remains available as a fallback.
+Automatic quote suggestions rank exact matches using field terminology, units,
+and ancestor context such as composition, layer, and processing-step names.
+Suggestions never mark a field as verified without reviewer action.
 
 Run the workbench locally from the repository root:
 

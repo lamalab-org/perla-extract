@@ -518,6 +518,46 @@ class ReviewApplication:
             raise ValueError(f"PDF page must be between 1 and {len(pages)}")
         return pages[page_number - 1], len(pages)
 
+    def pdf_page_text_lines(self, paper_id: str, page_number: int) -> list[dict]:
+        """Return positioned text lines for a selectable PDF text layer."""
+        path = self.pdf_path(paper_id)
+        if not path.exists():
+            raise FileNotFoundError(path)
+        with fitz.open(path) as document:
+            if not 1 <= page_number <= len(document):
+                raise ValueError(
+                    f"PDF page must be between 1 and {len(document)}"
+                )
+            page = document[page_number - 1]
+            page_rect = page.rect
+            lines = []
+            for block in page.get_text("dict").get("blocks", []):
+                if block.get("type") != 0:
+                    continue
+                for line in block.get("lines", []):
+                    spans = line.get("spans", [])
+                    text = "".join(span.get("text", "") for span in spans)
+                    if not text.strip():
+                        continue
+                    x0, y0, x1, y1 = line["bbox"]
+                    lines.append(
+                        {
+                            "text": text,
+                            "bbox": {
+                                "x": x0 / page_rect.width,
+                                "y": y0 / page_rect.height,
+                                "width": (x1 - x0) / page_rect.width,
+                                "height": (y1 - y0) / page_rect.height,
+                            },
+                            "font_size": max(
+                                (span.get("size", 0) for span in spans),
+                                default=0,
+                            )
+                            / page_rect.height,
+                        }
+                    )
+            return lines
+
     def search_pdf(self, paper_id: str, query: str) -> list[dict]:
         path = self.pdf_path(paper_id)
         if not path.exists():
@@ -769,7 +809,13 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         paper_id, page_number
                     )
                     self.send_json(
-                        {"text": page_text, "page_count": page_count}
+                        {
+                            "text": page_text,
+                            "page_count": page_count,
+                            "lines": application.pdf_page_text_lines(
+                                paper_id, page_number
+                            ),
+                        }
                     )
                     return
                 if parsed.path.startswith("/api/pdf/"):
