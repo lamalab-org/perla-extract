@@ -6,6 +6,7 @@ from review_workbench.review_evidence import (
     reconcile_evidence,
     review_progress,
     reviewer_entry,
+    save_evidence,
 )
 
 
@@ -21,6 +22,28 @@ def test_field_evidence_tracks_reviewers_independently():
     assert reviewer_entry(field, "alice")["status"] == "verified"
     assert review_progress(evidence, "alice")["reviewed"] == 1
     assert disagreement_paths(evidence) == ["/cells/0/pce/value"]
+
+
+def test_field_evidence_persists_relation_and_aggregation(tmp_path):
+    truth = {"cells": [{"pce": {"value": 20.1, "unit": "%"}}]}
+    evidence = reconcile_evidence("paper", truth)
+    evidence["fields"]["/cells/0/pce/value"]["reviews"] = {
+        "alice": {
+            "status": "verified",
+            "page": 2,
+            "quote": "average PCE above 20.1%",
+            "notes": "",
+            "value_relation": "lower_bound",
+            "aggregation": "mean",
+        }
+    }
+
+    saved = save_evidence(tmp_path, "test", "paper", truth, evidence)
+    review = reviewer_entry(saved["fields"]["/cells/0/pce/value"], "alice")
+
+    assert saved["schema_version"] == 2
+    assert review["value_relation"] == "lower_bound"
+    assert review["aggregation"] == "mean"
 
 
 def test_suggestions_and_unmapped_quantities():

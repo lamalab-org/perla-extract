@@ -2,6 +2,8 @@ import json
 from io import BytesIO
 from pathlib import Path
 
+import fitz
+
 from review_workbench.server import ReviewApplication, make_handler
 
 
@@ -43,15 +45,38 @@ def test_review_ui_has_no_direct_html_injection_sinks():
 
 
 def test_pdf_search_uses_reliable_page_navigation():
-    javascript = (
-        Path(__file__).parents[1]
-        / "review_app"
-        / "app.js"
-    ).read_text()
+    app_dir = Path(__file__).parents[1] / "review_app"
+    javascript = (app_dir / "app.js").read_text()
+    html = (app_dir / "index.html").read_text()
 
-    assert "#page=${targetPage}&view=FitH" in javascript
-    assert ":~:text=" not in javascript
-    assert "jumpToPage(result.page, matchedText(result, query))" in javascript
+    assert 'id="pdf-page-image"' in html
+    assert 'id="pdf-highlight"' in html
+    assert "/api/pdf-page/" in javascript
+    assert "result.bbox" in javascript
+    assert "showPdfHighlight" in javascript
+
+
+def test_pdf_search_returns_coordinates_and_page_renderer(tmp_path):
+    pdf_dir = tmp_path / "pdfs"
+    ground_truth_dir = tmp_path / "ground_truth"
+    pdf_dir.mkdir()
+    (ground_truth_dir / "dev").mkdir(parents=True)
+    (ground_truth_dir / "test").mkdir()
+    paper_id = "10.1234--coordinates"
+    document = fitz.open()
+    document.new_page().insert_text((72, 140), "The champion PCE was 21.4 percent.")
+    document.new_page().insert_text((72, 300), "Average efficiency was 19.2 percent.")
+    document.save(pdf_dir / f"{paper_id}.pdf")
+    app = ReviewApplication(pdf_dir, ground_truth_dir)
+
+    results = app.search_pdf(paper_id, "19.2")
+    image, page_count = app.render_pdf_page(paper_id, 2)
+
+    assert results[0]["page"] == 2
+    assert 0 < results[0]["bbox"]["y"] < 1
+    assert results[0]["bbox"]["width"] > 0
+    assert image.startswith(b"\x89PNG")
+    assert page_count == 2
 
 
 def test_review_ui_has_separate_figure_audit():
@@ -74,6 +99,9 @@ def test_search_and_issues_offer_explicit_pdf_jumps():
     assert "Jump · p." in javascript
     assert "Jump to evidence" in javascript
     assert "issue.source_text" in javascript
+    assert "fact-value-relation" in javascript
+    assert "fact-aggregation" in javascript
+    assert '"mean", "Average / mean"' in javascript
 
 
 def test_authenticated_comment_ignores_client_supplied_author(tmp_path):

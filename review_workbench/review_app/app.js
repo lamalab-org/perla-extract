@@ -2,7 +2,8 @@ const state = {
   split: "test", papers: [], selected: null, sources: [], tab: "fields",
   paperData: null, reviewData: null, quantityData: null, evidenceDirty: false,
   users: [], comments: [], issues: [], figureAudits: {}, corpusSummary: null, currentUser: null,
-  clerk: null, pdfUrl: null, pdfPaper: null,
+  clerk: null, pdfPage: 1, pdfPageCount: 0, pdfImageUrl: null,
+  pdfNavigationId: 0,
   internalToken: null,
 };
 const $ = (id) => document.getElementById(id);
@@ -213,6 +214,21 @@ function statusLabel(status) {
   return { pending: "Pending", verified: "Verified", incorrect: "Incorrect JSON", not_in_paper: "Not found in paper", needs_followup: "Needs follow-up" }[status] || status;
 }
 
+const VALUE_RELATIONS = [
+  ["unspecified", "Not specified"], ["exact", "Exact"],
+  ["approximately", "Approximately"], ["lower_bound", "Lower bound / at least"],
+  ["upper_bound", "Upper bound / at most"], ["range", "Range"],
+];
+const AGGREGATIONS = [
+  ["unspecified", "Not specified"], ["single_measurement", "Single measurement"],
+  ["mean", "Average / mean"], ["median", "Median"], ["champion", "Champion"],
+  ["stabilized", "Stabilized"], ["distribution", "Distribution"],
+];
+
+function selectOptions(options, selected) {
+  return options.map(([value, label]) => `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`).join("");
+}
+
 function highlightedSnippet(suggestion) {
   if (!suggestion) return "";
   const before = suggestion.snippet.slice(0, suggestion.match_start);
@@ -247,11 +263,13 @@ function renderFields() {
         <span class="fact-path">${escapeHtml(pathLabel(fact.path))}</span>
         <button class="value-chip" data-action="search-value">${escapeHtml(JSON.stringify(fact.value))}</button>
       </div>
-      ${peerReviews.length ? `<div class="peer-reviews">${peerReviews.map(([id, review]) => `<span class="peer-review ${review.status}">${escapeHtml(reviewerName(id))}: ${escapeHtml(statusLabel(review.status))}</span>`).join("")}${fact.disagreement ? `<strong>disagreement</strong>` : ""}</div>` : ""}
+      ${peerReviews.length ? `<div class="peer-reviews">${peerReviews.map(([id, review]) => `<span class="peer-review ${review.status}">${escapeHtml(reviewerName(id))}: ${escapeHtml(statusLabel(review.status))}${review.value_relation && review.value_relation !== "unspecified" ? ` · ${escapeHtml(review.value_relation.replaceAll("_", " "))}` : ""}${review.aggregation && review.aggregation !== "unspecified" ? ` · ${escapeHtml(review.aggregation.replaceAll("_", " "))}` : ""}</span>`).join("")}${fact.disagreement ? `<strong>disagreement</strong>` : ""}</div>` : ""}
       ${suggestion ? `<div class="suggestion"><button data-action="jump-suggestion">p. ${suggestion.page}</button><p>${highlightedSnippet(suggestion)}</p><button data-action="use-quote">Use as quote</button></div>` : `<div class="no-suggestion">No exact text match suggested — click the value to search variants.</div>`}
       <div class="evidence-fields">
         <label>Decision <select class="fact-status">${["pending", "verified", "incorrect", "not_in_paper", "needs_followup"].map((item) => `<option value="${item}" ${fact.evidence.status === item ? "selected" : ""}>${statusLabel(item)}</option>`).join("")}</select></label>
+        <label>Value relation <select class="fact-value-relation">${selectOptions(VALUE_RELATIONS, fact.evidence.value_relation || "unspecified")}</select></label>
         <label>Page <input class="fact-page" type="number" min="1" value="${fact.evidence.page || suggestion?.page || ""}" /></label>
+        <label>Aggregation <select class="fact-aggregation">${selectOptions(AGGREGATIONS, fact.evidence.aggregation || "unspecified")}</select></label>
         <label class="wide">Evidence quote <textarea class="fact-quote" rows="2" placeholder="Paste a short supporting quote…">${escapeHtml(fact.evidence.quote || "")}</textarea></label>
         <label class="wide">Reviewer note <input class="fact-notes" value="${escapeHtml(fact.evidence.notes || "")}" placeholder="Why is this ambiguous or incorrect?" /></label>
       </div>
@@ -269,6 +287,8 @@ function factForCard(card) { return state.reviewData.facts.find((fact) => fact.p
 function updateFactFromCard(card) {
   const fact = factForCard(card);
   fact.evidence.status = card.querySelector(".fact-status").value;
+  fact.evidence.value_relation = card.querySelector(".fact-value-relation").value;
+  fact.evidence.aggregation = card.querySelector(".fact-aggregation").value;
   fact.evidence.page = Number(card.querySelector(".fact-page").value) || null;
   fact.evidence.quote = card.querySelector(".fact-quote").value;
   fact.evidence.notes = card.querySelector(".fact-notes").value;
@@ -285,7 +305,7 @@ function bindFieldEvents() {
       card.querySelector(".fact-status").value = event.target.checked ? "verified" : "pending";
       updateFactFromCard(card);
     });
-    card.querySelectorAll(".fact-status,.fact-page,.fact-quote,.fact-notes").forEach((input) => input.addEventListener("change", () => updateFactFromCard(card)));
+    card.querySelectorAll(".fact-status,.fact-value-relation,.fact-aggregation,.fact-page,.fact-quote,.fact-notes").forEach((input) => input.addEventListener("change", () => updateFactFromCard(card)));
     card.querySelector('[data-action="search-value"]').addEventListener("click", () => searchValue(fact));
     card.querySelector('[data-action="jump-suggestion"]')?.addEventListener("click", () => jumpToPage(fact.suggestion.page, matchedText(fact.suggestion, fact.suggestion.query)));
     card.querySelector('[data-action="use-quote"]')?.addEventListener("click", () => {
@@ -448,24 +468,71 @@ function renderView() {
   else { $("json-panel").hidden = false; renderJson(); }
 }
 
-async function jumpToPage(page, text = "") {
-  if (!state.selected) return;
-  if (!state.pdfUrl || state.pdfPaper !== state.selected) {
-    if (state.pdfUrl) URL.revokeObjectURL(state.pdfUrl);
-    const response = await fetch(
-      `/api/pdf/${encodeURIComponent(state.selected)}`,
-      { headers: await authorizationHeaders() },
-    );
-    if (!response.ok) {
-      let message = `PDF failed to load (${response.status})`;
-      try { message = (await response.json()).error || message; } catch (_) { /* Not JSON. */ }
-      throw new Error(message);
-    }
-    state.pdfUrl = URL.createObjectURL(await response.blob());
-    state.pdfPaper = state.selected;
+async function findHighlight(page, text) {
+  if (!text) return null;
+  try {
+    const payload = await request(`/api/search/${encodeURIComponent(state.selected)}?q=${encodeURIComponent(text)}`);
+    return payload.results.find((result) => result.page === page && result.bbox)?.bbox || null;
+  } catch (_) { return null; }
+}
+
+function showPdfHighlight(bbox, text = "") {
+  const highlight = $("pdf-highlight");
+  if (!bbox) {
+    highlight.hidden = true;
+    $("pdf-scroll").scrollTop = 0;
+    $("pdf-location").textContent = `Page ${state.pdfPage}`;
+    return;
   }
-  const targetPage = Math.max(1, Number(page) || 1);
-  $("pdf-frame").src = `${state.pdfUrl}#page=${targetPage}&view=FitH`;
+  const paddingX = 0.004;
+  const paddingY = 0.003;
+  highlight.style.left = `${100 * Math.max(0, bbox.x - paddingX)}%`;
+  highlight.style.top = `${100 * Math.max(0, bbox.y - paddingY)}%`;
+  highlight.style.width = `${100 * Math.min(1, bbox.width + 2 * paddingX)}%`;
+  highlight.style.height = `${100 * Math.min(1, bbox.height + 2 * paddingY)}%`;
+  highlight.hidden = false;
+  const scroller = $("pdf-scroll");
+  const stage = $("pdf-page-stage");
+  scroller.scrollTop = Math.max(0, stage.offsetTop + bbox.y * stage.clientHeight - scroller.clientHeight / 3);
+  $("pdf-location").textContent = text ? `Highlighted “${text}”` : `Page ${state.pdfPage}`;
+}
+
+async function jumpToPage(page, text = "", bbox = null) {
+  if (!state.selected) return;
+  const targetPage = Math.max(1, Math.min(state.pdfPageCount || Infinity, Number(page) || 1));
+  const navigationId = ++state.pdfNavigationId;
+  const selectedPaper = state.selected;
+  $("pdf-location").textContent = `Loading page ${targetPage}…`;
+  $("pdf-highlight").hidden = true;
+  const highlightPromise = bbox ? Promise.resolve(bbox) : findHighlight(targetPage, text);
+  const response = await fetch(
+    `/api/pdf-page/${encodeURIComponent(selectedPaper)}?page=${targetPage}&scale=1.6`,
+    { headers: await authorizationHeaders() },
+  );
+  if (!response.ok) {
+    let message = `PDF page failed to load (${response.status})`;
+    try { message = (await response.json()).error || message; } catch (_) { /* Not JSON. */ }
+    throw new Error(message);
+  }
+  const imageUrl = URL.createObjectURL(await response.blob());
+  if (navigationId !== state.pdfNavigationId || selectedPaper !== state.selected) {
+    URL.revokeObjectURL(imageUrl);
+    return;
+  }
+  state.pdfPage = targetPage;
+  state.pdfPageCount = Number(response.headers.get("X-PDF-Pages")) || state.pdfPageCount;
+  if (state.pdfImageUrl) URL.revokeObjectURL(state.pdfImageUrl);
+  state.pdfImageUrl = imageUrl;
+  const image = $("pdf-page-image");
+  image.src = imageUrl;
+  try { await image.decode(); } catch (_) { /* The load event still paints the page. */ }
+  if (navigationId !== state.pdfNavigationId) return;
+  $("pdf-page").value = targetPage;
+  $("pdf-page").max = state.pdfPageCount || targetPage;
+  $("pdf-page-count").textContent = state.pdfPageCount || "–";
+  $("pdf-previous").disabled = targetPage <= 1;
+  $("pdf-next").disabled = Boolean(state.pdfPageCount && targetPage >= state.pdfPageCount);
+  showPdfHighlight(await highlightPromise, text);
 }
 
 async function searchPdf(jumpFirst = false) {
@@ -480,11 +547,11 @@ async function searchPdf(jumpFirst = false) {
   box.querySelectorAll("[data-page]").forEach((hit) => hit.addEventListener("click", () => {
     const result = payload.results[Number(hit.dataset.resultIndex)];
     box.hidden = true;
-    jumpToPage(result.page, matchedText(result, query));
+    jumpToPage(result.page, matchedText(result, query), result.bbox);
   }));
   if (jumpFirst) {
     box.hidden = true;
-    jumpToPage(payload.results[0].page, matchedText(payload.results[0], query));
+    jumpToPage(payload.results[0].page, matchedText(payload.results[0], query), payload.results[0].bbox);
   }
 }
 
@@ -493,6 +560,9 @@ $("filter").addEventListener("change", renderPapers);
 $("source").addEventListener("change", loadPaperData);
 $("search-button").addEventListener("click", () => searchPdf(false));
 $("pdf-search").addEventListener("keydown", (event) => { if (event.key === "Enter") searchPdf(false); });
+$("pdf-previous").addEventListener("click", () => jumpToPage(state.pdfPage - 1));
+$("pdf-next").addEventListener("click", () => jumpToPage(state.pdfPage + 1));
+$("pdf-page").addEventListener("change", () => jumpToPage($("pdf-page").value));
 $("field-cell").addEventListener("change", renderFields);
 $("field-status").addEventListener("change", renderFields);
 $("field-query").addEventListener("input", renderFields);

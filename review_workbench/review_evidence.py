@@ -17,6 +17,23 @@ REVIEW_STATUSES = {
     "not_in_paper",
     "needs_followup",
 }
+VALUE_RELATIONS = {
+    "unspecified",
+    "exact",
+    "approximately",
+    "lower_bound",
+    "upper_bound",
+    "range",
+}
+AGGREGATIONS = {
+    "unspecified",
+    "single_measurement",
+    "mean",
+    "median",
+    "champion",
+    "stabilized",
+    "distribution",
+}
 
 QUANTITY_PATTERN = re.compile(
     r"(?<![\w.])"
@@ -85,6 +102,12 @@ def reconcile_evidence(
                     "page": previous.get("page"),
                     "quote": previous.get("quote", ""),
                     "notes": previous.get("notes", ""),
+                    "value_relation": previous.get(
+                        "value_relation", "unspecified"
+                    ),
+                    "aggregation": previous.get(
+                        "aggregation", "unspecified"
+                    ),
                 }
             }
         fields[fact["path"]] = {
@@ -92,7 +115,7 @@ def reconcile_evidence(
             "reviews": reviews,
         }
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "paper_id": paper_id,
         "ground_truth_sha256": ground_truth_digest(ground_truth),
         "fields": fields,
@@ -125,10 +148,22 @@ def save_evidence(
         for review in field["reviews"].values():
             if review.get("status", "pending") not in REVIEW_STATUSES:
                 raise ValueError(f"Invalid review status: {review.get('status')}")
+            if review.get("value_relation", "unspecified") not in VALUE_RELATIONS:
+                raise ValueError(
+                    f"Invalid value relation: {review.get('value_relation')}"
+                )
+            if review.get("aggregation", "unspecified") not in AGGREGATIONS:
+                raise ValueError(
+                    f"Invalid aggregation: {review.get('aggregation')}"
+                )
             page = review.get("page")
             if page is not None and (not isinstance(page, int) or page < 1):
                 raise ValueError("Evidence pages must be positive integers")
             review["status"] = review.get("status", "pending")
+            review["value_relation"] = review.get(
+                "value_relation", "unspecified"
+            )
+            review["aggregation"] = review.get("aggregation", "unspecified")
             review["quote"] = str(review.get("quote", ""))
             review["notes"] = str(review.get("notes", ""))
     path = evidence_path(ground_truth_dir, split, paper_id)
@@ -146,6 +181,8 @@ def reviewer_entry(field: dict[str, Any], reviewer_id: str) -> dict[str, Any]:
         "page": review.get("page"),
         "quote": review.get("quote", ""),
         "notes": review.get("notes", ""),
+        "value_relation": review.get("value_relation", "unspecified"),
+        "aggregation": review.get("aggregation", "unspecified"),
     }
 
 

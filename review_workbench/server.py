@@ -435,6 +435,27 @@ class ReviewApplication:
         with fitz.open(path) as document:
             return tuple(page.get_text() for page in document)
 
+    def render_pdf_page(
+        self, paper_id: str, page_number: int, scale: float = 1.5
+    ) -> tuple[bytes, int]:
+        """Render one PDF page for deterministic in-app navigation."""
+        path = self.pdf_path(paper_id)
+        if not path.exists():
+            raise FileNotFoundError(path)
+        if not 0.75 <= scale <= 3:
+            raise ValueError("PDF page scale must be between 0.75 and 3")
+        with fitz.open(path) as document:
+            page_count = len(document)
+            if not 1 <= page_number <= page_count:
+                raise ValueError(
+                    f"PDF page must be between 1 and {page_count}"
+                )
+            page = document[page_number - 1]
+            pixmap = page.get_pixmap(
+                matrix=fitz.Matrix(scale, scale), alpha=False
+            )
+            return pixmap.tobytes("png"), page_count
+
     def search_pdf(self, paper_id: str, query: str) -> list[dict]:
         path = self.pdf_path(paper_id)
         if not path.exists():
@@ -442,24 +463,48 @@ class ReviewApplication:
         query = query.strip()
         if len(query) < 2 and not re.fullmatch(r"\d", query):
             return []
-        pages = self.pdf_pages(paper_id, path.stat().st_mtime_ns)
         results = []
-        pattern = re.compile(re.escape(query), re.IGNORECASE)
-        for page_number, text in enumerate(pages, 1):
-            normalized = re.sub(r"\s+", " ", text).strip()
-            for match in list(pattern.finditer(normalized))[:5]:
-                start = max(0, match.start() - 100)
-                end = min(len(normalized), match.end() + 150)
-                results.append(
-                    {
-                        "page": page_number,
-                        "snippet": normalized[start:end],
-                        "match_start": match.start() - start,
-                        "match_end": match.end() - start,
-                    }
-                )
-                if len(results) >= 50:
-                    return results
+        with fitz.open(path) as document:
+            for page_number, page in enumerate(document, 1):
+                page_rect = page.rect
+                text = page.get_text()
+                normalized = re.sub(r"\s+", " ", text).strip()
+                pattern = re.compile(re.escape(query), re.IGNORECASE)
+                text_matches = list(pattern.finditer(normalized))[:5]
+                rectangles = page.search_for(query)[:5]
+                count = max(len(text_matches), len(rectangles))
+                for index in range(count):
+                    match = text_matches[index] if index < len(text_matches) else None
+                    rectangle = rectangles[index] if index < len(rectangles) else None
+                    if match:
+                        start = max(0, match.start() - 100)
+                        end = min(len(normalized), match.end() + 150)
+                        snippet = normalized[start:end]
+                        match_start = match.start() - start
+                        match_end = match.end() - start
+                    else:
+                        snippet = query
+                        match_start = 0
+                        match_end = len(query)
+                    bbox = None
+                    if rectangle and page_rect.width and page_rect.height:
+                        bbox = {
+                            "x": rectangle.x0 / page_rect.width,
+                            "y": rectangle.y0 / page_rect.height,
+                            "width": rectangle.width / page_rect.width,
+                            "height": rectangle.height / page_rect.height,
+                        }
+                    results.append(
+                        {
+                            "page": page_number,
+                            "snippet": snippet,
+                            "match_start": match_start,
+                            "match_end": match_end,
+                            "bbox": bbox,
+                        }
+                    )
+                    if len(results) >= 50:
+                        return results
         return results
 
 
@@ -482,6 +527,18 @@ def make_handler(application: ReviewApplication, authenticator=None):
             self.send_header("Content-Type", content_type or mimetypes.guess_type(path.name)[0] or "application/octet-stream")
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def send_bytes(
+            self, body: bytes, content_type: str, headers: dict[str, str] | None = None
+        ):
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            for name, value in (headers or {}).items():
+                self.send_header(name, value)
             self.end_headers()
             self.wfile.write(body)
 
@@ -615,6 +672,21 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 if parsed.path.startswith("/api/search/"):
                     paper_id = unquote(parsed.path.removeprefix("/api/search/"))
                     self.send_json({"results": application.search_pdf(paper_id, query.get("q", [""])[0])})
+                    return
+                if parsed.path.startswith("/api/pdf-page/"):
+                    paper_id = unquote(
+                        parsed.path.removeprefix("/api/pdf-page/")
+                    )
+                    page_number = int(query.get("page", ["1"])[0])
+                    scale = float(query.get("scale", ["1.5"])[0])
+                    body, page_count = application.render_pdf_page(
+                        paper_id, page_number, scale
+                    )
+                    self.send_bytes(
+                        body,
+                        "image/png",
+                        {"X-PDF-Pages": str(page_count)},
+                    )
                     return
                 if parsed.path.startswith("/api/pdf/"):
                     paper_id = unquote(parsed.path.removeprefix("/api/pdf/"))

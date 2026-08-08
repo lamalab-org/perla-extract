@@ -55,7 +55,18 @@
           </div>
           <div id="search-results" class="search-results" hidden></div>
         </div>
-        <iframe id="pdf-frame" title="Paper PDF"></iframe>
+        <div class="pdf-toolbar" aria-label="PDF page navigation">
+          <button id="pdf-previous" type="button" aria-label="Previous page">←</button>
+          <label>Page <input id="pdf-page" type="number" min="1" value="1" /> <span>of <b id="pdf-page-count">–</b></span></label>
+          <button id="pdf-next" type="button" aria-label="Next page">→</button>
+          <span id="pdf-location">Loading paper…</span>
+        </div>
+        <div id="pdf-scroll" class="pdf-scroll">
+          <div id="pdf-page-stage" class="pdf-page-stage">
+            <img id="pdf-page-image" alt="Rendered PDF page" />
+            <div id="pdf-highlight" class="pdf-highlight" hidden></div>
+          </div>
+        </div>
       </section>
 
       <section class="review-pane">

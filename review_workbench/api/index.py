@@ -181,6 +181,12 @@ class VercelReviewApplication(ReviewApplication):
         self.ensure_pdf(paper_id)
         return super().search_pdf(paper_id, query)
 
+    def render_pdf_page(
+        self, paper_id: str, page_number: int, scale: float = 1.5
+    ) -> tuple[bytes, int]:
+        self.ensure_pdf(paper_id)
+        return super().render_pdf_page(paper_id, page_number, scale)
+
     def add_reviewer(self, payload: object) -> dict[str, str]:
         result = super().add_reviewer(payload)
         self._sync_state()
@@ -274,8 +280,16 @@ class handler(BaseHandler):
 
     def do_GET(self):  # noqa: N802
         parsed = urlparse(self.path)
-        if parsed.path.startswith("/api/pdf/"):
-            paper_id = unquote(parsed.path.removeprefix("/api/pdf/"))
+        pdf_prefix = next(
+            (
+                prefix
+                for prefix in ("/api/pdf/", "/api/pdf-page/")
+                if parsed.path.startswith(prefix)
+            ),
+            None,
+        )
+        if pdf_prefix:
+            paper_id = unquote(parsed.path.removeprefix(pdf_prefix))
             try:
                 review_application.ensure_pdf(paper_id)
             except FileNotFoundError:
