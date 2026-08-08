@@ -1,9 +1,9 @@
 const state = {
   split: "test", papers: [], selected: null, sources: [], tab: "fields",
   paperData: null, reviewData: null, quantityData: null, evidenceDirty: false,
-  users: [], comments: [], issues: [], figureAudits: {}, corpusSummary: null, currentUser: null,
+  users: [], reviewerProgress: [], comments: [], issues: [], figureAudits: {}, corpusSummary: null, currentUser: null,
   clerk: null, pdfPage: 1, pdfPageCount: 0, pdfImageUrl: null,
-  pdfNavigationId: 0,
+  pdfNavigationId: 0, pdfPageText: "", pdfQuote: "", pendingCursor: null,
   internalToken: null,
 };
 const $ = (id) => document.getElementById(id);
@@ -91,19 +91,42 @@ function renderPapers() {
   document.querySelectorAll("[data-paper]").forEach((button) => button.addEventListener("click", () => selectPaper(button.dataset.paper)));
 }
 
+function renderReviewerProgress() {
+  const reviewers = state.reviewerProgress || [];
+  renderSafeHtml($("reviewer-progress"), reviewers.length ? reviewers.map((reviewer) => `
+    <div class="reviewer-progress-item">
+      <div class="reviewer-progress-heading"><strong>${escapeHtml(reviewer.name)}${reviewer.id === reviewerId() ? " (you)" : ""}</strong><span>${reviewer.percent}%</span></div>
+      <div class="reviewer-progress-track"><i data-reviewer-progress="${reviewer.percent}"></i></div>
+      <div class="reviewer-progress-meta"><span>${reviewer.reviewed}/${reviewer.total} fields</span><span>${reviewer.papers_completed}/${reviewer.paper_count} papers</span></div>
+      ${reviewer.needs_followup || reviewer.incorrect ? `<div class="reviewer-progress-meta"><span>${reviewer.needs_followup} follow-up</span><span>${reviewer.incorrect} incorrect</span></div>` : ""}
+    </div>`).join("") : `<span>No reviewer accounts found.</span>`);
+  document.querySelectorAll("[data-reviewer-progress]").forEach((bar) => {
+    bar.style.width = `${Math.max(0, Math.min(100, Number(bar.dataset.reviewerProgress)))}%`;
+  });
+}
+
+async function loadReviewerProgress() {
+  const payload = await request(`/api/reviewer-progress?split=${state.split}`);
+  state.reviewerProgress = payload.reviewers;
+  renderReviewerProgress();
+}
+
 async function loadPapers() {
-  const [payload, userPayload, corpusSummary] = await Promise.all([
+  const [payload, userPayload, corpusSummary, reviewerProgress] = await Promise.all([
     request(`/api/papers?split=${state.split}`), request("/api/users"), request("/api/corpus-summary"),
+    request(`/api/reviewer-progress?split=${state.split}`),
   ]);
   state.papers = payload.papers;
   state.sources = payload.sources;
   state.users = userPayload.users;
   state.corpusSummary = corpusSummary;
+  state.reviewerProgress = reviewerProgress.reviewers;
   $("test-count").textContent = corpusSummary.test.papers;
   $("dev-count").textContent = corpusSummary.dev.papers;
   document.querySelectorAll("[data-split]").forEach((button) => button.classList.toggle("active", button.dataset.split === state.split));
   renderSafeHtml($("source"), `<option value="">Choose extraction…</option>` + state.sources.map((source) => `<option value="${escapeHtml(source)}">${escapeHtml(source)}</option>`).join(""));
   renderPapers();
+  renderReviewerProgress();
   const preferred = state.papers.find((paper) => paper.id === state.selected) || state.papers[0];
   if (preferred) await selectPaper(preferred.id);
 }
@@ -136,6 +159,7 @@ async function selectPaper(paperId) {
   state.selected = paperId;
   state.quantityData = null;
   state.evidenceDirty = false;
+  state.pendingCursor = null;
   $("paper-title").textContent = paperId.replace("--", "/");
   await jumpToPage(1);
   $("search-results").hidden = true;
@@ -307,7 +331,7 @@ function bindFieldEvents() {
     });
     card.querySelectorAll(".fact-status,.fact-value-relation,.fact-aggregation,.fact-page,.fact-quote,.fact-notes").forEach((input) => input.addEventListener("change", () => updateFactFromCard(card)));
     card.querySelector('[data-action="search-value"]').addEventListener("click", () => searchValue(fact));
-    card.querySelector('[data-action="jump-suggestion"]')?.addEventListener("click", () => jumpToPage(fact.suggestion.page, matchedText(fact.suggestion, fact.suggestion.query)));
+    card.querySelector('[data-action="jump-suggestion"]')?.addEventListener("click", () => jumpToPage(fact.suggestion.page, matchedText(fact.suggestion, fact.suggestion.query), null, fact.suggestion.snippet));
     card.querySelector('[data-action="use-quote"]')?.addEventListener("click", () => {
       card.querySelector(".fact-page").value = fact.suggestion.page;
       card.querySelector(".fact-quote").value = fact.suggestion.snippet;
@@ -320,6 +344,29 @@ function bindFieldEvents() {
       input.value = "";
       renderFields();
     });
+  });
+}
+
+function nextPendingField() {
+  const facts = state.reviewData?.facts || [];
+  if (!facts.length) return;
+  const start = Math.max(-1, facts.findIndex((fact) => fact.path === state.pendingCursor));
+  const ordered = facts.slice(start + 1).concat(facts.slice(0, start + 1));
+  const fact = ordered.find((item) => item.evidence.status === "pending");
+  if (!fact) {
+    $("evidence-status").textContent = "All fields in this paper have been reviewed";
+    return;
+  }
+  state.pendingCursor = fact.path;
+  const cell = fact.path.match(/^\/cells\/(\d+)/)?.[1];
+  $("field-cell").value = cell == null ? "all" : cell;
+  $("field-status").value = "pending";
+  $("field-query").value = "";
+  renderFields();
+  requestAnimationFrame(() => {
+    const card = [...document.querySelectorAll(".fact-card")].find((item) => item.dataset.factPath === fact.path);
+    card?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (fact.suggestion) jumpToPage(fact.suggestion.page, matchedText(fact.suggestion, fact.suggestion.query), null, fact.suggestion.snippet);
   });
 }
 
@@ -346,7 +393,8 @@ function renderQuantities() {
   </article>`).join("") : `<div class="empty-state">No unmatched quantities match this filter.</div>`);
   document.querySelectorAll(".quantity-jump").forEach((button) => button.addEventListener("click", async () => {
     const card = button.closest(".quantity-card");
-    jumpToPage(card.dataset.page, card.dataset.query);
+    const item = mentions[Number(card.dataset.quantityIndex)];
+    jumpToPage(card.dataset.page, card.dataset.query, null, item.snippet);
     $("pdf-search").value = card.dataset.query;
   }));
   document.querySelectorAll(".report-quantity").forEach((button) => button.addEventListener("click", async () => {
@@ -392,7 +440,7 @@ async function addComment(body, fieldPath = null) {
 }
 
 function issueTypeLabel(type) {
-  return { missing_cell: "Missing cell / device", missing_value: "Missing value", missing_layer: "Missing layer", missing_composition: "Missing composition", mixed_device: "Values mixed across devices", schema_limitation: "Schema limitation / uncertainty", wrong_value: "Wrong value", other: "Other" }[type] || type;
+  return { missing_cell: "Missing cell / device", missing_value: "Missing value", missing_layer: "Missing layer", missing_composition: "Missing composition", mixed_device: "Values mixed across devices", out_of_scope_tandem: "Out-of-scope tandem device", schema_limitation: "Schema limitation / uncertainty", wrong_value: "Wrong value", other: "Other" }[type] || type;
 }
 
 function renderFigureAudit() {
@@ -430,7 +478,7 @@ function renderIssues() {
     const issue = state.issues.find((item) => item.id === button.dataset.issueJump);
     if (!issue) return;
     if (issue.source_text) $("pdf-search").value = issue.source_text;
-    jumpToPage(issue.source_page, issue.source_text || "");
+    jumpToPage(issue.source_page, issue.source_text || "", null, issue.source_text || "");
   }));
   document.querySelectorAll("[data-resolve-issue]").forEach((button) => button.addEventListener("click", async () => {
     const resolution = button.previousElementSibling.value;
@@ -476,8 +524,10 @@ async function findHighlight(page, text) {
   } catch (_) { return null; }
 }
 
-function showPdfHighlight(bbox, text = "") {
+function showPdfHighlight(bbox, text = "", quote = "") {
   const highlight = $("pdf-highlight");
+  state.pdfQuote = (quote || text).trim();
+  $("copy-pdf-quote").disabled = !state.pdfQuote;
   if (!bbox) {
     highlight.hidden = true;
     $("pdf-scroll").scrollTop = 0;
@@ -497,7 +547,7 @@ function showPdfHighlight(bbox, text = "") {
   $("pdf-location").textContent = text ? `Highlighted “${text}”` : `Page ${state.pdfPage}`;
 }
 
-async function jumpToPage(page, text = "", bbox = null) {
+async function jumpToPage(page, text = "", bbox = null, quote = "") {
   if (!state.selected) return;
   const targetPage = Math.max(1, Math.min(state.pdfPageCount || Infinity, Number(page) || 1));
   const navigationId = ++state.pdfNavigationId;
@@ -505,6 +555,7 @@ async function jumpToPage(page, text = "", bbox = null) {
   $("pdf-location").textContent = `Loading page ${targetPage}…`;
   $("pdf-highlight").hidden = true;
   const highlightPromise = bbox ? Promise.resolve(bbox) : findHighlight(targetPage, text);
+  const pageTextPromise = request(`/api/pdf-text/${encodeURIComponent(selectedPaper)}?page=${targetPage}`);
   const response = await fetch(
     `/api/pdf-page/${encodeURIComponent(selectedPaper)}?page=${targetPage}&scale=1.6`,
     { headers: await authorizationHeaders() },
@@ -532,7 +583,10 @@ async function jumpToPage(page, text = "", bbox = null) {
   $("pdf-page-count").textContent = state.pdfPageCount || "–";
   $("pdf-previous").disabled = targetPage <= 1;
   $("pdf-next").disabled = Boolean(state.pdfPageCount && targetPage >= state.pdfPageCount);
-  showPdfHighlight(await highlightPromise, text);
+  const pageText = await pageTextPromise;
+  state.pdfPageText = pageText.text || "";
+  $("copy-page-text").disabled = !state.pdfPageText;
+  showPdfHighlight(await highlightPromise, text, quote);
 }
 
 async function searchPdf(jumpFirst = false) {
@@ -547,11 +601,24 @@ async function searchPdf(jumpFirst = false) {
   box.querySelectorAll("[data-page]").forEach((hit) => hit.addEventListener("click", () => {
     const result = payload.results[Number(hit.dataset.resultIndex)];
     box.hidden = true;
-    jumpToPage(result.page, matchedText(result, query), result.bbox);
+    jumpToPage(result.page, matchedText(result, query), result.bbox, result.snippet);
   }));
   if (jumpFirst) {
     box.hidden = true;
-    jumpToPage(payload.results[0].page, matchedText(payload.results[0], query), payload.results[0].bbox);
+    jumpToPage(payload.results[0].page, matchedText(payload.results[0], query), payload.results[0].bbox, payload.results[0].snippet);
+  }
+}
+
+async function copyPdfText(text, kind) {
+  if (!text) return;
+  const content = kind === "quote"
+    ? `${text.replace(/\s+/g, " ").trim()} (p. ${state.pdfPage})`
+    : `Page ${state.pdfPage}\n\n${text.trim()}`;
+  try {
+    await navigator.clipboard.writeText(content);
+    $("pdf-location").textContent = `${kind === "quote" ? "Quote" : "Page text"} copied with page ${state.pdfPage}`;
+  } catch (_) {
+    $("pdf-location").textContent = "Clipboard access was blocked by the browser";
   }
 }
 
@@ -563,6 +630,9 @@ $("pdf-search").addEventListener("keydown", (event) => { if (event.key === "Ente
 $("pdf-previous").addEventListener("click", () => jumpToPage(state.pdfPage - 1));
 $("pdf-next").addEventListener("click", () => jumpToPage(state.pdfPage + 1));
 $("pdf-page").addEventListener("change", () => jumpToPage($("pdf-page").value));
+$("copy-pdf-quote").addEventListener("click", () => copyPdfText(state.pdfQuote, "quote"));
+$("copy-page-text").addEventListener("click", () => copyPdfText(state.pdfPageText, "page"));
+$("next-pending").addEventListener("click", nextPendingField);
 $("field-cell").addEventListener("change", renderFields);
 $("field-status").addEventListener("change", renderFields);
 $("field-query").addEventListener("input", renderFields);
@@ -585,7 +655,7 @@ $("save-evidence").addEventListener("click", async () => {
     const fields = Object.fromEntries(state.reviewData.facts.map((fact) => [fact.path, fact.evidence]));
     const payload = await request(`/api/evidence/${state.split}/${encodeURIComponent(state.selected)}`, { method: "PUT", body: JSON.stringify({ reviewer_id: reviewerId(), fields }) });
     state.evidenceDirty = false; state.reviewData.progress = payload.progress;
-    currentPaper().field_review = payload.progress; renderProgress(payload.progress); renderPapers(); status.textContent = "Field review saved";
+    currentPaper().field_review = payload.overall_progress; renderProgress(payload.progress); renderPapers(); await loadReviewerProgress(); status.textContent = "Field review saved";
   } catch (error) { status.textContent = error.message; }
 });
 

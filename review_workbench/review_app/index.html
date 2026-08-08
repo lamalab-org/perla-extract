@@ -43,6 +43,10 @@
     <main class="workspace">
       <aside class="paper-rail">
         <div class="rail-summary" id="summary">Loading papers…</div>
+        <details class="team-progress" open>
+          <summary>Reviewer progress</summary>
+          <div id="reviewer-progress" class="reviewer-progress">Loading…</div>
+        </details>
         <div id="paper-list" class="paper-list"></div>
       </aside>
 
@@ -60,6 +64,8 @@
           <label>Page <input id="pdf-page" type="number" min="1" value="1" /> <span>of <b id="pdf-page-count">–</b></span></label>
           <button id="pdf-next" type="button" aria-label="Next page">→</button>
           <span id="pdf-location">Loading paper…</span>
+          <button id="copy-pdf-quote" type="button" disabled>Copy matched quote</button>
+          <button id="copy-page-text" type="button" disabled>Copy page text</button>
         </div>
         <div id="pdf-scroll" class="pdf-scroll">
           <div id="pdf-page-stage" class="pdf-page-stage">
@@ -88,7 +94,7 @@
                 <option value="unknown">Unknown</option><option value="research">Research</option><option value="review">Review</option><option value="perspective">Perspective</option><option value="news_and_views">News &amp; Views</option><option value="other">Other</option>
               </select>
             </label>
-            <label>Tandem scope
+            <label>Tandem content (tracking only)
               <select id="tandem-scope">
                 <option value="unknown">Unknown</option><option value="none">None</option><option value="mentions_only">Mentions only</option><option value="contains_tandem_devices">Contains tandem devices</option><option value="tandem_only">Tandem only</option>
               </select>
@@ -121,10 +127,10 @@
             <label>Status <select id="field-status"><option value="all">All fields</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="issues">Issues / follow-up</option><option value="disagreements">Reviewer disagreements</option></select></label>
             <label class="grow">Find field <input id="field-query" type="search" placeholder="PCE, temperature, layer name…" /></label>
           </div>
-          <div class="review-hint"><strong>Ground-truth evidence policy:</strong> verify values only when they are explicitly stated in the main-paper prose, captions, or tables. Do not promote values inferred from plots or found only in Supporting Information. Click any JSON value to search the PDF and jump to its best page.</div>
+          <div class="review-hint"><strong>Ground-truth evidence policy:</strong> verify values only when they are explicitly stated in the main-paper prose, captions, or tables. Do not promote values inferred from plots or found only in Supporting Information. Tandem papers remain eligible, but tandem device records themselves must not appear in the ground truth; retain explicitly reported single-junction devices from those papers. Click any JSON value to search the PDF and jump to its best page.</div>
           <div id="cell-context" class="cell-context"></div>
           <div id="field-list" class="field-list"></div>
-          <div class="sticky-actions"><span id="evidence-status">No unsaved review changes</span><button id="save-evidence">Save field review</button></div>
+          <div class="sticky-actions"><span id="evidence-status">No unsaved review changes</span><div><button id="next-pending" type="button" class="secondary-button">Next pending</button><button id="save-evidence">Save field review</button></div></div>
         </section>
 
         <section id="gaps-panel" class="review-panel" hidden>
@@ -164,7 +170,7 @@
           <form id="issue-form" class="issue-form">
             <h3>Report something missing or wrong</h3>
             <div class="field-grid">
-              <label>Type <select id="issue-type"><option value="missing_cell">Missing cell / device</option><option value="missing_value">Missing value</option><option value="missing_layer">Missing layer</option><option value="missing_composition">Missing composition</option><option value="mixed_device">Values mixed across devices</option><option value="schema_limitation">Schema limitation / uncertainty</option><option value="wrong_value">Wrong value</option><option value="other">Other</option></select></label>
+              <label>Type <select id="issue-type"><option value="missing_cell">Missing cell / device</option><option value="missing_value">Missing value</option><option value="missing_layer">Missing layer</option><option value="missing_composition">Missing composition</option><option value="mixed_device">Values mixed across devices</option><option value="out_of_scope_tandem">Out-of-scope tandem device</option><option value="schema_limitation">Schema limitation / uncertainty</option><option value="wrong_value">Wrong value</option><option value="other">Other</option></select></label>
               <label>Cell <select id="issue-cell"><option value="">Paper-level / unknown</option></select></label>
             </div>
             <label>Description <textarea id="issue-description" rows="3" required placeholder="What is missing, and where is it reported?"></textarea></label>

@@ -8,7 +8,6 @@ from typing import Any, Dict, Iterable
 
 
 ARTICLE_TYPES_EXCLUDED = {"review", "perspective", "news_and_views"}
-TANDEM_SCOPES_EXCLUDED = {"contains_tandem_devices", "tandem_only"}
 
 
 def review_metadata_path(truth_dir: Path) -> Path:
@@ -48,8 +47,6 @@ def exclusion_reasons(metadata: Dict[str, Any]) -> list[str]:
     reasons = []
     if metadata.get("article_type") in ARTICLE_TYPES_EXCLUDED:
         reasons.append(f"article_type:{metadata['article_type']}")
-    if metadata.get("tandem_scope") in TANDEM_SCOPES_EXCLUDED:
-        reasons.append(f"tandem_scope:{metadata['tandem_scope']}")
     return reasons
 
 

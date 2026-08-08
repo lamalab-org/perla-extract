@@ -137,6 +137,59 @@ class ReviewApplication:
             for split in ("dev", "test")
         }
 
+    def reviewer_progress_summary(self, split: str) -> list[dict]:
+        """Aggregate per-reviewer field progress across one dataset split."""
+        users = load_users(self.ground_truth_dir)
+        summaries = {
+            user["id"]: {
+                **user,
+                "total": 0,
+                "reviewed": 0,
+                "verified": 0,
+                "incorrect": 0,
+                "not_in_paper": 0,
+                "needs_followup": 0,
+                "pending": 0,
+                "papers_started": 0,
+                "papers_completed": 0,
+            }
+            for user in users
+        }
+        for truth_path in sorted(self.truth_dir(split).glob("*.json")):
+            truth = self.load_ground_truth(split, truth_path.stem)
+            evidence = load_evidence(
+                self.ground_truth_dir, split, truth_path.stem, truth
+            )
+            for reviewer_id, summary in summaries.items():
+                progress = review_progress(evidence, reviewer_id)
+                for key in (
+                    "total",
+                    "reviewed",
+                    "verified",
+                    "incorrect",
+                    "not_in_paper",
+                    "needs_followup",
+                    "pending",
+                ):
+                    summary[key] += progress[key]
+                if progress["reviewed"]:
+                    summary["papers_started"] += 1
+                if progress["total"] and progress["reviewed"] == progress["total"]:
+                    summary["papers_completed"] += 1
+        paper_count = len(list(self.truth_dir(split).glob("*.json")))
+        return [
+            {
+                **summary,
+                "paper_count": paper_count,
+                "percent": round(
+                    100 * summary["reviewed"] / summary["total"], 1
+                )
+                if summary["total"]
+                else 0,
+            }
+            for summary in summaries.values()
+        ]
+
     def load_ground_truth(self, split: str, paper_id: str) -> dict:
         truth_path = self.paper_path(split, paper_id)
         if not truth_path.exists():
@@ -456,6 +509,15 @@ class ReviewApplication:
             )
             return pixmap.tobytes("png"), page_count
 
+    def pdf_page_text(self, paper_id: str, page_number: int) -> tuple[str, int]:
+        path = self.pdf_path(paper_id)
+        if not path.exists():
+            raise FileNotFoundError(path)
+        pages = self.pdf_pages(paper_id, path.stat().st_mtime_ns)
+        if not 1 <= page_number <= len(pages):
+            raise ValueError(f"PDF page must be between 1 and {len(pages)}")
+        return pages[page_number - 1], len(pages)
+
     def search_pdf(self, paper_id: str, query: str) -> list[dict]:
         path = self.pdf_path(paper_id)
         if not path.exists():
@@ -610,6 +672,16 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 if parsed.path == "/api/corpus-summary":
                     self.send_json(application.corpus_summary())
                     return
+                if parsed.path == "/api/reviewer-progress":
+                    split = query.get("split", ["test"])[0]
+                    self.send_json(
+                        {
+                            "reviewers": application.reviewer_progress_summary(
+                                split
+                            )
+                        }
+                    )
+                    return
                 if parsed.path.startswith("/api/paper/"):
                     paper_id = unquote(parsed.path.removeprefix("/api/paper/"))
                     split = query.get("split", ["test"])[0]
@@ -686,6 +758,18 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         body,
                         "image/png",
                         {"X-PDF-Pages": str(page_count)},
+                    )
+                    return
+                if parsed.path.startswith("/api/pdf-text/"):
+                    paper_id = unquote(
+                        parsed.path.removeprefix("/api/pdf-text/")
+                    )
+                    page_number = int(query.get("page", ["1"])[0])
+                    page_text, page_count = application.pdf_page_text(
+                        paper_id, page_number
+                    )
+                    self.send_json(
+                        {"text": page_text, "page_count": page_count}
                     )
                     return
                 if parsed.path.startswith("/api/pdf/"):

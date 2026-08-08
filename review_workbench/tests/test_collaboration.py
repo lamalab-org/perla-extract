@@ -109,3 +109,20 @@ def test_schema_limitations_can_be_recorded_without_changing_ground_truth(tmp_pa
         "measurement_context": "steady_state",
         "uncertainty": "Reported as above 80%.",
     }
+
+
+def test_tandem_device_can_be_reported_as_out_of_scope(tmp_path):
+    user = add_user(tmp_path, "Ada")
+
+    issue = add_issue(
+        tmp_path,
+        "test",
+        "paper",
+        user["id"],
+        "out_of_scope_tandem",
+        "This record describes the complete tandem rather than a subcell.",
+        cell_index=1,
+        source_page=6,
+    )
+
+    assert issue["type"] == "out_of_scope_tandem"

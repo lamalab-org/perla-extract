@@ -187,6 +187,10 @@ class VercelReviewApplication(ReviewApplication):
         self.ensure_pdf(paper_id)
         return super().render_pdf_page(paper_id, page_number, scale)
 
+    def pdf_page_text(self, paper_id: str, page_number: int) -> tuple[str, int]:
+        self.ensure_pdf(paper_id)
+        return super().pdf_page_text(paper_id, page_number)
+
     def add_reviewer(self, payload: object) -> dict[str, str]:
         result = super().add_reviewer(payload)
         self._sync_state()

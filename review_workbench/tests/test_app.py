@@ -4,6 +4,7 @@ from pathlib import Path
 
 import fitz
 
+from review_workbench.review_collaboration import add_user
 from review_workbench.server import ReviewApplication, make_handler
 
 
@@ -71,12 +72,52 @@ def test_pdf_search_returns_coordinates_and_page_renderer(tmp_path):
 
     results = app.search_pdf(paper_id, "19.2")
     image, page_count = app.render_pdf_page(paper_id, 2)
+    page_text, text_page_count = app.pdf_page_text(paper_id, 2)
 
     assert results[0]["page"] == 2
     assert 0 < results[0]["bbox"]["y"] < 1
     assert results[0]["bbox"]["width"] > 0
     assert image.startswith(b"\x89PNG")
     assert page_count == 2
+    assert "Average efficiency" in page_text
+    assert text_page_count == 2
+
+
+def test_reviewer_progress_is_aggregated_by_split(tmp_path):
+    pdf_dir = tmp_path / "pdfs"
+    ground_truth_dir = tmp_path / "ground_truth"
+    pdf_dir.mkdir()
+    (ground_truth_dir / "dev").mkdir(parents=True)
+    (ground_truth_dir / "test").mkdir()
+    paper_id = "10.1234--progress"
+    (ground_truth_dir / "test" / f"{paper_id}.json").write_text(
+        json.dumps({"cells": [{"pce": {"value": 20.0, "unit": "%"}}]}),
+        encoding="utf-8",
+    )
+    app = ReviewApplication(pdf_dir, ground_truth_dir)
+    reviewer = add_user(ground_truth_dir, "Ada Reviewer")
+    app.save_review_evidence(
+        "test",
+        paper_id,
+        {
+            "reviewer_id": reviewer["id"],
+            "fields": {
+                "/cells/0/pce/value": {"status": "verified", "page": 1}
+            },
+        },
+    )
+
+    progress = next(
+        item
+        for item in app.reviewer_progress_summary("test")
+        if item["id"] == reviewer["id"]
+    )
+
+    assert progress["reviewed"] == 1
+    assert progress["total"] == 2
+    assert progress["papers_started"] == 1
+    assert progress["papers_completed"] == 0
+    assert progress["percent"] == 50.0
 
 
 def test_review_ui_has_separate_figure_audit():
@@ -102,6 +143,12 @@ def test_search_and_issues_offer_explicit_pdf_jumps():
     assert "fact-value-relation" in javascript
     assert "fact-aggregation" in javascript
     assert '"mean", "Average / mean"' in javascript
+    assert 'id="copy-pdf-quote"' in html
+    assert 'id="copy-page-text"' in html
+    assert "(p. ${state.pdfPage})" in javascript
+    assert 'id="reviewer-progress"' in html
+    assert 'id="next-pending"' in html
+    assert "out_of_scope_tandem" in html
 
 
 def test_authenticated_comment_ignores_client_supplied_author(tmp_path):

@@ -12,6 +12,13 @@ The separate Figure audit records how much schema-relevant information is lost
 under that policy. Figure-only counts and notes are coverage analysis and must
 not be promoted into the ground-truth JSON.
 
+Research papers are not excluded because they contain or focus on tandem
+devices. Tandem device records themselves are outside the current schema and
+must be omitted from ground truth, while explicitly reported single-junction
+devices from the same paper remain eligible for extraction and scoring. A
+tandem-only research paper therefore has an empty `cells` list rather than an
+article-level exclusion.
+
 Field reviews record whether a reported value is exact, approximate, a lower or
 upper bound, or a range, independently of whether it is a single measurement,
 mean, median, champion, stabilized value, or distribution. When the remaining
@@ -31,6 +38,12 @@ PYTHONPATH=. .venv/bin/python review_workbench/seed_review_findings.py
 This directory contains the complete local review UI and its isolated Vercel
 deployment surface. The scientific extraction and scoring code remains in
 `src/perla_extract`.
+
+The paper rail shows split-wide progress for every reviewer, including fields
+reviewed and papers completed. Within a paper, **Next pending** advances through
+the current reviewer's remaining fields. PDF search results jump to and
+highlight their source coordinates; the viewer can copy either the matched
+passage with its page citation or the complete extracted text of the page.
 
 Run the workbench locally from the repository root:
 
