@@ -8,18 +8,38 @@ import litellm
 from loguru import logger
 from typing import Any
 from perla_extract.configuration import MAX_RETRIES, MAX_TOKENS
-# Try to setup Redis cache if available, otherwise use disk cache
+
+
 log_traces = os.environ.get("PERLA_LOG_TRACES", "false").lower() == "true"
-try:
-    if log_traces:
+if log_traces:
+    required_vars = [
+        "LANGFUSE_PUBLIC_KEY",
+        "LANGFUSE_SECRET_KEY",
+    ]
+
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+
+    if missing_vars:
+        raise RuntimeError(
+            "PERLA tracing with Langfuse is enabled, but the following required "
+            f"environment variable(s) are missing: {', '.join(missing_vars)}. "
+            "Please set them and restart the application."
+        )
+
+    try:
         from langfuse.decorators import observe, langfuse_context
+
         litellm.success_callback = ["langfuse"]
         litellm.failure_callback = ["langfuse"]
         litellm.callbacks = ["langfuse"]
+
         logger.info("Langfuse tracing is enabled. All LLM calls will be traced.")
-except Exception as e:
-    logger.error(f"Error occurred while setting up Langfuse tracing: {e}. Tracing will be disabled.")
-    log_traces = False
+
+    except Exception:
+        logger.exception("Failed to initialize Langfuse tracing.")
+        raise
+
+
 try:
     # Disable litellm error output
     litellm.suppress_debug_info = True
@@ -55,11 +75,14 @@ def create_text_completion(
     additional_params: dict | None = None,
     session_id: str | None = None,
 ) -> tuple[PerovskiteSolarCells, Any]:
-    if log_traces:
-        create_text_completion_with_observation = observe(name="Perla Extract")(
-            _create_text_completion
-        )
-        out = create_text_completion_with_observation(
+    completion_fn = (
+        observe(name="Perla Extract")(_create_text_completion)
+        if log_traces
+        else _create_text_completion
+    )
+
+    try:
+        return completion_fn(
             model_name=model_name,
             pdf_text=pdf_text,
             system_prompt=system_prompt,
@@ -69,19 +92,9 @@ def create_text_completion(
             additional_params=additional_params,
             session_id=session_id,
         )
-        langfuse_context.flush()
-        return out
-    else:
-        return _create_text_completion(
-            model_name=model_name,
-            pdf_text=pdf_text,
-            system_prompt=system_prompt,
-            instruction=instruction,
-            api_key=api_key,
-            api_base_url=api_base_url,
-            additional_params=additional_params,
-            session_id=session_id,
-        )
+    finally:
+        if log_traces:
+            langfuse_context.flush()
 
 
 def _create_text_completion(
