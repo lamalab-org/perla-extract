@@ -2,9 +2,12 @@ from pint import UnitRegistry
 import re
 from platformdirs import user_data_dir
 from pathlib import Path
+from typing import Literal
 
 MAX_RETRIES = 3
 MAX_TOKENS = 64000
+
+EXTRACTION_METHODS = Literal["response_format", "tool_call"]
 # Initialize the UnitRegistry
 ureg = UnitRegistry()
 
