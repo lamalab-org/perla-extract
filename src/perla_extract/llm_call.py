@@ -11,15 +11,20 @@ from perla_extract.configuration import MAX_RETRIES, MAX_TOKENS
 # Try to setup Redis cache if available, otherwise use disk cache
 log_traces = os.environ.get("PERLA_LOG_TRACES", "false").lower() == "true"
 try:
-    # Disable litellm error output
-    litellm.suppress_debug_info = True
-    litellm.set_verbose = False
     if log_traces:
         from langfuse.decorators import observe, langfuse_context
         litellm.success_callback = ["langfuse"]
         litellm.failure_callback = ["langfuse"]
         litellm.callbacks = ["langfuse"]
         logger.info("Langfuse tracing is enabled. All LLM calls will be traced.")
+except Exception as e:
+    logger.error(f"Error occurred while setting up Langfuse tracing: {e}. Tracing will be disabled.")
+    log_traces = False
+try:
+    # Disable litellm error output
+    litellm.suppress_debug_info = True
+    litellm.set_verbose = False
+    
     import logging
 
     logging.getLogger("LiteLLM").setLevel(logging.CRITICAL)
