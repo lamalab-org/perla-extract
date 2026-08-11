@@ -194,12 +194,12 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> List[Path]:
                 logger.warning(f"File {filepath} already exists. Skipping download.")
                 downloaded_files.append(filepath)
                 continue
-        
-        if 'pdf_url' not in item and 'landing_page_url' in item and playwright_installed:
+        pdf_url = item.get("pdf_url")
+        if not pdf_url and 'landing_page_url' in item and playwright_installed:
             landing_page_url = item["landing_page_url"]
             logger.info(f"Attempting to download PDF from landing page for {doi}: {landing_page_url}")
             try:
-                if landing_page_url[:-4].lower() == ".pdf":
+                if landing_page_url.rstrip()[-4:].lower() == ".pdf":
                     download_success = download(landing_page_url, doi, filepath)
                     if download_success and filepath.exists():
                         found_urls[doi]["pdf_url"] = landing_page_url
@@ -214,8 +214,7 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> List[Path]:
             except Exception as e:
                 logger.error(f"Error extracting PDF URL from landing page for {doi}: {e}")
         
-        if "pdf_url" in item:
-            pdf_url = item["pdf_url"]
+        if pdf_url:
             try:
                 download_success = download(pdf_url, doi, filepath)
                 if download_success and filepath.exists():

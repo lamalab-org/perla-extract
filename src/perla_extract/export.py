@@ -11,6 +11,7 @@ import json
 import io
 import re
 import subprocess
+from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
     from pint import UnitRegistry
@@ -67,15 +68,17 @@ def get_repo_metadata():
             text=True
         ).strip()
         
-        if remote_url.startswith('git@github.com:'):
-            base_url = remote_url.replace('git@github.com:', 'https://github.com/')
+        if remote_url.startswith("git@github.com:"):
+            repo_path = remote_url.removeprefix("git@github.com:")
         else:
-            base_url = remote_url
-            
-        if base_url.endswith('.git'):
-            base_url = base_url[:-4]
-        
-        return commit_hash, f"{base_url}/tree/{commit_hash}"
+            parsed = urlsplit(remote_url)
+            if parsed.hostname != "github.com":
+                logger.warning("Origin is not a GitHub remote; omitting commit URL.")
+                return commit_hash, None
+            repo_path = parsed.path.lstrip("/")
+
+        repo_path = repo_path.removesuffix(".git")
+        return commit_hash, f"https://github.com/{repo_path}/tree/{commit_hash}"
         
     except subprocess.CalledProcessError as e:
         logger.error("Error: Make sure you are in a git repository and 'origin' is set. message: %s", e.output)

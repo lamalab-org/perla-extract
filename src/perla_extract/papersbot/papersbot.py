@@ -19,7 +19,7 @@ from typing import List, Optional
 from importlib.resources import files
 from loguru import logger
 from tqdm import tqdm
-from perla_extract.papersbot.utils import get_doi, save_summaries
+from perla_extract.papersbot.utils import get_doi, save_summaries, fetch_openalex_works_by_date
 from perla_extract.papersbot.match_pdf import check_pdfs, check_matches, download_pdfs
 from perla_extract.papersbot.proc_abstracts import (
     get_abstracts,
@@ -27,7 +27,7 @@ from perla_extract.papersbot.proc_abstracts import (
     check_relaxed_match_doi,
 )
 from perla_extract.configuration import papersbot_runs_path, RELAXED_REGEX, STRICT_REGEX
-
+import pandas as pd
 REGEXES = [STRICT_REGEX, RELAXED_REGEX]
 
 
@@ -135,7 +135,37 @@ class PapersBot:
             f.write(f"Number of papers seen before: {self.seen_before}\n")
             f.write(f"Total number of papers processed: {self.total}\n")
             f.write("\n")
+    def check_entry(self, entry):
+        any_match = 0
+        entry_stats = {
+                "id": entry.get("id", ""),
+                "parsed_time": time.time(),
+                "doi": get_doi(entry),
+            }
+        for r in range(len(REGEXES)):
+            match, status = entry_matches(entry, REGEXES[r])
+            any_match |= match
+            entry_stats["relaxed_regex" if r != 0 else "strict_regex"] = status
 
+        self.total_matched += any_match
+        entry_stats["match"] = any_match
+        entry_stats["processed"] = False if any_match else True
+        if any_match and (
+            entry_stats["doi"] and "error" not in entry_stats["doi"]
+        ):
+            save_summaries(
+                {
+                    entry_stats["id"]: {
+                        "title": entry.get("title", ""),
+                        "rss_feed_summary": entry.get("summary", ""),
+                        "doi": entry_stats["doi"],
+                    }
+                },
+                current=False,
+            )
+        self.save_entry_stats(entry_stats)
+        self.add_to_posted(entry.get("id"))
+        self.print_stats()
     # Main function, iterating over feeds and posting new items
     def run(self):
         for feed in tqdm(self.feeds):
@@ -147,43 +177,30 @@ class PapersBot:
                 logger.error(f"Exception info: {str(e)}")
 
             for entry in parsed_feed.entries:
-                any_match = 0
                 self.total += 1
                 if entry.id in self.posted:
                     self.seen_before += 1
                     continue
                 self.n_seen += 1
-                entry_stats = {
-                    "id": entry.get("id", ""),
-                    "parsed_time": time.time(),
-                    "doi": get_doi(entry),
-                }
-                for r in range(len(REGEXES)):
-                    match, status = entry_matches(entry, REGEXES[r])
-                    any_match |= match
-                    entry_stats["relaxed_regex" if r != 0 else "strict_regex"] = status
-
-                self.total_matched += any_match
-                entry_stats["match"] = any_match
-                entry_stats["processed"] = False if any_match else True
-                if any_match and (
-                    entry_stats["doi"] and "error" not in entry_stats["doi"]
-                ):
-                    save_summaries(
-                        {
-                            entry_stats["id"]: {
-                                "title": entry.get("title", ""),
-                                "rss_feed_summary": entry.get("summary", ""),
-                                "doi": entry_stats["doi"],
-                            }
-                        },
-                        current=False,
-                    )
-                self.save_entry_stats(entry_stats)
-                self.add_to_posted(entry.id)
-                self.print_stats()
-
-
+                self.check_entry(entry)
+    
+    
+    def run_openlex_feed(self):
+        start_date = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 7 * 24 * 60 * 60))
+        end_date = time.strftime("%Y-%m-%d", time.gmtime(time.time()))
+        feed = fetch_openalex_works_by_date(start_date=start_date, end_date=end_date)
+        entry_stats_csv = pd.read_csv(f"{papersbot_runs_path}/entry_stats.csv")
+        seen_dois = set(entry_stats_csv["doi"].apply(lambda x: x.replace("https://doi.org/", "").lower() if pd.notnull(x) else "").dropna().str.lower())
+        for entry in feed:
+            doi = entry.get("doi", "").replace("https://doi.org/", "").lower()
+            for check_doi in [entry.get("doi",""),doi]:
+                if check_doi in seen_dois or check_doi in self.posted:
+                    self.seen_before += 1
+                    continue
+            self.n_seen += 1
+            entry['summary'] = entry.get('abstract', '')
+            self.check_entry(entry)
+            
 def run_papersbot(download_dir: str = "downloaded_papers"):
     """Run the complete papersbot workflow.
 
@@ -195,21 +212,21 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
     """
 
     try:
-        bot = PapersBot()
+        # bot = PapersBot()
 
-        if not os.path.isfile(f"{papersbot_runs_path}/summaries.pkl"):
-            with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
-                pickle.dump({}, f)
+        # if not os.path.isfile(f"{papersbot_runs_path}/summaries.pkl"):
+        #     with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
+        #         pickle.dump({}, f)
 
-        # Run the bot to process feeds
-        bot.run()
-        bot.print_stats(update_current=False)
+        # # Run the bot to process feeds
+        # bot.run()
+        # bot.print_stats(update_current=False)
 
-        # Process the matched papers
-        check_relaxed_match_doi()  # Checks if DOI is correct
-        update_for_retry()  # Update entries for retrying processing
-        get_abstracts()  # Get abstracts for matched entries
-        check_matches()  # Check matches after getting abstracts
+        # # Process the matched papers
+        # check_relaxed_match_doi()  # Checks if DOI is correct
+        # update_for_retry()  # Update entries for retrying processing
+        # get_abstracts()  # Get abstracts for matched entries
+        # check_matches()  # Check matches after getting abstracts
         pdf_urls_found = check_pdfs()  # Check for Open access PDF URLs
 
         with open(f"{papersbot_runs_path}/stats.txt", "a+") as f:
@@ -221,7 +238,7 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
         # Download PDFs and get results
         downloaded_files = download_pdfs(download_dir=download_dir)
         pdfs_downloaded = len([f for f in downloaded_files if f.exists()])
-
+        pdf_urls_found=[]
         return PapersbotResult(
             success=True,
             papers_found=pdf_urls_found,
@@ -229,7 +246,9 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
             downloaded_files=downloaded_files,
         )
     except Exception as e:
+        import traceback
         logger.error(f"Error in papersbot workflow: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return PapersbotResult(
             success=False, error=f"Papersbot workflow failed: {str(e)}"
         )
