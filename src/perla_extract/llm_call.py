@@ -102,7 +102,7 @@ def create_text_completion(
             instruction=instruction,
             api_key=api_key,
             api_base_url=api_base_url,
-            Extraction_method=extraction_method,
+            extraction_method=extraction_method,
             additional_params=additional_params,
             session_id=session_id,
         )
