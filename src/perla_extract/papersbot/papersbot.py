@@ -212,21 +212,21 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
     """
 
     try:
-        # bot = PapersBot()
+        bot = PapersBot()
 
-        # if not os.path.isfile(f"{papersbot_runs_path}/summaries.pkl"):
-        #     with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
-        #         pickle.dump({}, f)
+        if not os.path.isfile(f"{papersbot_runs_path}/summaries.pkl"):
+            with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
+                pickle.dump({}, f)
 
-        # # Run the bot to process feeds
-        # bot.run()
-        # bot.print_stats(update_current=False)
+        # Run the bot to process feeds
+        bot.run()
+        bot.print_stats(update_current=False)
 
-        # # Process the matched papers
-        # check_relaxed_match_doi()  # Checks if DOI is correct
-        # update_for_retry()  # Update entries for retrying processing
-        # get_abstracts()  # Get abstracts for matched entries
-        # check_matches()  # Check matches after getting abstracts
+        # Process the matched papers
+        check_relaxed_match_doi()  # Checks if DOI is correct
+        update_for_retry()  # Update entries for retrying processing
+        get_abstracts()  # Get abstracts for matched entries
+        check_matches()  # Check matches after getting abstracts
         pdf_urls_found = check_pdfs()  # Check for Open access PDF URLs
 
         with open(f"{papersbot_runs_path}/stats.txt", "a+") as f:
@@ -238,7 +238,6 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
         # Download PDFs and get results
         downloaded_files = download_pdfs(download_dir=download_dir)
         pdfs_downloaded = len([f for f in downloaded_files if f.exists()])
-        pdf_urls_found=[]
         return PapersbotResult(
             success=True,
             papers_found=pdf_urls_found,
