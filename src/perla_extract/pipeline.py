@@ -8,7 +8,7 @@ import csv
 from collections import defaultdict
 import re
 from importlib.resources import files
-
+import time
 import numpy as np
 from pydantic import ValidationError
 import pdf2doi
@@ -364,8 +364,9 @@ class ExtractionPipeline:
         )
         results = ""
         try:
+            session_id = f"{doi}-{self.model_name.replace('/', '_')}-{time.strftime('%Y%m%d-%H%M%S')}"
             results, completion_usage = llm_call.create_text_completion(
-                self.model_name, pdf_text, additional_params=self.additional_params 
+                self.model_name, pdf_text, additional_params=self.additional_params, session_id=session_id
             )
             parsed = PerovskiteSolarCells(**postprocess(results.model_dump()))
             to_json(parsed, output_path)

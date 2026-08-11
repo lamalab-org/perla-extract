@@ -8,11 +8,43 @@ import litellm
 from loguru import logger
 from typing import Any
 from perla_extract.configuration import MAX_RETRIES, MAX_TOKENS
-# Try to setup Redis cache if available, otherwise use disk cache
+
+
+log_traces = os.environ.get("PERLA_LOG_TRACES", "false").lower() == "true"
+if log_traces:
+    required_vars = [
+        "LANGFUSE_PUBLIC_KEY",
+        "LANGFUSE_SECRET_KEY",
+    ]
+
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+
+    if missing_vars:
+        raise RuntimeError(
+            "PERLA tracing with Langfuse is enabled, but the following required "
+            f"environment variable(s) are missing: {', '.join(missing_vars)}. "
+            "Please set them and restart the application."
+        )
+
+    try:
+        from langfuse.decorators import observe, langfuse_context
+
+        litellm.success_callback = ["langfuse"]
+        litellm.failure_callback = ["langfuse"]
+        litellm.callbacks = ["langfuse"]
+
+        logger.info("Langfuse tracing is enabled. All LLM calls will be traced.")
+
+    except Exception:
+        logger.exception("Failed to initialize Langfuse tracing.")
+        raise
+
+
 try:
     # Disable litellm error output
     litellm.suppress_debug_info = True
     litellm.set_verbose = False
+    
     import logging
 
     logging.getLogger("LiteLLM").setLevel(logging.CRITICAL)
@@ -28,6 +60,7 @@ try:
 except Exception as e:
     pass
 
+
 class MaxRetriesExceededError(Exception):
     """Custom exception to indicate that the maximum number of retries has been exceeded."""
     pass
@@ -37,9 +70,42 @@ def create_text_completion(
     pdf_text: str = "",
     system_prompt: str = SYSTEM_PROMPT,
     instruction: str = INSTRUCTION_TEXT,
-    api_key: str = None,
-    api_base_url: str = None,
-    additional_params: dict = {}
+    api_key: str | None = None,
+    api_base_url: str | None = None,
+    additional_params: dict | None = None,
+    session_id: str | None = None,
+) -> tuple[PerovskiteSolarCells, Any]:
+    completion_fn = (
+        observe(name="Perla Extract")(_create_text_completion)
+        if log_traces
+        else _create_text_completion
+    )
+
+    try:
+        return completion_fn(
+            model_name=model_name,
+            pdf_text=pdf_text,
+            system_prompt=system_prompt,
+            instruction=instruction,
+            api_key=api_key,
+            api_base_url=api_base_url,
+            additional_params=additional_params,
+            session_id=session_id,
+        )
+    finally:
+        if log_traces:
+            langfuse_context.flush()
+
+
+def _create_text_completion(
+    model_name: str,
+    pdf_text: str = "",
+    system_prompt: str = SYSTEM_PROMPT,
+    instruction: str = INSTRUCTION_TEXT,
+    api_key: str | None = None,
+    api_base_url: str | None = None,
+    additional_params: dict | None = None,
+    session_id: str | None = None,
 ) -> tuple[PerovskiteSolarCells, Any]:
     """
      Extract structured perovskite solar cell data from raw PDF text using an LLM.
@@ -69,7 +135,7 @@ def create_text_completion(
     messages = [
         {
             "role": "user",
-            "content": f"{system_prompt}\n{instruction}\n Here is the schema: {str(PerovskiteSolarCells.model_json_schema())} \n\nHere is the text:\n{pdf_text}",
+            "content": f"{system_prompt}\n{instruction}\n Here is the schema: {PerovskiteSolarCells.model_json_schema()!s} \n\nHere is the text:\n{pdf_text}",
         },
     ]
 
@@ -78,6 +144,11 @@ def create_text_completion(
     supported_params = set()
     max_tokens = MAX_TOKENS
     filtered_params = {}
+    if log_traces:
+        filtered_params["metadata"] = {
+            "session_id": session_id
+        }
+        langfuse_context.update_current_trace(session_id=session_id)
     additional_params = {} if additional_params is None else additional_params
     try:
         model_info = litellm.get_model_info(model=model_name)
