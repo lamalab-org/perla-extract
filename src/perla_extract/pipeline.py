@@ -182,7 +182,7 @@ def is_doi_good_to_go(doi, pdf_text, metadata=None) -> bool:
     if word_count(abstract) < 100 and pdf_text:
         for r in range(5, 0, -1):
             abstract = pdf_text[:int(len(pdf_text) * (r / 100))]
-            if word_count(abstract) >= 100 and word_count(abstract) <= 300:
+            if word_count(abstract) <= 300:
                 break
         metadata['abstract'] = abstract
 
