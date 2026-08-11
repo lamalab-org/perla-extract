@@ -168,104 +168,10 @@ def is_doi_good_to_go(doi, pdf_text, metadata=None) -> bool:
     def word_count(text):
         return len(extract_words(text))
 
-    def non_solar_filter(text):
-        non_solar_keywords = {
-            'LED': [r'\bLED\b', r'light\s*-?\s*emitting\s+diode', r'electroluminescen\w*'],
-            'Battery': [r'\bbattery\b', r'energy storage', r'rechargeable'],
-            'Photodetector': [r'photodetector', r'X\s*-?\s*ray detector'],
-            'Catalyst': [r'catalys\w*',r'photocatalys\w*',r'water splitting',r'hydrogen evolution'],
-            'Other': [r'sens\w*',r'sensor',r'transistor',r'laser',r'memory',r'thermoelectric',r'capacitor']
-        }
-
-        solar_cell_keywords = [
-            r'solar cell',
-            r'photovoltaic',
-            r'\bPV\b',
-            r'\bPSC\b',
-            r'\bPCE\b'
-        ]
-
-        # Compile patterns
-        exclude_patterns = [
-            re.compile(p, re.IGNORECASE)
-            for sublist in non_solar_keywords.values()
-            for p in sublist
-        ]
-
-        include_patterns = [
-            re.compile(p, re.IGNORECASE)
-            for p in solar_cell_keywords
-        ]
-
-        # Count matches
-        non_solar_count = sum(
-            len(p.findall(text)) for p in exclude_patterns
-        )
-
-        solar_count = sum(
-            len(p.findall(text)) for p in include_patterns
-        )
-
-        # Decision rule:
-        # 1. Must mention solar at least once
-        # 2. Solar mentions must be >= non-solar mentions
-        return solar_count > 0 and solar_count >= non_solar_count
-    
-    def theory_filter(text):
-        theory_keywords = [
-            r'\bDFT\b', r'\bSCAPS\b', r'\bSCAPS-1D\b', r'density functional', r'first.?principles', 
-            r'ab.?initio', r'molecular dynamics', r'\bMD\b simulation', r'VASP', r'Gaussian', 
-            r'Quantum ESPRESSO', r'CASTEP', r'SIESTA', r'computational study', r'theoretical study', 
-            r'theoretical investigation', r'numerical simulation', r'numerical investigation', r'device simulation', 
-            r'theoretical analysis', r'computational analysis', r'theoretical modell?ing', 
-            r'computational modell?ing', r'simulated', r'simulation of', r'wxAMPS', r'AMPS-1D', 
-            r'PC1D', r'AFORS-HET', r'theoretical optimization', r'computational optimization',
-            r'numerical modeling',
-            r'simulated performance', r'theoretical efficiency', r'predicted efficiency',
-            r'simulation', r'\bMD\b.*simulation', r'\bMD\b.*simulation',
-            # --- Machine Learning / AI ---
-            r'machine learning', r'\bML\b',
-            r'deep learning', r'\bDL\b',
-            r'artificial intelligence', r'\bAI\b',
-            r'neural network', r'neural networks', r'\bNN\b', r'\bANN\b',
-            r'convolutional neural network', r'\bCNN\b',
-            r'recurrent neural network', r'\bRNN\b',
-            r'graph neural network', r'\bGNN\b',
-            r'support vector machine', r'\bSVM\b',
-            r'random forest', r'decision tree',
-            r'k[- ]?nearest neighbors?', r'\bKNN\b',
-            r'Gaussian process', r'\bGP\b',
-            r'data[- ]?driven',
-            r'surrogate model', r'meta[- ]?model',
-            r'predictive model', r'statistical learning',
-            r'learning[- ]?based',
-            r'model training', r'model prediction',
-            r'feature engineering', r'dimensionality reduction',
-        ]
-        pattern = re.compile('|'.join(theory_keywords), re.IGNORECASE)
-        match = pattern.search(text)
-        return match is None
-    
-    def review_article_filter(text):
-        review_patterns = [
-            r'^Review\b', r'^Perspective\b', r'^Overview\b', r'^Outlook\b', r'^Minireview\b',
-            r'^Critical [Rr]eview\b', r': [Aa] [Rr]eview\b', r': [Aa] [Pp]erspective\b',
-            r'\b[Rr]eview of\b', r'\b[Rr]eview on\b', r'^Progress in\b', r'^Recent [Aa]dvances\b',
-            r'^Advances in\b', r'^State of the art\b', r'^Current status\b',
-            # Explicit review types
-            r'\b(review|minireview|perspective|overview)\b',
-            r'\bcritical review\b',
-            r'\bstate[- ]of[- ]the[- ]art\b',
-            r'\bis (discussed|reviewed|summarized|outlined)\b',
-            r'\bare reviewed\b',
-            r'\bwe review\b',
-            r'\bthis (review|work) reviews\b',
-        ]
-        pattern = re.compile('|'.join(review_patterns), re.IGNORECASE)
-        is_review_article = pattern.search(text)
-        return not is_review_article
-
     metadata = metadata or get_doi_summary(doi)['consolidated']
+    for key in ['title', 'journal', 'abstract']:
+        if key not in metadata or metadata[key] is None:
+            metadata[key] = ""
     abstract = metadata.get("abstract", "")
     journal = metadata.get("journal", "")
     publisher = metadata.get("publisher", "")
@@ -274,7 +180,12 @@ def is_doi_good_to_go(doi, pdf_text, metadata=None) -> bool:
         return False
         
     if word_count(abstract) < 100 and pdf_text:
-        metadata['abstract'] = pdf_text[:int(len(pdf_text) * 0.05)]
+        for r in range(5, 0, -1):
+            abstract = pdf_text[:int(len(pdf_text) * (r / 100))]
+            if word_count(abstract) >= 100 and word_count(abstract) <= 300:
+                break
+        metadata['abstract'] = abstract
+
     classification_result = classify_paper(metadata)
     if classification_result is None:
         return False

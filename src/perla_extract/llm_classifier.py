@@ -11,8 +11,11 @@ class PaperFilter(BaseModel):
     reason: str
 
 def classify_paper(paper: dict, model: str=CLASSIFIER_MODEL) -> PaperFilter | None:
+    for key in ['title', 'journal', 'abstract']:
+        if key not in paper or not paper[key]:
+            logger.warning(f'Missing "{key}" in paper metadata dictionary.')
     prompt = LLM_CLASSIFIER_USER_PROMPT.format(
-        TITLE=paper.get('title', ''), JOURNAL=paper.get('journal', ''), ABSTRACT=paper.get('abstract', '')
+        TITLE=paper.get('title', 'Not Available'), JOURNAL=paper.get('journal', 'Not Available'), ABSTRACT=paper.get('abstract', 'Not Available')
     )
     messages = [
         {
