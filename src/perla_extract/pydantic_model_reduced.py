@@ -245,7 +245,7 @@ class AdditionalParameter(BaseModel):
     
     name: Optional[str] = Field(None, description="The name of the parameter (e.g., 'spin_coating_speed')")
     value: Optional[str | float] = Field(None, description="The value of the parameter")
-    unit: Optional[str] = Field(None)
+    unit: Optional[str] = Field(None, description="The unit of the parameter value (e.g., 'rpm', '°C', 's')")
 
 
 class ProcessingStep(BaseModel):

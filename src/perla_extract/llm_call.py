@@ -65,7 +65,7 @@ class MaxRetriesExceededError(Exception):
     pass
 
 def format_schema(model: BaseModel) -> dict:
-    #adaptede from https://github.com/567-labs/instructor/blob/47fdb2ca07119d389a3c0e8bc28b9930b814f294/instructor/v2/providers/openai/schema.py
+    #adapted from https://github.com/567-labs/instructor/blob/47fdb2ca07119d389a3c0e8bc28b9930b814f294/instructor/v2/providers/openai/schema.py
     schema = model.model_json_schema()
     parameters = {k: v for k, v in schema.items() if k not in ("title", "description")}
     parameters["required"] = sorted(schema.get("required", []))
@@ -216,7 +216,7 @@ def _create_text_completion(
             filtered_params["tool_choice"] = {
                 "type": "function", "function": {"name": formatted_schema["name"]}
             }
-            filtered_params['reasoning_effort'] = 'none'
+            filtered_params.setdefault("reasoning_effort", "none")
         try:
             resp = completion(**filtered_params)
         except litellm.exceptions.BadRequestError as e:
@@ -243,7 +243,15 @@ def _create_text_completion(
                 raise MaxRetriesExceededError(resp)
             retry_count += 1
             retry_prompt = f'\n\nThe previous attempt resulted in a validation error: {e}. Correct the output to match the expected schema.'
-            messages.extend([{'role':'assistant','content':data}, {"role":"user","content": retry_prompt}])
+            messages.append({'role':'assistant','content':data})
+        except (AttributeError, IndexError, TypeError, ValueError) as e:
+            logger.error(f"{type(e).__name__}: {e}. retrying.")
+            if retry_count >= MAX_RETRIES:
+                logger.error(f"Max retries reached ({MAX_RETRIES}). Raising MaxRetriesExceededError.")
+                raise MaxRetriesExceededError(resp)
+            retry_prompt = f'\n\nThe previous attempt resulted in an error: {type(e).__name__}: {e} when accessing the extracted in the response.' 
+            retry_count += 1
+        messages.append({"role":"user","content": retry_prompt})
     return extracted_data, resp
 
 

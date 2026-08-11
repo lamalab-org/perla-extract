@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Union, Literal
+from typing import Optional, Union
 import os
 import json
 import glob
