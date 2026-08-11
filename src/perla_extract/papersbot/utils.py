@@ -13,9 +13,10 @@ def save_summaries(summaries, current=True):
         with open(f"{papersbot_runs_path}/curr_summaries.pkl", "wb") as f:
             pickle.dump(summaries, f)
     else:
-        with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
+        with open(f"{papersbot_runs_path}/summaries.pkl", "rb") as f:
             old_summaries = pickle.load(f)
             old_summaries.update(summaries)
+        with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
             pickle.dump(old_summaries, f)
 
 def get_doi_summary(doi: str) -> dict:

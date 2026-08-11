@@ -189,11 +189,16 @@ class PapersBot:
         entry_stats_csv = pd.read_csv(f"{papersbot_runs_path}/entry_stats.csv")
         seen_dois = set(entry_stats_csv["doi"].apply(lambda x: x.replace("https://doi.org/", "").lower() if pd.notnull(x) else "").dropna().str.lower())
         for entry in feed:
-            doi = entry.get("doi", "").replace("https://doi.org/", "").lower()
-            for check_doi in [entry.get("doi",""),doi]:
+            seen = False
+            raw_doi = entry.get("doi", "")
+            doi = raw_doi.replace("https://doi.org/", "").lower()
+            for check_doi in [raw_doi, doi]:
                 if check_doi in seen_dois or check_doi in self.posted:
-                    self.seen_before += 1
-                    continue
+                    seen = True
+                    break
+            if seen:
+                self.seen_before += 1
+                continue
             self.n_seen += 1
             entry['summary'] = entry.get('abstract', '')
             self.check_entry(entry)
