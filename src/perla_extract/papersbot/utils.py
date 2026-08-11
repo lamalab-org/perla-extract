@@ -13,11 +13,10 @@ def save_summaries(summaries, current=True):
         with open(f"{papersbot_runs_path}/curr_summaries.pkl", "wb") as f:
             pickle.dump(summaries, f)
     else:
-        old_summaries = pickle.load(open(f"{papersbot_runs_path}/summaries.pkl", "rb"))
-        old_summaries.update(summaries)
         with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
+            old_summaries = pickle.load(f)
+            old_summaries.update(summaries)
             pickle.dump(old_summaries, f)
-
 
 def get_doi_summary(doi: str) -> dict:
     """
@@ -91,7 +90,7 @@ def get_doi_summary_crossref(doi: str) -> dict:
 
 def inverted_index_to_text(inverted_index: dict) -> str:
     """
-    Converts an inverted index to a text string.
+    Converts an inverted index to a text string. Needed for OpenAlex abstracts, which are returned as inverted indices.
     Args:
         inverted_index: A dictionary where keys are words and values are lists of positions.
     Returns:
@@ -113,6 +112,7 @@ def inverted_index_to_text(inverted_index: dict) -> str:
     
     # Join the list into a single string
     return " ".join(word_list)
+
 def get_doi_summary_openalex(doi: str) -> dict:
     doi = doi.lower().strip()
     api_url = f"https://api.openalex.org/works/https://doi.org/{doi}"
@@ -330,10 +330,13 @@ def fetch_openalex_works_by_date(start_date: str, end_date: str, email: str = No
     """
     Fetches articles from OpenAlex for specific topics within a date range.
     
-    :param start_date: Start date in 'YYYY-MM-DD' format.
-    :param end_date: End date in 'YYYY-MM-DD' format.
-    :param email: Optional but recommended. Puts you in the OpenAlex 'polite pool' for faster limits.
-    :return: A list of dictionaries containing the selected fields for each work.
+    Args:
+        start_date: Start date in 'YYYY-MM-DD' format.
+        end_date: End date in 'YYYY-MM-DD' format.
+        email: Optional but recommended. Puts you in the OpenAlex 'polite pool' for faster limits.
+    
+    Returns:
+        A list of dictionaries metadata for each work.
     """
     
     base_url = "https://api.openalex.org/works"
@@ -420,16 +423,18 @@ def get_pdf_url(doi: str) -> tuple[bool, bool, dict[str, str]]:
         tuple[bool, bool, dict[str, str] | None]: A tuple containing an error flag, OA status, key, and the PDF URL if available, otherwise None.
     """
     error_msg = ""
+    any_oa = False
     for get_pdf_url_func in [get_pdf_url_unpaywall, get_pdf_url_openalex]:
         error, is_oa, pdf_url = get_pdf_url_func(doi)
+        any_oa |= is_oa
         if 'msg' not in pdf_url and len(pdf_url) > 0:
-            return error, is_oa, pdf_url
+            return error, any_oa, pdf_url
         elif error:
             error_msg += pdf_url['msg']
     
     return_msg = {'msg': error_msg if error_msg else "No PDF available from any source."}
-    logger.error(f"No PDF available for this DOI: {doi}. OA status: {is_oa}. Details: {return_msg['msg']}")
-    return error, is_oa, return_msg
+    logger.error(f"No PDF available for this DOI: {doi}. OA status: {any_oa}. Details: {return_msg['msg']}")
+    return error, any_oa, return_msg
 
 
 def get_pdf_url_unpaywall(doi: str) -> tuple[bool, bool, dict[str, str]]:
@@ -600,18 +605,18 @@ async def playwright_get_pdf_links(url):
                 count = await pdf_locator.count()
                 
                 if count > 0:
-                    print(f"Success! Found {count} links on attempt {attempt + 1}.")
+                    logger.info(f"Success! Found {count} links on attempt {attempt + 1}.")
                     break  # Exit the loop once we find them
                 else:
-                    print(f"Attempt {attempt + 1}: No links found. Sleeping...")
+                    logger.info(f"Attempt {attempt + 1}: No links found. Sleeping...")
                     await page.wait_for_timeout(wait_time_ms)
             else:
                 # This 'else' triggers if the loop finishes without hitting 'break'
-                print("Gave up! Links never appeared after maximum attempts.")
+                logger.error("Gave up! Links never appeared after maximum attempts.")
                 await browser.close()
                 return
             links=[]
-            # 3. Iterate through and print the href of each link
+            # 3. Iterate through the href of each link
             for i in range(count):
                 link = pdf_locator.nth(i)
                 full_url = await link.evaluate("node => node.href")
@@ -631,7 +636,8 @@ def filter_links(links):
     for link in links:
         if not any(phrase in link.lower() for phrase in ["suppl","static-content","/epdf","/pb-assets/"]):
             if  "wiley.com/doi/pdf/" in link.lower():
-                link = link.replace("pdf","pdfdirect") + "?download=true"
+                link = link.replace("/doi/pdf/", "/doi/pdfdirect/", 1)
+                link += "&download=true" if "?" in link else "?download=true"
             filtered_links.append(link)
     return filtered_links[0] if filtered_links else None
 

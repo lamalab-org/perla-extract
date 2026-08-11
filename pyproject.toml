@@ -51,7 +51,7 @@ marker = ["marker-pdf"]
 pymupdf = ['pymupdf']
 cache = ["redis"]
 playwright = ["playwright"]
-trace_logging = ["pydantic-settings>=2.14.1","langfuse>=4.7.1","opentelemetry-api>=1.42.1", "opentelemetry-sdk>=1.42.1", "opentelemetry-exporter-otlp-proto-grpc>=1.42.1", "opentelemetry-exporter-otlp>=1.42.1"]
+# trace_logging = ["pydantic-settings>=2.14.1","langfuse>=4.7.1","opentelemetry-api>=1.42.1", "opentelemetry-sdk>=1.42.1", "opentelemetry-exporter-otlp-proto-grpc>=1.42.1", "opentelemetry-exporter-otlp>=1.42.1"]
 
 docs = [
     "mkdocs-material>=9.4.0",

@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-#
 # PapersBot
 #
 # purpose:  read journal RSS feeds and tweet selected entries

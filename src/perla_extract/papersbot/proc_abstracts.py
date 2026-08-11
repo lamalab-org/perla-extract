@@ -111,7 +111,8 @@ def get_abstracts():
     df = pd.read_csv(f"{papersbot_runs_path}/post_proc.csv").replace(
         {float("nan"): None}
     )
-    summaries = pickle.load(open(f"{papersbot_runs_path}/summaries.pkl", "rb"))
+    with open(f"{papersbot_runs_path}/summaries.pkl", "rb") as f:
+        summaries = pickle.load(f)
     stats = defaultdict(int)
     r_df = df[df["match"] & ~df["processed"]]
     logger.info(f"Getting abstracts for {len(r_df)} papers.")

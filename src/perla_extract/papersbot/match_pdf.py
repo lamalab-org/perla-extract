@@ -37,7 +37,8 @@ def check_matches():
             f.write(f"Total number of papers processed: {stats['total']}\n\n\n")
 
     post_proc_df = pd.read_csv(f"{papersbot_runs_path}/post_proc.csv")
-    summaries = pickle.load(open(f"{papersbot_runs_path}/summaries.pkl", "rb"))
+    with open(f"{papersbot_runs_path}/summaries.pkl", "rb") as f:
+        summaries = pickle.load(f)
     stats = {"matches": 0, "is_doi_good": 0, "total": 0, "error": 0}
     r_df = post_proc_df[
         ~post_proc_df["match_checked"] & post_proc_df["id"].isin(summaries.keys())
@@ -86,7 +87,8 @@ def check_pdfs():
             f.write(f"Total number of papers processed: {stats['total']}\n\n\n")
 
     post_proc_df = pd.read_csv(f"{papersbot_runs_path}/post_proc.csv").replace({float("nan"): None})
-    summaries = pickle.load(open(f"{papersbot_runs_path}/summaries.pkl", "rb"))
+    with open(f"{papersbot_runs_path}/summaries.pkl", "rb") as f:
+        summaries = pickle.load(f)
     r_df = post_proc_df[
         ~post_proc_df["pdf_checked"]
         & post_proc_df["doi_good_to_go"]
@@ -127,11 +129,13 @@ def check_pdfs():
         post_proc_df.at[i,"is_oa"] = is_oa
         stats["total"] += 1
     print_stats(stats)
-    old_found_urls = (
-        json.load(open(f"{papersbot_runs_path}/found_pdf_urls.json", "r"))
-        if os.path.isfile(f"{papersbot_runs_path}/found_pdf_urls.json")
-        else {}
-    )
+    
+    if os.path.isfile(f"{papersbot_runs_path}/found_pdf_urls.json"):
+        with open(f"{papersbot_runs_path}/found_pdf_urls.json", "r") as f:
+            old_found_urls = json.load(f)
+    else:
+        old_found_urls = {}
+    
     for k,v in found_urls.items():
         if k in old_found_urls:
             old_found_urls[k].update(v)
