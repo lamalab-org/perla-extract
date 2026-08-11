@@ -14,6 +14,7 @@ def classify_paper(paper: dict, model: str=CLASSIFIER_MODEL) -> PaperFilter | No
     for key in ['title', 'journal', 'abstract']:
         if key not in paper or not paper[key]:
             logger.warning(f'Missing "{key}" in paper metadata dictionary.')
+            paper[key] = 'Not Available'
     prompt = LLM_CLASSIFIER_USER_PROMPT.format(
         TITLE=paper.get('title', 'Not Available'), JOURNAL=paper.get('journal', 'Not Available'), ABSTRACT=paper.get('abstract', 'Not Available')
     )
