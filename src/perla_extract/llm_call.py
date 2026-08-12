@@ -7,9 +7,8 @@ from perla_extract.constants import SYSTEM_PROMPT, INSTRUCTION_TEXT
 import litellm
 from loguru import logger
 from typing import Any
-from perla_extract.configuration import MAX_RETRIES, MAX_TOKENS
-
-
+from perla_extract.configuration import MAX_RETRIES, MAX_TOKENS, EXTRACTION_METHODS
+# Try to setup Redis cache if available, otherwise use disk cache
 log_traces = os.environ.get("PERLA_LOG_TRACES", "false").lower() == "true"
 if log_traces:
     required_vars = [
@@ -65,6 +64,19 @@ class MaxRetriesExceededError(Exception):
     """Custom exception to indicate that the maximum number of retries has been exceeded."""
     pass
 
+def format_schema(model: BaseModel) -> dict:
+    #adapted from https://github.com/567-labs/instructor/blob/47fdb2ca07119d389a3c0e8bc28b9930b814f294/instructor/v2/providers/openai/schema.py
+    schema = model.model_json_schema()
+    parameters = {k: v for k, v in schema.items() if k not in ("title", "description")}
+    parameters["required"] = sorted(schema.get("required", []))
+
+    return {
+        "name": schema.get("title", ""),
+        "description": schema.get("description", ""),
+        "parameters": parameters,
+    }
+
+
 def create_text_completion(
     model_name: str,
     pdf_text: str = "",
@@ -72,6 +84,7 @@ def create_text_completion(
     instruction: str = INSTRUCTION_TEXT,
     api_key: str | None = None,
     api_base_url: str | None = None,
+    extraction_method: EXTRACTION_METHODS = "tool_call",
     additional_params: dict | None = None,
     session_id: str | None = None,
 ) -> tuple[PerovskiteSolarCells, Any]:
@@ -89,6 +102,7 @@ def create_text_completion(
             instruction=instruction,
             api_key=api_key,
             api_base_url=api_base_url,
+            extraction_method=extraction_method,
             additional_params=additional_params,
             session_id=session_id,
         )
@@ -104,6 +118,7 @@ def _create_text_completion(
     instruction: str = INSTRUCTION_TEXT,
     api_key: str | None = None,
     api_base_url: str | None = None,
+    extraction_method: EXTRACTION_METHODS = "tool_call",
     additional_params: dict | None = None,
     session_id: str | None = None,
 ) -> tuple[PerovskiteSolarCells, Any]:
@@ -135,7 +150,7 @@ def _create_text_completion(
     messages = [
         {
             "role": "user",
-            "content": f"{system_prompt}\n{instruction}\n Here is the schema: {PerovskiteSolarCells.model_json_schema()!s} \n\nHere is the text:\n{pdf_text}",
+            "content": f"{system_prompt}\n{instruction} \n\nHere is the text:\n{pdf_text}",
         },
     ]
 
@@ -143,7 +158,7 @@ def _create_text_completion(
 
     supported_params = set()
     max_tokens = MAX_TOKENS
-    filtered_params = {}
+    filtered_params: dict[str, Any] = {}
     if log_traces:
         filtered_params["metadata"] = {
             "session_id": session_id
@@ -181,14 +196,27 @@ def _create_text_completion(
 
 
     retry_count = 0
+    
     while True:
         filtered_params.update({"model": model_name,
                 "api_base": api_base_url, 
                 "api_key": api_key, 
                 "max_tokens": max_tokens,
                 "messages": messages,
-                "response_format": PerovskiteSolarCells,
                 "drop_params": True})
+        if extraction_method == "response_format":
+            filtered_params.update({"response_format": PerovskiteSolarCells})
+        else:
+            formatted_schema = format_schema(PerovskiteSolarCells)
+            filtered_params["tools"] = [
+                {
+                    "type": "function", "function": formatted_schema
+                }
+            ]
+            filtered_params["tool_choice"] = {
+                "type": "function", "function": {"name": formatted_schema["name"]}
+            }
+            filtered_params.setdefault("reasoning_effort", "none")
         try:
             resp = completion(**filtered_params)
         except litellm.exceptions.BadRequestError as e:
@@ -202,7 +230,11 @@ def _create_text_completion(
             logger.info(f"reduced max tokens to {max_tokens} due to context length error.")
             continue
         try:
-            extracted_data = PerovskiteSolarCells.model_validate_json(resp.choices[0].message.content,strict=True,extra="forbid")
+            if extraction_method == "response_format":
+                data = resp.choices[0].message.content
+            else:
+                data = resp.choices[0].message.tool_calls[0].function.arguments
+            extracted_data = PerovskiteSolarCells.model_validate_json(data,strict=True,extra="forbid")
             break
         except ValidationError as e:
             logger.error(f"Validation error: {e}. Attempting to correct the output.")
@@ -211,7 +243,15 @@ def _create_text_completion(
                 raise MaxRetriesExceededError(resp)
             retry_count += 1
             retry_prompt = f'\n\nThe previous attempt resulted in a validation error: {e}. Correct the output to match the expected schema.'
-            messages.extend([{'role':'assistant','content':resp.choices[0].message.content}, {"role":"user","content": retry_prompt}])
+            messages.append({'role':'assistant','content':data})
+        except (AttributeError, IndexError, TypeError, ValueError) as e:
+            logger.error(f"{type(e).__name__}: {e}. retrying.")
+            if retry_count >= MAX_RETRIES:
+                logger.error(f"Max retries reached ({MAX_RETRIES}). Raising MaxRetriesExceededError.")
+                raise MaxRetriesExceededError(resp)
+            retry_prompt = f'\n\nThe previous attempt resulted in an error: {type(e).__name__}: {e} when accessing the extracted in the response.' 
+            retry_count += 1
+        messages.append({"role":"user","content": retry_prompt})
     return extracted_data, resp
 
 

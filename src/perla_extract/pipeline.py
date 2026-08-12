@@ -13,7 +13,7 @@ import numpy as np
 from pydantic import ValidationError
 import pdf2doi
 
-from perla_extract.configuration import papersbot_runs_path
+from perla_extract.configuration import papersbot_runs_path, EXTRACTION_METHODS
 from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
 from perla_extract.papersbot.utils import get_doi_summary
 from perla_extract.papersbot.papersbot import PapersbotResult
@@ -235,6 +235,7 @@ class ExtractionPipeline:
         use_cache: bool = True,
         nomad: bool = False,
         nomad_upload_id: str = None,
+        extraction_method: EXTRACTION_METHODS = "tool_call",
         additional_params: dict = None,
     ):
         self.model_name = model_name
@@ -248,6 +249,7 @@ class ExtractionPipeline:
         self.total_completion_tokens = 0
         self.nomad = nomad
         self.upload_id = nomad_upload_id
+        self.extraction_method = extraction_method
         self.additional_params = additional_params
 
 
@@ -281,7 +283,7 @@ class ExtractionPipeline:
         try:
             session_id = f"{doi}-{self.model_name.replace('/', '_')}-{time.strftime('%Y%m%d-%H%M%S')}"
             results, completion_usage = llm_call.create_text_completion(
-                self.model_name, pdf_text, additional_params=self.additional_params, session_id=session_id
+                self.model_name, pdf_text, extraction_method=self.extraction_method, additional_params=self.additional_params, session_id=session_id
             )
             parsed = PerovskiteSolarCells(**postprocess(results.model_dump()))
             to_json(parsed, output_path)
@@ -370,12 +372,7 @@ class ExtractionPipeline:
         try:
             processed = postprocess(results.model_dump())
         except Exception as e:
-            try:
-                processed = json.loads(
-                    results.choices[0].message.content
-                )
-            except Exception as e:
-                processed = {"raw_output": str(results.choices[0].message.content)}
+            processed = {"raw_output": str(results.choices[0].message)}
         output_path.write_text(json.dumps(processed, indent=2))
 
     def run(
@@ -412,6 +409,7 @@ def extract(
     output: str = "./extractions",
     nomad: bool = False,
     nomad_upload_id: str = None,
+    extraction_method: EXTRACTION_METHODS = "tool_call",
     additional_params: dict = None,
 ):
     if pdf_print:
@@ -429,6 +427,7 @@ def extract(
         use_cache,
         nomad,
         nomad_upload_id,
+        extraction_method,
         additional_params
     ).run(filepath, truth, output=output)
 
