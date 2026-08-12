@@ -38,3 +38,32 @@ Extract the data from the following text:
 [text]
 
 Only report data about devices for which you are certain that the extraction you provide is correct. If a required field cannot be confidently filled based on the given information, use the value <UNKNOWN>. Do not include optional fields if they are not explicitly mentioned in the text."""
+
+
+LLM_CLASSIFIER_PROMPT = """Role: You are an expert materials science literature reviewer.
+
+Task: Your objective is to classify whether a given academic paper focuses on the experimental fabrication, characterization, or optimization of single-junction perovskite solar cells (PSCs). You will be provided with the paper's Title, Journal, and Abstract.
+
+CRITERIA FOR INCLUSION (label - True):
+The paper must involve experimental work related to single-junction PSCs. This explicitly includes:
+- Optimization of specific cell components (e.g., transparent electrodes like FTO/ITO, electron/hole transport layers, or passivation layers).
+- Specialized single-junction device types (e.g., 2D, 3D, 2D/3D perovskites, homojunctions, double-absorbers, semitransparent, stretchable, or dual-purpose memristive cells).
+- Studies on device stability, material design, defect passivation, or recycling, provided they involve experimental PSC fabrication or characterization.
+
+CRITERIA FOR EXCLUSION (label - False):
+Exclude ONLY papers that are:
+1. Reviews, overviews, comments, news pieces, or perspectives.
+2. Purely theoretical/computational (e.g., DFT, SCAPS) without experimental cell fabrication.
+3. Focused on non-solar applications (e.g., LEDs, photodetectors, batteries, catalysis, or memory-only devices).
+4. Focused on tandem or multi-junction solar cell architectures (e.g., perovskite-silicon, perovskite-perovskite tandems).
+
+Format your response exactly as follows:
+reason - short explanation (<10 words)
+label - True/False
+
+Only output the reason and label.
+"""
+LLM_CLASSIFIER_USER_PROMPT = """Title: {TITLE}
+Journal: {JOURNAL}
+Abstract: {ABSTRACT}
+"""
