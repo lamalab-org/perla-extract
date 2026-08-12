@@ -5,26 +5,32 @@
 # author:   François-Xavier Coudert
 # e-mail:   fxcoudert@gmail.com
 
-import os
-import time
-import feedparser
-import pickle
 import csv
-from pathlib import Path
+import os
+import pickle
+import time
 from dataclasses import dataclass
-from typing import List, Optional
 from importlib.resources import files
+from pathlib import Path
+
+import feedparser
+import pandas as pd
 from loguru import logger
 from tqdm import tqdm
-from perla_extract.papersbot.utils import get_doi, save_summaries, fetch_openalex_works_by_date
-from perla_extract.papersbot.match_pdf import check_pdfs, check_matches, download_pdfs
+
+from perla_extract.configuration import RELAXED_REGEX, STRICT_REGEX, papersbot_runs_path
+from perla_extract.papersbot.match_pdf import check_matches, check_pdfs, download_pdfs
 from perla_extract.papersbot.proc_abstracts import (
+    check_relaxed_match_doi,
     get_abstracts,
     update_for_retry,
-    check_relaxed_match_doi,
 )
-from perla_extract.configuration import papersbot_runs_path, RELAXED_REGEX, STRICT_REGEX
-import pandas as pd
+from perla_extract.papersbot.utils import (
+    fetch_openalex_works_by_date,
+    get_doi,
+    save_summaries,
+)
+
 REGEXES = [STRICT_REGEX, RELAXED_REGEX]
 
 
@@ -78,8 +84,8 @@ class PapersbotResult:
     success: bool
     papers_found: int = 0
     pdfs_downloaded: int = 0
-    downloaded_files: List[Path] = None
-    error: Optional[str] = None
+    downloaded_files: list[Path] = None
+    error: str | None = None
 
     def __post_init__(self):
         if self.downloaded_files is None:
@@ -132,13 +138,14 @@ class PapersBot:
             f.write(f"Number of papers seen before: {self.seen_before}\n")
             f.write(f"Total number of papers processed: {self.total}\n")
             f.write("\n")
+
     def check_entry(self, entry):
         any_match = 0
         entry_stats = {
-                "id": entry.get("id", ""),
-                "parsed_time": time.time(),
-                "doi": get_doi(entry),
-            }
+            "id": entry.get("id", ""),
+            "parsed_time": time.time(),
+            "doi": get_doi(entry),
+        }
         for r in range(len(REGEXES)):
             match, status = entry_matches(entry, REGEXES[r])
             any_match |= match
@@ -146,10 +153,8 @@ class PapersBot:
 
         self.total_matched += any_match
         entry_stats["match"] = any_match
-        entry_stats["processed"] = False if any_match else True
-        if any_match and (
-            entry_stats["doi"] and "error" not in entry_stats["doi"]
-        ):
+        entry_stats["processed"] = not any_match
+        if any_match and (entry_stats["doi"] and "error" not in entry_stats["doi"]):
             save_summaries(
                 {
                     entry_stats["id"]: {
@@ -163,6 +168,7 @@ class PapersBot:
         self.save_entry_stats(entry_stats)
         self.add_to_posted(entry.get("id"))
         self.print_stats()
+
     # Main function, iterating over feeds and posting new items
     def run(self):
         for feed in tqdm(self.feeds):
@@ -171,7 +177,7 @@ class PapersBot:
             except ConnectionResetError as e:
                 # Print information about which feed is failing, and what is the error
                 logger.error(f"Failure to load feed at URL {feed}")
-                logger.error(f"Exception info: {str(e)}")
+                logger.error(f"Exception info: {e!s}")
 
             for entry in parsed_feed.entries:
                 self.total += 1
@@ -180,14 +186,24 @@ class PapersBot:
                     continue
                 self.n_seen += 1
                 self.check_entry(entry)
-    
-    
+
     def run_openlex_feed(self):
-        start_date = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 7 * 24 * 60 * 60))
+        start_date = time.strftime(
+            "%Y-%m-%d", time.gmtime(time.time() - 7 * 24 * 60 * 60)
+        )
         end_date = time.strftime("%Y-%m-%d", time.gmtime(time.time()))
         feed = fetch_openalex_works_by_date(start_date=start_date, end_date=end_date)
         entry_stats_csv = pd.read_csv(f"{papersbot_runs_path}/entry_stats.csv")
-        seen_dois = set(entry_stats_csv["doi"].apply(lambda x: x.replace("https://doi.org/", "").lower() if pd.notnull(x) else "").dropna().str.lower())
+        seen_dois = set(
+            entry_stats_csv["doi"]
+            .apply(
+                lambda x: (
+                    x.replace("https://doi.org/", "").lower() if pd.notnull(x) else ""
+                )
+            )
+            .dropna()
+            .str.lower()
+        )
         for entry in feed:
             seen = False
             raw_doi = entry.get("doi", "")
@@ -200,9 +216,10 @@ class PapersBot:
                 self.seen_before += 1
                 continue
             self.n_seen += 1
-            entry['summary'] = entry.get('abstract', '')
+            entry["summary"] = entry.get("abstract", "")
             self.check_entry(entry)
-            
+
+
 def run_papersbot(download_dir: str = "downloaded_papers"):
     """Run the complete papersbot workflow.
 
@@ -248,10 +265,11 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
         )
     except Exception as e:
         import traceback
-        logger.error(f"Error in papersbot workflow: {str(e)}")
+
+        logger.error(f"Error in papersbot workflow: {e!s}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         return PapersbotResult(
-            success=False, error=f"Papersbot workflow failed: {str(e)}"
+            success=False, error=f"Papersbot workflow failed: {e!s}"
         )
 
 

@@ -1,6 +1,7 @@
 import os
-from huggingface_hub import snapshot_download
-from huggingface_hub import HfApi
+
+from huggingface_hub import HfApi, snapshot_download
+
 from perla_extract.configuration import papersbot_runs_path
 
 repo_id = os.environ["HF_REPO_ID"]

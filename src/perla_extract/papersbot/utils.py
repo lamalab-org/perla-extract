@@ -1,10 +1,13 @@
+import asyncio
 import os
 import pickle
-import requests
-from perla_extract.configuration import papersbot_runs_path, playwright_installed
-from loguru import logger
 import xml.etree.ElementTree as ET
-import asyncio
+
+import requests
+from loguru import logger
+
+from perla_extract.configuration import papersbot_runs_path, playwright_installed
+
 UNPAYWALL_EMAIL = os.environ.get("UNPAYWALL_EMAIL")
 
 
@@ -18,6 +21,7 @@ def save_summaries(summaries, current=True):
             old_summaries.update(summaries)
         with open(f"{papersbot_runs_path}/summaries.pkl", "wb") as f:
             pickle.dump(old_summaries, f)
+
 
 def get_doi_summary(doi: str) -> dict:
     """
@@ -89,6 +93,7 @@ def get_doi_summary_crossref(doi: str) -> dict:
             return {"error": f"Error: {e}"}
     return {"error": f"Error: Status code {response.status_code}"}
 
+
 def inverted_index_to_text(inverted_index: dict) -> str:
     """
     Converts an inverted index to a text string. Needed for OpenAlex abstracts, which are returned as inverted indices.
@@ -99,20 +104,21 @@ def inverted_index_to_text(inverted_index: dict) -> str:
     """
     if not inverted_index:
         return ""
-    
+
     # Find the maximum position to determine the length of the text
     max_position = max(max(positions) for positions in inverted_index.values())
-    
+
     # Create a list of empty strings with length equal to max_position + 1
     word_list = [""] * (max_position + 1)
-    
+
     # Fill the word_list with words at their respective positions
     for word, positions in inverted_index.items():
         for pos in positions:
             word_list[pos] = word
-    
+
     # Join the list into a single string
     return " ".join(word_list)
+
 
 def get_doi_summary_openalex(doi: str) -> dict:
     doi = doi.lower().strip()
@@ -326,25 +332,24 @@ def get_doi(entry):
         return f"error getting doi: {e}"
 
 
-
 def fetch_openalex_works_by_date(start_date: str, end_date: str, email: str = None):
     """
     Fetches articles from OpenAlex for specific topics within a date range.
-    
+
     Args:
         start_date: Start date in 'YYYY-MM-DD' format.
         end_date: End date in 'YYYY-MM-DD' format.
         email: Optional but recommended. Puts you in the OpenAlex 'polite pool' for faster limits.
-    
+
     Returns:
         A list of dictionaries metadata for each work.
     """
-    
+
     base_url = "https://api.openalex.org/works"
-    
+
     # Using the polite pool makes your requests faster and more reliable
     headers = {"User-Agent": f"mailto:{email}"} if email else {}
-    
+
     # We add from_publication_date and to_publication_date to the filter
     filters = (
         "topics.id:T10247|T10624|T12309,"
@@ -352,16 +357,16 @@ def fetch_openalex_works_by_date(start_date: str, end_date: str, email: str = No
         f"from_publication_date:{start_date},"
         f"to_publication_date:{end_date}"
     )
-    
+
     # Base parameters reflecting your URL
     params = {
         "filter": filters,
         "sort": "publication_date:desc",
         "select": "id,doi,title,publication_date,publication_year,abstract_inverted_index",
         "per_page": 100,
-        "page": 1
+        "page": 1,
     }
-    
+
     all_results = []
 
     logger.info("Fetching works from %s to %s...", start_date, end_date)
@@ -369,49 +374,54 @@ def fetch_openalex_works_by_date(start_date: str, end_date: str, email: str = No
     while True:
         response = requests.get(base_url, params=params, headers=headers)
         response.raise_for_status()  # Stop and raise an error if the request fails
-        
+
         data = response.json()
         results = data.get("results", [])
-        
+
         # If there are no results on this page, we've reached the end
         if not results:
             break
-            
+
         all_results.extend(results)
-        
+
         # Check pagination metadata
         meta = data.get("meta", {})
         total_count = meta.get("count", 0)
-        
-        logger.info(f"Fetched page {params['page']} - Got {len(all_results)} of {total_count} total results")
-        
+
+        logger.info(
+            f"Fetched page {params['page']} - Got {len(all_results)} of {total_count} total results"
+        )
+
         # If we have collected all available items, break the loop
         if len(all_results) >= total_count:
             break
-            
+
         # Increment the page number for the next request
         params["page"] += 1
-    results=[]
+    results = []
     for result in all_results:
         doi = result.get("doi", "")
         title = result.get("title", "")
         publication_date = result.get("publication_date", "")
         publication_year = result.get("publication_year", "")
         abstract_inverted_index = result.get("abstract_inverted_index", {})
-        
+
         # Reconstruct the abstract from the inverted index
         abstract = ""
         if abstract_inverted_index:
             abstract = inverted_index_to_text(abstract_inverted_index)
-        
-        results.append({
-            "doi": doi,
-            "title": title,
-            "publication_date": publication_date,
-            "publication_year": publication_year,
-            "abstract": abstract
-        })
+
+        results.append(
+            {
+                "doi": doi,
+                "title": title,
+                "publication_date": publication_date,
+                "publication_year": publication_year,
+                "abstract": abstract,
+            }
+        )
     return results
+
 
 def get_pdf_url(doi: str) -> tuple[bool, bool, dict[str, str]]:
     """
@@ -428,13 +438,17 @@ def get_pdf_url(doi: str) -> tuple[bool, bool, dict[str, str]]:
     for get_pdf_url_func in [get_pdf_url_unpaywall, get_pdf_url_openalex]:
         error, is_oa, pdf_url = get_pdf_url_func(doi)
         any_oa |= is_oa
-        if 'msg' not in pdf_url and len(pdf_url) > 0:
+        if "msg" not in pdf_url and len(pdf_url) > 0:
             return error, any_oa, pdf_url
         elif error:
-            error_msg += pdf_url['msg']
-    
-    return_msg = {'msg': error_msg if error_msg else "No PDF available from any source."}
-    logger.error(f"No PDF available for this DOI: {doi}. OA status: {any_oa}. Details: {return_msg['msg']}")
+            error_msg += pdf_url["msg"]
+
+    return_msg = {
+        "msg": error_msg if error_msg else "No PDF available from any source."
+    }
+    logger.error(
+        f"No PDF available for this DOI: {doi}. OA status: {any_oa}. Details: {return_msg['msg']}"
+    )
     return error, any_oa, return_msg
 
 
@@ -451,15 +465,16 @@ def get_pdf_url_unpaywall(doi: str) -> tuple[bool, bool, dict[str, str]]:
     doi = doi.lower().strip()
     try:
         api_url = f"https://api.unpaywall.org/v2/{doi}?email={UNPAYWALL_EMAIL}"
-        response = requests.get(api_url,timeout=30)
+        response = requests.get(api_url, timeout=30)
         response.raise_for_status()
         data = response.json()
         is_oa = data.get("is_oa", False)
-        keys_to_check = {"url_for_pdf": "pdf_url", "url": "landing_page_url", "url_for_landing_page": "landing_page_url"}
-        if (
-            is_oa
-            and data.get("best_oa_location")
-        ):
+        keys_to_check = {
+            "url_for_pdf": "pdf_url",
+            "url": "landing_page_url",
+            "url_for_landing_page": "landing_page_url",
+        }
+        if is_oa and data.get("best_oa_location"):
             for key in keys_to_check:
                 url = data["best_oa_location"].get(key, None)
                 if url:
@@ -467,11 +482,11 @@ def get_pdf_url_unpaywall(doi: str) -> tuple[bool, bool, dict[str, str]]:
             return False, is_oa, {keys_to_check[key]: url}
         else:
             logger.error(f"Unpaywall:No PDF available for this DOI: {doi}.")
-            return False, is_oa, {'msg': f"No PDF available for this DOI: {doi}."}
+            return False, is_oa, {"msg": f"No PDF available for this DOI: {doi}."}
 
     except Exception as e:
         logger.error(f"Error fetching data from Unpaywall: {e}")
-        return True, False, {'msg': f"Error fetching data from Unpaywall: {e}"}
+        return True, False, {"msg": f"Error fetching data from Unpaywall: {e}"}
 
 
 def get_pdf_url_openalex(doi: str) -> tuple[bool, bool, dict[str, str]]:
@@ -481,15 +496,14 @@ def get_pdf_url_openalex(doi: str) -> tuple[bool, bool, dict[str, str]]:
     doi = doi.lower().strip()
     try:
         api_url = f"https://api.openalex.org/works/https://doi.org/{doi}"
-        response = requests.get(api_url,timeout=30)
+        response = requests.get(api_url, timeout=30)
         response.raise_for_status()
         data = response.json()
-        is_oa = (data.get("best_oa_location") is not None) and data.get("best_oa_location", {}).get("is_oa", False)
+        is_oa = (data.get("best_oa_location") is not None) and data.get(
+            "best_oa_location", {}
+        ).get("is_oa", False)
         keys_to_check = {"pdf_url": "pdf_url", "landing_page_url": "landing_page_url"}
-        if (
-            is_oa
-            and data.get("best_oa_location")
-        ):
+        if is_oa and data.get("best_oa_location"):
             for key in keys_to_check:
                 url = data["best_oa_location"].get(key, None)
                 if url:
@@ -497,10 +511,10 @@ def get_pdf_url_openalex(doi: str) -> tuple[bool, bool, dict[str, str]]:
             return False, is_oa, {keys_to_check[key]: url}
         else:
             logger.error(f"Openalex: No PDF available for this DOI : {doi}")
-            return False, is_oa, {'msg': f"No PDF available for this DOI: {doi}."}
+            return False, is_oa, {"msg": f"No PDF available for this DOI: {doi}."}
     except Exception as e:
         logger.error(f"Error fetching data from Openalex: {e}")
-        return True, False, {'msg': f"Error fetching data from Openalex: {e}"}
+        return True, False, {"msg": f"Error fetching data from Openalex: {e}"}
 
 
 HEADERS = {
@@ -531,8 +545,7 @@ def download_pdf(url: str, filepath: str) -> bool:
 
             # --- Save the file in chunks ---
             with open(filepath, "wb") as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
+                f.writelines(response.iter_content(chunk_size=8192))
 
             logger.info(f"Successfully downloaded and saved to {filepath}\n")
             return True
@@ -572,9 +585,9 @@ async def playwright_download_pdf(url: str, filepath: str) -> bool:
                         raise e
                 download = await download_info.value
         except Exception as e:
-             logger.error(f"Playwright error downloading {url}: {e}")
-             await browser.close()
-             return False
+            logger.error(f"Playwright error downloading {url}: {e}")
+            await browser.close()
+            return False
 
         await download.save_as(filepath)
 
@@ -589,7 +602,7 @@ async def playwright_get_pdf_links(url):
 
     async with async_playwright() as p:
         # Launch browser (headless=False so you can see the action)
-        browser =  await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=False)
         context = await browser.new_context()
         page = await context.new_page()
         page.set_default_timeout(60000)
@@ -604,9 +617,11 @@ async def playwright_get_pdf_links(url):
 
             for attempt in range(max_attempts):
                 count = await pdf_locator.count()
-                
+
                 if count > 0:
-                    logger.info(f"Success! Found {count} links on attempt {attempt + 1}.")
+                    logger.info(
+                        f"Success! Found {count} links on attempt {attempt + 1}."
+                    )
                     break  # Exit the loop once we find them
                 else:
                     logger.info(f"Attempt {attempt + 1}: No links found. Sleeping...")
@@ -616,7 +631,7 @@ async def playwright_get_pdf_links(url):
                 logger.error("Gave up! Links never appeared after maximum attempts.")
                 await browser.close()
                 return
-            links=[]
+            links = []
             # 3. Iterate through the href of each link
             for i in range(count):
                 link = pdf_locator.nth(i)
@@ -632,15 +647,20 @@ async def playwright_get_pdf_links(url):
         logger.info(f"Found {len(links)} PDF links on the page.")
         return links
 
+
 def filter_links(links):
     filtered_links = []
     for link in links:
-        if not any(phrase in link.lower() for phrase in ["suppl","static-content","/epdf","/pb-assets/"]):
-            if  "wiley.com/doi/pdf/" in link.lower():
+        if not any(
+            phrase in link.lower()
+            for phrase in ["suppl", "static-content", "/epdf", "/pb-assets/"]
+        ):
+            if "wiley.com/doi/pdf/" in link.lower():
                 link = link.replace("/doi/pdf/", "/doi/pdfdirect/", 1)
                 link += "&download=true" if "?" in link else "?download=true"
             filtered_links.append(link)
     return filtered_links[0] if filtered_links else None
+
 
 def get_links(url):
     if playwright_installed:

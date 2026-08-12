@@ -1,10 +1,12 @@
-import os
-import requests
-from pathlib import Path
-from loguru import logger
 import io
-import zipfile
+import os
 import shutil
+import zipfile
+from pathlib import Path
+
+import requests
+from loguru import logger
+
 from perla_extract.configuration import papersbot_runs_path
 from perla_extract.export import get_authentication_token
 

@@ -1,25 +1,26 @@
-from perla_extract.papersbot.utils import (
-    get_pdf_url,
-    download_pdf,
-    playwright_download_pdf,
-    get_links,
-    save_summaries,
-)
-import pickle
 import asyncio
-from perla_extract.configuration import (
-    papersbot_runs_path,
-    playwright_installed,
-    STRICT_REGEX,
-)
-import pandas as pd
-import time
 import json
 import os
+import pickle
+import time
 from pathlib import Path
-from typing import List
+
+import pandas as pd
 from loguru import logger
 from tqdm import tqdm
+
+from perla_extract.configuration import (
+    STRICT_REGEX,
+    papersbot_runs_path,
+    playwright_installed,
+)
+from perla_extract.papersbot.utils import (
+    download_pdf,
+    get_links,
+    get_pdf_url,
+    playwright_download_pdf,
+    save_summaries,
+)
 
 
 def check_matches():
@@ -54,7 +55,7 @@ def check_matches():
         metadata["rss_feed_summary"] = s.get("rss_feed_summary")
         if not metadata["abstract"]:
             metadata["abstract"] = metadata["rss_feed_summary"]
-        for key, text in metadata.items():
+        for text in metadata.values():
             if STRICT_REGEX.search(text):
                 stats["matches"] += 1
                 match = True
@@ -86,7 +87,9 @@ def check_pdfs():
             f.write(f"Number of papers with no Pdfs: {stats['none']}\n")
             f.write(f"Total number of papers processed: {stats['total']}\n\n\n")
 
-    post_proc_df = pd.read_csv(f"{papersbot_runs_path}/post_proc.csv").replace({float("nan"): None})
+    post_proc_df = pd.read_csv(f"{papersbot_runs_path}/post_proc.csv").replace(
+        {float("nan"): None}
+    )
     with open(f"{papersbot_runs_path}/summaries.pkl", "rb") as f:
         summaries = pickle.load(f)
     r_df = post_proc_df[
@@ -101,42 +104,44 @@ def check_pdfs():
         doi = sample["doi"].strip().lower()
         error, is_oa, pdf_url = get_pdf_url(doi)
         post_proc_df.at[i, "pdf_checked"] = True
-        if 'msg' not in pdf_url and len(pdf_url) > 0:
+        if "msg" not in pdf_url and len(pdf_url) > 0:
             url_type = "pdf_url"
-            if 'pdf_url' not in pdf_url and pdf_url.get('landing_page_url'):
-                if sample["landing_page_url"] == pdf_url['landing_page_url']:
+            if "pdf_url" not in pdf_url and pdf_url.get("landing_page_url"):
+                if sample["landing_page_url"] == pdf_url["landing_page_url"]:
                     continue
-                post_proc_df.at[i, "landing_page_url"] = pdf_url['landing_page_url']
-                filtered_link, links = get_links(pdf_url['landing_page_url'])
+                post_proc_df.at[i, "landing_page_url"] = pdf_url["landing_page_url"]
+                filtered_link, links = get_links(pdf_url["landing_page_url"])
                 summaries[sample["id"]]["links"] = [filtered_link, links]
-                pdf_url['pdf_url'] = filtered_link if filtered_link else ""
+                pdf_url["pdf_url"] = filtered_link if filtered_link else ""
                 url_type = "filtered_landing_page"
-            post_proc_df.at[i, "pdf_available"] = True if pdf_url.get('pdf_url') else False
+            post_proc_df.at[i, "pdf_available"] = (
+                bool(pdf_url.get("pdf_url"))
+            )
             stats["urls_found"] += 1
             found_urls[doi] = {
                 "doi": doi,
                 "tries": 0,
             }
             found_urls[doi].update(pdf_url)
-            print(doi,pdf_url)
-            msg = pdf_url['pdf_url']
+            print(doi, pdf_url)
+            msg = pdf_url["pdf_url"]
         else:
             url_type = "none" if not error else "error"
             stats[url_type] += 1
-            msg=pdf_url['msg']
+            msg = pdf_url["msg"]
         post_proc_df.at[i, "pdf_url"] = msg
         post_proc_df.at[i, "pdf_url_type"] = url_type
-        post_proc_df.at[i,"is_oa"] = is_oa
+        post_proc_df.at[i, "is_oa"] = is_oa
         stats["total"] += 1
     print_stats(stats)
-    
+
     if os.path.isfile(f"{papersbot_runs_path}/found_pdf_urls.json"):
         with open(f"{papersbot_runs_path}/found_pdf_urls.json", "r") as f:
             old_found_urls = json.load(f)
     else:
         old_found_urls = {}
-    
-    for k,v in found_urls.items():
+
+    for k, v in found_urls.items():
         if k in old_found_urls:
             old_found_urls[k].update(v)
         else:
@@ -149,6 +154,7 @@ def check_pdfs():
     except Exception as e:
         logger.error(f"Failed to save summaries: {e}")
     return stats["urls_found"]
+
 
 def download(pdf_url: str, doi: str, filepath: str | Path) -> bool:
     filepath = Path(filepath)
@@ -167,7 +173,8 @@ def download(pdf_url: str, doi: str, filepath: str | Path) -> bool:
         logger.error(f"Error downloading {doi}: {e}")
     return False
 
-def download_pdfs(download_dir: str | Path = "downloaded_papers") -> List[Path]:
+
+def download_pdfs(download_dir: str | Path = "downloaded_papers") -> list[Path]:
     """
     Download PDFs from the found URLs.
 
@@ -180,7 +187,7 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> List[Path]:
     download_path = Path(download_dir)
     download_path.mkdir(parents=True, exist_ok=True)
 
-    downloaded_files: List[Path] = []
+    downloaded_files: list[Path] = []
 
     try:
         with open(f"{papersbot_runs_path}/found_pdf_urls.json", "r") as f:
@@ -190,18 +197,20 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> List[Path]:
         return downloaded_files
 
     for doi, item in found_urls.items():
-        if "processed" in item and item["processed"]:
+        if item.get("processed"):
             continue
 
         filepath = download_path / f"{doi.replace('/', '--')}.pdf"
         if filepath.exists():
-                logger.warning(f"File {filepath} already exists. Skipping download.")
-                downloaded_files.append(filepath)
-                continue
+            logger.warning(f"File {filepath} already exists. Skipping download.")
+            downloaded_files.append(filepath)
+            continue
         pdf_url = item.get("pdf_url")
-        if not pdf_url and 'landing_page_url' in item and playwright_installed:
+        if not pdf_url and "landing_page_url" in item and playwright_installed:
             landing_page_url = item["landing_page_url"]
-            logger.info(f"Attempting to download PDF from landing page for {doi}: {landing_page_url}")
+            logger.info(
+                f"Attempting to download PDF from landing page for {doi}: {landing_page_url}"
+            )
             try:
                 if landing_page_url.rstrip()[-4:].lower() == ".pdf":
                     download_success = download(landing_page_url, doi, filepath)
@@ -216,8 +225,10 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> List[Path]:
                 else:
                     logger.warning(f"No PDF URL found on landing page for {doi}.")
             except Exception as e:
-                logger.error(f"Error extracting PDF URL from landing page for {doi}: {e}")
-        
+                logger.error(
+                    f"Error extracting PDF URL from landing page for {doi}: {e}"
+                )
+
         if pdf_url:
             try:
                 download_success = download(pdf_url, doi, filepath)
@@ -227,9 +238,9 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> List[Path]:
                     logger.error(f"Failed to download PDF for {doi} from {pdf_url}")
             except Exception as e:
                 logger.error(f"Error downloading {doi}: {e}")
-                
+
         found_urls[doi]["tries"] += 1
-        if found_urls[doi]["tries"] >= 3:
+        if item["tries"] >= 3:
             logger.warning(f"Max tries reached for {doi}.")
             found_urls[doi]["processed"] = True
 
