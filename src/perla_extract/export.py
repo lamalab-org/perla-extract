@@ -189,7 +189,7 @@ def traverse_and_transform(obj, parent_key=None, ureg=None):
 
 def process_to_nomad(raw_data, doi, ureg=None):
     """Wraps the transformed data in the specific NOMAD schema envelope."""
-    doi_url = "https://www.doi.org/"+doi
+    doi_url = "https://doi.org/"+doi
     # Run the transformation
     transformed = traverse_and_transform(raw_data, ureg)
     output_entries = []
