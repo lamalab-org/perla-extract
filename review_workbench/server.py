@@ -392,6 +392,28 @@ class ReviewApplication:
             raise ValueError("Issue payload must be an object")
         if not self.paper_path(split, paper_id).exists():
             raise FileNotFoundError(self.paper_path(split, paper_id))
+        proposed_patch = payload.get("proposed_patch")
+        if proposed_patch:
+            candidate_issue = {
+                "id": "new-proposal-validation",
+                "status": "open",
+                "type": str(payload.get("type", "other")),
+                "description": str(payload.get("description", "")),
+                "proposed_patch": proposed_patch,
+                "atomic_groups": payload.get("atomic_groups") or [],
+                "accepted_change_ids": [],
+                "rejected_change_ids": [],
+            }
+            preview = apply_proposed_patches(
+                self.load_ground_truth(split, paper_id), [candidate_issue]
+            )
+            if preview["conflicts"]:
+                raise ValueError(
+                    f"Proposed correction cannot be applied: {preview['conflicts'][0]['error']}"
+                )
+            if not preview["changes"]:
+                raise ValueError("Proposed correction does not change ground truth")
+            self.validate_ground_truth(preview["proposed_ground_truth"])
         issue = add_issue(
             self.ground_truth_dir,
             split,
@@ -413,7 +435,7 @@ class ReviewApplication:
             proposal_confidence=str(
                 payload.get("proposal_confidence", "needs_review")
             ),
-            proposed_patch=payload.get("proposed_patch"),
+            proposed_patch=proposed_patch,
             source_type=str(payload.get("source_type", "unknown")),
             device_identity=str(payload.get("device_identity", "")),
             measurement_identity=str(payload.get("measurement_identity", "")),

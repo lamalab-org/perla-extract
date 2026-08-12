@@ -162,6 +162,12 @@ def test_review_ui_previews_proposed_ground_truth_before_saving():
     assert 'id="use-pdf-selection"' in html
     assert 'id="propose-schema-change"' in html
     assert 'id="download-ground-truth"' in html
+    assert 'id="field-correction-dialog"' in html
+    assert 'id="cell-correction-dialog"' in html
+    assert "Correct this value" in javascript
+    assert "Add missing cell" in javascript
+    assert "Duplicate and edit cell" in javascript
+    assert "Remove incorrect cell" in javascript
     assert "Ground-truth correction or schema change?" in html
     assert "Download corrected ground truth" in html
     assert "How to apply a proposal" in html
@@ -202,6 +208,40 @@ def test_proposed_ground_truth_endpoint_returns_preview(tmp_path):
     assert captured["payload"]["current_ground_truth"] == {"cells": []}
     assert captured["payload"]["proposed_ground_truth"] == {"cells": []}
     assert captured["payload"]["changes"] == []
+
+
+def test_invalid_generated_correction_is_rejected_before_issue_is_saved(tmp_path):
+    pdf_dir = tmp_path / "pdfs"
+    ground_truth_dir = tmp_path / "ground_truth"
+    pdf_dir.mkdir()
+    (ground_truth_dir / "dev").mkdir(parents=True)
+    (ground_truth_dir / "test").mkdir()
+    paper_id = "10.1234--invalid-correction"
+    (ground_truth_dir / "test" / f"{paper_id}.json").write_text(
+        json.dumps({"cells": []}), encoding="utf-8"
+    )
+    reviewer = add_user(ground_truth_dir, "Ada")
+    app = ReviewApplication(pdf_dir, ground_truth_dir)
+
+    try:
+        app.add_missing_issue(
+            "test", paper_id,
+            {
+                "reporter_id": reviewer["id"], "type": "missing_cell",
+                "description": "Invalid generated cell.",
+                "proposed_patch": [
+                    {"op": "test", "path": "/cells", "value": []},
+                    {"op": "add", "path": "/cells/-", "value": {"number_devices": "many"}},
+                ],
+                "atomic_groups": [{"id": "cell", "label": "Add cell", "operation_indexes": [0, 1]}],
+            },
+        )
+    except ValueError as error:
+        assert "extraction schema" in str(error)
+    else:
+        raise AssertionError("Invalid correction was saved")
+
+    assert app.issues("test", paper_id) == []
 
 
 def test_accepting_atomic_proposal_validates_saves_and_records_decision(tmp_path):

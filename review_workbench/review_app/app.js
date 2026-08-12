@@ -3,6 +3,7 @@ const state = {
   paperData: null, reviewData: null, quantityData: null, evidenceDirty: false,
   users: [], reviewerProgress: [], comments: [], issues: [], figureAudits: {}, corpusSummary: null, currentUser: null,
   revision: null, truthDraft: null, selectedRevisionChanges: new Set(), pendingProposalEdit: null,
+  correctionTarget: null, cellCorrection: null,
   clerk: null, pdfPage: 1, pdfPageCount: 0, pdfImageUrl: null,
   pdfNavigationId: 0, pdfPageText: "", pdfTextLines: [], pdfQuote: "", pendingCursor: null,
   internalToken: null,
@@ -221,15 +222,17 @@ function cellContextHtml(index) {
   const stack = (cell.layers || []).map((layer) => layer.name).filter(Boolean);
   return `<div class="cell-context-heading"><div><span class="cell-number">Cell ${Number(index) + 1}</span><strong>${escapeHtml(composition.formula || "Composition not recorded")}</strong></div><span>${escapeHtml(cell.device_architecture || "architecture unknown")}</span></div>
     <div class="cell-context-metrics">${metrics.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>
-    <div class="cell-context-details"><span><b>Type</b> ${escapeHtml(composition.sample_type || "—")}</span><span><b>Dimensionality</b> ${escapeHtml(composition.dimensionality || "—")}</span><span class="stack"><b>Stack</b> ${escapeHtml(stack.join(" / ") || "not recorded")}</span></div>`;
+    <div class="cell-context-details"><span><b>Type</b> ${escapeHtml(composition.sample_type || "—")}</span><span><b>Dimensionality</b> ${escapeHtml(composition.dimensionality || "—")}</span><span class="stack"><b>Stack</b> ${escapeHtml(stack.join(" / ") || "not recorded")}</span></div>
+    <div class="cell-context-actions"><button type="button" data-cell-action="add">Add missing cell</button><button type="button" data-cell-action="duplicate" data-cell-index="${index}">Duplicate and edit cell</button><button type="button" class="remove-cell" data-cell-action="remove" data-cell-index="${index}">Remove incorrect cell</button></div>`;
 }
 
 function renderCellContext() {
   const selected = $("field-cell").value;
   if (selected === "all") {
     const count = state.paperData?.ground_truth?.cells?.length || 0;
-    renderSafeHtml($("cell-context"), `<div class="review-hint">${count} cells in this paper. Select a cell to keep its composition, metrics, and stack visible while reviewing.</div>`);
+    renderSafeHtml($("cell-context"), `<div class="review-hint">${count} cells in this paper. Select a cell to keep its composition, metrics, and stack visible while reviewing.</div><div class="cell-context-actions"><button type="button" data-cell-action="add">Add missing cell</button></div>`);
   } else renderSafeHtml($("cell-context"), cellContextHtml(selected));
+  $("cell-context").querySelectorAll("[data-cell-action]").forEach((button) => button.addEventListener("click", () => openCellCorrection(button.dataset.cellAction, button.dataset.cellIndex == null ? null : Number(button.dataset.cellIndex))));
 }
 
 function pathLabel(path) {
@@ -276,6 +279,97 @@ function matchedText(suggestion, fallback = "") {
   return suggestion.snippet.slice(suggestion.match_start, suggestion.match_end) || fallback;
 }
 
+function cellIdentity(index, cell = state.paperData?.ground_truth?.cells?.[index]) {
+  if (!cell) return "Newly reported device not yet represented in ground truth";
+  const composition = cell.perovskite_composition?.formula || "composition not recorded";
+  const architecture = cell.device_architecture || "architecture not recorded";
+  const pce = cell.pce?.value == null ? "PCE not recorded" : `PCE ${cell.pce.value}%`;
+  return `Cell ${index + 1}: ${composition}; ${architecture}; ${pce}`;
+}
+
+function parseCorrectedValue(raw, current) {
+  const text = raw.trim();
+  try { return JSON.parse(text); } catch (_) {
+    if (typeof current === "number" && text !== "" && Number.isFinite(Number(text))) return Number(text);
+    if (typeof current === "boolean" && ["true", "false"].includes(text.toLowerCase())) return text.toLowerCase() === "true";
+    if (typeof current === "string") return text;
+    throw new Error("Enter a valid JSON value for this field.");
+  }
+}
+
+async function refreshProposalPreview() {
+  state.revision = await request(`/api/proposed-ground-truth/${state.split}/${encodeURIComponent(state.selected)}`);
+  state.selectedRevisionChanges = new Set();
+}
+
+function openFieldCorrection(fact, card) {
+  state.correctionTarget = fact;
+  const draftPage = Number(card.querySelector(".fact-page").value) || fact.evidence.page;
+  const draftQuote = card.querySelector(".fact-quote").value || fact.evidence.quote;
+  $("field-correction-title").textContent = `Correct ${pathLabel(fact.path)}`;
+  $("field-correction-current").textContent = `Current value: ${JSON.stringify(fact.value)}\nPath: ${fact.path}`;
+  $("field-correction-value").value = JSON.stringify(fact.value, null, 2);
+  $("field-correction-page").value = draftPage || fact.suggestion?.page || state.pdfPage || "";
+  $("field-correction-quote").value = draftQuote || fact.suggestion?.snippet || state.pdfQuote || "";
+  $("field-correction-linkage").value = `The cited passage explicitly reports the corrected ${pathLabel(fact.path).split(" › ").pop()} for this device.`;
+  $("field-correction-counterevidence").checked = false;
+  $("field-correction-scope").checked = false;
+  $("field-correction-status").textContent = "";
+  $("field-correction-dialog").showModal();
+}
+
+function populateCellCommonFields(cell) {
+  $("cell-edit-formula").value = cell?.perovskite_composition?.formula || "";
+  $("cell-edit-architecture").value = cell?.device_architecture || "";
+  $("cell-edit-aggregation").value = cell?.performance_aggregation || "";
+  $("cell-edit-pce").value = cell?.pce?.value ?? "";
+  $("cell-edit-voc").value = cell?.voc?.value ?? "";
+  $("cell-edit-jsc").value = cell?.jsc?.value ?? "";
+  $("cell-edit-ff").value = cell?.ff?.value ?? "";
+  $("cell-edit-number").value = cell?.number_devices ?? "";
+  $("cell-edit-json").value = JSON.stringify(cell || {}, null, 2);
+}
+
+function cellDraftFromForm() {
+  let cell;
+  try { cell = JSON.parse($("cell-edit-json").value || "{}"); }
+  catch (_) { throw new Error("The advanced cell JSON is invalid."); }
+  if (!cell || Array.isArray(cell) || typeof cell !== "object") throw new Error("A cell must be a JSON object.");
+  const formula = $("cell-edit-formula").value.trim();
+  if (formula) cell.perovskite_composition = { ...(cell.perovskite_composition || {}), formula };
+  const architecture = $("cell-edit-architecture").value;
+  if (architecture) cell.device_architecture = architecture;
+  const aggregation = $("cell-edit-aggregation").value;
+  if (aggregation) cell.performance_aggregation = aggregation;
+  const metric = (id, key, unit) => {
+    const raw = $(id).value;
+    if (raw !== "") cell[key] = { ...(cell[key] || {}), value: Number(raw), ...(unit ? { unit } : {}) };
+  };
+  metric("cell-edit-pce", "pce", "%");
+  metric("cell-edit-voc", "voc", "V");
+  metric("cell-edit-jsc", "jsc", "mA cm^-2");
+  metric("cell-edit-ff", "ff", null);
+  if ($("cell-edit-number").value !== "") cell.number_devices = Number($("cell-edit-number").value);
+  return cell;
+}
+
+function openCellCorrection(mode, index) {
+  const source = index == null ? null : state.paperData?.ground_truth?.cells?.[index];
+  state.cellCorrection = { mode, index };
+  $("cell-correction-title").textContent = mode === "add" ? "Add missing cell" : mode === "duplicate" ? `Duplicate and edit cell ${index + 1}` : `Remove incorrect cell ${index + 1}`;
+  $("cell-edit-fields").hidden = mode === "remove";
+  $("cell-remove-summary").hidden = mode !== "remove";
+  if (mode === "remove") $("cell-remove-summary").textContent = `Proposed removal: ${cellIdentity(index, source)}`;
+  else populateCellCommonFields(mode === "duplicate" ? structuredClone(source) : {});
+  $("cell-correction-page").value = state.pdfPage || "";
+  $("cell-correction-quote").value = state.pdfQuote || "";
+  $("cell-correction-linkage").value = mode === "remove" ? "The cited evidence shows that this JSON cell is not a distinct eligible device record." : "The cited evidence identifies this as a distinct device record with the stated treatment or measurement context.";
+  $("cell-correction-counterevidence").checked = false;
+  $("cell-correction-scope").checked = false;
+  $("cell-correction-status").textContent = "";
+  $("cell-correction-dialog").showModal();
+}
+
 function jumpToFactEvidence(fact) {
   if (fact.suggestion) {
     return jumpToPage(
@@ -319,6 +413,7 @@ function renderFields() {
         <label class="wide">Evidence quote <textarea class="fact-quote" rows="2" placeholder="Paste a short supporting quote…">${escapeHtml(fact.evidence.quote || "")}</textarea></label>
         <label class="wide">Reviewer note <input class="fact-notes" value="${escapeHtml(fact.evidence.notes || "")}" placeholder="Why is this ambiguous or incorrect?" /></label>
       </div>
+      <div class="field-correction-action"><button type="button" class="correct-field" data-action="correct-field">Correct this value</button></div>
       <div class="field-discussion">
         ${fieldComments.map((comment) => `<p><strong>${escapeHtml(reviewerName(comment.author_id))}</strong> ${escapeHtml(comment.body)}</p>`).join("")}
         <div><input class="field-comment" placeholder="Discuss this field with other reviewers…" /><button data-action="add-field-comment">Comment</button></div>
@@ -359,6 +454,7 @@ function bindFieldEvents() {
       card.querySelector(".fact-quote").value = fact.suggestion.snippet;
       updateFactFromCard(card);
     });
+    card.querySelector('[data-action="correct-field"]').addEventListener("click", () => openFieldCorrection(fact, card));
     card.querySelector('[data-action="add-field-comment"]').addEventListener("click", async () => {
       const input = card.querySelector(".field-comment");
       if (!input.value.trim()) return;
@@ -619,7 +715,8 @@ async function createIssue(overrides = {}) {
   const payload = {
     reporter_id: reviewerId(), type: overrides.type || $("issue-type").value,
     description: overrides.description || $("issue-description").value,
-    cell_index: overrides.cell_index ?? ($("issue-cell").value === "" ? null : Number($("issue-cell").value)),
+    cell_index: Object.hasOwn(overrides, "cell_index") ? overrides.cell_index : ($("issue-cell").value === "" ? null : Number($("issue-cell").value)),
+    field_path: overrides.field_path || null,
     suggested_value: overrides.suggested_value || $("issue-suggested-value").value,
     source_page: overrides.source_page || (Number($("issue-source-page").value) || null),
     source_text: overrides.source_text || $("issue-source-text").value,
@@ -866,6 +963,79 @@ $("use-pdf-selection").addEventListener("click", () => {
   $("issue-source-page").value = state.pdfPage;
   $("issue-source-text").value = state.pdfQuote || window.getSelection()?.toString().trim() || state.pdfPageText;
   $("issue-status").textContent = state.pdfQuote ? `Quote captured from p. ${state.pdfPage}` : `Page ${state.pdfPage} captured; select a shorter passage if possible.`;
+});
+$("cancel-field-correction").addEventListener("click", () => $("field-correction-dialog").close());
+$("field-correction-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const status = $("field-correction-status");
+  const fact = state.correctionTarget;
+  if (!fact) return;
+  try {
+    const corrected = parseCorrectedValue($("field-correction-value").value, fact.value);
+    if (JSON.stringify(corrected) === JSON.stringify(fact.value)) throw new Error("Enter a value different from the current ground truth.");
+    status.textContent = "Creating guarded proposal…";
+    const cellIndex = Number(fact.path.match(/^\/cells\/(\d+)/)?.[1]);
+    await createIssue({
+      type: "wrong_value", cell_index: Number.isInteger(cellIndex) ? cellIndex : null,
+      field_path: fact.path,
+      description: `Correct ${pathLabel(fact.path)} from ${JSON.stringify(fact.value)} to ${JSON.stringify(corrected)}.`,
+      suggested_value: JSON.stringify(corrected),
+      source_page: Number($("field-correction-page").value), source_text: $("field-correction-quote").value,
+      source_type: $("field-correction-source").value,
+      device_identity: Number.isInteger(cellIndex) ? cellIdentity(cellIndex) : "Paper-level ground-truth field",
+      measurement_identity: pathLabel(fact.path), linkage_rationale: $("field-correction-linkage").value,
+      counterevidence: "Reviewer confirmed that competing nearby values, devices, scans, and table rows were checked.",
+      scope_notes: "Reviewer confirmed eligible main-paper text/table evidence and excluded plot-inferred or Supporting-Information-only evidence.",
+      proposal_confidence: "high",
+      proposed_patch: [
+        { op: "test", path: fact.path, value: fact.value },
+        { op: "replace", path: fact.path, value: corrected },
+      ],
+      atomic_groups: [{ id: "correct-field", label: `Correct ${pathLabel(fact.path)}`, operation_indexes: [0, 1] }],
+    });
+    await refreshProposalPreview();
+    $("field-correction-dialog").close();
+    state.tab = "issues"; renderView();
+  } catch (error) { status.textContent = error.message; }
+});
+
+$("cancel-cell-correction").addEventListener("click", () => $("cell-correction-dialog").close());
+$("apply-common-cell-fields").addEventListener("click", () => {
+  try { $("cell-edit-json").value = JSON.stringify(cellDraftFromForm(), null, 2); $("cell-correction-status").textContent = "Common fields applied to the complete cell JSON."; }
+  catch (error) { $("cell-correction-status").textContent = error.message; }
+});
+$("cell-correction-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const status = $("cell-correction-status");
+  const target = state.cellCorrection;
+  if (!target) return;
+  try {
+    const cells = state.paperData?.ground_truth?.cells || [];
+    const source = target.index == null ? null : cells[target.index];
+    const proposedCell = target.mode === "remove" ? null : cellDraftFromForm();
+    const isRemove = target.mode === "remove";
+    const operations = isRemove
+      ? [{ op: "test", path: `/cells/${target.index}`, value: source }, { op: "remove", path: `/cells/${target.index}` }]
+      : [{ op: "test", path: "/cells", value: cells }, { op: "add", path: "/cells/-", value: proposedCell }];
+    const label = isRemove ? `Remove cell ${target.index + 1}` : target.mode === "duplicate" ? `Add distinct variant based on cell ${target.index + 1}` : "Add missing device cell";
+    status.textContent = "Creating guarded cell proposal…";
+    await createIssue({
+      type: isRemove ? "wrong_value" : "missing_cell", cell_index: target.index,
+      description: `${label}. ${$("cell-correction-linkage").value}`,
+      suggested_value: isRemove ? "Remove this cell" : JSON.stringify(proposedCell),
+      source_page: Number($("cell-correction-page").value), source_text: $("cell-correction-quote").value,
+      source_type: $("cell-correction-source").value,
+      device_identity: isRemove ? cellIdentity(target.index, source) : cellIdentity(cells.length, proposedCell),
+      measurement_identity: "Complete device/cell record", linkage_rationale: $("cell-correction-linkage").value,
+      counterevidence: "Reviewer confirmed that competing devices, treatments, scans, and table rows were checked.",
+      scope_notes: "Reviewer confirmed an eligible single-junction record explicitly supported by main-paper text/table evidence.",
+      proposal_confidence: "high", proposed_patch: operations,
+      atomic_groups: [{ id: "cell-record", label, operation_indexes: [0, 1] }],
+    });
+    await refreshProposalPreview();
+    $("cell-correction-dialog").close();
+    state.tab = "issues"; renderView();
+  } catch (error) { status.textContent = error.message; }
 });
 
 $("metadata-form").addEventListener("submit", async (event) => {

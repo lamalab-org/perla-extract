@@ -244,6 +244,52 @@
         <div class="dialog-actions"><button type="button" id="cancel-import" class="secondary-button">Cancel</button><button type="submit" class="primary-button">Import paper</button></div>
       </form>
     </dialog>
+    <dialog id="field-correction-dialog">
+      <form id="field-correction-form" class="dialog-form">
+        <div><p class="eyebrow">Ground-truth correction</p><h2 id="field-correction-title">Correct field</h2></div>
+        <div id="field-correction-current" class="correction-current"></div>
+        <label>Correct value <textarea id="field-correction-value" rows="3" required spellcheck="false"></textarea><span class="input-help">Numbers can be entered normally. Put text in quotes only when you need an exact JSON string.</span></label>
+        <div class="field-grid">
+          <label>Evidence page <input id="field-correction-page" type="number" min="1" required /></label>
+          <label>Evidence source <select id="field-correction-source"><option value="main_text">Main text</option><option value="table">Main-text table</option></select></label>
+        </div>
+        <label>Evidence quote <textarea id="field-correction-quote" rows="4" required placeholder="Shortest passage that supports the corrected value"></textarea></label>
+        <label>Why this value belongs here <textarea id="field-correction-linkage" rows="2" required></textarea></label>
+        <label class="confirmation-check"><input id="field-correction-counterevidence" type="checkbox" required /> I checked nearby competing values, devices, scans, and table rows.</label>
+        <label class="confirmation-check"><input id="field-correction-scope" type="checkbox" required /> The value is explicit in eligible main-paper text or a table—not inferred from a plot or taken only from Supporting Information.</label>
+        <div class="dialog-actions"><span id="field-correction-status"></span><button type="button" id="cancel-field-correction" class="secondary-button">Cancel</button><button type="submit" class="primary-button">Create correction proposal</button></div>
+      </form>
+    </dialog>
+    <dialog id="cell-correction-dialog">
+      <form id="cell-correction-form" class="dialog-form cell-correction-form">
+        <div><p class="eyebrow">Device-level correction</p><h2 id="cell-correction-title">Add missing cell</h2></div>
+        <div id="cell-edit-fields">
+          <div class="field-grid">
+            <label>Composition <input id="cell-edit-formula" placeholder="e.g. FA0.85MA0.15PbI3" /></label>
+            <label>Architecture <select id="cell-edit-architecture"><option value="">Unknown</option><option value="pin">p-i-n</option><option value="nip">n-i-p</option><option value="Back contacted">Back contacted</option><option value="Front contacted">Front contacted</option><option value="Other">Other</option></select></label>
+            <label>Aggregation <select id="cell-edit-aggregation"><option value="">Unknown</option><option value="single_device">Single device</option><option value="champion">Champion</option><option value="mean">Mean</option><option value="median">Median</option><option value="stabilized">Stabilized</option><option value="distribution">Distribution</option></select></label>
+          </div>
+          <div class="metric-edit-grid">
+            <label>PCE (%) <input id="cell-edit-pce" type="number" step="any" min="0" /></label>
+            <label>Voc (V) <input id="cell-edit-voc" type="number" step="any" min="0" /></label>
+            <label>Jsc (mA cm⁻²) <input id="cell-edit-jsc" type="number" step="any" /></label>
+            <label>FF (%) <input id="cell-edit-ff" type="number" step="any" min="0" /></label>
+            <label>Devices <input id="cell-edit-number" type="number" min="1" /></label>
+          </div>
+          <details><summary>Advanced: inspect or edit the complete cell JSON</summary><textarea id="cell-edit-json" rows="12" spellcheck="false"></textarea><button id="apply-common-cell-fields" type="button" class="secondary-button">Apply common fields to JSON</button></details>
+        </div>
+        <div id="cell-remove-summary" class="correction-current" hidden></div>
+        <div class="field-grid">
+          <label>Evidence page <input id="cell-correction-page" type="number" min="1" required /></label>
+          <label>Evidence source <select id="cell-correction-source"><option value="main_text">Main text</option><option value="table">Main-text table</option></select></label>
+        </div>
+        <label>Evidence quote <textarea id="cell-correction-quote" rows="4" required></textarea></label>
+        <label>Why this is a distinct/mistaken device record <textarea id="cell-correction-linkage" rows="2" required></textarea></label>
+        <label class="confirmation-check"><input id="cell-correction-counterevidence" type="checkbox" required /> I checked competing devices, treatments, scans, and table rows.</label>
+        <label class="confirmation-check"><input id="cell-correction-scope" type="checkbox" required /> This concerns an eligible single-junction record explicitly supported by main-paper text or a table.</label>
+        <div class="dialog-actions"><span id="cell-correction-status"></span><button type="button" id="cancel-cell-correction" class="secondary-button">Cancel</button><button type="submit" class="primary-button">Create cell proposal</button></div>
+      </form>
+    </dialog>
     </div>
     <script src="/app.js"></script>
   </body>
