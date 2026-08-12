@@ -302,9 +302,9 @@ class ExtractionPipeline:
             log_processing(doi, 'processed', True)
             return True
         except ValidationError as e:
-            self._handle_failure(e, results, output_path)
+            self._handle_failure(e, results, resps, output_path)
         except MaxRetriesExceededError as e:
-            self._handle_failure(e, e.args[0], output_path)
+            self._handle_failure(e, None, e.args[0], output_path)
         except json.decoder.JSONDecodeError as e:
             output_path.write_text("")
 
@@ -371,13 +371,21 @@ class ExtractionPipeline:
         logger.info(f"Prompt Tokens: {self.total_prompt_tokens}")
         logger.info(f"Completion Tokens: {self.total_completion_tokens}")
 
-    def _handle_failure(self, error, results, output_path):
+    def _handle_failure(self, error, results, resps, output_path):
         logger.error(f"Extraction failed: {error}")
-        try:
-            processed = postprocess(results.model_dump())
-        except Exception as e:
-            processed = {"raw_output": str(results.choices[0].message)}
-        output_path.write_text(json.dumps(processed, indent=2))
+        err_path = output_path.with_suffix(".error.json")
+        
+        if results is not None:
+            try:
+                processed = postprocess(results.model_dump())
+            except Exception as e:
+                processed = {"raw_output": str(results)}
+            err_path.write_text(json.dumps(processed, indent=2))
+        
+        if DEBUG_MODE:
+            with open(f"{output_path.parent}/{output_path.stem}.resps.pkl", "wb") as debug_file:
+                pickle.dump(resps, debug_file)
+
 
     def run(
         self,

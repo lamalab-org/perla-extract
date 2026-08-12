@@ -249,7 +249,7 @@ def _create_text_completion(
             logger.error(f"{type(e).__name__}: {e}. retrying.")
             if retry_count >= MAX_RETRIES:
                 logger.error(f"Max retries reached ({MAX_RETRIES}). Raising MaxRetriesExceededError.")
-                raise MaxRetriesExceededError(resp)
+                raise MaxRetriesExceededError(resps)
             retry_prompt = f'\n\nThe previous attempt resulted in an error: {type(e).__name__}: {e} when accessing the extracted in the response.' 
             retry_count += 1
         messages.append({"role":"user","content": retry_prompt})

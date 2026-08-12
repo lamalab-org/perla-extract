@@ -21,7 +21,8 @@ def remove_ml_concentrations(data: dict) -> dict:
 
     # Work on a deep copy so original data stays unchanged
     data = copy.deepcopy(data)
-
+    if data.get("cells") is None:
+        return data
     for cell in data.get("cells", []):
         for layer in cell.get("layers", []) or []:
             for dep in layer.get("deposition", []) or []:
