@@ -52,7 +52,7 @@ The paper must involve experimental work related to single-junction PSCs. This e
 
 CRITERIA FOR EXCLUSION (label - False):
 Exclude ONLY papers that are:
-1. Reviews, overviews, or perspectives.
+1. Reviews, overviews, comments, news pieces, or perspectives.
 2. Purely theoretical/computational (e.g., DFT, SCAPS) without experimental cell fabrication.
 3. Focused on non-solar applications (e.g., LEDs, photodetectors, batteries, catalysis, or memory-only devices).
 4. Focused on tandem or multi-junction solar cell architectures (e.g., perovskite-silicon, perovskite-perovskite tandems).
