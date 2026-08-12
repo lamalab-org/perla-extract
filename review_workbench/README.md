@@ -115,6 +115,9 @@ without putting credentials in the repository:
 
 - `REVIEW_INTERNAL_ACCOUNTS`, a JSON object keyed by normalized email address;
   each value contains `name`, `role`, and a PBKDF2 `password_hash`
+- `REVIEW_INTERNAL_ACCOUNT_ADDITIONS`, an optional JSON object with the same
+  format that is merged over the base account list; use it to add accounts
+  without rotating the existing encrypted value
 - `REVIEW_SESSION_SECRET`, a random secret of at least 32 characters
 
 `review_workbench.auth.hash_password()` creates compatible salted hashes. When

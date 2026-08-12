@@ -140,3 +140,30 @@ def test_internal_authenticator_rejects_bad_password():
 
     with pytest.raises(AuthenticationError, match="incorrect"):
         auth.login("reviewer@example.org", "wrong")
+
+
+def test_internal_authenticator_merges_additive_accounts(monkeypatch):
+    monkeypatch.setenv(
+        "REVIEW_INTERNAL_ACCOUNT_ADDITIONS",
+        json.dumps(
+            {
+                "new@example.org": {
+                    "name": "New Reviewer",
+                    "role": "reviewer",
+                    "password_hash": hash_password("new password", iterations=1_000),
+                }
+            }
+        ),
+    )
+    base = json.dumps(
+        {
+            "existing@example.org": {
+                "password_hash": hash_password("existing", iterations=1_000)
+            }
+        }
+    )
+
+    auth = InternalAuthenticator(base, "s" * 32)
+
+    assert auth.login("existing@example.org", "existing")[1]["email"] == "existing@example.org"
+    assert auth.login("new@example.org", "new password")[1]["name"] == "New Reviewer"

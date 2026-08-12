@@ -437,6 +437,7 @@ function renderJson() {
   $("json-editor").value = data ? JSON.stringify(data, null, 2) : "";
   $("json-editor").readOnly = state.tab !== "truth";
   $("save-json").disabled = state.tab !== "truth";
+  $("download-ground-truth").hidden = state.tab !== "truth";
   $("save-json").textContent = state.pendingProposalEdit ? "Accept edited ground truth" : "Save ground truth";
   $("cell-summary").textContent = summarizeCells(data);
 }
@@ -855,6 +856,12 @@ $("select-no-changes").addEventListener("click", () => {
   renderRevision();
 });
 $("open-quantity-scanner").addEventListener("click", () => { state.tab = "gaps"; renderView(); });
+$("propose-schema-change").addEventListener("click", () => {
+  $("issue-type").value = "schema_limitation";
+  $("issue-description").focus();
+  $("issue-form").scrollIntoView({ behavior: "smooth", block: "start" });
+  $("issue-status").textContent = "Describe what the current schema cannot represent and the field or structure you propose. This will not edit ground truth.";
+});
 $("use-pdf-selection").addEventListener("click", () => {
   $("issue-source-page").value = state.pdfPage;
   $("issue-source-text").value = state.pdfQuote || window.getSelection()?.toString().trim() || state.pdfPageText;
@@ -952,6 +959,19 @@ $("save-json").addEventListener("click", async () => {
       state.paperData.ground_truth = parsed; state.truthDraft = null; status.textContent = "Ground truth saved"; await loadPaperData();
     }
   } catch (error) { status.textContent = `Not saved: ${error.message}`; }
+});
+
+$("download-ground-truth").addEventListener("click", () => {
+  const payload = state.truthDraft || state.paperData?.ground_truth;
+  if (!payload || !state.selected) return;
+  const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${state.selected}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+  $("json-status").textContent = `Downloaded corrected ground truth for ${state.selected.replace("--", "/")}`;
 });
 
 window.addEventListener("beforeunload", (event) => { if (state.evidenceDirty) event.preventDefault(); });

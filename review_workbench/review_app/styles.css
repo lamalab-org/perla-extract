@@ -55,7 +55,7 @@ textarea { resize: vertical; }
 .source-label { min-width: 185px; }.source-label select { max-width: 220px; }
 .cell-summary { margin: 9px 0 6px; min-height: 20px; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .json-editor { width: 100%; min-height: 460px; height: calc(100vh - 450px); resize: vertical; padding: 13px; border-radius: 8px; background: #17201d; color: #e6eee9; font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; tab-size: 2; }
-.editor-actions { margin-top: 7px; }.editor-actions button:disabled { opacity: .4; cursor: not-allowed; }
+.editor-actions { margin-top: 7px; }.editor-actions > div { display: flex; gap: 7px; }.editor-actions button:disabled { opacity: .4; cursor: not-allowed; }
 .review-panel { min-height: 0; }
 .review-controls { position: sticky; top: -17px; z-index: 3; display: flex; gap: 9px; padding: 9px 0; background: var(--panel); }
 .review-controls .grow { flex: 1; }.review-controls .grow input { width: 100%; }

@@ -160,6 +160,10 @@ def test_review_ui_previews_proposed_ground_truth_before_saving():
     assert 'id="reject-proposal"' in html
     assert 'id="defer-proposal"' in html
     assert 'id="use-pdf-selection"' in html
+    assert 'id="propose-schema-change"' in html
+    assert 'id="download-ground-truth"' in html
+    assert "Ground-truth correction or schema change?" in html
+    assert "Download corrected ground truth" in html
     assert "How to apply a proposal" in html
     assert "Accept and apply" in html
     assert "Reject — keep current truth" in html
@@ -169,6 +173,7 @@ def test_review_ui_previews_proposed_ground_truth_before_saving():
     assert "This paper has no applicable proposed change yet" in javascript
     assert "pendingProposalEdit" in javascript
     assert "edited_ground_truth" in javascript
+    assert 'link.download = `${state.selected}.json`' in javascript
     assert "/preview" in javascript
     assert "/decision" in javascript
     assert "atomic_group_key" in javascript

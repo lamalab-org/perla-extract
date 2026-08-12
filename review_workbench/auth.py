@@ -80,6 +80,16 @@ class InternalAuthenticator:
             raise ValueError("REVIEW_INTERNAL_ACCOUNTS is not valid JSON") from error
         if not isinstance(loaded, dict):
             raise ValueError("REVIEW_INTERNAL_ACCOUNTS must be a JSON object")
+        raw_additions = os.environ.get("REVIEW_INTERNAL_ACCOUNT_ADDITIONS", "")
+        try:
+            additions = json.loads(raw_additions) if raw_additions else {}
+        except json.JSONDecodeError as error:
+            raise ValueError(
+                "REVIEW_INTERNAL_ACCOUNT_ADDITIONS is not valid JSON"
+            ) from error
+        if not isinstance(additions, dict):
+            raise ValueError("REVIEW_INTERNAL_ACCOUNT_ADDITIONS must be a JSON object")
+        loaded = {**loaded, **additions}
         self.accounts = {
             str(email).strip().lower(): account
             for email, account in loaded.items()

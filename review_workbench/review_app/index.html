@@ -170,10 +170,11 @@
         <section id="issues-panel" class="review-panel" hidden>
           <div class="workflow-guide"><strong>How to apply a proposal</strong><span>1. Open a proposal marked “Ready for decision”.</span><span>2. Compare the current and proposed values and jump to the cited PDF evidence.</span><span>3. Accept it, reject it, or leave it for more investigation.</span></div>
           <div id="issue-summary" class="review-hint"></div>
-          <div class="proposal-toolbar"><button id="open-quantity-scanner" type="button">Open diagnostic quantity scanner</button><span>Use only when a strong proposal is not already available.</span></div>
+          <div class="proposal-toolbar"><button id="propose-schema-change" type="button">Propose schema change</button><button id="open-quantity-scanner" type="button">Open diagnostic quantity scanner</button><span>Schema changes are tracked separately from corrections that can be applied now.</span></div>
           <div id="issue-list" class="issue-list"></div>
           <form id="issue-form" class="issue-form">
             <h3>Add a reviewer proposal or unresolved finding</h3>
+            <div class="workflow-guide"><strong>Ground-truth correction or schema change?</strong><span>Use missing/wrong-value types when this paper’s JSON should change now.</span><span>Use “Schema limitation / uncertainty” when the shared extraction schema needs a new field or representation. This records a design proposal; it does not modify schema code or today’s ground truth.</span></div>
             <div class="field-grid">
               <label>Type <select id="issue-type"><option value="missing_cell">Missing cell / device</option><option value="missing_value">Missing value</option><option value="missing_layer">Missing layer</option><option value="missing_composition">Missing composition</option><option value="mixed_device">Values mixed across devices</option><option value="out_of_scope_tandem">Out-of-scope tandem device</option><option value="schema_limitation">Schema limitation / uncertainty</option><option value="wrong_value">Wrong value</option><option value="other">Other</option></select></label>
               <label>Cell <select id="issue-cell"><option value="">Paper-level / unknown</option></select></label>
@@ -223,10 +224,11 @@
         </section>
 
         <section id="json-panel" class="review-panel" hidden>
+          <div class="workflow-guide"><strong>Corrected version of this paper</strong><span>This JSON is the current saved ground truth after accepted proposals and manual corrections. Download it to export the selected paper; downloading does not change review state.</span></div>
           <textarea id="json-editor" class="json-editor" spellcheck="false" aria-label="Ground truth JSON"></textarea>
           <div class="action-row editor-actions">
             <span id="json-status">Ground truth is editable; model output is read-only.</span>
-            <button id="save-json">Save ground truth</button>
+            <div><button id="download-ground-truth" type="button" class="secondary-button">Download corrected ground truth</button><button id="save-json">Save ground truth</button></div>
           </div>
         </section>
       </section>
