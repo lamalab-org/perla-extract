@@ -155,7 +155,7 @@ def _create_text_completion(
     ]
 
     # Call with LiteLLM
-
+    resps = []
     supported_params = set()
     max_tokens = MAX_TOKENS
     filtered_params: dict[str, Any] = {}
@@ -219,6 +219,7 @@ def _create_text_completion(
             filtered_params.setdefault("reasoning_effort", "none")
         try:
             resp = completion(**filtered_params)
+            resps.append({'messages': messages, 'response': resp})
         except litellm.exceptions.BadRequestError as e:
             if (
                 'AnthropicException - {"type":"error","error":{"type":"invalid_request_error","message":"input length and `max_tokens` exceed context limit:'
@@ -240,7 +241,7 @@ def _create_text_completion(
             logger.error(f"Validation error: {e}. Attempting to correct the output.")
             if retry_count >= MAX_RETRIES:
                 logger.error(f"Max retries reached ({MAX_RETRIES}). Raising MaxRetriesExceededError.")
-                raise MaxRetriesExceededError(resp)
+                raise MaxRetriesExceededError(resps)
             retry_count += 1
             retry_prompt = f'\n\nThe previous attempt resulted in a validation error: {e}. Correct the output to match the expected schema.'
             messages.append({'role':'assistant','content':data})
@@ -252,7 +253,7 @@ def _create_text_completion(
             retry_prompt = f'\n\nThe previous attempt resulted in an error: {type(e).__name__}: {e} when accessing the extracted in the response.' 
             retry_count += 1
         messages.append({"role":"user","content": retry_prompt})
-    return extracted_data, resp
+    return extracted_data, resps
 
 
 def llm_as_judge(ground_truth, value_truth, value_extraction):

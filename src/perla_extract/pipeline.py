@@ -5,6 +5,7 @@ import json
 import glob
 import math
 import csv
+import pickle
 from collections import defaultdict
 import re
 from importlib.resources import files
@@ -13,7 +14,7 @@ import numpy as np
 from pydantic import ValidationError
 import pdf2doi
 
-from perla_extract.configuration import papersbot_runs_path, EXTRACTION_METHODS
+from perla_extract.configuration import papersbot_runs_path, EXTRACTION_METHODS, DEBUG_MODE
 from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
 from perla_extract.papersbot.utils import get_doi_summary
 from perla_extract.papersbot.papersbot import PapersbotResult
@@ -260,7 +261,7 @@ class ExtractionPipeline:
         pdf_text = self.preprocessor.pdf_to_text(filepath)
         if doi is None:
             doi = extract_doi_from_pdf(filepath)
-        results, completion_usage = llm_call.create_text_completion(
+        results, resps = llm_call.create_text_completion(
             self.model_name, pdf_text, api_key=api_key, api_base_url=api_base_url
         )
         results = PerovskiteSolarCells(**postprocess(results.model_dump()))
@@ -282,13 +283,16 @@ class ExtractionPipeline:
         results = ""
         try:
             session_id = f"{doi}-{self.model_name.replace('/', '_')}-{time.strftime('%Y%m%d-%H%M%S')}"
-            results, completion_usage = llm_call.create_text_completion(
+            results, resps = llm_call.create_text_completion(
                 self.model_name, pdf_text, extraction_method=self.extraction_method, additional_params=self.additional_params, session_id=session_id
             )
+            if DEBUG_MODE:
+                with open(f"{output_path.parent}/{output_path.stem}.resps.pkl", "wb") as debug_file:
+                    pickle.dump(resps, debug_file)
             parsed = PerovskiteSolarCells(**postprocess(results.model_dump()))
             to_json(parsed, output_path)
-            self.total_prompt_tokens += completion_usage.usage.prompt_tokens
-            self.total_completion_tokens += completion_usage.usage.completion_tokens
+            self.total_prompt_tokens += sum(resp['response'].usage.prompt_tokens for resp in resps)
+            self.total_completion_tokens += sum(resp['response'].usage.completion_tokens for resp in resps)
             logger.info(f"Extracted: {filepath.name}")    
             log_processing(doi, 'extracted', True)
             if self.nomad:

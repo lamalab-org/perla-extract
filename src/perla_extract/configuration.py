@@ -1,19 +1,23 @@
+import os
 from pint import UnitRegistry
 import re
 from platformdirs import user_data_dir
 from pathlib import Path
 from typing import Literal
 
+DEBUG_MODE = os.environ.get("DEBUG_MODE", "False").lower() == "true"
+
 MAX_RETRIES = 3
 MAX_TOKENS = 64000
 
 EXTRACTION_METHODS = Literal["response_format", "tool_call"]
+
+CLASSIFIER_MODEL = "openrouter/gpt-oss-120b"
+
 # Initialize the UnitRegistry
 ureg = UnitRegistry()
 
 ureg.define("sun = 1 kW/m^2")
-
-CLASSIFIER_MODEL = "openrouter/gpt-oss-120b"
 
 pint = {
     "default_units_by_type": {
