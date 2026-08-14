@@ -44,17 +44,13 @@ def get_doi_summary(doi: str) -> dict:
         summaries[source] = summary
         if "error" not in summary and summary.get("abstract", "") != "":
             break
-
-    metadata = {}
+    
+    metadata_fields = ["title", "abstract", "journal", "publisher"]
+    metadata = {key: "" for key in metadata_fields}
     for k in summaries:
-        abstract = summaries[k].get("abstract", "")
-        journal = summaries[k].get("journal", "")
-        publisher = summaries[k].get("publisher", "")
-        metadata["abstract"] = abstract if abstract else metadata.get("abstract", "")
-        metadata["journal"] = journal if journal else metadata.get("journal", "")
-        metadata["publisher"] = (
-            publisher if publisher else metadata.get("publisher", "")
-        )
+        for key in metadata_fields:
+            if summaries[k].get(key, ""):
+                metadata[key] = summaries[k][key]
     summaries["consolidated"] = metadata
     return summaries
 
@@ -303,7 +299,9 @@ def get_doi_summary_pubmed(doi):
 
 def get_doi(entry):
     try:
-        if "prism_doi" in entry:
+        if "doi" in entry:
+            doi = entry["doi"].replace("https://doi.org/", "").lower()
+        elif "prism_doi" in entry:
             doi = entry["prism_doi"]  # + '  direct'
         elif "dc_identifier" in entry:
             doi = entry["dc_identifier"]
@@ -369,7 +367,7 @@ def fetch_openalex_works_by_date(start_date: str, end_date: str, email: str = No
 
     all_results = []
 
-    logger.info("Fetching works from %s to %s...", start_date, end_date)
+    logger.info(f"Fetching works from {start_date} to {end_date}...")
 
     while True:
         response = requests.get(base_url, params=params, headers=headers)
@@ -478,11 +476,9 @@ def get_pdf_url_unpaywall(doi: str) -> tuple[bool, bool, dict[str, str]]:
             for key in keys_to_check:
                 url = data["best_oa_location"].get(key, None)
                 if url:
-                    break
-            return False, is_oa, {keys_to_check[key]: url}
-        else:
-            logger.error(f"Unpaywall:No PDF available for this DOI: {doi}.")
-            return False, is_oa, {"msg": f"No PDF available for this DOI: {doi}."}
+                    return False, is_oa, {keys_to_check[key]: url}
+        logger.error(f"Unpaywall:No PDF available for this DOI: {doi}.")
+        return False, is_oa, {"msg": f"No PDF available for this DOI: {doi}."}
 
     except Exception as e:
         logger.error(f"Error fetching data from Unpaywall: {e}")
@@ -507,11 +503,9 @@ def get_pdf_url_openalex(doi: str) -> tuple[bool, bool, dict[str, str]]:
             for key in keys_to_check:
                 url = data["best_oa_location"].get(key, None)
                 if url:
-                    break
-            return False, is_oa, {keys_to_check[key]: url}
-        else:
-            logger.error(f"Openalex: No PDF available for this DOI : {doi}")
-            return False, is_oa, {"msg": f"No PDF available for this DOI: {doi}."}
+                    return False, is_oa, {keys_to_check[key]: url}
+        logger.error(f"Openalex: No PDF available for this DOI : {doi}")
+        return False, is_oa, {"msg": f"No PDF available for this DOI: {doi}."}
     except Exception as e:
         logger.error(f"Error fetching data from Openalex: {e}")
         return True, False, {"msg": f"Error fetching data from Openalex: {e}"}
@@ -663,6 +657,9 @@ def filter_links(links):
 
 
 def get_links(url):
+    if url.startswith("https://pmc.ncbi.nlm.nih.gov/articles/"):
+        pdf_url = f"{url}pdf/" if not url.endswith("/") else f"{url}/pdf/"
+        return pdf_url, [pdf_url]
     if playwright_installed:
         try:
             links = asyncio.run(playwright_get_pdf_links(url))

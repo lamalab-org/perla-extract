@@ -113,7 +113,7 @@ def check_pdfs():
                 filtered_link, links = get_links(pdf_url["landing_page_url"])
                 summaries[sample["id"]]["links"] = [filtered_link, links]
                 pdf_url["pdf_url"] = filtered_link if filtered_link else ""
-                url_type = "filtered_landing_page"
+                url_type = "filtered_landing_page" if filtered_link else "landing_page_url"
             post_proc_df.at[i, "pdf_available"] = (
                 bool(pdf_url.get("pdf_url"))
             )
@@ -123,7 +123,7 @@ def check_pdfs():
                 "tries": 0,
             }
             found_urls[doi].update(pdf_url)
-            print(doi, pdf_url)
+            logger.info(f"Found PDF URL for {doi}: {pdf_url}")
             msg = pdf_url["pdf_url"]
         else:
             url_type = "none" if not error else "error"
@@ -184,6 +184,14 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> list[Path]:
     Returns:
         List of Path objects for downloaded files
     """
+    def print_stats(stats):
+        end_time = time.strftime("%Y-%m-%d %H:%M:%S %Z")
+        with open(f"{papersbot_runs_path}/stats.txt", "a") as f:
+            f.write(f"Downloading PDFs Run: {end_time}\n")
+            f.write(f"Number of PDFs downloaded: {stats['downloaded']}\n")
+            f.write(f"Total number of papers processed: {stats['total']}\n\n\n")
+    
+    stats = {"downloaded": 0, "total": 0}
     download_path = Path(download_dir)
     download_path.mkdir(parents=True, exist_ok=True)
 
@@ -239,6 +247,7 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> list[Path]:
             except Exception as e:
                 logger.error(f"Error downloading {doi}: {e}")
 
+        stats["total"] += 1
         found_urls[doi]["tries"] += 1
         if item["tries"] >= 3:
             logger.warning(f"Max tries reached for {doi}.")
@@ -249,5 +258,6 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> list[Path]:
             json.dump(found_urls, f, indent=4)
     except Exception as e:
         logger.error(f"Error writing found_pdf_urls.json: {e}")
-
+    stats["downloaded"] = len(downloaded_files)
+    print_stats(stats)
     return downloaded_files

@@ -40,10 +40,10 @@ def entry_matches(entry, regex):
         return False, 0
     title_match = False
     summary_match = False
-    if regex.search(entry.title):
+    if regex.search(entry["title"]):
         title_match = True
     if "summary" in entry:
-        if regex.search(entry.summary):
+        if regex.search(entry["summary"]):
             summary_match = True
         elif not title_match:
             return False, 2
@@ -142,7 +142,7 @@ class PapersBot:
     def check_entry(self, entry):
         any_match = 0
         entry_stats = {
-            "id": entry.get("id", ""),
+            "id": entry.get("id", "") or entry.get("doi", ""),
             "parsed_time": time.time(),
             "doi": get_doi(entry),
         }
@@ -239,6 +239,7 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
 
         # Run the bot to process feeds
         bot.run()
+        bot.run_openlex_feed()
         bot.print_stats(update_current=False)
 
         # Process the matched papers
@@ -248,14 +249,13 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
         check_matches()  # Check matches after getting abstracts
         pdf_urls_found = check_pdfs()  # Check for Open access PDF URLs
 
+        # Download PDFs and get results
+        downloaded_files = download_pdfs(download_dir=download_dir)
         with open(f"{papersbot_runs_path}/stats.txt", "a+") as f:
             print(
                 "************************************************************\n************************************************************\n",
                 file=f,
             )
-
-        # Download PDFs and get results
-        downloaded_files = download_pdfs(download_dir=download_dir)
         pdfs_downloaded = len([f for f in downloaded_files if f.exists()])
         return PapersbotResult(
             success=True,

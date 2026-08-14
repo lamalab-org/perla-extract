@@ -12,7 +12,6 @@ import time
 import numpy as np
 from pydantic import ValidationError
 import pdf2doi
-from langfuse import propagate_attributes
 
 from perla_extract.configuration import papersbot_runs_path, EXTRACTION_METHODS, DEFAULT_LLM_MODEL
 from perla_extract.pydantic_model_reduced import PerovskiteSolarCells
@@ -191,7 +190,7 @@ def is_doi_good_to_go(doi, pdf_text, metadata=None) -> bool:
     if classification_result is None:
         return False
     elif not classification_result.label:
-        print(f"Paper classified as not relevant: {classification_result.reason}")
+        logger.info(f"Paper {doi} classified as not relevant: {classification_result.reason}")
         return False
     
     return True
