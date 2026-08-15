@@ -66,7 +66,7 @@ class Fact(StrictModel):
 
 
 class MaterialConstituent(StrictModel):
-    """Represent a named constituent, precursor, additive, or dopant."""
+    """Keep each reported chemical separate so composition remains queryable."""
 
     name: ShortText
     role: Annotated[str | None, Field(max_length=300)]
@@ -75,7 +75,7 @@ class MaterialConstituent(StrictModel):
 
 
 class Layer(StrictModel):
-    """Represent one physical layer in the reported stack order."""
+    """Preserve one physical layer's stack position, role, and source wording."""
 
     layer_id: Identifier
     sequence: Annotated[int | None, Field(ge=1)]
@@ -99,7 +99,11 @@ class Layer(StrictModel):
 
 
 class ProcessingStep(StrictModel):
-    """Represent a fabrication operation using generic reported conditions."""
+    """Store one fabrication operation without prescribing property-specific fields.
+
+    Generic ``Fact`` conditions let the schema retain unfamiliar treatments and
+    process parameters without adding extraction code for every new property.
+    """
 
     step_id: Identifier
     sequence: Annotated[int | None, Field(ge=1)]
@@ -111,7 +115,12 @@ class ProcessingStep(StrictModel):
 
 
 class DeviceFamily(StrictModel):
-    """Collect composition and processing shared by one or more devices."""
+    """Collect the composition and fabrication shared by a reported device variant.
+
+    Performance observations link to individual devices rather than directly to this
+    record, so family-level structure is not confused with a champion or population
+    result.
+    """
 
     family_id: Identifier
     label: ShortText
@@ -140,7 +149,11 @@ class IndividualDevice(StrictModel):
 
 
 class PerformanceObservation(StrictModel):
-    """Store one protocol-specific measurement of one individual device."""
+    """Keep one protocol-specific measurement linked to one individual device.
+
+    Reverse and forward scans, stabilized output, certification, and EQE-derived
+    current remain separate observations even when they concern the same cell.
+    """
 
     observation_id: Identifier
     device_id: Identifier
@@ -158,7 +171,11 @@ class PerformanceObservation(StrictModel):
 
 
 class PopulationStatistic(StrictModel):
-    """Keep a population result separate from individual device measurements."""
+    """Prevent a reported aggregate from being mistaken for an individual device.
+
+    Sample size and statistic type preserve whether values are means, medians, ranges,
+    distributions, or another population-level summary.
+    """
 
     population_id: Identifier
     family_id: Identifier | None
@@ -180,7 +197,7 @@ class PopulationStatistic(StrictModel):
 
 
 class StabilityCheckpoint(StrictModel):
-    """Store one point or lifetime metric within a stability experiment."""
+    """Preserve one reported outcome and its time within an ordered stability test."""
 
     checkpoint_id: Identifier
     time: Fact | None
@@ -189,7 +206,11 @@ class StabilityCheckpoint(StrictModel):
 
 
 class StabilityTest(StrictModel):
-    """Keep a stability experiment distinct from JV measurements."""
+    """Keep aging conditions and checkpoints distinct from performance observations.
+
+    ``link_status`` makes unsupported device identity explicit: a test may link to an
+    individual device, only to a family, or remain a separate stability specimen.
+    """
 
     test_id: Identifier
     family_id: Identifier | None
@@ -238,7 +259,13 @@ class EquivalenceGroup(StrictModel):
 
 
 class StudyExtraction(StrictModel):
-    """Hold all extracted candidates from one paper and its supplement."""
+    """Represent all supported study entities without flattening reporting levels.
+
+    The model deliberately keeps families, individual devices, protocol-specific
+    observations, population statistics, and stability tests in separate collections.
+    Windowed extraction may add equivalence links, but candidates remain intact so
+    reconciliation cannot silently discard conflicting evidence.
+    """
 
     paper: Paper
     device_families: list[DeviceFamily]

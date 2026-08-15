@@ -130,7 +130,7 @@ def _evidence(blocks: list[EvidenceBlock]) -> list[dict[str, object]]:
 
 
 def _direct_prompt(blocks: list[EvidenceBlock]) -> str:
-    """Build the one-call prompt from the complete study evidence."""
+    """Give one call global evidence context when the complete study fits."""
 
     return (
         EXTRACTION_PROMPT
@@ -140,7 +140,7 @@ def _direct_prompt(blocks: list[EvidenceBlock]) -> str:
 
 
 def _window_prompt(primary: list[EvidenceBlock], context: list[EvidenceBlock]) -> str:
-    """Build a window prompt that distinguishes extractable evidence from context."""
+    """Tell the model not to emit candidates supported only by repeated context."""
 
     return (
         EXTRACTION_PROMPT
@@ -154,7 +154,7 @@ def _window_prompt(primary: list[EvidenceBlock], context: list[EvidenceBlock]) -
 
 
 def _reconciliation_prompt(candidates: StudyExtraction) -> str:
-    """Build the identity-only prompt from the lossless window candidate union."""
+    """Ask only for identity links so reconciliation cannot rewrite candidates."""
 
     return (
         RECONCILIATION_PROMPT
@@ -240,7 +240,12 @@ def _extract(
     mode: str,
     plan: WindowPlan | None,
 ) -> tuple[StudyExtraction, list[str]]:
-    """Extract one complete study directly or through generic evidence windows."""
+    """Run the selected call plan while retaining every successful partial result.
+
+    Window failures are accumulated rather than invalidating successful windows.
+    Reconciliation adds audited equivalence groups to the lossless candidate union; it
+    never chooses a winner or rewrites scientific fields.
+    """
 
     errors: list[str] = []
     if mode == "single":
@@ -335,7 +340,13 @@ def _extract(
 
 
 def run_extraction(config: ExtractionConfig) -> dict[str, object]:
-    """Run parsing, high-recall extraction, grounding checks, and PERLA export."""
+    """Write a complete, inspectable extraction run and return its report.
+
+    Parsing and configuration artifacts are written before model calls. Model failure
+    still yields a valid ``extraction.json`` and report; local grounding annotates
+    rather than filters the rich result; reduced conversion is an independent final
+    step whose losses are recorded separately.
+    """
 
     started = time.monotonic()
     if config.mode not in {"auto", "single", "windowed"}:

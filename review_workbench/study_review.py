@@ -1,7 +1,7 @@
 """Versioned human review of rich, evidence-backed study extractions.
 
-The model output is an immutable seed. Human edits are recorded as guarded JSON
-pointer operations and replayed into a validated ``StudyExtraction``. Keeping the
+The model output is an immutable seed. Human edits are guarded JSON-pointer operations
+that update a validated ``StudyExtraction`` and append an audit event. Keeping the
 seed, event log, and compiled truth separate makes the benchmark reproducible while
 remaining pleasant to edit in the browser.
 """
@@ -219,7 +219,12 @@ def _record_catalog(truth: dict[str, Any]) -> dict[str, str]:
 
 
 class StudyReviewStore:
-    """Persist immutable seeds, validated truth, and auditable human decisions."""
+    """Keep model output, current truth, and human decisions independently auditable.
+
+    The seed is immutable, mutations compile into a Pydantic-valid truth document, and
+    every accepted action appends an event. Revision checks prevent stale browser tabs
+    from overwriting newer work; record digests invalidate decisions after edits.
+    """
 
     def __init__(self, root: Path):
         self.root = root.resolve()
@@ -280,6 +285,12 @@ class StudyReviewStore:
 
     @staticmethod
     def summary(truth: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any]:
+        """Derive current review state instead of trusting mutable status flags.
+
+        Record decisions count only while their stored digest matches current content,
+        which makes a scientific edit automatically reopen that record for review.
+        """
+
         stages: dict[str, list[str]] = {}
         audits: dict[str, dict[str, Any]] = {}
         decisions: dict[str, dict[str, str]] = {}
@@ -320,7 +331,12 @@ class StudyReviewStore:
         manifest: dict[str, Any] | None,
         reviewer_id: str,
     ) -> dict[str, Any]:
-        """Create a review record from a model extraction without mutating the seed."""
+        """Create immutable seed, editable truth, and provenance as separate files.
+
+        Import validates the complete rich schema before anything is persisted and
+        refuses to replace an existing paper, keeping benchmark initialization an
+        explicit one-time event.
+        """
 
         self.validate_identity(split, paper_id)
         truth_path = self.truth_path(split, paper_id)
@@ -351,12 +367,16 @@ class StudyReviewStore:
         return self.load_bundle(split, paper_id)
 
     def _validate_revision(self, split: str, paper_id: str, base_revision: int) -> list[dict[str, Any]]:
+        """Reject stale writes so concurrent reviewers cannot silently overwrite work."""
+
         events = self.events(split, paper_id)
         if base_revision != len(events):
             raise ValueError(f"stale revision {base_revision}; current revision is {len(events)}")
         return events
 
     def _validate_citations(self, split: str, paper_id: str, citations: list[Citation]) -> None:
+        """Require human evidence quotes to occur in the imported source blocks."""
+
         if not citations:
             return
         path = self.document_path(split, paper_id)
@@ -389,6 +409,13 @@ class StudyReviewStore:
                 raise ValueError(f"quote is not present in evidence block {citation.block_id}")
 
     def mutate(self, split: str, paper_id: str, request: MutationRequest, reviewer_id: str) -> dict[str, Any]:
+        """Apply one evidence-guarded edit and revalidate the entire rich result.
+
+        The event stores before and after values, while the compiled truth remains easy
+        for downstream evaluation code to consume. Invalid intermediate states never
+        reach disk.
+        """
+
         events = self._validate_revision(split, paper_id, request.base_revision)
         self._validate_citations(split, paper_id, request.evidence)
         current = self.load_truth(split, paper_id)
@@ -414,7 +441,11 @@ class StudyReviewStore:
         request: RecordDecisionRequest,
         reviewer_id: str,
     ) -> dict[str, Any]:
-        """Attach a reviewer decision to the current content of one stable record."""
+        """Bind a decision to a record's current digest rather than only its stable ID.
+
+        Stable IDs locate records, but the digest ensures a later correction makes the
+        previous verification decision disappear from the derived summary.
+        """
 
         events = self._validate_revision(split, paper_id, request.base_revision)
         truth = self.load_truth(split, paper_id)
@@ -449,6 +480,8 @@ class StudyReviewStore:
         return self.load_bundle(split, paper_id)
 
     def inventory_audit(self, split: str, paper_id: str, request: InventoryAuditRequest, reviewer_id: str) -> dict[str, Any]:
+        """Persist the independent device census performed before candidates are shown."""
+
         events = self._validate_revision(split, paper_id, request.base_revision)
         event = ReviewEvent(
             event_id=str(uuid.uuid4()), revision=len(events) + 1,
@@ -459,6 +492,13 @@ class StudyReviewStore:
         return self.load_bundle(split, paper_id)
 
     def complete_stage(self, split: str, paper_id: str, request: StageRequest, reviewer_id: str) -> dict[str, Any]:
+        """Advance review only after the evidence-based prerequisites are satisfied.
+
+        Inventory requires a blind audit, field review requires a current decision for
+        every record, and later stages require the preceding stage. These constraints
+        keep interface clicks from bypassing the ground-truth protocol.
+        """
+
         events = self._validate_revision(split, paper_id, request.base_revision)
         reviewer_events = [
             event for event in events if event["reviewer_id"] == reviewer_id
@@ -507,6 +547,8 @@ class StudyReviewStore:
         return self.load_bundle(split, paper_id)
 
     def list_papers(self, split: str) -> list[dict[str, Any]]:
+        """Return summaries derived from truth and events rather than cached counters."""
+
         self.validate_identity(split, "10.0000--placeholder")
         papers = []
         for path in sorted((self.root / split).glob("*.json")):

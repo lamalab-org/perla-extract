@@ -55,6 +55,11 @@ mkdocs build --strict
 
 Use `mkdocs serve` while editing the site locally.
 
+Docstrings are expected at public APIs, scientific model boundaries, persistence
+transitions, and non-obvious algorithms. Explain invariants, side effects, or why a
+choice exists; do not add a docstring to obvious private plumbing merely to restate its
+name. Field descriptions remain the preferred place for leaf-schema constraints.
+
 We also provide pre-commit hooks that format the code according to standard
 conventions.
 

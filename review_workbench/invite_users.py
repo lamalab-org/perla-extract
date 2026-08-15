@@ -19,6 +19,8 @@ def dotenv_value(path: Path, name: str) -> str:
 
 
 def invite(secret_key: str, email: str, role: str) -> str:
+    """Create a Clerk invitation while treating an existing identity as idempotent."""
+
     body = json.dumps(
         {
             "email_address": email,

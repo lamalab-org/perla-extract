@@ -34,7 +34,11 @@ from review_workbench.study_review import (  # noqa: E402
 
 
 class ReviewApplication:
-    """Expose review storage and source PDFs through a small application boundary."""
+    """Keep HTTP concerns outside the review-state and scientific-validation logic.
+
+    Both the local server and Vercel adapter use this boundary, so request payloads,
+    PDF handling, and UI conveniences cannot create a second review implementation.
+    """
 
     def __init__(self, pdf_dir: Path, ground_truth_dir: Path):
         self.pdf_dir = pdf_dir.resolve()
@@ -129,7 +133,12 @@ class ReviewApplication:
         configuration_bytes: bytes = b"",
         reviewer_id: str,
     ) -> dict[str, Any]:
-        """Seed one review from extractor artifacts and its source documents."""
+        """Validate an uploaded artifact set before creating a review workspace.
+
+        The rich extraction is validated by ``StudyReviewStore``; source PDFs,
+        evidence blocks, and run configuration remain separate so reviewers can audit
+        both scientific claims and the extraction conditions that produced them.
+        """
 
         if not pdf_bytes.startswith(b"%PDF"):
             raise ValueError("main paper is not a PDF")
@@ -166,7 +175,7 @@ class ReviewApplication:
         )
 
     def decide_record(self, split: str, paper_id: str, payload: object, reviewer_id: str) -> dict[str, Any]:
-        """Store one review outcome for the current version of a rich record."""
+        """Validate an HTTP decision payload before invoking digest-bound review logic."""
 
         return self._with_sources(
             self.store.decide_record(
@@ -185,6 +194,8 @@ class ReviewApplication:
         )
 
     def evidence_blocks(self, split: str, paper_id: str, query: str = "") -> list[dict[str, Any]]:
+        """Return a bounded source-block search for evidence selection in the UI."""
+
         path = self.store.document_path(split, paper_id)
         if not path.exists():
             return []

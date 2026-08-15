@@ -59,7 +59,12 @@ def _verify_password(password: str, encoded: str) -> bool:
 
 
 class InternalAuthenticator:
-    """Authenticate a small fixed set of environment-configured accounts."""
+    """Authenticate a small deployment without adding an external identity service.
+
+    Account configuration stays server-side, passwords are stored only as salted
+    PBKDF2 hashes, and signed sessions are accepted only while the account remains in
+    the current allowlist.
+    """
 
     def __init__(
         self,
@@ -123,6 +128,8 @@ class InternalAuthenticator:
         }
 
     def login(self, email: str, password: str) -> tuple[str, dict[str, str]]:
+        """Issue a bounded session only after hash verification and role lookup."""
+
         if not self.configured:
             raise AuthenticationError("Authentication is not configured", 503)
         normalized = email.strip().lower()
@@ -140,6 +147,8 @@ class InternalAuthenticator:
         return token, user
 
     def authenticate(self, headers) -> dict[str, str]:
+        """Recheck session identity against the live account list on every request."""
+
         if not self.configured:
             raise AuthenticationError("Authentication is not configured", 503)
         token = self._token(headers)
@@ -172,7 +181,11 @@ def _emails(value: str) -> set[str]:
 
 
 class ClerkAuthenticator:
-    """Verify Clerk sessions and enforce the configured reviewer allowlist."""
+    """Layer repository-controlled authorization on top of Clerk authentication.
+
+    A valid Clerk identity is insufficient by itself: the primary email must also be
+    present in the reviewer or administrator allowlist configured for this deployment.
+    """
 
     def __init__(
         self,
@@ -241,6 +254,8 @@ class ClerkAuthenticator:
             return json.load(response)
 
     def authenticate(self, headers) -> dict[str, str]:
+        """Verify Clerk's signature and issuer before applying the local allowlist."""
+
         if not self.configured:
             raise AuthenticationError("Authentication is not configured", 503)
         token = self._token(headers)

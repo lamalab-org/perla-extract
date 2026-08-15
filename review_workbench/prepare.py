@@ -21,6 +21,12 @@ def copy_file(relative: str, output: Path, target_relative: str | None = None) -
 
 
 def prepare(output: Path) -> Path:
+    """Build an isolated deploy bundle without copying papers or review data.
+
+    Existing Vercel link metadata is preserved across rebuilds, while unsafe targets
+    such as the repository or its Git metadata are rejected before replacement.
+    """
+
     output = output.resolve()
     git_dir = (REPO_ROOT / ".git").resolve()
     if output == REPO_ROOT or output == git_dir or git_dir in output.parents:
@@ -66,7 +72,7 @@ def prepare(output: Path) -> Path:
     show_default=True,
 )
 def main(output: Path) -> None:
-    """Build the minimal Vercel deployment directory."""
+    """Prepare the minimal, data-free Vercel deployment bundle."""
 
     click.echo(prepare(output))
 

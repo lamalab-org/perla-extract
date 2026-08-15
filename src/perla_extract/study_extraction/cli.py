@@ -61,7 +61,13 @@ def extract_study(
     dry_run: bool = False,
     env_file: str | Path | None = None,
 ) -> dict[str, object]:
-    """Build an extraction configuration and run it from Python or the CLI."""
+    """Run the artifact-producing extraction workflow from Python.
+
+    This is the programmatic counterpart of ``perla-extract``: it writes the rich
+    extraction, validation, provenance, report, and compatibility artifacts to
+    ``output_dir`` and returns the final report. A live run requires an OpenRouter key;
+    ``dry_run`` still parses and caches documents but makes no model request.
+    """
 
     _load_env(Path(env_file) if env_file else Path(".env.local"))
     config = ExtractionConfig(

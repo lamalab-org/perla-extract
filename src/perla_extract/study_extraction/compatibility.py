@@ -47,7 +47,11 @@ class RecordMapping(BaseModel):
 
 
 class ReducedExport(BaseModel):
-    """Bundle reduced cells with provenance and unavoidable conversion losses."""
+    """Pair reduced rows with traceable mappings and unavoidable information loss.
+
+    Consumers should inspect ``issues`` rather than treating a schema-valid reduced
+    row as proof that every rich field was represented faithfully.
+    """
 
     model_config = ConfigDict(extra="forbid")
     cells: PerovskiteSolarCells
@@ -88,8 +92,6 @@ def _key(value: str) -> str:
 def _issue(
     issues: list[ConversionIssue], code: str, kind: str, source_id: str, detail: str
 ) -> None:
-    """Append a consistently shaped conversion issue."""
-
     issues.append(
         ConversionIssue(code=code, source_kind=kind, source_id=source_id, detail=detail)
     )
@@ -108,7 +110,7 @@ def _fact_payload(fact: Fact) -> dict:
 
 
 def _metric_field(fact: Fact) -> str | None:
-    """Return the reduced metric field for an explicitly supported fact name."""
+    """Apply legacy metric aliases only at export, never during extraction."""
 
     name = _key(fact.name)
     return next(
@@ -182,7 +184,7 @@ def _metrics(
 
 
 def _processing(step: ProcessingStep) -> dict:
-    """Keep generic processing conditions in the reduced extension dictionary."""
+    """Preserve arbitrary processing facts instead of forcing a lossy projection."""
 
     return {
         "step_name": step.operation,
@@ -298,7 +300,13 @@ def _cell(fields: dict, note: dict) -> PerovskiteSolarCell:
 
 
 def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
-    """Export every rich record type to a separate reduced cell with a loss report."""
+    """Project rich records without collapsing scientifically distinct results.
+
+    Every observation, population statistic, and stability test becomes a separate
+    reduced row. Values that cannot be represented faithfully stay in structured
+    ``additional_notes`` and produce an issue; equivalence groups are reported but
+    never used to merge candidates heuristically.
+    """
 
     issues: list[ConversionIssue] = []
     for group in study.equivalence_groups:
@@ -560,6 +568,10 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
 
 
 def to_reduced(study: StudyExtraction) -> PerovskiteSolarCells:
-    """Return the deterministic reduced export when a report is not required."""
+    """Return reduced rows while deliberately discarding the conversion report.
+
+    Prefer :func:`to_reduced_with_report` for scientific pipelines, where explicit
+    mappings and losses are normally part of the provenance record.
+    """
 
     return to_reduced_with_report(study).cells

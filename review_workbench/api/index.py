@@ -62,7 +62,12 @@ class BlobStore:
 
 
 class VercelReviewApplication(ReviewApplication):
-    """Mirror mutable JSON locally and synchronize after every accepted decision."""
+    """Adapt the filesystem-oriented review core to Vercel's ephemeral runtime.
+
+    Each instance hydrates an isolated temporary workspace from one private Blob state
+    object. Accepted state transitions are serialized under a lock and uploaded
+    immediately; PDFs remain separate blobs and are downloaded lazily.
+    """
 
     state_pathname = "workbench/study-review-state.json"
     pdf_prefix = "papers/"
@@ -79,6 +84,8 @@ class VercelReviewApplication(ReviewApplication):
         self._hydrate()
 
     def _hydrate(self) -> None:
+        """Rebuild local state while rejecting paths outside the review directory."""
+
         if not self.blob.configured:
             return
         state_blob = self.blob.find(self.state_pathname)
@@ -101,6 +108,8 @@ class VercelReviewApplication(ReviewApplication):
             self.remote_pdfs[(paper_id, source)] = blob
 
     def _sync(self) -> None:
+        """Upload one coherent JSON snapshot after an accepted state transition."""
+
         if not self.blob.configured:
             return
         with self._write_lock:
@@ -112,6 +121,8 @@ class VercelReviewApplication(ReviewApplication):
             self.blob.put(self.state_pathname, body, "application/json")
 
     def ensure_pdf(self, paper_id: str, source: str) -> Path:
+        """Download a private source PDF lazily into this runtime's workspace."""
+
         path = super().pdf_path(paper_id, source)
         if path.exists() and path.stat().st_size:
             return path
@@ -185,7 +196,11 @@ BaseHandler = make_handler(review_application, authenticator)
 
 
 class handler(BaseHandler):
-    """Vercel Python runtime handler."""
+    """Hydrate source PDFs before delegating requests to the shared HTTP handler.
+
+    Only routes that read PDFs trigger the lazy download; all review behavior remains
+    in ``ReviewApplication`` and its generated base handler.
+    """
 
     def do_GET(self):  # noqa: N802
         parsed = urlparse(self.path)

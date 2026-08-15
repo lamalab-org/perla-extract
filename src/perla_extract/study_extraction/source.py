@@ -144,7 +144,11 @@ def _overlap_fraction(first: list[float], second: list[float]) -> float:
 
 
 def _pymupdf_candidates(path: Path) -> list[dict[str, Any]]:
-    """Read native text and tables in geometric reading order."""
+    """Recover native text and tables without emitting table contents twice.
+
+    Detected table rectangles suppress overlapping text blocks; all remaining
+    candidates retain geometry so later ordering and evidence locations stay stable.
+    """
 
     candidates: list[dict[str, Any]] = []
     with pymupdf.open(path) as document:
@@ -278,7 +282,7 @@ def _classify_headings(candidates: list[dict[str, Any]]) -> None:
 def _ordered_blocks(
     candidates: list[dict[str, Any]], source: str, *, sort_geometry: bool = True
 ) -> list[EvidenceBlock]:
-    """Attach stable identifiers and section paths to parser candidates."""
+    """Turn backend candidates into stable evidence with inherited section paths."""
 
     _classify_headings(candidates)
     if sort_geometry:
@@ -369,7 +373,11 @@ def _native_typography_blocks(
 
 
 def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
-    """Convert Docling's document model into the common evidence blocks."""
+    """Adapt Docling structure without leaking its object model downstream.
+
+    Native typography blocks are added only as compact supporting evidence for
+    subscripts and superscripts that a layout conversion may normalize away.
+    """
 
     try:
         from docling.document_converter import DocumentConverter
@@ -454,7 +462,12 @@ def parse_pdf(
     refresh_cache: bool = False,
     heartbeat_seconds: float = 20,
 ) -> tuple[list[EvidenceBlock], dict[str, object]]:
-    """Parse one PDF with a content-addressed cache and explicit fallback."""
+    """Parse one PDF reproducibly, falling back only when ``parser='auto'``.
+
+    Cache identity includes source content, backend, dependency version, and parser
+    code version. An explicitly requested backend fails visibly instead of silently
+    changing the evidence representation.
+    """
 
     if parser not in available_parsers():
         raise ValueError(

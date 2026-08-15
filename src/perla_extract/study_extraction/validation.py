@@ -76,7 +76,12 @@ def _assembled_from_quotes(raw_value: object, references: list[dict]) -> bool:
 def validate_study(
     extraction: StudyExtraction, blocks: list[EvidenceBlock]
 ) -> dict[str, object]:
-    """Check evidence quotes, fact values, IDs, and links while preserving output."""
+    """Annotate textual grounding and relationship failures without deleting output.
+
+    These deterministic checks prove that quotes and raw fact values occur in supplied
+    blocks and that identifiers resolve. They do not prove semantic correctness or
+    recall, so the complete extraction remains available for human review.
+    """
 
     block_by_id = {block.block_id: block for block in blocks}
     issues: list[dict[str, str]] = []

@@ -71,7 +71,8 @@ class ModelClient:
     LiteLLM translates the provider-prefixed model name and normalizes transport
     errors. PERLA deliberately retains the policies that affect reproducibility:
     complete-request hashing, Pydantic validation before cache admission, preserved
-    failure artifacts, and one bounded application-level retry.
+    failure artifacts, and one bounded application-level retry. Failed responses stay
+    beside the run artifacts so provider errors cannot become silent data loss.
     """
 
     def __init__(
@@ -200,7 +201,12 @@ class ModelClient:
         max_output_tokens: int,
         reasoning_effort: str | None,
     ) -> ResponseModel:
-        """Return only locally Pydantic-validated cached or live output."""
+        """Return a schema-valid response from cache or a bounded live request.
+
+        Cache entries are validated again on read. Invalid JSON, schema failures, and
+        transport errors are written under ``requests/`` before ``ModelCallError`` is
+        raised, so downstream code never receives an unvalidated partial object.
+        """
 
         schema = _strict_schema(response_model)
         body = self._request(
