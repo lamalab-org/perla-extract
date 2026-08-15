@@ -46,6 +46,7 @@ def test_reduced_export_does_not_mix_champion_average_and_stability():
                 evidence=EVIDENCE,
             )
         ],
+        absorber_formula=None,
         absorber_properties=[],
         absorber_constituents=[],
         processing_steps=[],
