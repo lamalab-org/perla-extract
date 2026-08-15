@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
@@ -74,7 +74,7 @@ class PaperRecord(BaseModel):
     downloaded_file: str | None = None
     error: str | None = None
     updated_at: str = Field(
-        default_factory=lambda: datetime.now(UTC).isoformat(timespec="seconds")
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(timespec="seconds")
     )
 
 

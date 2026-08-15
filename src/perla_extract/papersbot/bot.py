@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from html import unescape
 from importlib.resources import files
 from pathlib import Path
@@ -328,7 +328,7 @@ def run_papersbot(
                 record.status = "error"
                 record.error = str(exc)
                 logger.warning("Candidate {} failed: {}", record.doi, exc)
-            record.updated_at = datetime.now(UTC).isoformat(timespec="seconds")
+            record.updated_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
             state.papers[record.identifier] = record
             save_state(state_path, state)
 
