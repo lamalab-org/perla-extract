@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PERLA study ground truth</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <div><span class="eyebrow">PERLA</span><h1>Study ground-truth review</h1></div>
+    <div class="header-actions">
+      <label>Dataset <select id="split"><option>calibration</option><option>dev</option><option>test</option></select></label>
+      <button id="open-import">Import extraction</button>
+      <span id="reviewer" class="pill">Loading reviewer…</span>
+    </div>
+  </header>
+
+  <main>
+    <aside class="paper-rail">
+      <div class="rail-heading"><h2>Papers</h2><span id="paper-count"></span></div>
+      <input id="paper-filter" type="search" placeholder="Filter papers…" />
+      <div id="paper-list" class="paper-list"></div>
+    </aside>
+
+    <section id="empty-state" class="empty-state">
+      <h2>Choose a paper</h2>
+      <p>Import the best current extraction, then establish a device census before reviewing its candidates.</p>
+    </section>
+
+    <section id="workspace" hidden>
+      <div class="study-heading">
+        <div><span id="paper-split" class="eyebrow"></span><h2 id="paper-title"></h2><p id="paper-doi"></p></div>
+        <div><span id="revision" class="pill"></span><button id="download-truth">Download ground truth</button></div>
+      </div>
+
+      <div class="workspace-grid">
+        <section class="pdf-panel">
+          <div class="panel-toolbar">
+            <select id="pdf-source"><option value="main">Main paper</option><option value="supplement">Supplement</option></select>
+            <button id="previous-page" aria-label="Previous page">←</button>
+            <label>Page <input id="page-number" type="number" min="1" value="1" /></label>
+            <span id="page-count"></span>
+            <button id="next-page" aria-label="Next page">→</button>
+          </div>
+          <div id="pdf-stage"><img id="pdf-page" alt="Rendered PDF page" /></div>
+          <details class="source-text"><summary>Selectable page text</summary><pre id="pdf-text"></pre></details>
+        </section>
+
+        <section class="review-panel">
+          <nav class="tabs">
+            <button data-tab="inventory" class="active">1 · Inventory</button>
+            <button data-tab="records">2 · Records</button>
+            <button data-tab="completeness">3 · Completeness</button>
+            <button data-tab="history">History</button>
+          </nav>
+
+          <div id="inventory-tab" class="tab-panel">
+            <div id="blind-audit">
+              <h3>Blind device census</h3>
+              <p class="callout">Inspect the paper and SI before revealing the model candidates. This protects recall estimates from model anchoring.</p>
+              <div class="check-row"><label><input id="searched-main" type="checkbox" checked /> Main paper searched</label><label><input id="searched-supplement" type="checkbox" /> SI searched</label></div>
+              <div id="inventory-counts" class="count-grid"></div>
+              <label>Missing, ambiguous, or difficult records<textarea id="inventory-notes" rows="4" placeholder="Describe devices or measurements you expect to reconcile…"></textarea></label>
+              <button id="submit-audit" class="primary">Submit census and reveal candidates</button>
+            </div>
+            <div id="inventory-revealed" hidden>
+              <div id="inventory-comparison"></div>
+              <div id="inventory-lists"></div>
+              <button data-stage="inventory" class="complete-stage primary">Mark inventory reviewed</button>
+            </div>
+          </div>
+
+          <div id="records-tab" class="tab-panel" hidden>
+            <div class="records-toolbar">
+              <p>Correct coherent records. Every addition or correction requires an exact supplied evidence block.</p>
+              <div class="record-add">
+                <select id="new-record-kind" aria-label="New record type">
+                  <option value="device_families">Device family</option>
+                  <option value="individual_devices">Individual device</option>
+                  <option value="performance_observations">Performance observation</option>
+                  <option value="population_statistics">Population statistic</option>
+                  <option value="stability_tests">Stability test</option>
+                  <option value="equivalence_groups">Equivalence group</option>
+                </select>
+                <button id="add-record">Add record</button>
+              </div>
+            </div>
+            <div id="record-groups"></div>
+            <button data-stage="fields" class="complete-stage primary">Mark all record fields reviewed</button>
+          </div>
+
+          <div id="completeness-tab" class="tab-panel" hidden>
+            <h3>Final completeness audit</h3>
+            <p>Confirm that all distinctions required for scoring survived the review.</p>
+            <div id="quality-gates" class="quality-gates"></div>
+            <label>Completion note<textarea id="stage-note" rows="4" placeholder="Record remaining ambiguity or schema limitations…"></textarea></label>
+            <button data-stage="completeness" class="complete-stage primary">Complete paper review</button>
+            <button data-stage="adjudication" id="complete-adjudication" class="complete-stage">Complete adjudication</button>
+          </div>
+
+          <div id="history-tab" class="tab-panel" hidden><div id="event-history"></div></div>
+          <p id="status" role="status"></p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="record-dialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-heading"><div><span id="record-kind" class="eyebrow"></span><h2 id="record-title">Edit record</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <label>Validated record JSON<textarea id="record-json" rows="18" spellcheck="false"></textarea></label>
+      <div class="evidence-picker">
+        <label>Find evidence<input id="evidence-query" type="search" placeholder="Search extracted evidence…" /></label>
+        <button id="search-evidence" type="button">Search</button>
+      </div>
+      <div id="evidence-results"></div>
+      <label>Evidence block ID<input id="citation-block" /></label>
+      <label>Exact quote <span>Trim this to the smallest passage that supports the correction.</span><textarea id="citation-quote" rows="3"></textarea></label>
+      <label>Decision note<input id="mutation-note" placeholder="Why is this correction needed?" /></label>
+      <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove record</button><span></span><button value="cancel">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
+      <p id="dialog-status" role="status"></p>
+    </form>
+  </dialog>
+
+  <dialog id="import-dialog">
+    <form id="import-form" class="dialog-card">
+      <div class="dialog-heading"><div><span class="eyebrow">New review</span><h2>Import extractor artifacts</h2></div><button type="button" id="close-import">×</button></div>
+      <label>Paper identifier<input name="paper_id" required placeholder="10.1126--science.adf0194" /></label>
+      <label>Dataset split<select name="split"><option>calibration</option><option>dev</option><option>test</option></select></label>
+      <label>Main paper PDF<input name="pdf" type="file" accept="application/pdf" required /></label>
+      <label>Supplement PDF<input name="supplement" type="file" accept="application/pdf" /></label>
+      <label>extraction.json<input name="extraction" type="file" accept="application/json" required /></label>
+      <label>document.json <span>(required for guarded corrections)</span><input name="document" type="file" accept="application/json" /></label>
+      <label>run_configuration.json<input name="run_configuration" type="file" accept="application/json" /></label>
+      <div class="dialog-actions"><span></span><button type="button" id="cancel-import">Cancel</button><button class="primary">Import</button></div>
+      <p id="import-status" role="status"></p>
+    </form>
+  </dialog>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

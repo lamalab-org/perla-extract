@@ -1,0 +1,472 @@
+"""Serve the study-extraction ground-truth workbench locally or on Vercel."""
+
+from __future__ import annotations
+
+import email.policy
+import json
+import mimetypes
+import re
+import sys
+from email.parser import BytesParser
+from functools import lru_cache
+from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import Any
+from urllib.parse import parse_qs, unquote, urlparse
+
+import click
+import fitz
+from loguru import logger
+from pydantic import ValidationError
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "src"))
+
+from review_workbench.study_review import (  # noqa: E402
+    InventoryAuditRequest,
+    MutationRequest,
+    RecordDecisionRequest,
+    StageRequest,
+    StudyReviewStore,
+)
+
+
+class ReviewApplication:
+    """Expose review storage and source PDFs through a small application boundary."""
+
+    def __init__(self, pdf_dir: Path, ground_truth_dir: Path):
+        self.pdf_dir = pdf_dir.resolve()
+        self.pdf_dir.mkdir(parents=True, exist_ok=True)
+        self.store = StudyReviewStore(ground_truth_dir)
+        self.ground_truth_dir = self.store.root
+        self.static_dir = REPO_ROOT / "review_workbench" / "review_app"
+
+    def pdf_path(self, paper_id: str, source: str = "main") -> Path:
+        self.store.validate_identity("dev", paper_id)
+        if source == "main":
+            return self.pdf_dir / f"{paper_id}.pdf"
+        if source == "supplement":
+            return self.pdf_dir / f"{paper_id}.supplement.pdf"
+        raise ValueError("source must be main or supplement")
+
+    def list_papers(self, split: str) -> list[dict[str, Any]]:
+        papers = self.store.list_papers(split)
+        for paper in papers:
+            paper["sources"] = [
+                source
+                for source in ("main", "supplement")
+                if self.pdf_path(paper["id"], source).exists()
+            ]
+        return papers
+
+    def get_paper(self, split: str, paper_id: str) -> dict[str, Any]:
+        return self._with_sources(self.store.load_bundle(split, paper_id))
+
+    def _with_sources(self, bundle: dict[str, Any]) -> dict[str, Any]:
+        """Attach available source documents to every bundle returned to the UI."""
+
+        paper_id = str(bundle["paper_id"])
+        bundle["sources"] = [
+            source
+            for source in ("main", "supplement")
+            if self.pdf_path(paper_id, source).exists()
+        ]
+        return bundle
+
+    def users(self) -> list[dict[str, str]]:
+        path = self.ground_truth_dir / "users.json"
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+
+    def ensure_authenticated_user(self, user: dict[str, str]) -> dict[str, str]:
+        users = self.users()
+        existing = next((item for item in users if item["id"] == user["id"]), None)
+        if existing == user:
+            return existing
+        if existing:
+            users[users.index(existing)] = user
+        else:
+            users.append(user)
+        self._write_users(users)
+        return user
+
+    def add_reviewer(self, payload: object) -> dict[str, str]:
+        if not isinstance(payload, dict) or not str(payload.get("name", "")).strip():
+            raise ValueError("reviewer name is required")
+        name = str(payload["name"]).strip()
+        identifier = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+        user = {"id": identifier, "name": name, "email": "", "role": "reviewer"}
+        return self.ensure_authenticated_user(user)
+
+    def _write_users(self, users: list[dict[str, str]]) -> None:
+        path = self.ground_truth_dir / "users.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(".tmp")
+        temporary.write_text(json.dumps(users, indent=2) + "\n", encoding="utf-8")
+        temporary.replace(path)
+
+    @staticmethod
+    def _decode_json(data: bytes | None, label: str, *, required: bool = True) -> object | None:
+        if not data:
+            if required:
+                raise ValueError(f"{label} is required")
+            return None
+        try:
+            return json.loads(data)
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise ValueError(f"{label} is not valid JSON") from error
+
+    def import_paper(
+        self,
+        split: str,
+        paper_id: str,
+        pdf_bytes: bytes,
+        extraction_bytes: bytes,
+        *,
+        supplement_bytes: bytes = b"",
+        document_bytes: bytes = b"",
+        configuration_bytes: bytes = b"",
+        reviewer_id: str,
+    ) -> dict[str, Any]:
+        """Seed one review from extractor artifacts and its source documents."""
+
+        if not pdf_bytes.startswith(b"%PDF"):
+            raise ValueError("main paper is not a PDF")
+        if supplement_bytes and not supplement_bytes.startswith(b"%PDF"):
+            raise ValueError("supplement is not a PDF")
+        extraction = self._decode_json(extraction_bytes, "extraction.json")
+        document = self._decode_json(document_bytes, "document.json", required=False)
+        configuration = self._decode_json(
+            configuration_bytes, "run_configuration.json", required=False
+        )
+        bundle = self.store.import_seed(
+            split, paper_id, extraction, document=document,
+            manifest={"extraction_configuration": configuration or {}},
+            reviewer_id=reviewer_id,
+        )
+        main_path = self.pdf_path(paper_id, "main")
+        main_path.write_bytes(pdf_bytes)
+        if supplement_bytes:
+            self.pdf_path(paper_id, "supplement").write_bytes(supplement_bytes)
+        return self._with_sources(bundle)
+
+    def mutate(self, split: str, paper_id: str, payload: object, reviewer_id: str) -> dict[str, Any]:
+        return self._with_sources(
+            self.store.mutate(
+                split, paper_id, MutationRequest.model_validate(payload), reviewer_id
+            )
+        )
+
+    def inventory_audit(self, split: str, paper_id: str, payload: object, reviewer_id: str) -> dict[str, Any]:
+        return self._with_sources(
+            self.store.inventory_audit(
+                split, paper_id, InventoryAuditRequest.model_validate(payload), reviewer_id
+            )
+        )
+
+    def decide_record(self, split: str, paper_id: str, payload: object, reviewer_id: str) -> dict[str, Any]:
+        """Store one review outcome for the current version of a rich record."""
+
+        return self._with_sources(
+            self.store.decide_record(
+                split,
+                paper_id,
+                RecordDecisionRequest.model_validate(payload),
+                reviewer_id,
+            )
+        )
+
+    def complete_stage(self, split: str, paper_id: str, payload: object, reviewer_id: str) -> dict[str, Any]:
+        return self._with_sources(
+            self.store.complete_stage(
+                split, paper_id, StageRequest.model_validate(payload), reviewer_id
+            )
+        )
+
+    def evidence_blocks(self, split: str, paper_id: str, query: str = "") -> list[dict[str, Any]]:
+        path = self.store.document_path(split, paper_id)
+        if not path.exists():
+            return []
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        blocks = payload.get("blocks", []) if isinstance(payload, dict) else payload
+        query = query.strip().lower()
+        if query:
+            blocks = [
+                block
+                for block in blocks
+                if query in str(block.get("text", "")).lower()
+                or query in str(block.get("block_id", "")).lower()
+            ]
+        return blocks[:100]
+
+    @lru_cache(maxsize=128)
+    def _pages(self, paper_id: str, source: str, modified_ns: int) -> tuple[str, ...]:
+        del modified_ns
+        with fitz.open(self.pdf_path(paper_id, source)) as document:
+            return tuple(page.get_text() for page in document)
+
+    def render_pdf_page(self, paper_id: str, source: str, page_number: int, scale: float = 1.5) -> tuple[bytes, int]:
+        path = self.pdf_path(paper_id, source)
+        if not path.exists():
+            raise FileNotFoundError(path)
+        if not 0.75 <= scale <= 3:
+            raise ValueError("scale must be between 0.75 and 3")
+        with fitz.open(path) as document:
+            if not 1 <= page_number <= len(document):
+                raise ValueError(f"page must be between 1 and {len(document)}")
+            pixmap = document[page_number - 1].get_pixmap(
+                matrix=fitz.Matrix(scale, scale), alpha=False
+            )
+            return pixmap.tobytes("png"), len(document)
+
+    def pdf_page_text(self, paper_id: str, source: str, page_number: int) -> dict[str, Any]:
+        path = self.pdf_path(paper_id, source)
+        if not path.exists():
+            raise FileNotFoundError(path)
+        with fitz.open(path) as document:
+            if not 1 <= page_number <= len(document):
+                raise ValueError(f"page must be between 1 and {len(document)}")
+            page = document[page_number - 1]
+            page_rect = page.rect
+            lines = []
+            for block in page.get_text("dict").get("blocks", []):
+                if block.get("type") != 0:
+                    continue
+                for line in block.get("lines", []):
+                    spans = line.get("spans", [])
+                    text = "".join(span.get("text", "") for span in spans)
+                    if not text.strip():
+                        continue
+                    x0, y0, x1, y1 = line["bbox"]
+                    lines.append({"text": text, "bbox": {
+                        "x": x0 / page_rect.width, "y": y0 / page_rect.height,
+                        "width": (x1 - x0) / page_rect.width,
+                        "height": (y1 - y0) / page_rect.height,
+                    }})
+            return {"text": page.get_text(), "page_count": len(document), "lines": lines}
+
+    def search_pdf(self, paper_id: str, source: str, query: str) -> list[dict[str, Any]]:
+        path = self.pdf_path(paper_id, source)
+        if not path.exists():
+            raise FileNotFoundError(path)
+        query = query.strip()
+        if len(query) < 2:
+            return []
+        results = []
+        with fitz.open(path) as document:
+            for page_number, page in enumerate(document, 1):
+                text = re.sub(r"\s+", " ", page.get_text()).strip()
+                for match in list(re.finditer(re.escape(query), text, re.IGNORECASE))[:5]:
+                    start, end = max(0, match.start() - 100), min(len(text), match.end() + 160)
+                    results.append({"page": page_number, "snippet": text[start:end]})
+                    if len(results) == 50:
+                        return results
+        return results
+
+
+def make_handler(application: ReviewApplication, authenticator=None):
+    """Build an HTTP handler while keeping authentication optional for local use."""
+
+    class Handler(BaseHTTPRequestHandler):
+        def send_json(self, payload: object, status: HTTPStatus = HTTPStatus.OK):
+            body = json.dumps(payload, ensure_ascii=False).encode()
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def send_file(self, path: Path, content_type: str | None = None):
+            if not path.is_file():
+                raise FileNotFoundError(path)
+            body = path.read_bytes()
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", content_type or mimetypes.guess_type(path.name)[0] or "application/octet-stream")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def send_bytes(self, body: bytes, content_type: str, headers: dict[str, str] | None = None):
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            for key, value in (headers or {}).items():
+                self.send_header(key, value)
+            self.end_headers()
+            self.wfile.write(body)
+
+        def read_json(self) -> object:
+            return json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))))
+
+        def read_multipart(self) -> dict[str, bytes | str]:
+            length = int(self.headers.get("Content-Length", "0"))
+            content_type = self.headers.get("Content-Type", "")
+            if "multipart/form-data" not in content_type:
+                raise ValueError("expected multipart form data")
+            message = BytesParser(policy=email.policy.default).parsebytes(
+                f"Content-Type: {content_type}\r\nMIME-Version: 1.0\r\n\r\n".encode()
+                + self.rfile.read(length)
+            )
+            result: dict[str, bytes | str] = {}
+            for part in message.iter_parts():
+                name = part.get_param("name", header="content-disposition")
+                if name:
+                    value = part.get_payload(decode=True) or b""
+                    result[name] = value if part.get_filename() else value.decode()
+            return result
+
+        def current_user(self, require_admin: bool = False) -> dict[str, str]:
+            if authenticator is None:
+                return {"id": "local-reviewer", "name": "Local reviewer", "email": "", "role": "admin"}
+            if not hasattr(self, "_review_user"):
+                self._review_user = authenticator.authenticate(self.headers)
+                application.ensure_authenticated_user(self._review_user)
+            if require_admin and self._review_user.get("role") != "admin":
+                raise PermissionError("administrator access is required")
+            return self._review_user
+
+        @staticmethod
+        def route_parts(path: str) -> list[str]:
+            return [unquote(part) for part in path.strip("/").split("/")]
+
+        def do_GET(self):  # noqa: N802
+            parsed, query = urlparse(self.path), parse_qs(urlparse(self.path).query)
+            try:
+                if parsed.path == "/api/auth/config":
+                    self.send_json(authenticator.public_config() if authenticator else {"enabled": False, "mode": "local"})
+                    return
+                if parsed.path == "/api/session":
+                    self.send_json({"user": self.current_user()})
+                    return
+                if parsed.path.startswith("/api/"):
+                    self.current_user()
+                if parsed.path == "/api/papers":
+                    split = query.get("split", ["calibration"])[0]
+                    self.send_json({"papers": application.list_papers(split)})
+                    return
+                if parsed.path == "/api/users":
+                    self.send_json({"users": application.users()})
+                    return
+                parts = self.route_parts(parsed.path)
+                if parts[:2] == ["api", "paper"] and len(parts) == 4:
+                    self.send_json(application.get_paper(parts[2], parts[3]))
+                    return
+                if parts[:2] == ["api", "evidence"] and len(parts) == 4:
+                    self.send_json({"blocks": application.evidence_blocks(parts[2], parts[3], query.get("q", [""])[0])})
+                    return
+                if len(parts) == 3 and parts[:2] in (["api", "pdf-page"], ["api", "pdf-text"], ["api", "search"], ["api", "pdf"]):
+                    paper_id = parts[2]
+                    source = query.get("source", ["main"])[0]
+                    if parts[1] == "pdf-page":
+                        body, count = application.render_pdf_page(paper_id, source, int(query.get("page", ["1"])[0]), float(query.get("scale", ["1.5"])[0]))
+                        self.send_bytes(body, "image/png", {"X-PDF-Pages": str(count)})
+                    elif parts[1] == "pdf-text":
+                        self.send_json(application.pdf_page_text(paper_id, source, int(query.get("page", ["1"])[0])))
+                    elif parts[1] == "search":
+                        self.send_json({"results": application.search_pdf(paper_id, source, query.get("q", [""])[0])})
+                    else:
+                        self.send_file(application.pdf_path(paper_id, source), "application/pdf")
+                    return
+                asset = "index.html" if parsed.path == "/" else parsed.path.lstrip("/")
+                if asset not in {"index.html", "app.js", "styles.css"}:
+                    self.send_error(HTTPStatus.NOT_FOUND)
+                    return
+                self.send_file(application.static_dir / asset)
+            except FileNotFoundError as error:
+                self.send_json({"error": str(error)}, HTTPStatus.NOT_FOUND)
+            except (ValueError, ValidationError, json.JSONDecodeError) as error:
+                self.send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+            except PermissionError as error:
+                self.send_json(
+                    {"error": str(error)},
+                    HTTPStatus(getattr(error, "status", HTTPStatus.FORBIDDEN)),
+                )
+
+        def do_POST(self):  # noqa: N802
+            parsed = urlparse(self.path)
+            parts = self.route_parts(parsed.path)
+            try:
+                if parsed.path == "/api/auth/login":
+                    if authenticator is None or not hasattr(authenticator, "login"):
+                        raise ValueError("password login is not enabled")
+                    payload = self.read_json()
+                    token, user = authenticator.login(str(payload.get("email", "")), str(payload.get("password", "")))
+                    application.ensure_authenticated_user(user)
+                    self.send_json({"token": token, "user": user})
+                    return
+                user = self.current_user()
+                if parsed.path == "/api/users":
+                    self.current_user(require_admin=True)
+                    self.send_json({"user": application.add_reviewer(self.read_json())}, HTTPStatus.CREATED)
+                    return
+                if parsed.path == "/api/papers/import":
+                    self.current_user(require_admin=True)
+                    form = self.read_multipart()
+                    def binary(name: str) -> bytes:
+                        value = form.get(name, b"")
+                        return value if isinstance(value, bytes) else b""
+                    bundle = application.import_paper(
+                        str(form.get("split", "calibration")), str(form.get("paper_id", "")),
+                        binary("pdf"), binary("extraction"), supplement_bytes=binary("supplement"),
+                        document_bytes=binary("document"), configuration_bytes=binary("run_configuration"),
+                        reviewer_id=user["id"],
+                    )
+                    self.send_json(bundle, HTTPStatus.CREATED)
+                    return
+                if len(parts) == 4 and parts[:2] == ["api", "mutations"]:
+                    self.send_json(application.mutate(parts[2], parts[3], self.read_json(), user["id"]), HTTPStatus.CREATED)
+                    return
+                if len(parts) == 4 and parts[:2] == ["api", "inventory-audits"]:
+                    self.send_json(application.inventory_audit(parts[2], parts[3], self.read_json(), user["id"]), HTTPStatus.CREATED)
+                    return
+                if len(parts) == 4 and parts[:2] == ["api", "record-decisions"]:
+                    self.send_json(application.decide_record(parts[2], parts[3], self.read_json(), user["id"]), HTTPStatus.CREATED)
+                    return
+                if len(parts) == 4 and parts[:2] == ["api", "stages"]:
+                    payload = self.read_json()
+                    if isinstance(payload, dict) and payload.get("stage") == "adjudication":
+                        self.current_user(require_admin=True)
+                    self.send_json(application.complete_stage(parts[2], parts[3], payload, user["id"]), HTTPStatus.CREATED)
+                    return
+                self.send_error(HTTPStatus.NOT_FOUND)
+            except FileNotFoundError as error:
+                self.send_json({"error": str(error)}, HTTPStatus.NOT_FOUND)
+            except (ValueError, ValidationError, json.JSONDecodeError) as error:
+                self.send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+            except PermissionError as error:
+                self.send_json(
+                    {"error": str(error)},
+                    HTTPStatus(getattr(error, "status", HTTPStatus.FORBIDDEN)),
+                )
+
+        def log_message(self, fmt: str, *args):
+            logger.info("{} - {}", self.client_address[0], fmt % args)
+
+    return Handler
+
+
+@click.command()
+@click.option("--pdf-dir", type=click.Path(path_type=Path, file_okay=False), required=True)
+@click.option("--ground-truth-dir", type=click.Path(path_type=Path, file_okay=False), default=Path("review_data"), show_default=True)
+@click.option("--host", default="127.0.0.1", show_default=True)
+@click.option("--port", default=8765, type=int, show_default=True)
+def main(pdf_dir: Path, ground_truth_dir: Path, host: str, port: int) -> None:
+    """Run the collaborative study ground-truth workbench."""
+
+    application = ReviewApplication(pdf_dir, ground_truth_dir)
+    server = ThreadingHTTPServer((host, port), make_handler(application))
+    logger.info("Ground-truth workbench: http://{}:{}", host, port)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        logger.info("Stopping ground-truth workbench")
+    finally:
+        server.server_close()
+
+
+if __name__ == "__main__":
+    main()

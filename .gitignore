@@ -193,6 +193,9 @@ venv.bak/
 .perla-cache/
 /extractions/
 /study_extraction/
+/review_data/
+/review_workbench/.vercel-build/
+/.vercel/
 
 # Spyder project settings
 .spyderproject

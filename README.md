@@ -103,6 +103,22 @@ result and conversion losses are explicit in `reduced_conversion.json`.
 See [the study-extraction guide](docs/study-extraction.md) for the schema contract,
 long-SI behavior, and reduced-schema mapping.
 
+## Build ground truth
+
+The optional review workbench imports `extraction.json`, `document.json`, the main
+paper, and its SI. Reviewers first perform a blind device census, then correct the rich
+records with exact source evidence. The immutable seed, validated ground truth, and
+human event history remain separate.
+
+```bash
+python review_workbench/server.py \
+  --pdf-dir review_pdfs \
+  --ground-truth-dir review_data
+```
+
+See [the ground-truth protocol](docs/ground-truth-workflow.md) and the
+[workbench guide](review_workbench/README.md).
+
 ## Python API
 
 ```python
