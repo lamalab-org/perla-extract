@@ -90,3 +90,8 @@ Parser code, schema, dependency, and source changes automatically produce distin
 cache keys. Use `--refresh-document-cache` only when you explicitly want to reparse an
 otherwise identical input. Change model or request settings to produce a distinct
 model-cache key.
+
+`run_configuration.json` records a small integer `schema_version` for intentional
+compatibility breaks and automatically computed SHA-256 fingerprints for the generated
+Pydantic schema and all model prompts. A schema or prompt edit therefore changes
+provenance and cache identity without relying on a date string or a manual patch bump.

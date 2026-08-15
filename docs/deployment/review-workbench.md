@@ -26,6 +26,12 @@ The application imports `extraction.json`, `document.json`, the main PDF, an opt
 SI, and optional run configuration. It stores immutable seeds, compiled truth, event
 history, evidence blocks, and manifests under the ground-truth directory.
 
+Review state is committed under `state/`. One immutable source bundle contains the
+seed, evidence document, manifest, and initial revision. Each accepted change writes
+one new revision snapshot containing both the validated truth and complete event
+history. The familiar `seeds/`, `events/`, `documents/`, `manifests/`, and split
+directories are refreshed as derived, inspectable exports.
+
 ## Verify the application
 
 ```bash
@@ -45,9 +51,14 @@ vercel link --cwd review_workbench/.vercel-build --yes \
 vercel deploy --cwd review_workbench/.vercel-build --prebuilt
 ```
 
-The deployed adapter stores private PDFs under `papers/` and the mutable JSON state at
-`workbench/study-review-state.json` in Vercel Blob. Configure
-`BLOB_READ_WRITE_TOKEN`; the server-side token is never sent to the browser.
+The deployed adapter stores private PDFs under `papers/`, immutable source bundles
+under `workbench/review-sources/`, and immutable revision snapshots under
+`workbench/review-revisions/` in Vercel Blob. Creating revision `N + 1` with overwrite
+disabled is the compare-and-swap operation: if two serverless instances review
+revision `N`, exactly one can create the next path and the other receives a stale
+revision error. No process-local lock or mutable whole-dataset blob is involved.
+
+Configure `BLOB_READ_WRITE_TOKEN`; the server-side token is never sent to the browser.
 
 ## Authentication
 

@@ -16,13 +16,16 @@ from .client import ModelCallError, ModelClient
 from .compatibility import to_reduced_with_report
 from .identity_linking import IdentityLinkProposal, attach_valid_identity_links
 from .logging import logger
-from .models import EvidenceBlock, PaperMetadata, StudyExtraction
+from .models import (
+    STUDY_SCHEMA_VERSION,
+    EvidenceBlock,
+    PaperMetadata,
+    StudyExtraction,
+    study_schema_sha256,
+)
 from .partitioning import EvidenceWindowPlan, plan_evidence_windows
 from .source import parse_documents
 from .validation import validate_study
-
-SCHEMA_VERSION = "2026-08-15.2"
-PROMPT_VERSION = "2026-08-15.2"
 
 SYSTEM_PROMPT = """Extract the complete present photovoltaic study as device-centered data.
 Use only supplied evidence. Preserve source wording and distinctions. Never invent,
@@ -89,6 +92,17 @@ Rules:
 - Cite the smallest supplied candidate evidence quotes that support the identity link.
 - An empty identity_links list is correct when identity is uncertain.
 """
+
+
+def prompt_sha256() -> str:
+    """Fingerprint every prompt template that can change scientific model output."""
+
+    encoded = json.dumps(
+        [SYSTEM_PROMPT, EXTRACTION_PROMPT, WINDOW_PROMPT, IDENTITY_LINK_PROMPT],
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -220,8 +234,9 @@ def _run_configuration(
             "document_cache_dir": str(config.document_cache_dir),
             "model_cache_dir": str(config.model_cache_dir),
             "effective_mode": mode,
-            "schema_version": SCHEMA_VERSION,
-            "prompt_version": PROMPT_VERSION,
+            "schema_version": STUDY_SCHEMA_VERSION,
+            "schema_sha256": study_schema_sha256(),
+            "prompt_sha256": prompt_sha256(),
             "source_sha256": [
                 event.get("source_sha256")
                 for event in source_events

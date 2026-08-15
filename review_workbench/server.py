@@ -24,6 +24,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
+from perla_extract.study_extraction.artifacts import write_json_atomic  # noqa: E402
+from review_workbench.review_storage import ReviewStateStorage  # noqa: E402
 from review_workbench.study_review import (  # noqa: E402
     InventoryAuditRequest,
     MutationRequest,
@@ -40,10 +42,15 @@ class ReviewApplication:
     PDF handling, and UI conveniences cannot create a second review implementation.
     """
 
-    def __init__(self, pdf_dir: Path, ground_truth_dir: Path):
+    def __init__(
+        self,
+        pdf_dir: Path,
+        ground_truth_dir: Path,
+        review_storage: ReviewStateStorage | None = None,
+    ):
         self.pdf_dir = pdf_dir.resolve()
         self.pdf_dir.mkdir(parents=True, exist_ok=True)
-        self.store = StudyReviewStore(ground_truth_dir)
+        self.store = StudyReviewStore(ground_truth_dir, review_storage)
         self.ground_truth_dir = self.store.root
         self.static_dir = REPO_ROOT / "review_workbench" / "review_app"
 
@@ -104,14 +111,12 @@ class ReviewApplication:
         return self.ensure_authenticated_user(user)
 
     def _write_users(self, users: list[dict[str, str]]) -> None:
-        path = self.ground_truth_dir / "users.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_suffix(".tmp")
-        temporary.write_text(json.dumps(users, indent=2) + "\n", encoding="utf-8")
-        temporary.replace(path)
+        write_json_atomic(self.ground_truth_dir / "users.json", users)
 
     @staticmethod
-    def _decode_json(data: bytes | None, label: str, *, required: bool = True) -> object | None:
+    def _decode_json(
+        data: bytes | None, label: str, *, required: bool = True
+    ) -> object | None:
         if not data:
             if required:
                 raise ValueError(f"{label} is required")
@@ -150,7 +155,10 @@ class ReviewApplication:
             configuration_bytes, "run_configuration.json", required=False
         )
         bundle = self.store.import_seed(
-            split, paper_id, extraction, document=document,
+            split,
+            paper_id,
+            extraction,
+            document=document,
             manifest={"extraction_configuration": configuration or {}},
             reviewer_id=reviewer_id,
         )
@@ -160,21 +168,30 @@ class ReviewApplication:
             self.pdf_path(paper_id, "supplement").write_bytes(supplement_bytes)
         return self._with_sources(bundle)
 
-    def mutate(self, split: str, paper_id: str, payload: object, reviewer_id: str) -> dict[str, Any]:
+    def mutate(
+        self, split: str, paper_id: str, payload: object, reviewer_id: str
+    ) -> dict[str, Any]:
         return self._with_sources(
             self.store.mutate(
                 split, paper_id, MutationRequest.model_validate(payload), reviewer_id
             )
         )
 
-    def inventory_audit(self, split: str, paper_id: str, payload: object, reviewer_id: str) -> dict[str, Any]:
+    def inventory_audit(
+        self, split: str, paper_id: str, payload: object, reviewer_id: str
+    ) -> dict[str, Any]:
         return self._with_sources(
             self.store.inventory_audit(
-                split, paper_id, InventoryAuditRequest.model_validate(payload), reviewer_id
+                split,
+                paper_id,
+                InventoryAuditRequest.model_validate(payload),
+                reviewer_id,
             )
         )
 
-    def decide_record(self, split: str, paper_id: str, payload: object, reviewer_id: str) -> dict[str, Any]:
+    def decide_record(
+        self, split: str, paper_id: str, payload: object, reviewer_id: str
+    ) -> dict[str, Any]:
         """Validate an HTTP decision payload before invoking digest-bound review logic."""
 
         return self._with_sources(
@@ -186,20 +203,23 @@ class ReviewApplication:
             )
         )
 
-    def complete_stage(self, split: str, paper_id: str, payload: object, reviewer_id: str) -> dict[str, Any]:
+    def complete_stage(
+        self, split: str, paper_id: str, payload: object, reviewer_id: str
+    ) -> dict[str, Any]:
         return self._with_sources(
             self.store.complete_stage(
                 split, paper_id, StageRequest.model_validate(payload), reviewer_id
             )
         )
 
-    def evidence_blocks(self, split: str, paper_id: str, query: str = "") -> list[dict[str, Any]]:
+    def evidence_blocks(
+        self, split: str, paper_id: str, query: str = ""
+    ) -> list[dict[str, Any]]:
         """Return a bounded source-block search for evidence selection in the UI."""
 
-        path = self.store.document_path(split, paper_id)
-        if not path.exists():
+        payload = self.store.load_document(split, paper_id)
+        if payload is None:
             return []
-        payload = json.loads(path.read_text(encoding="utf-8"))
         blocks = payload.get("blocks", []) if isinstance(payload, dict) else payload
         query = query.strip().lower()
         if query:
@@ -217,7 +237,9 @@ class ReviewApplication:
         with fitz.open(self.pdf_path(paper_id, source)) as document:
             return tuple(page.get_text() for page in document)
 
-    def render_pdf_page(self, paper_id: str, source: str, page_number: int, scale: float = 1.5) -> tuple[bytes, int]:
+    def render_pdf_page(
+        self, paper_id: str, source: str, page_number: int, scale: float = 1.5
+    ) -> tuple[bytes, int]:
         path = self.pdf_path(paper_id, source)
         if not path.exists():
             raise FileNotFoundError(path)
@@ -231,7 +253,9 @@ class ReviewApplication:
             )
             return pixmap.tobytes("png"), len(document)
 
-    def pdf_page_text(self, paper_id: str, source: str, page_number: int) -> dict[str, Any]:
+    def pdf_page_text(
+        self, paper_id: str, source: str, page_number: int
+    ) -> dict[str, Any]:
         path = self.pdf_path(paper_id, source)
         if not path.exists():
             raise FileNotFoundError(path)
@@ -250,14 +274,26 @@ class ReviewApplication:
                     if not text.strip():
                         continue
                     x0, y0, x1, y1 = line["bbox"]
-                    lines.append({"text": text, "bbox": {
-                        "x": x0 / page_rect.width, "y": y0 / page_rect.height,
-                        "width": (x1 - x0) / page_rect.width,
-                        "height": (y1 - y0) / page_rect.height,
-                    }})
-            return {"text": page.get_text(), "page_count": len(document), "lines": lines}
+                    lines.append(
+                        {
+                            "text": text,
+                            "bbox": {
+                                "x": x0 / page_rect.width,
+                                "y": y0 / page_rect.height,
+                                "width": (x1 - x0) / page_rect.width,
+                                "height": (y1 - y0) / page_rect.height,
+                            },
+                        }
+                    )
+            return {
+                "text": page.get_text(),
+                "page_count": len(document),
+                "lines": lines,
+            }
 
-    def search_pdf(self, paper_id: str, source: str, query: str) -> list[dict[str, Any]]:
+    def search_pdf(
+        self, paper_id: str, source: str, query: str
+    ) -> list[dict[str, Any]]:
         path = self.pdf_path(paper_id, source)
         if not path.exists():
             raise FileNotFoundError(path)
@@ -268,8 +304,13 @@ class ReviewApplication:
         with fitz.open(path) as document:
             for page_number, page in enumerate(document, 1):
                 text = re.sub(r"\s+", " ", page.get_text()).strip()
-                for match in list(re.finditer(re.escape(query), text, re.IGNORECASE))[:5]:
-                    start, end = max(0, match.start() - 100), min(len(text), match.end() + 160)
+                for match in list(re.finditer(re.escape(query), text, re.IGNORECASE))[
+                    :5
+                ]:
+                    start, end = (
+                        max(0, match.start() - 100),
+                        min(len(text), match.end() + 160),
+                    )
                     results.append({"page": page_number, "snippet": text[start:end]})
                     if len(results) == 50:
                         return results
@@ -294,13 +335,20 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 raise FileNotFoundError(path)
             body = path.read_bytes()
             self.send_response(HTTPStatus.OK)
-            self.send_header("Content-Type", content_type or mimetypes.guess_type(path.name)[0] or "application/octet-stream")
+            self.send_header(
+                "Content-Type",
+                content_type
+                or mimetypes.guess_type(path.name)[0]
+                or "application/octet-stream",
+            )
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
             self.wfile.write(body)
 
-        def send_bytes(self, body: bytes, content_type: str, headers: dict[str, str] | None = None):
+        def send_bytes(
+            self, body: bytes, content_type: str, headers: dict[str, str] | None = None
+        ):
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
@@ -311,7 +359,9 @@ def make_handler(application: ReviewApplication, authenticator=None):
             self.wfile.write(body)
 
         def read_json(self) -> object:
-            return json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))))
+            return json.loads(
+                self.rfile.read(int(self.headers.get("Content-Length", "0")))
+            )
 
         def read_multipart(self) -> dict[str, bytes | str]:
             length = int(self.headers.get("Content-Length", "0"))
@@ -332,7 +382,12 @@ def make_handler(application: ReviewApplication, authenticator=None):
 
         def current_user(self, require_admin: bool = False) -> dict[str, str]:
             if authenticator is None:
-                return {"id": "local-reviewer", "name": "Local reviewer", "email": "", "role": "admin"}
+                return {
+                    "id": "local-reviewer",
+                    "name": "Local reviewer",
+                    "email": "",
+                    "role": "admin",
+                }
             if not hasattr(self, "_review_user"):
                 self._review_user = authenticator.authenticate(self.headers)
                 application.ensure_authenticated_user(self._review_user)
@@ -348,7 +403,11 @@ def make_handler(application: ReviewApplication, authenticator=None):
             parsed, query = urlparse(self.path), parse_qs(urlparse(self.path).query)
             try:
                 if parsed.path == "/api/auth/config":
-                    self.send_json(authenticator.public_config() if authenticator else {"enabled": False, "mode": "local"})
+                    self.send_json(
+                        authenticator.public_config()
+                        if authenticator
+                        else {"enabled": False, "mode": "local"}
+                    )
                     return
                 if parsed.path == "/api/session":
                     self.send_json({"user": self.current_user()})
@@ -367,20 +426,48 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     self.send_json(application.get_paper(parts[2], parts[3]))
                     return
                 if parts[:2] == ["api", "evidence"] and len(parts) == 4:
-                    self.send_json({"blocks": application.evidence_blocks(parts[2], parts[3], query.get("q", [""])[0])})
+                    self.send_json(
+                        {
+                            "blocks": application.evidence_blocks(
+                                parts[2], parts[3], query.get("q", [""])[0]
+                            )
+                        }
+                    )
                     return
-                if len(parts) == 3 and parts[:2] in (["api", "pdf-page"], ["api", "pdf-text"], ["api", "search"], ["api", "pdf"]):
+                if len(parts) == 3 and parts[:2] in (
+                    ["api", "pdf-page"],
+                    ["api", "pdf-text"],
+                    ["api", "search"],
+                    ["api", "pdf"],
+                ):
                     paper_id = parts[2]
                     source = query.get("source", ["main"])[0]
                     if parts[1] == "pdf-page":
-                        body, count = application.render_pdf_page(paper_id, source, int(query.get("page", ["1"])[0]), float(query.get("scale", ["1.5"])[0]))
+                        body, count = application.render_pdf_page(
+                            paper_id,
+                            source,
+                            int(query.get("page", ["1"])[0]),
+                            float(query.get("scale", ["1.5"])[0]),
+                        )
                         self.send_bytes(body, "image/png", {"X-PDF-Pages": str(count)})
                     elif parts[1] == "pdf-text":
-                        self.send_json(application.pdf_page_text(paper_id, source, int(query.get("page", ["1"])[0])))
+                        self.send_json(
+                            application.pdf_page_text(
+                                paper_id, source, int(query.get("page", ["1"])[0])
+                            )
+                        )
                     elif parts[1] == "search":
-                        self.send_json({"results": application.search_pdf(paper_id, source, query.get("q", [""])[0])})
+                        self.send_json(
+                            {
+                                "results": application.search_pdf(
+                                    paper_id, source, query.get("q", [""])[0]
+                                )
+                            }
+                        )
                     else:
-                        self.send_file(application.pdf_path(paper_id, source), "application/pdf")
+                        self.send_file(
+                            application.pdf_path(paper_id, source), "application/pdf"
+                        )
                     return
                 asset = "index.html" if parsed.path == "/" else parsed.path.lstrip("/")
                 if asset not in {"index.html", "app.js", "styles.css"}:
@@ -405,43 +492,77 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     if authenticator is None or not hasattr(authenticator, "login"):
                         raise ValueError("password login is not enabled")
                     payload = self.read_json()
-                    token, user = authenticator.login(str(payload.get("email", "")), str(payload.get("password", "")))
+                    token, user = authenticator.login(
+                        str(payload.get("email", "")), str(payload.get("password", ""))
+                    )
                     application.ensure_authenticated_user(user)
                     self.send_json({"token": token, "user": user})
                     return
                 user = self.current_user()
                 if parsed.path == "/api/users":
                     self.current_user(require_admin=True)
-                    self.send_json({"user": application.add_reviewer(self.read_json())}, HTTPStatus.CREATED)
+                    self.send_json(
+                        {"user": application.add_reviewer(self.read_json())},
+                        HTTPStatus.CREATED,
+                    )
                     return
                 if parsed.path == "/api/papers/import":
                     self.current_user(require_admin=True)
                     form = self.read_multipart()
+
                     def binary(name: str) -> bytes:
                         value = form.get(name, b"")
                         return value if isinstance(value, bytes) else b""
+
                     bundle = application.import_paper(
-                        str(form.get("split", "calibration")), str(form.get("paper_id", "")),
-                        binary("pdf"), binary("extraction"), supplement_bytes=binary("supplement"),
-                        document_bytes=binary("document"), configuration_bytes=binary("run_configuration"),
+                        str(form.get("split", "calibration")),
+                        str(form.get("paper_id", "")),
+                        binary("pdf"),
+                        binary("extraction"),
+                        supplement_bytes=binary("supplement"),
+                        document_bytes=binary("document"),
+                        configuration_bytes=binary("run_configuration"),
                         reviewer_id=user["id"],
                     )
                     self.send_json(bundle, HTTPStatus.CREATED)
                     return
                 if len(parts) == 4 and parts[:2] == ["api", "mutations"]:
-                    self.send_json(application.mutate(parts[2], parts[3], self.read_json(), user["id"]), HTTPStatus.CREATED)
+                    self.send_json(
+                        application.mutate(
+                            parts[2], parts[3], self.read_json(), user["id"]
+                        ),
+                        HTTPStatus.CREATED,
+                    )
                     return
                 if len(parts) == 4 and parts[:2] == ["api", "inventory-audits"]:
-                    self.send_json(application.inventory_audit(parts[2], parts[3], self.read_json(), user["id"]), HTTPStatus.CREATED)
+                    self.send_json(
+                        application.inventory_audit(
+                            parts[2], parts[3], self.read_json(), user["id"]
+                        ),
+                        HTTPStatus.CREATED,
+                    )
                     return
                 if len(parts) == 4 and parts[:2] == ["api", "record-decisions"]:
-                    self.send_json(application.decide_record(parts[2], parts[3], self.read_json(), user["id"]), HTTPStatus.CREATED)
+                    self.send_json(
+                        application.decide_record(
+                            parts[2], parts[3], self.read_json(), user["id"]
+                        ),
+                        HTTPStatus.CREATED,
+                    )
                     return
                 if len(parts) == 4 and parts[:2] == ["api", "stages"]:
                     payload = self.read_json()
-                    if isinstance(payload, dict) and payload.get("stage") == "adjudication":
+                    if (
+                        isinstance(payload, dict)
+                        and payload.get("stage") == "adjudication"
+                    ):
                         self.current_user(require_admin=True)
-                    self.send_json(application.complete_stage(parts[2], parts[3], payload, user["id"]), HTTPStatus.CREATED)
+                    self.send_json(
+                        application.complete_stage(
+                            parts[2], parts[3], payload, user["id"]
+                        ),
+                        HTTPStatus.CREATED,
+                    )
                     return
                 self.send_error(HTTPStatus.NOT_FOUND)
             except FileNotFoundError as error:
@@ -461,8 +582,15 @@ def make_handler(application: ReviewApplication, authenticator=None):
 
 
 @click.command()
-@click.option("--pdf-dir", type=click.Path(path_type=Path, file_okay=False), required=True)
-@click.option("--ground-truth-dir", type=click.Path(path_type=Path, file_okay=False), default=Path("review_data"), show_default=True)
+@click.option(
+    "--pdf-dir", type=click.Path(path_type=Path, file_okay=False), required=True
+)
+@click.option(
+    "--ground-truth-dir",
+    type=click.Path(path_type=Path, file_okay=False),
+    default=Path("review_data"),
+    show_default=True,
+)
 @click.option("--host", default="127.0.0.1", show_default=True)
 @click.option("--port", default=8765, type=int, show_default=True)
 def main(pdf_dir: Path, ground_truth_dir: Path, host: str, port: int) -> None:

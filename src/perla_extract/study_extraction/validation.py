@@ -2,75 +2,11 @@
 
 from __future__ import annotations
 
-import re
-import unicodedata
 from collections import Counter
 
+from .evidence import assembled_from_quotes, source_contains_text
 from .identifiers import entity_id_lists, window_namespace
 from .models import EvidenceBlock, StudyExtraction
-
-
-def _normalized_with_offsets(value: object) -> tuple[str, list[int], str]:
-    """Normalize OCR typography while retaining positions in the source string."""
-
-    raw = unicodedata.normalize("NFKC", str(value or ""))
-    raw = raw.replace("−", "-").replace("–", "-").replace("—", "-")
-    characters: list[str] = []
-    offsets: list[int] = []
-    for index, character in enumerate(raw):
-        if unicodedata.category(character) == "Pd":
-            character = "-"
-        for folded in character.casefold():
-            if re.fullmatch(r"[\w.%<>~=+/\-]", folded):
-                characters.append(folded)
-                offsets.append(index)
-    return "".join(characters), offsets, raw
-
-
-def _normalized(value: object) -> str:
-    """Normalize PDF typography for conservative source comparison."""
-
-    return _normalized_with_offsets(value)[0]
-
-
-def _contains(query: object, source: object) -> bool:
-    """Match copied evidence after conservative whitespace and Unicode normalization."""
-
-    raw_query = unicodedata.normalize("NFKC", str(query or ""))
-    raw_source = unicodedata.normalize("NFKC", str(source or ""))
-    if raw_query and raw_query in raw_source:
-        return True
-    needle = _normalized(query)
-    haystack, offsets, boundary_source = _normalized_with_offsets(source)
-    if not needle:
-        return False
-    for match in re.finditer(re.escape(needle), haystack):
-        source_start = offsets[match.start()]
-        source_end = offsets[match.end() - 1]
-        before = boundary_source[source_start - 1] if source_start else ""
-        after = (
-            boundary_source[source_end + 1]
-            if source_end + 1 < len(boundary_source)
-            else ""
-        )
-        if needle[0].isalnum() and before.isalnum():
-            continue
-        if needle[-1].isalnum() and after.isalnum():
-            continue
-        return True
-    return False
-
-
-def _assembled_from_quotes(raw_value: object, references: list[dict]) -> bool:
-    """Accept a value made only by joining two or more verified source quotes.
-
-    Multi-part values such as two tandem absorber formulas may live in separate
-    blocks.  Joining exact quoted values with punctuation is grounded; adding,
-    dropping, or rewriting any alphanumeric content is not.
-    """
-
-    parts = [_normalized(reference.get("quote")) for reference in references]
-    return len(parts) > 1 and all(parts) and _normalized(raw_value) == "".join(parts)
 
 
 def validate_study(
@@ -101,7 +37,7 @@ def validate_study(
             if block is None:
                 issue(reference_path, "unknown block_id")
                 supported = False
-            elif not _contains(reference.get("quote"), block.text):
+            elif not source_contains_text(block.text, reference.get("quote")):
                 issue(reference_path, "quote not found in cited block")
                 supported = False
         return supported
@@ -114,10 +50,10 @@ def validate_study(
                 evidence_ok = evidence_supported(value["evidence"], path)
                 raw_direct = any(
                     (block := block_by_id.get(reference.get("block_id"))) is not None
-                    and _contains(value["raw_value"], block.text)
+                    and source_contains_text(block.text, value["raw_value"])
                     for reference in value["evidence"]
                 )
-                raw_assembled = evidence_ok and _assembled_from_quotes(
+                raw_assembled = evidence_ok and assembled_from_quotes(
                     value["raw_value"], value["evidence"]
                 )
                 raw_ok = raw_direct or raw_assembled

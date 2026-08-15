@@ -1,7 +1,13 @@
+import json
 from pathlib import Path
 
+from perla_extract.study_extraction.models import (
+    STUDY_SCHEMA_VERSION,
+    study_schema_sha256,
+)
 from perla_extract.study_extraction.workflow import (
     ExtractionConfig,
+    prompt_sha256,
     run_extraction,
 )
 
@@ -27,3 +33,13 @@ def test_dry_run_writes_a_complete_request_plan(tmp_path):
     assert (tmp_path / "output" / "document.json").exists()
     assert (tmp_path / "output" / "extraction.schema.json").exists()
     assert (tmp_path / "output" / "report.json").exists()
+    configuration = json.loads(
+        (tmp_path / "output" / "run_configuration.json").read_text()
+    )
+    assert configuration["schema_version"] == STUDY_SCHEMA_VERSION
+    assert configuration["schema_sha256"] == study_schema_sha256()
+    assert configuration["prompt_sha256"] == prompt_sha256()
+    assert all(
+        len(configuration[field]) == 64
+        for field in ("schema_sha256", "prompt_sha256", "configuration_sha256")
+    )

@@ -8,4 +8,7 @@ def test_prepare_bundles_only_runtime_and_rich_schema(tmp_path):
     assert (output / "src/perla_extract/study_extraction/models.py").exists()
     assert not (output / "src/perla_extract/data").exists()
     assert not (output / "review_workbench/review_collaboration.py").exists()
-    assert "def decide_record" in (output / "api/index.py").read_text(encoding="utf-8")
+    assert (output / "review_workbench/review_storage.py").exists()
+    assert "class BlobReviewStateStorage" in (output / "api/index.py").read_text(
+        encoding="utf-8"
+    )

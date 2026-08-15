@@ -1,9 +1,9 @@
 """Versioned human review of rich, evidence-backed study extractions.
 
 The model output is an immutable seed. Human edits are guarded JSON-pointer operations
-that update a validated ``StudyExtraction`` and append an audit event. Keeping the
-seed, event log, and compiled truth separate makes the benchmark reproducible while
-remaining pleasant to edit in the browser.
+that atomically commit a validated ``StudyExtraction`` with its audit event. Immutable
+revision snapshots make the benchmark reproducible while derived flat exports remain
+pleasant to inspect and consume.
 """
 
 from __future__ import annotations
@@ -19,7 +19,19 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from perla_extract.study_extraction.models import StudyExtraction
+from perla_extract.study_extraction.artifacts import write_json_atomic
+from perla_extract.study_extraction.evidence import source_contains_text
+from perla_extract.study_extraction.models import (
+    STUDY_SCHEMA_VERSION,
+    StudyExtraction,
+    study_schema_sha256,
+)
+from review_workbench.review_storage import (
+    LocalReviewStateStorage,
+    ReviewPaperSource,
+    ReviewRevision,
+    ReviewStateStorage,
+)
 
 PAPER_ID = re.compile(r"^[A-Za-z0-9.-]+--[A-Za-z0-9._-]+$")
 Split = Literal["calibration", "dev", "test"]
@@ -146,19 +158,6 @@ class ReviewEvent(BaseModel):
     details: dict[str, Any] = Field(default_factory=dict)
 
 
-def _json(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _atomic_json(path: Path, value: object) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(
-        json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
-    temporary.replace(path)
-
-
 def _decode_pointer(path: str) -> list[str]:
     return [part.replace("~1", "/").replace("~0", "~") for part in path[1:].split("/")]
 
@@ -233,9 +232,10 @@ class StudyReviewStore:
     from overwriting newer work; record digests invalidate decisions after edits.
     """
 
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, storage: ReviewStateStorage | None = None) -> None:
         self.root = root.resolve()
-        self._citation_indexes: dict[Path, tuple[int, dict[str, str]]] = {}
+        self.storage = storage or LocalReviewStateStorage(self.root)
+        self._citation_indexes: dict[tuple[str, str], dict[str, str]] = {}
 
     @staticmethod
     def validate_identity(split: str, paper_id: str) -> tuple[Split, str]:
@@ -262,32 +262,78 @@ class StudyReviewStore:
         return self.root / "manifests" / split / f"{paper_id}.json"
 
     def events(self, split: str, paper_id: str) -> list[dict[str, Any]]:
-        path = self.events_path(split, paper_id)
-        return _json(path) if path.exists() else []
+        self.validate_identity(split, paper_id)
+        return self.storage.load_revision(split, paper_id).events
 
     def revision(self, split: str, paper_id: str) -> int:
-        return len(self.events(split, paper_id))
+        self.validate_identity(split, paper_id)
+        return self.storage.load_revision(split, paper_id).revision
 
     def load_truth(self, split: str, paper_id: str) -> dict[str, Any]:
-        path = self.truth_path(split, paper_id)
-        if not path.exists():
-            raise FileNotFoundError(path)
-        return _json(path)
+        self.validate_identity(split, paper_id)
+        return self.storage.load_revision(split, paper_id).ground_truth
+
+    def load_document(self, split: str, paper_id: str) -> Any:
+        """Return the immutable evidence document captured with the model seed."""
+
+        self.validate_identity(split, paper_id)
+        return self.storage.load_source(split, paper_id).document
+
+    def _materialize(
+        self,
+        split: str,
+        paper_id: str,
+        source: ReviewPaperSource,
+        revision: ReviewRevision,
+    ) -> None:
+        """Refresh familiar flat exports after the atomic state is committed.
+
+        These files remain convenient for inspection and benchmark consumers, but
+        immutable snapshots under ``state/`` are the authoritative review history.
+        """
+
+        write_json_atomic(self.seed_path(split, paper_id), source.seed_extraction)
+        write_json_atomic(self.truth_path(split, paper_id), revision.ground_truth)
+        write_json_atomic(self.events_path(split, paper_id), revision.events)
+        if source.document is not None:
+            write_json_atomic(self.document_path(split, paper_id), source.document)
+        write_json_atomic(self.manifest_path(split, paper_id), source.manifest)
+
+    def _commit(
+        self,
+        split: str,
+        paper_id: str,
+        current: ReviewRevision,
+        truth: dict[str, Any],
+        event: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Atomically commit truth and audit event as the next paper revision."""
+
+        revision = ReviewRevision(
+            revision=current.revision + 1,
+            ground_truth=truth,
+            events=[*current.events, event],
+        )
+        self.storage.compare_and_swap(split, paper_id, current.revision, revision)
+        self._materialize(
+            split, paper_id, self.storage.load_source(split, paper_id), revision
+        )
+        return self.load_bundle(split, paper_id)
 
     def load_bundle(self, split: str, paper_id: str) -> dict[str, Any]:
-        truth = self.load_truth(split, paper_id)
-        events = self.events(split, paper_id)
-        seed_path = self.seed_path(split, paper_id)
-        manifest_path = self.manifest_path(split, paper_id)
+        self.validate_identity(split, paper_id)
+        source = self.storage.load_source(split, paper_id)
+        revision = self.storage.load_revision(split, paper_id)
+        self._materialize(split, paper_id, source, revision)
         return {
             "paper_id": paper_id,
             "split": split,
-            "revision": len(events),
-            "ground_truth": truth,
-            "seed_extraction": _json(seed_path),
-            "events": events,
-            "manifest": _json(manifest_path) if manifest_path.exists() else {},
-            "summary": self.summary(truth, events),
+            "revision": revision.revision,
+            "ground_truth": revision.ground_truth,
+            "seed_extraction": source.seed_extraction,
+            "events": revision.events,
+            "manifest": source.manifest,
+            "summary": self.summary(revision.ground_truth, revision.events),
         }
 
     @staticmethod
@@ -340,7 +386,7 @@ class StudyReviewStore:
         manifest: dict[str, Any] | None,
         reviewer_id: str,
     ) -> dict[str, Any]:
-        """Create immutable seed, editable truth, and provenance as separate files.
+        """Create one immutable source bundle and its first review revision.
 
         Import validates the complete rich schema before anything is persisted and
         refuses to replace an existing paper, keeping benchmark initialization an
@@ -348,9 +394,6 @@ class StudyReviewStore:
         """
 
         self.validate_identity(split, paper_id)
-        truth_path = self.truth_path(split, paper_id)
-        if truth_path.exists():
-            raise ValueError("paper already exists")
         if isinstance(extraction, dict) and isinstance(
             extraction.get("extraction"), dict
         ):
@@ -368,34 +411,36 @@ class StudyReviewStore:
             kind="seed_imported",
             details={"seed_sha256": seed_digest},
         ).model_dump(mode="json")
-        _atomic_json(self.seed_path(split, paper_id), truth)
-        _atomic_json(truth_path, truth)
-        _atomic_json(self.events_path(split, paper_id), [event])
-        if document is not None:
-            _atomic_json(self.document_path(split, paper_id), document)
-        _atomic_json(
-            self.manifest_path(split, paper_id),
-            {
+        revision = ReviewRevision(revision=1, ground_truth=truth, events=[event])
+        source = ReviewPaperSource(
+            seed_extraction=truth,
+            document=document,
+            manifest={
+                **(manifest or {}),
                 "schema": "StudyExtraction",
-                "schema_version": "2026-08-15.1",
+                "schema_version": STUDY_SCHEMA_VERSION,
+                "schema_sha256": study_schema_sha256(),
                 "seed_sha256": seed_digest,
                 "imported_at": now,
-                **(manifest or {}),
             },
+            initial_revision=revision,
         )
+        self.storage.create(split, paper_id, source)
+        self._materialize(split, paper_id, source, revision)
         return self.load_bundle(split, paper_id)
 
     def _validate_revision(
         self, split: str, paper_id: str, base_revision: int
-    ) -> list[dict[str, Any]]:
-        """Reject stale writes so concurrent reviewers cannot silently overwrite work."""
+    ) -> ReviewRevision:
+        """Read the revision a transition is based on before its atomic commit."""
 
-        events = self.events(split, paper_id)
-        if base_revision != len(events):
+        self.validate_identity(split, paper_id)
+        revision = self.storage.load_revision(split, paper_id)
+        if base_revision != revision.revision:
             raise ValueError(
-                f"stale revision {base_revision}; current revision is {len(events)}"
+                f"stale revision {base_revision}; current revision is {revision.revision}"
             )
-        return events
+        return revision
 
     def _validate_citations(
         self, split: str, paper_id: str, citations: list[Citation]
@@ -404,15 +449,12 @@ class StudyReviewStore:
 
         if not citations:
             return
-        path = self.document_path(split, paper_id)
-        if not path.exists():
+        document = self.load_document(split, paper_id)
+        if document is None:
             raise ValueError("evidence citations require an imported document.json")
-        modified_ns = path.stat().st_mtime_ns
-        cached = self._citation_indexes.get(path)
-        if cached and cached[0] == modified_ns:
-            index = cached[1]
-        else:
-            document = _json(path)
+        key = (split, paper_id)
+        index = self._citation_indexes.get(key)
+        if index is None:
             blocks = (
                 document.get("blocks", document)
                 if isinstance(document, dict)
@@ -423,14 +465,12 @@ class StudyReviewStore:
                 for block in blocks
                 if isinstance(block, dict)
             }
-            self._citation_indexes[path] = (modified_ns, index)
+            self._citation_indexes[key] = index
         for citation in citations:
             source = index.get(citation.block_id)
             if source is None:
                 raise ValueError(f"unknown evidence block {citation.block_id}")
-            normalized_source = " ".join(source.split())
-            normalized_quote = " ".join(citation.quote.split())
-            if normalized_quote not in normalized_source:
+            if not source_contains_text(source, citation.quote):
                 raise ValueError(
                     f"quote is not present in evidence block {citation.block_id}"
                 )
@@ -445,16 +485,17 @@ class StudyReviewStore:
         reach disk.
         """
 
-        events = self._validate_revision(split, paper_id, request.base_revision)
+        current_revision = self._validate_revision(
+            split, paper_id, request.base_revision
+        )
         self._validate_citations(split, paper_id, request.evidence)
-        current = self.load_truth(split, paper_id)
-        before, proposed = _apply(current, request)
+        before, proposed = _apply(current_revision.ground_truth, request)
         if request.action == "replace" and before == request.value:
             raise ValueError("replacement does not change the record")
         validated = StudyExtraction.model_validate(proposed).model_dump(mode="json")
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
-            revision=len(events) + 1,
+            revision=current_revision.revision + 1,
             timestamp=datetime.now(timezone.utc).isoformat(),
             reviewer_id=reviewer_id,
             kind="mutation",
@@ -465,9 +506,7 @@ class StudyReviewStore:
             evidence=request.evidence,
             note=request.note,
         ).model_dump(mode="json")
-        _atomic_json(self.truth_path(split, paper_id), validated)
-        _atomic_json(self.events_path(split, paper_id), [*events, event])
-        return self.load_bundle(split, paper_id)
+        return self._commit(split, paper_id, current_revision, validated, event)
 
     def decide_record(
         self,
@@ -482,8 +521,10 @@ class StudyReviewStore:
         previous verification decision disappear from the derived summary.
         """
 
-        events = self._validate_revision(split, paper_id, request.base_revision)
-        truth = self.load_truth(split, paper_id)
+        current_revision = self._validate_revision(
+            split, paper_id, request.base_revision
+        )
+        truth = current_revision.ground_truth
         identifier_field = RECORD_IDENTIFIERS[request.collection]
         record = next(
             (
@@ -498,7 +539,7 @@ class StudyReviewStore:
         record_key = f"{request.collection}:{request.record_id}"
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
-            revision=len(events) + 1,
+            revision=current_revision.revision + 1,
             timestamp=datetime.now(timezone.utc).isoformat(),
             reviewer_id=reviewer_id,
             kind="record_decision",
@@ -509,8 +550,7 @@ class StudyReviewStore:
                 "decision": request.decision,
             },
         ).model_dump(mode="json")
-        _atomic_json(self.events_path(split, paper_id), [*events, event])
-        return self.load_bundle(split, paper_id)
+        return self._commit(split, paper_id, current_revision, truth, event)
 
     def inventory_audit(
         self,
@@ -521,17 +561,24 @@ class StudyReviewStore:
     ) -> dict[str, Any]:
         """Persist the independent device census performed before candidates are shown."""
 
-        events = self._validate_revision(split, paper_id, request.base_revision)
+        current_revision = self._validate_revision(
+            split, paper_id, request.base_revision
+        )
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
-            revision=len(events) + 1,
+            revision=current_revision.revision + 1,
             timestamp=datetime.now(timezone.utc).isoformat(),
             reviewer_id=reviewer_id,
             kind="inventory_audit",
             details=request.model_dump(mode="json", exclude={"base_revision"}),
         ).model_dump(mode="json")
-        _atomic_json(self.events_path(split, paper_id), [*events, event])
-        return self.load_bundle(split, paper_id)
+        return self._commit(
+            split,
+            paper_id,
+            current_revision,
+            current_revision.ground_truth,
+            event,
+        )
 
     def complete_stage(
         self, split: str, paper_id: str, request: StageRequest, reviewer_id: str
@@ -543,7 +590,10 @@ class StudyReviewStore:
         keep interface clicks from bypassing the ground-truth protocol.
         """
 
-        events = self._validate_revision(split, paper_id, request.base_revision)
+        current_revision = self._validate_revision(
+            split, paper_id, request.base_revision
+        )
+        events = current_revision.events
         reviewer_events = [
             event for event in events if event["reviewer_id"] == reviewer_id
         ]
@@ -571,7 +621,7 @@ class StudyReviewStore:
         ):
             raise ValueError(f"complete the {prerequisite} stage first")
         if request.stage == "fields":
-            truth = self.load_truth(split, paper_id)
+            truth = current_revision.ground_truth
             decisions = self.summary(truth, events)["record_decisions"].get(
                 reviewer_id, {}
             )
@@ -586,29 +636,33 @@ class StudyReviewStore:
                 )
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
-            revision=len(events) + 1,
+            revision=current_revision.revision + 1,
             timestamp=datetime.now(timezone.utc).isoformat(),
             reviewer_id=reviewer_id,
             kind="stage_complete",
             note=request.note,
             details={"stage": request.stage},
         ).model_dump(mode="json")
-        _atomic_json(self.events_path(split, paper_id), [*events, event])
-        return self.load_bundle(split, paper_id)
+        return self._commit(
+            split,
+            paper_id,
+            current_revision,
+            current_revision.ground_truth,
+            event,
+        )
 
     def list_papers(self, split: str) -> list[dict[str, Any]]:
         """Return summaries derived from truth and events rather than cached counters."""
 
         self.validate_identity(split, "10.0000--placeholder")
         papers = []
-        for path in sorted((self.root / split).glob("*.json")):
-            truth = _json(path)
-            events = self.events(split, path.stem)
+        for paper_id in self.storage.list_paper_ids(split):
+            revision = self.storage.load_revision(split, paper_id)
             papers.append(
                 {
-                    "id": path.stem,
-                    "revision": len(events),
-                    **self.summary(truth, events),
+                    "id": paper_id,
+                    "revision": revision.revision,
+                    **self.summary(revision.ground_truth, revision.events),
                 }
             )
         return papers

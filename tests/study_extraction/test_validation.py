@@ -1,3 +1,4 @@
+from perla_extract.study_extraction.evidence import source_contains_text
 from perla_extract.study_extraction.models import (
     DeviceFamily,
     EvidenceBlock,
@@ -11,7 +12,7 @@ from perla_extract.study_extraction.models import (
     StabilityTest,
     StudyExtraction,
 )
-from perla_extract.study_extraction.validation import _contains, validate_study
+from perla_extract.study_extraction.validation import validate_study
 
 
 def test_ocr_spacing_does_not_destroy_real_source_boundaries():
@@ -19,11 +20,11 @@ def test_ocr_spacing_does_not_destroy_real_source_boundaries():
 
     formula = "Cs0.3FA0.6DMA0.1Pb(I0.7Br0.3)3"
 
-    assert _contains(
-        formula,
+    assert source_contains_text(
         "based on Cs0.3FA0.6DMA0.1Pb (I 0.7 Br0.3)3. We compare",
+        formula,
     )
-    assert not _contains(formula, "xCs0.3FA0.6DMA0.1Pb (I 0.7 Br0.3)3")
+    assert not source_contains_text("xCs0.3FA0.6DMA0.1Pb (I 0.7 Br0.3)3", formula)
 
 
 def test_reported_value_can_be_an_exact_join_of_multiple_verified_quotes():

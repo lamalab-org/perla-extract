@@ -37,6 +37,9 @@ Every scientific record carries one or more `EvidenceCitation` values. A citatio
 supplied block and copies the smallest useful supporting quote. Every `ReportedValue.raw_value`
 must also occur in at least one cited block. A value assembled from multiple exact
 quotes is accepted only when their normalized contents join to the complete raw value.
+Extraction validation and human corrections use the same conservative matcher, so
+Unicode normalization and harmless OCR spacing are accepted consistently at both
+boundaries without allowing text to join across surrounding word characters.
 
 The extractor is instructed not to digitize plots, interpolate, infer unreported
 identity, or import values from cited background work. Human ground truth follows the

@@ -5,15 +5,25 @@ from __future__ import annotations
 import json
 import os
 import sys
-import threading
 from pathlib import Path
+from typing import Any
 from urllib.parse import quote, unquote, urlparse
 from urllib.request import Request, urlopen
 
 MODULE_PATH = Path(__file__).resolve()
-PROJECT_ROOT = MODULE_PATH.parents[2] if MODULE_PATH.parent.parent.name == "review_workbench" else MODULE_PATH.parents[1]
+PROJECT_ROOT = (
+    MODULE_PATH.parents[2]
+    if MODULE_PATH.parent.parent.name == "review_workbench"
+    else MODULE_PATH.parents[1]
+)
 sys.path[:0] = [str(PROJECT_ROOT), str(PROJECT_ROOT / "src")]
 
+from perla_extract.study_extraction.artifacts import write_json_atomic  # noqa: E402
+from review_workbench.review_storage import (  # noqa: E402
+    ReviewPaperSource,
+    ReviewRevision,
+    StaleRevisionError,
+)
 from review_workbench.server import ReviewApplication, make_handler  # noqa: E402
 
 
@@ -43,60 +53,174 @@ class BlobStore:
     def list(self, prefix: str) -> list[dict]:
         if not self.configured:
             return []
-        return json.loads(self._request(f"{self.endpoint}?prefix={quote(prefix)}&limit=1000")).get("blobs", [])
+        return json.loads(
+            self._request(f"{self.endpoint}?prefix={quote(prefix)}&limit=1000")
+        ).get("blobs", [])
 
     def find(self, pathname: str) -> dict | None:
-        return next((item for item in self.list(pathname) if item.get("pathname") == pathname), None)
+        return next(
+            (item for item in self.list(pathname) if item.get("pathname") == pathname),
+            None,
+        )
 
     def download(self, blob: dict) -> bytes:
         return self._request(str(blob["url"]))
 
-    def put(self, pathname: str, body: bytes, content_type: str) -> dict:
+    def put(
+        self,
+        pathname: str,
+        body: bytes,
+        content_type: str,
+        *,
+        overwrite: bool = True,
+    ) -> dict:
         if self.client is None:
             raise RuntimeError("BLOB_READ_WRITE_TOKEN is not configured")
         result = self.client.put(
-            pathname, body, access="private", content_type=content_type,
-            add_random_suffix=False, overwrite=True, cache_control_max_age=60,
+            pathname,
+            body,
+            access="private",
+            content_type=content_type,
+            add_random_suffix=False,
+            overwrite=overwrite,
+            cache_control_max_age=60,
         )
-        return {"pathname": result.pathname, "url": result.url, "downloadUrl": result.download_url}
+        return {
+            "pathname": result.pathname,
+            "url": result.url,
+            "downloadUrl": result.download_url,
+        }
+
+
+class BlobReviewStateStorage:
+    """Use immutable Blob paths as a distributed compare-and-swap log."""
+
+    source_prefix = "workbench/review-sources/"
+    revision_prefix = "workbench/review-revisions/"
+
+    def __init__(self, blob: BlobStore):
+        self.blob = blob
+
+    def _source_path(self, split: str, paper_id: str) -> str:
+        return f"{self.source_prefix}{split}/{paper_id}.json"
+
+    def _revision_prefix(self, split: str, paper_id: str) -> str:
+        return f"{self.revision_prefix}{split}/{paper_id}/"
+
+    def _revision_path(self, split: str, paper_id: str, revision: int) -> str:
+        return f"{self._revision_prefix(split, paper_id)}{revision:08d}.json"
+
+    @staticmethod
+    def _body(value: Any) -> bytes:
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode()
+
+    def _read(
+        self, pathname: str, model: type[ReviewPaperSource] | type[ReviewRevision]
+    ):
+        item = self.blob.find(pathname)
+        if item is None:
+            raise FileNotFoundError(pathname)
+        return model.model_validate_json(self.blob.download(item))
+
+    def _put_exclusive(self, pathname: str, value: Any) -> None:
+        try:
+            self.blob.put(
+                pathname,
+                self._body(value),
+                "application/json",
+                overwrite=False,
+            )
+        except Exception as error:
+            if self.blob.find(pathname) is not None:
+                raise FileExistsError(pathname) from error
+            raise
+
+    def create(self, split: str, paper_id: str, source: ReviewPaperSource) -> None:
+        try:
+            self._put_exclusive(
+                self._source_path(split, paper_id), source.model_dump(mode="json")
+            )
+        except FileExistsError as error:
+            raise ValueError("paper already exists") from error
+
+    def load_source(self, split: str, paper_id: str) -> ReviewPaperSource:
+        return self._read(self._source_path(split, paper_id), ReviewPaperSource)
+
+    def load_revision(self, split: str, paper_id: str) -> ReviewRevision:
+        source = self.load_source(split, paper_id)
+        revisions = self.blob.list(self._revision_prefix(split, paper_id))
+        if not revisions:
+            return source.initial_revision
+        latest = max(revisions, key=lambda item: str(item.get("pathname", "")))
+        return ReviewRevision.model_validate_json(self.blob.download(latest))
+
+    def compare_and_swap(
+        self,
+        split: str,
+        paper_id: str,
+        expected_revision: int,
+        revision: ReviewRevision,
+    ) -> None:
+        current = self.load_revision(split, paper_id)
+        if current.revision != expected_revision:
+            raise StaleRevisionError(
+                f"stale revision {expected_revision}; current revision is {current.revision}"
+            )
+        if revision.revision != expected_revision + 1:
+            raise ValueError(
+                "new revision must immediately follow the expected revision"
+            )
+        try:
+            self._put_exclusive(
+                self._revision_path(split, paper_id, revision.revision),
+                revision.model_dump(mode="json"),
+            )
+        except FileExistsError as error:
+            raise StaleRevisionError(
+                f"stale revision {expected_revision}; revision {revision.revision} already exists"
+            ) from error
+
+    def list_paper_ids(self, split: str) -> list[str]:
+        prefix = f"{self.source_prefix}{split}/"
+        return sorted(
+            Path(str(item["pathname"])).stem
+            for item in self.blob.list(prefix)
+            if str(item.get("pathname", "")).endswith(".json")
+        )
 
 
 class VercelReviewApplication(ReviewApplication):
     """Adapt the filesystem-oriented review core to Vercel's ephemeral runtime.
 
-    Each instance hydrates an isolated temporary workspace from one private Blob state
-    object. Accepted state transitions are serialized under a lock and uploaded
-    immediately; PDFs remain separate blobs and are downloaded lazily.
+    Review transitions commit immutable Blob revisions, so separate serverless
+    instances cannot overwrite each other. PDFs remain separate blobs and are
+    downloaded lazily.
     """
 
-    state_pathname = "workbench/study-review-state.json"
+    users_pathname = "workbench/review-users.json"
     pdf_prefix = "papers/"
 
     def __init__(self, blob: BlobStore, workspace: Path):
         self.blob = blob
         self.workspace = workspace
-        self._write_lock = threading.RLock()
         self.remote_pdfs: dict[tuple[str, str], dict] = {}
         ground_truth, pdfs = workspace / "review_data", workspace / "pdfs"
         ground_truth.mkdir(parents=True, exist_ok=True)
         pdfs.mkdir(parents=True, exist_ok=True)
-        super().__init__(pdfs, ground_truth)
+        super().__init__(pdfs, ground_truth, BlobReviewStateStorage(blob))
         self._hydrate()
 
     def _hydrate(self) -> None:
-        """Rebuild local state while rejecting paths outside the review directory."""
+        """Load small user metadata and index private PDFs for lazy download."""
 
         if not self.blob.configured:
             return
-        state_blob = self.blob.find(self.state_pathname)
-        if state_blob:
-            state = json.loads(self.blob.download(state_blob))
-            for relative, payload in state.get("json_files", {}).items():
-                target = (self.ground_truth_dir / relative).resolve()
-                if self.ground_truth_dir not in target.parents:
-                    continue
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        users_blob = self.blob.find(self.users_pathname)
+        if users_blob:
+            write_json_atomic(
+                self.ground_truth_dir / "users.json",
+                json.loads(self.blob.download(users_blob)),
+            )
         for blob in self.blob.list(self.pdf_prefix):
             name = Path(str(blob.get("pathname", ""))).name
             if not name.endswith(".pdf"):
@@ -107,18 +231,16 @@ class VercelReviewApplication(ReviewApplication):
                 paper_id, source = name.removesuffix(".pdf"), "main"
             self.remote_pdfs[(paper_id, source)] = blob
 
-    def _sync(self) -> None:
-        """Upload one coherent JSON snapshot after an accepted state transition."""
+    def _sync_users(self) -> None:
+        """Persist the non-scientific reviewer directory separately from paper state."""
 
-        if not self.blob.configured:
-            return
-        with self._write_lock:
-            files = {
-                str(path.relative_to(self.ground_truth_dir)): json.loads(path.read_text(encoding="utf-8"))
-                for path in sorted(self.ground_truth_dir.rglob("*.json"))
-            }
-            body = json.dumps({"schema_version": 2, "json_files": files}, ensure_ascii=False, separators=(",", ":")).encode()
-            self.blob.put(self.state_pathname, body, "application/json")
+        path = self.ground_truth_dir / "users.json"
+        if self.blob.configured and path.exists():
+            self.blob.put(
+                self.users_pathname,
+                path.read_bytes(),
+                "application/json",
+            )
 
     def ensure_pdf(self, paper_id: str, source: str) -> Path:
         """Download a private source PDF lazily into this runtime's workspace."""
@@ -140,48 +262,44 @@ class VercelReviewApplication(ReviewApplication):
 
     def ensure_authenticated_user(self, user: dict[str, str]) -> dict[str, str]:
         result = super().ensure_authenticated_user(user)
-        self._sync()
+        self._sync_users()
         return result
 
     def add_reviewer(self, payload: object) -> dict[str, str]:
         result = super().add_reviewer(payload)
-        self._sync()
+        self._sync_users()
         return result
 
-    def import_paper(self, split: str, paper_id: str, pdf_bytes: bytes, extraction_bytes: bytes, **kwargs):
-        result = super().import_paper(split, paper_id, pdf_bytes, extraction_bytes, **kwargs)
-        main = self.blob.put(f"{self.pdf_prefix}{paper_id}.pdf", pdf_bytes, "application/pdf")
+    def import_paper(
+        self,
+        split: str,
+        paper_id: str,
+        pdf_bytes: bytes,
+        extraction_bytes: bytes,
+        **kwargs,
+    ):
+        result = super().import_paper(
+            split, paper_id, pdf_bytes, extraction_bytes, **kwargs
+        )
+        main = self.blob.put(
+            f"{self.pdf_prefix}{paper_id}.pdf", pdf_bytes, "application/pdf"
+        )
         self.remote_pdfs[(paper_id, "main")] = main
         supplement = kwargs.get("supplement_bytes", b"")
         if supplement:
-            item = self.blob.put(f"{self.pdf_prefix}{paper_id}.supplement.pdf", supplement, "application/pdf")
+            item = self.blob.put(
+                f"{self.pdf_prefix}{paper_id}.supplement.pdf",
+                supplement,
+                "application/pdf",
+            )
             self.remote_pdfs[(paper_id, "supplement")] = item
-        self._sync()
-        return result
-
-    def mutate(self, *args, **kwargs):
-        result = super().mutate(*args, **kwargs)
-        self._sync()
-        return result
-
-    def inventory_audit(self, *args, **kwargs):
-        result = super().inventory_audit(*args, **kwargs)
-        self._sync()
-        return result
-
-    def decide_record(self, *args, **kwargs):
-        result = super().decide_record(*args, **kwargs)
-        self._sync()
-        return result
-
-    def complete_stage(self, *args, **kwargs):
-        result = super().complete_stage(*args, **kwargs)
-        self._sync()
         return result
 
 
 blob_store = BlobStore()
-review_application = VercelReviewApplication(blob_store, Path("/tmp/perla-study-review"))
+review_application = VercelReviewApplication(
+    blob_store, Path("/tmp/perla-study-review")
+)
 authenticator = None
 if os.environ.get("REVIEW_INTERNAL_ACCOUNTS"):
     from review_workbench.auth import InternalAuthenticator
@@ -204,9 +322,24 @@ class handler(BaseHandler):
 
     def do_GET(self):  # noqa: N802
         parsed = urlparse(self.path)
-        if any(parsed.path.startswith(prefix) for prefix in ("/api/pdf/", "/api/pdf-page/", "/api/pdf-text/", "/api/search/")):
+        if any(
+            parsed.path.startswith(prefix)
+            for prefix in (
+                "/api/pdf/",
+                "/api/pdf-page/",
+                "/api/pdf-text/",
+                "/api/search/",
+            )
+        ):
             paper_id = unquote(parsed.path.split("/", 3)[-1])
-            source = (dict(item.split("=", 1) for item in parsed.query.split("&") if "=" in item).get("source") or "main")
+            source = (
+                dict(
+                    item.split("=", 1)
+                    for item in parsed.query.split("&")
+                    if "=" in item
+                ).get("source")
+                or "main"
+            )
             try:
                 review_application.ensure_pdf(paper_id, source)
             except FileNotFoundError:

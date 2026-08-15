@@ -32,11 +32,15 @@ def prepare(output: Path) -> Path:
     if output == REPO_ROOT or output == git_dir or git_dir in output.parents:
         raise ValueError("Refusing unsafe deployment output directory")
     vercel_dir = output / ".vercel"
-    saved_vercel_files = {
-        path.relative_to(vercel_dir): path.read_bytes()
-        for path in vercel_dir.rglob("*")
-        if path.is_file()
-    } if vercel_dir.exists() else {}
+    saved_vercel_files = (
+        {
+            path.relative_to(vercel_dir): path.read_bytes()
+            for path in vercel_dir.rglob("*")
+            if path.is_file()
+        }
+        if vercel_dir.exists()
+        else {}
+    )
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
@@ -48,10 +52,13 @@ def prepare(output: Path) -> Path:
     for relative in (
         "review_workbench/__init__.py",
         "review_workbench/auth.py",
+        "review_workbench/review_storage.py",
         "review_workbench/server.py",
         "review_workbench/study_review.py",
         "src/perla_extract/__init__.py",
         "src/perla_extract/study_extraction/__init__.py",
+        "src/perla_extract/study_extraction/artifacts.py",
+        "src/perla_extract/study_extraction/evidence.py",
         "src/perla_extract/study_extraction/models.py",
     ):
         copy_file(relative, output)
@@ -68,7 +75,9 @@ def prepare(output: Path) -> Path:
 
 @click.command()
 @click.option(
-    "--output", type=click.Path(path_type=Path), default=DEFAULT_OUTPUT,
+    "--output",
+    type=click.Path(path_type=Path),
+    default=DEFAULT_OUTPUT,
     show_default=True,
 )
 def main(output: Path) -> None:

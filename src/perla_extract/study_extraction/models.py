@@ -8,6 +8,8 @@ instead of one field per possible processing or material property.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -21,6 +23,7 @@ EntityKind = Literal[
     "population_statistic",
     "stability_test",
 ]
+STUDY_SCHEMA_VERSION = 1
 
 
 class StrictModel(BaseModel):
@@ -275,3 +278,14 @@ class StudyExtraction(StrictModel):
     stability_tests: list[StabilityTest]
     identity_links: list[CrossWindowIdentityLink] = Field(default_factory=list)
     unresolved_notes: list[ShortText]
+
+
+def study_schema_sha256() -> str:
+    """Fingerprint the generated schema so provenance cannot depend on manual bumps."""
+
+    encoded = json.dumps(
+        StudyExtraction.model_json_schema(),
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()

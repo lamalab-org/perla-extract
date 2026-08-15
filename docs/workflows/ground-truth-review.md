@@ -41,23 +41,33 @@ stateDiagram-v2
    the ground-truth revision.
 
 Edits use a known base revision and are rejected when stale. The full
-`StudyExtraction` is validated after every mutation. Editing a record changes its
-content digest and invalidates the previous record decision automatically.
+`StudyExtraction` is validated after every mutation. Truth and its new audit event are
+then committed together as one immutable revision, so concurrent reviewers cannot
+produce a truth/event mismatch. Editing a record changes its content digest and
+invalidates the previous record decision automatically.
 
 ## Stored artifacts
 
-For each paper, the workbench separates:
+For each paper, the workbench keeps authoritative immutable state:
+
+| Path | Meaning |
+| --- | --- |
+| `state/sources/<split>/<paper>.json` | Seed, source document, provenance manifest, and initial revision |
+| `state/revisions/<split>/<paper>/<revision>.json` | Atomic validated truth and audit-history snapshot |
+
+It also materializes convenient exports after every successful commit:
 
 | Path | Meaning |
 | --- | --- |
 | `seeds/<split>/<paper>.json` | Immutable model extraction |
 | `<split>/<paper>.json` | Compiled, Pydantic-validated rich ground truth |
-| `events/<split>/<paper>.json` | Append-only reviewer, revision, before/after, evidence, and decisions |
+| `events/<split>/<paper>.json` | Current exported reviewer history, including before/after values, evidence, and decisions |
 | `documents/<split>/<paper>.json` | Imported evidence blocks |
 | `manifests/<split>/<paper>.json` | Schema, source, model configuration, and seed digest |
 
-The rich result is authoritative. Generate the reduced representation with the
-deterministic adapter rather than curating two ground truths independently.
+The latest immutable rich revision is authoritative. Generate the reduced
+representation with the deterministic adapter rather than curating two ground truths
+independently.
 
 ## Dataset splits
 
