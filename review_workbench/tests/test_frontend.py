@@ -27,13 +27,16 @@ def test_ui_does_not_reintroduce_flat_cell_editor():
     assert "quantity_mentions" not in source
 
 
-def test_each_collection_uses_its_own_identity_field():
+def test_backend_is_the_single_source_for_record_identity_fields():
     source = (APP / "app.js").read_text(encoding="utf-8")
+    backend = (APP.parent / "study_review.py").read_text(encoding="utf-8")
     for field in (
         "family_id", "device_id", "observation_id", "population_id", "test_id",
         "equivalence_id",
     ):
-        assert field in source
+        assert field in backend
+        assert field not in source
+    assert "record_identifiers" in source
 
 
 def test_ui_tracks_record_review_and_avoids_prompt_based_creation():
@@ -44,3 +47,9 @@ def test_ui_tracks_record_review_and_avoids_prompt_based_creation():
     assert "needs_correction" in source
     assert "record_key" in source
     assert "window.prompt" not in source
+
+
+def test_ui_builds_untrusted_content_with_dom_nodes():
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    assert "innerHTML" not in source
+    assert "replaceChildren" in source

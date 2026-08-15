@@ -31,14 +31,22 @@ async function request(url, options = {}) {
   return payload;
 }
 
-function escapeHtml(value) {
-  return String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
+function element(tag, options = {}, children = []) {
+  const result = document.createElement(tag);
+  if (options.className) result.className = options.className;
+  if (options.text != null) result.textContent = String(options.text);
+  Object.assign(result, options.properties || {});
+  Object.assign(result.dataset, options.dataset || {});
+  for (const [name, value] of Object.entries(options.attributes || {})) result.setAttribute(name, value);
+  for (const [name, listener] of Object.entries(options.events || {})) result.addEventListener(name, listener);
+  result.append(...children.filter((child) => child != null));
+  return result;
 }
 
 function pointerPart(value) { return String(value).replaceAll("~", "~0").replaceAll("/", "~1"); }
 function entityId(kind, item, index) {
-  const keys = { device_families: "family_id", individual_devices: "device_id", performance_observations: "observation_id", population_statistics: "population_id", stability_tests: "test_id", equivalence_groups: "equivalence_id" };
-  return item[keys[kind]] || `${kind} ${index + 1}`;
+  const identifier = state.bundle.summary.record_identifiers[kind];
+  return item[identifier] || `${kind} ${index + 1}`;
 }
 function recordKey(kind, item, index) { return `${kind}:${entityId(kind, item, index)}`; }
 function recordDecision(kind, item, index) {
@@ -69,15 +77,18 @@ function renderPapers() {
   const query = $("paper-filter").value.toLowerCase();
   const papers = state.papers.filter((paper) => paper.id.toLowerCase().includes(query));
   $("paper-count").textContent = papers.length;
-  $("paper-list").innerHTML = papers.map((paper) => {
+  const cards = papers.map((paper) => {
     const completed = Object.keys(paper.completed_stages || {});
-    return `<button class="paper-card ${paper.id === state.paperId ? "selected" : ""}" data-paper="${escapeHtml(paper.id)}">
-      <strong>${escapeHtml(paper.id)}</strong>
-      <span>${paper.individual_devices} devices · ${paper.performance_observations} observations</span>
-      <span>${completed.length}/4 review stages · revision ${paper.revision}</span>
-    </button>`;
-  }).join("") || `<p class="muted">No imported papers in this split.</p>`;
-  document.querySelectorAll("[data-paper]").forEach((button) => button.addEventListener("click", () => selectPaper(button.dataset.paper)));
+    return element("button", {
+      className: `paper-card ${paper.id === state.paperId ? "selected" : ""}`,
+      events: { click: () => selectPaper(paper.id) },
+    }, [
+      element("strong", { text: paper.id }),
+      element("span", { text: `${paper.individual_devices} devices · ${paper.performance_observations} observations` }),
+      element("span", { text: `${completed.length}/4 review stages · revision ${paper.revision}` }),
+    ]);
+  });
+  $("paper-list").replaceChildren(...(cards.length ? cards : [element("p", { className: "muted", text: "No imported papers in this split." })]));
 }
 
 async function selectPaper(paperId) {
@@ -103,7 +114,10 @@ function renderStudy() {
   $("paper-title").textContent = truth.paper.title || state.paperId;
   $("paper-doi").textContent = truth.paper.doi || "DOI not reported";
   $("revision").textContent = `Revision ${state.bundle.revision}`;
-  $("pdf-source").innerHTML = state.bundle.sources.map((source) => `<option value="${source}" ${source === state.source ? "selected" : ""}>${source === "main" ? "Main paper" : "Supplement"}</option>`).join("");
+  $("pdf-source").replaceChildren(...state.bundle.sources.map((source) => element("option", {
+    text: source === "main" ? "Main paper" : "Supplement",
+    properties: { value: source, selected: source === state.source },
+  })));
   $("blind-audit").hidden = hasAudit();
   $("inventory-revealed").hidden = !hasAudit();
   renderInventoryForm();
@@ -112,7 +126,7 @@ function renderStudy() {
     renderRecordGroups("inventory-lists", true);
     renderRecordGroups("record-groups", false);
   } else {
-    $("record-groups").innerHTML = `<p class="callout">Submit the blind device census before reviewing model candidates.</p>`;
+    $("record-groups").replaceChildren(element("p", { className: "callout", text: "Submit the blind device census before reviewing model candidates." }));
   }
   renderStageControls();
   renderQualityGates();
@@ -120,7 +134,13 @@ function renderStudy() {
 }
 
 function renderInventoryForm() {
-  $("inventory-counts").innerHTML = Object.entries(COLLECTIONS).filter(([key]) => key !== "equivalence_groups").map(([key, label]) => `<label>${label}<input type="number" min="0" value="0" data-count="${key}" /></label>`).join("");
+  const inputs = Object.entries(COLLECTIONS)
+    .filter(([key]) => key !== "equivalence_groups")
+    .map(([key, label]) => element("label", {}, [
+      label,
+      element("input", { properties: { type: "number", min: "0", value: "0" }, dataset: { count: key } }),
+    ]));
+  $("inventory-counts").replaceChildren(...inputs);
   $("searched-supplement").disabled = !state.bundle.sources.includes("supplement");
 }
 
@@ -129,44 +149,69 @@ function renderInventoryComparison() {
   const rows = Object.entries(COLLECTIONS).filter(([key]) => key !== "equivalence_groups").map(([key, label]) => {
     const expected = audit.expected_counts[key] ?? 0;
     const extracted = state.bundle.summary[key] ?? 0;
-    return `<tr><td>${label}</td><td>${expected}</td><td>${extracted}</td><td class="${expected === extracted ? "match" : "difference"}">${expected === extracted ? "match" : `${extracted - expected > 0 ? "+" : ""}${extracted - expected}`}</td></tr>`;
-  }).join("");
-  $("inventory-comparison").innerHTML = `<h3>Census versus candidates</h3><table><thead><tr><th>Record type</th><th>Your census</th><th>Current truth</th><th>Difference</th></tr></thead><tbody>${rows}</tbody></table>${audit.missing_or_ambiguous ? `<p class="callout">${escapeHtml(audit.missing_or_ambiguous)}</p>` : ""}`;
+    const difference = expected === extracted ? "match" : `${extracted - expected > 0 ? "+" : ""}${extracted - expected}`;
+    return element("tr", {}, [
+      element("td", { text: label }),
+      element("td", { text: expected }),
+      element("td", { text: extracted }),
+      element("td", { className: expected === extracted ? "match" : "difference", text: difference }),
+    ]);
+  });
+  const header = element("tr", {}, ["Record type", "Your census", "Current truth", "Difference"].map((label) => element("th", { text: label })));
+  const comparison = [
+    element("h3", { text: "Census versus candidates" }),
+    element("table", {}, [element("thead", {}, [header]), element("tbody", {}, rows)]),
+  ];
+  if (audit.missing_or_ambiguous) comparison.push(element("p", { className: "callout", text: audit.missing_or_ambiguous }));
+  $("inventory-comparison").replaceChildren(...comparison);
 }
 
 function recordCard(kind, item, index, compact) {
   const decision = recordDecision(kind, item, index);
-  return `<article class="record-card ${escapeHtml(decision)}">
-    <div><span class="eyebrow">${escapeHtml(entityId(kind, item, index))}</span><h4>${escapeHtml(entityTitle(kind, item, index))}</h4><p>${escapeHtml(entityDetail(kind, item))}</p></div>
-    ${compact ? "" : `<div class="record-actions">
-      <select data-decision-kind="${kind}" data-decision-index="${index}" aria-label="Review decision for ${escapeHtml(entityTitle(kind, item, index))}">
-        <option value="" ${decision ? "" : "selected"}>Not reviewed</option>
-        <option value="verified" ${decision === "verified" ? "selected" : ""}>Verified</option>
-        <option value="uncertain" ${decision === "uncertain" ? "selected" : ""}>Uncertain</option>
-        <option value="needs_correction" ${decision === "needs_correction" ? "selected" : ""}>Needs correction</option>
-      </select>
-      <button data-clone-kind="${kind}" data-clone-index="${index}">Duplicate</button>
-      <button data-edit-kind="${kind}" data-edit-index="${index}">Review</button>
-    </div>`}
-  </article>`;
+  const summary = element("div", {}, [
+    element("span", { className: "eyebrow", text: entityId(kind, item, index) }),
+    element("h4", { text: entityTitle(kind, item, index) }),
+    element("p", { text: entityDetail(kind, item) }),
+  ]);
+  if (compact) return element("article", { className: `record-card ${decision}` }, [summary]);
+  const decisionSelect = element("select", {
+    properties: { value: decision },
+    attributes: { "aria-label": `Review decision for ${entityTitle(kind, item, index)}` },
+  }, [
+    element("option", { text: "Not reviewed", properties: { value: "" } }),
+    element("option", { text: "Verified", properties: { value: "verified" } }),
+    element("option", { text: "Uncertain", properties: { value: "uncertain" } }),
+    element("option", { text: "Needs correction", properties: { value: "needs_correction" } }),
+  ]);
+  decisionSelect.value = decision;
+  decisionSelect.addEventListener("change", () => decideRecord(decisionSelect, kind, index));
+  const actions = element("div", { className: "record-actions" }, [
+    decisionSelect,
+    element("button", { text: "Duplicate", events: { click: () => openRecord(kind, null, item) } }),
+    element("button", { text: "Review", events: { click: () => openRecord(kind, index) } }),
+  ]);
+  return element("article", { className: `record-card ${decision}` }, [summary, actions]);
 }
 
 function renderRecordGroups(target, compact) {
   const truth = state.bundle.ground_truth;
-  $(target).innerHTML = Object.entries(COLLECTIONS).map(([kind, label]) => `<section class="record-group"><div class="group-heading"><h3>${label}</h3><span>${truth[kind].length}</span></div>${truth[kind].map((item, index) => recordCard(kind, item, index, compact)).join("") || `<p class="muted">No records</p>`}</section>`).join("");
-  if (!compact) {
-    document.querySelectorAll("[data-edit-kind]").forEach((button) => button.addEventListener("click", () => openRecord(button.dataset.editKind, Number(button.dataset.editIndex))));
-    document.querySelectorAll("[data-clone-kind]").forEach((button) => button.addEventListener("click", () => {
-      const item = truth[button.dataset.cloneKind][Number(button.dataset.cloneIndex)];
-      openRecord(button.dataset.cloneKind, null, item);
-    }));
-    document.querySelectorAll("[data-decision-kind]").forEach((select) => select.addEventListener("change", () => decideRecord(select)));
-  }
+  const groups = Object.entries(COLLECTIONS).map(([kind, label]) => {
+    const records = truth[kind].map((item, index) => recordCard(kind, item, index, compact));
+    return element("section", { className: "record-group" }, [
+      element("div", { className: "group-heading" }, [element("h3", { text: label }), element("span", { text: truth[kind].length })]),
+      ...(records.length ? records : [element("p", { className: "muted", text: "No records" })]),
+    ]);
+  });
+  $(target).replaceChildren(...groups);
 }
 
 function renderQualityGates() {
   const completed = state.bundle.summary.completed_stages.completeness || [];
-  $("quality-gates").innerHTML = QUALITY_GATES.map((label, index) => `<label><input type="checkbox" data-gate="${index}" ${completed.includes(state.user.id) ? "checked disabled" : ""} /> ${label}</label>`).join("");
+  const complete = completed.includes(state.user.id);
+  $("quality-gates").replaceChildren(...QUALITY_GATES.map((label, index) => element("label", {}, [
+    element("input", { properties: { type: "checkbox", checked: complete, disabled: complete }, dataset: { gate: String(index) } }),
+    label,
+  ])));
 }
 
 function renderStageControls() {
@@ -188,11 +233,18 @@ function renderStageControls() {
 }
 
 function renderHistory() {
-  $("event-history").innerHTML = [...state.bundle.events].reverse().map((event) => {
+  const events = [...state.bundle.events].reverse().map((event) => {
     const subject = event.path || event.details?.record_key || event.details?.stage || event.note || "";
     const decision = event.details?.decision ? ` · ${event.details.decision.replaceAll("_", " ")}` : "";
-    return `<article class="event"><div><strong>r${event.revision} · ${escapeHtml(event.kind.replaceAll("_", " "))}</strong><span>${escapeHtml(event.reviewer_id)} · ${new Date(event.timestamp).toLocaleString()}</span></div><p>${escapeHtml(subject + decision)}</p></article>`;
-  }).join("");
+    return element("article", { className: "event" }, [
+      element("div", {}, [
+        element("strong", { text: `r${event.revision} · ${event.kind.replaceAll("_", " ")}` }),
+        element("span", { text: `${event.reviewer_id} · ${new Date(event.timestamp).toLocaleString()}` }),
+      ]),
+      element("p", { text: subject + decision }),
+    ]);
+  });
+  $("event-history").replaceChildren(...events);
 }
 
 async function renderPdf() {
@@ -228,15 +280,13 @@ function openRecord(kind, index = null, template = null) {
   $("citation-quote").value = "";
   $("mutation-note").value = "";
   $("remove-record").hidden = index == null;
-  $("evidence-results").innerHTML = "";
+  $("evidence-results").replaceChildren();
   $("dialog-status").textContent = "";
   $("record-dialog").showModal();
 }
 
-async function decideRecord(select) {
+async function decideRecord(select, kind, index) {
   if (!select.value) return;
-  const kind = select.dataset.decisionKind;
-  const index = Number(select.dataset.decisionIndex);
   const item = state.bundle.ground_truth[kind][index];
   select.disabled = true;
   try {
@@ -253,7 +303,10 @@ async function saveRecord() {
   try {
     const value = JSON.parse($("record-json").value);
     const { kind, index } = state.edit;
-    const payload = { action: index == null ? "add" : "replace", path: `/${pointerPart(kind)}/${index == null ? "-" : index}`, value, evidence: [{ block_id: $("citation-block").value.trim(), quote: $("citation-quote").value.trim() }], note: $("mutation-note").value, base_revision: state.bundle.revision };
+    const blockId = $("citation-block").value.trim();
+    const quote = $("citation-quote").value.trim();
+    if (!blockId || !quote) throw new Error("Choose an evidence block and provide an exact quote.");
+    const payload = { action: index == null ? "add" : "replace", path: `/${pointerPart(kind)}/${index == null ? "-" : index}`, value, evidence: [{ block_id: blockId, quote }], note: $("mutation-note").value, base_revision: state.bundle.revision };
     state.bundle = await request(`/api/mutations/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify(payload) });
     $("record-dialog").close();
     renderStudy();
@@ -274,8 +327,12 @@ async function removeRecord() {
 async function searchEvidence() {
   try {
     const payload = await request(`/api/evidence/${state.split}/${encodeURIComponent(state.paperId)}?q=${encodeURIComponent($("evidence-query").value)}`);
-    $("evidence-results").innerHTML = payload.blocks.map((block) => `<button type="button" class="evidence-result" data-block="${escapeHtml(block.block_id)}"><span>${escapeHtml(block.source)} · p.${block.page}</span>${escapeHtml(block.text)}</button>`).join("") || `<p class="muted">No evidence blocks found.</p>`;
-    document.querySelectorAll("[data-block]").forEach((button, index) => button.addEventListener("click", () => chooseEvidence(payload.blocks[index])));
+    const results = payload.blocks.map((block) => element("button", {
+      className: "evidence-result",
+      properties: { type: "button" },
+      events: { click: () => chooseEvidence(block) },
+    }, [element("span", { text: `${block.source} · p.${block.page}` }), block.text]));
+    $("evidence-results").replaceChildren(...(results.length ? results : [element("p", { className: "muted", text: "No evidence blocks found." })]));
   } catch (error) { $("dialog-status").textContent = error.message; }
 }
 

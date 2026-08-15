@@ -223,6 +223,7 @@ class StudyReviewStore:
 
     def __init__(self, root: Path):
         self.root = root.resolve()
+        self._citation_indexes: dict[Path, tuple[int, dict[str, str]]] = {}
 
     @staticmethod
     def validate_identity(split: str, paper_id: str) -> tuple[Split, str]:
@@ -306,6 +307,7 @@ class StudyReviewStore:
             "inventory_audits": audits,
             "record_decisions": decisions,
             "record_count": len(catalog),
+            "record_identifiers": RECORD_IDENTIFIERS,
         }
 
     def import_seed(
@@ -360,9 +362,23 @@ class StudyReviewStore:
         path = self.document_path(split, paper_id)
         if not path.exists():
             raise ValueError("evidence citations require an imported document.json")
-        document = _json(path)
-        blocks = document.get("blocks", document) if isinstance(document, dict) else document
-        index = {str(block.get("block_id")): str(block.get("text", "")) for block in blocks if isinstance(block, dict)}
+        modified_ns = path.stat().st_mtime_ns
+        cached = self._citation_indexes.get(path)
+        if cached and cached[0] == modified_ns:
+            index = cached[1]
+        else:
+            document = _json(path)
+            blocks = (
+                document.get("blocks", document)
+                if isinstance(document, dict)
+                else document
+            )
+            index = {
+                str(block.get("block_id")): str(block.get("text", ""))
+                for block in blocks
+                if isinstance(block, dict)
+            }
+            self._citation_indexes[path] = (modified_ns, index)
         for citation in citations:
             source = index.get(citation.block_id)
             if source is None:
