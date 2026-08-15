@@ -421,6 +421,9 @@ class StudyReviewStore:
                 "schema_version": STUDY_SCHEMA_VERSION,
                 "schema_sha256": study_schema_sha256(),
                 "seed_sha256": seed_digest,
+                "evidence_document_sha256": (
+                    _digest(document) if document is not None else None
+                ),
                 "imported_at": now,
             },
             initial_revision=revision,

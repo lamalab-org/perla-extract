@@ -69,6 +69,43 @@ The latest immutable rich revision is authoritative. Generate the reduced
 representation with the deterministic adapter rather than curating two ground truths
 independently.
 
+## Freeze a revision for a data PR
+
+The mutable review directory is deliberately ignored by Git. After an administrator
+completes adjudication, freeze one paper from the repository root:
+
+```bash
+python review_workbench/export_ground_truth.py \
+  --review-data review_data \
+  --split dev \
+  --paper-id 10.1126--science.adf0194
+```
+
+The command writes an atomic, immutable directory under
+`data/study_extraction/ground_truth/v1/<split>/<paper_id>/`:
+
+| File | PR reviewer checks |
+| --- | --- |
+| `ground_truth.json` | Final rich `StudyExtraction` records and evidence citations |
+| `seed_extraction.json` | Original model result, kept separate for error analysis |
+| `review_events.json` | Complete corrections, decisions, stage gates, and adjudication history |
+| `manifest.json` | Schema and source provenance, frozen revision, validation counts, reviewers, and content hashes |
+
+The exporter requires `document.json` internally so it can resolve citations, but does
+not commit the parser document or copyrighted PDFs. It refuses export unless the latest
+event is adjudication, every current record has an adjudicator decision, the complete
+Pydantic schema is valid, and deterministic evidence validation reports no issue.
+Repeated export of identical content is a no-op; a differing existing item is never
+overwritten implicitly.
+
+The administrator can also use **Download PR bundle** in the workbench after
+adjudication. Unzip its four files into the same version/split/paper directory. Before
+opening the data PR, review the diff and run:
+
+```bash
+python -m pytest -q review_workbench/tests
+```
+
 ## Dataset splits
 
 - **Calibration** exposes schema, instructions, and interface problems. Do not report

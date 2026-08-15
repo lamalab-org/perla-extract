@@ -32,6 +32,13 @@ one new revision snapshot containing both the validated truth and complete event
 history. The familiar `seeds/`, `events/`, `documents/`, `manifests/`, and split
 directories are refreshed as derived, inspectable exports.
 
+After the final administrator adjudication, **Download PR bundle** produces a
+deterministic ZIP containing the rich ground truth, immutable seed, complete review
+events, and provenance manifest. The download is disabled if any edit occurred after
+adjudication or if source-evidence validation fails. For a local review directory, the
+equivalent tracked export command is documented in
+[Build ground truth](../workflows/ground-truth-review.md#freeze-a-revision-for-a-data-pr).
+
 ## Verify the application
 
 ```bash

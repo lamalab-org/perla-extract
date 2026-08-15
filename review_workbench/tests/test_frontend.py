@@ -61,3 +61,12 @@ def test_ui_builds_untrusted_content_with_dom_nodes():
     source = (APP / "app.js").read_text(encoding="utf-8")
     assert "innerHTML" not in source
     assert "replaceChildren" in source
+
+
+def test_only_admins_can_download_an_adjudicated_pr_bundle():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    assert "Download PR bundle" in html
+    assert "ground-truth-export" in source
+    assert 'state.user.role === "admin"' in source
+    assert 'finalEvent?.details?.stage === "adjudication"' in source

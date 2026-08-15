@@ -52,6 +52,7 @@ def prepare(output: Path) -> Path:
     for relative in (
         "review_workbench/__init__.py",
         "review_workbench/auth.py",
+        "review_workbench/ground_truth_export.py",
         "review_workbench/review_storage.py",
         "review_workbench/server.py",
         "review_workbench/study_review.py",
@@ -59,7 +60,9 @@ def prepare(output: Path) -> Path:
         "src/perla_extract/study_extraction/__init__.py",
         "src/perla_extract/study_extraction/artifacts.py",
         "src/perla_extract/study_extraction/evidence.py",
+        "src/perla_extract/study_extraction/identifiers.py",
         "src/perla_extract/study_extraction/models.py",
+        "src/perla_extract/study_extraction/validation.py",
     ):
         copy_file(relative, output)
 

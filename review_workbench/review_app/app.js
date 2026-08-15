@@ -228,6 +228,10 @@ function renderStageControls() {
     if (button.dataset.stage === "fields" && remaining > 0 && !mine("fields")) button.textContent = `Review ${remaining} remaining record${remaining === 1 ? "" : "s"}`;
   });
   $("complete-adjudication").hidden = state.user.role !== "admin";
+  const finalEvent = state.bundle.events.at(-1);
+  const canExport = state.user.role === "admin" && finalEvent?.kind === "stage_complete" && finalEvent?.details?.stage === "adjudication";
+  $("download-truth").hidden = state.user.role !== "admin";
+  $("download-truth").disabled = !canExport;
   $("add-record").disabled = !hasAudit();
   $("new-record-kind").disabled = !hasAudit();
 }
@@ -364,6 +368,22 @@ function setTab(tab) {
 
 function setStatus(message, error = false) { $("status").textContent = message; $("status").className = error ? "error" : "success"; }
 
+async function downloadGroundTruth() {
+  const token = localStorage.getItem("review-token");
+  const response = await fetch(`/api/ground-truth-export/${state.split}/${encodeURIComponent(state.paperId)}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) {
+    const payload = await response.json();
+    throw new Error(payload.error || `Request failed (${response.status})`);
+  }
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(await response.blob());
+  link.download = `${state.paperId}.ground-truth.zip`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
 async function importPaper(event) {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -392,7 +412,12 @@ $("save-record").addEventListener("click", saveRecord);
 $("remove-record").addEventListener("click", removeRecord);
 $("search-evidence").addEventListener("click", searchEvidence);
 $("evidence-query").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); searchEvidence(); } });
-$("download-truth").addEventListener("click", () => { const blob = new Blob([JSON.stringify(state.bundle.ground_truth, null, 2)], { type: "application/json" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${state.paperId}.ground-truth.json`; link.click(); URL.revokeObjectURL(link.href); });
+$("download-truth").addEventListener("click", async () => {
+  try {
+    await downloadGroundTruth();
+    setStatus("Downloaded the adjudicated PR bundle.");
+  } catch (error) { setStatus(error.message, true); }
+});
 $("open-import").addEventListener("click", () => $("import-dialog").showModal());
 $("close-import").addEventListener("click", () => $("import-dialog").close());
 $("cancel-import").addEventListener("click", () => $("import-dialog").close());

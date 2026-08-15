@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 
 import fitz
@@ -25,6 +26,13 @@ def test_imports_extractor_bundle_and_both_documents(tmp_path, empty_study, docu
     )
     assert bundle["ground_truth"] == empty_study
     assert bundle["sources"] == ["main", "supplement"]
+    assert bundle["manifest"]["main_pdf_sha256"] == hashlib.sha256(
+        app.pdf_path("10.0000--example").read_bytes()
+    ).hexdigest()
+    assert bundle["manifest"]["supplement_pdf_sha256"] == hashlib.sha256(
+        app.pdf_path("10.0000--example", "supplement").read_bytes()
+    ).hexdigest()
+    assert len(bundle["manifest"]["evidence_document_sha256"]) == 64
     assert app.get_paper("calibration", "10.0000--example")["sources"] == ["main", "supplement"]
     assert app.pdf_page_text("10.0000--example", "supplement", 1)["text"].startswith("Supplement")
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import email.policy
+import hashlib
 import json
 import mimetypes
 import re
@@ -25,6 +26,10 @@ sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from perla_extract.study_extraction.artifacts import write_json_atomic  # noqa: E402
+from review_workbench.ground_truth_export import (  # noqa: E402
+    build_ground_truth_export,
+    ground_truth_zip,
+)
 from review_workbench.review_storage import ReviewStateStorage  # noqa: E402
 from review_workbench.study_review import (  # noqa: E402
     InventoryAuditRequest,
@@ -159,7 +164,15 @@ class ReviewApplication:
             paper_id,
             extraction,
             document=document,
-            manifest={"extraction_configuration": configuration or {}},
+            manifest={
+                "extraction_configuration": configuration or {},
+                "main_pdf_sha256": hashlib.sha256(pdf_bytes).hexdigest(),
+                "supplement_pdf_sha256": (
+                    hashlib.sha256(supplement_bytes).hexdigest()
+                    if supplement_bytes
+                    else None
+                ),
+            },
             reviewer_id=reviewer_id,
         )
         main_path = self.pdf_path(paper_id, "main")
@@ -230,6 +243,11 @@ class ReviewApplication:
                 or query in str(block.get("block_id", "")).lower()
             ]
         return blocks[:100]
+
+    def ground_truth_archive(self, split: str, paper_id: str) -> bytes:
+        """Build the adjudicated, citation-validated bundle used in data PRs."""
+
+        return ground_truth_zip(build_ground_truth_export(self.store, split, paper_id))
 
     @lru_cache(maxsize=128)
     def _pages(self, paper_id: str, source: str, modified_ns: int) -> tuple[str, ...]:
@@ -432,6 +450,19 @@ def make_handler(application: ReviewApplication, authenticator=None):
                                 parts[2], parts[3], query.get("q", [""])[0]
                             )
                         }
+                    )
+                    return
+                if parts[:2] == ["api", "ground-truth-export"] and len(parts) == 4:
+                    self.current_user(require_admin=True)
+                    paper_id = parts[3]
+                    self.send_bytes(
+                        application.ground_truth_archive(parts[2], paper_id),
+                        "application/zip",
+                        {
+                            "Content-Disposition": (
+                                f'attachment; filename="{paper_id}.ground-truth.zip"'
+                            )
+                        },
                     )
                     return
                 if len(parts) == 3 and parts[:2] in (
