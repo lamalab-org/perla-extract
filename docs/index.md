@@ -16,7 +16,7 @@ flowchart LR
     C -->|Yes| D["Complete-study extraction"]
     C -->|No| E["Structure-aware evidence windows"]
     E --> F["Lossless candidate union"]
-    F --> G["Explicit identity reconciliation"]
+    F --> G["Explicit cross-window identity links"]
     D --> H["Rich StudyExtraction"]
     G --> H
     H --> I["Local evidence and link checks"]
@@ -36,9 +36,10 @@ result; they do not erase model output.
   population statistics, and stability experiments are different record types.
 - **Prefer a complete-study view.** One extraction call is used when the paper and SI
   fit. Long inputs are partitioned without discarding source blocks.
-- **Preserve candidates.** Window reconciliation adds equivalence links instead of
+- **Preserve candidates.** Cross-window linking adds identity links instead of
   guessing which candidate should replace another.
-- **Use generic scientific facts.** Layers and processing steps contain generic facts;
+- **Use generic reported values.** Layers and processing steps contain `ReportedValue`
+  records;
   property-specific regular expressions do not decide what can be extracted.
 - **Make uncertainty inspectable.** The full output, conservative grounded subset,
   failed responses, configuration, and conversion losses are separate artifacts.

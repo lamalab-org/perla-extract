@@ -15,8 +15,12 @@ def test_ui_enforces_inventory_before_candidates():
 def test_ui_covers_every_rich_record_collection():
     javascript = (APP / "app.js").read_text(encoding="utf-8")
     for collection in (
-        "device_families", "individual_devices", "performance_observations",
-        "population_statistics", "stability_tests", "equivalence_groups",
+        "device_families",
+        "individual_devices",
+        "performance_observations",
+        "population_statistics",
+        "stability_tests",
+        "identity_links",
     ):
         assert collection in javascript
 
@@ -31,8 +35,12 @@ def test_backend_is_the_single_source_for_record_identity_fields():
     source = (APP / "app.js").read_text(encoding="utf-8")
     backend = (APP.parent / "study_review.py").read_text(encoding="utf-8")
     for field in (
-        "family_id", "device_id", "observation_id", "population_id", "test_id",
-        "equivalence_id",
+        "family_id",
+        "device_id",
+        "observation_id",
+        "population_id",
+        "test_id",
+        "link_id",
     ):
         assert field in backend
         assert field not in source

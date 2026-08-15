@@ -64,7 +64,7 @@ def _contains(query: object, source: object) -> bool:
 def _assembled_from_quotes(raw_value: object, references: list[dict]) -> bool:
     """Accept a value made only by joining two or more verified source quotes.
 
-    Multi-part facts such as two tandem absorber formulas may live in separate
+    Multi-part values such as two tandem absorber formulas may live in separate
     blocks.  Joining exact quoted values with punctuation is grounded; adding,
     dropping, or rewriting any alphanumeric content is not.
     """
@@ -78,17 +78,17 @@ def validate_study(
 ) -> dict[str, object]:
     """Annotate textual grounding and relationship failures without deleting output.
 
-    These deterministic checks prove that quotes and raw fact values occur in supplied
+    These deterministic checks prove that quotes and raw reported values occur in supplied
     blocks and that identifiers resolve. They do not prove semantic correctness or
     recall, so the complete extraction remains available for human review.
     """
 
     block_by_id = {block.block_id: block for block in blocks}
     issues: list[dict[str, str]] = []
-    total_facts = 0
-    grounded_facts = 0
-    assembled_facts = 0
-    verified_facts: list[dict[str, object]] = []
+    total_reported_values = 0
+    source_verified_values = 0
+    source_assembled_values = 0
+    verified_values: list[dict[str, object]] = []
 
     def issue(path: str, reason: str) -> None:
         issues.append({"path": path, "reason": reason})
@@ -107,10 +107,10 @@ def validate_study(
         return supported
 
     def walk(value: object, path: str = "$") -> None:
-        nonlocal total_facts, grounded_facts, assembled_facts
+        nonlocal total_reported_values, source_verified_values, source_assembled_values
         if isinstance(value, dict):
             if {"name", "raw_value", "evidence"} <= value.keys():
-                total_facts += 1
+                total_reported_values += 1
                 evidence_ok = evidence_supported(value["evidence"], path)
                 raw_direct = any(
                     (block := block_by_id.get(reference.get("block_id"))) is not None
@@ -124,9 +124,9 @@ def validate_study(
                 if not raw_ok:
                     issue(path, "raw_value not found in cited evidence")
                 if evidence_ok and raw_ok:
-                    grounded_facts += 1
-                    assembled_facts += int(raw_assembled and not raw_direct)
-                    verified_facts.append({"path": path, **value})
+                    source_verified_values += 1
+                    source_assembled_values += int(raw_assembled and not raw_direct)
+                    verified_values.append({"path": path, **value})
             elif isinstance(value.get("evidence"), list):
                 evidence_supported(value["evidence"], path)
             for key, item in value.items():
@@ -175,26 +175,28 @@ def validate_study(
             issue(f"$.stability_tests[{index}].device_id", "unknown device_id")
 
     entity_ids = {kind: set(ids) for kind, ids in identifiers.items()}
-    equivalence_ids: set[str] = set()
+    link_ids: set[str] = set()
     claimed: set[tuple[str, str]] = set()
-    for index, group in enumerate(extraction.equivalence_groups):
-        path = f"$.equivalence_groups[{index}]"
-        if group.equivalence_id in equivalence_ids:
-            issue(f"{path}.equivalence_id", "duplicate equivalence_id")
-        equivalence_ids.add(group.equivalence_id)
-        namespaces = {window_namespace(member) for member in group.member_ids}
+    for index, link in enumerate(extraction.identity_links):
+        path = f"$.identity_links[{index}]"
+        if link.link_id in link_ids:
+            issue(f"{path}.link_id", "duplicate link_id")
+        link_ids.add(link.link_id)
+        namespaces = {
+            window_namespace(candidate_id) for candidate_id in link.candidate_ids
+        }
         if None in namespaces or len(namespaces) < 2:
             issue(
-                f"{path}.member_ids",
-                "equivalence members must come from different windows",
+                f"{path}.candidate_ids",
+                "linked candidates must come from different windows",
             )
-        for member_id in group.member_ids:
-            member = (group.entity_kind, member_id)
-            if member_id not in entity_ids[group.entity_kind]:
-                issue(f"{path}.member_ids", "unknown equivalence member ID")
-            if member in claimed:
-                issue(f"{path}.member_ids", "equivalence member used more than once")
-            claimed.add(member)
+        for candidate_id in link.candidate_ids:
+            candidate = (link.entity_kind, candidate_id)
+            if candidate_id not in entity_ids[link.entity_kind]:
+                issue(f"{path}.candidate_ids", "unknown linked candidate ID")
+            if candidate in claimed:
+                issue(f"{path}.candidate_ids", "candidate used in more than one link")
+            claimed.add(candidate)
 
     return {
         "status": "verified" if not issues else "needs_review",
@@ -205,11 +207,11 @@ def validate_study(
             "performance_observations": len(extraction.performance_observations),
             "population_statistics": len(extraction.population_statistics),
             "stability_tests": len(extraction.stability_tests),
-            "equivalence_groups": len(extraction.equivalence_groups),
-            "facts": total_facts,
-            "source_verified_facts": grounded_facts,
-            "source_assembled_facts": assembled_facts,
+            "identity_links": len(extraction.identity_links),
+            "reported_values": total_reported_values,
+            "source_verified_values": source_verified_values,
+            "source_assembled_values": source_assembled_values,
             "issues_by_reason": dict(Counter(item["reason"] for item in issues)),
         },
-        "verified_facts": verified_facts,
+        "verified_values": verified_values,
     }

@@ -1,22 +1,22 @@
 """Public API for evidence-complete, device-centered study records."""
 
+from .candidate_collection import combine_window_candidates, namespace_window_candidates
 from .compatibility import ReducedExport, to_reduced, to_reduced_with_report
-from .merge import merge_candidates, namespace_candidates
+from .identity_linking import IdentityLinkProposal, attach_valid_identity_links
 from .models import EvidenceBlock, StudyExtraction
-from .partitioning import EvidenceWindow, WindowPlan, plan_windows
-from .reconciliation import ReconciliationResult, attach_valid_equivalences
+from .partitioning import EvidenceWindow, EvidenceWindowPlan, plan_evidence_windows
 
 __all__ = [
     "EvidenceBlock",
     "EvidenceWindow",
+    "EvidenceWindowPlan",
+    "IdentityLinkProposal",
     "ReducedExport",
-    "ReconciliationResult",
     "StudyExtraction",
-    "WindowPlan",
-    "attach_valid_equivalences",
-    "merge_candidates",
-    "namespace_candidates",
-    "plan_windows",
+    "attach_valid_identity_links",
+    "combine_window_candidates",
+    "namespace_window_candidates",
+    "plan_evidence_windows",
     "to_reduced",
     "to_reduced_with_report",
 ]

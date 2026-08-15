@@ -5,7 +5,7 @@ const COLLECTIONS = {
   performance_observations: "Performance observations",
   population_statistics: "Population statistics",
   stability_tests: "Stability tests",
-  equivalence_groups: "Equivalence groups",
+  identity_links: "Cross-window identity links",
 };
 const QUALITY_GATES = [
   "Main-paper device variants checked",
@@ -15,7 +15,7 @@ const QUALITY_GATES = [
   "Scan directions and stabilized measurements kept distinct",
   "Composition, layer stack, and processing details checked",
   "Stability specimens, conditions, and checkpoints checked",
-  "Every equivalence group explicitly justified",
+  "Every cross-window identity link explicitly justified",
   "Every accepted reported value has source evidence",
   "Remaining uncertainty recorded without inventing a value",
 ];
@@ -53,11 +53,11 @@ function recordDecision(kind, item, index) {
   return state.bundle.summary.record_decisions?.[state.user.id]?.[recordKey(kind, item, index)] || "";
 }
 function entityTitle(kind, item, index) { return item.label || item.specimen_label || entityId(kind, item, index); }
-function metrics(item) { return (item.metrics || item.conditions || []).map((fact) => `${fact.name}: ${fact.raw_value}`).slice(0, 5).join(" · "); }
+function metrics(item) { return (item.metrics || item.conditions || []).map((value) => `${value.name}: ${value.raw_value}`).slice(0, 5).join(" · "); }
 function entityDetail(kind, item) {
   if (kind === "device_families") return item.full_stack_raw || (item.layers || []).map((layer) => layer.material).join(" / ") || item.variant;
   if (kind === "individual_devices") return `${item.champion_status === "yes" ? "Champion · " : ""}${item.variant || "variant not reported"}`;
-  if (kind === "equivalence_groups") return `${item.entity_kind}: ${(item.member_ids || []).join(" = ")}`;
+  if (kind === "identity_links") return `${item.entity_kind}: ${(item.candidate_ids || []).join(" = ")}`;
   return metrics(item) || item.statistic_type || item.measurement_type || item.link_status || "";
 }
 
@@ -135,7 +135,7 @@ function renderStudy() {
 
 function renderInventoryForm() {
   const inputs = Object.entries(COLLECTIONS)
-    .filter(([key]) => key !== "equivalence_groups")
+    .filter(([key]) => key !== "identity_links")
     .map(([key, label]) => element("label", {}, [
       label,
       element("input", { properties: { type: "number", min: "0", value: "0" }, dataset: { count: key } }),
@@ -146,7 +146,7 @@ function renderInventoryForm() {
 
 function renderInventoryComparison() {
   const audit = state.bundle.summary.inventory_audits[state.user.id];
-  const rows = Object.entries(COLLECTIONS).filter(([key]) => key !== "equivalence_groups").map(([key, label]) => {
+  const rows = Object.entries(COLLECTIONS).filter(([key]) => key !== "identity_links").map(([key, label]) => {
     const expected = audit.expected_counts[key] ?? 0;
     const extracted = state.bundle.summary[key] ?? 0;
     const difference = expected === extracted ? "match" : `${extracted - expected > 0 ? "+" : ""}${extracted - expected}`;

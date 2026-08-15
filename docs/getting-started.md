@@ -58,7 +58,7 @@ suffix preserves the previous quality-first routing for the default OpenRouter m
 | Artifact | Purpose |
 | --- | --- |
 | `extraction.json` | Complete rich study result, including records that need review |
-| `grounded_facts.json` | Conservative subset of facts that passed local source checks |
+| `grounded_values.json` | Conservative subset of reported values that passed local source checks |
 | `validation.json` | Evidence, identifier, and relationship findings |
 | `document.json` | Model-facing scientific evidence blocks with source and page locations |
 | `report.json` | Status, counts, usage, cost, cache information, and failures |
@@ -67,12 +67,12 @@ suffix preserves the previous quality-first routing for the default OpenRouter m
 | `reduced_conversion.json` | Rich-to-reduced mappings and explicit losses |
 
 Windowed runs additionally write `window_plan.json`, successful per-window results,
-`candidates.json`, and—when reconciliation is attempted—`reconciliation.json`.
+`candidates.json`, and—when cross-window linking is attempted—`identity_links.json`.
 Requests and preserved failure responses are stored under `requests/`.
 
 `report.json` uses `complete` only when local validation reports no findings.
 `complete_needs_review` means the model call completed but at least one local check
-needs attention. `partial` means a window, reconciliation call, or conversion failed
+needs attention. `partial` means a window, identity-linking call, or conversion failed
 while inspectable output was still produced; `failed` means no model call succeeded.
 
 ## Caching and repeatability

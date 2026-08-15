@@ -54,9 +54,9 @@ convenience wrapper that returns only the validated reduced cells.
 
 ## Plan long-document windows
 
-`plan_windows` accepts parser-independent `EvidenceBlock` records. It guarantees that
+`plan_evidence_windows` accepts parser-independent `EvidenceBlock` records. It guarantees that
 each supplied block appears exactly once as primary evidence.
 
-::: perla_extract.study_extraction.partitioning.plan_windows
+::: perla_extract.study_extraction.partitioning.plan_evidence_windows
     options:
       show_root_heading: true

@@ -54,7 +54,7 @@ erDiagram
 A `DeviceFamily` holds information shared by a reported variant: the architecture,
 polarity, full stack, ordered layers, absorber formula and constituents, absorber
 properties, and processing steps. Layers identify their role and material while
-retaining arbitrary reported details as `Fact` records. Processing steps similarly
+retaining arbitrary reported details as `ReportedValue` records. Processing steps similarly
 store an operation, target layers, materials, and generic conditions.
 
 This arrangement captures chemical detail without adding a Python field or regular
@@ -74,9 +74,9 @@ condition.
 Unknown relationships remain unknown. A stability record can link to a family, an
 individual device, or only a separately described specimen through `link_status`.
 
-## Generic facts and qualifiers
+## Reported values and qualifiers
 
-`Fact` keeps:
+`ReportedValue` keeps:
 
 - the source label in `name`;
 - the reported text in `raw_value`;
@@ -88,9 +88,9 @@ Bounds, ranges, approximations, and other qualifiers therefore remain visible in
 represented with `null`, `not_reported`, or an empty collection as allowed by the
 specific field; the extractor must not create a placeholder value.
 
-## Window equivalence
+## Cross-window identity links
 
 Long documents can cause the same entity to be proposed in more than one extraction
-window. `EquivalenceGroup` records positive identity evidence between those candidates.
-It does not merge them or choose a preferred candidate. This keeps disagreements and
-partial records available for inspection and later curation.
+window. `CrossWindowIdentityLink` records positive identity evidence between those
+candidates. It does not merge them or choose a preferred candidate. This keeps
+disagreements and partial records available for inspection and later curation.

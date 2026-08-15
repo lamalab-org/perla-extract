@@ -31,7 +31,7 @@ RecordCollection = Literal[
     "performance_observations",
     "population_statistics",
     "stability_tests",
-    "equivalence_groups",
+    "identity_links",
 ]
 RecordDecision = Literal["verified", "uncertain", "needs_correction"]
 
@@ -41,7 +41,7 @@ RECORD_IDENTIFIERS: dict[str, str] = {
     "performance_observations": "observation_id",
     "population_statistics": "population_id",
     "stability_tests": "test_id",
-    "equivalence_groups": "equivalence_id",
+    "identity_links": "link_id",
 }
 
 
@@ -91,7 +91,10 @@ class InventoryAuditRequest(BaseModel):
     def validate_counts(self) -> "InventoryAuditRequest":
         """Keep the census generic but reject nonsensical negative counts."""
 
-        if any(not isinstance(value, int) or value < 0 for value in self.expected_counts.values()):
+        if any(
+            not isinstance(value, int) or value < 0
+            for value in self.expected_counts.values()
+        ):
             raise ValueError("inventory counts must be non-negative integers")
         return self
 
@@ -168,7 +171,9 @@ def _parent(document: Any, path: str) -> tuple[Any, str]:
     return node, parts[-1]
 
 
-def _apply(document: dict[str, Any], request: MutationRequest) -> tuple[Any, dict[str, Any]]:
+def _apply(
+    document: dict[str, Any], request: MutationRequest
+) -> tuple[Any, dict[str, Any]]:
     """Apply one RFC-6901-addressed operation and return its previous value."""
 
     result = copy.deepcopy(document)
@@ -203,7 +208,9 @@ def _apply(document: dict[str, Any], request: MutationRequest) -> tuple[Any, dic
 def _digest(value: object) -> str:
     """Create a stable content identity so edits invalidate old review decisions."""
 
-    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    encoded = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    )
     return hashlib.sha256(encoded.encode()).hexdigest()
 
 
@@ -297,7 +304,9 @@ class StudyReviewStore:
         catalog = _record_catalog(truth)
         for event in events:
             if event["kind"] == "stage_complete":
-                stages.setdefault(event["details"]["stage"], []).append(event["reviewer_id"])
+                stages.setdefault(event["details"]["stage"], []).append(
+                    event["reviewer_id"]
+                )
             elif event["kind"] == "inventory_audit":
                 audits[event["reviewer_id"]] = event["details"]
             elif event["kind"] == "record_decision":
@@ -313,7 +322,7 @@ class StudyReviewStore:
             "performance_observations": len(truth["performance_observations"]),
             "population_statistics": len(truth["population_statistics"]),
             "stability_tests": len(truth["stability_tests"]),
-            "equivalence_groups": len(truth.get("equivalence_groups", [])),
+            "identity_links": len(truth.get("identity_links", [])),
             "completed_stages": stages,
             "inventory_audits": audits,
             "record_decisions": decisions,
@@ -342,7 +351,9 @@ class StudyReviewStore:
         truth_path = self.truth_path(split, paper_id)
         if truth_path.exists():
             raise ValueError("paper already exists")
-        if isinstance(extraction, dict) and isinstance(extraction.get("extraction"), dict):
+        if isinstance(extraction, dict) and isinstance(
+            extraction.get("extraction"), dict
+        ):
             extraction = extraction["extraction"]
         truth = StudyExtraction.model_validate(extraction).model_dump(mode="json")
         now = datetime.now(timezone.utc).isoformat()
@@ -350,8 +361,11 @@ class StudyReviewStore:
             json.dumps(truth, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
         event = ReviewEvent(
-            event_id=str(uuid.uuid4()), revision=1, timestamp=now,
-            reviewer_id=reviewer_id, kind="seed_imported",
+            event_id=str(uuid.uuid4()),
+            revision=1,
+            timestamp=now,
+            reviewer_id=reviewer_id,
+            kind="seed_imported",
             details={"seed_sha256": seed_digest},
         ).model_dump(mode="json")
         _atomic_json(self.seed_path(split, paper_id), truth)
@@ -361,20 +375,31 @@ class StudyReviewStore:
             _atomic_json(self.document_path(split, paper_id), document)
         _atomic_json(
             self.manifest_path(split, paper_id),
-            {"schema": "StudyExtraction", "schema_version": "2026-08-15.1",
-             "seed_sha256": seed_digest, "imported_at": now, **(manifest or {})},
+            {
+                "schema": "StudyExtraction",
+                "schema_version": "2026-08-15.1",
+                "seed_sha256": seed_digest,
+                "imported_at": now,
+                **(manifest or {}),
+            },
         )
         return self.load_bundle(split, paper_id)
 
-    def _validate_revision(self, split: str, paper_id: str, base_revision: int) -> list[dict[str, Any]]:
+    def _validate_revision(
+        self, split: str, paper_id: str, base_revision: int
+    ) -> list[dict[str, Any]]:
         """Reject stale writes so concurrent reviewers cannot silently overwrite work."""
 
         events = self.events(split, paper_id)
         if base_revision != len(events):
-            raise ValueError(f"stale revision {base_revision}; current revision is {len(events)}")
+            raise ValueError(
+                f"stale revision {base_revision}; current revision is {len(events)}"
+            )
         return events
 
-    def _validate_citations(self, split: str, paper_id: str, citations: list[Citation]) -> None:
+    def _validate_citations(
+        self, split: str, paper_id: str, citations: list[Citation]
+    ) -> None:
         """Require human evidence quotes to occur in the imported source blocks."""
 
         if not citations:
@@ -406,9 +431,13 @@ class StudyReviewStore:
             normalized_source = " ".join(source.split())
             normalized_quote = " ".join(citation.quote.split())
             if normalized_quote not in normalized_source:
-                raise ValueError(f"quote is not present in evidence block {citation.block_id}")
+                raise ValueError(
+                    f"quote is not present in evidence block {citation.block_id}"
+                )
 
-    def mutate(self, split: str, paper_id: str, request: MutationRequest, reviewer_id: str) -> dict[str, Any]:
+    def mutate(
+        self, split: str, paper_id: str, request: MutationRequest, reviewer_id: str
+    ) -> dict[str, Any]:
         """Apply one evidence-guarded edit and revalidate the entire rich result.
 
         The event stores before and after values, while the compiled truth remains easy
@@ -424,11 +453,17 @@ class StudyReviewStore:
             raise ValueError("replacement does not change the record")
         validated = StudyExtraction.model_validate(proposed).model_dump(mode="json")
         event = ReviewEvent(
-            event_id=str(uuid.uuid4()), revision=len(events) + 1,
-            timestamp=datetime.now(timezone.utc).isoformat(), reviewer_id=reviewer_id,
-            kind="mutation", action=request.action, path=request.path,
-            before=before, after=request.value if request.action != "remove" else None,
-            evidence=request.evidence, note=request.note,
+            event_id=str(uuid.uuid4()),
+            revision=len(events) + 1,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            reviewer_id=reviewer_id,
+            kind="mutation",
+            action=request.action,
+            path=request.path,
+            before=before,
+            after=request.value if request.action != "remove" else None,
+            evidence=request.evidence,
+            note=request.note,
         ).model_dump(mode="json")
         _atomic_json(self.truth_path(split, paper_id), validated)
         _atomic_json(self.events_path(split, paper_id), [*events, event])
@@ -459,9 +494,7 @@ class StudyReviewStore:
             None,
         )
         if record is None:
-            raise ValueError(
-                f"unknown {request.collection} record {request.record_id}"
-            )
+            raise ValueError(f"unknown {request.collection} record {request.record_id}")
         record_key = f"{request.collection}:{request.record_id}"
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
@@ -479,19 +512,30 @@ class StudyReviewStore:
         _atomic_json(self.events_path(split, paper_id), [*events, event])
         return self.load_bundle(split, paper_id)
 
-    def inventory_audit(self, split: str, paper_id: str, request: InventoryAuditRequest, reviewer_id: str) -> dict[str, Any]:
+    def inventory_audit(
+        self,
+        split: str,
+        paper_id: str,
+        request: InventoryAuditRequest,
+        reviewer_id: str,
+    ) -> dict[str, Any]:
         """Persist the independent device census performed before candidates are shown."""
 
         events = self._validate_revision(split, paper_id, request.base_revision)
         event = ReviewEvent(
-            event_id=str(uuid.uuid4()), revision=len(events) + 1,
-            timestamp=datetime.now(timezone.utc).isoformat(), reviewer_id=reviewer_id,
-            kind="inventory_audit", details=request.model_dump(mode="json", exclude={"base_revision"}),
+            event_id=str(uuid.uuid4()),
+            revision=len(events) + 1,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            reviewer_id=reviewer_id,
+            kind="inventory_audit",
+            details=request.model_dump(mode="json", exclude={"base_revision"}),
         ).model_dump(mode="json")
         _atomic_json(self.events_path(split, paper_id), [*events, event])
         return self.load_bundle(split, paper_id)
 
-    def complete_stage(self, split: str, paper_id: str, request: StageRequest, reviewer_id: str) -> dict[str, Any]:
+    def complete_stage(
+        self, split: str, paper_id: str, request: StageRequest, reviewer_id: str
+    ) -> dict[str, Any]:
         """Advance review only after the evidence-based prerequisites are satisfied.
 
         Inventory requires a blind audit, field review requires a current decision for
@@ -512,7 +556,9 @@ class StudyReviewStore:
         if request.stage == "inventory" and not any(
             event["kind"] == "inventory_audit" for event in reviewer_events
         ):
-            raise ValueError("submit a blind inventory audit before completing inventory")
+            raise ValueError(
+                "submit a blind inventory audit before completing inventory"
+            )
         prerequisite = {
             "fields": "inventory",
             "completeness": "fields",
@@ -539,9 +585,13 @@ class StudyReviewStore:
                     f"review every current record before completing fields ({len(unresolved)} remaining)"
                 )
         event = ReviewEvent(
-            event_id=str(uuid.uuid4()), revision=len(events) + 1,
-            timestamp=datetime.now(timezone.utc).isoformat(), reviewer_id=reviewer_id,
-            kind="stage_complete", note=request.note, details={"stage": request.stage},
+            event_id=str(uuid.uuid4()),
+            revision=len(events) + 1,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            reviewer_id=reviewer_id,
+            kind="stage_complete",
+            note=request.note,
+            details={"stage": request.stage},
         ).model_dump(mode="json")
         _atomic_json(self.events_path(split, paper_id), [*events, event])
         return self.load_bundle(split, paper_id)
@@ -554,5 +604,11 @@ class StudyReviewStore:
         for path in sorted((self.root / split).glob("*.json")):
             truth = _json(path)
             events = self.events(split, path.stem)
-            papers.append({"id": path.stem, "revision": len(events), **self.summary(truth, events)})
+            papers.append(
+                {
+                    "id": path.stem,
+                    "revision": len(events),
+                    **self.summary(truth, events),
+                }
+            )
         return papers

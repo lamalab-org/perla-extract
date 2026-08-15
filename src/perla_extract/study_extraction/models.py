@@ -2,7 +2,7 @@
 
 These models preserve distinctions that the historical flat PERLA schema cannot
 represent, especially device identity, measurement protocol, population results,
-and multiple stability experiments.  They deliberately contain generic facts
+and multiple stability experiments. They deliberately contain generic reported values
 instead of one field per possible processing or material property.
 """
 
@@ -48,21 +48,21 @@ class EvidenceBlock(StrictModel):
         return len(self.text)
 
 
-class EvidenceRef(StrictModel):
+class EvidenceCitation(StrictModel):
     """Point to a source block and quote the text that supports a claim."""
 
     block_id: Identifier
     quote: Annotated[str, Field(min_length=1, max_length=1600)]
 
 
-class Fact(StrictModel):
+class ReportedValue(StrictModel):
     """Keep a reported value verbatim and normalize it only when unambiguous."""
 
     name: ShortText
     raw_value: Annotated[str, Field(min_length=1, max_length=800)]
     value_number: float | None
     unit: Annotated[str | None, Field(max_length=120)]
-    evidence: Annotated[list[EvidenceRef], Field(min_length=1, max_length=8)]
+    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=8)]
 
 
 class MaterialConstituent(StrictModel):
@@ -70,8 +70,8 @@ class MaterialConstituent(StrictModel):
 
     name: ShortText
     role: Annotated[str | None, Field(max_length=300)]
-    amount: Fact | None
-    evidence: Annotated[list[EvidenceRef], Field(min_length=1, max_length=8)]
+    amount: ReportedValue | None
+    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=8)]
 
 
 class Layer(StrictModel):
@@ -94,15 +94,15 @@ class Layer(StrictModel):
         "not_reported",
     ]
     material: ShortText
-    details: Annotated[list[Fact], Field(max_length=40)]
-    evidence: Annotated[list[EvidenceRef], Field(min_length=1, max_length=12)]
+    reported_properties: Annotated[list[ReportedValue], Field(max_length=40)]
+    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
 
 class ProcessingStep(StrictModel):
     """Store one fabrication operation without prescribing property-specific fields.
 
-    Generic ``Fact`` conditions let the schema retain unfamiliar treatments and
-    process parameters without adding extraction code for every new property.
+    Generic ``ReportedValue`` conditions let the schema retain unfamiliar treatments
+    and process parameters without adding extraction code for every new property.
     """
 
     step_id: Identifier
@@ -110,8 +110,8 @@ class ProcessingStep(StrictModel):
     operation: ShortText
     target_layer_ids: Annotated[list[Identifier], Field(max_length=30)]
     materials: Annotated[list[ShortText], Field(max_length=30)]
-    conditions: Annotated[list[Fact], Field(max_length=50)]
-    evidence: Annotated[list[EvidenceRef], Field(min_length=1, max_length=12)]
+    conditions: Annotated[list[ReportedValue], Field(max_length=50)]
+    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
 
 class DeviceFamily(StrictModel):
@@ -129,11 +129,11 @@ class DeviceFamily(StrictModel):
     polarity: Literal["n-i-p", "p-i-n", "tandem", "other", "not_reported"]
     full_stack_raw: Annotated[str | None, Field(max_length=1600)]
     layers: Annotated[list[Layer], Field(max_length=60)]
-    absorber_formula: Fact | None
-    absorber_properties: Annotated[list[Fact], Field(max_length=60)]
+    absorber_formula: ReportedValue | None
+    absorber_properties: Annotated[list[ReportedValue], Field(max_length=60)]
     absorber_constituents: Annotated[list[MaterialConstituent], Field(max_length=80)]
     processing_steps: Annotated[list[ProcessingStep], Field(max_length=150)]
-    evidence: Annotated[list[EvidenceRef], Field(min_length=1, max_length=15)]
+    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=15)]
 
 
 class IndividualDevice(StrictModel):
@@ -145,7 +145,7 @@ class IndividualDevice(StrictModel):
     variant: Annotated[str | None, Field(max_length=500)]
     champion_status: Literal["yes", "no", "not_reported"]
     selection_basis: Literal["champion", "representative", "other", "not_reported"]
-    evidence: Annotated[list[EvidenceRef], Field(min_length=1, max_length=12)]
+    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
 
 class PerformanceObservation(StrictModel):
@@ -166,8 +166,8 @@ class PerformanceObservation(StrictModel):
         "not_reported",
     ]
     scan_direction: Literal["reverse", "forward", "not_applicable", "not_reported"]
-    metrics: Annotated[list[Fact], Field(min_length=1, max_length=40)]
-    evidence: Annotated[list[EvidenceRef], Field(min_length=1, max_length=12)]
+    metrics: Annotated[list[ReportedValue], Field(min_length=1, max_length=40)]
+    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
 
 class PopulationStatistic(StrictModel):
@@ -192,17 +192,17 @@ class PopulationStatistic(StrictModel):
         "not_reported",
     ]
     sample_size: Annotated[int | None, Field(ge=1)]
-    metrics: Annotated[list[Fact], Field(min_length=1, max_length=40)]
-    evidence: Annotated[list[EvidenceRef], Field(min_length=1, max_length=12)]
+    metrics: Annotated[list[ReportedValue], Field(min_length=1, max_length=40)]
+    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
 
 class StabilityCheckpoint(StrictModel):
     """Preserve one reported outcome and its time within an ordered stability test."""
 
     checkpoint_id: Identifier
-    time: Fact | None
-    outcomes: Annotated[list[Fact], Field(min_length=1, max_length=40)]
-    evidence: Annotated[list[EvidenceRef], Field(min_length=1, max_length=12)]
+    time: ReportedValue | None
+    outcomes: Annotated[list[ReportedValue], Field(min_length=1, max_length=40)]
+    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
 
 class StabilityTest(StrictModel):
@@ -222,39 +222,39 @@ class StabilityTest(StrictModel):
         "stability_specimen_only",
         "not_reported",
     ]
-    conditions: Annotated[list[Fact], Field(max_length=60)]
+    conditions: Annotated[list[ReportedValue], Field(max_length=60)]
     checkpoints: Annotated[
         list[StabilityCheckpoint], Field(min_length=1, max_length=80)
     ]
-    evidence: Annotated[list[EvidenceRef], Field(min_length=1, max_length=12)]
+    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
 
-class Paper(StrictModel):
+class PaperMetadata(StrictModel):
     """Identify the supplied paper without trying to infer missing metadata."""
 
     title: Annotated[str | None, Field(max_length=800)]
     doi: Annotated[str | None, Field(max_length=300)]
 
 
-class EquivalenceGroup(StrictModel):
+class CrossWindowIdentityLink(StrictModel):
     """Link window candidates that denote the same real-world entity.
 
     Candidates remain intact and auditable. The link communicates identity without
     selecting one candidate or heuristically merging possibly conflicting details.
     """
 
-    equivalence_id: Identifier
+    link_id: Identifier
     entity_kind: EntityKind
-    member_ids: Annotated[list[Identifier], Field(min_length=2, max_length=100)]
+    candidate_ids: Annotated[list[Identifier], Field(min_length=2, max_length=100)]
     rationale: ShortText
-    evidence: Annotated[list[EvidenceRef], Field(min_length=1, max_length=20)]
+    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=20)]
 
     @model_validator(mode="after")
-    def validate_members(self) -> EquivalenceGroup:
-        """Reject repeated members because an equivalence set contains unique IDs."""
+    def validate_candidate_ids(self) -> CrossWindowIdentityLink:
+        """Reject duplicate candidates because one link denotes one identity set."""
 
-        if len(self.member_ids) != len(set(self.member_ids)):
-            raise ValueError("member_ids must be unique")
+        if len(self.candidate_ids) != len(set(self.candidate_ids)):
+            raise ValueError("candidate_ids must be unique")
         return self
 
 
@@ -263,15 +263,15 @@ class StudyExtraction(StrictModel):
 
     The model deliberately keeps families, individual devices, protocol-specific
     observations, population statistics, and stability tests in separate collections.
-    Windowed extraction may add equivalence links, but candidates remain intact so
-    reconciliation cannot silently discard conflicting evidence.
+    Windowed extraction may add identity links, but candidates remain intact so
+    linking cannot silently discard conflicting evidence.
     """
 
-    paper: Paper
+    paper: PaperMetadata
     device_families: list[DeviceFamily]
     individual_devices: list[IndividualDevice]
     performance_observations: list[PerformanceObservation]
     population_statistics: list[PopulationStatistic]
     stability_tests: list[StabilityTest]
-    equivalence_groups: list[EquivalenceGroup] = Field(default_factory=list)
+    identity_links: list[CrossWindowIdentityLink] = Field(default_factory=list)
     unresolved_notes: list[ShortText]

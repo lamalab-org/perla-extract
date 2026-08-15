@@ -24,7 +24,7 @@ individual measurement, aggregate, and stability result into one reduced cell.
 The adapter projects only unambiguous supported fields:
 
 - PCE, short-circuit current density, open-circuit voltage, and fill factor when one
-  recognized fact has a compatible numeric value and unit;
+  recognized reported value has a compatible numeric value and unit;
 - family polarity, ordered layers, absorber formula, and layer-linked processing; and
 - explicit aggregation semantics such as champion, single device, stabilized, mean,
   median, or distribution.
@@ -36,7 +36,7 @@ reduced file. It does not control what the model extracts.
 
 Rich information that has no faithful reduced field is serialized into
 `additional_notes` with stable source identifiers and evidence-block references. This
-includes full family provenance, absorber constituents, unprojected facts, detailed
+includes full family provenance, absorber constituents, unprojected values, detailed
 processing conditions, protocol identity, and ordered stability checkpoints.
 
 `reduced_conversion.json` contains:
@@ -44,14 +44,14 @@ processing conditions, protocol identity, and ordered stability checkpoints.
 - `cells`: the validated reduced rows;
 - `mappings`: each rich source kind and ID mapped to its reduced row index; and
 - `issues`: explicit conversion limitations such as incompatible units, ambiguous
-  metrics, dangling links, uncollapsed equivalences, and stability retained in notes.
+  metrics, dangling links, uncollapsed identity links, and stability retained in notes.
 
 ## Why the reverse direction is not deterministic
 
 A reduced cell does not retain enough information to reconstruct stable rich entity
 identifiers, multiple measurement protocols for one device, ordered stability
-checkpoints, complete evidence, or cross-window candidate equivalence. Converting it
-back could therefore create only a partial rich record; it cannot recover facts that
+checkpoints, complete evidence, or cross-window candidate identity. Converting it
+back could therefore create only a partial rich record; it cannot recover values that
 were never encoded. The authoritative ground truth should remain `StudyExtraction`.
 
 ## Use the adapter

@@ -31,11 +31,11 @@ It changes only when the cache envelope becomes incompatible. Parser implementat
 `EvidenceBlock` schema, backend version, and source changes are fingerprinted
 automatically and therefore require no manual version bump.
 
-## Evidence references
+## Evidence citations
 
-Every scientific record carries one or more `EvidenceRef` values. A reference names a
-supplied block and copies the smallest useful supporting quote. Every `Fact.raw_value`
-must also occur in at least one cited block. A fact assembled from multiple exact
+Every scientific record carries one or more `EvidenceCitation` values. A citation names a
+supplied block and copies the smallest useful supporting quote. Every `ReportedValue.raw_value`
+must also occur in at least one cited block. A value assembled from multiple exact
 quotes is accepted only when their normalized contents join to the complete raw value.
 
 The extractor is instructed not to digitize plots, interpolate, infer unreported
@@ -49,10 +49,10 @@ After extraction, `validate_study` checks:
 1. cited block identifiers exist;
 2. evidence quotes occur in those blocks after conservative Unicode and whitespace
    normalization;
-3. fact values occur in their cited evidence;
+3. reported values occur in their cited evidence;
 4. family and device identifiers are unique;
 5. device, observation, population, and stability links resolve; and
-6. equivalence members exist and are not claimed more than once.
+6. linked candidates exist and are not claimed by more than one identity link.
 
 ```mermaid
 flowchart LR
@@ -60,11 +60,11 @@ flowchart LR
     C["document.json"] --> D["Quote and value checks"]
     B --> D
     D --> E["validation.json"]
-    D --> F["grounded_facts.json"]
+    D --> F["grounded_values.json"]
     A --> G["Full result remains unchanged"]
 ```
 
-`grounded_facts.json` is a conservative fact-level subset. It is useful when precision
+`grounded_values.json` is a conservative value-level subset. It is useful when precision
 matters more than recall, but it is not a replacement for `extraction.json`: local text
 matching cannot prove that a supported value was attached to the correct scientific
 entity or that no device was missed.

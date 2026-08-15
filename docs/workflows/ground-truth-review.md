@@ -29,7 +29,7 @@ stateDiagram-v2
    interface reveals model candidates. Count device families, individual devices,
    performance observations, population statistics, and stability tests.
 2. **Identity.** Separate variants, individual devices, protocols, aggregates, and
-   stability specimens. Accept equivalence only with positive source evidence.
+   stability specimens. Accept an identity link only with positive source evidence.
 3. **Scientific fields.** Review stack order, absorber composition and constituents,
    processing, performance, and stability. Mark every complete record as verified,
    uncertain, or needing correction.

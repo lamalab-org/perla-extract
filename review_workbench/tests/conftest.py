@@ -18,7 +18,7 @@ def empty_study() -> dict:
         "performance_observations": [],
         "population_statistics": [],
         "stability_tests": [],
-        "equivalence_groups": [],
+        "identity_links": [],
         "unresolved_notes": ["Initial model note"],
     }
 

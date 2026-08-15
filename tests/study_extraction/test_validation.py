@@ -1,12 +1,12 @@
 from perla_extract.study_extraction.models import (
     DeviceFamily,
     EvidenceBlock,
-    EvidenceRef,
-    Fact,
+    EvidenceCitation,
     IndividualDevice,
-    Paper,
+    PaperMetadata,
     PerformanceObservation,
     PopulationStatistic,
+    ReportedValue,
     StabilityCheckpoint,
     StabilityTest,
     StudyExtraction,
@@ -26,12 +26,12 @@ def test_ocr_spacing_does_not_destroy_real_source_boundaries():
     assert not _contains(formula, "xCs0.3FA0.6DMA0.1Pb (I 0.7 Br0.3)3")
 
 
-def test_fact_can_be_an_exact_join_of_multiple_verified_quotes():
-    """A tandem fact may join two exact source values without inventing content."""
+def test_reported_value_can_be_an_exact_join_of_multiple_verified_quotes():
+    """A tandem value may join two exact source values without inventing content."""
 
     references = [
-        EvidenceRef(block_id="a", quote="CsPbI3"),
-        EvidenceRef(block_id="b", quote="FASnI3"),
+        EvidenceCitation(block_id="a", quote="CsPbI3"),
+        EvidenceCitation(block_id="b", quote="FASnI3"),
     ]
     family = DeviceFamily(
         family_id="f",
@@ -41,7 +41,7 @@ def test_fact_can_be_an_exact_join_of_multiple_verified_quotes():
         polarity="tandem",
         full_stack_raw=None,
         layers=[],
-        absorber_formula=Fact(
+        absorber_formula=ReportedValue(
             name="absorber formulas",
             raw_value="CsPbI3; FASnI3",
             value_number=None,
@@ -54,7 +54,7 @@ def test_fact_can_be_an_exact_join_of_multiple_verified_quotes():
         evidence=references,
     )
     extraction = StudyExtraction(
-        paper=Paper(title=None, doi=None),
+        paper=PaperMetadata(title=None, doi=None),
         device_families=[family],
         individual_devices=[],
         performance_observations=[],
@@ -70,18 +70,18 @@ def test_fact_can_be_an_exact_join_of_multiple_verified_quotes():
     result = validate_study(extraction, blocks)
 
     assert result["status"] == "verified"
-    assert result["counts"]["source_verified_facts"] == 1
-    assert result["counts"]["source_assembled_facts"] == 1
+    assert result["counts"]["source_verified_values"] == 1
+    assert result["counts"]["source_assembled_values"] == 1
     assert (
-        result["verified_facts"][0]["path"] == "$.device_families[0].absorber_formula"
+        result["verified_values"][0]["path"] == "$.device_families[0].absorber_formula"
     )
 
 
-def test_fact_with_one_invalid_citation_is_not_in_grounded_subset():
-    """Require every attached citation to validate before calling a fact grounded."""
+def test_reported_value_with_one_invalid_citation_is_not_in_grounded_subset():
+    """Require every citation to validate before calling a value source-verified."""
 
-    valid = EvidenceRef(block_id="a", quote="CsPbI3")
-    invalid = EvidenceRef(block_id="missing", quote="CsPbI3")
+    valid = EvidenceCitation(block_id="a", quote="CsPbI3")
+    invalid = EvidenceCitation(block_id="missing", quote="CsPbI3")
     family = DeviceFamily(
         family_id="f",
         label="device",
@@ -90,7 +90,7 @@ def test_fact_with_one_invalid_citation_is_not_in_grounded_subset():
         polarity="not_reported",
         full_stack_raw=None,
         layers=[],
-        absorber_formula=Fact(
+        absorber_formula=ReportedValue(
             name="absorber",
             raw_value="CsPbI3",
             value_number=None,
@@ -103,7 +103,7 @@ def test_fact_with_one_invalid_citation_is_not_in_grounded_subset():
         evidence=[valid],
     )
     extraction = StudyExtraction(
-        paper=Paper(title=None, doi=None),
+        paper=PaperMetadata(title=None, doi=None),
         device_families=[family],
         individual_devices=[],
         performance_observations=[],
@@ -118,15 +118,15 @@ def test_fact_with_one_invalid_citation_is_not_in_grounded_subset():
     result = validate_study(extraction, blocks)
 
     assert result["status"] == "needs_review"
-    assert result["counts"]["source_verified_facts"] == 0
-    assert result["verified_facts"] == []
+    assert result["counts"]["source_verified_values"] == 0
+    assert result["verified_values"] == []
 
 
 def test_validation_reports_duplicate_ids_for_every_entity_collection():
     """Semantic validation must not hide ambiguous identifiers in sets."""
 
-    evidence = [EvidenceRef(block_id="a", quote="reported")]
-    fact = Fact(
+    evidence = [EvidenceCitation(block_id="a", quote="reported")]
+    reported_value = ReportedValue(
         name="PCE",
         raw_value="20%",
         value_number=20.0,
@@ -161,7 +161,7 @@ def test_validation_reports_duplicate_ids_for_every_entity_collection():
         device_id="d",
         measurement_type="not_reported",
         scan_direction="not_reported",
-        metrics=[fact],
+        metrics=[reported_value],
         evidence=evidence,
     )
     population = PopulationStatistic(
@@ -170,7 +170,7 @@ def test_validation_reports_duplicate_ids_for_every_entity_collection():
         label="population",
         statistic_type="not_reported",
         sample_size=None,
-        metrics=[fact],
+        metrics=[reported_value],
         evidence=evidence,
     )
     stability = StabilityTest(
@@ -184,14 +184,14 @@ def test_validation_reports_duplicate_ids_for_every_entity_collection():
             StabilityCheckpoint(
                 checkpoint_id="c",
                 time=None,
-                outcomes=[fact],
+                outcomes=[reported_value],
                 evidence=evidence,
             )
         ],
         evidence=evidence,
     )
     extraction = StudyExtraction(
-        paper=Paper(title=None, doi=None),
+        paper=PaperMetadata(title=None, doi=None),
         device_families=[family, family.model_copy()],
         individual_devices=[device, device.model_copy()],
         performance_observations=[observation, observation.model_copy()],

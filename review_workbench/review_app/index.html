@@ -61,7 +61,7 @@
               <p class="callout">Inspect the paper and SI before revealing the model candidates. This protects recall estimates from model anchoring.</p>
               <div class="check-row"><label><input id="searched-main" type="checkbox" checked /> Main paper searched</label><label><input id="searched-supplement" type="checkbox" /> SI searched</label></div>
               <div id="inventory-counts" class="count-grid"></div>
-              <label>Missing, ambiguous, or difficult records<textarea id="inventory-notes" rows="4" placeholder="Describe devices or measurements you expect to reconcile…"></textarea></label>
+              <label>Missing, ambiguous, or difficult records<textarea id="inventory-notes" rows="4" placeholder="Describe devices or measurements that still need review…"></textarea></label>
               <button id="submit-audit" class="primary">Submit census and reveal candidates</button>
             </div>
             <div id="inventory-revealed" hidden>
@@ -81,7 +81,7 @@
                   <option value="performance_observations">Performance observation</option>
                   <option value="population_statistics">Population statistic</option>
                   <option value="stability_tests">Stability test</option>
-                  <option value="equivalence_groups">Equivalence group</option>
+                  <option value="identity_links">Cross-window identity link</option>
                 </select>
                 <button id="add-record">Add record</button>
               </div>

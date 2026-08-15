@@ -87,7 +87,7 @@ def _block_id(source: str, page: int, order: int, kind: str, text: str) -> str:
     return f"{source}_p{page}_{order:04d}_{kind}_{digest}"
 
 
-def _clean(value: object) -> str:
+def _normalize_layout_text(value: object) -> str:
     """Normalize layout whitespace while retaining line boundaries."""
 
     lines = [
@@ -135,14 +135,14 @@ def _overlap_fraction(first: list[float], second: list[float]) -> float:
     return intersection / area
 
 
-def _pymupdf_candidates(path: Path) -> list[dict[str, Any]]:
+def _pymupdf_layout_items(path: Path) -> list[dict[str, Any]]:
     """Recover native text and tables without emitting table contents twice.
 
     Detected table rectangles suppress overlapping text blocks; all remaining
-    candidates retain geometry so later ordering and evidence locations stay stable.
+    layout_items retain geometry so later ordering and evidence locations stay stable.
     """
 
-    candidates: list[dict[str, Any]] = []
+    layout_items: list[dict[str, Any]] = []
     with pymupdf.open(path) as document:
         for page_index, page in enumerate(document, start=1):
             table_boxes: list[list[float]] = []
@@ -153,7 +153,7 @@ def _pymupdf_candidates(path: Path) -> list[dict[str, Any]]:
                 tables = []
             for table in tables:
                 rows = [
-                    [_clean(cell) or None for cell in row]
+                    [_normalize_layout_text(cell) or None for cell in row]
                     for row in (table.extract() or [])
                 ]
                 nonempty_by_row = [
@@ -171,7 +171,7 @@ def _pymupdf_candidates(path: Path) -> list[dict[str, Any]]:
                     continue
                 bbox = [float(value) for value in table.bbox]
                 table_boxes.append(bbox)
-                candidates.append(
+                layout_items.append(
                     {
                         "page": page_index,
                         "bbox": bbox,
@@ -198,10 +198,12 @@ def _pymupdf_candidates(path: Path) -> list[dict[str, Any]]:
                     "".join(str(span.get("text", "")) for span in line.get("spans", []))
                     for line in lines
                 ]
-                plain = _clean("\n".join(plain_lines))
+                plain = _normalize_layout_text("\n".join(plain_lines))
                 if not plain:
                     continue
-                formatted = _clean("\n".join(_formatted_line(line) for line in lines))
+                formatted = _normalize_layout_text(
+                    "\n".join(_formatted_line(line) for line in lines)
+                )
                 text = plain
                 if formatted and formatted != plain:
                     text += "\nTypography-preserving rendering: " + formatted
@@ -219,7 +221,7 @@ def _pymupdf_candidates(path: Path) -> list[dict[str, Any]]:
                 total_characters = max(
                     1, sum(len(str(span.get("text", ""))) for span in spans)
                 )
-                candidates.append(
+                layout_items.append(
                     {
                         "page": page_index,
                         "bbox": bbox,
@@ -231,24 +233,24 @@ def _pymupdf_candidates(path: Path) -> list[dict[str, Any]]:
                         "metadata": {},
                     }
                 )
-    return candidates
+    return layout_items
 
 
-def _classify_headings(candidates: list[dict[str, Any]]) -> None:
+def _classify_headings(layout_items: list[dict[str, Any]]) -> None:
     """Infer document hierarchy from typography rather than journal-specific labels."""
 
     body_sizes = [
         item["font_size"]
-        for item in candidates
+        for item in layout_items
         if item["kind"] == "text" and len(item["text"]) >= 120 and item["font_size"] > 0
     ]
     body_size = median(body_sizes) if body_sizes else 10.0
     heading_sizes: list[float] = [
         round(float(item.get("max_font_size") or item.get("font_size") or 0), 1)
-        for item in candidates
+        for item in layout_items
         if item["kind"] == "heading" and "level" not in item
     ]
-    for item in candidates:
+    for item in layout_items:
         if item["kind"] != "text":
             continue
         compact = item["text"].split("\nTypography-preserving rendering:", 1)[0]
@@ -265,25 +267,25 @@ def _classify_headings(candidates: list[dict[str, Any]]) -> None:
                 round(float(item.get("max_font_size") or item["font_size"]), 1)
             )
     size_order = sorted(set(heading_sizes), reverse=True)
-    for item in candidates:
+    for item in layout_items:
         if item["kind"] == "heading" and "level" not in item:
             size = round(float(item.get("max_font_size") or item["font_size"]), 1)
             item["level"] = min(size_order.index(size) + 1, 6)
 
 
-def _ordered_blocks(
-    candidates: list[dict[str, Any]], source: str, *, sort_geometry: bool = True
+def _evidence_blocks_from_layout(
+    layout_items: list[dict[str, Any]], source: str, *, sort_geometry: bool = True
 ) -> list[EvidenceBlock]:
-    """Turn backend candidates into stable evidence with inherited section paths."""
+    """Turn backend layout_items into stable evidence with inherited section paths."""
 
-    _classify_headings(candidates)
+    _classify_headings(layout_items)
     if sort_geometry:
-        candidates.sort(
+        layout_items.sort(
             key=lambda item: (item["page"], item["bbox"][1], item["bbox"][0])
         )
     headings: list[tuple[int, str]] = []
     blocks: list[EvidenceBlock] = []
-    for order, item in enumerate(candidates, start=1):
+    for order, item in enumerate(layout_items, start=1):
         if item["kind"] == "heading":
             level = int(item.get("level", 1))
             while headings and headings[-1][0] >= level:
@@ -310,7 +312,7 @@ def _ordered_blocks(
 def _parse_pymupdf(path: Path, source: str) -> list[EvidenceBlock]:
     """Parse a born-digital PDF using the repository's required dependency."""
 
-    return _ordered_blocks(_pymupdf_candidates(path), source)
+    return _evidence_blocks_from_layout(_pymupdf_layout_items(path), source)
 
 
 def _docling_bbox(item: object) -> list[float] | None:
@@ -383,7 +385,7 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
         raise RuntimeError("Docling is not installed; reinstall perla-extract") from exc
 
     document = DocumentConverter().convert(str(path)).document
-    candidates: list[dict[str, Any]] = []
+    layout_items: list[dict[str, Any]] = []
     items = document.iterate_items(
         included_content_layers={ContentLayer.BODY, ContentLayer.FURNITURE}
     )
@@ -393,7 +395,7 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
         class_name = type(item).__name__.casefold()
         provenance = getattr(item, "prov", None) or []
         page = int(getattr(provenance[0], "page_no", 1) or 1) if provenance else 1
-        text = _clean(getattr(item, "text", ""))
+        text = _normalize_layout_text(getattr(item, "text", ""))
         metadata: dict[str, object] = {
             "docling_label": label,
             "content_layer": content_layer,
@@ -419,9 +421,12 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
             try:
                 dataframe = item.export_to_dataframe(doc=document)
                 rows = [
-                    [_clean(value) or None for value in dataframe.columns.tolist()],
+                    [
+                        _normalize_layout_text(value) or None
+                        for value in dataframe.columns.tolist()
+                    ],
                     *[
-                        [_clean(value) or None for value in row]
+                        [_normalize_layout_text(value) or None for value in row]
                         for row in dataframe.astype(object)
                         .where(dataframe.notna(), None)
                         .values.tolist()
@@ -435,11 +440,11 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
             continue
         bbox = _docling_bbox(item) or [
             0.0,
-            float(len(candidates)),
+            float(len(layout_items)),
             0.0,
-            float(len(candidates) + 1),
+            float(len(layout_items) + 1),
         ]
-        candidates.append(
+        layout_items.append(
             {
                 "page": max(1, page),
                 "bbox": bbox,
@@ -453,8 +458,8 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
             }
         )
     # Docling already classifies headings. Avoid replacing its labels by giving
-    # non-heading candidates no typography signal in _ordered_blocks.
-    blocks = _ordered_blocks(candidates, source, sort_geometry=False)
+    # non-heading layout_items no typography signal in _evidence_blocks_from_layout.
+    blocks = _evidence_blocks_from_layout(layout_items, source, sort_geometry=False)
     scientific_pages = {
         block.page
         for block in blocks
@@ -612,27 +617,29 @@ def parse_pdf(
     }
 
 
-def _text_key(block: EvidenceBlock) -> str:
+def _normalized_block_text_key(block: EvidenceBlock) -> str:
     """Normalize complete blocks only for cross-document duplicate detection."""
 
     text = unicodedata.normalize("NFKC", block.text).casefold()
     return re.sub(r"\s+", " ", text).strip()
 
 
-def _deduplicate(blocks: list[EvidenceBlock]) -> tuple[list[EvidenceBlock], int]:
+def _deduplicate_evidence_blocks(
+    blocks: list[EvidenceBlock],
+) -> tuple[list[EvidenceBlock], int]:
     """Collapse a main-paper block repeated verbatim inside a concatenated SI."""
 
     main: dict[str, EvidenceBlock] = {}
     for block in blocks:
         if block.source != "main":
             continue
-        key = _text_key(block)
+        key = _normalized_block_text_key(block)
         if len(key) > 40:
             main[key] = block
     output: list[EvidenceBlock] = []
     skipped = 0
     for block in blocks:
-        key = _text_key(block)
+        key = _normalized_block_text_key(block)
         canonical = main.get(key) if block.source != "main" else None
         if canonical is None:
             output.append(block)
@@ -677,6 +684,6 @@ def parse_documents(
         )
         blocks.extend(supplement_blocks)
         events.append(supplement_event)
-    blocks, skipped = _deduplicate(blocks)
+    blocks, skipped = _deduplicate_evidence_blocks(blocks)
     events.append({"operation": "cross_document_deduplication", "skipped": skipped})
     return blocks, events

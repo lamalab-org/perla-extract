@@ -11,22 +11,22 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from .artifacts import write_json_atomic
+from .candidate_collection import combine_window_candidates
 from .client import ModelCallError, ModelClient
 from .compatibility import to_reduced_with_report
+from .identity_linking import IdentityLinkProposal, attach_valid_identity_links
 from .logging import logger
-from .merge import merge_candidates
-from .models import EvidenceBlock, Paper, StudyExtraction
-from .partitioning import WindowPlan, plan_windows
-from .reconciliation import ReconciliationResult, attach_valid_equivalences
+from .models import EvidenceBlock, PaperMetadata, StudyExtraction
+from .partitioning import EvidenceWindowPlan, plan_evidence_windows
 from .source import parse_documents
 from .validation import validate_study
 
-SCHEMA_VERSION = "2026-08-15.1"
-PROMPT_VERSION = "2026-08-15.1"
+SCHEMA_VERSION = "2026-08-15.2"
+PROMPT_VERSION = "2026-08-15.2"
 
 SYSTEM_PROMPT = """Extract the complete present photovoltaic study as device-centered data.
 Use only supplied evidence. Preserve source wording and distinctions. Never invent,
-interpolate, digitize graph traces, or import facts from cited literature."""
+interpolate, digitize graph traces, or import values from cited literature."""
 
 EXTRACTION_PROMPT = """Read all supplied evidence before extracting.
 
@@ -52,11 +52,12 @@ Rules:
   Use one MaterialConstituent per named chemical; do not combine a list of chemicals
   into one constituent.
 - Put arbitrary reported material, geometry, processing, measurement, and stability
-  values in generic Fact records. Do not omit a value because it lacks a dedicated
-  schema field.
-- Fact.raw_value and EvidenceRef.quote must be copied from a supplied block. Cite the
-  smallest useful quote and only supplied block IDs. Typography-preserving renderings
-  are source evidence and may be used for subscript or superscript notation.
+  values in generic ReportedValue records. Do not omit a value because it lacks a
+  dedicated schema field.
+- ReportedValue.raw_value and EvidenceCitation.quote must be copied from a supplied
+  block. Cite the smallest useful quote and only supplied block IDs.
+  Typography-preserving renderings are source evidence and may be used for subscript
+  or superscript notation.
 - Stability tests remain separate experiments with ordered checkpoints, even when
   linked to a performance device.
 - Exclude background examples, prior literature, reference entries, review material,
@@ -64,19 +65,19 @@ Rules:
 - Use null or not_reported for unknown identity or context. Do not guess.
 - Empty arrays are correct only when all supplied evidence truly contains no record of
   that kind.
-- Return equivalence_groups as an empty array. Cross-window identity is handled by a
-  separate auditable reconciliation call.
+- Return identity_links as an empty array. Cross-window identity is handled by a
+  separate auditable identity-linking call.
 """
 
 WINDOW_PROMPT = """PRIMARY EVIDENCE is the part assigned to this extraction window.
 CONTEXT EVIDENCE is supplied only to understand identity and terminology. Emit a
-candidate only when at least one of its EvidenceRef entries cites a PRIMARY EVIDENCE
-block. Do not emit candidates supported exclusively by context. Partial candidates are
-allowed: later windows are combined without deleting them."""
+candidate only when at least one of its EvidenceCitation entries cites a PRIMARY
+EVIDENCE block. Do not emit candidates supported exclusively by context. Partial
+candidates are allowed: later windows are combined without deleting them."""
 
-RECONCILIATION_PROMPT = """Identify only candidates that refer to the same real-world
-entity across extraction windows. Return explicit equivalence groups; do not merge,
-delete, rank, or rewrite candidates.
+IDENTITY_LINK_PROMPT = """Identify only candidates that refer to the same real-world
+entity across extraction windows. Return explicit identity links; do not merge, delete,
+rank, or rewrite candidates.
 
 Rules:
 - Group only IDs of the declared entity_kind and only IDs present below.
@@ -84,9 +85,9 @@ Rules:
 - Device variants, different individual devices, different scan directions, population
   statistics, and separate stability specimens are distinct unless the candidate
   evidence explicitly establishes identity.
-- Each member may appear in at most one group of its entity kind.
+- Each candidate may appear in at most one link of its entity kind.
 - Cite the smallest supplied candidate evidence quotes that support the identity link.
-- An empty group list is correct when identity is uncertain.
+- An empty identity_links list is correct when identity is uncertain.
 """
 
 
@@ -113,7 +114,7 @@ class ExtractionConfig:
     dry_run: bool = False
 
 
-def _evidence(blocks: list[EvidenceBlock]) -> list[dict[str, object]]:
+def _evidence_payload(blocks: list[EvidenceBlock]) -> list[dict[str, object]]:
     """Send the model source content and locations without parser implementation data."""
 
     return [
@@ -135,7 +136,7 @@ def _direct_prompt(blocks: list[EvidenceBlock]) -> str:
     return (
         EXTRACTION_PROMPT
         + "\n\nCOMPLETE STUDY EVIDENCE:\n"
-        + json.dumps(_evidence(blocks), ensure_ascii=False)
+        + json.dumps(_evidence_payload(blocks), ensure_ascii=False)
     )
 
 
@@ -147,19 +148,19 @@ def _window_prompt(primary: list[EvidenceBlock], context: list[EvidenceBlock]) -
         + "\n\n"
         + WINDOW_PROMPT
         + "\n\nCONTEXT EVIDENCE:\n"
-        + json.dumps(_evidence(context), ensure_ascii=False)
+        + json.dumps(_evidence_payload(context), ensure_ascii=False)
         + "\n\nPRIMARY EVIDENCE:\n"
-        + json.dumps(_evidence(primary), ensure_ascii=False)
+        + json.dumps(_evidence_payload(primary), ensure_ascii=False)
     )
 
 
-def _reconciliation_prompt(candidates: StudyExtraction) -> str:
-    """Ask only for identity links so reconciliation cannot rewrite candidates."""
+def _identity_link_prompt(candidates: StudyExtraction) -> str:
+    """Ask only for identity links so the model cannot rewrite candidates."""
 
     return (
-        RECONCILIATION_PROMPT
+        IDENTITY_LINK_PROMPT
         + "\n\nCANDIDATE UNION:\n"
-        + candidates.model_dump_json(exclude={"equivalence_groups"})
+        + candidates.model_dump_json(exclude={"identity_links"})
     )
 
 
@@ -169,11 +170,11 @@ def _approximate_tokens(prompt: str, schema: dict) -> int:
     return (len(prompt) + len(json.dumps(schema, ensure_ascii=False))) // 4
 
 
-def _empty(note: str) -> StudyExtraction:
+def _empty_extraction(note: str) -> StudyExtraction:
     """Produce a valid inspectable result even when no model call succeeds."""
 
     return StudyExtraction(
-        paper=Paper(title=None, doi=None),
+        paper=PaperMetadata(title=None, doi=None),
         device_families=[],
         individual_devices=[],
         performance_observations=[],
@@ -183,7 +184,7 @@ def _empty(note: str) -> StudyExtraction:
     )
 
 
-def _usage(calls: list[dict[str, object]]) -> dict[str, float | int]:
+def _summarize_usage(calls: list[dict[str, object]]) -> dict[str, float | int]:
     """Aggregate charges from live calls; cache hits cost no tokens or money."""
 
     usage_records = [call.get("usage", {}) for call in calls]
@@ -205,7 +206,7 @@ def _usage(calls: list[dict[str, object]]) -> dict[str, float | int]:
     }
 
 
-def _configuration(
+def _run_configuration(
     config: ExtractionConfig, mode: str, source_events: list[dict]
 ) -> dict:
     """Persist a secret-free fingerprint of every scientifically relevant setting."""
@@ -233,18 +234,18 @@ def _configuration(
     return value
 
 
-def _extract(
+def _run_model_calls(
     config: ExtractionConfig,
     client: ModelClient,
     blocks: list[EvidenceBlock],
     mode: str,
-    plan: WindowPlan | None,
+    window_plan: EvidenceWindowPlan | None,
 ) -> tuple[StudyExtraction, list[str]]:
     """Run the selected call plan while retaining every successful partial result.
 
     Window failures are accumulated rather than invalidating successful windows.
-    Reconciliation adds audited equivalence groups to the lossless candidate union; it
-    never chooses a winner or rewrites scientific fields.
+    Identity linking adds audited links to the lossless candidate union; it never
+    chooses a winner or rewrites scientific fields.
     """
 
     errors: list[str] = []
@@ -263,13 +264,13 @@ def _extract(
             )
         except ModelCallError as exc:
             errors.append(str(exc))
-            extraction = _empty(
+            extraction = _empty_extraction(
                 "Complete-study model call failed; inspect requests/ and report.json."
             )
         return extraction, errors
 
-    parts: list[tuple[str, StudyExtraction]] = []
-    windows = plan.windows if plan else []
+    window_extractions: list[tuple[str, StudyExtraction]] = []
+    windows = window_plan.windows if window_plan else []
     for index, window in enumerate(windows, start=1):
         logger.info(
             "Extracting evidence window {}/{} ({}, {} primary blocks)",
@@ -279,7 +280,7 @@ def _extract(
             len(window.primary_blocks),
         )
         try:
-            part = client.complete(
+            window_extraction = client.complete(
                 kind="evidence_window",
                 slug=window.window_id,
                 model=config.model,
@@ -292,48 +293,54 @@ def _extract(
         except ModelCallError as exc:
             errors.append(f"{window.window_id}: {exc}")
             continue
-        parts.append((window.window_id, part))
+        window_extractions.append((window.window_id, window_extraction))
         write_json_atomic(
             config.output_dir / "windows" / f"{window.window_id}.json",
-            part.model_dump(mode="json"),
+            window_extraction.model_dump(mode="json"),
         )
     extraction = (
-        merge_candidates(parts)
-        if parts
-        else _empty(
+        combine_window_candidates(window_extractions)
+        if window_extractions
+        else _empty_extraction(
             "All evidence-window model calls failed; inspect requests/ and report.json."
         )
     )
-    if parts:
+    if window_extractions:
         write_json_atomic(
             config.output_dir / "candidates.json", extraction.model_dump(mode="json")
         )
-    if len(parts) > 1:
-        logger.info("Reconciling candidate identity across {} windows", len(parts))
+    if len(window_extractions) > 1:
+        logger.info(
+            "Linking candidate identity across {} windows", len(window_extractions)
+        )
         try:
-            proposal = client.complete(
-                kind="candidate_reconciliation",
-                slug="candidate_reconciliation",
+            identity_link_proposal = client.complete(
+                kind="cross_window_identity_links",
+                slug="cross_window_identity_links",
                 model=config.model,
                 system=SYSTEM_PROMPT,
-                prompt=_reconciliation_prompt(extraction),
-                response_model=ReconciliationResult,
+                prompt=_identity_link_prompt(extraction),
+                response_model=IdentityLinkProposal,
                 max_output_tokens=config.max_output_tokens,
                 reasoning_effort=config.reasoning_effort,
             )
         except ModelCallError as exc:
-            errors.append(f"candidate_reconciliation: {exc}")
+            errors.append(f"cross_window_identity_links: {exc}")
             write_json_atomic(
-                config.output_dir / "reconciliation.json",
+                config.output_dir / "identity_links.json",
                 {"status": "failed", "error": str(exc)},
             )
         else:
-            extraction, audit = attach_valid_equivalences(extraction, proposal)
+            extraction, identity_link_audit = attach_valid_identity_links(
+                extraction, identity_link_proposal
+            )
             write_json_atomic(
-                config.output_dir / "reconciliation.json",
+                config.output_dir / "identity_links.json",
                 {
-                    "status": "accepted" if not audit.issues else "needs_review",
-                    **audit.model_dump(mode="json"),
+                    "status": (
+                        "accepted" if not identity_link_audit.issues else "needs_review"
+                    ),
+                    **identity_link_audit.model_dump(mode="json"),
                 },
             )
     return extraction, errors
@@ -391,8 +398,8 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             else "windowed"
         )
     )
-    configuration = _configuration(config, mode, source_events)
-    write_json_atomic(config.output_dir / "run_configuration.json", configuration)
+    run_configuration = _run_configuration(config, mode, source_events)
+    write_json_atomic(config.output_dir / "run_configuration.json", run_configuration)
     write_json_atomic(config.output_dir / "extraction.schema.json", schema)
     logger.info(
         "Prepared {} evidence blocks (~{} request tokens); mode={}",
@@ -401,19 +408,20 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         mode,
     )
 
-    plan: WindowPlan | None = None
+    window_plan: EvidenceWindowPlan | None = None
     if mode == "windowed":
         schema_tokens = len(json.dumps(schema, ensure_ascii=False)) // 4
         evidence_budget = max(
             8_000, (config.window_input_tokens - schema_tokens - 4_000) * 4
         )
-        plan = plan_windows(
+        window_plan = plan_evidence_windows(
             blocks,
             max_characters=evidence_budget,
             max_context_characters=min(24_000, evidence_budget // 3),
         )
         write_json_atomic(
-            config.output_dir / "window_plan.json", plan.model_dump(mode="json")
+            config.output_dir / "window_plan.json",
+            window_plan.model_dump(mode="json"),
         )
 
     if config.dry_run:
@@ -426,8 +434,8 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
                 1
                 if mode == "single"
                 else (
-                    len(plan.windows if plan else [])
-                    + int(len(plan.windows if plan else []) > 1)
+                    len(window_plan.windows if window_plan else [])
+                    + int(len(window_plan.windows if window_plan else []) > 1)
                 )
             ),
             "source_parsing": source_events,
@@ -443,14 +451,14 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         timeout_seconds=config.timeout_seconds,
         temperature=config.temperature,
     )
-    extraction, errors = _extract(config, client, blocks, mode, plan)
+    extraction, errors = _run_model_calls(config, client, blocks, mode, window_plan)
 
     write_json_atomic(
         config.output_dir / "extraction.json", extraction.model_dump(mode="json")
     )
     validation = validate_study(extraction, blocks)
-    grounded_facts = validation.pop("verified_facts")
-    write_json_atomic(config.output_dir / "grounded_facts.json", grounded_facts)
+    grounded_values = validation.pop("verified_values")
+    write_json_atomic(config.output_dir / "grounded_values.json", grounded_values)
     write_json_atomic(config.output_dir / "validation.json", validation)
     conversion_error: str | None = None
     try:
@@ -494,7 +502,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         "conversion_error": conversion_error,
         "errors": errors,
         "calls": client.calls,
-        "usage": _usage(client.calls),
+        "usage": _summarize_usage(client.calls),
         "source_parsing": source_events,
         "elapsed_seconds": round(time.monotonic() - started, 3),
     }

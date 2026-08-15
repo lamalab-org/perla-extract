@@ -9,12 +9,12 @@ from perla_extract.study_extraction.client import (
     ModelClient,
     _strict_schema,
 )
-from perla_extract.study_extraction.models import Paper, StudyExtraction
+from perla_extract.study_extraction.models import PaperMetadata, StudyExtraction
 
 
 def empty_result() -> dict:
     return StudyExtraction(
-        paper=Paper(title=None, doi=None),
+        paper=PaperMetadata(title=None, doi=None),
         device_families=[],
         individual_devices=[],
         performance_observations=[],

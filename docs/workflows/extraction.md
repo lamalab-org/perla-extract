@@ -16,7 +16,7 @@ flowchart TD
     F --> G["Extract every window"]
     G --> H["Namespace and union all candidates"]
     H --> I{"More than one successful window?"}
-    I -->|Yes| J["Identity-only reconciliation call"]
+    I -->|Yes| J["Cross-window identity-linking call"]
     I -->|No| K["Rich extraction"]
     J --> K
     E --> K
@@ -49,9 +49,9 @@ cross-document context without duplicating the main paper's candidates.
 
 Successful window results are namespaced and combined without record deletion. If
 more than one window succeeds, a separate schema-constrained call proposes only
-cross-window equivalence groups. Local reconciliation accepts groups only when their
-members, entity kinds, and evidence are valid; rejected proposals remain visible in
-`reconciliation.json`.
+cross-window identity links. Local validation attaches a link only when its candidate
+IDs, entity kind, and evidence are valid; rejected proposals remain visible in
+`identity_links.json`.
 
 ## Failure behavior
 
@@ -61,8 +61,8 @@ In windowed mode, successful windows remain usable when another window fails. Ra
 request and failure artifacts stay under `requests/`.
 
 Local validation never silently removes unsupported records. Read the rich extraction
-and `validation.json` together, or use `grounded_facts.json` when you explicitly want
-only locally source-matched facts.
+and `validation.json` together, or use `grounded_values.json` when you explicitly want
+only locally source-matched reported values.
 
 ## Model choice
 
