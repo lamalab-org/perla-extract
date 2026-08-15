@@ -96,7 +96,7 @@ class ExtractionConfig:
     pdf: Path
     supplement: Path | None
     output_dir: Path
-    model: str = "openrouter/openai/gpt-5.6-sol"
+    model: str = "openrouter/openai/gpt-5.6-sol:exacto"
     reasoning_effort: str | None = "medium"
     parser: str = "auto"
     mode: str = "auto"

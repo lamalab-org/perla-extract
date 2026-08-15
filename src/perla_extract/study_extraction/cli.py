@@ -45,7 +45,7 @@ def extract_study(
     pdf: str | Path,
     supplement: str | Path | None = None,
     output_dir: str | Path = "study_extraction",
-    model: str = "openrouter/openai/gpt-5.6-sol",
+    model: str = "openrouter/openai/gpt-5.6-sol:exacto",
     reasoning_effort: str = "medium",
     parser: str = "auto",
     mode: str = "auto",
@@ -98,7 +98,7 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 @click.option("--output-dir", type=OUTPUT_DIRECTORY, default="study_extraction")
 @click.option(
     "--model",
-    default="openrouter/openai/gpt-5.6-sol",
+    default="openrouter/openai/gpt-5.6-sol:exacto",
     help="LiteLLM provider-prefixed model name.",
 )
 @click.option(

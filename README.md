@@ -48,7 +48,7 @@ perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
   --parser docling \
-  --model openrouter/openai/gpt-5.6-sol \
+  --model openrouter/openai/gpt-5.6-sol:exacto \
   --output-dir results/paper
 ```
 
@@ -71,7 +71,9 @@ showed could reduce scientific recall.
 Model calls use LiteLLM. Select another backend with its provider-prefixed model name
 and corresponding environment variable—for example, an `openai/...` model with
 `OPENAI_API_KEY` or an `anthropic/...` model with `ANTHROPIC_API_KEY`. `.env.local` is
-loaded when present, and existing process variables take precedence.
+loaded when present, and existing process variables take precedence. The explicit
+`:exacto` suffix preserves the previous quality-first OpenRouter default without
+provider-specific routing code.
 
 ## Output
 

@@ -81,7 +81,7 @@ def test_click_help_exposes_frontier_default() -> None:
     result = CliRunner().invoke(cli.main, ["--help"])
 
     assert result.exit_code == 0
-    assert "openrouter/openai/gpt-5.6-sol" in result.stdout
+    assert "openrouter/openai/gpt-5.6-sol:exacto" in result.stdout
     assert "--json-logs" in result.stdout
 
 

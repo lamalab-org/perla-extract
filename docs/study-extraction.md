@@ -10,7 +10,7 @@ perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
   --parser docling \
-  --model openrouter/openai/gpt-5.6-sol \
+  --model openrouter/openai/gpt-5.6-sol:exacto \
   --output-dir results/paper
 ```
 
@@ -22,6 +22,8 @@ LiteLLM provides the model transport. The model name chooses the backend: the de
 uses OpenRouter, while `openai/...`, `anthropic/...`, `ollama/...`, and other LiteLLM
 prefixes use their matching credentials and provider. Put provider environment
 variables in the process environment or `.env.local`; process values take precedence.
+The explicit `:exacto` suffix preserves quality-first OpenRouter routing without
+hard-coding provider behavior in the client.
 
 ## What the files contain
 
