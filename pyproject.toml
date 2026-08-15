@@ -30,7 +30,8 @@ dependencies = [
 
 [project.optional-dependencies]
 docling = ["docling"]
-dev = ["build", "pytest", "ruff"]
+papersbot = ["feedparser>=6.0", "requests>=2.31"]
+dev = ["build", "feedparser>=6.0", "pytest", "requests>=2.31", "ruff"]
 docs = [
     "mkdocs-material>=9.4.0",
     "mkdocstrings[python]>=0.22.0",
@@ -40,9 +41,10 @@ docs = [
 
 [project.scripts]
 perla-extract = "perla_extract.study_extraction.cli:main"
+perla-papersbot = "perla_extract.papersbot.cli:main"
 
-[tool.setuptools]
-include-package-data = false
+[tool.setuptools.package-data]
+"perla_extract.papersbot" = ["feeds.txt", "selection.json"]
 
 [tool.ruff]
 target-version = "py310"

@@ -39,6 +39,13 @@ For development:
 pip install -e '.[dev,docling]'
 ```
 
+The literature-discovery bot is kept as a separate optional installation so feed and
+HTTP dependencies do not enlarge the extractor runtime:
+
+```bash
+pip install 'perla-extract[papersbot]'
+```
+
 ## Extract a study
 
 ```bash
@@ -110,6 +117,20 @@ report = extract_study(
 
 Historical evaluation datasets remain under `src/perla_extract/data/` as repository
 research assets. They are not installed with the production package.
+
+## Discover new papers
+
+PapersBot checks the packaged journal feeds, applies a replaceable JSON selection
+policy, resolves open-access PDF links, and records incremental state as readable
+JSON. It is deliberately separate from scientific data extraction:
+
+```bash
+perla-papersbot downloaded_papers --state-dir .papersbot-state
+```
+
+Use `--feeds-file` or repeated `--feed` options to replace the journal list and
+`--selection-file` to replace the relevance policy. The daily GitHub workflow caches
+the state and publishes newly downloaded PDFs as a run artifact.
 
 ## Authors
 
