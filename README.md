@@ -108,8 +108,8 @@ report = extract_study(
 )
 ```
 
-The historical evaluation datasets remain under `src/perla_extract/data/`. They are
-library and research assets, not part of the extraction CLI.
+Historical evaluation datasets remain under `src/perla_extract/data/` as repository
+research assets. They are not installed with the production package.
 
 ## Authors
 

@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field, confloat, model_validator
 from typing import List, Literal, Optional
+
+from pydantic import BaseModel, Field, confloat, model_validator
 
 
 class Ion(BaseModel):
