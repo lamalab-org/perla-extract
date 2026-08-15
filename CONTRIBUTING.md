@@ -46,6 +46,15 @@ pip install -e '.[dev,docling]'
 PERLA_RUN_DOCLING_TESTS=1 pytest -q tests/study_extraction/test_docling_integration.py
 ```
 
+Build the documentation with strict link and reference checks:
+
+```bash
+pip install -e '.[docs]'
+mkdocs build --strict
+```
+
+Use `mkdocs serve` while editing the site locally.
+
 We also provide pre-commit hooks that format the code according to standard
 conventions.
 
