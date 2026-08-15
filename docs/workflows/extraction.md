@@ -7,8 +7,9 @@ inputs use windows.
 
 ```mermaid
 flowchart TD
-    A["Parse paper and SI"] --> B["Write document.json"]
-    B --> C["Estimate evidence + schema tokens"]
+    A["Parse and cache complete paper and SI"] --> B["Select scientific evidence"]
+    B --> C0["Write document.json"]
+    C0 --> C["Estimate evidence + schema tokens"]
     C --> D{"Mode"}
     D -->|single| E["One complete-study call"]
     D -->|windowed| F["Partition ordered source blocks"]

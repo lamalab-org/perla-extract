@@ -14,11 +14,22 @@ Both parser backends produce ordered `EvidenceBlock` records with:
 - the source text; and
 - an optional page bounding box and parser metadata.
 
-PyMuPDF reads native PDF text and tables and uses typography to infer headings. It also
-adds a typography-preserving rendering when raised or lowered glyphs can clarify
-chemical subscripts or superscripts. Docling maps its document structure into the same
-block contract. Downstream extraction is therefore independent of parser-specific
-objects.
+Docling is the default because it provides document structure, layout-aware tables,
+and semantic content labels. PyMuPDF is an explicit lightweight alternative that reads
+native PDF text and tables and uses typography to infer headings. It also adds a
+typography-preserving rendering when raised or lowered glyphs can clarify chemical
+subscripts or superscripts. Both map into the same block contract, so downstream
+extraction is independent of parser-specific objects.
+
+The document cache retains every parsed block. Before model calls, a scientific evidence
+view withholds only content Docling explicitly labels as references or document
+furniture, such as page headers and footers. Unknown content is retained. This avoids
+journal-specific heading rules while keeping the original parse recoverable.
+
+`DOCUMENT_CACHE_FORMAT_VERSION` is the only manually maintained parser-cache version.
+It changes only when the cache envelope becomes incompatible. Parser implementation,
+`EvidenceBlock` schema, backend version, and source changes are fingerprinted
+automatically and therefore require no manual version bump.
 
 ## Evidence references
 

@@ -1,8 +1,9 @@
 """Parse PDFs into a small, parser-independent evidence representation.
 
 The extractor consumes ordered blocks rather than parser-specific document
-objects.  PyMuPDF is the lightweight default; Docling is an optional backend.
-Both preserve page locations, section context, tables, and source wording.
+objects. Docling is the quality-first default; PyMuPDF remains an explicit,
+lightweight alternative. Both preserve page locations, section context, tables,
+and source wording.
 """
 
 from __future__ import annotations
@@ -51,10 +52,10 @@ def _sha256(path: Path) -> str:
 
 @lru_cache(maxsize=1)
 def _parser_implementation_sha256() -> str:
-    """Invalidate parsed documents whenever parser behavior changes.
+    """Fingerprint parser behavior so code edits cannot reuse stale parses.
 
-    Hashing this module may also invalidate after harmless refactors, but that is
-    safer and easier to maintain than a manually bumped implementation version.
+    Hashing the module may invalidate a cache after a harmless refactor, but it is
+    safer than relying on a manually bumped version.
     """
 
     return _sha256(Path(__file__))
@@ -62,7 +63,7 @@ def _parser_implementation_sha256() -> str:
 
 @lru_cache(maxsize=1)
 def _evidence_schema_sha256() -> str:
-    """Invalidate parsed documents when the serialized block contract changes."""
+    """Fingerprint the serialized block contract independently of cache plumbing."""
 
     schema = json.dumps(
         EvidenceBlock.model_json_schema(),
@@ -72,20 +73,11 @@ def _evidence_schema_sha256() -> str:
     return hashlib.sha256(schema).hexdigest()
 
 
-def _cache_identity(
-    *, source_hash: str, source: str, parser: str, parser_version: str
-) -> dict[str, object]:
-    """Describe every input that can change the parsed block representation."""
+def _semantic_value(value: object) -> str:
+    """Normalize a parser enum without depending on the parser's Python types."""
 
-    return {
-        "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
-        "parser_implementation_sha256": _parser_implementation_sha256(),
-        "evidence_schema_sha256": _evidence_schema_sha256(),
-        "source_sha256": source_hash,
-        "source": source,
-        "parser": parser,
-        "parser_version": parser_version,
-    }
+    raw = getattr(value, "value", value)
+    return re.sub(r"[-\s]+", "_", str(raw or "").strip().casefold())
 
 
 def _block_id(source: str, page: int, order: int, kind: str, text: str) -> str:
@@ -337,13 +329,18 @@ def _docling_bbox(item: object) -> list[float] | None:
 
 
 def _native_typography_blocks(
-    path: Path, source: str, start_order: int
+    path: Path,
+    source: str,
+    start_order: int,
+    included_pages: set[int] | None = None,
 ) -> list[EvidenceBlock]:
-    """Supplement parser text with compact subscript/superscript source renderings."""
+    """Supplement scientific pages with compact sub/superscript renderings."""
 
     blocks: list[EvidenceBlock] = []
     with pymupdf.open(path) as document:
         for page_index, page in enumerate(document, start=1):
+            if included_pages is not None and page_index not in included_pages:
+                continue
             fragments: list[str] = []
             for raw_block in page.get_text("dict", sort=True).get("blocks", []):
                 for line in raw_block.get("lines", []):
@@ -381,20 +378,35 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
 
     try:
         from docling.document_converter import DocumentConverter
-    except ImportError as exc:  # optional dependency
-        raise RuntimeError(
-            "Docling is not installed; install perla-extract[docling]"
-        ) from exc
+        from docling_core.types.doc import ContentLayer, DocItemLabel
+    except ImportError as exc:
+        raise RuntimeError("Docling is not installed; reinstall perla-extract") from exc
 
     document = DocumentConverter().convert(str(path)).document
     candidates: list[dict[str, Any]] = []
-    for item, hierarchy_level in document.iterate_items():
-        label = str(getattr(item, "label", "")).casefold()
+    items = document.iterate_items(
+        included_content_layers={ContentLayer.BODY, ContentLayer.FURNITURE}
+    )
+    for item, hierarchy_level in items:
+        label = _semantic_value(getattr(item, "label", ""))
+        content_layer = _semantic_value(getattr(item, "content_layer", ""))
         class_name = type(item).__name__.casefold()
         provenance = getattr(item, "prov", None) or []
         page = int(getattr(provenance[0], "page_no", 1) or 1) if provenance else 1
         text = _clean(getattr(item, "text", ""))
-        metadata: dict[str, object] = {"docling_label": label}
+        metadata: dict[str, object] = {
+            "docling_label": label,
+            "content_layer": content_layer,
+            "include_in_evidence": not (
+                getattr(item, "label", None)
+                in {
+                    DocItemLabel.REFERENCE,
+                    DocItemLabel.PAGE_HEADER,
+                    DocItemLabel.PAGE_FOOTER,
+                }
+                or getattr(item, "content_layer", None) == ContentLayer.FURNITURE
+            ),
+        }
         kind = "text"
         if (
             "sectionheader" in class_name
@@ -417,7 +429,7 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
                 ]
                 text = "\n".join(" | ".join(cell or "" for cell in row) for row in rows)
                 metadata["rows"] = rows
-            except Exception as exc:  # noqa: BLE001 - optional Docling table APIs vary by release
+            except Exception as exc:  # noqa: BLE001 - Docling APIs vary by release
                 logger.debug("Docling table export failed: {}", exc)
         if not text:
             continue
@@ -443,135 +455,161 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
     # Docling already classifies headings. Avoid replacing its labels by giving
     # non-heading candidates no typography signal in _ordered_blocks.
     blocks = _ordered_blocks(candidates, source, sort_geometry=False)
-    blocks.extend(_native_typography_blocks(path, source, len(blocks) + 1))
+    scientific_pages = {
+        block.page
+        for block in blocks
+        if block.kind != "heading"
+        and block.metadata.get("include_in_evidence", True) is not False
+    }
+    blocks.extend(
+        _native_typography_blocks(
+            path, source, len(blocks) + 1, included_pages=scientific_pages
+        )
+    )
     return blocks
 
 
 def available_parsers() -> list[str]:
     """List stable user-facing parser choices."""
 
-    return ["auto", "pymupdf", "docling"]
+    return ["docling", "pymupdf"]
+
+
+def _scientific_evidence_blocks(
+    blocks: list[EvidenceBlock],
+) -> tuple[list[EvidenceBlock], int]:
+    """Build the model-facing view from parser semantics, never heading names.
+
+    Parsed blocks remain complete in the document cache. Only content that Docling
+    explicitly classifies as references or document furniture is withheld. PyMuPDF
+    and unknown Docling classifications pass through unchanged.
+    """
+
+    evidence: list[EvidenceBlock] = []
+    for block in blocks:
+        if block.metadata.get("include_in_evidence", True) is False:
+            continue
+        evidence.append(block)
+    return evidence, len(blocks) - len(evidence)
+
+
+def _cache_identity(
+    *, source_hash: str, source: str, parser: str, parser_version: str
+) -> dict[str, object]:
+    """Describe every input that can change the parsed block representation."""
+
+    return {
+        "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
+        "parser_implementation_sha256": _parser_implementation_sha256(),
+        "evidence_schema_sha256": _evidence_schema_sha256(),
+        "source_sha256": source_hash,
+        "source": source,
+        "parser": parser,
+        "parser_version": parser_version,
+    }
 
 
 def parse_pdf(
     path: Path,
     source: str,
     *,
-    parser: str = "auto",
+    parser: str = "docling",
     cache_dir: Path | None = None,
     refresh_cache: bool = False,
     heartbeat_seconds: float = 20,
 ) -> tuple[list[EvidenceBlock], dict[str, object]]:
-    """Parse one PDF reproducibly, falling back only when ``parser='auto'``.
+    """Parse one PDF with the explicitly selected, reproducible backend.
 
-    Cache identity includes source content, backend, dependency version, and parser
-    code version. An explicitly requested backend fails visibly instead of silently
-    changing the evidence representation.
+    The cache retains the complete parse. The returned model-facing view omits only
+    content that the backend confidently labels as references or document furniture.
+    Cache identity covers the source, backend, dependency, block schema, and parser
+    implementation.
     """
 
     if parser not in available_parsers():
         raise ValueError(
             f"Unknown parser {parser!r}; choose from {available_parsers()}"
         )
-    candidates = ["docling", "pymupdf"] if parser == "auto" else [parser]
     source_hash = _sha256(path)
-    last_error: Exception | None = None
-    for choice in candidates:
-        version = _package_version("docling" if choice == "docling" else "PyMuPDF")
-        if choice == "docling" and version == "not-installed":
-            if parser == "docling":
-                raise RuntimeError(
-                    "Docling is not installed; install perla-extract[docling]"
-                )
-            continue
-        identity = _cache_identity(
-            source_hash=source_hash,
-            source=source,
-            parser=choice,
-            parser_version=version,
+    version = _package_version("docling" if parser == "docling" else "PyMuPDF")
+    if version == "not-installed":
+        raise RuntimeError(
+            f"The selected {parser} parser is not installed; reinstall perla-extract"
         )
-        key = hashlib.sha256(
-            json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()
-        ).hexdigest()
-        cache_path = cache_dir / f"{key}.json" if cache_dir else None
-        if cache_path and cache_path.exists() and not refresh_cache:
-            try:
-                payload = json.loads(cache_path.read_text(encoding="utf-8"))
-                if payload["cache_identity"] != identity:
-                    raise ValueError("cache identity does not match the current parser")
-                blocks = [
-                    EvidenceBlock.model_validate(item) for item in payload["blocks"]
-                ]
-            except (
-                OSError,
-                TypeError,
-                json.JSONDecodeError,
-                KeyError,
-                ValueError,
-                ValidationError,
-            ):
-                logger.warning(
-                    "Ignoring invalid document cache entry {}", cache_path.name
-                )
-            else:
-                logger.info(
-                    "Document cache hit for {} (parser={}, {} blocks)",
-                    path.name,
-                    choice,
-                    len(blocks),
-                )
-                return blocks, {
-                    "source": source,
-                    "source_path": str(path),
-                    "source_sha256": source_hash,
-                    "parser": choice,
-                    "parser_version": version,
-                    "parser_implementation_sha256": identity[
-                        "parser_implementation_sha256"
-                    ],
-                    "evidence_schema_sha256": identity["evidence_schema_sha256"],
-                    "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
-                    "cache_hit": True,
-                    "block_count": len(blocks),
-                }
+    identity = _cache_identity(
+        source_hash=source_hash,
+        source=source,
+        parser=parser,
+        parser_version=version,
+    )
+    key = hashlib.sha256(
+        json.dumps(identity, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    cache_path = cache_dir / f"{key}.json" if cache_dir else None
+    cache_hit = False
+    parsed_blocks: list[EvidenceBlock] | None = None
+    if cache_path and cache_path.exists() and not refresh_cache:
         try:
-            logger.info("Parsing {} with {}", path.name, choice)
-            with heartbeat(f"{choice} parsing for {path.name}", heartbeat_seconds):
-                blocks = (
-                    _parse_docling(path, source)
-                    if choice == "docling"
-                    else _parse_pymupdf(path, source)
-                )
-        except Exception as exc:
-            last_error = exc
-            if parser != "auto":
-                raise
-            logger.warning(
-                "{} failed for {}: {}; trying fallback", choice, path.name, exc
+            payload = json.loads(cache_path.read_text(encoding="utf-8"))
+            if payload["cache_identity"] != identity:
+                raise ValueError("cache identity does not match the current parser")
+            parsed_blocks = [
+                EvidenceBlock.model_validate(item) for item in payload["blocks"]
+            ]
+        except (
+            OSError,
+            TypeError,
+            json.JSONDecodeError,
+            KeyError,
+            ValueError,
+            ValidationError,
+        ):
+            logger.warning("Ignoring invalid document cache entry {}", cache_path.name)
+        else:
+            cache_hit = True
+
+    if parsed_blocks is None:
+        logger.info("Parsing {} with {}", path.name, parser)
+        with heartbeat(f"{parser} parsing for {path.name}", heartbeat_seconds):
+            parsed_blocks = (
+                _parse_docling(path, source)
+                if parser == "docling"
+                else _parse_pymupdf(path, source)
             )
-            continue
         if cache_path:
             write_json_atomic(
                 cache_path,
                 {
                     "cache_identity": identity,
-                    "blocks": [block.model_dump(mode="json") for block in blocks],
+                    "blocks": [
+                        block.model_dump(mode="json") for block in parsed_blocks
+                    ],
                 },
             )
-        logger.info("Parsed {} with {} ({} blocks)", path.name, choice, len(blocks))
-        return blocks, {
-            "source": source,
-            "source_path": str(path),
-            "source_sha256": source_hash,
-            "parser": choice,
-            "parser_version": version,
-            "parser_implementation_sha256": identity["parser_implementation_sha256"],
-            "evidence_schema_sha256": identity["evidence_schema_sha256"],
-            "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
-            "cache_hit": False,
-            "block_count": len(blocks),
-        }
-    raise RuntimeError(f"No parser succeeded for {path}: {last_error}")
+
+    evidence_blocks, excluded = _scientific_evidence_blocks(parsed_blocks)
+    logger.info(
+        "{} {} with {} ({} evidence blocks, {} excluded blocks)",
+        "Loaded" if cache_hit else "Parsed",
+        path.name,
+        parser,
+        len(evidence_blocks),
+        excluded,
+    )
+    return evidence_blocks, {
+        "source": source,
+        "source_path": str(path),
+        "source_sha256": source_hash,
+        "parser": parser,
+        "parser_version": version,
+        "parser_implementation_sha256": identity["parser_implementation_sha256"],
+        "evidence_schema_sha256": identity["evidence_schema_sha256"],
+        "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
+        "cache_hit": cache_hit,
+        "parsed_block_count": len(parsed_blocks),
+        "excluded_block_count": excluded,
+        "block_count": len(evidence_blocks),
+    }
 
 
 def _text_key(block: EvidenceBlock) -> str:
@@ -612,7 +650,7 @@ def parse_documents(
     pdf: Path,
     supplement: Path | None = None,
     *,
-    parser: str = "auto",
+    parser: str = "docling",
     cache_dir: Path | None = None,
     refresh_cache: bool = False,
     heartbeat_seconds: float = 20,

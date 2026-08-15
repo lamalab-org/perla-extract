@@ -47,7 +47,7 @@ def extract_study(
     output_dir: str | Path = "study_extraction",
     model: str = "openrouter/openai/gpt-5.6-sol:exacto",
     reasoning_effort: str = "medium",
-    parser: str = "auto",
+    parser: str = "docling",
     mode: str = "auto",
     single_call_max_input_tokens: int = 90_000,
     window_input_tokens: int = 60_000,
@@ -111,7 +111,7 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 @click.option(
     "--reasoning-effort", type=click.Choice(REASONING_LEVELS), default="medium"
 )
-@click.option("--parser", type=click.Choice(available_parsers()), default="auto")
+@click.option("--parser", type=click.Choice(available_parsers()), default="docling")
 @click.option(
     "--mode", type=click.Choice(("auto", "single", "windowed")), default="auto"
 )
@@ -128,9 +128,7 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 @click.option(
     "--document-cache-dir", type=OUTPUT_DIRECTORY, default=".perla-cache/documents"
 )
-@click.option(
-    "--model-cache-dir", type=OUTPUT_DIRECTORY, default=".perla-cache/models"
-)
+@click.option("--model-cache-dir", type=OUTPUT_DIRECTORY, default=".perla-cache/models")
 @click.option("--refresh-document-cache", is_flag=True)
 @click.option("--dry-run", is_flag=True, help="Parse and plan without calling a model.")
 @click.option("--env-file", type=click.Path(path_type=Path, dir_okay=False))

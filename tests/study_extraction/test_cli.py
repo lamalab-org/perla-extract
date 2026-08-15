@@ -127,3 +127,4 @@ def test_public_entry_points_share_scientific_defaults() -> None:
     assert {key: comparable(key, value) for key, value in click_defaults.items()} == {
         key: comparable(key, value) for key, value in config_defaults.items()
     }
+    assert config_defaults["parser"] == "docling"

@@ -8,13 +8,12 @@ device-centered, source-linked data. It keeps device families, individual cells,
 performance observations, population summaries, and stability experiments distinct.
 
 ```bash
-pip install 'perla-extract[docling]'
+pip install perla-extract
 export OPENROUTER_API_KEY="your-openrouter-key"  # for the default backend
 
 perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
-  --parser docling \
   --model openrouter/openai/gpt-5.6-sol:exacto \
   --output-dir results/paper
 ```

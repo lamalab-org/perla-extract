@@ -26,14 +26,17 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `--parser [auto|pymupdf|docling]` | `auto` | Parser backend; selecting Docling requires the optional dependency |
+| `--parser [docling|pymupdf]` | `docling` | Explicit parser backend |
 | `--mode [auto|single|windowed]` | `auto` | Complete-study or long-document execution path |
 | `--single-call-max-input-tokens INTEGER` | `90000` | Estimated request limit used by auto mode |
 | `--window-input-tokens INTEGER` | `60000` | Request budget used to size structural windows |
 | `--dry-run` | off | Parse, plan, and write an estimate without a model call |
 
-`auto` parser selection prefers Docling when installed and falls back to PyMuPDF if
-Docling fails. Parser results are cached by source content, parser version, and backend.
+Docling is the reproducible quality-first default. PyMuPDF is an explicit lightweight
+alternative; parser failures never silently change backends. Complete parser results
+are cached using the source, backend and dependency version, block schema, and parser
+implementation. Only parser-labelled references and document furniture are withheld
+from the model-facing evidence view.
 
 ## Model request
 
