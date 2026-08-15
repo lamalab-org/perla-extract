@@ -39,10 +39,10 @@ ruff check src tests
 pytest -q
 ```
 
-The optional Docling contract test is deliberately outside the fast suite:
+The slower Docling contract test is deliberately outside the fast suite:
 
 ```bash
-pip install -e '.[dev,docling]'
+pip install -e '.[dev]'
 PERLA_RUN_DOCLING_TESTS=1 pytest -q tests/study_extraction/test_docling_integration.py
 ```
 
