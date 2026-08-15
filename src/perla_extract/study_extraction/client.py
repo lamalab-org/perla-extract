@@ -1,23 +1,30 @@
-"""Small cached OpenRouter client for schema-constrained extraction calls."""
+"""Provider-neutral model calls with reproducible local artifacts."""
 
 from __future__ import annotations
 
 import hashlib
-import http.client
 import json
 import time
-import urllib.error
-import urllib.request
 from pathlib import Path
 from typing import TypeVar
 
+import litellm
 from pydantic import BaseModel, ValidationError
 
 from .logging import logger
 from .progress import heartbeat
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 ResponseModel = TypeVar("ResponseModel", bound=BaseModel)
+RETRYABLE_ERRORS = (
+    litellm.RateLimitError,
+    litellm.Timeout,
+    litellm.APIConnectionError,
+    litellm.InternalServerError,
+    litellm.ServiceUnavailableError,
+)
+MODEL_ERRORS = tuple(litellm.exceptions.LITELLM_EXCEPTION_TYPES) + (
+    litellm.exceptions.LiteLLMUnknownProvider,
+)
 
 
 class ModelCallError(RuntimeError):
@@ -29,7 +36,7 @@ class ModelCallError(RuntimeError):
 
 
 def _strict_schema(model: type[BaseModel]) -> dict:
-    """Make every object property required as strict OpenAI providers demand."""
+    """Close every object because strict structured-output APIs require it."""
 
     schema = model.model_json_schema()
 
@@ -68,36 +75,28 @@ def _atomic_json(path: Path, value: object) -> None:
     temporary.replace(path)
 
 
-def _model_name(model: str, provider_sort: str) -> str:
-    """Normalize LiteLLM-style names and optionally request OpenRouter Exacto."""
+class ModelClient:
+    """Keep scientific call guarantees independent of the selected LLM provider.
 
-    if model.startswith("openrouter/"):
-        model = model.removeprefix("openrouter/")
-    if provider_sort == "quality" and not model.endswith(":exacto"):
-        return f"{model}:exacto"
-    return model
-
-
-class OpenRouterClient:
-    """Execute validated model calls with caching, heartbeats, and bounded retries."""
+    LiteLLM translates the provider-prefixed model name and normalizes transport
+    errors. PERLA deliberately retains the policies that affect reproducibility:
+    complete-request hashing, Pydantic validation before cache admission, preserved
+    failure artifacts, and one bounded application-level retry.
+    """
 
     def __init__(
         self,
         *,
-        api_key: str | None,
         cache_dir: Path,
         output_dir: Path,
         heartbeat_seconds: float = 20,
         timeout_seconds: float = 600,
-        provider_sort: str = "quality",
         temperature: float | None = 0,
     ) -> None:
-        self.api_key = api_key
         self.cache_dir = cache_dir
         self.output_dir = output_dir
         self.heartbeat_seconds = heartbeat_seconds
         self.timeout_seconds = timeout_seconds
-        self.provider_sort = provider_sort
         self.temperature = temperature
         self.calls: list[dict[str, object]] = []
 
@@ -113,11 +112,8 @@ class OpenRouterClient:
     ) -> dict:
         """Build the complete request so every scientific setting enters the cache key."""
 
-        provider: dict[str, object] = {"require_parameters": True}
-        if self.provider_sort not in {"quality", "none"}:
-            provider["sort"] = self.provider_sort
         body: dict[str, object] = {
-            "model": _model_name(model, self.provider_sort),
+            "model": model,
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": prompt},
@@ -130,78 +126,41 @@ class OpenRouterClient:
                     "schema": schema,
                 },
             },
-            "provider": provider,
             "seed": 0,
             "max_tokens": max_output_tokens,
             "stream": False,
+            "timeout": self.timeout_seconds,
+            "num_retries": 0,
         }
         if reasoning_effort is not None:
-            body["reasoning"] = {"effort": reasoning_effort}
+            body["reasoning_effort"] = reasoning_effort
         if self.temperature is not None:
             body["temperature"] = self.temperature
         return body
 
     def _live(self, body: dict, failure_path: Path) -> tuple[dict, dict]:
-        """Send one request while logging progress during slow provider responses."""
+        """Call LiteLLM while keeping slow requests and failures observable."""
 
-        if not self.api_key:
-            raise ModelCallError(
-                "OPENROUTER_API_KEY is not set and no cached response exists"
-            )
-        request = urllib.request.Request(
-            OPENROUTER_URL,
-            data=json.dumps(body).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": "https://github.com/lamalab-org/perla-extract",
-                "X-OpenRouter-Title": "PERLA study extractor",
-            },
-            method="POST",
-        )
         try:
             with heartbeat(
                 failure_path.stem.removesuffix(".failure"), self.heartbeat_seconds
-            ) as started, urllib.request.urlopen(
-                request, timeout=self.timeout_seconds
-            ) as response:
-                payload = json.loads(response.read())
-        except urllib.error.HTTPError as exc:
-            response_text = exc.read().decode("utf-8", errors="replace")
+            ) as started:
+                response = litellm.completion(**body)
+        except MODEL_ERRORS as exc:
             _atomic_json(
                 failure_path,
                 {
-                    "http_status": exc.code,
-                    "reason": str(exc.reason),
-                    "response": response_text,
-                },
-            )
-            raise ModelCallError(
-                f"OpenRouter HTTP {exc.code}; see {failure_path}",
-                retryable=exc.code == 429 or exc.code >= 500,
-            ) from exc
-        except http.client.IncompleteRead as exc:
-            _atomic_json(
-                failure_path,
-                {
+                    "error_type": type(exc).__name__,
                     "error": str(exc),
-                    "partial_response": exc.partial.decode("utf-8", errors="replace"),
+                    "status_code": getattr(exc, "status_code", None),
+                    "model": body["model"],
                 },
             )
             raise ModelCallError(
-                f"OpenRouter response was incomplete; see {failure_path}",
-                retryable=True,
+                f"Model provider request failed: {exc}; see {failure_path}",
+                retryable=isinstance(exc, RETRYABLE_ERRORS),
             ) from exc
-        except (
-            urllib.error.URLError,
-            TimeoutError,
-            json.JSONDecodeError,
-            http.client.HTTPException,
-        ) as exc:
-            _atomic_json(failure_path, {"error": str(exc)})
-            raise ModelCallError(
-                f"OpenRouter request failed: {exc}; see {failure_path}"
-            ) from exc
+        payload = response.model_dump()
         choice = payload.get("choices", [{}])[0]
         content = choice.get("message", {}).get("content")
         try:
@@ -219,11 +178,13 @@ class OpenRouterClient:
                 f"Model returned invalid JSON; see {failure_path}",
                 retryable=choice.get("finish_reason") != "length",
             ) from exc
-        usage = dict(payload.get("usage", {}))
+        usage = dict(payload.get("usage") or {})
+        hidden = getattr(response, "_hidden_params", {})
         usage.update(
             {
                 "response_model": payload.get("model"),
-                "provider": payload.get("provider"),
+                "provider": hidden.get("custom_llm_provider"),
+                "cost": hidden.get("response_cost"),
                 "finish_reason": choice.get("finish_reason"),
                 "latency_seconds": round(time.monotonic() - started, 3),
             }
@@ -293,7 +254,9 @@ class OpenRouterClient:
         last_error: ModelCallError | None = None
         for attempt in range(1, 3):
             try:
-                logger.info("Calling OpenRouter for {} (attempt {}/2)", kind, attempt)
+                logger.info(
+                    "Calling model provider for {} (attempt {}/2)", kind, attempt
+                )
                 raw_result, usage = self._live(body, failure_path)
                 validated = response_model.model_validate(raw_result)
             except ValidationError as exc:

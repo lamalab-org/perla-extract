@@ -1,12 +1,12 @@
-import http.client
 import json
-import urllib.request
+from types import SimpleNamespace
 
+import litellm
 import pytest
 
 from perla_extract.study_extraction.client import (
+    ModelClient,
     ModelCallError,
-    OpenRouterClient,
     _strict_schema,
 )
 from perla_extract.study_extraction.models import Paper, StudyExtraction
@@ -27,11 +27,9 @@ def empty_result() -> dict:
 def test_only_validated_model_results_enter_cache(tmp_path, monkeypatch):
     cache = tmp_path / "cache"
     output = tmp_path / "output"
-    client = OpenRouterClient(
-        api_key="test-key",
+    client = ModelClient(
         cache_dir=cache,
         output_dir=output,
-        provider_sort="none",
     )
     monkeypatch.setattr(client, "_live", lambda body, failure: (empty_result(), {}))
     first = client.complete(
@@ -45,11 +43,9 @@ def test_only_validated_model_results_enter_cache(tmp_path, monkeypatch):
         reasoning_effort="none",
     )
 
-    second_client = OpenRouterClient(
-        api_key=None,
+    second_client = ModelClient(
         cache_dir=cache,
         output_dir=output,
-        provider_sort="none",
     )
     monkeypatch.setattr(
         second_client,
@@ -82,11 +78,9 @@ def test_invalid_model_cache_is_replaced(tmp_path, monkeypatch):
     """Treat a partial cache write as a miss instead of aborting extraction."""
 
     cache = tmp_path / "cache"
-    client = OpenRouterClient(
-        api_key="test",
+    client = ModelClient(
         cache_dir=cache,
         output_dir=tmp_path / "output",
-        provider_sort="none",
     )
     monkeypatch.setattr(client, "_live", lambda body, failure: (empty_result(), {}))
     client.complete(
@@ -101,11 +95,9 @@ def test_invalid_model_cache_is_replaced(tmp_path, monkeypatch):
     )
     next(cache.glob("*.json")).write_text("{", encoding="utf-8")
 
-    replacement = OpenRouterClient(
-        api_key="test",
+    replacement = ModelClient(
         cache_dir=cache,
         output_dir=tmp_path / "output",
-        provider_sort="none",
     )
     live_calls = 0
 
@@ -133,8 +125,7 @@ def test_invalid_model_cache_is_replaced(tmp_path, monkeypatch):
 def test_length_truncation_is_not_retried(tmp_path, monkeypatch):
     """A deterministic output-limit failure must not trigger another paid call."""
 
-    client = OpenRouterClient(
-        api_key="test",
+    client = ModelClient(
         cache_dir=tmp_path / "cache",
         output_dir=tmp_path / "out",
     )
@@ -160,26 +151,14 @@ def test_length_truncation_is_not_retried(tmp_path, monkeypatch):
     assert attempts == 1
 
 
-def test_incomplete_http_response_becomes_retryable_model_error(tmp_path, monkeypatch):
-    """Turn a truncated response into an inspectable model-call failure."""
+def test_litellm_timeout_becomes_retryable_model_error(tmp_path, monkeypatch):
+    """Keep normalized provider failures inspectable without provider-specific code."""
 
-    class BrokenResponse:
-        def __enter__(self):
-            return self
+    def time_out(**_kwargs):
+        raise litellm.Timeout("slow", model="test/model", llm_provider="test")
 
-        def __exit__(self, *_args):
-            return False
-
-        def read(self):
-            raise http.client.IncompleteRead(b'{"choices":')
-
-    monkeypatch.setattr(
-        urllib.request,
-        "urlopen",
-        lambda *_args, **_kwargs: BrokenResponse(),
-    )
-    client = OpenRouterClient(
-        api_key="test",
+    monkeypatch.setattr(litellm, "completion", time_out)
+    client = ModelClient(
         cache_dir=tmp_path / "cache",
         output_dir=tmp_path / "out",
         heartbeat_seconds=0,
@@ -187,8 +166,62 @@ def test_incomplete_http_response_becomes_retryable_model_error(tmp_path, monkey
     failure_path = tmp_path / "out/requests/broken.failure.json"
 
     with pytest.raises(ModelCallError) as caught:
-        client._live({}, failure_path)
+        client._live({"model": "test/model"}, failure_path)
 
     assert caught.value.retryable is True
     failure = json.loads(failure_path.read_text(encoding="utf-8"))
-    assert failure["partial_response"] == '{"choices":'
+    assert failure["error_type"] == "Timeout"
+
+
+def test_litellm_request_preserves_schema_and_provider_prefix(tmp_path):
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        timeout_seconds=42,
+        temperature=None,
+    )
+
+    request = client._request(
+        model="openrouter/openai/example",
+        system="system",
+        prompt="prompt",
+        schema={"type": "object"},
+        max_output_tokens=123,
+        reasoning_effort="low",
+    )
+
+    assert request["model"] == "openrouter/openai/example"
+    assert request["reasoning_effort"] == "low"
+    assert request["response_format"]["json_schema"]["strict"] is True
+    assert request["timeout"] == 42
+    assert "temperature" not in request
+
+
+def test_litellm_response_is_normalized_to_result_and_usage(tmp_path, monkeypatch):
+    payload = {
+        "model": "provider-model",
+        "choices": [
+            {
+                "finish_reason": "stop",
+                "message": {"content": json.dumps(empty_result())},
+            }
+        ],
+        "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
+    }
+    response = SimpleNamespace(
+        model_dump=lambda: payload,
+        _hidden_params={"custom_llm_provider": "test", "response_cost": 0.01},
+    )
+    monkeypatch.setattr(litellm, "completion", lambda **_kwargs: response)
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        heartbeat_seconds=0,
+    )
+
+    result, usage = client._live({"model": "test/model"}, tmp_path / "failure.json")
+
+    assert result == empty_result()
+    assert usage["provider"] == "test"
+    assert usage["cost"] == 0.01
+    assert usage["total_tokens"] == 15
