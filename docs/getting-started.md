@@ -47,7 +47,7 @@ perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
   --parser docling \
-  --model openrouter/openai/gpt-5.6-sol \
+  --model openrouter/openai/gpt-5.6-sol:exacto \
   --output-dir results/paper
 ```
 
@@ -57,7 +57,8 @@ fallback details.
 
 Model transport is provider-neutral through LiteLLM. Choose a different backend with
 its provider-prefixed model name and standard credential, such as `openai/...` with
-`OPENAI_API_KEY` or `anthropic/...` with `ANTHROPIC_API_KEY`.
+`OPENAI_API_KEY` or `anthropic/...` with `ANTHROPIC_API_KEY`. The explicit `:exacto`
+suffix preserves the previous quality-first routing for the default OpenRouter model.
 
 ## Read the result
 

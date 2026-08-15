@@ -39,7 +39,7 @@ Docling fails. Parser results are cached by source content, parser version, and 
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `--model TEXT` | `openrouter/openai/gpt-5.6-sol` | LiteLLM provider-prefixed model name |
+| `--model TEXT` | `openrouter/openai/gpt-5.6-sol:exacto` | LiteLLM provider-prefixed model name |
 | `--reasoning-effort [omit|none|minimal|low|medium|high]` | `medium` | Reasoning setting; `omit` removes the parameter for models that do not support it |
 | `--max-output-tokens INTEGER` | `80000` | Maximum completion tokens per call |
 | `--temperature FLOAT` | omitted | Sampling temperature; omission leaves the provider default |
@@ -48,8 +48,9 @@ Docling fails. Parser results are cached by source content, parser version, and 
 
 The model prefix selects a LiteLLM backend. For example, `openrouter/...` uses
 `OPENROUTER_API_KEY`, `openai/...` uses `OPENAI_API_KEY`, and `anthropic/...` uses
-`ANTHROPIC_API_KEY`. All requests set seed `0`; reproducibility still depends on the
-selected provider and model version.
+`ANTHROPIC_API_KEY`. The default's explicit `:exacto` suffix preserves quality-first
+OpenRouter routing without provider-specific client logic. All requests set seed `0`;
+reproducibility still depends on the selected provider and model version.
 
 ## Cache and logging
 
