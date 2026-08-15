@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pydantic import Field, model_validator
 
+from .identifiers import duplicate_entity_ids, entity_id_lists, window_namespace
 from .models import EquivalenceGroup, ShortText, StrictModel, StudyExtraction
 
 
@@ -39,22 +40,6 @@ class ReconciliationAudit(StrictModel):
     unresolved_notes: list[ShortText] = Field(default_factory=list)
 
 
-def _entity_ids(study: StudyExtraction) -> dict[str, set[str]]:
-    """Index valid identifiers by entity kind for semantic link validation."""
-
-    return {
-        "device_family": {item.family_id for item in study.device_families},
-        "individual_device": {item.device_id for item in study.individual_devices},
-        "performance_observation": {
-            item.observation_id for item in study.performance_observations
-        },
-        "population_statistic": {
-            item.population_id for item in study.population_statistics
-        },
-        "stability_test": {item.test_id for item in study.stability_tests},
-    }
-
-
 def attach_valid_equivalences(
     study: StudyExtraction, result: ReconciliationResult
 ) -> tuple[StudyExtraction, ReconciliationAudit]:
@@ -65,11 +50,15 @@ def attach_valid_equivalences(
     no candidate record is deleted or rewritten.
     """
 
-    valid_ids = _entity_ids(study)
+    duplicates = duplicate_entity_ids(study)
+    if duplicates:
+        raise ValueError(f"cannot reconcile ambiguous entity IDs: {duplicates}")
+    valid_ids = {kind: set(ids) for kind, ids in entity_id_lists(study).items()}
     claimed: set[tuple[str, str]] = set()
     accepted: list[EquivalenceGroup] = []
     issues: list[ReconciliationIssue] = []
     for group in result.equivalence_groups:
+        namespaces = {window_namespace(member) for member in group.member_ids}
         unknown = sorted(set(group.member_ids) - valid_ids[group.entity_kind])
         overlap = sorted(
             member
@@ -81,6 +70,14 @@ def attach_valid_equivalences(
                 ReconciliationIssue(
                     equivalence_id=group.equivalence_id,
                     reason=f"unknown {group.entity_kind} member IDs: {unknown}",
+                )
+            )
+            continue
+        if None in namespaces or len(namespaces) < 2:
+            issues.append(
+                ReconciliationIssue(
+                    equivalence_id=group.equivalence_id,
+                    reason="equivalence members must come from different windows",
                 )
             )
             continue

@@ -29,6 +29,25 @@ class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
 
+class EvidenceBlock(StrictModel):
+    """Represent the smallest parser unit that should not be split further."""
+
+    block_id: Identifier
+    source: str
+    page: int = Field(ge=1)
+    section_path: list[str] = Field(default_factory=list, max_length=20)
+    kind: str
+    text: str
+    bbox: list[float] | None = Field(default=None, min_length=4, max_length=4)
+    metadata: dict[str, object] = Field(default_factory=dict)
+
+    @property
+    def character_count(self) -> int:
+        """Return a backend-independent estimate used to bound model calls."""
+
+        return len(self.text)
+
+
 class EvidenceRef(StrictModel):
     """Point to a source block and quote the text that supports a claim."""
 
@@ -101,7 +120,7 @@ class DeviceFamily(StrictModel):
     polarity: Literal["n-i-p", "p-i-n", "tandem", "other", "not_reported"]
     full_stack_raw: Annotated[str | None, Field(max_length=1600)]
     layers: Annotated[list[Layer], Field(max_length=60)]
-    absorber_formula: Fact | None = None
+    absorber_formula: Fact | None
     absorber_properties: Annotated[list[Fact], Field(max_length=60)]
     absorber_constituents: Annotated[list[MaterialConstituent], Field(max_length=80)]
     processing_steps: Annotated[list[ProcessingStep], Field(max_length=150)]

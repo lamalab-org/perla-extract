@@ -1,4 +1,5 @@
-from perla_extract.study_extraction.partitioning import EvidenceBlock, plan_windows
+from perla_extract.study_extraction.models import EvidenceBlock
+from perla_extract.study_extraction.partitioning import plan_windows
 
 
 def block(
@@ -45,3 +46,21 @@ def test_single_oversized_parser_block_is_kept_intact():
     )
     assert len(plan.windows) == 1
     assert plan.windows[0].primary_blocks[0].text == "x" * 800
+
+
+def test_oversized_main_paper_is_not_repeated_as_supplement_context():
+    blocks = [
+        block("m1", "main", 1, "Methods", 300),
+        block("s1", "supplement", 1, "Methods", 100),
+    ]
+
+    plan = plan_windows(
+        blocks,
+        max_characters=500,
+        max_context_characters=250,
+    )
+
+    supplement = next(
+        window for window in plan.windows if window.source == "supplement"
+    )
+    assert supplement.context_blocks == []

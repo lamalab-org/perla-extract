@@ -12,26 +12,7 @@ from collections.abc import Iterable, Sequence
 
 from pydantic import Field, model_validator
 
-from .models import Identifier, StrictModel
-
-
-class EvidenceBlock(StrictModel):
-    """Represent the smallest parser unit that should not be split further."""
-
-    block_id: Identifier
-    source: str
-    page: int = Field(ge=1)
-    section_path: list[str] = Field(default_factory=list, max_length=20)
-    kind: str
-    text: str
-    bbox: list[float] | None = Field(default=None, min_length=4, max_length=4)
-    metadata: dict[str, object] = Field(default_factory=dict)
-
-    @property
-    def character_count(self) -> int:
-        """Return a simple, backend-independent estimate of prompt size."""
-
-        return len(self.text)
+from .models import EvidenceBlock, Identifier, StrictModel
 
 
 class EvidenceWindow(StrictModel):

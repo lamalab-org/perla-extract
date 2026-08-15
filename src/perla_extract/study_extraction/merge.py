@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from .identifiers import duplicate_entity_ids
 from .models import Paper, StudyExtraction
 
 
@@ -64,6 +65,9 @@ def merge_candidates(parts: Sequence[tuple[str, StudyExtraction]]) -> StudyExtra
 
     if not parts:
         raise ValueError("at least one extraction is required")
+    window_ids = [window_id for window_id, _ in parts]
+    if len(window_ids) != len(set(window_ids)):
+        raise ValueError("window IDs must be unique")
     namespaced = [
         namespace_candidates(extraction, window_id) for window_id, extraction in parts
     ]
@@ -74,7 +78,7 @@ def merge_candidates(parts: Sequence[tuple[str, StudyExtraction]]) -> StudyExtra
         notes.append("Window extractions disagreed on paper title.")
     if len({part.paper.doi for part in namespaced if part.paper.doi}) > 1:
         notes.append("Window extractions disagreed on DOI.")
-    return StudyExtraction(
+    merged = StudyExtraction(
         paper=Paper(title=title, doi=doi),
         device_families=[item for part in namespaced for item in part.device_families],
         individual_devices=[
@@ -90,3 +94,7 @@ def merge_candidates(parts: Sequence[tuple[str, StudyExtraction]]) -> StudyExtra
         equivalence_groups=[],
         unresolved_notes=notes,
     )
+    duplicates = duplicate_entity_ids(merged)
+    if duplicates:
+        raise ValueError(f"entity IDs must be unique after namespacing: {duplicates}")
+    return merged

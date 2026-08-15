@@ -11,6 +11,7 @@ from typing import TypeVar
 import litellm
 from pydantic import BaseModel, ValidationError
 
+from .artifacts import write_json_atomic
 from .logging import logger
 from .progress import heartbeat
 
@@ -62,17 +63,6 @@ def _canonical(value: object) -> bytes:
     return json.dumps(
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
     ).encode("utf-8")
-
-
-def _atomic_json(path: Path, value: object) -> None:
-    """Prevent interrupted writes from becoming valid-looking cache entries."""
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(
-        json.dumps(value, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-    temporary.replace(path)
 
 
 class ModelClient:
@@ -147,7 +137,7 @@ class ModelClient:
             ) as started:
                 response = litellm.completion(**body)
         except MODEL_ERRORS as exc:
-            _atomic_json(
+            write_json_atomic(
                 failure_path,
                 {
                     "error_type": type(exc).__name__,
@@ -161,12 +151,18 @@ class ModelClient:
                 retryable=isinstance(exc, RETRYABLE_ERRORS),
             ) from exc
         payload = response.model_dump()
-        choice = payload.get("choices", [{}])[0]
-        content = choice.get("message", {}).get("content")
+        choices = payload.get("choices")
+        choice = (
+            choices[0]
+            if isinstance(choices, list) and choices and isinstance(choices[0], dict)
+            else {}
+        )
+        message = choice.get("message")
+        content = message.get("content") if isinstance(message, dict) else None
         try:
             result = json.loads(content)
         except (TypeError, json.JSONDecodeError) as exc:
-            _atomic_json(
+            write_json_atomic(
                 failure_path,
                 {
                     "finish_reason": choice.get("finish_reason"),
@@ -178,7 +174,8 @@ class ModelClient:
                 f"Model returned invalid JSON; see {failure_path}",
                 retryable=choice.get("finish_reason") != "length",
             ) from exc
-        usage = dict(payload.get("usage") or {})
+        usage_payload = payload.get("usage")
+        usage = dict(usage_payload) if isinstance(usage_payload, dict) else {}
         hidden = getattr(response, "_hidden_params", {})
         usage.update(
             {
@@ -218,7 +215,7 @@ class ModelClient:
         request_path = self.output_dir / "requests" / f"{slug}.request.json"
         cache_path = self.cache_dir / f"{request_hash}.json"
         failure_path = self.output_dir / "requests" / f"{slug}.failure.json"
-        _atomic_json(request_path, body)
+        write_json_atomic(request_path, body)
         logger.info(
             "Prepared model call {} (model={}, request={})",
             kind,
@@ -237,7 +234,13 @@ class ModelClient:
             try:
                 cached = json.loads(cache_path.read_text(encoding="utf-8"))
                 validated = response_model.model_validate(cached["result"])
-            except (json.JSONDecodeError, KeyError, ValidationError):
+            except (
+                OSError,
+                TypeError,
+                json.JSONDecodeError,
+                KeyError,
+                ValidationError,
+            ):
                 logger.warning("Ignoring invalid model cache entry {}", cache_path.name)
             else:
                 failure_path.unlink(missing_ok=True)
@@ -260,7 +263,7 @@ class ModelClient:
                 raw_result, usage = self._live(body, failure_path)
                 validated = response_model.model_validate(raw_result)
             except ValidationError as exc:
-                _atomic_json(
+                write_json_atomic(
                     failure_path,
                     {
                         "validation_errors": exc.errors(include_url=False),
@@ -273,7 +276,7 @@ class ModelClient:
             except ModelCallError as exc:
                 last_error = exc
             else:
-                _atomic_json(
+                write_json_atomic(
                     cache_path,
                     {
                         "request_sha256": request_hash,

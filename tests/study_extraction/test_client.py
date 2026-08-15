@@ -71,10 +71,12 @@ def test_provider_schema_requires_nullable_defaulted_fields():
     schema = _strict_schema(StudyExtraction)
     family = schema["$defs"]["DeviceFamily"]
     assert "absorber_formula" in family["required"]
+    assert "default" not in family["properties"]["absorber_formula"]
     assert family["additionalProperties"] is False
 
 
-def test_invalid_model_cache_is_replaced(tmp_path, monkeypatch):
+@pytest.mark.parametrize("invalid_cache", ["{", "[]"])
+def test_invalid_model_cache_is_replaced(tmp_path, monkeypatch, invalid_cache):
     """Treat a partial cache write as a miss instead of aborting extraction."""
 
     cache = tmp_path / "cache"
@@ -93,7 +95,7 @@ def test_invalid_model_cache_is_replaced(tmp_path, monkeypatch):
         max_output_tokens=100,
         reasoning_effort=None,
     )
-    next(cache.glob("*.json")).write_text("{", encoding="utf-8")
+    next(cache.glob("*.json")).write_text(invalid_cache, encoding="utf-8")
 
     replacement = ModelClient(
         cache_dir=cache,
@@ -120,6 +122,24 @@ def test_invalid_model_cache_is_replaced(tmp_path, monkeypatch):
 
     assert live_calls == 1
     assert replacement.calls[0]["cache_hit"] is False
+
+    reused = ModelClient(cache_dir=cache, output_dir=tmp_path / "output")
+    monkeypatch.setattr(
+        reused,
+        "_live",
+        lambda body, failure: (_ for _ in ()).throw(AssertionError("cache missed")),
+    )
+    reused.complete(
+        kind="test",
+        slug="third",
+        model="test/model",
+        system="system",
+        prompt="prompt",
+        response_model=StudyExtraction,
+        max_output_tokens=100,
+        reasoning_effort=None,
+    )
+    assert reused.calls[0]["cache_hit"] is True
 
 
 def test_length_truncation_is_not_retried(tmp_path, monkeypatch):
@@ -225,3 +245,29 @@ def test_litellm_response_is_normalized_to_result_and_usage(tmp_path, monkeypatc
     assert usage["provider"] == "test"
     assert usage["cost"] == 0.01
     assert usage["total_tokens"] == 15
+
+
+@pytest.mark.parametrize(
+    "choices",
+    [[], [{"finish_reason": "stop", "message": None}]],
+)
+def test_unusable_litellm_response_becomes_inspectable_error(
+    tmp_path, monkeypatch, choices
+):
+    """Malformed provider responses must not escape as indexing errors."""
+
+    payload = {"model": "provider-model", "choices": choices, "usage": {}}
+    response = SimpleNamespace(model_dump=lambda: payload, _hidden_params={})
+    monkeypatch.setattr(litellm, "completion", lambda **_kwargs: response)
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        heartbeat_seconds=0,
+    )
+    failure_path = tmp_path / "failure.json"
+
+    with pytest.raises(ModelCallError, match="invalid JSON"):
+        client._live({"model": "test/model"}, failure_path)
+
+    failure = json.loads(failure_path.read_text(encoding="utf-8"))
+    assert failure["content"] is None

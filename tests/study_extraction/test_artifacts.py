@@ -1,0 +1,25 @@
+import json
+from concurrent.futures import ThreadPoolExecutor
+
+import pytest
+
+from perla_extract.study_extraction.artifacts import write_json_atomic
+
+
+def test_concurrent_json_writers_leave_one_complete_artifact(tmp_path):
+    """Shared caches may receive concurrent writes but never partial JSON."""
+
+    path = tmp_path / "result.json"
+    values = [{"writer": index, "values": list(range(100))} for index in range(8)]
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        list(executor.map(lambda value: write_json_atomic(path, value), values))
+
+    assert json.loads(path.read_text(encoding="utf-8")) in values
+    assert list(tmp_path.glob("*.tmp")) == []
+
+
+def test_failed_serialization_cleans_up_temporary_file(tmp_path):
+    with pytest.raises(TypeError):
+        write_json_atomic(tmp_path / "result.json", object())
+
+    assert list(tmp_path.iterdir()) == []

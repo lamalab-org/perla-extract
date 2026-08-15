@@ -6,8 +6,8 @@ import re
 import unicodedata
 from collections import Counter
 
-from .models import StudyExtraction
-from .partitioning import EvidenceBlock
+from .identifiers import entity_id_lists, window_namespace
+from .models import EvidenceBlock, StudyExtraction
 
 
 def _normalized_with_offsets(value: object) -> tuple[str, list[int], str]:
@@ -133,13 +133,24 @@ def validate_study(
 
     data = extraction.model_dump(mode="json")
     walk(data)
-    family_ids = [item.family_id for item in extraction.device_families]
-    device_ids = [item.device_id for item in extraction.individual_devices]
+    identifiers = entity_id_lists(extraction)
+    family_ids = identifiers["device_family"]
+    device_ids = identifiers["individual_device"]
     families, devices = set(family_ids), set(device_ids)
-    if len(families) != len(family_ids):
-        issue("$.device_families", "duplicate family_id")
-    if len(devices) != len(device_ids):
-        issue("$.individual_devices", "duplicate device_id")
+    collections = {
+        "device_family": ("$.device_families", "family_id"),
+        "individual_device": ("$.individual_devices", "device_id"),
+        "performance_observation": (
+            "$.performance_observations",
+            "observation_id",
+        ),
+        "population_statistic": ("$.population_statistics", "population_id"),
+        "stability_test": ("$.stability_tests", "test_id"),
+    }
+    for kind, ids in identifiers.items():
+        if len(ids) != len(set(ids)):
+            path, field = collections[kind]
+            issue(path, f"duplicate {field}")
     for index, device in enumerate(extraction.individual_devices):
         if device.family_id and device.family_id not in families:
             issue(f"$.individual_devices[{index}].family_id", "unknown family_id")
@@ -158,17 +169,7 @@ def validate_study(
         if test.device_id and test.device_id not in devices:
             issue(f"$.stability_tests[{index}].device_id", "unknown device_id")
 
-    entity_ids = {
-        "device_family": families,
-        "individual_device": devices,
-        "performance_observation": {
-            item.observation_id for item in extraction.performance_observations
-        },
-        "population_statistic": {
-            item.population_id for item in extraction.population_statistics
-        },
-        "stability_test": {item.test_id for item in extraction.stability_tests},
-    }
+    entity_ids = {kind: set(ids) for kind, ids in identifiers.items()}
     equivalence_ids: set[str] = set()
     claimed: set[tuple[str, str]] = set()
     for index, group in enumerate(extraction.equivalence_groups):
@@ -176,6 +177,12 @@ def validate_study(
         if group.equivalence_id in equivalence_ids:
             issue(f"{path}.equivalence_id", "duplicate equivalence_id")
         equivalence_ids.add(group.equivalence_id)
+        namespaces = {window_namespace(member) for member in group.member_ids}
+        if None in namespaces or len(namespaces) < 2:
+            issue(
+                f"{path}.member_ids",
+                "equivalence members must come from different windows",
+            )
         for member_id in group.member_ids:
             member = (group.entity_kind, member_id)
             if member_id not in entity_ids[group.entity_kind]:

@@ -1,11 +1,16 @@
 from perla_extract.study_extraction.models import (
     DeviceFamily,
+    EvidenceBlock,
     EvidenceRef,
     Fact,
+    IndividualDevice,
     Paper,
+    PerformanceObservation,
+    PopulationStatistic,
+    StabilityCheckpoint,
+    StabilityTest,
     StudyExtraction,
 )
-from perla_extract.study_extraction.partitioning import EvidenceBlock
 from perla_extract.study_extraction.validation import _contains, validate_study
 
 
@@ -115,3 +120,104 @@ def test_fact_with_one_invalid_citation_is_not_in_grounded_subset():
     assert result["status"] == "needs_review"
     assert result["counts"]["source_verified_facts"] == 0
     assert result["verified_facts"] == []
+
+
+def test_validation_reports_duplicate_ids_for_every_entity_collection():
+    """Semantic validation must not hide ambiguous identifiers in sets."""
+
+    evidence = [EvidenceRef(block_id="a", quote="reported")]
+    fact = Fact(
+        name="PCE",
+        raw_value="20%",
+        value_number=20.0,
+        unit="%",
+        evidence=evidence,
+    )
+    family = DeviceFamily(
+        family_id="f",
+        label="device",
+        variant=None,
+        architecture=None,
+        polarity="not_reported",
+        full_stack_raw=None,
+        layers=[],
+        absorber_formula=None,
+        absorber_properties=[],
+        absorber_constituents=[],
+        processing_steps=[],
+        evidence=evidence,
+    )
+    device = IndividualDevice(
+        device_id="d",
+        family_id="f",
+        label="device",
+        variant=None,
+        champion_status="not_reported",
+        selection_basis="not_reported",
+        evidence=evidence,
+    )
+    observation = PerformanceObservation(
+        observation_id="o",
+        device_id="d",
+        measurement_type="not_reported",
+        scan_direction="not_reported",
+        metrics=[fact],
+        evidence=evidence,
+    )
+    population = PopulationStatistic(
+        population_id="p",
+        family_id="f",
+        label="population",
+        statistic_type="not_reported",
+        sample_size=None,
+        metrics=[fact],
+        evidence=evidence,
+    )
+    stability = StabilityTest(
+        test_id="s",
+        family_id="f",
+        device_id="d",
+        specimen_label="device",
+        link_status="explicit_device_link",
+        conditions=[],
+        checkpoints=[
+            StabilityCheckpoint(
+                checkpoint_id="c",
+                time=None,
+                outcomes=[fact],
+                evidence=evidence,
+            )
+        ],
+        evidence=evidence,
+    )
+    extraction = StudyExtraction(
+        paper=Paper(title=None, doi=None),
+        device_families=[family, family.model_copy()],
+        individual_devices=[device, device.model_copy()],
+        performance_observations=[observation, observation.model_copy()],
+        population_statistics=[population, population.model_copy()],
+        stability_tests=[stability, stability.model_copy()],
+        unresolved_notes=[],
+    )
+
+    result = validate_study(
+        extraction,
+        [
+            EvidenceBlock(
+                block_id="a",
+                source="main",
+                page=1,
+                kind="text",
+                text="reported 20%",
+            )
+        ],
+    )
+
+    reasons = result["counts"]["issues_by_reason"]
+    assert {
+        "duplicate family_id",
+        "duplicate device_id",
+        "duplicate observation_id",
+        "duplicate population_id",
+        "duplicate test_id",
+    } <= reasons.keys()

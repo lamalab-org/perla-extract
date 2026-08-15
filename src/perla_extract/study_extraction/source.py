@@ -12,6 +12,7 @@ import importlib.metadata
 import json
 import re
 import unicodedata
+from functools import lru_cache
 from pathlib import Path
 from statistics import median
 from typing import Any
@@ -19,12 +20,14 @@ from typing import Any
 import pymupdf
 from pydantic import ValidationError
 
+from .artifacts import write_json_atomic
 from .logging import logger
-from .partitioning import EvidenceBlock
+from .models import EvidenceBlock
 from .progress import heartbeat
 
-PARSER_FORMAT_VERSION = 1
-PARSER_CODE_VERSION = "2026-08-14.3"
+# Bump only when the cache envelope itself becomes incompatible. Parser code,
+# block schema, source, and backend changes are fingerprinted automatically.
+DOCUMENT_CACHE_FORMAT_VERSION = 1
 
 
 def _package_version(name: str) -> str:
@@ -44,6 +47,45 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+@lru_cache(maxsize=1)
+def _parser_implementation_sha256() -> str:
+    """Invalidate parsed documents whenever parser behavior changes.
+
+    Hashing this module may also invalidate after harmless refactors, but that is
+    safer and easier to maintain than a manually bumped implementation version.
+    """
+
+    return _sha256(Path(__file__))
+
+
+@lru_cache(maxsize=1)
+def _evidence_schema_sha256() -> str:
+    """Invalidate parsed documents when the serialized block contract changes."""
+
+    schema = json.dumps(
+        EvidenceBlock.model_json_schema(),
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(schema).hexdigest()
+
+
+def _cache_identity(
+    *, source_hash: str, source: str, parser: str, parser_version: str
+) -> dict[str, object]:
+    """Describe every input that can change the parsed block representation."""
+
+    return {
+        "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
+        "parser_implementation_sha256": _parser_implementation_sha256(),
+        "evidence_schema_sha256": _evidence_schema_sha256(),
+        "source_sha256": source_hash,
+        "source": source,
+        "parser": parser,
+        "parser_version": parser_version,
+    }
 
 
 def _block_id(source: str, page: int, order: int, kind: str, text: str) -> str:
@@ -403,17 +445,6 @@ def available_parsers() -> list[str]:
     return ["auto", "pymupdf", "docling"]
 
 
-def _write_json(path: Path, value: object) -> None:
-    """Atomically write parser cache data."""
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(
-        json.dumps(value, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-    temporary.replace(path)
-
-
 def parse_pdf(
     path: Path,
     source: str,
@@ -440,27 +471,32 @@ def parse_pdf(
                     "Docling is not installed; install perla-extract[docling]"
                 )
             continue
+        identity = _cache_identity(
+            source_hash=source_hash,
+            source=source,
+            parser=choice,
+            parser_version=version,
+        )
         key = hashlib.sha256(
-            json.dumps(
-                {
-                    "format": PARSER_FORMAT_VERSION,
-                    "code": PARSER_CODE_VERSION,
-                    "source_sha256": source_hash,
-                    "source": source,
-                    "parser": choice,
-                    "version": version,
-                },
-                sort_keys=True,
-            ).encode()
+            json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
         cache_path = cache_dir / f"{key}.json" if cache_dir else None
         if cache_path and cache_path.exists() and not refresh_cache:
             try:
                 payload = json.loads(cache_path.read_text(encoding="utf-8"))
+                if payload["cache_identity"] != identity:
+                    raise ValueError("cache identity does not match the current parser")
                 blocks = [
                     EvidenceBlock.model_validate(item) for item in payload["blocks"]
                 ]
-            except (json.JSONDecodeError, KeyError, ValidationError):
+            except (
+                OSError,
+                TypeError,
+                json.JSONDecodeError,
+                KeyError,
+                ValueError,
+                ValidationError,
+            ):
                 logger.warning(
                     "Ignoring invalid document cache entry {}", cache_path.name
                 )
@@ -477,6 +513,11 @@ def parse_pdf(
                     "source_sha256": source_hash,
                     "parser": choice,
                     "parser_version": version,
+                    "parser_implementation_sha256": identity[
+                        "parser_implementation_sha256"
+                    ],
+                    "evidence_schema_sha256": identity["evidence_schema_sha256"],
+                    "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
                     "cache_hit": True,
                     "block_count": len(blocks),
                 }
@@ -497,13 +538,10 @@ def parse_pdf(
             )
             continue
         if cache_path:
-            _write_json(
+            write_json_atomic(
                 cache_path,
                 {
-                    "format_version": PARSER_FORMAT_VERSION,
-                    "source_sha256": source_hash,
-                    "parser": choice,
-                    "parser_version": version,
+                    "cache_identity": identity,
                     "blocks": [block.model_dump(mode="json") for block in blocks],
                 },
             )
@@ -514,6 +552,9 @@ def parse_pdf(
             "source_sha256": source_hash,
             "parser": choice,
             "parser_version": version,
+            "parser_implementation_sha256": identity["parser_implementation_sha256"],
+            "evidence_schema_sha256": identity["evidence_schema_sha256"],
+            "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
             "cache_hit": False,
             "block_count": len(blocks),
         }
@@ -530,11 +571,13 @@ def _text_key(block: EvidenceBlock) -> str:
 def _deduplicate(blocks: list[EvidenceBlock]) -> tuple[list[EvidenceBlock], int]:
     """Collapse a main-paper block repeated verbatim inside a concatenated SI."""
 
-    main = {
-        _text_key(block): block
-        for block in blocks
-        if block.source == "main" and len(_text_key(block)) > 40
-    }
+    main: dict[str, EvidenceBlock] = {}
+    for block in blocks:
+        if block.source != "main":
+            continue
+        key = _text_key(block)
+        if len(key) > 40:
+            main[key] = block
     output: list[EvidenceBlock] = []
     skipped = 0
     for block in blocks:

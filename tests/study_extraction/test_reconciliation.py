@@ -1,5 +1,7 @@
 """Tests for explicit, non-destructive identity reconciliation."""
 
+import pytest
+
 from perla_extract.study_extraction.merge import merge_candidates
 from perla_extract.study_extraction.models import (
     DeviceFamily,
@@ -29,6 +31,7 @@ def extraction(family_id: str) -> StudyExtraction:
                 polarity="not_reported",
                 full_stack_raw=None,
                 layers=[],
+                absorber_formula=None,
                 absorber_properties=[],
                 absorber_constituents=[],
                 processing_steps=[],
@@ -61,9 +64,7 @@ def proposal(*member_ids: str) -> ReconciliationResult:
 
 
 def test_valid_equivalence_is_attached_without_deleting_candidates():
-    candidates = merge_candidates(
-        [("w1", extraction("f1")), ("w2", extraction("f1"))]
-    )
+    candidates = merge_candidates([("w1", extraction("f1")), ("w2", extraction("f1"))])
 
     reconciled, audit = attach_valid_equivalences(
         candidates, proposal("w1:f1", "w2:f1")
@@ -76,9 +77,7 @@ def test_valid_equivalence_is_attached_without_deleting_candidates():
 
 
 def test_unknown_member_is_rejected_but_preserved_in_audit():
-    candidates = merge_candidates(
-        [("w1", extraction("f1")), ("w2", extraction("f1"))]
-    )
+    candidates = merge_candidates([("w1", extraction("f1")), ("w2", extraction("f1"))])
 
     reconciled, audit = attach_valid_equivalences(
         candidates, proposal("w1:f1", "missing:f1")
@@ -87,3 +86,26 @@ def test_unknown_member_is_rejected_but_preserved_in_audit():
     assert reconciled.equivalence_groups == []
     assert audit.proposed_groups[0].member_ids == ["w1:f1", "missing:f1"]
     assert "unknown device_family member IDs" in audit.issues[0].reason
+
+
+def test_same_window_equivalence_is_rejected():
+    candidates = extraction("f1")
+    candidates.device_families.append(
+        candidates.device_families[0].model_copy(update={"family_id": "f2"})
+    )
+    candidates = merge_candidates([("w1", candidates)])
+
+    reconciled, audit = attach_valid_equivalences(
+        candidates, proposal("w1:f1", "w1:f2")
+    )
+
+    assert reconciled.equivalence_groups == []
+    assert "different windows" in audit.issues[0].reason
+
+
+def test_reconciliation_rejects_ambiguous_source_ids():
+    candidates = merge_candidates([("w1", extraction("f1"))])
+    candidates.device_families.append(candidates.device_families[0].model_copy())
+
+    with pytest.raises(ValueError, match="ambiguous entity IDs"):
+        attach_valid_equivalences(candidates, proposal("w1:f1", "w2:f1"))
