@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator, confloat
+from pydantic import BaseModel, Field, confloat, model_validator
 from typing import List, Literal, Optional
 
 
@@ -70,7 +70,9 @@ class PerovskiteComposition(BaseModel):
         None,
         description="Type of the perovskite (e.g., Polycrystalline film, Single crystal, etc.).",
     )
-    dimensionality: Optional[Literal["0D", "1D", "2D", "3D", "2D/3D"]] = Field(None)
+    dimensionality: Optional[
+        Literal["0D", "1D", "2D", "3D", "1D/3D", "2D/3D"]
+    ] = Field(None)
     a_ions: Optional[List[Ion]] = Field(
         None,
         description="A-site ions. Only include information that is described in the paper.",
@@ -89,7 +91,7 @@ class PerovskiteComposition(BaseModel):
     # )
     bandgap: Optional[Bandgap] = Field(
         None,
-        description="Bandgap of the perovskite material being used in eV. You can also estimate the bandgap based on your knowledge if it's not mentioned in the paper.",
+        description="Directly reported bandgap of the perovskite material in eV. Do not estimate a missing value.",
     )
     impurities: Optional[Impurity] = Field(
         None, description="List any impurities added to the perovskite layer."
@@ -115,16 +117,15 @@ class VOC(UnitValue):
     value: Optional[confloat(ge=0, le=1500)] = Field(None)
     unit: Optional[Literal["V", "mV"]] = Field(None)
 
-    @validator("value")
-    def check_voc_value(cls, v, values):
-        if v is None:
-            return v
-        unit = values.get("unit")
-        if unit == "V" and v > 1.5:
+    @model_validator(mode="after")
+    def check_voc_value(self):
+        if self.value is None:
+            return self
+        if self.unit == "V" and self.value > 1.5:
             raise ValueError("When unit is 'V', value must be <= 1.5")
-        elif unit == "mV" and v > 1500:
+        if self.unit == "mV" and self.value > 1500:
             raise ValueError("When unit is 'mV', value must be <= 1500")
-        return v
+        return self
 
 
 class FF(BaseModel):
@@ -138,15 +139,6 @@ class ActiveArea(UnitValue):
     value: Optional[confloat(gt=0)] = Field(None)
     unit: Optional[Literal["cm^2", "mm^2"]] = Field(None)
 
-    @validator("value")
-    def convert_to_cm2(cls, v, values):
-        if v is None:
-            return v
-        unit = values.get("unit")
-        if unit == "mm^2":
-            return v / 100
-        return v
-
 
 class LightIntensity(UnitValue):
     value: Optional[confloat(ge=0)] = Field(None)
@@ -156,14 +148,6 @@ class LightIntensity(UnitValue):
 class Temperature(UnitValue):
     value: Optional[float] = Field(None)
     unit: Optional[Literal["°C", "K"]] = Field(None)
-
-    @validator("value")
-    def convert_to_celsius(cls, v, values):
-        if v is None:
-            return v
-        if values.get("unit") == "K":
-            return v - 273.15
-        return v
 
 
 class Time(UnitValue):
@@ -355,7 +339,21 @@ class PerovskiteSolarCell(BaseModel):
     )
     averaged_quantities: Optional[bool] = Field(
         None,
-        description="True if the reported performance metrics are reported based on an average over multiple devices. If there are additional statistics that have been reported, extract them into `additional_notes`.",
+        description="Legacy compatibility field. True if the metrics are an average over multiple devices. Prefer `performance_aggregation` for new extractions.",
+        deprecated=True,
+    )
+    performance_aggregation: Optional[
+        Literal[
+            "single_device",
+            "champion",
+            "mean",
+            "median",
+            "stabilized",
+            "distribution",
+        ]
+    ] = Field(
+        None,
+        description="How the reported performance tuple was selected or aggregated. Use `champion` for a best-performing device, `mean` or `median` for a device population, `single_device` when no selection claim is made, `stabilized` for a steady-state/MPP value, and `distribution` when only population statistics are reported.",
     )
     active_area: Optional[ActiveArea] = Field(
         None, description="Reported active area of the solar cell."
