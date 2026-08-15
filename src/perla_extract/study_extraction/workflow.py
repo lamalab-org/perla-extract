@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .client import ModelCallError, OpenRouterClient
+from .client import ModelCallError, ModelClient
 from .compatibility import to_reduced_with_report
 from .logging import logger
 from .merge import merge_candidates
@@ -96,19 +96,18 @@ class ExtractionConfig:
     pdf: Path
     supplement: Path | None
     output_dir: Path
-    model: str = "openai/gpt-5.6-sol"
+    model: str = "openrouter/openai/gpt-5.6-sol"
     reasoning_effort: str | None = "medium"
     parser: str = "auto"
     mode: str = "auto"
     single_call_max_input_tokens: int = 90_000
     window_input_tokens: int = 60_000
     max_output_tokens: int = 80_000
-    provider_sort: str = "quality"
     temperature: float | None = None
     heartbeat_seconds: float = 20
     timeout_seconds: float = 600
     document_cache_dir: Path = Path(".perla-cache/documents")
-    model_cache_dir: Path = Path(".perla-cache/openrouter")
+    model_cache_dir: Path = Path(".perla-cache/models")
     refresh_document_cache: bool = False
     dry_run: bool = False
 
@@ -246,7 +245,7 @@ def _configuration(
 
 def _extract(
     config: ExtractionConfig,
-    client: OpenRouterClient,
+    client: ModelClient,
     blocks: list[EvidenceBlock],
     mode: str,
     plan: WindowPlan | None,
@@ -345,7 +344,7 @@ def _extract(
     return extraction, errors
 
 
-def run_extraction(config: ExtractionConfig, api_key: str | None) -> dict[str, object]:
+def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     """Run parsing, high-recall extraction, grounding checks, and PERLA export."""
 
     started = time.monotonic()
@@ -436,13 +435,11 @@ def run_extraction(config: ExtractionConfig, api_key: str | None) -> dict[str, o
         _atomic_json(config.output_dir / "report.json", report)
         return report
 
-    client = OpenRouterClient(
-        api_key=api_key,
+    client = ModelClient(
         cache_dir=config.model_cache_dir,
         output_dir=config.output_dir,
         heartbeat_seconds=config.heartbeat_seconds,
         timeout_seconds=config.timeout_seconds,
-        provider_sort=config.provider_sort,
         temperature=config.temperature,
     )
     extraction, errors = _extract(config, client, blocks, mode, plan)

@@ -1,7 +1,8 @@
 """Tests for command-line option translation."""
 
-import json
 import inspect
+import json
+import os
 from pathlib import Path
 
 from click.testing import CliRunner
@@ -15,9 +16,8 @@ def test_omit_reasoning_leaves_parameter_out(monkeypatch, tmp_path: Path) -> Non
 
     captured = {}
 
-    def fake_run(config, api_key):
+    def fake_run(config):
         captured["config"] = config
-        captured["api_key"] = api_key
         return {"status": "complete"}
 
     monkeypatch.setattr(cli, "run_extraction", fake_run)
@@ -30,7 +30,24 @@ def test_omit_reasoning_leaves_parameter_out(monkeypatch, tmp_path: Path) -> Non
 
     assert result == {"status": "complete"}
     assert captured["config"].reasoning_effort is None
-    assert captured["api_key"] is None
+
+
+def test_env_file_loads_any_provider_key_without_overwriting_process_env(
+    monkeypatch, tmp_path: Path
+) -> None:
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "OPENROUTER_API_KEY=from-file\nOPENAI_API_KEY=direct-key\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("OPENROUTER_API_KEY", "from-process")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(cli, "run_extraction", lambda config: {"status": "complete"})
+
+    cli.extract_study(pdf=tmp_path / "paper.pdf", env_file=env_file, dry_run=True)
+
+    assert os.environ["OPENROUTER_API_KEY"] == "from-process"
+    assert os.environ["OPENAI_API_KEY"] == "direct-key"
 
 
 def test_click_command_keeps_report_and_logs_separate(
@@ -64,7 +81,7 @@ def test_click_help_exposes_frontier_default() -> None:
     result = CliRunner().invoke(cli.main, ["--help"])
 
     assert result.exit_code == 0
-    assert "openai/gpt-5.6-sol" in result.stdout
+    assert "openrouter/openai/gpt-5.6-sol" in result.stdout
     assert "--json-logs" in result.stdout
 
 
@@ -79,7 +96,6 @@ def test_public_entry_points_share_scientific_defaults() -> None:
         "single_call_max_input_tokens",
         "window_input_tokens",
         "max_output_tokens",
-        "provider_sort",
         "temperature",
         "heartbeat_seconds",
         "timeout_seconds",

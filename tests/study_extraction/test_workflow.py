@@ -18,8 +18,7 @@ def test_dry_run_writes_a_complete_request_plan(tmp_path):
             document_cache_dir=tmp_path / "documents",
             model_cache_dir=tmp_path / "models",
             dry_run=True,
-        ),
-        api_key=None,
+        )
     )
 
     assert report["status"] == "dry_run"

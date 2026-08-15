@@ -4,19 +4,24 @@ Use `perla-extract` when you want the devices from one paper and its SI as
 source-linked records rather than one flat row of nearby values.
 
 ```bash
-export OPENROUTER_API_KEY="your-openrouter-key"
+export OPENROUTER_API_KEY="your-openrouter-key"  # for the default backend
 
 perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
   --parser docling \
-  --model openai/gpt-5.6-sol \
+  --model openrouter/openai/gpt-5.6-sol \
   --output-dir results/paper
 ```
 
 Docling is recommended because it recovers tables, reading order, and chemical
 subscripts better than plain PDF text. Install it with
 `pip install 'perla-extract[docling]'`. PyMuPDF remains the lightweight fallback.
+
+LiteLLM provides the model transport. The model name chooses the backend: the default
+uses OpenRouter, while `openai/...`, `anthropic/...`, `ollama/...`, and other LiteLLM
+prefixes use their matching credentials and provider. Put provider environment
+variables in the process environment or `.env.local`; process values take precedence.
 
 ## What the files contain
 

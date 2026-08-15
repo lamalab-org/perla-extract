@@ -42,13 +42,13 @@ pip install -e '.[dev,docling]'
 ## Extract a study
 
 ```bash
-export OPENROUTER_API_KEY="your-openrouter-key"
+export OPENROUTER_API_KEY="your-openrouter-key"  # for the default backend
 
 perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
   --parser docling \
-  --model openai/gpt-5.6-sol \
+  --model openrouter/openai/gpt-5.6-sol \
   --output-dir results/paper
 ```
 
@@ -67,6 +67,11 @@ Model and document responses are cached by their complete inputs. The default
 workflow sends the complete study to one frontier model when it fits. It does not
 replace the resulting records with lower-context expansion calls, which experiments
 showed could reduce scientific recall.
+
+Model calls use LiteLLM. Select another backend with its provider-prefixed model name
+and corresponding environment variable—for example, an `openai/...` model with
+`OPENAI_API_KEY` or an `anthropic/...` model with `ANTHROPIC_API_KEY`. `.env.local` is
+loaded when present, and existing process variables take precedence.
 
 ## Output
 

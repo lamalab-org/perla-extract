@@ -15,19 +15,24 @@ from .workflow import ExtractionConfig, run_extraction
 REASONING_LEVELS = ("omit", "none", "minimal", "low", "medium", "high")
 
 
-def _env_value(path: Path | None, name: str) -> str | None:
-    """Read one explicitly named secret without adding a dotenv dependency."""
+def _load_env(path: Path | None) -> None:
+    """Load provider credentials without choosing a provider in application code.
+
+    Existing process variables win, matching normal command-line expectations. The
+    small loader intentionally supports only the ``NAME=VALUE`` form needed for model
+    provider keys; LiteLLM interprets the variables for the selected model prefix.
+    """
 
     if path is None or not path.exists():
-        return None
+        return
     for raw_line in path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, value = line.split("=", 1)
-        if key.strip().removeprefix("export ").strip() == name:
-            return value.strip().strip('"').strip("'")
-    return None
+        name = key.strip().removeprefix("export ").strip()
+        if name:
+            os.environ.setdefault(name, value.strip().strip('"').strip("'"))
 
 
 def _reasoning(value: str) -> str | None:
@@ -40,33 +45,25 @@ def extract_study(
     pdf: str | Path,
     supplement: str | Path | None = None,
     output_dir: str | Path = "study_extraction",
-    model: str = "openai/gpt-5.6-sol",
+    model: str = "openrouter/openai/gpt-5.6-sol",
     reasoning_effort: str = "medium",
     parser: str = "auto",
     mode: str = "auto",
     single_call_max_input_tokens: int = 90_000,
     window_input_tokens: int = 60_000,
     max_output_tokens: int = 80_000,
-    provider_sort: str = "quality",
     temperature: float | None = None,
     heartbeat_seconds: float = 20,
     timeout_seconds: float = 600,
     document_cache_dir: str | Path = ".perla-cache/documents",
-    model_cache_dir: str | Path = ".perla-cache/openrouter",
+    model_cache_dir: str | Path = ".perla-cache/models",
     refresh_document_cache: bool = False,
     dry_run: bool = False,
     env_file: str | Path | None = None,
 ) -> dict[str, object]:
     """Build an extraction configuration and run it from Python or the CLI."""
 
-    environment_path = Path(env_file) if env_file else Path(".env.local")
-    api_key = os.environ.get("OPENROUTER_API_KEY") or _env_value(
-        environment_path, "OPENROUTER_API_KEY"
-    )
-    if not dry_run and not api_key:
-        raise ValueError(
-            "OPENROUTER_API_KEY is not set; export it or pass --env-file containing it"
-        )
+    _load_env(Path(env_file) if env_file else Path(".env.local"))
     config = ExtractionConfig(
         pdf=Path(pdf),
         supplement=Path(supplement) if supplement else None,
@@ -78,7 +75,6 @@ def extract_study(
         single_call_max_input_tokens=single_call_max_input_tokens,
         window_input_tokens=window_input_tokens,
         max_output_tokens=max_output_tokens,
-        provider_sort=provider_sort,
         temperature=temperature,
         heartbeat_seconds=heartbeat_seconds,
         timeout_seconds=timeout_seconds,
@@ -87,7 +83,7 @@ def extract_study(
         refresh_document_cache=refresh_document_cache,
         dry_run=dry_run,
     )
-    return run_extraction(config, api_key)
+    return run_extraction(config)
 
 
 EXISTING_FILE = click.Path(
@@ -100,7 +96,11 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 @click.option("--pdf", type=EXISTING_FILE, required=True, help="Main paper PDF.")
 @click.option("--supplement", type=EXISTING_FILE, help="Supplementary PDF.")
 @click.option("--output-dir", type=OUTPUT_DIRECTORY, default="study_extraction")
-@click.option("--model", default="openai/gpt-5.6-sol", help="OpenRouter model ID.")
+@click.option(
+    "--model",
+    default="openrouter/openai/gpt-5.6-sol",
+    help="LiteLLM provider-prefixed model name.",
+)
 @click.option(
     "--reasoning-effort", type=click.Choice(REASONING_LEVELS), default="medium"
 )
@@ -113,11 +113,6 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 )
 @click.option("--window-input-tokens", type=click.IntRange(min=1), default=60_000)
 @click.option("--max-output-tokens", type=click.IntRange(min=1), default=80_000)
-@click.option(
-    "--provider-sort",
-    type=click.Choice(("quality", "throughput", "latency", "price", "none")),
-    default="quality",
-)
 @click.option("--temperature", type=float, default=None)
 @click.option("--heartbeat-seconds", type=click.FloatRange(min=0), default=20.0)
 @click.option(
@@ -127,7 +122,7 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     "--document-cache-dir", type=OUTPUT_DIRECTORY, default=".perla-cache/documents"
 )
 @click.option(
-    "--model-cache-dir", type=OUTPUT_DIRECTORY, default=".perla-cache/openrouter"
+    "--model-cache-dir", type=OUTPUT_DIRECTORY, default=".perla-cache/models"
 )
 @click.option("--refresh-document-cache", is_flag=True)
 @click.option("--dry-run", is_flag=True, help="Parse and plan without calling a model.")
