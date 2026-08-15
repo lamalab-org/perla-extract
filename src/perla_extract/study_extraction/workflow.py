@@ -10,6 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from .artifacts import write_json_atomic
 from .client import ModelCallError, ModelClient
 from .compatibility import to_reduced_with_report
 from .logging import logger
@@ -110,17 +111,6 @@ class ExtractionConfig:
     model_cache_dir: Path = Path(".perla-cache/models")
     refresh_document_cache: bool = False
     dry_run: bool = False
-
-
-def _atomic_json(path: Path, value: object) -> None:
-    """Write every public artifact atomically so failures remain diagnosable."""
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(
-        json.dumps(value, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-    temporary.replace(path)
 
 
 def _evidence(blocks: list[EvidenceBlock]) -> list[dict[str, object]]:
@@ -298,7 +288,7 @@ def _extract(
             errors.append(f"{window.window_id}: {exc}")
             continue
         parts.append((window.window_id, part))
-        _atomic_json(
+        write_json_atomic(
             config.output_dir / "windows" / f"{window.window_id}.json",
             part.model_dump(mode="json"),
         )
@@ -310,7 +300,7 @@ def _extract(
         )
     )
     if parts:
-        _atomic_json(
+        write_json_atomic(
             config.output_dir / "candidates.json", extraction.model_dump(mode="json")
         )
     if len(parts) > 1:
@@ -328,13 +318,13 @@ def _extract(
             )
         except ModelCallError as exc:
             errors.append(f"candidate_reconciliation: {exc}")
-            _atomic_json(
+            write_json_atomic(
                 config.output_dir / "reconciliation.json",
                 {"status": "failed", "error": str(exc)},
             )
         else:
             extraction, audit = attach_valid_equivalences(extraction, proposal)
-            _atomic_json(
+            write_json_atomic(
                 config.output_dir / "reconciliation.json",
                 {
                     "status": "accepted" if not audit.issues else "needs_review",
@@ -373,7 +363,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         refresh_cache=config.refresh_document_cache,
         heartbeat_seconds=config.heartbeat_seconds,
     )
-    _atomic_json(
+    write_json_atomic(
         config.output_dir / "document.json",
         {"blocks": [block.model_dump(mode="json") for block in blocks]},
     )
@@ -391,8 +381,8 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         )
     )
     configuration = _configuration(config, mode, source_events)
-    _atomic_json(config.output_dir / "run_configuration.json", configuration)
-    _atomic_json(config.output_dir / "extraction.schema.json", schema)
+    write_json_atomic(config.output_dir / "run_configuration.json", configuration)
+    write_json_atomic(config.output_dir / "extraction.schema.json", schema)
     logger.info(
         "Prepared {} evidence blocks (~{} request tokens); mode={}",
         len(blocks),
@@ -411,7 +401,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             max_characters=evidence_budget,
             max_context_characters=min(24_000, evidence_budget // 3),
         )
-        _atomic_json(
+        write_json_atomic(
             config.output_dir / "window_plan.json", plan.model_dump(mode="json")
         )
 
@@ -432,7 +422,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             "source_parsing": source_events,
             "elapsed_seconds": round(time.monotonic() - started, 3),
         }
-        _atomic_json(config.output_dir / "report.json", report)
+        write_json_atomic(config.output_dir / "report.json", report)
         return report
 
     client = ModelClient(
@@ -444,27 +434,27 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     )
     extraction, errors = _extract(config, client, blocks, mode, plan)
 
-    _atomic_json(
+    write_json_atomic(
         config.output_dir / "extraction.json", extraction.model_dump(mode="json")
     )
     validation = validate_study(extraction, blocks)
     grounded_facts = validation.pop("verified_facts")
-    _atomic_json(config.output_dir / "grounded_facts.json", grounded_facts)
-    _atomic_json(config.output_dir / "validation.json", validation)
+    write_json_atomic(config.output_dir / "grounded_facts.json", grounded_facts)
+    write_json_atomic(config.output_dir / "validation.json", validation)
     conversion_error: str | None = None
     try:
         reduced = to_reduced_with_report(extraction)
     except (ValidationError, ValueError) as exc:
         conversion_error = str(exc)
-        _atomic_json(
+        write_json_atomic(
             config.output_dir / "reduced_conversion_failure.json",
             {"error": conversion_error},
         )
     else:
-        _atomic_json(
+        write_json_atomic(
             config.output_dir / "reduced.json", reduced.cells.model_dump(mode="json")
         )
-        _atomic_json(
+        write_json_atomic(
             config.output_dir / "reduced_conversion.json",
             reduced.model_dump(mode="json"),
         )
@@ -497,5 +487,5 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         "source_parsing": source_events,
         "elapsed_seconds": round(time.monotonic() - started, 3),
     }
-    _atomic_json(config.output_dir / "report.json", report)
+    write_json_atomic(config.output_dir / "report.json", report)
     return report
