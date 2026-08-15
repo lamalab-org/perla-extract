@@ -5,8 +5,8 @@ import litellm
 import pytest
 
 from perla_extract.study_extraction.client import (
-    ModelClient,
     ModelCallError,
+    ModelClient,
     _strict_schema,
 )
 from perla_extract.study_extraction.models import Paper, StudyExtraction
