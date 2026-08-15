@@ -1,0 +1,18 @@
+"""Public API for evidence-complete, device-centered study records."""
+
+from .merge import merge_candidates, namespace_candidates
+from .models import StudyExtraction
+from .partitioning import EvidenceBlock, EvidenceWindow, WindowPlan, plan_windows
+from .reconciliation import ReconciliationResult, attach_valid_equivalences
+
+__all__ = [
+    "EvidenceBlock",
+    "EvidenceWindow",
+    "ReconciliationResult",
+    "StudyExtraction",
+    "WindowPlan",
+    "attach_valid_equivalences",
+    "merge_candidates",
+    "namespace_candidates",
+    "plan_windows",
+]
