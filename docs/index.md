@@ -46,6 +46,7 @@ result; they do not erase model output.
 ## Choose a path
 
 - [Run your first extraction](getting-started.md)
+- [Discover new papers with PapersBot](workflows/papersbot.md)
 - [Understand the study model](concepts/study-model.md)
 - [Understand evidence validation](concepts/evidence.md)
 - [Review and curate ground truth](workflows/ground-truth-review.md)

@@ -66,3 +66,16 @@ reproducibility still depends on the selected provider and model version.
 | `--json-logs` | off | Emit JSON log records |
 
 Run `perla-extract --help` to see the complete installed command interface.
+
+## PapersBot
+
+The optional literature-discovery command has a separate dependency boundary and
+does not change the extraction command:
+
+```text
+perla-papersbot [OPTIONS] [DOWNLOAD_DIR]
+```
+
+Install it with `pip install 'perla-extract[papersbot]'`. See
+[Discover papers](../workflows/papersbot.md) for state, selection, and scheduled-run
+behavior.
