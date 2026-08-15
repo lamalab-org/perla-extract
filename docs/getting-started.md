@@ -24,7 +24,7 @@ pip install -e '.[dev,docs,docling]'
 ## Inspect the planned run
 
 `--dry-run` parses and caches the documents, chooses single or windowed mode, and
-writes a call estimate without contacting OpenRouter:
+writes a call estimate without contacting a model provider:
 
 ```bash
 perla-extract \
@@ -41,19 +41,23 @@ parser events, and selected mode.
 ## Extract
 
 ```bash
-export OPENROUTER_API_KEY="your-openrouter-key"
+export OPENROUTER_API_KEY="your-openrouter-key"  # for the default backend
 
 perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
   --parser docling \
-  --model openai/gpt-5.6-sol \
+  --model openrouter/openai/gpt-5.6-sol \
   --output-dir results/paper
 ```
 
 Progress and periodic heartbeats go to stderr. The final report is printed as JSON on
 stdout. `--json-logs` emits machine-readable logs; `--log-level DEBUG` shows parser
 fallback details.
+
+Model transport is provider-neutral through LiteLLM. Choose a different backend with
+its provider-prefixed model name and standard credential, such as `openai/...` with
+`OPENAI_API_KEY` or `anthropic/...` with `ANTHROPIC_API_KEY`.
 
 ## Read the result
 
@@ -81,7 +85,7 @@ while inspectable output was still produced; `failed` means no model call succee
 
 Parsed documents and validated model responses use content-addressed caches. The model
 cache key covers the complete request, including model, schema, prompts, reasoning,
-temperature, provider routing, and evidence. Requests also set a fixed seed. Provider
+temperature, token limits, timeout, and evidence. Requests also set a fixed seed. Provider
 behavior can still change, so the run configuration and source hashes are part of the
 scientific record.
 

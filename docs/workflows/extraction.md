@@ -66,9 +66,9 @@ only locally source-matched facts.
 ## Model choice
 
 The default model is the frontier model encoded in the current CLI. You can pass any
-OpenRouter model that supports the requested strict JSON schema and parameters. Model
-choice affects recall and semantic linking; schema conformance alone is not evidence
-of extraction quality. Compare models against independently reviewed ground truth,
-especially on device inventory and chemical composition.
+LiteLLM provider-prefixed model that supports the requested strict JSON schema and
+parameters. Model choice affects recall and semantic linking; schema conformance alone
+is not evidence of extraction quality. Compare models against independently reviewed
+ground truth, especially on device inventory and chemical composition.
 
 For all runtime settings, see the [CLI reference](../reference/cli.md).

@@ -16,10 +16,11 @@ final report to stdout and writes progress logs to stderr.
 | `--pdf PATH` | required | Main paper PDF |
 | `--supplement PATH` | none | Supporting Information PDF |
 | `--output-dir DIRECTORY` | `study_extraction` | Artifact directory |
-| `--env-file PATH` | `.env.local` when present | File from which only `OPENROUTER_API_KEY` is read |
+| `--env-file PATH` | `.env.local` when present | Provider environment variables to load |
 
-`OPENROUTER_API_KEY` from the process environment takes precedence over the env file.
-It is not written to `run_configuration.json`.
+Variables already present in the process environment take precedence over the env
+file. Provider credentials are consumed by LiteLLM and are not written to
+`run_configuration.json`.
 
 ## Parser and call planning
 
@@ -38,24 +39,24 @@ Docling fails. Parser results are cached by source content, parser version, and 
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `--model TEXT` | `openai/gpt-5.6-sol` | OpenRouter model ID |
-| `--reasoning-effort [omit|none|minimal|low|medium|high]` | `medium` | OpenRouter reasoning setting; `omit` removes the parameter |
+| `--model TEXT` | `openrouter/openai/gpt-5.6-sol` | LiteLLM provider-prefixed model name |
+| `--reasoning-effort [omit|none|minimal|low|medium|high]` | `medium` | Reasoning setting; `omit` removes the parameter for models that do not support it |
 | `--max-output-tokens INTEGER` | `80000` | Maximum completion tokens per call |
-| `--provider-sort [quality|throughput|latency|price|none]` | `quality` | Provider routing preference |
 | `--temperature FLOAT` | omitted | Sampling temperature; omission leaves the provider default |
 | `--timeout-seconds FLOAT` | `600` | Timeout for one live request |
 | `--heartbeat-seconds FLOAT` | `20` | Progress-log interval; `0` disables heartbeats |
 
-Quality routing appends OpenRouter's `:exacto` model variant unless already present.
-All requests set seed `0`; reproducibility still depends on the selected provider and
-model version.
+The model prefix selects a LiteLLM backend. For example, `openrouter/...` uses
+`OPENROUTER_API_KEY`, `openai/...` uses `OPENAI_API_KEY`, and `anthropic/...` uses
+`ANTHROPIC_API_KEY`. All requests set seed `0`; reproducibility still depends on the
+selected provider and model version.
 
 ## Cache and logging
 
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--document-cache-dir DIRECTORY` | `.perla-cache/documents` | Parsed document cache |
-| `--model-cache-dir DIRECTORY` | `.perla-cache/openrouter` | Validated response cache |
+| `--model-cache-dir DIRECTORY` | `.perla-cache/models` | Validated response cache |
 | `--refresh-document-cache` | off | Ignore and replace matching parser cache entries |
 | `--log-level [DEBUG|INFO|WARNING|ERROR]` | `INFO` | Minimum stderr log level |
 | `--json-logs` | off | Emit JSON log records |

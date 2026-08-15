@@ -4,8 +4,9 @@
 ## Run an extraction
 
 `extract_study` exposes the same settings as the command line and returns the final
-report dictionary. It reads `OPENROUTER_API_KEY` from the environment unless the run is
-a dry run or the key is present in the named env file.
+report dictionary. LiteLLM resolves the provider and credentials from the model prefix
+and environment. A named env file can supply provider variables; existing process
+variables take precedence.
 
 ```python
 from perla_extract.study_extraction.cli import extract_study

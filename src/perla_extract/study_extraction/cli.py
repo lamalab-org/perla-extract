@@ -65,8 +65,9 @@ def extract_study(
 
     This is the programmatic counterpart of ``perla-extract``: it writes the rich
     extraction, validation, provenance, report, and compatibility artifacts to
-    ``output_dir`` and returns the final report. A live run requires an OpenRouter key;
-    ``dry_run`` still parses and caches documents but makes no model request.
+    ``output_dir`` and returns the final report. LiteLLM resolves credentials for the
+    provider prefix in ``model``; ``dry_run`` parses and caches documents without
+    requiring any provider credential.
     """
 
     _load_env(Path(env_file) if env_file else Path(".env.local"))
