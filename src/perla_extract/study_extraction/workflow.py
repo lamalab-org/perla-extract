@@ -15,8 +15,8 @@ from .client import ModelCallError, ModelClient
 from .compatibility import to_reduced_with_report
 from .logging import logger
 from .merge import merge_candidates
-from .models import Paper, StudyExtraction
-from .partitioning import EvidenceBlock, WindowPlan, plan_windows
+from .models import EvidenceBlock, Paper, StudyExtraction
+from .partitioning import WindowPlan, plan_windows
 from .reconciliation import ReconciliationResult, attach_valid_equivalences
 from .source import parse_documents
 from .validation import validate_study

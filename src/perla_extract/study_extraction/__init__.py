@@ -2,8 +2,8 @@
 
 from .compatibility import ReducedExport, to_reduced, to_reduced_with_report
 from .merge import merge_candidates, namespace_candidates
-from .models import StudyExtraction
-from .partitioning import EvidenceBlock, EvidenceWindow, WindowPlan, plan_windows
+from .models import EvidenceBlock, StudyExtraction
+from .partitioning import EvidenceWindow, WindowPlan, plan_windows
 from .reconciliation import ReconciliationResult, attach_valid_equivalences
 
 __all__ = [
