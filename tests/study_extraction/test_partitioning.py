@@ -1,3 +1,5 @@
+import pytest
+
 from perla_extract.study_extraction.models import EvidenceBlock
 from perla_extract.study_extraction.partitioning import plan_windows
 
@@ -64,3 +66,10 @@ def test_oversized_main_paper_is_not_repeated_as_supplement_context():
         window for window in plan.windows if window.source == "supplement"
     )
     assert supplement.context_blocks == []
+
+
+def test_duplicate_block_error_identifies_conflicting_ids():
+    duplicate = block("same", "main", 1, "Methods", 100)
+
+    with pytest.raises(ValueError, match=r"duplicates=\['same'\]"):
+        plan_windows([duplicate, duplicate.model_copy()])

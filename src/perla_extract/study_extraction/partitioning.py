@@ -8,6 +8,7 @@ for supplement windows.
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Iterable, Sequence
 
 from pydantic import Field, model_validator
@@ -169,8 +170,14 @@ def plan_windows(
         raise ValueError("max_characters must be positive")
     if not 0 <= max_context_characters < max_characters:
         raise ValueError("max_context_characters must be in [0, max_characters)")
-    if len({block.block_id for block in blocks}) != len(blocks):
-        raise ValueError("block_id values must be unique")
+    block_id_counts = Counter(block.block_id for block in blocks)
+    duplicate_block_ids = sorted(
+        block_id for block_id, count in block_id_counts.items() if count > 1
+    )
+    if duplicate_block_ids:
+        raise ValueError(
+            f"block_id values must be unique; duplicates={duplicate_block_ids}"
+        )
 
     main = [block for block in blocks if block.source == main_source]
     context = (
