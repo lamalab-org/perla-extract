@@ -177,6 +177,7 @@ def is_doi_good_to_go(doi, pdf_text, metadata=None) -> bool:
     publisher = metadata.get("publisher", "")
 
     if journal and not journal_filter(journal, publisher):
+        logger.info(f"Paper {doi} filtered out due to journal: {journal}")
         return False
         
     if word_count(abstract) < 100 and pdf_text:
@@ -275,14 +276,13 @@ class ExtractionPipeline:
             doi = filepath.stem.replace("--", "/")
         pdf_text = self.preprocessor.pdf_to_text(filepath)
         if not is_doi_good_to_go(doi, pdf_text):
-            print(f"This DOI {doi} ({filepath.name}) will be skipped.")
+            logger.info(f"This DOI {doi} ({filepath.name}) will be skipped.")
             log_processing(doi, 'skipped', True)
             log_processing(doi, 'processed', True)
             return False
-
+        log_msg = doi if doi != "NOT_FOUND" else filepath.stem.replace('--', '/')
         logger.info(
-            "Extracting:",
-            (doi if doi != "NOT_FOUND" else filepath.stem.replace("--", "/")),
+            f"Extracting: {log_msg}"
         )
 
         try:

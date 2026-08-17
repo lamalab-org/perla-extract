@@ -537,6 +537,10 @@ def download_pdf(url: str, filepath: str) -> bool:
             # Check if the request was successful
             response.raise_for_status()
 
+            content_type = response.headers.get('Content-Type', '')
+            if 'text/html' in content_type:
+                logger.error(f"Failed: Received HTML page instead of PDF (likely blocked by a CAPTCHA) for {url}")
+                return False
             # --- Save the file in chunks ---
             with open(filepath, "wb") as f:
                 f.writelines(response.iter_content(chunk_size=8192))
