@@ -2,8 +2,9 @@
 # Reduced PERLA schema
 
 The rich study model and the historical reduced PERLA schema do not carry the same
-information. PERLA Extract therefore supports one deterministic direction—rich to
-reduced—with an explicit conversion report. It does not claim a lossless round trip.
+information. PERLA Extract therefore keeps one optional deterministic direction—rich
+to reduced—with an explicit conversion report. It does not claim a lossless round
+trip, and NOMAD export does not depend on this format.
 
 ```mermaid
 flowchart LR
@@ -56,8 +57,8 @@ were never encoded. The authoritative ground truth should remain `StudyExtractio
 
 ## Use the adapter
 
-The extraction workflow writes both `reduced.json` and `reduced_conversion.json`
-automatically. From Python:
+Pass `--reduced-export` to make the extraction workflow write `reduced.json` and
+`reduced_conversion.json`. From Python:
 
 ```python
 from pathlib import Path

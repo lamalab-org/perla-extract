@@ -65,9 +65,9 @@ It also materializes convenient exports after every successful commit:
 | `documents/<split>/<paper>.json` | Imported evidence blocks |
 | `manifests/<split>/<paper>.json` | Schema, source, model configuration, and seed digest |
 
-The latest immutable rich revision is authoritative. Generate the reduced
-representation with the deterministic adapter rather than curating two ground truths
-independently.
+The latest immutable rich revision is authoritative. Generate NOMAD archives—or the
+optional reduced representation—with deterministic adapters rather than curating
+multiple ground truths independently.
 
 ## Freeze a revision for a data PR
 

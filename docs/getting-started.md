@@ -67,8 +67,10 @@ suffix preserves the previous quality-first routing for the default OpenRouter m
 | `document.json` | Model-facing scientific evidence blocks with source and page locations |
 | `report.json` | Status, counts, usage, cost, cache information, and failures |
 | `run_configuration.json` | Non-secret configuration and source fingerprints |
-| `reduced.json` | Deterministic reduced-schema export |
-| `reduced_conversion.json` | Rich-to-reduced mappings and explicit losses |
+| `nomad/*.archive.json` | One standalone NOMAD archive per atomic extracted record |
+| `nomad/manifest.json` | NOMAD target pin, record mappings, and conversion issues |
+| `composition_projection.json` | Formula/site-ion normalization review queue |
+| `reduced.json` | Optional historical export when `--reduced-export` is passed |
 
 Windowed runs additionally write `window_plan.json`, successful per-window results,
 `candidates.json`, and—when cross-window linking is attempted—`identity_links.json`.

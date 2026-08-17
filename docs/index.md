@@ -21,7 +21,7 @@ flowchart LR
     D --> H["Rich StudyExtraction"]
     G --> H
     H --> I["Citation repair, evidence checks, and coverage audit"]
-    H --> J["Deterministic reduced export"]
+    H --> J["Atomic NOMAD archives"]
     H --> K["Human ground-truth review"]
 ```
 
@@ -54,4 +54,5 @@ result; they do not erase model output.
 - [Understand the study model](concepts/study-model.md)
 - [Understand evidence validation](concepts/evidence.md)
 - [Review and curate ground truth](workflows/ground-truth-review.md)
-- [Export to the reduced PERLA schema](compatibility/reduced-schema.md)
+- [Export directly to NOMAD](workflows/nomad-export.md)
+- [Export to the historical reduced PERLA schema](compatibility/reduced-schema.md)

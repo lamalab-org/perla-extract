@@ -39,7 +39,16 @@ study = StudyExtraction.model_validate_json(
       show_root_heading: true
       members: false
 
-## Convert to the reduced schema
+## Export to NOMAD
+
+`to_nomad_with_report` returns separately uploadable archives, source mappings,
+composition-normalization readiness, and explicit conversion issues.
+
+::: perla_extract.study_extraction.nomad.to_nomad_with_report
+    options:
+      show_root_heading: true
+
+## Convert to the historical reduced schema
 
 Use `to_reduced_with_report` when conversion provenance matters. `to_reduced` is a
 convenience wrapper that returns only the validated reduced cells.

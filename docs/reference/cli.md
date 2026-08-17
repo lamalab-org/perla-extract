@@ -17,6 +17,7 @@ final report to stdout and writes progress logs to stderr.
 | `--supplement PATH` | none | Supporting Information PDF |
 | `--output-dir DIRECTORY` | `study_extraction` | Artifact directory |
 | `--env-file PATH` | `.env.local` when present | Provider environment variables to load |
+| `--reduced-export` | off | Also write historical reduced-schema compatibility files |
 
 Variables already present in the process environment take precedence over the env
 file. Provider credentials are consumed by LiteLLM and are not written to

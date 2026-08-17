@@ -66,6 +66,7 @@ def extract_study(
     document_cache_dir: str | Path = ".perla-cache/documents",
     model_cache_dir: str | Path = ".perla-cache/models",
     refresh_document_cache: bool = False,
+    reduced_export: bool = False,
     dry_run: bool = False,
     env_file: str | Path | None = None,
 ) -> dict[str, object]:
@@ -99,6 +100,7 @@ def extract_study(
         document_cache_dir=Path(document_cache_dir),
         model_cache_dir=Path(model_cache_dir),
         refresh_document_cache=refresh_document_cache,
+        reduced_export=reduced_export,
         dry_run=dry_run,
     )
     return run_extraction(config)
@@ -153,6 +155,11 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 )
 @click.option("--model-cache-dir", type=OUTPUT_DIRECTORY, default=".perla-cache/models")
 @click.option("--refresh-document-cache", is_flag=True)
+@click.option(
+    "--reduced-export",
+    is_flag=True,
+    help="Also write the historical reduced PERLA compatibility files.",
+)
 @click.option("--dry-run", is_flag=True, help="Parse and plan without calling a model.")
 @click.option("--env-file", type=click.Path(path_type=Path, dir_okay=False))
 @click.option(

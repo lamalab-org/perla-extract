@@ -27,7 +27,7 @@ flowchart TD
     K --> L["Citation repair and local validation"]
     C0 --> N["Independent coverage audit"]
     K --> N
-    K --> M["Reduced-schema conversion"]
+    K --> M["Atomic NOMAD archive export"]
 ```
 
 ## Select a mode
@@ -105,6 +105,10 @@ only locally source-matched reported values.
 Before validation, an invalid source pointer is repaired only when its unchanged quote
 has exactly one match across the parsed evidence. Zero or multiple matches remain
 review findings. Every decision is recorded in `citation_repairs.json`.
+
+After validation, the workflow writes one pinned NOMAD archive per atomic source
+record and a conversion report. See [Export to NOMAD](nomad-export.md). The historical
+reduced schema is an optional compatibility output rather than an intermediate format.
 
 ## Model choice
 

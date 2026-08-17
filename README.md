@@ -25,9 +25,9 @@ quality-first `:exacto` suffix, but the extraction workflow itself is provider-n
 
 The extraction directory contains the complete rich result, an independent record
 inventory and coverage audit, conservative citation repairs, local evidence checks,
-the parsed source blocks, a run report, and a deterministic export to the reduced
-PERLA schema. Use `--dry-run` to parse the documents and estimate call size without
-calling a model.
+the parsed source blocks, a run report, and atomic archives for the pinned NOMAD
+perovskite-solar-cell schema. Use `--dry-run` to parse the documents and estimate call
+size without calling a model.
 
 ## Documentation
 
@@ -35,8 +35,9 @@ The [documentation site](docs/index.md) explains:
 
 - [the study and evidence model](docs/concepts/study-model.md);
 - [single-call and long-supplement extraction](docs/workflows/extraction.md);
-- [human ground-truth review](docs/workflows/ground-truth-review.md); and
-- [the reduced-schema compatibility boundary](docs/compatibility/reduced-schema.md).
+- [human ground-truth review](docs/workflows/ground-truth-review.md);
+- [direct NOMAD export](docs/workflows/nomad-export.md); and
+- [the optional reduced-schema compatibility boundary](docs/compatibility/reduced-schema.md).
 
 Build it locally with:
 

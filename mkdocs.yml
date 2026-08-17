@@ -20,6 +20,7 @@ nav:
       - Evidence and validation: concepts/evidence.md
   - Workflows:
       - Extract a study: workflows/extraction.md
+      - Export to NOMAD: workflows/nomad-export.md
       - Discover papers: workflows/papersbot.md
       - Build ground truth: workflows/ground-truth-review.md
   - Compatibility:

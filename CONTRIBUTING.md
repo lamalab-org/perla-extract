@@ -46,6 +46,13 @@ pip install -e '.[dev]'
 PERLA_RUN_DOCLING_TESTS=1 pytest -q tests/study_extraction/test_docling_integration.py
 ```
 
+The heavy NOMAD contract is pinned and runs in its manual CI job:
+
+```bash
+pip install -e '.[dev,nomad]'
+PERLA_RUN_NOMAD_TESTS=1 pytest -q tests/study_extraction/test_nomad_integration.py
+```
+
 Build the documentation with strict link and reference checks:
 
 ```bash

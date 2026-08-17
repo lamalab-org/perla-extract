@@ -29,6 +29,7 @@ from .models import (
     StudyExtraction,
     study_schema_sha256,
 )
+from .nomad import NOMADExport, to_nomad_with_report
 from .partitioning import EvidenceWindowPlan, plan_evidence_windows
 from .source import parse_documents
 from .transport import (
@@ -174,7 +175,49 @@ class ExtractionConfig:
     document_cache_dir: Path = Path(".perla-cache/documents")
     model_cache_dir: Path = Path(".perla-cache/models")
     refresh_document_cache: bool = False
+    reduced_export: bool = False
     dry_run: bool = False
+
+
+def _write_nomad_artifacts(output_dir: Path, exported: NOMADExport) -> None:
+    """Write uploadable archives separately while keeping one inspectable manifest."""
+
+    payload = exported.model_dump(mode="json", exclude_none=True)
+    write_json_atomic(output_dir / "nomad_export.json", payload)
+    write_json_atomic(
+        output_dir / "composition_projection.json",
+        {
+            "target_package": exported.target_package,
+            "target_version": exported.target_version,
+            "target_commit": exported.target_commit,
+            "projections": [
+                item.model_dump(mode="json", exclude_none=True)
+                for item in exported.composition_projections
+            ],
+        },
+    )
+    archive_dir = output_dir / "nomad"
+    for stale in archive_dir.glob("*.archive.json"):
+        stale.unlink()
+    for mapping in exported.mappings:
+        archive = exported.archives[mapping.archive_index]
+        write_json_atomic(
+            archive_dir / mapping.archive_file,
+            archive.model_dump(mode="json", exclude_none=True),
+        )
+    write_json_atomic(
+        archive_dir / "manifest.json",
+        {
+            "target_package": exported.target_package,
+            "target_version": exported.target_version,
+            "target_commit": exported.target_commit,
+            "mappings": [item.model_dump(mode="json") for item in exported.mappings],
+            "issues": [
+                item.model_dump(mode="json", exclude_none=True)
+                for item in exported.issues
+            ],
+        },
+    )
 
 
 def _evidence_payload(blocks: list[EvidenceBlock]) -> list[dict[str, object]]:
@@ -470,8 +513,8 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
 
     Parsing and configuration artifacts are written before model calls. Model failure
     still yields a valid ``extraction.json`` and report; local grounding annotates
-    rather than filters the rich result; reduced conversion is an independent final
-    step whose losses are recorded separately.
+    rather than filters the rich result. NOMAD archives are the primary downstream
+    artifacts; historical reduced conversion is available only when requested.
     """
 
     started = time.monotonic()
@@ -631,23 +674,53 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     if inventory is not None:
         coverage_audit = audit_inventory_coverage(inventory, extraction)
         write_json_atomic(config.output_dir / "coverage_audit.json", coverage_audit)
-    conversion_error: str | None = None
+    for name in (
+        "nomad_export.json",
+        "composition_projection.json",
+        "nomad_conversion_failure.json",
+    ):
+        (config.output_dir / name).unlink(missing_ok=True)
+    nomad_dir = config.output_dir / "nomad"
+    for stale in nomad_dir.glob("*.archive.json"):
+        stale.unlink()
+    (nomad_dir / "manifest.json").unlink(missing_ok=True)
+    nomad_error: str | None = None
     try:
-        reduced = to_reduced_with_report(extraction)
+        nomad = to_nomad_with_report(extraction, model=config.model)
     except (ValidationError, ValueError) as exc:
-        conversion_error = str(exc)
+        nomad_error = str(exc)
         write_json_atomic(
-            config.output_dir / "reduced_conversion_failure.json",
-            {"error": conversion_error},
+            config.output_dir / "nomad_conversion_failure.json",
+            {"error": nomad_error},
         )
     else:
-        write_json_atomic(
-            config.output_dir / "reduced.json", reduced.cells.model_dump(mode="json")
-        )
-        write_json_atomic(
-            config.output_dir / "reduced_conversion.json",
-            reduced.model_dump(mode="json"),
-        )
+        _write_nomad_artifacts(config.output_dir, nomad)
+
+    for name in (
+        "reduced.json",
+        "reduced_conversion.json",
+        "reduced_conversion_failure.json",
+    ):
+        (config.output_dir / name).unlink(missing_ok=True)
+    reduced_error: str | None = None
+    if config.reduced_export:
+        try:
+            reduced = to_reduced_with_report(extraction)
+        except (ValidationError, ValueError) as exc:
+            reduced_error = str(exc)
+            write_json_atomic(
+                config.output_dir / "reduced_conversion_failure.json",
+                {"error": reduced_error},
+            )
+        else:
+            write_json_atomic(
+                config.output_dir / "reduced.json",
+                reduced.cells.model_dump(mode="json"),
+            )
+            write_json_atomic(
+                config.output_dir / "reduced_conversion.json",
+                reduced.model_dump(mode="json"),
+            )
 
     counts = validation["counts"]
     extraction_calls = [
@@ -658,7 +731,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         if not extraction_calls or all(call.get("error") for call in extraction_calls)
         else (
             "partial"
-            if errors or conversion_error
+            if errors or nomad_error or reduced_error
             else (
                 "complete"
                 if validation["status"] == "verified"
@@ -677,7 +750,10 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         "validation_issue_count": len(validation["issues"]),
         "citation_repair_count": citation_repairs["repair_count"],
         "coverage": coverage_audit["counts"] if coverage_audit else None,
-        "conversion_error": conversion_error,
+        "nomad_archive_count": len(nomad.archives) if nomad_error is None else 0,
+        "nomad_issue_count": len(nomad.issues) if nomad_error is None else 0,
+        "nomad_conversion_error": nomad_error,
+        "reduced_conversion_error": reduced_error,
         "errors": errors,
         "calls": client.calls,
         "usage": _summarize_usage(client.calls),
