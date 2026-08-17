@@ -1,0 +1,76 @@
+{
+  "artifact_format_version": 1,
+  "schema": "PerovskiteSolarCells",
+  "schema_kind": "historical_reduced",
+  "source": "workbench/state.json",
+  "source_state_schema_version": 1,
+  "source_state_sha256": "f4b0f7cee200f5489972f71031781a9e3a5a3fee44d85ea5b541a54a740213f1",
+  "papers": [
+    {
+      "paper_id": "10.1002--solr.202300438",
+      "split": "test",
+      "review_status": "reviewed",
+      "article_type": "review",
+      "tandem_scope": "mentions_only",
+      "disposition": "excluded_non_research",
+      "cell_count": 0,
+      "ground_truth_path": "test/10.1002--solr.202300438.json",
+      "ground_truth_sha256": "704c7f575b473af84665f2d217a63070b70161fc46f5bf300b3d0ac3e0346160"
+    },
+    {
+      "paper_id": "10.1016--j.jallcom.2023.170970",
+      "split": "test",
+      "review_status": "reviewed",
+      "article_type": "research",
+      "tandem_scope": "contains_tandem_devices",
+      "disposition": "included",
+      "cell_count": 4,
+      "ground_truth_path": "test/10.1016--j.jallcom.2023.170970.json",
+      "ground_truth_sha256": "cb6c25cf8d630878b22c53d6098a421642bde6e5a7162095b0bd14294e775d99"
+    },
+    {
+      "paper_id": "10.1021--acsaelm.4c02297",
+      "split": "test",
+      "review_status": "reviewed",
+      "article_type": "perspective",
+      "tandem_scope": "none",
+      "disposition": "excluded_non_research",
+      "cell_count": 0,
+      "ground_truth_path": "test/10.1021--acsaelm.4c02297.json",
+      "ground_truth_sha256": "704c7f575b473af84665f2d217a63070b70161fc46f5bf300b3d0ac3e0346160"
+    },
+    {
+      "paper_id": "10.1038--s41560-022-01061-2",
+      "split": "test",
+      "review_status": "reviewed",
+      "article_type": "news_and_views",
+      "tandem_scope": "tandem_only",
+      "disposition": "excluded_non_research",
+      "cell_count": 0,
+      "ground_truth_path": "test/10.1038--s41560-022-01061-2.json",
+      "ground_truth_sha256": "704c7f575b473af84665f2d217a63070b70161fc46f5bf300b3d0ac3e0346160"
+    },
+    {
+      "paper_id": "10.1038--s41560-022-01102-w",
+      "split": "test",
+      "review_status": "reviewed",
+      "article_type": "research",
+      "tandem_scope": "contains_tandem_devices",
+      "disposition": "included",
+      "cell_count": 1,
+      "ground_truth_path": "test/10.1038--s41560-022-01102-w.json",
+      "ground_truth_sha256": "8ca63de1e850fe041d9e177813c2240a64e1371befd6f8da37c8466231d9f7dc"
+    },
+    {
+      "paper_id": "10.1126--science.adf0194",
+      "split": "test",
+      "review_status": "reviewed",
+      "article_type": "research",
+      "tandem_scope": "contains_tandem_devices",
+      "disposition": "included",
+      "cell_count": 1,
+      "ground_truth_path": "test/10.1126--science.adf0194.json",
+      "ground_truth_sha256": "344a380dfb521118bfdaf08979033daa77e730f9c12db15616c661e56b173459"
+    }
+  ]
+}
