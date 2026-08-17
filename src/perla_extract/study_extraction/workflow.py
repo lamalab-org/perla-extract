@@ -21,7 +21,10 @@ from .enrichment import (
     EnrichmentAudit,
     run_enrichment,
 )
-from .evidence import repair_unique_citation_pointers
+from .evidence import (
+    repair_noncontiguous_citation_quotes,
+    repair_unique_citation_pointers,
+)
 from .identity_linking import IdentityLinkProposal, attach_valid_identity_links
 from .inventory import (
     EvidenceInventory,
@@ -810,7 +813,16 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     )
     errors.extend(extraction_errors)
 
-    extraction, citation_repairs = repair_unique_citation_pointers(extraction, blocks)
+    extraction, quote_repairs = repair_noncontiguous_citation_quotes(
+        extraction, blocks
+    )
+    extraction, pointer_repairs = repair_unique_citation_pointers(extraction, blocks)
+    citation_repairs = {
+        "repair_count": quote_repairs["repair_count"]
+        + pointer_repairs["repair_count"],
+        "quote_repairs": quote_repairs,
+        "pointer_repairs": pointer_repairs,
+    }
     write_json_atomic(config.output_dir / "citation_repairs.json", citation_repairs)
 
     write_json_atomic(
@@ -826,13 +838,19 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         write_json_atomic(config.output_dir / "coverage_audit.json", coverage_audit)
     quality_comparison: dict[str, object] | None = None
     if initial_extraction is not None:
-        draft_validation = validate_study(initial_extraction, blocks)
+        comparable_draft, _ = repair_noncontiguous_citation_quotes(
+            initial_extraction, blocks
+        )
+        comparable_draft, _ = repair_unique_citation_pointers(
+            comparable_draft, blocks
+        )
+        draft_validation = validate_study(comparable_draft, blocks)
         draft_validation.pop("verified_values")
         write_json_atomic(
             config.output_dir / "draft_validation.json", draft_validation
         )
         draft_coverage = (
-            audit_inventory_coverage(grounded_inventory, initial_extraction)
+            audit_inventory_coverage(grounded_inventory, comparable_draft)
             if grounded_inventory is not None
             else None
         )
@@ -843,6 +861,14 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         quality_comparison = {
             "draft_validation_issue_count": len(draft_validation["issues"]),
             "final_validation_issue_count": len(validation["issues"]),
+            "draft_values": {
+                key: draft_validation["counts"][key]
+                for key in ("reported_values", "source_verified_values")
+            },
+            "final_values": {
+                key: validation["counts"][key]
+                for key in ("reported_values", "source_verified_values")
+            },
             "draft_coverage": draft_coverage["counts"] if draft_coverage else None,
             "final_coverage": coverage_audit["counts"] if coverage_audit else None,
         }

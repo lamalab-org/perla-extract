@@ -5,8 +5,11 @@ from __future__ import annotations
 import re
 import unicodedata
 from copy import deepcopy
+from difflib import SequenceMatcher
 
 from .models import EvidenceBlock, StudyExtraction
+
+MAX_CITATION_LENGTH = 1600
 
 
 def _normalized_with_offsets(value: object) -> tuple[str, list[int], str]:
@@ -69,6 +72,123 @@ def assembled_from_quotes(raw_value: object, references: list[dict]) -> bool:
         and all(parts)
         and normalized_source_text(raw_value) == "".join(parts)
     )
+
+
+def repair_noncontiguous_citation_quotes(
+    extraction: StudyExtraction, blocks: list[EvidenceBlock]
+) -> tuple[StudyExtraction, dict[str, object]]:
+    """Replace a stitched excerpt only when it is an ordered subset of one block.
+
+    Structured-output models sometimes copy several real passages from one block but
+    omit the prose between them. Such a string is not a valid verbatim citation. If
+    the normalized quote is exactly two long source spans joined together, those exact
+    spans are a conservative replacement. No scientific value or source pointer
+    changes.
+    """
+
+    data = deepcopy(extraction.model_dump(mode="json"))
+    block_by_id = {block.block_id: block for block in blocks}
+    repairs: list[dict[str, object]] = []
+
+    def ordered_subset(query: str, source: str) -> bool:
+        if len(query) < 80:
+            return False
+        position = 0
+        for character in query:
+            position = source.find(character, position)
+            if position < 0:
+                return False
+            position += 1
+        return True
+
+    def replacement(
+        reference: dict, path: str, *, allow_split: bool
+    ) -> list[dict]:
+        block = block_by_id.get(str(reference["block_id"]))
+        quote = str(reference["quote"])
+        if block is None or source_contains_text(block.text, quote):
+            return [reference]
+        query = normalized_source_text(quote)
+        source, offsets, raw_source = _normalized_with_offsets(block.text)
+        if len(block.text) <= MAX_CITATION_LENGTH and ordered_subset(query, source):
+            repairs.append(
+                {
+                    "path": path,
+                    "block_id": block.block_id,
+                    "old_quote": quote,
+                    "new_quotes": [block.text],
+                    "rule": "restore_complete_short_block",
+                }
+            )
+            return [{"block_id": block.block_id, "quote": block.text}]
+        if len(query) < 80:
+            return [reference]
+        matches = [
+            match
+            for match in SequenceMatcher(
+                None, query, source, autojunk=False
+            ).get_matching_blocks()
+            if match.size
+        ]
+        if (
+            len(matches) != 2
+            or min(match.size for match in matches) < 40
+            or sum(match.size for match in matches) != len(query)
+        ):
+            return [reference]
+        source_quotes = [
+            raw_source[
+                offsets[match.b] : offsets[match.b + match.size - 1] + 1
+            ].strip()
+            for match in matches
+        ]
+        if any(
+            not source_quote or len(source_quote) > MAX_CITATION_LENGTH
+            for source_quote in source_quotes
+        ):
+            return [reference]
+        if allow_split:
+            new_quotes = source_quotes
+            rule = "split_two_exact_source_spans"
+        else:
+            return [reference]
+        repairs.append(
+            {
+                "path": path,
+                "block_id": block.block_id,
+                "old_quote": quote,
+                "new_quotes": new_quotes,
+                "rule": rule,
+            }
+        )
+        return [{"block_id": block.block_id, "quote": item} for item in new_quotes]
+
+    def walk(value: object, path: str = "$") -> None:
+        if isinstance(value, dict):
+            for key, item in value.items():
+                if key == "evidence" and isinstance(item, list):
+                    value[key] = [
+                        replacement(
+                            reference,
+                            f"{path}.evidence[{index}]",
+                            allow_split=len(item) < 8,
+                        )
+                        for index, reference in enumerate(item)
+                    ]
+                    value[key] = [
+                        reference for group in value[key] for reference in group
+                    ]
+                else:
+                    walk(item, f"{path}.{key}")
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                walk(item, f"{path}[{index}]")
+
+    walk(data)
+    return StudyExtraction.model_validate(data), {
+        "repair_count": len(repairs),
+        "repairs": repairs,
+    }
 
 
 def repair_unique_citation_pointers(

@@ -132,9 +132,12 @@ Local validation never silently removes unsupported records. Read the rich extra
 and `validation.json` together, or use `grounded_values.json` when you explicitly want
 only locally source-matched reported values.
 
-Before validation, an invalid source pointer is repaired only when its unchanged quote
-has exactly one match across the parsed evidence. Zero or multiple matches remain
-review findings. Every decision is recorded in `citation_repairs.json`.
+Before validation, a non-contiguous model excerpt may be restored to its exact claimed
+block only under the conservative ordered-content rule described in
+[Evidence and provenance](../concepts/evidence.md). An invalid source pointer is
+repaired only when its unchanged quote has exactly one match across the parsed
+evidence. Other failures remain review findings. Every decision is recorded in
+`citation_repairs.json`.
 
 After validation, two compact semantic passes interpret site ions and processing
 roles from existing records and only their cited evidence. They run by default and

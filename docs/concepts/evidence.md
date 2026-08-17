@@ -55,6 +55,14 @@ unchanged quotation. A unique normalized match repairs only the block pointer. A
 missing or ambiguous match is never guessed and remains visible in
 `citation_repairs.json` and `validation.json`.
 
+A model may also stitch two real passages from one block while omitting the text
+between them. That is not one verbatim quote. PERLA repairs it only when both
+normalized spans are at least 40 characters and together account for every normalized
+character in the model excerpt. A short claimed block becomes one exact block quote; a
+longer block becomes the two exact source citations when the evidence field has room.
+The audit records the old and new quotes; block identity and scientific values never
+change.
+
 ## What local validation proves
 
 After extraction, `validate_study` checks:

@@ -64,7 +64,7 @@ suffix preserves the previous quality-first routing for the default OpenRouter m
 | `inventory_grounding.json` | Inventory candidates admitted to or rejected from extraction guidance |
 | `evidence_routing.json` | Auditable block-selection decisions; the complete parse remains preserved |
 | `coverage_audit.json` | Covered, possible, and unmatched inventory candidates |
-| `citation_repairs.json` | Unique-quotation pointer repairs and unresolved citations |
+| `citation_repairs.json` | Audited non-contiguous-quote and unique-pointer repairs |
 | `document.json` | Model-facing scientific evidence blocks with source and page locations |
 | `report.json` | Status, counts, usage, cost, cache information, and failures |
 | `run_configuration.json` | Non-secret configuration and source fingerprints |

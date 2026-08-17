@@ -1,4 +1,5 @@
 from perla_extract.study_extraction.evidence import (
+    repair_noncontiguous_citation_quotes,
     repair_unique_citation_pointers,
     source_contains_text,
 )
@@ -256,6 +257,88 @@ def test_bare_value_is_not_used_to_repair_a_citation_pointer():
     assert repaired == extraction
     assert audit["repair_count"] == 0
     assert audit["unresolved"][0]["reason"] == "quote_too_short_for_safe_repair"
+
+
+def test_ordered_source_content_repairs_a_noncontiguous_model_quote():
+    first = "The complete photovoltaic device stack contains the reported absorber."
+    second = "The same source passage reports the measured power conversion efficiency."
+    source = f"{first} Intervening source material is retained separately. {second}"
+    stitched = f"{first} {second}"
+    family = DeviceFamily(
+        family_id="f",
+        label="device",
+        variant=None,
+        architecture=None,
+        polarity="not_reported",
+        full_stack_raw=None,
+        layers=[],
+        absorber_formula=None,
+        absorber_properties=[],
+        absorber_constituents=[],
+        processing_steps=[],
+        evidence=[EvidenceCitation(block_id="a", quote=stitched)],
+    )
+    extraction = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[family],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+
+    repaired, audit = repair_noncontiguous_citation_quotes(
+        extraction,
+        [EvidenceBlock(block_id="a", source="main", page=1, kind="text", text=source)],
+    )
+
+    repaired_quotes = [item.quote for item in repaired.device_families[0].evidence]
+    assert repaired_quotes == [source]
+    assert all(source_contains_text(source, quote) for quote in repaired_quotes)
+    assert audit["repair_count"] == 1
+    assert validate_study(repaired, [EvidenceBlock(
+        block_id="a", source="main", page=1, kind="text", text=source
+    )])["status"] == "verified"
+
+
+def test_long_block_repairs_stitched_quote_as_two_exact_citations():
+    first = "The complete device stack contains a supported absorber layer and contact."
+    second = "The same experiment reports a supported efficiency under illumination."
+    source = f"{first} {'intervening ' * 150} {second}"
+    family = DeviceFamily(
+        family_id="f",
+        label="device",
+        variant=None,
+        architecture=None,
+        polarity="not_reported",
+        full_stack_raw=None,
+        layers=[],
+        absorber_formula=None,
+        absorber_properties=[],
+        absorber_constituents=[],
+        processing_steps=[],
+        evidence=[EvidenceCitation(block_id="a", quote=f"{first} {second}")],
+    )
+    extraction = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[family],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+
+    repaired, audit = repair_noncontiguous_citation_quotes(
+        extraction,
+        [EvidenceBlock(block_id="a", source="main", page=1, kind="text", text=source)],
+    )
+
+    quotes = [item.quote for item in repaired.device_families[0].evidence]
+    assert len(quotes) == 2
+    assert all(source_contains_text(source, quote) for quote in quotes)
+    assert audit["repair_count"] == 1
 
 
 def test_validation_reports_duplicate_ids_for_every_entity_collection():
