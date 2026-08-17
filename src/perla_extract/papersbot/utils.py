@@ -44,7 +44,7 @@ def get_doi_summary(doi: str) -> dict:
         summaries[source] = summary
         if "error" not in summary and summary.get("abstract", "") != "":
             break
-    
+
     metadata_fields = ["title", "abstract", "journal", "publisher"]
     metadata = {key: "" for key in metadata_fields}
     for k in summaries:
@@ -537,9 +537,11 @@ def download_pdf(url: str, filepath: str) -> bool:
             # Check if the request was successful
             response.raise_for_status()
 
-            content_type = response.headers.get('Content-Type', '')
-            if 'text/html' in content_type:
-                logger.error(f"Failed: Received HTML page instead of PDF (likely blocked by a CAPTCHA) for {url}")
+            content_type = response.headers.get("Content-Type", "")
+            if "text/html" in content_type:
+                logger.error(
+                    f"Failed: Received HTML page instead of PDF (likely blocked by a CAPTCHA) for {url}"
+                )
                 return False
             # --- Save the file in chunks ---
             with open(filepath, "wb") as f:
@@ -564,7 +566,13 @@ async def playwright_download_pdf(url: str, filepath: str) -> bool:
     from playwright.async_api import async_playwright
 
     async with async_playwright() as p:
-        browser = await p.firefox.launch(headless=False)
+        browser = await p.firefox.launch(
+            headless=False,
+            firefox_user_prefs={
+                "pdfjs.disabled": True,  # Disables the built-in PDF viewer
+                "browser.helperApps.neverAsk.saveToDisk": "application/pdf",  # Forces direct download
+            },
+        )
         context = await browser.new_context(accept_downloads=True)
         page = await context.new_page()
         page.set_default_timeout(60000)
@@ -572,7 +580,7 @@ async def playwright_download_pdf(url: str, filepath: str) -> bool:
             async with page.expect_download() as download_info:
                 try:
                     # 2. Go to the URL (this will trigger the download and the error)
-                    await page.goto(url)
+                    await page.goto(url, wait_until="commit")
                 except Exception as e:
                     # 3. Catch the specific error you got and let the script continue
                     if "Download is starting" in str(e):
@@ -649,7 +657,21 @@ async def playwright_get_pdf_links(url):
 def filter_links(links):
     filtered_links = []
     for link in links:
-        if not any(
+        if (
+            link.contains("/sciadv.")
+            and not link.contains("pdf")
+            and link.contains("doi")
+        ):
+            link = f"https://www.science.org/doi/pdf/{link.split('doi/')[-1]}?download=true"
+            return link
+        elif link.startswith("https://pmc.ncbi.nlm.nih.gov/articles/"):
+            link = f"{link}pdf/" if not link.endswith("/") else f"{link}/pdf/"
+            return link
+        elif "www.science.org/doi/epdf/" in link.lower():
+            link = link.replace("/doi/epdf/", "/doi/pdf/", 1)
+            link += "&download=true" if "?" in link else "?download=true"
+            return link
+        elif not any(
             phrase in link.lower()
             for phrase in ["suppl", "static-content", "/epdf", "/pb-assets/"]
         ):
@@ -661,15 +683,13 @@ def filter_links(links):
 
 
 def get_links(url):
-    if url.startswith("https://pmc.ncbi.nlm.nih.gov/articles/"):
-        pdf_url = f"{url}pdf/" if not url.endswith("/") else f"{url}/pdf/"
-        return pdf_url, [pdf_url]
-    if playwright_installed:
+    links = None
+    filtered_link = filter_links([url])
+    if not filtered_link and playwright_installed:
         try:
             links = asyncio.run(playwright_get_pdf_links(url))
             if links:
                 filtered_link = filter_links(links)
-                return filtered_link, links
         except Exception as e:
             logger.error(f"Error extracting PDF links from landing page for {url}: {e}")
-    return None, None
+    return filtered_link, links

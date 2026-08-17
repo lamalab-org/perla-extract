@@ -113,10 +113,10 @@ def check_pdfs():
                 filtered_link, links = get_links(pdf_url["landing_page_url"])
                 summaries[sample["id"]]["links"] = [filtered_link, links]
                 pdf_url["pdf_url"] = filtered_link if filtered_link else ""
-                url_type = "filtered_landing_page" if filtered_link else "landing_page_url"
-            post_proc_df.at[i, "pdf_available"] = (
-                bool(pdf_url.get("pdf_url"))
-            )
+                url_type = (
+                    "filtered_landing_page" if filtered_link else "landing_page_url"
+                )
+            post_proc_df.at[i, "pdf_available"] = bool(pdf_url.get("pdf_url"))
             stats["urls_found"] += 1
             found_urls[doi] = {
                 "doi": doi,
@@ -184,13 +184,14 @@ def download_pdfs(download_dir: str | Path = "downloaded_papers") -> list[Path]:
     Returns:
         List of Path objects for downloaded files
     """
+
     def print_stats(stats):
         end_time = time.strftime("%Y-%m-%d %H:%M:%S %Z")
         with open(f"{papersbot_runs_path}/stats.txt", "a") as f:
             f.write(f"Downloading PDFs Run: {end_time}\n")
             f.write(f"Number of PDFs downloaded: {stats['downloaded']}\n")
             f.write(f"Total number of papers processed: {stats['total']}\n\n\n")
-    
+
     stats = {"downloaded": 0, "total": 0}
     download_path = Path(download_dir)
     download_path.mkdir(parents=True, exist_ok=True)

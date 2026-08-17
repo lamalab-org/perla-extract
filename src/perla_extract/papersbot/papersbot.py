@@ -270,9 +270,7 @@ def run_papersbot(download_dir: str = "downloaded_papers"):
 
         logger.error(f"Error in papersbot workflow: {e!s}")
         logger.error(f"Traceback: {traceback.format_exc()}")
-        return PapersbotResult(
-            success=False, error=f"Papersbot workflow failed: {e!s}"
-        )
+        return PapersbotResult(success=False, error=f"Papersbot workflow failed: {e!s}")
 
 
 if __name__ == "__main__":
