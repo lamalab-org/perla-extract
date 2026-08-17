@@ -207,6 +207,8 @@ class PapersBot:
         for entry in feed:
             seen = False
             raw_doi = entry.get("doi", "")
+            if not raw_doi:
+                continue
             doi = raw_doi.replace("https://doi.org/", "").lower()
             for check_doi in [raw_doi, doi]:
                 if check_doi in seen_dois or check_doi in self.posted:
