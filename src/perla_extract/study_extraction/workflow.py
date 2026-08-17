@@ -14,6 +14,13 @@ from .artifacts import write_json_atomic
 from .candidate_collection import combine_window_candidates
 from .client import ModelCallError, ModelClient
 from .compatibility import to_reduced_with_report
+from .enrichment import (
+    COMPOSITION_ENRICHMENT_PROMPT,
+    ENRICHMENT_SYSTEM_PROMPT,
+    PROCESSING_ENRICHMENT_PROMPT,
+    EnrichmentAudit,
+    run_enrichment,
+)
 from .evidence import repair_unique_citation_pointers
 from .identity_linking import IdentityLinkProposal, attach_valid_identity_links
 from .inventory import (
@@ -145,6 +152,9 @@ def prompt_sha256() -> str:
             WINDOW_PROMPT,
             IDENTITY_LINK_PROMPT,
             INVENTORY_PROMPT,
+            ENRICHMENT_SYSTEM_PROMPT,
+            COMPOSITION_ENRICHMENT_PROMPT,
+            PROCESSING_ENRICHMENT_PROMPT,
         ],
         ensure_ascii=False,
         separators=(",", ":"),
@@ -164,6 +174,9 @@ class ExtractionConfig:
     use_inventory: bool = True
     inventory_model: str | None = DEFAULT_INVENTORY_MODEL
     inventory_max_output_tokens: int = 20_000
+    use_enrichment: bool = True
+    enrichment_model: str | None = None
+    enrichment_max_output_tokens: int = 20_000
     parser: str = "docling"
     mode: str = "auto"
     single_call_max_input_tokens: int = 90_000
@@ -529,6 +542,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             config.window_input_tokens,
             config.max_output_tokens,
             config.inventory_max_output_tokens,
+            config.enrichment_max_output_tokens,
         )
         <= 0
     ):
@@ -553,6 +567,10 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     run_configuration = _run_configuration(config, mode, source_events)
     write_json_atomic(config.output_dir / "run_configuration.json", run_configuration)
     write_json_atomic(config.output_dir / "extraction.schema.json", schema)
+    write_json_atomic(
+        config.output_dir / "enrichment.schema.json",
+        EnrichmentAudit.model_json_schema(),
+    )
     logger.info(
         "Prepared {} evidence blocks (~{} request tokens); mode={}",
         len(blocks),
@@ -580,7 +598,9 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
                     + int(len(window_plan.windows if window_plan else []) > 1)
                     + int(config.use_inventory)
                 )
-            ),
+            )
+            + (2 if config.use_enrichment else 0),
+            "planned_enrichment_calls_max": 2 if config.use_enrichment else 0,
             "source_parsing": source_events,
             "elapsed_seconds": round(time.monotonic() - started, 3),
         }
@@ -674,6 +694,45 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     if inventory is not None:
         coverage_audit = audit_inventory_coverage(inventory, extraction)
         write_json_atomic(config.output_dir / "coverage_audit.json", coverage_audit)
+    enrichment: EnrichmentAudit | None = None
+    for name in (
+        "enrichment.json",
+        "composition_proposals.json",
+        "processing_proposals.json",
+    ):
+        (config.output_dir / name).unlink(missing_ok=True)
+    if config.use_enrichment:
+        logger.info("Interpreting composition and processing from local evidence")
+        enrichment = run_enrichment(
+            client=client,
+            study=extraction,
+            blocks=blocks,
+            model=config.enrichment_model or config.model,
+            reasoning_effort=config.reasoning_effort,
+            max_output_tokens=config.enrichment_max_output_tokens,
+        )
+        write_json_atomic(
+            config.output_dir / "enrichment.json",
+            enrichment.model_dump(mode="json"),
+        )
+        write_json_atomic(
+            config.output_dir / "composition_proposals.json",
+            {
+                "results": [
+                    result.model_dump(mode="json")
+                    for result in enrichment.composition_results
+                ]
+            },
+        )
+        write_json_atomic(
+            config.output_dir / "processing_proposals.json",
+            {
+                "results": [
+                    result.model_dump(mode="json")
+                    for result in enrichment.processing_results
+                ]
+            },
+        )
     for name in (
         "nomad_export.json",
         "composition_projection.json",
@@ -686,7 +745,9 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     (nomad_dir / "manifest.json").unlink(missing_ok=True)
     nomad_error: str | None = None
     try:
-        nomad = to_nomad_with_report(extraction, model=config.model)
+        nomad = to_nomad_with_report(
+            extraction, model=config.model, enrichment=enrichment
+        )
     except (ValidationError, ValueError) as exc:
         nomad_error = str(exc)
         write_json_atomic(
@@ -724,8 +785,33 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
 
     counts = validation["counts"]
     extraction_calls = [
-        call for call in client.calls if call.get("kind") != "evidence_inventory"
+        call
+        for call in client.calls
+        if call.get("kind")
+        not in {
+            "evidence_inventory",
+            "composition_enrichment",
+            "processing_enrichment",
+        }
     ]
+    enrichment_status = None
+    if enrichment is not None:
+        results = [
+            *enrichment.composition_results,
+            *enrichment.processing_results,
+        ]
+        enrichment_status = (
+            "failed"
+            if enrichment.errors and not results
+            else (
+                "needs_review"
+                if enrichment.errors
+                or any(result.status != "accepted" for result in results)
+                or enrichment.unresolved_composition_ids
+                or enrichment.unresolved_processing_step_ids
+                else "complete"
+            )
+        )
     status = (
         "failed"
         if not extraction_calls or all(call.get("error") for call in extraction_calls)
@@ -736,6 +822,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
                 "complete"
                 if validation["status"] == "verified"
                 and (coverage_audit is None or coverage_audit["status"] == "complete")
+                and enrichment_status not in {"failed", "needs_review"}
                 else "complete_needs_review"
             )
         )
@@ -750,6 +837,22 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         "validation_issue_count": len(validation["issues"]),
         "citation_repair_count": citation_repairs["repair_count"],
         "coverage": coverage_audit["counts"] if coverage_audit else None,
+        "enrichment_status": enrichment_status,
+        "enrichment_errors": enrichment.errors if enrichment else [],
+        "accepted_composition_proposals": sum(
+            result.status == "accepted"
+            for result in (enrichment.composition_results if enrichment else [])
+        ),
+        "accepted_processing_proposals": sum(
+            result.status == "accepted"
+            for result in (enrichment.processing_results if enrichment else [])
+        ),
+        "unresolved_composition_proposals": (
+            len(enrichment.unresolved_composition_ids) if enrichment else 0
+        ),
+        "unresolved_processing_proposals": (
+            len(enrichment.unresolved_processing_step_ids) if enrichment else 0
+        ),
         "nomad_archive_count": len(nomad.archives) if nomad_error is None else 0,
         "nomad_issue_count": len(nomad.issues) if nomad_error is None else 0,
         "nomad_conversion_error": nomad_error,

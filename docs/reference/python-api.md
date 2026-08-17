@@ -39,6 +39,15 @@ study = StudyExtraction.model_validate_json(
       show_root_heading: true
       members: false
 
+## Inspect enrichment
+
+`EnrichmentAudit` keeps semantic interpretation separate from reported facts. The
+default workflow writes it as `enrichment.json` before running downstream adapters.
+
+::: perla_extract.study_extraction.enrichment.EnrichmentAudit
+    options:
+      show_root_heading: true
+
 ## Export to NOMAD
 
 `to_nomad_with_report` returns separately uploadable archives, source mappings,

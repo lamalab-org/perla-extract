@@ -10,6 +10,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .vocabulary import NormalizedAtmosphere
+
 NOMAD_SCHEMA_PACKAGE = "perovskite-solar-cell-database"
 NOMAD_SCHEMA_VERSION = "1.2.14"
 NOMAD_SCHEMA_COMMIT = "afd75e69ebb07c8f7f82d203231b70f488e40997"
@@ -23,6 +25,7 @@ SourceKind = Literal[
     "individual_device",
     "performance_observation",
     "population_statistic",
+    "processing_step",
     "stability_test",
 ]
 CompositionStatus = Literal["ready", "partial", "not_reported", "needs_review"]
@@ -85,28 +88,50 @@ class NOMADCompositionProjection(_StrictModel):
     issues: list[str] = Field(default_factory=list)
 
 
+class NOMADSolute(_StrictModel):
+    """Mirror a named solute and an optional explicitly reported concentration."""
+
+    name: str
+    concentration: float | None = None
+    concentration_unit: (
+        Literal[
+            "mol/L",
+            "mmol/L",
+            "g/L",
+            "mg/L",
+            "mg/mL",
+            "wt%",
+            "vol%",
+            "M",
+            "Unknown",
+        ]
+        | None
+    ) = None
+
+
+class NOMADSolvent(_StrictModel):
+    """Mirror a named solvent without inventing a mixture fraction."""
+
+    name: str
+    volume_fraction: float | None = None
+
+
+class NOMADReactionSolution(_StrictModel):
+    """Mirror the solution subset populated from accepted material-role proposals."""
+
+    solutes: list[NOMADSolute] = Field(default_factory=list)
+    solvents: list[NOMADSolvent] = Field(default_factory=list)
+
+
 class NOMADProcessingStep(_StrictModel):
     """Mirror fields the pinned NOMAD processing section accepts."""
 
     step_name: str | None = None
     method: str | None = None
-    atmosphere: (
-        Literal[
-            "Ambient air",
-            "Dry air",
-            "Air",
-            "N2",
-            "Ar",
-            "He",
-            "H2",
-            "Vacuum",
-            "Other",
-            "Unknown",
-        ]
-        | None
-    ) = None
+    atmosphere: NormalizedAtmosphere | None = None
     temperature: float | None = None
     duration: float | None = None
+    solution: NOMADReactionSolution | None = None
     antisolvent: str | None = None
     additional_parameters: dict[str, object] | None = None
 

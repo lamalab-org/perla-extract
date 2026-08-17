@@ -10,8 +10,16 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Iterable
-from functools import lru_cache
 
+from .enrichment import (
+    CompositionProposalResponse,
+    CompositionProposalResult,
+    EnrichmentAudit,
+    ProcessingProposalResponse,
+    ProcessingProposalResult,
+    validate_composition_proposals,
+    validate_processing_proposals,
+)
 from .models import (
     DeviceFamily,
     IndividualDevice,
@@ -33,10 +41,15 @@ from .nomad_contract import (
     NOMADIon,
     NOMADLayer,
     NOMADProcessingStep,
+    NOMADReactionSolution,
     NOMADRecordMapping,
+    NOMADSolute,
+    NOMADSolvent,
     NOMADStability,
     SourceKind,
 )
+from .units import convert_reported_value
+from .vocabulary import NORMALIZED_ATMOSPHERES
 
 _METRIC_NAMES = {
     "pce": {"pce", "powerconversionefficiency", "efficiency"},
@@ -75,18 +88,6 @@ _COEFFICIENT_NAMES = {"coefficient", "stoichiometriccoefficient", "fraction"}
 _BAND_GAP_NAMES = {"bandgap", "opticalbandgap"}
 _DIMENSIONALITY_NAMES = {"dimensionality", "perovskitedimensionality"}
 _DIMENSIONALITIES = {"0D", "1D", "2D", "2D/3D", "3D", "Other"}
-_ATMOSPHERES = {
-    "Ambient air",
-    "Dry air",
-    "Air",
-    "N2",
-    "Ar",
-    "He",
-    "H2",
-    "Vacuum",
-    "Other",
-    "Unknown",
-}
 _CONDITION_FIELDS = {
     "temperature": ("temperature", "degree_Celsius"),
     "duration": ("duration", "second"),
@@ -120,57 +121,6 @@ def _payload(value: ReportedValue) -> dict[str, object]:
     }
 
 
-@lru_cache(maxsize=1)
-def _unit_registry():
-    """Create Pint lazily so importing schemas has no unit-registry side effects."""
-
-    from pint import UnitRegistry
-
-    registry = UnitRegistry()
-    registry.define("sun = 1000 * watt / meter ** 2")
-    return registry
-
-
-def _pint_unit(unit: str) -> str:
-    """Translate typography, not scientific meaning, before Pint parses a unit."""
-
-    superscript = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺", "0123456789-+")
-    value = (
-        unit.strip()
-        .replace("°C", "degree_Celsius")
-        .replace("·", " * ")
-        .replace("−", "-")
-    )
-    value = re.sub(
-        r"[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+",
-        lambda match: "**" + match.group(0).translate(superscript),
-        value,
-    )
-    value = value.replace("^", "**")
-    return re.sub(r"(?<=[A-Za-z])\s+([+-]?\d+)(?=\s|$|[/)*])", r"**\1", value)
-
-
-def _convert(value: ReportedValue, target_unit: str) -> float | None:
-    """Convert only an explicit numeric value with an explicit compatible unit."""
-
-    from pint.errors import PintError
-
-    if value.value_number is None or value.unit is None:
-        return None
-    unit = value.unit.strip()
-    if target_unit == "percent":
-        return (
-            value.value_number
-            if _key(unit) in {"percent", "percentage"} or unit == "%"
-            else None
-        )
-    try:
-        quantity = _unit_registry().Quantity(value.value_number, _pint_unit(unit))
-        return float(quantity.to(target_unit).magnitude)
-    except (PintError, TypeError, ValueError):
-        return None
-
-
 def _issue(
     issues: list[NOMADConversionIssue],
     code: str,
@@ -201,14 +151,19 @@ def _explicit_coefficient(constituent: MaterialConstituent) -> str | None:
     return amount.raw_value if _key(amount.name) in _COEFFICIENT_NAMES else None
 
 
-def _project_composition(family: DeviceFamily) -> NOMADCompositionProjection:
-    """Map reported formula/site claims while refusing formula interpretation."""
+def _project_composition(
+    family: DeviceFamily,
+    enrichment: CompositionProposalResult | None = None,
+) -> NOMADCompositionProjection:
+    """Map explicit site claims or an independently validated formula interpretation."""
 
     raw_formula = family.absorber_formula.raw_value if family.absorber_formula else None
     composition = NOMADComposition(long_form=raw_formula, formula=raw_formula)
     notes: list[str] = []
     band_gap = _unique_value(family.absorber_properties, _BAND_GAP_NAMES)
-    band_gap_ev = _convert(band_gap, "electron_volt") if band_gap else None
+    band_gap_ev = (
+        convert_reported_value(band_gap, "electron_volt") if band_gap else None
+    )
     if band_gap_ev is not None:
         composition.band_gap = band_gap_ev
     elif band_gap is not None:
@@ -222,11 +177,13 @@ def _project_composition(family: DeviceFamily) -> NOMADCompositionProjection:
         )
     explicit_sites = 0
     incomplete_sites = 0
+    explicit_site_targets: set[str] = set()
     for constituent in family.absorber_constituents:
         target = _SITE_ROLES.get(_key(constituent.role or ""))
         if target is None:
             continue
         explicit_sites += 1
+        explicit_site_targets.add(target)
         coefficient = _explicit_coefficient(constituent)
         if coefficient is None:
             incomplete_sites += 1
@@ -237,6 +194,30 @@ def _project_composition(family: DeviceFamily) -> NOMADCompositionProjection:
     has_projected_property = (
         composition.band_gap is not None or composition.dimensionality is not None
     )
+    site_fields = {"ions_a_site", "ions_b_site", "ions_x_site"}
+    if (
+        enrichment
+        and enrichment.status == "accepted"
+        and (incomplete_sites or explicit_site_targets != site_fields)
+    ):
+        for field in site_fields:
+            setattr(composition, field, [])
+        for ion in enrichment.proposal.ions:
+            target = {"A": "ions_a_site", "B": "ions_b_site", "X": "ions_x_site"}[
+                ion.site
+            ]
+            getattr(composition, target).append(
+                NOMADIon(
+                    abbreviation=ion.abbreviation,
+                    coefficient=ion.coefficient,
+                )
+            )
+        explicit_sites = len(enrichment.proposal.ions)
+        incomplete_sites = 0
+        notes.append(
+            "Site assignments were accepted only after exact reconstruction of the reported formula."
+        )
+
     if raw_formula is None and explicit_sites == 0 and not has_projected_property:
         status: CompositionStatus = "needs_review" if notes else "not_reported"
         result: NOMADComposition | None = None
@@ -247,7 +228,11 @@ def _project_composition(family: DeviceFamily) -> NOMADCompositionProjection:
             "At least one explicitly labelled site ion lacks an explicitly labelled stoichiometric coefficient."
         )
     elif explicit_sites:
-        status = "needs_review" if notes else "ready"
+        status = (
+            "ready"
+            if enrichment and enrichment.status == "accepted"
+            else ("needs_review" if notes else "ready")
+        )
         result = composition
     else:
         status = "partial"
@@ -310,7 +295,7 @@ def _project_metrics(
                 field,
             )
             continue
-        converted = _convert(matches[0], _METRIC_UNITS[field])
+        converted = convert_reported_value(matches[0], _METRIC_UNITS[field])
         if converted is None:
             remainder.append(_payload(matches[0]))
             _issue(
@@ -326,8 +311,40 @@ def _project_metrics(
     return projected, remainder
 
 
-def _project_step(step: ProcessingStep) -> NOMADProcessingStep:
-    """Populate generic NOMAD process fields and preserve all atomic source details."""
+def _concentration_unit(unit: str | None) -> str | None:
+    """Map exact presentation variants onto NOMAD's pinned concentration vocabulary."""
+
+    if unit is None:
+        return None
+    compact = (
+        re.sub(r"\s+", "", unit)
+        .replace("·", "")
+        .replace("−", "-")
+        .translate(str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻", "0123456789-"))
+    )
+    aliases = {
+        "mol/L": "mol/L",
+        "molL-1": "mol/L",
+        "mmol/L": "mmol/L",
+        "mmolL-1": "mmol/L",
+        "g/L": "g/L",
+        "gL-1": "g/L",
+        "mg/L": "mg/L",
+        "mgL-1": "mg/L",
+        "mg/mL": "mg/mL",
+        "mgmL-1": "mg/mL",
+        "wt%": "wt%",
+        "vol%": "vol%",
+        "M": "M",
+    }
+    return aliases.get(compact)
+
+
+def _project_step(
+    step: ProcessingStep,
+    enrichment: ProcessingProposalResult | None = None,
+) -> NOMADProcessingStep:
+    """Project source fields plus accepted index-based semantic interpretations."""
 
     projected: dict[str, object] = {
         "step_name": step.operation,
@@ -341,21 +358,68 @@ def _project_step(step: ProcessingStep) -> NOMADProcessingStep:
     }
     for name, (field, unit) in _CONDITION_FIELDS.items():
         value = _unique_value(step.conditions, {name})
-        converted = _convert(value, unit) if value else None
+        converted = convert_reported_value(value, unit) if value else None
         if converted is not None:
             projected[field] = converted
     atmosphere = _unique_value(step.conditions, {"atmosphere"})
-    if atmosphere and atmosphere.raw_value in _ATMOSPHERES:
+    if atmosphere and atmosphere.raw_value in NORMALIZED_ATMOSPHERES:
         projected["atmosphere"] = atmosphere.raw_value
     antisolvent = _unique_value(step.conditions, {"antisolvent"})
     if antisolvent:
         projected["antisolvent"] = antisolvent.raw_value
+    if enrichment and enrichment.status == "accepted":
+        for assignment in enrichment.proposal.condition_assignments:
+            value = step.conditions[assignment.condition_index]
+            if assignment.target_field == "atmosphere":
+                projected["atmosphere"] = assignment.atmosphere
+            else:
+                target_unit = {
+                    "temperature": "degree_Celsius",
+                    "duration": "second",
+                }[assignment.target_field]
+                converted = convert_reported_value(value, target_unit)
+                if converted is not None:
+                    projected[assignment.target_field] = converted
+        solutes: list[NOMADSolute] = []
+        solvents: list[NOMADSolvent] = []
+        antisolvents: list[str] = []
+        for assignment in enrichment.proposal.material_assignments:
+            name = step.materials[assignment.material_index]
+            if assignment.role == "solute":
+                concentration = None
+                concentration_unit = None
+                if assignment.concentration_condition_index is not None:
+                    value = step.conditions[assignment.concentration_condition_index]
+                    concentration_unit = _concentration_unit(value.unit)
+                    if concentration_unit:
+                        concentration = value.value_number
+                solutes.append(
+                    NOMADSolute(
+                        name=name,
+                        concentration=concentration,
+                        concentration_unit=concentration_unit,
+                    )
+                )
+            elif assignment.role == "solvent":
+                solvents.append(NOMADSolvent(name=name))
+            elif assignment.role == "antisolvent":
+                antisolvents.append(name)
+        if solutes or solvents:
+            projected["solution"] = NOMADReactionSolution(
+                solutes=solutes, solvents=solvents
+            )
+        if antisolvents:
+            projected["antisolvent"] = "; ".join(antisolvents)
+        projected["additional_parameters"]["accepted_enrichment"] = (
+            enrichment.proposal.model_dump(mode="json")
+        )
     return NOMADProcessingStep.model_validate(projected)
 
 
 def _project_family(
     family: DeviceFamily | None,
     composition: NOMADCompositionProjection | None,
+    processing: dict[str, ProcessingProposalResult],
 ) -> tuple[dict[str, object], dict[str, object]]:
     """Project shared device construction once for every linked atomic record."""
 
@@ -364,11 +428,15 @@ def _project_family(
     steps_by_layer: dict[str, list[NOMADProcessingStep]] = {}
     for step in family.processing_steps:
         for layer_id in step.target_layer_ids:
-            steps_by_layer.setdefault(layer_id, []).append(_project_step(step))
+            steps_by_layer.setdefault(layer_id, []).append(
+                _project_step(step, processing.get(step.step_id))
+            )
     layers: list[NOMADLayer] = []
     for layer in sorted(family.layers, key=lambda item: item.sequence or 10_000):
         thickness = _unique_value(layer.reported_properties, {"thickness"})
-        thickness_nm = _convert(thickness, "nanometer") if thickness else None
+        thickness_nm = (
+            convert_reported_value(thickness, "nanometer") if thickness else None
+        )
         layers.append(
             NOMADLayer(
                 name=layer.material,
@@ -400,7 +468,9 @@ def _project_family(
         "architecture_raw": family.architecture,
         "full_stack_raw": family.full_stack_raw,
         "unassigned_processing_steps": [
-            _project_step(step).model_dump(mode="json", exclude_none=True)
+            _project_step(step, processing.get(step.step_id)).model_dump(
+                mode="json", exclude_none=True
+            )
             for step in family.processing_steps
             if not step.target_layer_ids
         ],
@@ -426,11 +496,12 @@ def _base_cell(
     study: StudyExtraction,
     family: DeviceFamily | None,
     composition: NOMADCompositionProjection | None,
+    processing: dict[str, ProcessingProposalResult],
     model: str | None,
 ) -> tuple[dict[str, object], dict[str, object]]:
     """Create publication and family fields shared by every emitted archive."""
 
-    fields, context = _project_family(family, composition)
+    fields, context = _project_family(family, composition, processing)
     doi = study.paper.doi
     if doi and not doi.startswith(("http://", "https://")):
         doi = "https://doi.org/" + re.sub(r"^doi:\s*", "", doi.strip(), flags=re.I)
@@ -458,12 +529,12 @@ def _stability_summary(
         if target is None:
             continue
         field, unit = target
-        converted = _convert(value, unit)
+        converted = convert_reported_value(value, unit)
         if converted is not None and field not in fields:
             fields[field] = converted
     final = test.checkpoints[-1]
     if final.time:
-        duration = _convert(final.time, "hour")
+        duration = convert_reported_value(final.time, "hour")
         if duration is not None:
             fields["time"] = duration
     absolute_pce = {
@@ -475,21 +546,21 @@ def _stability_summary(
     first = test.checkpoints[0]
     first_pce = absolute_pce[first.checkpoint_id]
     last_pce = absolute_pce[final.checkpoint_id]
-    first_time = _convert(first.time, "hour") if first.time else None
+    first_time = convert_reported_value(first.time, "hour") if first.time else None
     first_value = (
-        _convert(first_pce, "percent")
+        convert_reported_value(first_pce, "percent")
         if first_pce is not None and first_time == 0
         else None
     )
-    last_value = _convert(last_pce, "percent") if last_pce else None
+    last_value = convert_reported_value(last_pce, "percent") if last_pce else None
     if first_value is not None:
         fields["PCE_at_start"] = first_value
     if last_value is not None:
         fields["PCE_at_end"] = last_value
     for checkpoint in test.checkpoints:
-        if checkpoint.time and _convert(checkpoint.time, "hour") == 1000:
+        if checkpoint.time and convert_reported_value(checkpoint.time, "hour") == 1000:
             value = absolute_pce[checkpoint.checkpoint_id]
-            converted = _convert(value, "percent") if value else None
+            converted = convert_reported_value(value, "percent") if value else None
             if converted is not None:
                 fields["PCE_after_1000_hours"] = converted
     _issue(
@@ -510,8 +581,48 @@ def _archive_name(index: int, kind: SourceKind, source_id: str) -> str:
     return f"{index:04d}-{kind}-{slug}.archive.json"
 
 
+def _accepted_enrichment(
+    study: StudyExtraction, audit: EnrichmentAudit | None
+) -> tuple[
+    dict[str, CompositionProposalResult],
+    dict[str, ProcessingProposalResult],
+    list[CompositionProposalResult | ProcessingProposalResult],
+]:
+    """Revalidate accepted audit entries at the adapter's trust boundary."""
+
+    proposed_compositions = [
+        result.proposal
+        for result in (audit.composition_results if audit else [])
+        if result.status == "accepted"
+    ]
+    proposed_processing = [
+        result.proposal
+        for result in (audit.processing_results if audit else [])
+        if result.status == "accepted"
+    ]
+    composition_results = validate_composition_proposals(
+        study, CompositionProposalResponse(proposals=proposed_compositions)
+    )
+    processing_results = validate_processing_proposals(
+        study, ProcessingProposalResponse(proposals=proposed_processing)
+    )
+    compositions = {
+        result.proposal.family_id: result
+        for result in composition_results
+        if result.status == "accepted"
+    }
+    processing = {
+        result.proposal.step_id: result
+        for result in processing_results
+        if result.status == "accepted"
+    }
+    return compositions, processing, [*composition_results, *processing_results]
+
+
 def to_nomad_with_report(
-    study: StudyExtraction, model: str | None = None
+    study: StudyExtraction,
+    model: str | None = None,
+    enrichment: EnrichmentAudit | None = None,
 ) -> NOMADExport:
     """Export every atomic record as a separate pinned NOMAD archive.
 
@@ -554,7 +665,13 @@ def to_nomad_with_report(
                 f"Unknown family_id {device.family_id!r}; the device is still exported.",
                 "family_id",
             )
-    projections = [_project_composition(family) for family in study.device_families]
+    composition_enrichment, processing_enrichment, revalidated_results = (
+        _accepted_enrichment(study, enrichment)
+    )
+    projections = [
+        _project_composition(family, composition_enrichment.get(family.family_id))
+        for family in study.device_families
+    ]
     compositions = {item.family_id: item for item in projections}
     for projection in projections:
         for detail in projection.issues:
@@ -565,6 +682,65 @@ def to_nomad_with_report(
                 projection.family_id,
                 detail,
                 "perovskite_composition",
+            )
+    if enrichment:
+        for family_id in enrichment.unresolved_composition_ids:
+            _issue(
+                issues,
+                "enrichment_not_proposed",
+                "device_family",
+                family_id,
+                "No composition interpretation was proposed.",
+                "perovskite_composition",
+            )
+        for step_id in enrichment.unresolved_processing_step_ids:
+            _issue(
+                issues,
+                "enrichment_not_proposed",
+                "processing_step",
+                step_id,
+                "No processing interpretation was proposed.",
+                "layers.deposition",
+            )
+        for result in enrichment.composition_results:
+            if result.status != "accepted":
+                _issue(
+                    issues,
+                    "enrichment_not_applied",
+                    "device_family",
+                    result.proposal.family_id,
+                    "; ".join(result.issues) or result.status,
+                    "perovskite_composition",
+                )
+        for result in enrichment.processing_results:
+            if result.status != "accepted":
+                _issue(
+                    issues,
+                    "enrichment_not_applied",
+                    "processing_step",
+                    result.proposal.step_id,
+                    "; ".join(result.issues) or result.status,
+                    "layers.deposition",
+                )
+        for result in revalidated_results:
+            if result.status == "accepted":
+                continue
+            kind: SourceKind = (
+                "device_family"
+                if isinstance(result, CompositionProposalResult)
+                else "processing_step"
+            )
+            source_id = (
+                result.proposal.family_id
+                if isinstance(result, CompositionProposalResult)
+                else result.proposal.step_id
+            )
+            _issue(
+                issues,
+                "accepted_enrichment_failed_revalidation",
+                kind,
+                source_id,
+                "; ".join(result.issues),
             )
     archives: list[NOMADArchive] = []
     mappings: list[NOMADRecordMapping] = []
@@ -604,7 +780,11 @@ def to_nomad_with_report(
             )
         family = families.get(device.family_id) if device and device.family_id else None
         fields, family_note = _base_cell(
-            study, family, compositions.get(family.family_id) if family else None, model
+            study,
+            family,
+            compositions.get(family.family_id) if family else None,
+            processing_enrichment,
+            model,
         )
         metrics, remainder = _project_metrics(
             observation.metrics,
@@ -644,7 +824,11 @@ def to_nomad_with_report(
                 "family_id",
             )
         fields, family_note = _base_cell(
-            study, family, compositions.get(family.family_id) if family else None, model
+            study,
+            family,
+            compositions.get(family.family_id) if family else None,
+            processing_enrichment,
+            model,
         )
         metrics, remainder = _project_metrics(
             population.metrics, "population_statistic", population.population_id, issues
@@ -690,7 +874,11 @@ def to_nomad_with_report(
                 "family_id",
             )
         fields, family_note = _base_cell(
-            study, family, compositions.get(family.family_id) if family else None, model
+            study,
+            family,
+            compositions.get(family.family_id) if family else None,
+            processing_enrichment,
+            model,
         )
         fields["stability"] = _stability_summary(stability, issues)
         add(
@@ -720,7 +908,11 @@ def to_nomad_with_report(
             continue
         family = families.get(device.family_id) if device.family_id else None
         fields, family_note = _base_cell(
-            study, family, compositions.get(family.family_id) if family else None, model
+            study,
+            family,
+            compositions.get(family.family_id) if family else None,
+            processing_enrichment,
+            model,
         )
         add(
             "individual_device",
@@ -743,7 +935,11 @@ def to_nomad_with_report(
         if family.family_id in represented_families:
             continue
         fields, family_note = _base_cell(
-            study, family, compositions[family.family_id], model
+            study,
+            family,
+            compositions[family.family_id],
+            processing_enrichment,
+            model,
         )
         add(
             "device_family",

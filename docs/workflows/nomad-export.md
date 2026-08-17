@@ -7,7 +7,7 @@ historical reduced PERLA schema.
 
 ```mermaid
 flowchart LR
-    A["StudyExtraction"] --> B["Deterministic NOMAD adapter"]
+    A["StudyExtraction + accepted enrichment"] --> B["Deterministic NOMAD adapter"]
     B --> C["One archive per atomic source record"]
     B --> D["Record mappings and conversion issues"]
     B --> E["Composition review queue"]
@@ -31,20 +31,20 @@ issue where a target field was rejected.
 ## Chemical composition
 
 The reported absorber formula is copied to both NOMAD `long_form` and `formula`.
-Perovskite site ions are populated only when the rich extraction explicitly labels a
-constituent as an A-, B-, or X-site ion. Its amount becomes a coefficient only when the
-source value explicitly calls itself a stoichiometric coefficient or fraction.
+Perovskite site ions come either from explicit source claims or from an accepted
+enrichment proposal that exactly reconstructs that formula. Processing fields and
+solution roles likewise consume only accepted index-based proposals. See
+[Interpret composition and processing](enrichment.md).
 
 `composition_projection.json` records one of four states for every family:
 
-- `ready`: all exported site assignments and coefficients were explicit;
+- `ready`: assignments were explicit or passed exact formula reconstruction;
 - `partial`: a formula was preserved but no site assignment was explicit;
 - `needs_review`: a site was explicit but a coefficient was not; or
 - `not_reported`: neither a formula nor explicit site ions were extracted.
 
-This artifact is the input queue for a future optional chemical-enrichment pass. Such
-proposals should remain separate from `extraction.json` until they pass deterministic
-checks or human review.
+All proposals remain separate from `extraction.json`; reviewable ones are never
+silently projected into NOMAD.
 
 ## Files
 

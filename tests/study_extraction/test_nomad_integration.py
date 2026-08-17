@@ -10,6 +10,10 @@ from perla_extract.study_extraction.nomad_contract import (
     NOMADCell,
     NOMADComposition,
     NOMADLayer,
+    NOMADProcessingStep,
+    NOMADReactionSolution,
+    NOMADSolute,
+    NOMADSolvent,
 )
 
 pytestmark = pytest.mark.skipif(
@@ -33,10 +37,29 @@ def test_outbound_fields_exist_in_pinned_nomad_schema():
     payload = NOMADCell(
         pce=20.0,
         perovskite_composition=NOMADComposition(long_form="FAPbI3", formula="FAPbI3"),
-        layers=[NOMADLayer(name="FAPbI3", functionality="Absorber")],
+        layers=[
+            NOMADLayer(
+                name="FAPbI3",
+                functionality="Absorber",
+                deposition=[
+                    NOMADProcessingStep(
+                        method="Spin-coating",
+                        solution=NOMADReactionSolution(
+                            solutes=[
+                                NOMADSolute(
+                                    name="FAI", concentration=1, concentration_unit="M"
+                                )
+                            ],
+                            solvents=[NOMADSolvent(name="DMF")],
+                        ),
+                    )
+                ],
+            )
+        ],
     ).model_dump(exclude_none=True)
     payload.pop("m_def")
     parsed = LLMExtractedPerovskiteSolarCell.m_from_dict(payload)
     assert parsed.pce == 20.0
     assert parsed.perovskite_composition.long_form == "FAPbI3"
     assert parsed.layers[0].name == "FAPbI3"
+    assert parsed.layers[0].deposition[0].solution.solutes[0].name == "FAI"

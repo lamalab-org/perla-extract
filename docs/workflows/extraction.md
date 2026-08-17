@@ -25,9 +25,10 @@ flowchart TD
     J --> K
     E --> K
     K --> L["Citation repair and local validation"]
+    L --> O["Audited composition and processing enrichment"]
     C0 --> N["Independent coverage audit"]
     K --> N
-    K --> M["Atomic NOMAD archive export"]
+    O --> M["Atomic NOMAD archive export"]
 ```
 
 ## Select a mode
@@ -106,7 +107,12 @@ Before validation, an invalid source pointer is repaired only when its unchanged
 has exactly one match across the parsed evidence. Zero or multiple matches remain
 review findings. Every decision is recorded in `citation_repairs.json`.
 
-After validation, the workflow writes one pinned NOMAD archive per atomic source
+After validation, two compact semantic passes interpret site ions and processing
+roles from existing records and only their cited evidence. They run by default and
+write a separate audit without changing `extraction.json`. See
+[Interpret composition and processing](enrichment.md).
+
+The workflow then writes one pinned NOMAD archive per atomic source
 record and a conversion report. See [Export to NOMAD](nomad-export.md). The historical
 reduced schema is an optional compatibility output rather than an intermediate format.
 

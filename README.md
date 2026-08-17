@@ -24,10 +24,10 @@ standard credential—for example, `openai/...` with `OPENAI_API_KEY` or
 quality-first `:exacto` suffix, but the extraction workflow itself is provider-neutral.
 
 The extraction directory contains the complete rich result, an independent record
-inventory and coverage audit, conservative citation repairs, local evidence checks,
-the parsed source blocks, a run report, and atomic archives for the pinned NOMAD
-perovskite-solar-cell schema. Use `--dry-run` to parse the documents and estimate call
-size without calling a model.
+inventory and coverage audit, local evidence checks, and a separate audited
+composition/processing enrichment. Accepted interpretations feed atomic archives for
+the pinned NOMAD schema without rewriting reported facts in `extraction.json`. Use
+`--dry-run` to parse the documents and estimate call size without calling a model.
 
 ## Documentation
 
@@ -36,6 +36,7 @@ The [documentation site](docs/index.md) explains:
 - [the study and evidence model](docs/concepts/study-model.md);
 - [single-call and long-supplement extraction](docs/workflows/extraction.md);
 - [human ground-truth review](docs/workflows/ground-truth-review.md);
+- [audited composition and processing interpretation](docs/workflows/enrichment.md);
 - [direct NOMAD export](docs/workflows/nomad-export.md); and
 - [the optional reduced-schema compatibility boundary](docs/compatibility/reduced-schema.md).
 

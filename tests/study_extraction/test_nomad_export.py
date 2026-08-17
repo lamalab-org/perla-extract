@@ -2,6 +2,16 @@ import json
 
 import pytest
 
+from perla_extract.study_extraction.enrichment import (
+    CompositionProposal,
+    CompositionProposalResult,
+    EnrichmentAudit,
+    ProcessingConditionAssignment,
+    ProcessingMaterialAssignment,
+    ProcessingProposalResult,
+    ProcessingStepProposal,
+    ProposedIon,
+)
 from perla_extract.study_extraction.models import (
     DeviceFamily,
     EvidenceCitation,
@@ -219,6 +229,99 @@ def test_formula_without_reported_site_assignments_is_reviewable_not_invented():
     assert projection.status == "partial"
     assert projection.nomad_composition.ions_a_site == []
     assert any(issue.code == "composition_needs_review" for issue in exported.issues)
+
+
+def test_nomad_export_consumes_only_accepted_enrichment():
+    study = study_fixture()
+    study.device_families[0].absorber_constituents = []
+    step = study.device_families[0].processing_steps[0]
+    step.materials = ["FAI", "DMF", "chlorobenzene"]
+    step.conditions.append(value("FAI concentration", "1 M", 1, "M"))
+    enrichment = EnrichmentAudit(
+        composition_results=[
+            CompositionProposalResult(
+                proposal=CompositionProposal(
+                    family_id="f1",
+                    ions=[
+                        ProposedIon(site="A", abbreviation="FA", coefficient="1"),
+                        ProposedIon(site="B", abbreviation="Pb", coefficient="1"),
+                        ProposedIon(site="X", abbreviation="I", coefficient="3"),
+                    ],
+                ),
+                status="accepted",
+            )
+        ],
+        processing_results=[
+            ProcessingProposalResult(
+                proposal=ProcessingStepProposal(
+                    step_id="anneal",
+                    condition_assignments=[
+                        ProcessingConditionAssignment(
+                            condition_index=0,
+                            target_field="temperature",
+                            atmosphere=None,
+                        )
+                    ],
+                    material_assignments=[
+                        ProcessingMaterialAssignment(
+                            material_index=0,
+                            role="solute",
+                            concentration_condition_index=2,
+                        ),
+                        ProcessingMaterialAssignment(
+                            material_index=1,
+                            role="solvent",
+                            concentration_condition_index=None,
+                        ),
+                        ProcessingMaterialAssignment(
+                            material_index=2,
+                            role="antisolvent",
+                            concentration_condition_index=None,
+                        ),
+                    ],
+                ),
+                status="accepted",
+            )
+        ],
+    )
+
+    exported = to_nomad_with_report(study, enrichment=enrichment)
+    absorber = exported.archives[0].data.layers[1]
+    process = absorber.deposition[0]
+
+    assert exported.composition_projections[0].status == "ready"
+    assert process.solution.solutes[0].name == "FAI"
+    assert process.solution.solutes[0].concentration == 1
+    assert process.solution.solvents[0].name == "DMF"
+    assert process.antisolvent == "chlorobenzene"
+
+
+def test_nomad_export_revalidates_an_audit_marked_accepted():
+    study = study_fixture()
+    study.device_families[0].absorber_constituents = []
+    forged = EnrichmentAudit(
+        composition_results=[
+            CompositionProposalResult(
+                proposal=CompositionProposal(
+                    family_id="f1",
+                    ions=[
+                        ProposedIon(site="A", abbreviation="FA", coefficient="1"),
+                        ProposedIon(site="B", abbreviation="Pb", coefficient="1"),
+                        ProposedIon(site="X", abbreviation="Br", coefficient="3"),
+                    ],
+                ),
+                status="accepted",
+            )
+        ]
+    )
+
+    exported = to_nomad_with_report(study, enrichment=forged)
+
+    assert exported.composition_projections[0].status == "partial"
+    assert any(
+        issue.code == "accepted_enrichment_failed_revalidation"
+        for issue in exported.issues
+    )
 
 
 def test_nomad_artifacts_are_standalone_and_pin_the_target(tmp_path):

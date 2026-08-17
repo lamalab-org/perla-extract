@@ -35,6 +35,9 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | `--inventory / --no-inventory` | inventory | Independently inventory records, route evidence, and audit recall |
 | `--inventory-model TEXT` | `openrouter/openai/gpt-5.6-terra:exacto` | Balanced model for the compact inventory |
 | `--inventory-max-output-tokens INTEGER` | `20000` | Completion limit for the value-free inventory |
+| `--enrichment / --no-enrichment` | enrichment | Run the audited composition and processing interpretation stage |
+| `--enrichment-model TEXT` | extraction model | Model used for the two compact enrichment calls |
+| `--enrichment-max-output-tokens INTEGER` | `20000` | Completion limit for each enrichment call |
 
 Docling is the reproducible quality-first default. PyMuPDF is an explicit lightweight
 alternative; parser failures never silently change backends. Complete parser results

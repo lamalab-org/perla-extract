@@ -55,6 +55,9 @@ def extract_study(
     use_inventory: bool = True,
     inventory_model: str | None = DEFAULT_INVENTORY_MODEL,
     inventory_max_output_tokens: int = 20_000,
+    use_enrichment: bool = True,
+    enrichment_model: str | None = None,
+    enrichment_max_output_tokens: int = 20_000,
     parser: str = "docling",
     mode: str = "auto",
     single_call_max_input_tokens: int = 90_000,
@@ -89,6 +92,9 @@ def extract_study(
         use_inventory=use_inventory,
         inventory_model=inventory_model,
         inventory_max_output_tokens=inventory_max_output_tokens,
+        use_enrichment=use_enrichment,
+        enrichment_model=enrichment_model,
+        enrichment_max_output_tokens=enrichment_max_output_tokens,
         parser=parser,
         mode=mode,
         single_call_max_input_tokens=single_call_max_input_tokens,
@@ -135,6 +141,20 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 )
 @click.option(
     "--inventory-max-output-tokens", type=click.IntRange(min=1), default=20_000
+)
+@click.option(
+    "--enrichment/--no-enrichment",
+    "use_enrichment",
+    default=True,
+    help="Interpret composition sites and processing roles in separate audited calls.",
+)
+@click.option(
+    "--enrichment-model",
+    default=None,
+    help="LiteLLM model for enrichment; defaults to --model.",
+)
+@click.option(
+    "--enrichment-max-output-tokens", type=click.IntRange(min=1), default=20_000
 )
 @click.option("--parser", type=click.Choice(available_parsers()), default="docling")
 @click.option(

@@ -32,6 +32,7 @@ def test_dry_run_writes_a_complete_request_plan(tmp_path):
     assert report["planned_calls"] >= 1
     assert (tmp_path / "output" / "document.json").exists()
     assert (tmp_path / "output" / "extraction.schema.json").exists()
+    assert (tmp_path / "output" / "enrichment.schema.json").exists()
     assert (tmp_path / "output" / "report.json").exists()
     configuration = json.loads(
         (tmp_path / "output" / "run_configuration.json").read_text()
