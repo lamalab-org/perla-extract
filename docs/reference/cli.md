@@ -31,6 +31,9 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | `--single-call-max-input-tokens INTEGER` | `90000` | Estimated request limit used by auto mode |
 | `--window-input-tokens INTEGER` | `60000` | Request budget used to size structural windows |
 | `--dry-run` | off | Parse, plan, and write an estimate without a model call |
+| `--inventory / --no-inventory` | inventory | Independently inventory records, route evidence, and audit recall |
+| `--inventory-model TEXT` | `openrouter/openai/gpt-5.6-terra:exacto` | Balanced model for the compact inventory |
+| `--inventory-max-output-tokens INTEGER` | `20000` | Completion limit for the value-free inventory |
 
 Docling is the reproducible quality-first default. PyMuPDF is an explicit lightweight
 alternative; parser failures never silently change backends. Complete parser results
@@ -43,7 +46,7 @@ from the model-facing evidence view.
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--model TEXT` | `openrouter/openai/gpt-5.6-sol:exacto` | LiteLLM provider-prefixed model name |
-| `--reasoning-effort [omit|none|minimal|low|medium|high]` | `medium` | Reasoning setting; `omit` removes the parameter for models that do not support it |
+| `--reasoning-effort [omit|none|minimal|low|medium|high]` | `omit` | Reasoning setting; `omit` removes the parameter for models that do not support it |
 | `--max-output-tokens INTEGER` | `80000` | Maximum completion tokens per call |
 | `--temperature FLOAT` | omitted | Sampling temperature; omission leaves the provider default |
 | `--timeout-seconds FLOAT` | `600` | Timeout for one live request |

@@ -12,14 +12,15 @@ as the same measurement.
 ```mermaid
 flowchart LR
     A["Paper + Supporting Information"] --> B["Parser-independent evidence blocks"]
-    B --> C{"Fits one model context?"}
+    B --> C0["Independent record inventory and conservative routing"]
+    C0 --> C{"Routed evidence fits one model context?"}
     C -->|Yes| D["Complete-study extraction"]
     C -->|No| E["Structure-aware evidence windows"]
     E --> F["Lossless candidate union"]
     F --> G["Explicit cross-window identity links"]
     D --> H["Rich StudyExtraction"]
     G --> H
-    H --> I["Local evidence and link checks"]
+    H --> I["Citation repair, evidence checks, and coverage audit"]
     H --> J["Deterministic reduced export"]
     H --> K["Human ground-truth review"]
 ```
@@ -34,13 +35,15 @@ result; they do not erase model output.
 
 - **Keep scientific reporting levels separate.** Individual measurements,
   population statistics, and stability experiments are different record types.
-- **Prefer a complete-study view.** One extraction call is used when the paper and SI
-  fit. Long inputs are partitioned without discarding source blocks.
+- **Prefer a complete-study view.** A shallow inventory removes only cited,
+  high-confidence irrelevant blocks from the expensive request. The complete parse is
+  preserved, and remaining long inputs use structural windows.
 - **Preserve candidates.** Cross-window linking adds identity links instead of
   guessing which candidate should replace another.
 - **Use generic reported values.** Layers and processing steps contain `ReportedValue`
-  records;
-  property-specific regular expressions do not decide what can be extracted.
+  records. Every value denotes one semantic quantity, while shared citation IDs avoid
+  repeating the same evidence. Property-specific regular expressions do not decide
+  what can be extracted.
 - **Make uncertainty inspectable.** The full output, conservative grounded subset,
   failed responses, configuration, and conversion losses are separate artifacts.
 

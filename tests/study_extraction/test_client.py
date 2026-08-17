@@ -217,6 +217,32 @@ def test_litellm_request_preserves_schema_and_provider_prefix(tmp_path):
     assert "temperature" not in request
 
 
+def test_model_boundary_decodes_compact_transport_before_validation(
+    tmp_path, monkeypatch
+):
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+    )
+    compact = {"transport": empty_result()}
+    monkeypatch.setattr(client, "_live", lambda body, failure: (compact, {}))
+
+    result = client.complete(
+        kind="test",
+        slug="compact",
+        model="test/model",
+        system="system",
+        prompt="prompt",
+        response_model=StudyExtraction,
+        max_output_tokens=100,
+        reasoning_effort=None,
+        request_schema={"type": "object", "properties": {}},
+        decode=lambda value: value["transport"],
+    )
+
+    assert result.model_dump(mode="json") == empty_result()
+
+
 def test_litellm_response_is_normalized_to_result_and_usage(tmp_path, monkeypatch):
     payload = {
         "model": "provider-model",

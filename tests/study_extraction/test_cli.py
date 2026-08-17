@@ -91,6 +91,9 @@ def test_public_entry_points_share_scientific_defaults() -> None:
     names = {
         "model",
         "reasoning_effort",
+        "use_inventory",
+        "inventory_model",
+        "inventory_max_output_tokens",
         "parser",
         "mode",
         "single_call_max_input_tokens",

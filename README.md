@@ -23,7 +23,8 @@ standard credential—for example, `openai/...` with `OPENAI_API_KEY` or
 `anthropic/...` with `ANTHROPIC_API_KEY`. The default uses OpenRouter with an explicit
 quality-first `:exacto` suffix, but the extraction workflow itself is provider-neutral.
 
-The extraction directory contains the complete rich result, local evidence checks,
+The extraction directory contains the complete rich result, an independent record
+inventory and coverage audit, conservative citation repairs, local evidence checks,
 the parsed source blocks, a run report, and a deterministic export to the reduced
 PERLA schema. Use `--dry-run` to parse the documents and estimate call size without
 calling a model.

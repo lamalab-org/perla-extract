@@ -1,4 +1,7 @@
-from perla_extract.study_extraction.evidence import source_contains_text
+from perla_extract.study_extraction.evidence import (
+    repair_unique_citation_pointers,
+    source_contains_text,
+)
 from perla_extract.study_extraction.models import (
     DeviceFamily,
     EvidenceBlock,
@@ -121,6 +124,138 @@ def test_reported_value_with_one_invalid_citation_is_not_in_grounded_subset():
     assert result["status"] == "needs_review"
     assert result["counts"]["source_verified_values"] == 0
     assert result["verified_values"] == []
+
+
+def test_unique_quote_match_repairs_only_the_source_pointer():
+    wrong = EvidenceCitation(block_id="invented", quote="reported control device")
+    family = DeviceFamily(
+        family_id="f",
+        label="control",
+        variant=None,
+        architecture=None,
+        polarity="not_reported",
+        full_stack_raw=None,
+        layers=[],
+        absorber_formula=None,
+        absorber_properties=[],
+        absorber_constituents=[],
+        processing_steps=[],
+        evidence=[wrong],
+    )
+    extraction = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[family],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+    blocks = [
+        EvidenceBlock(
+            block_id="real",
+            source="main",
+            page=2,
+            kind="text",
+            text="The reported control device was measured.",
+        )
+    ]
+
+    repaired, audit = repair_unique_citation_pointers(extraction, blocks)
+
+    assert repaired.device_families[0].evidence[0].block_id == "real"
+    assert repaired.device_families[0].evidence[0].quote == wrong.quote
+    assert audit["repair_count"] == 1
+    assert audit["repairs"][0]["rule"] == "unique_normalized_quote_match"
+
+
+def test_ambiguous_quote_match_is_not_repaired():
+    citation = EvidenceCitation(block_id="missing", quote="same reported wording")
+    extraction = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[
+            DeviceFamily(
+                family_id="f",
+                label="control",
+                variant=None,
+                architecture=None,
+                polarity="not_reported",
+                full_stack_raw=None,
+                layers=[],
+                absorber_formula=None,
+                absorber_properties=[],
+                absorber_constituents=[],
+                processing_steps=[],
+                evidence=[citation],
+            )
+        ],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+    blocks = [
+        EvidenceBlock(
+            block_id="a",
+            source="main",
+            page=1,
+            kind="text",
+            text="same reported wording",
+        ),
+        EvidenceBlock(
+            block_id="b",
+            source="supplement",
+            page=1,
+            kind="text",
+            text="same reported wording",
+        ),
+    ]
+
+    repaired, audit = repair_unique_citation_pointers(extraction, blocks)
+
+    assert repaired == extraction
+    assert audit["repair_count"] == 0
+    assert audit["unresolved"][0]["matching_block_ids"] == ["a", "b"]
+
+
+def test_bare_value_is_not_used_to_repair_a_citation_pointer():
+    citation = EvidenceCitation(block_id="missing", quote="21.5%")
+    extraction = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[
+            DeviceFamily(
+                family_id="f",
+                label="control",
+                variant=None,
+                architecture=None,
+                polarity="not_reported",
+                full_stack_raw=None,
+                layers=[],
+                absorber_formula=None,
+                absorber_properties=[],
+                absorber_constituents=[],
+                processing_steps=[],
+                evidence=[citation],
+            )
+        ],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+    blocks = [
+        EvidenceBlock(
+            block_id="result", source="main", page=1, kind="text", text="PCE was 21.5%."
+        )
+    ]
+
+    repaired, audit = repair_unique_citation_pointers(extraction, blocks)
+
+    assert repaired == extraction
+    assert audit["repair_count"] == 0
+    assert audit["unresolved"][0]["reason"] == "quote_too_short_for_safe_repair"
 
 
 def test_validation_reports_duplicate_ids_for_every_entity_collection():

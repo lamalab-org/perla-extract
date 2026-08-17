@@ -10,7 +10,12 @@ import click
 
 from .logging import configure_logging, logger
 from .source import available_parsers
-from .workflow import ExtractionConfig, run_extraction
+from .workflow import (
+    DEFAULT_EXTRACTION_MODEL,
+    DEFAULT_INVENTORY_MODEL,
+    ExtractionConfig,
+    run_extraction,
+)
 
 REASONING_LEVELS = ("omit", "none", "minimal", "low", "medium", "high")
 
@@ -45,8 +50,11 @@ def extract_study(
     pdf: str | Path,
     supplement: str | Path | None = None,
     output_dir: str | Path = "study_extraction",
-    model: str = "openrouter/openai/gpt-5.6-sol:exacto",
+    model: str = DEFAULT_EXTRACTION_MODEL,
     reasoning_effort: str = "omit",
+    use_inventory: bool = True,
+    inventory_model: str | None = DEFAULT_INVENTORY_MODEL,
+    inventory_max_output_tokens: int = 20_000,
     parser: str = "docling",
     mode: str = "auto",
     single_call_max_input_tokens: int = 90_000,
@@ -77,6 +85,9 @@ def extract_study(
         output_dir=Path(output_dir),
         model=model,
         reasoning_effort=_reasoning(reasoning_effort),
+        use_inventory=use_inventory,
+        inventory_model=inventory_model,
+        inventory_max_output_tokens=inventory_max_output_tokens,
         parser=parser,
         mode=mode,
         single_call_max_input_tokens=single_call_max_input_tokens,
@@ -105,11 +116,23 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 @click.option("--output-dir", type=OUTPUT_DIRECTORY, default="study_extraction")
 @click.option(
     "--model",
-    default="openrouter/openai/gpt-5.6-sol:exacto",
+    default=DEFAULT_EXTRACTION_MODEL,
     help="LiteLLM provider-prefixed model name.",
 )
+@click.option("--reasoning-effort", type=click.Choice(REASONING_LEVELS), default="omit")
 @click.option(
-    "--reasoning-effort", type=click.Choice(REASONING_LEVELS), default="omit"
+    "--inventory/--no-inventory",
+    "use_inventory",
+    default=True,
+    help="Run an independent record inventory for routing and recall review.",
+)
+@click.option(
+    "--inventory-model",
+    default=DEFAULT_INVENTORY_MODEL,
+    help="LiteLLM model for the compact inventory.",
+)
+@click.option(
+    "--inventory-max-output-tokens", type=click.IntRange(min=1), default=20_000
 )
 @click.option("--parser", type=click.Choice(available_parsers()), default="docling")
 @click.option(

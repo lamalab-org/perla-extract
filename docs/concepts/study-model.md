@@ -83,6 +83,12 @@ individual device, or only a separately described specimen through `link_status`
 - a numeric value and unit only when normalization is unambiguous; and
 - one or more exact evidence references.
 
+One `ReportedValue` denotes one semantic quantity. A reported uncertainty or range
+may remain in the same `raw_value`, but different metrics or table columns are separate
+objects. During model generation, repeated quotations are represented once in a
+temporary citation catalog; deterministic expansion restores the ordinary nested
+evidence objects before `extraction.json` is written.
+
 Bounds, ranges, approximations, and other qualifiers therefore remain visible in
 `raw_value` instead of being coerced into an exact scalar. Missing information is
 represented with `null`, `not_reported`, or an empty collection as allowed by the

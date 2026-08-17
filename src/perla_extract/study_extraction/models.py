@@ -59,10 +59,33 @@ class EvidenceCitation(StrictModel):
 
 
 class ReportedValue(StrictModel):
-    """Keep a reported value verbatim and normalize it only when unambiguous."""
+    """Keep one semantic quantity verbatim and normalize it only when unambiguous.
 
-    name: ShortText
-    raw_value: Annotated[str, Field(min_length=1, max_length=800)]
+    A value may include its reported uncertainty or range, but it must not pack
+    different quantities or table columns into one string. Atomic values keep metrics
+    queryable without prescribing a vocabulary of photovoltaic properties.
+    """
+
+    name: Annotated[
+        str,
+        Field(
+            min_length=1,
+            max_length=500,
+            description="Name exactly one reported semantic quantity.",
+        ),
+    ]
+    raw_value: Annotated[
+        str,
+        Field(
+            min_length=1,
+            max_length=800,
+            description=(
+                "Verbatim value of one quantity. A reported uncertainty or range may "
+                "remain attached, but different metrics or table columns must be "
+                "separate ReportedValue objects."
+            ),
+        ),
+    ]
     value_number: float | None
     unit: Annotated[str | None, Field(max_length=120)]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=8)]

@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from copy import deepcopy
+
+from .models import EvidenceBlock, StudyExtraction
 
 
 def _normalized_with_offsets(value: object) -> tuple[str, list[int], str]:
@@ -66,3 +69,86 @@ def assembled_from_quotes(raw_value: object, references: list[dict]) -> bool:
         and all(parts)
         and normalized_source_text(raw_value) == "".join(parts)
     )
+
+
+def repair_unique_citation_pointers(
+    extraction: StudyExtraction, blocks: list[EvidenceBlock]
+) -> tuple[StudyExtraction, dict[str, object]]:
+    """Relink a citation only when its unchanged quote has one source match.
+
+    A repair corrects transport metadata, not scientific content. Zero or multiple
+    matches remain unresolved, and searching by a bare reported value is deliberately
+    forbidden because common numbers and material names are ambiguous.
+    """
+
+    data = deepcopy(extraction.model_dump(mode="json"))
+    block_by_id = {block.block_id: block for block in blocks}
+    repairs: list[dict[str, str]] = []
+    unresolved: list[dict[str, object]] = []
+
+    def has_context(quote: str) -> bool:
+        """Require enough prose to distinguish a citation from a bare value."""
+
+        return (
+            len(normalized_source_text(quote)) >= 12
+            and len(re.findall(r"\w+", quote)) >= 2
+        )
+
+    def walk(value: object, path: str = "$") -> None:
+        if isinstance(value, dict):
+            if {"block_id", "quote"} <= value.keys():
+                old_id = str(value["block_id"])
+                quote = str(value["quote"])
+                current = block_by_id.get(old_id)
+                if current is not None and source_contains_text(current.text, quote):
+                    return
+                if not has_context(quote):
+                    unresolved.append(
+                        {
+                            "path": path,
+                            "block_id": old_id,
+                            "quote": quote,
+                            "matching_block_ids": [],
+                            "reason": "quote_too_short_for_safe_repair",
+                        }
+                    )
+                    return
+                matches = [
+                    block.block_id
+                    for block in blocks
+                    if source_contains_text(block.text, quote)
+                ]
+                if len(matches) == 1:
+                    value["block_id"] = matches[0]
+                    repairs.append(
+                        {
+                            "path": path,
+                            "old_block_id": old_id,
+                            "new_block_id": matches[0],
+                            "quote": quote,
+                            "rule": "unique_normalized_quote_match",
+                        }
+                    )
+                else:
+                    unresolved.append(
+                        {
+                            "path": path,
+                            "block_id": old_id,
+                            "quote": quote,
+                            "matching_block_ids": matches,
+                        }
+                    )
+                return
+            for key, item in value.items():
+                walk(item, f"{path}.{key}")
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                walk(item, f"{path}[{index}]")
+
+    walk(data)
+    return StudyExtraction.model_validate(data), {
+        "repair_count": len(repairs),
+        "unresolved_count": len(unresolved),
+        "repairs": repairs,
+        "unresolved": unresolved,
+    }

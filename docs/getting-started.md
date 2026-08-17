@@ -60,6 +60,10 @@ suffix preserves the previous quality-first routing for the default OpenRouter m
 | `extraction.json` | Complete rich study result, including records that need review |
 | `grounded_values.json` | Conservative subset of reported values that passed local source checks |
 | `validation.json` | Evidence, identifier, and relationship findings |
+| `evidence_inventory.json` | Independent, value-free record inventory used for routing and recall review |
+| `evidence_routing.json` | Auditable block-selection decisions; the complete parse remains preserved |
+| `coverage_audit.json` | Covered, possible, and unmatched inventory candidates |
+| `citation_repairs.json` | Unique-quotation pointer repairs and unresolved citations |
 | `document.json` | Model-facing scientific evidence blocks with source and page locations |
 | `report.json` | Status, counts, usage, cost, cache information, and failures |
 | `run_configuration.json` | Non-secret configuration and source fingerprints |
@@ -70,7 +74,8 @@ Windowed runs additionally write `window_plan.json`, successful per-window resul
 `candidates.json`, and—when cross-window linking is attempted—`identity_links.json`.
 Requests and preserved failure responses are stored under `requests/`.
 
-`report.json` uses `complete` only when local validation reports no findings.
+`report.json` uses `complete` only when local validation and inventory coverage report
+no findings.
 `complete_needs_review` means the model call completed but at least one local check
 needs attention. `partial` means a window, identity-linking call, or conversion failed
 while inspectable output was still produced; `failed` means no model call succeeded.

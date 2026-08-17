@@ -45,6 +45,16 @@ The extractor is instructed not to digitize plots, interpolate, infer unreported
 identity, or import values from cited background work. Human ground truth follows the
 same boundary.
 
+The model-facing response normalizes repeated quotations into a citation catalog.
+PERLA expands catalog references before writing the public `StudyExtraction`, so
+review and export continue to see ordinary nested citations while generation avoids
+repeating a table row for every atomic value.
+
+If a citation points to the wrong or an unknown block, PERLA searches for its complete
+unchanged quotation. A unique normalized match repairs only the block pointer. A
+missing or ambiguous match is never guessed and remains visible in
+`citation_repairs.json` and `validation.json`.
+
 ## What local validation proves
 
 After extraction, `validate_study` checks:
@@ -83,3 +93,5 @@ completeness. It cannot independently determine whether:
 - the paper itself leaves a relationship ambiguous.
 
 Those questions belong to the [ground-truth workflow](../workflows/ground-truth-review.md).
+`coverage_audit.json` helps by comparing an independent, value-free record inventory
+with the detailed extraction, but unmatched candidates still require adjudication.

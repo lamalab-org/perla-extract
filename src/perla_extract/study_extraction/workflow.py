@@ -14,7 +14,13 @@ from .artifacts import write_json_atomic
 from .candidate_collection import combine_window_candidates
 from .client import ModelCallError, ModelClient
 from .compatibility import to_reduced_with_report
+from .evidence import repair_unique_citation_pointers
 from .identity_linking import IdentityLinkProposal, attach_valid_identity_links
+from .inventory import (
+    EvidenceInventory,
+    audit_inventory_coverage,
+    routed_blocks,
+)
 from .logging import logger
 from .models import (
     STUDY_SCHEMA_VERSION,
@@ -25,7 +31,15 @@ from .models import (
 )
 from .partitioning import EvidenceWindowPlan, plan_evidence_windows
 from .source import parse_documents
+from .transport import (
+    compact_study_schema,
+    constrain_evidence_block_ids,
+    expand_compact_study,
+)
 from .validation import validate_study
+
+DEFAULT_EXTRACTION_MODEL = "openrouter/openai/gpt-5.6-sol:exacto"
+DEFAULT_INVENTORY_MODEL = "openrouter/openai/gpt-5.6-terra:exacto"
 
 SYSTEM_PROMPT = """Extract the complete present photovoltaic study as device-centered data.
 Use only supplied evidence. Preserve source wording and distinctions. Never invent,
@@ -57,10 +71,17 @@ Rules:
 - Put arbitrary reported material, geometry, processing, measurement, and stability
   values in generic ReportedValue records. Do not omit a value because it lacks a
   dedicated schema field.
+- Each ReportedValue must contain exactly one semantic quantity. A reported
+  uncertainty or range may stay with that quantity, but never pack different metrics,
+  table columns, or a complete row into one name or raw_value. Emit one object per
+  quantity even when several quantities share the same source row.
 - ReportedValue.raw_value and EvidenceCitation.quote must be copied from a supplied
   block. Cite the smallest useful quote and only supplied block IDs.
   Typography-preserving renderings are source evidence and may be used for subscript
   or superscript notation.
+- Define each source quotation once in evidence_catalog and refer to its citation_id
+  from every evidence array. Reuse a citation_id when several atomic values share the
+  same source row or sentence.
 - Stability tests remain separate experiments with ordered checkpoints, even when
   linked to a performance device.
 - Exclude background examples, prior literature, reference entries, review material,
@@ -93,12 +114,37 @@ Rules:
 - An empty identity_links list is correct when identity is uncertain.
 """
 
+INVENTORY_PROMPT = """Independently inventory the photovoltaic records made or
+measured in the present study before detailed extraction. Identify photovoltaic device
+families or processing/composition variants, individually measured photovoltaic
+devices, their protocol-specific performance observations, population statistics, and
+stability tests. Do not extract their numerical values. Keep distinct reporting levels
+and variants distinct. Non-photovoltaic components, material-only specimens, and
+integrated systems are context rather than target records unless the evidence
+specifically reports a photovoltaic device or measurement represented by the schema.
+
+Also list blocks that are clearly irrelevant to extracting present-study device
+composition, processing, performance, measurement conditions, or stability. Exclude
+only obvious background literature, administrative material, or unrelated content.
+If a block might provide identity, composition, fabrication, measurement, or result
+context, retain it by omitting it from exclusions. Every inventory item needs a small
+verbatim quotation and a supplied block ID. Every exclusion also needs a verbatim
+quotation from the excluded block so the routing decision is auditable. Never invent
+block IDs.
+"""
+
 
 def prompt_sha256() -> str:
     """Fingerprint every prompt template that can change scientific model output."""
 
     encoded = json.dumps(
-        [SYSTEM_PROMPT, EXTRACTION_PROMPT, WINDOW_PROMPT, IDENTITY_LINK_PROMPT],
+        [
+            SYSTEM_PROMPT,
+            EXTRACTION_PROMPT,
+            WINDOW_PROMPT,
+            IDENTITY_LINK_PROMPT,
+            INVENTORY_PROMPT,
+        ],
         ensure_ascii=False,
         separators=(",", ":"),
     ).encode("utf-8")
@@ -112,8 +158,11 @@ class ExtractionConfig:
     pdf: Path
     supplement: Path | None
     output_dir: Path
-    model: str = "openrouter/openai/gpt-5.6-sol:exacto"
+    model: str = DEFAULT_EXTRACTION_MODEL
     reasoning_effort: str | None = None
+    use_inventory: bool = True
+    inventory_model: str | None = DEFAULT_INVENTORY_MODEL
+    inventory_max_output_tokens: int = 20_000
     parser: str = "docling"
     mode: str = "auto"
     single_call_max_input_tokens: int = 90_000
@@ -149,6 +198,16 @@ def _direct_prompt(blocks: list[EvidenceBlock]) -> str:
 
     return (
         EXTRACTION_PROMPT
+        + "\n\nCOMPLETE STUDY EVIDENCE:\n"
+        + json.dumps(_evidence_payload(blocks), ensure_ascii=False)
+    )
+
+
+def _inventory_prompt(blocks: list[EvidenceBlock]) -> str:
+    """Request a shallow record inventory without exposing the final extraction."""
+
+    return (
+        INVENTORY_PROMPT
         + "\n\nCOMPLETE STUDY EVIDENCE:\n"
         + json.dumps(_evidence_payload(blocks), ensure_ascii=False)
     )
@@ -276,6 +335,8 @@ def _run_model_calls(
                 response_model=StudyExtraction,
                 max_output_tokens=config.max_output_tokens,
                 reasoning_effort=config.reasoning_effort,
+                request_schema=compact_study_schema(block.block_id for block in blocks),
+                decode=expand_compact_study,
             )
         except ModelCallError as exc:
             errors.append(str(exc))
@@ -304,6 +365,11 @@ def _run_model_calls(
                 response_model=StudyExtraction,
                 max_output_tokens=config.max_output_tokens,
                 reasoning_effort=config.reasoning_effort,
+                request_schema=compact_study_schema(
+                    block.block_id
+                    for block in [*window.primary_blocks, *window.context_blocks]
+                ),
+                decode=expand_compact_study,
             )
         except ModelCallError as exc:
             errors.append(f"{window.window_id}: {exc}")
@@ -338,6 +404,10 @@ def _run_model_calls(
                 response_model=IdentityLinkProposal,
                 max_output_tokens=config.max_output_tokens,
                 reasoning_effort=config.reasoning_effort,
+                request_schema=constrain_evidence_block_ids(
+                    IdentityLinkProposal.model_json_schema(),
+                    (block.block_id for block in blocks),
+                ),
             )
         except ModelCallError as exc:
             errors.append(f"cross_window_identity_links: {exc}")
@@ -361,6 +431,40 @@ def _run_model_calls(
     return extraction, errors
 
 
+def _plan_extraction(
+    config: ExtractionConfig,
+    blocks: list[EvidenceBlock],
+) -> tuple[str, int, EvidenceWindowPlan | None]:
+    """Choose one global call when routed evidence fits, otherwise plan windows."""
+
+    request_schema = compact_study_schema(block.block_id for block in blocks)
+    approximate_tokens = _approximate_tokens(_direct_prompt(blocks), request_schema)
+    mode = (
+        config.mode
+        if config.mode != "auto"
+        else (
+            "single"
+            if approximate_tokens <= config.single_call_max_input_tokens
+            else "windowed"
+        )
+    )
+    if mode != "windowed":
+        return mode, approximate_tokens, None
+    schema_tokens = len(json.dumps(request_schema, ensure_ascii=False)) // 4
+    evidence_budget = max(
+        8_000, (config.window_input_tokens - schema_tokens - 4_000) * 4
+    )
+    return (
+        mode,
+        approximate_tokens,
+        plan_evidence_windows(
+            blocks,
+            max_characters=evidence_budget,
+            max_context_characters=min(24_000, evidence_budget // 3),
+        ),
+    )
+
+
 def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     """Write a complete, inspectable extraction run and return its report.
 
@@ -381,6 +485,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             config.single_call_max_input_tokens,
             config.window_input_tokens,
             config.max_output_tokens,
+            config.inventory_max_output_tokens,
         )
         <= 0
     ):
@@ -400,19 +505,8 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         config.output_dir / "document.json",
         {"blocks": [block.model_dump(mode="json") for block in blocks]},
     )
-    response_model = StudyExtraction
-    schema = response_model.model_json_schema()
-    prompt = _direct_prompt(blocks)
-    approximate_tokens = _approximate_tokens(prompt, schema)
-    mode = (
-        config.mode
-        if config.mode != "auto"
-        else (
-            "single"
-            if approximate_tokens <= config.single_call_max_input_tokens
-            else "windowed"
-        )
-    )
+    schema = StudyExtraction.model_json_schema()
+    mode, approximate_tokens, window_plan = _plan_extraction(config, blocks)
     run_configuration = _run_configuration(config, mode, source_events)
     write_json_atomic(config.output_dir / "run_configuration.json", run_configuration)
     write_json_atomic(config.output_dir / "extraction.schema.json", schema)
@@ -423,34 +517,25 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         mode,
     )
 
-    window_plan: EvidenceWindowPlan | None = None
-    if mode == "windowed":
-        schema_tokens = len(json.dumps(schema, ensure_ascii=False)) // 4
-        evidence_budget = max(
-            8_000, (config.window_input_tokens - schema_tokens - 4_000) * 4
-        )
-        window_plan = plan_evidence_windows(
-            blocks,
-            max_characters=evidence_budget,
-            max_context_characters=min(24_000, evidence_budget // 3),
-        )
-        write_json_atomic(
-            config.output_dir / "window_plan.json",
-            window_plan.model_dump(mode="json"),
-        )
-
     if config.dry_run:
+        if window_plan is not None:
+            write_json_atomic(
+                config.output_dir / "window_plan.json",
+                window_plan.model_dump(mode="json"),
+            )
         report = {
             "status": "dry_run",
             "mode": mode,
             "evidence_blocks": len(blocks),
+            "selected_evidence_blocks": len(blocks),
             "approximate_request_tokens": approximate_tokens,
             "planned_calls": (
-                1
+                1 + int(config.use_inventory)
                 if mode == "single"
                 else (
                     len(window_plan.windows if window_plan else [])
                     + int(len(window_plan.windows if window_plan else []) > 1)
+                    + int(config.use_inventory)
                 )
             ),
             "source_parsing": source_events,
@@ -466,7 +551,74 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         timeout_seconds=config.timeout_seconds,
         temperature=config.temperature,
     )
-    extraction, errors = _run_model_calls(config, client, blocks, mode, window_plan)
+    errors: list[str] = []
+    inventory: EvidenceInventory | None = None
+    selected_blocks = blocks
+    if config.use_inventory:
+        logger.info("Inventorying study records and routing evidence")
+        try:
+            inventory = client.complete(
+                kind="evidence_inventory",
+                slug="evidence_inventory",
+                model=config.inventory_model or config.model,
+                system=SYSTEM_PROMPT,
+                prompt=_inventory_prompt(blocks),
+                response_model=EvidenceInventory,
+                max_output_tokens=config.inventory_max_output_tokens,
+                reasoning_effort=config.reasoning_effort,
+                request_schema=constrain_evidence_block_ids(
+                    EvidenceInventory.model_json_schema(),
+                    (block.block_id for block in blocks),
+                ),
+            )
+        except ModelCallError as exc:
+            errors.append(f"evidence_inventory: {exc}")
+            write_json_atomic(
+                config.output_dir / "evidence_routing.json",
+                {
+                    "status": "failed_open",
+                    "error": str(exc),
+                    "input_block_count": len(blocks),
+                    "selected_block_count": len(blocks),
+                },
+            )
+        else:
+            write_json_atomic(
+                config.output_dir / "evidence_inventory.json",
+                inventory.model_dump(mode="json"),
+            )
+            selected_blocks, routing = routed_blocks(blocks, inventory)
+            write_json_atomic(
+                config.output_dir / "evidence_routing.json",
+                {"status": "complete", **routing},
+            )
+
+    mode, approximate_tokens, window_plan = _plan_extraction(config, selected_blocks)
+    write_json_atomic(
+        config.output_dir / "run_configuration.json",
+        _run_configuration(config, mode, source_events),
+    )
+    if window_plan is not None:
+        write_json_atomic(
+            config.output_dir / "window_plan.json",
+            window_plan.model_dump(mode="json"),
+        )
+    else:
+        (config.output_dir / "window_plan.json").unlink(missing_ok=True)
+    logger.info(
+        "Selected {} of {} evidence blocks (~{} request tokens); mode={}",
+        len(selected_blocks),
+        len(blocks),
+        approximate_tokens,
+        mode,
+    )
+    extraction, extraction_errors = _run_model_calls(
+        config, client, selected_blocks, mode, window_plan
+    )
+    errors.extend(extraction_errors)
+
+    extraction, citation_repairs = repair_unique_citation_pointers(extraction, blocks)
+    write_json_atomic(config.output_dir / "citation_repairs.json", citation_repairs)
 
     write_json_atomic(
         config.output_dir / "extraction.json", extraction.model_dump(mode="json")
@@ -475,6 +627,10 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     grounded_values = validation.pop("verified_values")
     write_json_atomic(config.output_dir / "grounded_values.json", grounded_values)
     write_json_atomic(config.output_dir / "validation.json", validation)
+    coverage_audit: dict[str, object] | None = None
+    if inventory is not None:
+        coverage_audit = audit_inventory_coverage(inventory, extraction)
+        write_json_atomic(config.output_dir / "coverage_audit.json", coverage_audit)
     conversion_error: str | None = None
     try:
         reduced = to_reduced_with_report(extraction)
@@ -494,15 +650,19 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         )
 
     counts = validation["counts"]
+    extraction_calls = [
+        call for call in client.calls if call.get("kind") != "evidence_inventory"
+    ]
     status = (
         "failed"
-        if not client.calls or all(call.get("error") for call in client.calls)
+        if not extraction_calls or all(call.get("error") for call in extraction_calls)
         else (
             "partial"
             if errors or conversion_error
             else (
                 "complete"
                 if validation["status"] == "verified"
+                and (coverage_audit is None or coverage_audit["status"] == "complete")
                 else "complete_needs_review"
             )
         )
@@ -511,9 +671,12 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         "status": status,
         "mode": mode,
         "evidence_blocks": len(blocks),
+        "selected_evidence_blocks": len(selected_blocks),
         "approximate_request_tokens": approximate_tokens,
         **counts,
         "validation_issue_count": len(validation["issues"]),
+        "citation_repair_count": citation_repairs["repair_count"],
+        "coverage": coverage_audit["counts"] if coverage_audit else None,
         "conversion_error": conversion_error,
         "errors": errors,
         "calls": client.calls,
