@@ -26,6 +26,17 @@ def test_ui_covers_every_rich_record_collection():
         assert collection in javascript
 
 
+def test_ui_shows_reported_composition_beside_enrichment_proposals():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    javascript = (APP / "app.js").read_text(encoding="utf-8")
+
+    assert 'name="enrichment"' in html
+    assert "Source-reported composition" in javascript
+    assert "Proposed site interpretation" in javascript
+    assert "composition_results" in javascript
+    assert "result.status" in javascript
+
+
 def test_ui_does_not_reintroduce_flat_cell_editor():
     source = (APP / "app.js").read_text(encoding="utf-8")
     assert "cellCorrection" not in source

@@ -26,6 +26,7 @@ sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from perla_extract.study_extraction.artifacts import write_json_atomic  # noqa: E402
+from perla_extract.study_extraction.enrichment import EnrichmentAudit  # noqa: E402
 from review_workbench.ground_truth_export import (  # noqa: E402
     build_ground_truth_export,
     ground_truth_zip,
@@ -143,6 +144,7 @@ class ReviewApplication:
         configuration_bytes: bytes = b"",
         coverage_bytes: bytes = b"",
         refinement_bytes: bytes = b"",
+        enrichment_bytes: bytes = b"",
         reviewer_id: str,
     ) -> dict[str, Any]:
         """Validate an uploaded artifact set before creating a review workspace.
@@ -167,6 +169,14 @@ class ReviewApplication:
         refinement = self._decode_json(
             refinement_bytes, "refinement_audit.json", required=False
         )
+        enrichment_payload = self._decode_json(
+            enrichment_bytes, "enrichment.json", required=False
+        )
+        enrichment = (
+            EnrichmentAudit.model_validate(enrichment_payload).model_dump(mode="json")
+            if enrichment_payload is not None
+            else None
+        )
         bundle = self.store.import_seed(
             split,
             paper_id,
@@ -177,6 +187,7 @@ class ReviewApplication:
                 "quality_artifacts": {
                     "coverage_audit": coverage,
                     "refinement_audit": refinement,
+                    "enrichment": enrichment,
                 },
                 "main_pdf_sha256": hashlib.sha256(pdf_bytes).hexdigest(),
                 "supplement_pdf_sha256": (
@@ -567,6 +578,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         configuration_bytes=binary("run_configuration"),
                         coverage_bytes=binary("coverage_audit"),
                         refinement_bytes=binary("refinement_audit"),
+                        enrichment_bytes=binary("enrichment"),
                         reviewer_id=user["id"],
                     )
                     self.send_json(bundle, HTTPStatus.CREATED)

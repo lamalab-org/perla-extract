@@ -60,9 +60,12 @@ def prepare(output: Path) -> Path:
         "src/perla_extract/study_extraction/__init__.py",
         "src/perla_extract/study_extraction/artifacts.py",
         "src/perla_extract/study_extraction/evidence.py",
+        "src/perla_extract/study_extraction/enrichment.py",
         "src/perla_extract/study_extraction/identifiers.py",
         "src/perla_extract/study_extraction/models.py",
+        "src/perla_extract/study_extraction/units.py",
         "src/perla_extract/study_extraction/validation.py",
+        "src/perla_extract/study_extraction/vocabulary.py",
     ):
         copy_file(relative, output)
 

@@ -52,6 +52,15 @@ th,td { padding:.55rem; border-bottom:1px solid var(--line); text-align:left; } 
 .record-card.needs_correction { border-color:#d9a09c; background:#fff7f6; }
 .record-card h4 { margin-bottom:.3rem; }.record-card p { margin:0; color:var(--muted); font-size:.78rem; overflow-wrap:anywhere; }
 .record-actions { align-self:center; }.record-actions select { max-width:150px; }
+.composition-comparison { grid-column:1 / -1; display:grid; grid-template-columns:1fr 1fr; gap:10px; padding-top:10px; border-top:1px solid var(--line); }
+.composition-comparison > div { min-width:0; padding:9px; border-radius:8px; background:var(--wash); }
+.composition-comparison strong { display:block; font-size:.83rem; overflow-wrap:anywhere; }
+.composition-comparison p { margin-top:.4rem; }
+.proposal-status { display:inline-block; border-radius:99px; padding:.2rem .5rem; font-size:.7rem; font-weight:700; text-transform:uppercase; }
+.proposal-status.accepted { background:var(--brand-soft); color:var(--brand); }
+.proposal-status.needs_review { background:#fff1cc; color:#7a5910; }
+.proposal-status.rejected { background:#f8dddd; color:var(--danger); }
+.composition-comparison .proposal-issues { color:var(--danger); }
 .quality-gates { display:grid; gap:8px; margin-bottom:16px; }.quality-gates label,.check-row label { display:flex; align-items:center; gap:.5rem; color:var(--ink); }
 .event { border-left:2px solid var(--line); padding:2px 0 10px 12px; }.event div { display:flex; justify-content:space-between; }.event span,.event p { color:var(--muted); font-size:.75rem; }.event p { margin:.3rem 0 0; }
 #status,.success { color:var(--brand); }.error,#dialog-status,#import-status { color:var(--danger); }
@@ -66,3 +75,4 @@ dialog::backdrop { background:#16201dbb; }
 .muted { color:var(--muted); font-size:.82rem; }
 button:disabled,select:disabled { cursor:not-allowed; opacity:.55; }
 @media (max-width:1050px) { main { grid-template-columns:220px 1fr; }.workspace-grid { grid-template-columns:1fr; height:auto; }.pdf-panel { max-height:70vh; } }
+@media (max-width:650px) { .composition-comparison { grid-template-columns:1fr; } }

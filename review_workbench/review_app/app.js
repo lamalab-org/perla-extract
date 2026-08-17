@@ -61,6 +61,46 @@ function entityDetail(kind, item) {
   return metrics(item) || item.statistic_type || item.measurement_type || item.link_status || "";
 }
 
+function compositionProposal(item) {
+  const identifier = state.bundle.summary.record_identifiers.device_families;
+  const results = state.bundle.manifest.quality_artifacts?.enrichment?.composition_results || [];
+  return results.find((result) => result.proposal?.[identifier] === item[identifier]) || null;
+}
+
+function sourceComposition(item) {
+  const formula = item.absorber_formula?.raw_value || "Formula not reported";
+  const constituents = (item.absorber_constituents || []).map((constituent) => {
+    const amount = constituent.amount?.raw_value;
+    return amount ? `${constituent.name} (${amount})` : constituent.name;
+  });
+  return [element("strong", { text: formula }), ...(constituents.length ? [element("p", { text: `Reported constituents: ${constituents.join(" · ")}` })] : [])];
+}
+
+function interpretedComposition(result) {
+  if (!result) return [element("p", { className: "muted", text: "No A/B/X-site proposal was supplied." })];
+  const bySite = (result.proposal.ions || []).reduce((groups, ion) => {
+    (groups[ion.site] ||= []).push(ion);
+    return groups;
+  }, {});
+  const sites = ["A", "B", "X"].map((site) => {
+    const ions = (bySite[site] || []).map((ion) => `${ion.abbreviation}${ion.coefficient === "1" ? "" : ion.coefficient}`);
+    return `${site}: ${ions.length ? ions.join(" + ") : "—"}`;
+  });
+  return [
+    element("span", { className: `proposal-status ${result.status}`, text: result.status.replaceAll("_", " ") }),
+    element("p", { text: sites.join(" · ") }),
+    ...((result.issues || []).length ? [element("p", { className: "proposal-issues", text: result.issues.join(" · ") })] : []),
+  ];
+}
+
+function compositionComparison(item) {
+  const result = compositionProposal(item);
+  return element("section", { className: "composition-comparison" }, [
+    element("div", {}, [element("span", { className: "eyebrow", text: "Source-reported composition" }), ...sourceComposition(item)]),
+    element("div", {}, [element("span", { className: "eyebrow", text: "Proposed site interpretation" }), ...interpretedComposition(result)]),
+  ]);
+}
+
 async function loadSession() {
   const payload = await request("/api/session");
   state.user = payload.user;
@@ -216,7 +256,8 @@ function recordCard(kind, item, index, compact) {
     element("button", { text: "Duplicate", events: { click: () => openRecord(kind, null, item) } }),
     element("button", { text: "Review", events: { click: () => openRecord(kind, index) } }),
   ]);
-  return element("article", { className: `record-card ${decision}` }, [summary, actions]);
+  const guidance = kind === "device_families" ? compositionComparison(item) : null;
+  return element("article", { className: `record-card ${decision}` }, [summary, actions, guidance]);
 }
 
 function renderRecordGroups(target, compact) {
