@@ -64,10 +64,15 @@ The model prefix selects a LiteLLM backend. For example, `openrouter/...` uses
 OpenRouter routing without provider-specific client logic. All requests set seed `0`;
 reproducibility still depends on the selected provider and model version.
 
-Refinement is enabled in the quality-first default. It approximately doubles detailed
-extraction calls while leaving inventory and enrichment unchanged. For cost
-experiments, compare `--no-refinement` and cheaper `--refinement-model` settings
+Refinement is enabled in the quality-first default. It adds one detailed model call
+while leaving inventory and enrichment unchanged. The draft uses a shared citation
+catalog in this request, so repeated source quotations do not dominate its input. For
+cost experiments, compare `--no-refinement` and cheaper `--refinement-model` settings
 against frozen ground truth rather than treating lower spend as equivalent quality.
+
+The command reports prompt tokens, completion tokens, cache hits, and provider-reported
+cost for each call. A cache hit has zero new usage in the aggregate `usage` object;
+the original call metadata remains under `calls[].cached_response_usage` for provenance.
 
 ## Cache and logging
 

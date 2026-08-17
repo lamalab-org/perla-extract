@@ -59,6 +59,7 @@ result; they do not erase model output.
 - [Understand the study model](concepts/study-model.md)
 - [Understand evidence validation](concepts/evidence.md)
 - [Review and curate ground truth](workflows/ground-truth-review.md)
+- [Create quality-first review seeds, then reduce cost](workflows/quality-first-ground-truth.md)
 - [Interpret composition and processing](workflows/enrichment.md)
 - [Export directly to NOMAD](workflows/nomad-export.md)
 - [Export to the historical reduced PERLA schema](compatibility/reduced-schema.md)

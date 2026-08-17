@@ -5,6 +5,11 @@ Ground truth is a reviewed scientific dataset, not an edited model response. The
 extraction is useful pre-annotation; the review protocol supplies an independent recall
 check, source requirements, and adjudication.
 
+Use the [quality-first seed workflow](quality-first-ground-truth.md) to generate the
+pre-annotation and preserve its cost and model provenance. A seed may be exceptionally
+detailed and fully source-verified while still being scientifically wrong. It becomes
+ground truth only after review and final adjudication.
+
 ## Evidence boundary
 
 The `full_study` scope includes claims explicitly reported in the supplied main paper
@@ -115,6 +120,10 @@ python -m pytest -q review_workbench/tests
 - **Development** supports prompt and workflow iteration.
 - **Test** remains locked until the extraction design is fixed. Use independent review
   and adjudication for final test papers.
+
+A paper inspected while designing prompts, schemas, routing, validation, or model
+selection is no longer held out. Move it to calibration or development; do not retain a
+`test` label merely because an earlier directory used that name.
 
 Sample across publishers, SI length, table density, parser difficulty, device count,
 architecture, stability reporting, and chemical complexity. Exclude reviews, news,
