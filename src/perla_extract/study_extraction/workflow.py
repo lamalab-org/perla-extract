@@ -113,7 +113,7 @@ class ExtractionConfig:
     supplement: Path | None
     output_dir: Path
     model: str = "openrouter/openai/gpt-5.6-sol:exacto"
-    reasoning_effort: str | None = "medium"
+    reasoning_effort: str | None = None
     parser: str = "docling"
     mode: str = "auto"
     single_call_max_input_tokens: int = 90_000

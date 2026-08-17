@@ -46,7 +46,7 @@ def extract_study(
     supplement: str | Path | None = None,
     output_dir: str | Path = "study_extraction",
     model: str = "openrouter/openai/gpt-5.6-sol:exacto",
-    reasoning_effort: str = "medium",
+    reasoning_effort: str = "omit",
     parser: str = "docling",
     mode: str = "auto",
     single_call_max_input_tokens: int = 90_000,
@@ -109,7 +109,7 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     help="LiteLLM provider-prefixed model name.",
 )
 @click.option(
-    "--reasoning-effort", type=click.Choice(REASONING_LEVELS), default="medium"
+    "--reasoning-effort", type=click.Choice(REASONING_LEVELS), default="omit"
 )
 @click.option("--parser", type=click.Choice(available_parsers()), default="docling")
 @click.option(

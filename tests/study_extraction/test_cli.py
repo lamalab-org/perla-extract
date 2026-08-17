@@ -119,6 +119,8 @@ def test_public_entry_points_share_scientific_defaults() -> None:
     }
 
     def comparable(name, value):
+        if name == "reasoning_effort" and value == "omit":
+            return None
         return Path(value).parts if name.endswith("_dir") else value
 
     assert {key: comparable(key, value) for key, value in python_defaults.items()} == {
@@ -128,3 +130,4 @@ def test_public_entry_points_share_scientific_defaults() -> None:
         key: comparable(key, value) for key, value in config_defaults.items()
     }
     assert config_defaults["parser"] == "docling"
+    assert config_defaults["reasoning_effort"] is None
