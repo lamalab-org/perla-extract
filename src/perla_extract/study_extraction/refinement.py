@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from .artifacts import write_json_atomic
 from .client import ModelCallError, ModelClient
 from .models import EvidenceBlock, StudyExtraction
-from .transport import compact_study_schema, expand_compact_study
+from .transport import compact_study, compact_study_schema, expand_compact_study
 
 REFINEMENT_PROMPT = """Audit the supplied draft against all supplied evidence and
 return a complete corrected StudyExtraction.
@@ -28,8 +29,8 @@ def _prompt(evidence_prompt: str, draft: StudyExtraction) -> str:
 
     return (
         REFINEMENT_PROMPT
-        + "\n\nDRAFT EXTRACTION:\n"
-        + draft.model_dump_json()
+        + "\n\nDRAFT EXTRACTION WITH SHARED EVIDENCE CATALOG:\n"
+        + json.dumps(compact_study(draft), ensure_ascii=False)
         + "\n\nEVIDENCE AND INVENTORY:\n"
         + evidence_prompt
     )

@@ -78,6 +78,10 @@ Rules:
   device a champion. Otherwise use not_reported.
 - Keep reverse scans, forward scans, stabilized output, certified measurements, and
   EQE-integrated currents as distinct observations of the same device where supported.
+- A performance observation requires at least one reported result. A statement that a
+  measurement or spectrum exists, without any reported outcome, is context rather than
+  a performance observation. Non-numeric outcomes are valid when the source actually
+  reports them; do not use a method name or specimen description as a metric value.
 - Extract the complete ordered layer stack, the explicitly reported absorber formula,
   absorber constituents, additives or dopants, and all reported processing steps.
   Use one MaterialConstituent per named chemical; do not combine a list of chemicals

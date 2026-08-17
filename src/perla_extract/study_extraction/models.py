@@ -178,7 +178,9 @@ class PerformanceObservation(StrictModel):
     """Keep one protocol-specific measurement linked to one individual device.
 
     Reverse and forward scans, stabilized output, certification, and EQE-derived
-    current remain separate observations even when they concern the same cell.
+    current remain separate observations even when they concern the same cell. The
+    record represents a reported outcome, not merely a statement that an experiment
+    was performed.
     """
 
     observation_id: Identifier

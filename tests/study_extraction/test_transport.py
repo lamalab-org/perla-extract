@@ -7,6 +7,7 @@ from perla_extract.study_extraction.models import (
     StudyExtraction,
 )
 from perla_extract.study_extraction.transport import (
+    compact_study,
     compact_study_schema,
     expand_compact_study,
 )
@@ -67,6 +68,15 @@ def test_compact_response_expands_to_the_public_schema():
     expanded = StudyExtraction.model_validate(expand_compact_study(compact))
 
     assert expanded == study()
+
+
+def test_existing_study_compacts_and_round_trips_shared_citations():
+    original = study()
+    compact = compact_study(original)
+
+    assert compact["device_families"][0]["evidence"] == ["citation-1"]
+    assert len(compact["evidence_catalog"]) == 1
+    assert StudyExtraction.model_validate(expand_compact_study(compact)) == original
 
 
 def test_compact_response_rejects_an_unknown_citation_reference():

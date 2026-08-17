@@ -151,7 +151,11 @@ def repair_noncontiguous_citation_quotes(
             new_quotes = source_quotes
             rule = "split_two_exact_source_spans"
         else:
-            return [reference]
+            # Some parent records already use the smallest evidence-list limit. In
+            # that case, retain the longer exact source span instead of leaving one
+            # invalid stitched quotation or exceeding the public schema's limit.
+            new_quotes = [max(source_quotes, key=len)]
+            rule = "retain_longest_exact_source_span"
         repairs.append(
             {
                 "path": path,

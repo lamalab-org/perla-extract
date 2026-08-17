@@ -341,6 +341,58 @@ def test_long_block_repairs_stitched_quote_as_two_exact_citations():
     assert audit["repair_count"] == 1
 
 
+def test_full_evidence_list_repairs_stitched_quote_without_growing():
+    first = "The complete device stack contains a supported absorber layer and contact."
+    second = "The same experiment reports a supported efficiency under illumination."
+    source = f"{first} {'intervening ' * 150} {second}"
+    citations = [EvidenceCitation(block_id="a", quote=f"{first} {second}")]
+    citations.extend(
+        EvidenceCitation(block_id="b", quote="independent source evidence")
+        for _ in range(7)
+    )
+    family = DeviceFamily(
+        family_id="f",
+        label="device",
+        variant=None,
+        architecture=None,
+        polarity="not_reported",
+        full_stack_raw=None,
+        layers=[],
+        absorber_formula=None,
+        absorber_properties=[],
+        absorber_constituents=[],
+        processing_steps=[],
+        evidence=citations,
+    )
+    extraction = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[family],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+    blocks = [
+        EvidenceBlock(block_id="a", source="main", page=1, kind="text", text=source),
+        EvidenceBlock(
+            block_id="b",
+            source="main",
+            page=2,
+            kind="text",
+            text="independent source evidence",
+        ),
+    ]
+
+    repaired, audit = repair_noncontiguous_citation_quotes(extraction, blocks)
+
+    quotes = [item.quote for item in repaired.device_families[0].evidence]
+    assert len(quotes) == 8
+    assert quotes[0] == max((first, second), key=len)
+    assert validate_study(repaired, blocks)["status"] == "verified"
+    assert audit["repairs"][0]["rule"] == "retain_longest_exact_source_span"
+
+
 def test_validation_reports_duplicate_ids_for_every_entity_collection():
     """Semantic validation must not hide ambiguous identifiers in sets."""
 

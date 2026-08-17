@@ -106,6 +106,50 @@ def expand_compact_study(payload: object) -> dict[str, object]:
     return data
 
 
+def compact_study(study: StudyExtraction) -> dict[str, object]:
+    """Deduplicate an existing study's citations for another model request.
+
+    This is the mechanical inverse of ``expand_compact_study``. Refinement needs the
+    whole draft, but repeating a long table row beside every atomic value can dominate
+    its input. Stable encounter-order IDs retain all evidence while making that input
+    reproducible and substantially smaller.
+    """
+
+    data = study.model_dump(mode="json")
+    citation_ids: dict[tuple[str, str], str] = {}
+    catalog: list[dict[str, str]] = []
+
+    def compact(value: object) -> None:
+        if isinstance(value, dict):
+            for key, item in value.items():
+                if key == "evidence" and isinstance(item, list):
+                    references: list[str] = []
+                    for reference in item:
+                        identity = (str(reference["block_id"]), str(reference["quote"]))
+                        citation_id = citation_ids.get(identity)
+                        if citation_id is None:
+                            citation_id = f"citation-{len(catalog) + 1}"
+                            citation_ids[identity] = citation_id
+                            catalog.append(
+                                {
+                                    "citation_id": citation_id,
+                                    "block_id": identity[0],
+                                    "quote": identity[1],
+                                }
+                            )
+                        references.append(citation_id)
+                    value[key] = references
+                else:
+                    compact(item)
+        elif isinstance(value, list):
+            for item in value:
+                compact(item)
+
+    compact(data)
+    data["evidence_catalog"] = catalog
+    return data
+
+
 def constrain_evidence_block_ids(
     schema: dict[str, object], block_ids: Iterable[str]
 ) -> dict[str, object]:
