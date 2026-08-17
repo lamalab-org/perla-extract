@@ -3,6 +3,7 @@ from perla_extract.study_extraction.inventory import (
     EvidenceInventory,
     InventoryItem,
     audit_inventory_coverage,
+    grounded_inventory_items,
     routed_blocks,
 )
 from perla_extract.study_extraction.models import (
@@ -110,3 +111,42 @@ def test_independent_inventory_reports_exact_and_unmatched_candidates():
 
     assert audit["counts"] == {"covered": 1, "possible_match": 0, "unmatched": 1}
     assert audit["status"] == "needs_review"
+
+
+def test_only_source_grounded_inventory_candidates_can_guide_extraction():
+    blocks = [
+        EvidenceBlock(
+            block_id="result",
+            source="main",
+            page=1,
+            kind="text",
+            text="The control device reached 20.1% efficiency.",
+        )
+    ]
+    inventory = EvidenceInventory(
+        items=[
+            InventoryItem(
+                item_id="valid",
+                kind="device_family",
+                label="control",
+                evidence=[
+                    EvidenceCitation(block_id="result", quote="control device")
+                ],
+            ),
+            InventoryItem(
+                item_id="invented",
+                kind="device_family",
+                label="invented variant",
+                evidence=[
+                    EvidenceCitation(block_id="result", quote="invented variant")
+                ],
+            ),
+        ],
+        exclusions=[],
+    )
+
+    items, audit = grounded_inventory_items(blocks, inventory)
+
+    assert [item.item_id for item in items] == ["valid"]
+    assert audit["grounded_item_count"] == 1
+    assert audit["rejected_item_count"] == 1

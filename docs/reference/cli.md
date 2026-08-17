@@ -38,6 +38,8 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | `--enrichment / --no-enrichment` | enrichment | Run the audited composition and processing interpretation stage |
 | `--enrichment-model TEXT` | extraction model | Model used for the two compact enrichment calls |
 | `--enrichment-max-output-tokens INTEGER` | `20000` | Completion limit for each enrichment call |
+| `--refinement / --no-refinement` | refinement | Re-read the same evidence to correct the extraction draft |
+| `--refinement-model TEXT` | extraction model | Optional different model for the quality pass |
 
 Docling is the reproducible quality-first default. PyMuPDF is an explicit lightweight
 alternative; parser failures never silently change backends. Complete parser results
@@ -61,6 +63,11 @@ The model prefix selects a LiteLLM backend. For example, `openrouter/...` uses
 `ANTHROPIC_API_KEY`. The default's explicit `:exacto` suffix preserves quality-first
 OpenRouter routing without provider-specific client logic. All requests set seed `0`;
 reproducibility still depends on the selected provider and model version.
+
+Refinement is enabled in the quality-first default. It approximately doubles detailed
+extraction calls while leaving inventory and enrichment unchanged. For cost
+experiments, compare `--no-refinement` and cheaper `--refinement-model` settings
+against frozen ground truth rather than treating lower spend as equivalent quality.
 
 ## Cache and logging
 

@@ -23,8 +23,13 @@ Open <http://127.0.0.1:8765>. The local server uses a local administrator identi
 `8765`.
 
 The application imports `extraction.json`, `document.json`, the main PDF, an optional
-SI, and optional run configuration. It stores immutable seeds, compiled truth, event
-history, evidence blocks, and manifests under the ground-truth directory.
+SI, and optional run configuration. Import `coverage_audit.json` and
+`refinement_audit.json` as well when they are available. They remain provenance aids:
+after the blind census is submitted, the interface highlights unmatched inventory
+candidates and the record groups changed by refinement so reviewers can focus their
+attention without treating either model artifact as truth. The app stores immutable
+seeds, compiled truth, event history, evidence blocks, and manifests under the
+ground-truth directory.
 
 Review state is committed under `state/`. One immutable source bundle contains the
 seed, evidence document, manifest, and initial revision. Each accepted change writes

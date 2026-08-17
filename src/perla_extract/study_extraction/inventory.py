@@ -55,6 +55,47 @@ class EvidenceInventory(StrictModel):
     exclusions: list[EvidenceExclusion]
 
 
+def grounded_inventory_items(
+    blocks: list[EvidenceBlock], inventory: EvidenceInventory
+) -> tuple[list[InventoryItem], dict[str, object]]:
+    """Retain only inventory candidates whose quotations resolve in the document.
+
+    The inventory is model output, so it must not become trusted context merely
+    because it passed structural validation.  A candidate may guide detailed
+    extraction only after at least one of its citations is found verbatim in the
+    claimed source block.  Invalid citations remain visible in the returned audit.
+    """
+
+    block_by_id = {block.block_id: block for block in blocks}
+    grounded: list[InventoryItem] = []
+    rejected: list[dict[str, object]] = []
+    for item in inventory.items:
+        citations = [
+            citation
+            for citation in item.evidence
+            if (block := block_by_id.get(citation.block_id)) is not None
+            and source_contains_text(block.text, citation.quote)
+        ]
+        if citations:
+            grounded.append(item.model_copy(update={"evidence": citations}))
+        else:
+            rejected.append(
+                {
+                    "item_id": item.item_id,
+                    "reason": "no citation resolves in the claimed evidence block",
+                    "citations": [
+                        citation.model_dump(mode="json") for citation in item.evidence
+                    ],
+                }
+            )
+    return grounded, {
+        "input_item_count": len(inventory.items),
+        "grounded_item_count": len(grounded),
+        "rejected_item_count": len(rejected),
+        "rejected_items": rejected,
+    }
+
+
 def routed_blocks(
     blocks: list[EvidenceBlock], inventory: EvidenceInventory
 ) -> tuple[list[EvidenceBlock], dict[str, object]]:

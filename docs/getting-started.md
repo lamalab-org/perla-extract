@@ -61,6 +61,7 @@ suffix preserves the previous quality-first routing for the default OpenRouter m
 | `grounded_values.json` | Conservative subset of reported values that passed local source checks |
 | `validation.json` | Evidence, identifier, and relationship findings |
 | `evidence_inventory.json` | Independent, value-free record inventory used for routing and recall review |
+| `inventory_grounding.json` | Inventory candidates admitted to or rejected from extraction guidance |
 | `evidence_routing.json` | Auditable block-selection decisions; the complete parse remains preserved |
 | `coverage_audit.json` | Covered, possible, and unmatched inventory candidates |
 | `citation_repairs.json` | Unique-quotation pointer repairs and unresolved citations |
@@ -70,9 +71,14 @@ suffix preserves the previous quality-first routing for the default OpenRouter m
 | `nomad/*.archive.json` | One standalone NOMAD archive per atomic extracted record |
 | `nomad/manifest.json` | NOMAD target pin, record mappings, and conversion issues |
 | `composition_projection.json` | Formula/site-ion normalization review queue |
+| `draft_extraction.json` | First complete-study result retained before the default quality pass |
+| `refinement_audit.json` | Record IDs added, removed, or changed by the complete-study quality pass |
+| `quality_comparison.json` | Draft-versus-final evidence issue and inventory coverage counts |
 | `reduced.json` | Optional historical export when `--reduced-export` is passed |
 
-Windowed runs additionally write `window_plan.json`, successful per-window results,
+Windowed runs additionally write `window_plan.json`, first-pass results under
+`draft_windows/`, their lossless `draft_candidates.json` union, change indexes under
+`refinement_audits/`, refined per-window results,
 `candidates.json`, and—when cross-window linking is attempted—`identity_links.json`.
 Requests and preserved failure responses are stored under `requests/`.
 

@@ -14,12 +14,13 @@ flowchart LR
     A["Paper + Supporting Information"] --> B["Parser-independent evidence blocks"]
     B --> C0["Independent record inventory and conservative routing"]
     C0 --> C{"Routed evidence fits one model context?"}
-    C -->|Yes| D["Complete-study extraction"]
+    C -->|Yes| D["Complete-study draft"]
     C -->|No| E["Structure-aware evidence windows"]
     E --> F["Lossless candidate union"]
     F --> G["Explicit cross-window identity links"]
-    D --> H["Rich StudyExtraction"]
-    G --> H
+    D --> R["Evidence-complete refinement"]
+    G --> R
+    R --> H["Rich StudyExtraction"]
     H --> I["Citation repair, evidence checks, and coverage audit"]
     I --> L["Audited composition and processing enrichment"]
     L --> J["Atomic NOMAD archives"]
@@ -38,7 +39,10 @@ result; they do not erase model output.
   population statistics, and stability experiments are different record types.
 - **Prefer a complete-study view.** A shallow inventory removes only cited,
   high-confidence irrelevant blocks from the expensive request. The complete parse is
-  preserved, and remaining long inputs use structural windows.
+  preserved, grounded inventory candidates guide recall, and remaining long inputs
+  use structural windows.
+- **Re-read before review.** A second pass audits the complete draft against the same
+  evidence. The first draft and a record-level change index remain inspectable.
 - **Preserve candidates.** Cross-window linking adds identity links instead of
   guessing which candidate should replace another.
 - **Use generic reported values.** Layers and processing steps contain `ReportedValue`

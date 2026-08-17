@@ -22,7 +22,10 @@ def test_imports_extractor_bundle_and_both_documents(tmp_path, empty_study, docu
     bundle = app.import_paper(
         "calibration", "10.0000--example", pdf_bytes("Main paper"),
         json.dumps(empty_study).encode(), supplement_bytes=pdf_bytes("Supplement"),
-        document_bytes=json.dumps(document_payload).encode(), reviewer_id="ada",
+        document_bytes=json.dumps(document_payload).encode(),
+        coverage_bytes=json.dumps({"counts": {"unmatched": 2}}).encode(),
+        refinement_bytes=json.dumps({"collections": {}}).encode(),
+        reviewer_id="ada",
     )
     assert bundle["ground_truth"] == empty_study
     assert bundle["sources"] == ["main", "supplement"]
@@ -33,6 +36,7 @@ def test_imports_extractor_bundle_and_both_documents(tmp_path, empty_study, docu
         app.pdf_path("10.0000--example", "supplement").read_bytes()
     ).hexdigest()
     assert len(bundle["manifest"]["evidence_document_sha256"]) == 64
+    assert bundle["manifest"]["quality_artifacts"]["coverage_audit"]["counts"]["unmatched"] == 2
     assert app.get_paper("calibration", "10.0000--example")["sources"] == ["main", "supplement"]
     assert app.pdf_page_text("10.0000--example", "supplement", 1)["text"].startswith("Supplement")
 

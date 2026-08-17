@@ -66,6 +66,7 @@
             </div>
             <div id="inventory-revealed" hidden>
               <div id="inventory-comparison"></div>
+              <div id="quality-artifacts"></div>
               <div id="inventory-lists"></div>
               <button data-stage="inventory" class="complete-stage primary">Mark inventory reviewed</button>
             </div>
@@ -133,6 +134,8 @@
       <label>extraction.json<input name="extraction" type="file" accept="application/json" required /></label>
       <label>document.json <span>(required for guarded corrections)</span><input name="document" type="file" accept="application/json" /></label>
       <label>run_configuration.json<input name="run_configuration" type="file" accept="application/json" /></label>
+      <label>coverage_audit.json<input name="coverage_audit" type="file" accept="application/json" /></label>
+      <label>refinement_audit.json<input name="refinement_audit" type="file" accept="application/json" /></label>
       <div class="dialog-actions"><span></span><button type="button" id="cancel-import">Cancel</button><button class="primary">Import</button></div>
       <p id="import-status" role="status"></p>
     </form>

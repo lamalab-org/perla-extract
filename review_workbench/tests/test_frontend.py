@@ -10,6 +10,7 @@ def test_ui_enforces_inventory_before_candidates():
     assert "submit-audit" in html
     assert "hasAudit()" in javascript
     assert "Model candidates are now visible" in javascript
+    assert "renderQualityArtifacts()" in javascript
 
 
 def test_ui_covers_every_rich_record_collection():

@@ -58,6 +58,8 @@ def extract_study(
     use_enrichment: bool = True,
     enrichment_model: str | None = None,
     enrichment_max_output_tokens: int = 20_000,
+    use_refinement: bool = True,
+    refinement_model: str | None = None,
     parser: str = "docling",
     mode: str = "auto",
     single_call_max_input_tokens: int = 90_000,
@@ -95,6 +97,8 @@ def extract_study(
         use_enrichment=use_enrichment,
         enrichment_model=enrichment_model,
         enrichment_max_output_tokens=enrichment_max_output_tokens,
+        use_refinement=use_refinement,
+        refinement_model=refinement_model,
         parser=parser,
         mode=mode,
         single_call_max_input_tokens=single_call_max_input_tokens,
@@ -155,6 +159,17 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 )
 @click.option(
     "--enrichment-max-output-tokens", type=click.IntRange(min=1), default=20_000
+)
+@click.option(
+    "--refinement/--no-refinement",
+    "use_refinement",
+    default=True,
+    help="Re-read the evidence to correct omissions and unsupported draft records.",
+)
+@click.option(
+    "--refinement-model",
+    default=None,
+    help="LiteLLM model for the quality pass; defaults to --model.",
 )
 @click.option("--parser", type=click.Choice(available_parsers()), default="docling")
 @click.option(

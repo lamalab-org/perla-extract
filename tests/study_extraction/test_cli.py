@@ -97,6 +97,8 @@ def test_public_entry_points_share_scientific_defaults() -> None:
         "use_enrichment",
         "enrichment_model",
         "enrichment_max_output_tokens",
+        "use_refinement",
+        "refinement_model",
         "parser",
         "mode",
         "single_call_max_input_tokens",

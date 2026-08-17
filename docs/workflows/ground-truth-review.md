@@ -28,6 +28,8 @@ stateDiagram-v2
 1. **Blind inventory.** Search the paper and SI and record expected counts before the
    interface reveals model candidates. Count device families, individual devices,
    performance observations, population statistics, and stability tests.
+   After submission, use the imported coverage and refinement audits as attention
+   queues—not as evidence or automatic corrections.
 2. **Identity.** Separate variants, individual devices, protocols, aggregates, and
    stability specimens. Accept an identity link only with positive source evidence.
 3. **Scientific fields.** Review stack order, absorber composition and constituents,

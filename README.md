@@ -23,8 +23,9 @@ standard credential—for example, `openai/...` with `OPENAI_API_KEY` or
 `anthropic/...` with `ANTHROPIC_API_KEY`. The default uses OpenRouter with an explicit
 quality-first `:exacto` suffix, but the extraction workflow itself is provider-neutral.
 
-The extraction directory contains the complete rich result, an independent record
-inventory and coverage audit, local evidence checks, and a separate audited
+The extraction directory contains the refined rich result, its retained first draft,
+an independent source-grounded record inventory and coverage audit, local evidence
+checks, and a separate audited
 composition/processing enrichment. Accepted interpretations feed atomic archives for
 the pinned NOMAD schema without rewriting reported facts in `extraction.json`. Use
 `--dry-run` to parse the documents and estimate call size without calling a model.

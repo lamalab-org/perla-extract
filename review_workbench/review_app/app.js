@@ -123,6 +123,7 @@ function renderStudy() {
   renderInventoryForm();
   if (hasAudit()) {
     renderInventoryComparison();
+    renderQualityArtifacts();
     renderRecordGroups("inventory-lists", true);
     renderRecordGroups("record-groups", false);
   } else {
@@ -131,6 +132,31 @@ function renderStudy() {
   renderStageControls();
   renderQualityGates();
   renderHistory();
+}
+
+function renderQualityArtifacts() {
+  const artifacts = state.bundle.manifest.quality_artifacts || {};
+  const coverage = artifacts.coverage_audit;
+  const refinement = artifacts.refinement_audit;
+  const sections = [];
+  if (coverage?.counts) {
+    sections.push(element("p", {
+      className: "callout",
+      text: `Extractor recall audit: ${coverage.counts.covered || 0} covered · ${coverage.counts.possible_match || 0} possible · ${coverage.counts.unmatched || 0} unmatched inventory candidates.`,
+    }));
+  }
+  const changes = refinement?.collections || {};
+  const changed = Object.entries(changes).flatMap(([kind, value]) => {
+    const count = (value.added_ids || []).length + (value.removed_ids || []).length + (value.changed_ids || []).length;
+    return count ? [`${COLLECTIONS[kind] || kind}: ${count}`] : [];
+  });
+  if (changed.length) {
+    sections.push(element("p", {
+      className: "callout",
+      text: `Quality-pass changes to inspect: ${changed.join(" · ")}.`,
+    }));
+  }
+  $("quality-artifacts").replaceChildren(...sections);
 }
 
 function renderInventoryForm() {

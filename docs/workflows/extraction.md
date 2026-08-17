@@ -15,15 +15,17 @@ flowchart TD
     C0 --> C1["Exclude only cited, clearly irrelevant blocks"]
     C1 --> C["Estimate routed evidence + compact schema tokens"]
     C --> D{"Mode"}
-    D -->|single| E["One complete-study call with shared citations"]
+    D -->|single| E["Complete-study draft with grounded inventory"]
     D -->|windowed| F["Partition ordered source blocks"]
     F --> G["Extract every window"]
-    G --> H["Namespace and union all candidates"]
+    E --> E2["Re-read evidence and refine full draft"]
+    G --> G2["Re-read evidence and refine each window draft"]
+    G2 --> H["Namespace and union all candidates"]
     H --> I{"More than one successful window?"}
     I -->|Yes| J["Cross-window identity-linking call"]
     I -->|No| K["Rich extraction"]
     J --> K
-    E --> K
+    E2 --> K
     K --> L["Citation repair and local validation"]
     L --> O["Audited composition and processing enrichment"]
     C0 --> N["Independent coverage audit"]
@@ -56,10 +58,35 @@ uses Sol. `--inventory-model` can select any schema-capable LiteLLM model, and
 `--no-inventory` disables both routing and the independent coverage audit for a
 controlled ablation.
 
+Before candidates are shown to detailed extraction, PERLA independently verifies that
+at least one quoted passage occurs in the claimed block. Only those grounded candidates
+become recall guidance; rejected inventory claims remain visible in
+`inventory_grounding.json`. This prevents a hallucinated inventory item from becoming
+an apparent paper fact while still making a valid inventory useful before extraction.
+
 After extraction, inventory candidates are compared with the rich records. Exact
 quote overlap is marked covered, shared-block-only evidence is a possible match, and
 the rest is unmatched. `coverage_audit.json` is a recall-review queue, not an automatic
 record insertion mechanism.
+
+## Evidence-complete refinement
+
+Detailed extraction runs as a draft followed by one refinement pass by default. The
+refinement sees the complete evidence assigned to that call, the draft, and the
+source-grounded inventory. It must return the complete corrected extraction: recover
+missed records and atomic values, preserve correct records, and remove unsupported or
+duplicated claims. In windowed mode, each window is refined before the lossless union
+and identity-linking stage.
+
+The first result is retained as `draft_extraction.json` for a single-call run or under
+`draft_windows/` for a windowed run. A failed refinement therefore cannot destroy a
+valid draft. Use `--no-refinement` only for a measured cost/quality ablation; use
+`--refinement-model` to evaluate a less expensive quality-pass model without changing
+the primary extractor.
+
+`quality_comparison.json` records draft-versus-final inventory coverage and evidence
+issue counts. It is a diagnostic, not an accuracy score: only reviewed ground truth
+can reveal false positive records or a semantically wrong but verbatim source value.
 
 ## Compact transport and atomic values
 
@@ -95,7 +122,9 @@ IDs, entity kind, and evidence are valid; rejected proposals remain visible in
 ## Failure behavior
 
 The workflow writes parser output, configuration, and schema before model extraction.
-A single-call failure produces a valid empty `extraction.json` with an unresolved note.
+A first-pass single-call failure produces a valid empty `extraction.json` with an unresolved note.
+If only refinement fails, the valid draft becomes `extraction.json` and the run is
+marked partial rather than discarding scientific output.
 In windowed mode, successful windows remain usable when another window fails. Raw
 request and failure artifacts stay under `requests/`.
 

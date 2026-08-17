@@ -141,6 +141,8 @@ class ReviewApplication:
         supplement_bytes: bytes = b"",
         document_bytes: bytes = b"",
         configuration_bytes: bytes = b"",
+        coverage_bytes: bytes = b"",
+        refinement_bytes: bytes = b"",
         reviewer_id: str,
     ) -> dict[str, Any]:
         """Validate an uploaded artifact set before creating a review workspace.
@@ -159,6 +161,12 @@ class ReviewApplication:
         configuration = self._decode_json(
             configuration_bytes, "run_configuration.json", required=False
         )
+        coverage = self._decode_json(
+            coverage_bytes, "coverage_audit.json", required=False
+        )
+        refinement = self._decode_json(
+            refinement_bytes, "refinement_audit.json", required=False
+        )
         bundle = self.store.import_seed(
             split,
             paper_id,
@@ -166,6 +174,10 @@ class ReviewApplication:
             document=document,
             manifest={
                 "extraction_configuration": configuration or {},
+                "quality_artifacts": {
+                    "coverage_audit": coverage,
+                    "refinement_audit": refinement,
+                },
                 "main_pdf_sha256": hashlib.sha256(pdf_bytes).hexdigest(),
                 "supplement_pdf_sha256": (
                     hashlib.sha256(supplement_bytes).hexdigest()
@@ -553,6 +565,8 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         supplement_bytes=binary("supplement"),
                         document_bytes=binary("document"),
                         configuration_bytes=binary("run_configuration"),
+                        coverage_bytes=binary("coverage_audit"),
+                        refinement_bytes=binary("refinement_audit"),
                         reviewer_id=user["id"],
                     )
                     self.send_json(bundle, HTTPStatus.CREATED)

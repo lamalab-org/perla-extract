@@ -25,7 +25,9 @@ from .evidence import repair_unique_citation_pointers
 from .identity_linking import IdentityLinkProposal, attach_valid_identity_links
 from .inventory import (
     EvidenceInventory,
+    InventoryItem,
     audit_inventory_coverage,
+    grounded_inventory_items,
     routed_blocks,
 )
 from .logging import logger
@@ -38,6 +40,7 @@ from .models import (
 )
 from .nomad import NOMADExport, to_nomad_with_report
 from .partitioning import EvidenceWindowPlan, plan_evidence_windows
+from .refinement import REFINEMENT_PROMPT, refine_draft
 from .source import parse_documents
 from .transport import (
     compact_study_schema,
@@ -141,6 +144,11 @@ quotation from the excluded block so the routing decision is auditable. Never in
 block IDs.
 """
 
+INVENTORY_GUIDANCE = """The supplied independent inventory contains recall hints,
+not paper facts. Check every item against its quoted evidence. Represent each supported
+item at the correct reporting level, and ignore an item when the evidence does not
+actually establish a schema record. Never copy a claim merely because it appears in
+the inventory."""
 
 def prompt_sha256() -> str:
     """Fingerprint every prompt template that can change scientific model output."""
@@ -152,9 +160,11 @@ def prompt_sha256() -> str:
             WINDOW_PROMPT,
             IDENTITY_LINK_PROMPT,
             INVENTORY_PROMPT,
+            INVENTORY_GUIDANCE,
             ENRICHMENT_SYSTEM_PROMPT,
             COMPOSITION_ENRICHMENT_PROMPT,
             PROCESSING_ENRICHMENT_PROMPT,
+            REFINEMENT_PROMPT,
         ],
         ensure_ascii=False,
         separators=(",", ":"),
@@ -177,6 +187,8 @@ class ExtractionConfig:
     use_enrichment: bool = True
     enrichment_model: str | None = None
     enrichment_max_output_tokens: int = 20_000
+    use_refinement: bool = True
+    refinement_model: str | None = None
     parser: str = "docling"
     mode: str = "auto"
     single_call_max_input_tokens: int = 90_000
@@ -249,11 +261,25 @@ def _evidence_payload(blocks: list[EvidenceBlock]) -> list[dict[str, object]]:
     ]
 
 
-def _direct_prompt(blocks: list[EvidenceBlock]) -> str:
+def _inventory_payload(items: list[InventoryItem]) -> str:
+    """Serialize only source-grounded inventory candidates as extraction guidance."""
+
+    return json.dumps(
+        [item.model_dump(mode="json") for item in items], ensure_ascii=False
+    )
+
+
+def _direct_prompt(
+    blocks: list[EvidenceBlock], inventory_items: list[InventoryItem]
+) -> str:
     """Give one call global evidence context when the complete study fits."""
 
     return (
         EXTRACTION_PROMPT
+        + "\n\nSOURCE-GROUNDED INDEPENDENT INVENTORY:\n"
+        + INVENTORY_GUIDANCE
+        + "\n"
+        + _inventory_payload(inventory_items)
         + "\n\nCOMPLETE STUDY EVIDENCE:\n"
         + json.dumps(_evidence_payload(blocks), ensure_ascii=False)
     )
@@ -269,13 +295,21 @@ def _inventory_prompt(blocks: list[EvidenceBlock]) -> str:
     )
 
 
-def _window_prompt(primary: list[EvidenceBlock], context: list[EvidenceBlock]) -> str:
+def _window_prompt(
+    primary: list[EvidenceBlock],
+    context: list[EvidenceBlock],
+    inventory_items: list[InventoryItem],
+) -> str:
     """Tell the model not to emit candidates supported only by repeated context."""
 
     return (
         EXTRACTION_PROMPT
         + "\n\n"
         + WINDOW_PROMPT
+        + "\n\nSOURCE-GROUNDED INVENTORY ITEMS IN THIS WINDOW:\n"
+        + INVENTORY_GUIDANCE
+        + "\n"
+        + _inventory_payload(inventory_items)
         + "\n\nCONTEXT EVIDENCE:\n"
         + json.dumps(_evidence_payload(context), ensure_ascii=False)
         + "\n\nPRIMARY EVIDENCE:\n"
@@ -370,7 +404,8 @@ def _run_model_calls(
     blocks: list[EvidenceBlock],
     mode: str,
     window_plan: EvidenceWindowPlan | None,
-) -> tuple[StudyExtraction, list[str]]:
+    inventory_items: list[InventoryItem],
+) -> tuple[StudyExtraction, StudyExtraction | None, list[str]]:
     """Run the selected call plan while retaining every successful partial result.
 
     Window failures are accumulated rather than invalidating successful windows.
@@ -380,6 +415,8 @@ def _run_model_calls(
 
     errors: list[str] = []
     if mode == "single":
+        initial_extraction: StudyExtraction | None = None
+        prompt = _direct_prompt(blocks, inventory_items)
         logger.info("Extracting the complete study in one model call")
         try:
             extraction = client.complete(
@@ -387,7 +424,7 @@ def _run_model_calls(
                 slug="complete_study",
                 model=config.model,
                 system=SYSTEM_PROMPT,
-                prompt=_direct_prompt(blocks),
+                prompt=prompt,
                 response_model=StudyExtraction,
                 max_output_tokens=config.max_output_tokens,
                 reasoning_effort=config.reasoning_effort,
@@ -399,11 +436,43 @@ def _run_model_calls(
             extraction = _empty_extraction(
                 "Complete-study model call failed; inspect requests/ and report.json."
             )
-        return extraction, errors
+        if config.use_refinement and not errors:
+            initial_extraction = extraction
+            logger.info("Refining the complete draft against source evidence")
+            extraction, error = refine_draft(
+                client,
+                draft=extraction,
+                evidence_prompt=prompt,
+                blocks=blocks,
+                model=config.refinement_model or config.model,
+                reasoning_effort=config.reasoning_effort,
+                max_output_tokens=config.max_output_tokens,
+                system_prompt=SYSTEM_PROMPT,
+                kind="study_refinement",
+                slug="study_refinement",
+                draft_path=config.output_dir / "draft_extraction.json",
+                audit_path=config.output_dir / "refinement_audit.json",
+            )
+            if error:
+                errors.append(f"study_refinement: {error}")
+        return extraction, initial_extraction, errors
 
     window_extractions: list[tuple[str, StudyExtraction]] = []
+    draft_window_extractions: list[tuple[str, StudyExtraction]] = []
     windows = window_plan.windows if window_plan else []
     for index, window in enumerate(windows, start=1):
+        visible_ids = {
+            block.block_id
+            for block in [*window.primary_blocks, *window.context_blocks]
+        }
+        local_inventory = [
+            item
+            for item in inventory_items
+            if any(citation.block_id in visible_ids for citation in item.evidence)
+        ]
+        prompt = _window_prompt(
+            window.primary_blocks, window.context_blocks, local_inventory
+        )
         logger.info(
             "Extracting evidence window {}/{} ({}, {} primary blocks)",
             index,
@@ -417,7 +486,7 @@ def _run_model_calls(
                 slug=window.window_id,
                 model=config.model,
                 system=SYSTEM_PROMPT,
-                prompt=_window_prompt(window.primary_blocks, window.context_blocks),
+                prompt=prompt,
                 response_model=StudyExtraction,
                 max_output_tokens=config.max_output_tokens,
                 reasoning_effort=config.reasoning_effort,
@@ -430,6 +499,31 @@ def _run_model_calls(
         except ModelCallError as exc:
             errors.append(f"{window.window_id}: {exc}")
             continue
+        if config.use_refinement:
+            draft_window_extractions.append((window.window_id, window_extraction))
+            logger.info("Refining evidence window {}/{}", index, len(windows))
+            window_extraction, error = refine_draft(
+                client,
+                draft=window_extraction,
+                evidence_prompt=prompt,
+                blocks=[*window.primary_blocks, *window.context_blocks],
+                model=config.refinement_model or config.model,
+                reasoning_effort=config.reasoning_effort,
+                max_output_tokens=config.max_output_tokens,
+                system_prompt=SYSTEM_PROMPT,
+                kind="evidence_window_refinement",
+                slug=f"{window.window_id}_refinement",
+                draft_path=(
+                    config.output_dir / "draft_windows" / f"{window.window_id}.json"
+                ),
+                audit_path=(
+                    config.output_dir
+                    / "refinement_audits"
+                    / f"{window.window_id}.json"
+                ),
+            )
+            if error:
+                errors.append(f"{window.window_id}_refinement: {error}")
         window_extractions.append((window.window_id, window_extraction))
         write_json_atomic(
             config.output_dir / "windows" / f"{window.window_id}.json",
@@ -442,6 +536,16 @@ def _run_model_calls(
             "All evidence-window model calls failed; inspect requests/ and report.json."
         )
     )
+    initial_extraction = (
+        combine_window_candidates(draft_window_extractions)
+        if draft_window_extractions
+        else None
+    )
+    if initial_extraction is not None:
+        write_json_atomic(
+            config.output_dir / "draft_candidates.json",
+            initial_extraction.model_dump(mode="json"),
+        )
     if window_extractions:
         write_json_atomic(
             config.output_dir / "candidates.json", extraction.model_dump(mode="json")
@@ -484,7 +588,7 @@ def _run_model_calls(
                     **identity_link_audit.model_dump(mode="json"),
                 },
             )
-    return extraction, errors
+    return extraction, initial_extraction, errors
 
 
 def _plan_extraction(
@@ -494,7 +598,7 @@ def _plan_extraction(
     """Choose one global call when routed evidence fits, otherwise plan windows."""
 
     request_schema = compact_study_schema(block.block_id for block in blocks)
-    approximate_tokens = _approximate_tokens(_direct_prompt(blocks), request_schema)
+    approximate_tokens = _approximate_tokens(_direct_prompt(blocks, []), request_schema)
     mode = (
         config.mode
         if config.mode != "auto"
@@ -584,22 +688,25 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
                 config.output_dir / "window_plan.json",
                 window_plan.model_dump(mode="json"),
             )
+        extraction_call_count = (
+            1
+            if mode == "single"
+            else len(window_plan.windows if window_plan else [])
+        )
         report = {
             "status": "dry_run",
             "mode": mode,
             "evidence_blocks": len(blocks),
             "selected_evidence_blocks": len(blocks),
             "approximate_request_tokens": approximate_tokens,
-            "planned_calls": (
-                1 + int(config.use_inventory)
-                if mode == "single"
-                else (
-                    len(window_plan.windows if window_plan else [])
-                    + int(len(window_plan.windows if window_plan else []) > 1)
-                    + int(config.use_inventory)
-                )
-            )
+            "planned_calls": extraction_call_count
+            + extraction_call_count * int(config.use_refinement)
+            + int(config.use_inventory)
+            + int(mode == "windowed" and extraction_call_count > 1)
             + (2 if config.use_enrichment else 0),
+            "planned_refinement_calls": (
+                extraction_call_count if config.use_refinement else 0
+            ),
             "planned_enrichment_calls_max": 2 if config.use_enrichment else 0,
             "source_parsing": source_events,
             "elapsed_seconds": round(time.monotonic() - started, 3),
@@ -616,6 +723,8 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     )
     errors: list[str] = []
     inventory: EvidenceInventory | None = None
+    grounded_inventory: EvidenceInventory | None = None
+    inventory_items: list[InventoryItem] = []
     selected_blocks = blocks
     if config.use_inventory:
         logger.info("Inventorying study records and routing evidence")
@@ -650,6 +759,15 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
                 config.output_dir / "evidence_inventory.json",
                 inventory.model_dump(mode="json"),
             )
+            inventory_items, inventory_grounding = grounded_inventory_items(
+                blocks, inventory
+            )
+            grounded_inventory = EvidenceInventory(
+                items=inventory_items, exclusions=inventory.exclusions
+            )
+            write_json_atomic(
+                config.output_dir / "inventory_grounding.json", inventory_grounding
+            )
             selected_blocks, routing = routed_blocks(blocks, inventory)
             write_json_atomic(
                 config.output_dir / "evidence_routing.json",
@@ -675,8 +793,20 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         approximate_tokens,
         mode,
     )
-    extraction, extraction_errors = _run_model_calls(
-        config, client, selected_blocks, mode, window_plan
+    for name in (
+        "draft_extraction.json",
+        "draft_candidates.json",
+        "draft_validation.json",
+        "draft_coverage_audit.json",
+        "refinement_audit.json",
+        "quality_comparison.json",
+    ):
+        (config.output_dir / name).unlink(missing_ok=True)
+    for directory in ("draft_windows", "refinement_audits"):
+        for stale in (config.output_dir / directory).glob("*.json"):
+            stale.unlink()
+    extraction, initial_extraction, extraction_errors = _run_model_calls(
+        config, client, selected_blocks, mode, window_plan, inventory_items
     )
     errors.extend(extraction_errors)
 
@@ -691,9 +821,34 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     write_json_atomic(config.output_dir / "grounded_values.json", grounded_values)
     write_json_atomic(config.output_dir / "validation.json", validation)
     coverage_audit: dict[str, object] | None = None
-    if inventory is not None:
-        coverage_audit = audit_inventory_coverage(inventory, extraction)
+    if grounded_inventory is not None:
+        coverage_audit = audit_inventory_coverage(grounded_inventory, extraction)
         write_json_atomic(config.output_dir / "coverage_audit.json", coverage_audit)
+    quality_comparison: dict[str, object] | None = None
+    if initial_extraction is not None:
+        draft_validation = validate_study(initial_extraction, blocks)
+        draft_validation.pop("verified_values")
+        write_json_atomic(
+            config.output_dir / "draft_validation.json", draft_validation
+        )
+        draft_coverage = (
+            audit_inventory_coverage(grounded_inventory, initial_extraction)
+            if grounded_inventory is not None
+            else None
+        )
+        if draft_coverage is not None:
+            write_json_atomic(
+                config.output_dir / "draft_coverage_audit.json", draft_coverage
+            )
+        quality_comparison = {
+            "draft_validation_issue_count": len(draft_validation["issues"]),
+            "final_validation_issue_count": len(validation["issues"]),
+            "draft_coverage": draft_coverage["counts"] if draft_coverage else None,
+            "final_coverage": coverage_audit["counts"] if coverage_audit else None,
+        }
+        write_json_atomic(
+            config.output_dir / "quality_comparison.json", quality_comparison
+        )
     enrichment: EnrichmentAudit | None = None
     for name in (
         "enrichment.json",
@@ -836,6 +991,12 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         **counts,
         "validation_issue_count": len(validation["issues"]),
         "citation_repair_count": citation_repairs["repair_count"],
+        "refinement_calls": sum(
+            call.get("kind")
+            in {"study_refinement", "evidence_window_refinement"}
+            for call in client.calls
+        ),
+        "quality_comparison": quality_comparison,
         "coverage": coverage_audit["counts"] if coverage_audit else None,
         "enrichment_status": enrichment_status,
         "enrichment_errors": enrichment.errors if enrichment else [],
