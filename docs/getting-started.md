@@ -64,6 +64,7 @@ suffix preserves the previous quality-first routing for the default OpenRouter m
 | `inventory_grounding.json` | Inventory candidates admitted to or rejected from extraction guidance |
 | `evidence_routing.json` | Auditable block-selection decisions; the complete parse remains preserved |
 | `coverage_audit.json` | Covered, possible, and unmatched inventory candidates |
+| `targeted_repair.json` | Evidence-local repair worklist, proposed-record counts, quality gates, and decision |
 | `citation_repairs.json` | Audited non-contiguous-quote and unique-pointer repairs |
 | `document.json` | Model-facing scientific evidence blocks with source and page locations |
 | `report.json` | Status, counts, usage, cost, cache information, and failures |
@@ -71,6 +72,7 @@ suffix preserves the previous quality-first routing for the default OpenRouter m
 | `nomad/*.archive.json` | One standalone NOMAD archive per atomic extracted record |
 | `nomad/manifest.json` | NOMAD target pin, record mappings, and conversion issues |
 | `composition_projection.json` | Formula/site-ion normalization review queue |
+| `enrichment.json` | Absorber-scoped composition and processing proposals with deterministic decisions |
 | `draft_extraction.json` | First complete-study result retained before the default quality pass |
 | `refinement_audit.json` | Record IDs added, removed, or changed by the complete-study quality pass |
 | `quality_comparison.json` | Draft-versus-final evidence issue and inventory coverage counts |

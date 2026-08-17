@@ -15,10 +15,11 @@ import unicodedata
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .evidence import assembled_from_quotes, source_contains_text
 from .models import (
+    AbsorberComponent,
     DeviceFamily,
     EvidenceBlock,
     ProcessingStep,
@@ -35,7 +36,7 @@ ENRICHMENT_SYSTEM_PROMPT = """Interpret only the supplied extracted records and 
 local source evidence. Never add a device, material, condition, number, or formula.
 Return an empty proposal list when the evidence does not support a requested mapping."""
 
-COMPOSITION_ENRICHMENT_PROMPT = """Assign the terms of each reported perovskite
+COMPOSITION_ENRICHMENT_PROMPT = """Assign the terms of each reported absorber
 formula to its A, B, and X sites.
 
 Rules:
@@ -44,7 +45,8 @@ Rules:
 - Preserve the order of terms within each site.
 - Do not infer a formula from a layer name or from general chemical knowledge.
 - Do not repair or complete a malformed formula.
-- Emit at most one proposal for each supplied family_id.
+- Copy the supplied family_id and absorber_id into each proposal.
+- Emit at most one proposal for each supplied absorber_id.
 """
 
 PROCESSING_ENRICHMENT_PROMPT = """Classify existing atomic process values and
@@ -83,9 +85,10 @@ class ProposedIon(_StrictModel):
 
 
 class CompositionProposal(_StrictModel):
-    """Group all site assignments proposed for one existing device family."""
+    """Group all site assignments proposed for one scoped absorber."""
 
     family_id: str = Field(min_length=1, max_length=200)
+    absorber_id: str | None = Field(default=None, min_length=1, max_length=200)
     ions: list[ProposedIon] = Field(max_length=40)
 
 
@@ -146,24 +149,39 @@ class EnrichmentAudit(_StrictModel):
 
     composition_results: list[CompositionProposalResult] = Field(default_factory=list)
     processing_results: list[ProcessingProposalResult] = Field(default_factory=list)
-    unresolved_composition_ids: list[str] = Field(default_factory=list)
+    unresolved_absorber_ids: list[str] = Field(default_factory=list)
     unresolved_processing_step_ids: list[str] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
 
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_unscoped_ids(cls, value: object) -> object:
+        """Read historical audits while exposing absorber-scoped output going forward."""
 
-def _citations_for_family(family: DeviceFamily) -> Iterable[str]:
-    """Collect only evidence IDs already attached to a family's composition claims."""
+        if isinstance(value, dict) and "unresolved_composition_ids" in value:
+            migrated = dict(value)
+            migrated["unresolved_absorber_ids"] = migrated.pop(
+                "unresolved_composition_ids"
+            )
+            return migrated
+        return value
 
-    for citation in family.evidence:
+
+def _citations_for_absorber(
+    family: DeviceFamily, absorber: AbsorberComponent
+) -> Iterable[str]:
+    """Collect evidence IDs attached to one absorber without mixing subcells."""
+
+    for citation in absorber.evidence:
         yield citation.block_id
-    if family.absorber_formula:
-        for citation in family.absorber_formula.evidence:
+    if absorber.formula:
+        for citation in absorber.formula.evidence:
             yield citation.block_id
-    for constituent in family.absorber_constituents:
+    for constituent in absorber.constituents:
         for citation in constituent.evidence:
             yield citation.block_id
     for layer in family.layers:
-        if layer.role == "absorber":
+        if layer.layer_id == absorber.layer_id:
             for citation in layer.evidence:
                 yield citation.block_id
 
@@ -202,21 +220,27 @@ def _local_evidence(
 def composition_context(
     study: StudyExtraction, blocks: list[EvidenceBlock]
 ) -> list[dict[str, object]]:
-    """Build a compact composition request from reported formulas and cited blocks."""
+    """Build one compact composition target per reported absorber formula."""
 
     by_id = {block.block_id: block for block in blocks}
     return [
         {
             "family_id": family.family_id,
-            "reported_formula": family.absorber_formula.raw_value,
+            "absorber_id": absorber.absorber_id,
+            "absorber_label": absorber.label,
+            "layer_id": absorber.layer_id,
+            "reported_formula": absorber.formula.raw_value,
             "reported_constituents": [
                 {"name": item.name, "role": item.role}
-                for item in family.absorber_constituents
+                for item in absorber.constituents
             ],
-            "evidence": _local_evidence(_citations_for_family(family), by_id),
+            "evidence": _local_evidence(
+                _citations_for_absorber(family, absorber), by_id
+            ),
         }
         for family in study.device_families
-        if family.absorber_formula is not None
+        for absorber in family.absorbers
+        if absorber.formula is not None
     ]
 
 
@@ -292,6 +316,45 @@ def _formula_candidates(ions: list[ProposedIon]) -> set[str]:
     return {_formula_key(explicit), _formula_key(implicit)}
 
 
+def _reported_formula_candidates(value: str) -> set[str]:
+    """Canonicalize presentation variants without interpreting chemical identity.
+
+    Mixed-halide perovskites commonly report fractional X-site occupancy inside a
+    final parenthesized group followed by the site multiplicity, for example
+    ``Pb(I0.7Br0.3)3``. Enrichment deliberately copies the fractional coefficients,
+    so the trailing ``3`` is presentation rather than another ion coefficient. Both
+    forms are retained; no token is renamed, reordered, or inferred.
+    """
+
+    normalized = unicodedata.normalize("NFKC", value).translate(_FORMULA_TRANSLATION)
+    candidates = {_formula_key(normalized)}
+    final_group = re.search(r"\(([^()]*)\)\s*([0-9]+(?:\.[0-9]+)?)\s*$", normalized)
+    fractional_terms = (
+        re.findall(r"[A-Za-z]+0?\.\d+", final_group.group(1))
+        if final_group
+        else []
+    )
+    if (
+        final_group
+        and len(fractional_terms) >= 2
+        and final_group.group(2).isdigit()
+    ):
+        candidates.add(
+            _formula_key(
+                normalized[: final_group.start()]
+                + final_group.group(1)
+                + normalized[final_group.end() :]
+            )
+        )
+    return candidates
+
+
+def _formula_reconstructs(value: str, ions: list[ProposedIon]) -> bool:
+    """Return whether copied site terms match a conservative reported-form candidate."""
+
+    return bool(_reported_formula_candidates(value) & _formula_candidates(ions))
+
+
 def _reported_value_is_grounded(
     value: ReportedValue, blocks: dict[str, EvidenceBlock]
 ) -> bool:
@@ -313,6 +376,29 @@ def _reported_value_is_grounded(
     )
 
 
+def composition_target_id(
+    study: StudyExtraction, proposal: CompositionProposal
+) -> str | None:
+    """Resolve a legacy family-only proposal only when that family has one formula."""
+
+    if proposal.absorber_id is not None:
+        return proposal.absorber_id
+    family = next(
+        (
+            candidate
+            for candidate in study.device_families
+            if candidate.family_id == proposal.family_id
+        ),
+        None,
+    )
+    formula_absorbers = (
+        [absorber for absorber in family.absorbers if absorber.formula is not None]
+        if family
+        else []
+    )
+    return formula_absorbers[0].absorber_id if len(formula_absorbers) == 1 else None
+
+
 def validate_composition_proposals(
     study: StudyExtraction,
     response: CompositionProposalResponse,
@@ -321,23 +407,37 @@ def validate_composition_proposals(
     """Accept site assignments only when they exactly reconstruct a reported formula."""
 
     families = {family.family_id: family for family in study.device_families}
+    absorbers = {
+        absorber.absorber_id: (family, absorber)
+        for family in study.device_families
+        for absorber in family.absorbers
+    }
     block_by_id = {block.block_id: block for block in blocks or []}
     seen: set[str] = set()
     results: list[CompositionProposalResult] = []
     for proposal in response.proposals:
         issues: list[str] = []
         family = families.get(proposal.family_id)
+        target_id = composition_target_id(study, proposal)
+        target = absorbers.get(target_id or "")
+        absorber_id = target[1].absorber_id if target else proposal.absorber_id
         if family is None:
             issues.append("family_id does not exist in extraction.json")
             status: ProposalStatus = "rejected"
-        elif proposal.family_id in seen:
-            issues.append("more than one proposal targets this family_id")
+        elif target is None:
+            issues.append("absorber_id does not exist in extraction.json")
             status = "rejected"
-        elif family.absorber_formula is None:
-            issues.append("the family has no reported absorber formula")
+        elif target[0].family_id != proposal.family_id:
+            issues.append("absorber_id does not belong to the supplied family_id")
+            status = "rejected"
+        elif absorber_id in seen:
+            issues.append("more than one proposal targets this absorber_id")
+            status = "rejected"
+        elif target[1].formula is None:
+            issues.append("the absorber has no reported formula")
             status = "rejected"
         elif blocks is not None and not _reported_value_is_grounded(
-            family.absorber_formula, block_by_id
+            target[1].formula, block_by_id
         ):
             issues.append("the reported formula is not grounded in its cited evidence")
             status = "needs_review"
@@ -347,16 +447,15 @@ def validate_composition_proposals(
         ):
             issues.append("a complete A/B/X site assignment was not proposed")
             status = "needs_review"
-        elif _formula_key(family.absorber_formula.raw_value) not in _formula_candidates(
-            proposal.ions
-        ):
+        elif not _formula_reconstructs(target[1].formula.raw_value, proposal.ions):
             issues.append(
                 "the assigned ions do not exactly reconstruct the reported formula"
             )
             status = "needs_review"
         else:
             status = "accepted"
-        seen.add(proposal.family_id)
+        if absorber_id:
+            seen.add(absorber_id)
         results.append(
             CompositionProposalResult(proposal=proposal, status=status, issues=issues)
         )
@@ -501,7 +600,12 @@ def run_enrichment(
     reasoning_effort: str | None,
     max_output_tokens: int,
 ) -> EnrichmentAudit:
-    """Run at most two compact calls and retain failures without blocking extraction."""
+    """Interpret local records, retrying only composition targets omitted once.
+
+    The retry never expands context: it contains only parser blocks already local to
+    the missing absorbers. This recovers model omissions without paying for or risking
+    another full-paper pass.
+    """
 
     from .client import ModelCallError
 
@@ -509,6 +613,7 @@ def run_enrichment(
     composition_results: list[CompositionProposalResult] = []
     processing_results: list[ProcessingProposalResult] = []
     composition_input = composition_context(study, blocks)
+    composition_call_succeeded = False
     if composition_input:
         try:
             response = client.complete(
@@ -526,8 +631,47 @@ def run_enrichment(
         except ModelCallError as exc:
             errors.append(f"composition_enrichment: {exc}")
         else:
+            composition_call_succeeded = True
             composition_results = validate_composition_proposals(
                 study, response, blocks
+            )
+    resolved_compositions = {
+        target
+        for result in composition_results
+        if (target := composition_target_id(study, result.proposal)) is not None
+    }
+    missing_composition_input = [
+        item
+        for item in composition_input
+        if str(item["absorber_id"]) not in resolved_compositions
+    ]
+    if composition_call_succeeded and missing_composition_input:
+        try:
+            retry_response = client.complete(
+                kind="composition_enrichment_retry",
+                slug="composition_enrichment_retry",
+                model=model,
+                system=ENRICHMENT_SYSTEM_PROMPT,
+                prompt=COMPOSITION_ENRICHMENT_PROMPT
+                + "\n\nThe first pass omitted these absorbers. Interpret only these "
+                "targets; an empty proposal list is correct if their formulas remain "
+                "ambiguous.\n\nOMITTED ABSORBERS AND LOCAL EVIDENCE:\n"
+                + json.dumps(missing_composition_input, ensure_ascii=False),
+                response_model=CompositionProposalResponse,
+                max_output_tokens=max_output_tokens,
+                reasoning_effort=reasoning_effort,
+            )
+        except ModelCallError as exc:
+            errors.append(f"composition_enrichment_retry: {exc}")
+        else:
+            retry_results = validate_composition_proposals(
+                study, retry_response, blocks
+            )
+            composition_results.extend(
+                result
+                for result in retry_results
+                if composition_target_id(study, result.proposal)
+                not in resolved_compositions
             )
     processing_input = processing_context(study, blocks)
     if processing_input:
@@ -551,9 +695,13 @@ def run_enrichment(
     return EnrichmentAudit(
         composition_results=composition_results,
         processing_results=processing_results,
-        unresolved_composition_ids=sorted(
-            {str(item["family_id"]) for item in composition_input}
-            - {result.proposal.family_id for result in composition_results}
+        unresolved_absorber_ids=sorted(
+            {str(item["absorber_id"]) for item in composition_input}
+            - {
+                target
+                for result in composition_results
+                if (target := composition_target_id(study, result.proposal)) is not None
+            }
         ),
         unresolved_processing_step_ids=sorted(
             {str(item["step_id"]) for item in processing_input}

@@ -31,6 +31,7 @@ def test_ui_shows_reported_composition_beside_enrichment_proposals():
     javascript = (APP / "app.js").read_text(encoding="utf-8")
 
     assert 'name="enrichment"' in html
+    assert 'name="targeted_repair"' in html
     assert "Source-reported composition" in javascript
     assert "Proposed site interpretation" in javascript
     assert "composition_results" in javascript

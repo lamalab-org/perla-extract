@@ -24,11 +24,13 @@ standard credential—for example, `openai/...` with `OPENAI_API_KEY` or
 quality-first `:exacto` suffix, but the extraction workflow itself is provider-neutral.
 
 The extraction directory contains the refined rich result, its retained first draft,
-an independent source-grounded record inventory and coverage audit, local evidence
-checks, and a separate audited
+an independent source-grounded record inventory and coverage audit, a bounded repair
+pass for audit-visible gaps, local evidence checks, and a separate audited
 composition/processing enrichment. Accepted interpretations feed atomic archives for
 the pinned NOMAD schema without rewriting reported facts in `extraction.json`. Use
 `--dry-run` to parse the documents and estimate call size without calling a model.
+Every model request contains parser-produced text and tables only; the workflow does
+not send rendered pages to a vision model.
 
 ## Documentation
 

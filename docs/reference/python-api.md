@@ -22,6 +22,8 @@ report = extract_study(
 The quality-first default performs a second evidence-complete refinement. Set
 `use_refinement=False` for a cost ablation, or set `refinement_model` to test a
 different model while keeping the primary draft fixed through the response cache.
+`use_targeted_repair=False` disables the bounded audit-driven recovery call;
+`repair_model` changes only that call.
 
 ::: perla_extract.study_extraction.cli.extract_study
     options:

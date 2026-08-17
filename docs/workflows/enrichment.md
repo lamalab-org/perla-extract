@@ -26,12 +26,16 @@ another exporter can use the same artifact without repeating the calls.
 
 ## What the calls may decide
 
-The composition call receives only families with a reported formula, existing
-constituents, and their cited blocks. It proposes A-, B-, and X-site terms. A proposal
+The composition call receives one target per scoped absorber with a reported formula,
+its existing constituents, and its cited blocks. It proposes A-, B-, and X-site terms
+for that absorber only. A proposal
 is accepted automatically only when all three sites are present and the proposed
 terms exactly reconstruct the reported formula after removing typographic formatting.
-Mixed or grouped formulas that cannot be reconstructed exactly remain
-`needs_review`; the code does not contain a catalogue of material-specific ions.
+The deterministic comparison also recognizes a final parenthesized site group whose
+trailing multiplier is presentation of site multiplicity, while preserving every
+copied fractional occupancy. Other grouped formulas that cannot be reconstructed
+exactly remain `needs_review`; the code does not contain a catalogue of
+material-specific ions.
 The reported formula must also occur in its valid cited source block.
 
 The processing call receives existing steps with indexed materials and atomic
@@ -51,9 +55,11 @@ Referenced conditions and material names must occur in the step's cited evidence
 | `composition_proposals.json` | Composition-only review queue |
 | `processing_proposals.json` | Processing-only review queue |
 
-At most two batched model calls are added per paper, and a call is skipped when there
-is no corresponding extracted record. Requests use local evidence rather than the
-complete paper and share the normal content-addressed model cache. Use
+Two batched model calls are normally added per paper. If the first composition response
+omits an absorber, one additional call retries only the omitted targets; a call is
+skipped when there is no corresponding extracted record. Requests use local parser
+text/table evidence rather than the complete paper or rendered pages and share the
+normal content-addressed model cache. Use
 `--enrichment-model` to select a different schema-capable model or `--no-enrichment`
 for a cost or ablation run.
 

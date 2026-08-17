@@ -23,7 +23,7 @@ EntityKind = Literal[
     "population_statistic",
     "stability_test",
 ]
-STUDY_SCHEMA_VERSION = 1
+STUDY_SCHEMA_VERSION = 2
 
 
 class StrictModel(BaseModel):
@@ -140,6 +140,23 @@ class ProcessingStep(StrictModel):
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
 
+class AbsorberComponent(StrictModel):
+    """Scope one reported composition to one absorber layer or subcell.
+
+    A device may contain several perovskite absorbers. Keeping their formulas,
+    constituents, and properties together prevents tandem recipes from being merged
+    into one chemically incoherent family-level composition.
+    """
+
+    absorber_id: Identifier
+    layer_id: Identifier | None
+    label: ShortText
+    formula: ReportedValue | None
+    properties: Annotated[list[ReportedValue], Field(max_length=60)]
+    constituents: Annotated[list[MaterialConstituent], Field(max_length=80)]
+    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=15)]
+
+
 class DeviceFamily(StrictModel):
     """Collect the composition and fabrication shared by a reported device variant.
 
@@ -155,11 +172,94 @@ class DeviceFamily(StrictModel):
     polarity: Literal["n-i-p", "p-i-n", "tandem", "other", "not_reported"]
     full_stack_raw: Annotated[str | None, Field(max_length=1600)]
     layers: Annotated[list[Layer], Field(max_length=60)]
-    absorber_formula: ReportedValue | None
-    absorber_properties: Annotated[list[ReportedValue], Field(max_length=60)]
-    absorber_constituents: Annotated[list[MaterialConstituent], Field(max_length=80)]
+    absorbers: Annotated[list[AbsorberComponent], Field(max_length=12)]
     processing_steps: Annotated[list[ProcessingStep], Field(max_length=150)]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=15)]
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_unscoped_absorber(cls, value: object) -> object:
+        """Read version-1 records without exposing legacy fields in the new schema.
+
+        Migration is deliberately lossless but not interpretive: all former absorber
+        claims become one unscoped component. Splitting a historical tandem record
+        still requires source review because doing so deterministically would invent
+        which constituent belongs to which subcell.
+        """
+
+        if not isinstance(value, dict):
+            return value
+        legacy_keys = (
+            "absorber_formula",
+            "absorber_properties",
+            "absorber_constituents",
+        )
+        if not any(key in value for key in legacy_keys):
+            return value
+        data = dict(value)
+        formula = data.pop("absorber_formula", None)
+        properties = data.pop("absorber_properties", [])
+        constituents = data.pop("absorber_constituents", [])
+        if "absorbers" in data:
+            if formula is not None or properties or constituents:
+                raise ValueError("cannot mix scoped and legacy absorber fields")
+            return data
+        if formula is None and not properties and not constituents:
+            data["absorbers"] = []
+            return data
+
+        citations: list[dict[str, object]] = []
+        for claim in [formula, *properties, *constituents]:
+            claim_data = (
+                claim.model_dump(mode="json")
+                if isinstance(claim, BaseModel)
+                else claim
+            )
+            if isinstance(claim_data, dict):
+                citations.extend(
+                    item
+                    for item in claim_data.get("evidence", [])
+                    if isinstance(item, dict)
+                )
+        if not citations:
+            citations.extend(
+                item.model_dump(mode="json")
+                if isinstance(item, BaseModel)
+                else item
+                for item in data.get("evidence", [])
+                if isinstance(item, (dict, BaseModel))
+            )
+        unique_citations = list(
+            {
+                (str(item.get("block_id")), str(item.get("quote"))): item
+                for item in citations
+            }.values()
+        )[:15]
+        absorber_layers = [
+            layer.model_dump(mode="json")
+            if isinstance(layer, BaseModel)
+            else layer
+            for layer in data.get("layers", [])
+            if (
+                layer.role == "absorber"
+                if isinstance(layer, Layer)
+                else isinstance(layer, dict) and layer.get("role") == "absorber"
+            )
+        ]
+        layer = absorber_layers[0] if len(absorber_layers) == 1 else None
+        family_id = str(data.get("family_id", "family"))
+        data["absorbers"] = [
+            {
+                "absorber_id": f"{family_id[:188]}-absorber-1",
+                "layer_id": layer.get("layer_id") if layer else None,
+                "label": str(layer.get("material")) if layer else "Unscoped absorber",
+                "formula": formula,
+                "properties": properties,
+                "constituents": constituents,
+                "evidence": unique_citations,
+            }
+        ]
+        return data
 
 
 class IndividualDevice(StrictModel):

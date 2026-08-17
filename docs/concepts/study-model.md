@@ -8,6 +8,7 @@ shape of a downstream database.
 ```mermaid
 erDiagram
     DEVICE_FAMILY ||--o{ INDIVIDUAL_DEVICE : "groups"
+    DEVICE_FAMILY ||--o{ ABSORBER_COMPONENT : "contains"
     DEVICE_FAMILY ||--o{ POPULATION_STATISTIC : "summarized by"
     INDIVIDUAL_DEVICE ||--o{ PERFORMANCE_OBSERVATION : "measured as"
     DEVICE_FAMILY o|--o{ STABILITY_TEST : "may link"
@@ -18,7 +19,16 @@ erDiagram
         string label
         string polarity
         list layers
+        list absorbers
         list processing_steps
+    }
+    ABSORBER_COMPONENT {
+        string absorber_id
+        string layer_id
+        string label
+        ReportedValue formula
+        list constituents
+        list properties
     }
     INDIVIDUAL_DEVICE {
         string device_id
@@ -52,10 +62,17 @@ erDiagram
 ## Device families and composition
 
 A `DeviceFamily` holds information shared by a reported variant: the architecture,
-polarity, full stack, ordered layers, absorber formula and constituents, absorber
-properties, and processing steps. Layers identify their role and material while
-retaining arbitrary reported details as `ReportedValue` records. Processing steps similarly
-store an operation, target layers, materials, and generic conditions.
+polarity, full stack, ordered layers, scoped absorbers, and processing steps. Each
+`AbsorberComponent` keeps one absorber layer or subcell's formula, constituents, and
+properties together. A tandem can therefore contain separate wide-bandgap and
+narrow-bandgap absorbers without merging their ions. Layers identify their role and
+material while retaining arbitrary reported details as `ReportedValue` records.
+Processing steps similarly store an operation, target layers, materials, and generic
+conditions.
+
+Version-1 inputs with one family-level absorber are read as one explicitly unscoped
+component. That migration preserves data but does not guess how a historical tandem
+composition should be split. New output always uses the scoped `absorbers` array.
 
 This arrangement captures chemical detail without adding a Python field or regular
 expression for every possible material property, additive, treatment, or process

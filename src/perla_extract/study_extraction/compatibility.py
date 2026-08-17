@@ -218,7 +218,12 @@ def _reduced_processing_step(step: ProcessingStep) -> dict:
 
 
 def _project_family(family: DeviceFamily | None) -> tuple[dict, dict]:
-    """Project stack structure while returning rich-only family data for notes."""
+    """Project stack structure while keeping multi-absorber data out of a flat slot.
+
+    The historical reduced schema can represent only one composition.  Choosing one
+    side of a tandem would silently change meaning, so only an unambiguous single
+    absorber is projected and every scoped absorber remains available in notes.
+    """
 
     if family is None:
         return {}, {}
@@ -229,9 +234,10 @@ def _project_family(family: DeviceFamily | None) -> tuple[dict, dict]:
         "other": "Other",
         "not_reported": None,
     }[family.polarity]
+    absorber = family.absorbers[0] if len(family.absorbers) == 1 else None
     composition: dict = (
-        {"formula": family.absorber_formula.raw_value}
-        if family.absorber_formula
+        {"formula": absorber.formula.raw_value}
+        if absorber is not None and absorber.formula is not None
         else {}
     )
     steps_by_layer: dict[str, list[dict]] = {}
@@ -259,20 +265,37 @@ def _project_family(family: DeviceFamily | None) -> tuple[dict, dict]:
         "variant": family.variant,
         "architecture_raw": family.architecture,
         "full_stack_raw": family.full_stack_raw,
-        "absorber_constituents": [
+        "absorbers": [
             {
-                "name": item.name,
-                "role": item.role,
-                "amount": _reported_value_payload(item.amount) if item.amount else None,
+                "absorber_id": item.absorber_id,
+                "layer_id": item.layer_id,
+                "label": item.label,
+                "formula": (
+                    _reported_value_payload(item.formula) if item.formula else None
+                ),
+                "constituents": [
+                    {
+                        "name": constituent.name,
+                        "role": constituent.role,
+                        "amount": (
+                            _reported_value_payload(constituent.amount)
+                            if constituent.amount
+                            else None
+                        ),
+                        "evidence_blocks": [
+                            ref.block_id for ref in constituent.evidence
+                        ],
+                    }
+                    for constituent in item.constituents
+                ],
+                "properties": [
+                    _reported_value_payload(reported_value)
+                    for reported_value in item.properties
+                ],
                 "evidence_blocks": [ref.block_id for ref in item.evidence],
             }
-            for item in family.absorber_constituents
+            for item in family.absorbers
         ],
-        "absorber_formula": (
-            _reported_value_payload(family.absorber_formula)
-            if family.absorber_formula
-            else None
-        ),
         "layer_reported_properties": [
             {
                 "layer_id": layer.layer_id,
@@ -285,10 +308,11 @@ def _project_family(family: DeviceFamily | None) -> tuple[dict, dict]:
             for layer in family.layers
             if layer.reported_properties
         ],
-        "unprojected_absorber_properties": [
-            _reported_value_payload(reported_value)
-            for reported_value in family.absorber_properties
-        ],
+        "reduced_composition_omitted_reason": (
+            "multiple scoped absorbers cannot be represented by the reduced schema"
+            if len(family.absorbers) > 1
+            else None
+        ),
         "unassigned_processing_steps": [
             _reduced_processing_step(step)
             for step in family.processing_steps

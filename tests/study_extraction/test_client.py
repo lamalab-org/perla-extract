@@ -70,8 +70,9 @@ def test_only_validated_model_results_enter_cache(tmp_path, monkeypatch):
 def test_provider_schema_requires_nullable_defaulted_fields():
     schema = _strict_schema(StudyExtraction)
     family = schema["$defs"]["DeviceFamily"]
-    assert "absorber_formula" in family["required"]
-    assert "default" not in family["properties"]["absorber_formula"]
+    assert "absorbers" in family["required"]
+    assert "default" not in family["properties"]["absorbers"]
+    assert "absorber_formula" not in family["properties"]
     assert family["additionalProperties"] is False
 
 

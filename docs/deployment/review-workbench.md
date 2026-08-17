@@ -24,12 +24,14 @@ Open <http://127.0.0.1:8765>. The local server uses a local administrator identi
 
 The application imports `extraction.json`, `document.json`, the main PDF, an optional
 SI, and optional run configuration. Import `coverage_audit.json` and
-`refinement_audit.json` as well when they are available. Import `enrichment.json` to
+`refinement_audit.json` as well when they are available. Import
+`targeted_repair.json` to show the evidence-local recovery worklist and whether its
+patch passed the quality gates. Import `enrichment.json` to
 show source-reported absorber composition beside proposed A/B/X assignments, including
 their acceptance status and issues. These files remain provenance aids:
 after the blind census is submitted, the interface highlights unmatched inventory
 candidates and the record groups changed by refinement so reviewers can focus their
-attention without treating either model artifact as truth. The app stores immutable
+attention without treating any model artifact as truth. The app stores immutable
 seeds, compiled truth, event history, evidence blocks, and manifests under the
 ground-truth directory.
 

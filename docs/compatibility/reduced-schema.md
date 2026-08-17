@@ -26,7 +26,8 @@ The adapter projects only unambiguous supported fields:
 
 - PCE, short-circuit current density, open-circuit voltage, and fill factor when one
   recognized reported value has a compatible numeric value and unit;
-- family polarity, ordered layers, absorber formula, and layer-linked processing; and
+- family polarity, ordered layers, one absorber formula only when the family has
+  exactly one scoped absorber, and layer-linked processing; and
 - explicit aggregation semantics such as champion, single device, stabilized, mean,
   median, or distribution.
 
@@ -37,7 +38,8 @@ reduced file. It does not control what the model extracts.
 
 Rich information that has no faithful reduced field is serialized into
 `additional_notes` with stable source identifiers and evidence-block references. This
-includes full family provenance, absorber constituents, unprojected values, detailed
+includes full family provenance, every scoped absorber and its constituents,
+multi-absorber formulas that cannot fit the flat slot, unprojected values, detailed
 processing conditions, protocol identity, and ordered stability checkpoints.
 
 `reduced_conversion.json` contains:

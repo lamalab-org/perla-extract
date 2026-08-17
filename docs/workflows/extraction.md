@@ -27,9 +27,14 @@ flowchart TD
     J --> K
     E2 --> K
     K --> L["Citation repair and local validation"]
-    L --> O["Audited composition and processing enrichment"]
     C0 --> N["Independent coverage audit"]
     K --> N
+    L --> R{"Audit-visible gaps?"}
+    N --> R
+    R -->|Yes| T["One targeted text/table repair call"]
+    R -->|No| O["Audited composition and processing enrichment"]
+    T --> U["Monotonic quality gates"]
+    U --> O
     O --> M["Atomic NOMAD archive export"]
 ```
 
@@ -66,8 +71,28 @@ an apparent paper fact while still making a valid inventory useful before extrac
 
 After extraction, inventory candidates are compared with the rich records. Exact
 quote overlap is marked covered, shared-block-only evidence is a possible match, and
-the rest is unmatched. `coverage_audit.json` is a recall-review queue, not an automatic
-record insertion mechanism.
+the rest is unmatched. `coverage_audit.json` remains a recall-review queue; a targeted
+repair call may propose complete typed records for its unresolved entries, but the
+proposal is not accepted merely because it was generated.
+
+## Targeted repair
+
+After the main quality pass, PERLA combines non-covered inventory candidates with
+deterministic validation findings into `targeted_repair.json`. When the worklist has
+resolvable evidence, one additional request receives only the implicated parser text
+and table blocks plus the affected current records. It may add or replace complete
+top-level records; it cannot delete records or submit partial field patches.
+
+The candidate patch is accepted only if it does not increase validation issues,
+decrease extracted or source-verified atomic values, or worsen inventory coverage.
+Otherwise the original extraction remains intact and the rejection is recorded.
+Use `--no-targeted-repair` for an ablation or `--repair-model` to select a different
+schema-capable model.
+
+This path is text-only by design. Neither the main workflow nor repair sends rendered
+PDF pages or images to a model. Formula recovery is limited to what the selected parser
+preserves in text or tables; unreadable chemistry remains a review item rather than a
+vision-assisted guess.
 
 ## Evidence-complete refinement
 
@@ -139,9 +164,10 @@ repaired only when its unchanged quote has exactly one match across the parsed
 evidence. Other failures remain review findings. Every decision is recorded in
 `citation_repairs.json`.
 
-After validation, two compact semantic passes interpret site ions and processing
-roles from existing records and only their cited evidence. They run by default and
-write a separate audit without changing `extraction.json`. See
+After validation, compact semantic passes interpret site ions and processing roles
+from existing records and only their cited evidence. A composition call omitted target
+gets one retry containing only that absorber and its already-local evidence. These
+calls run by default and write a separate audit without changing `extraction.json`. See
 [Interpret composition and processing](enrichment.md).
 
 The workflow then writes one pinned NOMAD archive per atomic source

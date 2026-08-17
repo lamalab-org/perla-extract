@@ -92,6 +92,42 @@ def validate_study(
         if len(ids) != len(set(ids)):
             path, field = collections[kind]
             issue(path, f"duplicate {field}")
+    absorber_ids = [
+        absorber.absorber_id
+        for family in extraction.device_families
+        for absorber in family.absorbers
+    ]
+    if len(absorber_ids) != len(set(absorber_ids)):
+        issue("$.device_families", "duplicate absorber_id")
+    for family_index, family in enumerate(extraction.device_families):
+        layer_roles = {layer.layer_id: layer.role for layer in family.layers}
+        absorber_layers = {
+            layer_id for layer_id, role in layer_roles.items() if role == "absorber"
+        }
+        scoped_layers: set[str] = set()
+        for absorber_index, absorber in enumerate(family.absorbers):
+            path = (
+                f"$.device_families[{family_index}].absorbers[{absorber_index}]"
+            )
+            if absorber.layer_id is None:
+                if len(absorber_layers) > 1:
+                    issue(
+                        f"{path}.layer_id",
+                        "absorber is unscoped in a multi-absorber family",
+                    )
+                continue
+            if absorber.layer_id not in layer_roles:
+                issue(f"{path}.layer_id", "unknown layer_id")
+            elif layer_roles[absorber.layer_id] != "absorber":
+                issue(f"{path}.layer_id", "layer_id does not identify an absorber")
+            elif absorber.layer_id in scoped_layers:
+                issue(f"{path}.layer_id", "more than one absorber uses this layer_id")
+            scoped_layers.add(absorber.layer_id)
+        if len(absorber_layers) > 1 and absorber_layers - scoped_layers:
+            issue(
+                f"$.device_families[{family_index}].absorbers",
+                "one or more absorber layers lack a scoped composition record",
+            )
     for index, device in enumerate(extraction.individual_devices):
         if device.family_id and device.family_id not in families:
             issue(f"$.individual_devices[{index}].family_id", "unknown family_id")

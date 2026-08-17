@@ -29,14 +29,20 @@ perla-extract \
   --output-dir results/paper
 ```
 
-This profile combines four independent safeguards:
+This profile combines five independent safeguards:
 
 1. Docling preserves document structure in parser-independent evidence blocks.
 2. A value-free inventory searches for reporting-level candidates and guides recall.
 3. The frontier extraction model creates a complete draft, followed by an
    evidence-complete refinement pass over the same sources.
 4. Deterministic validation checks exact evidence, atomic values, identifiers, and
-   links; separate enrichment calls propose composition and processing interpretations.
+   links.
+5. One bounded repair call revisits only audit-visible gaps using implicated parser
+   text/table blocks, then monotonic gates prevent it from trading away grounded data;
+   separate enrichment calls propose composition and processing interpretations.
+
+No stage sends rendered pages to a vision model. Parser failures in chemical notation
+remain visible for review instead of being silently reconstructed from an image.
 
 The refinement request normalizes repeated evidence into one citation catalog. This is
 a lossless transport optimization: the public `StudyExtraction` still contains ordinary
@@ -56,6 +62,7 @@ Before import, require:
 - `validation.json` with no unresolved evidence issue;
 - `document.json`, `run_configuration.json`, and `report.json`;
 - the independent `coverage_audit.json` and `refinement_audit.json`; and
+- `targeted_repair.json`, including its worklist and acceptance decision; and
 - the exact main-paper and supplement hashes.
 
 Keep enrichment decisions in `enrichment.json`. An accepted deterministic proposal may

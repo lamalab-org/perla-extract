@@ -65,15 +65,18 @@ function entityDetail(kind, item) {
   return metrics(item) || item.statistic_type || item.measurement_type || item.link_status || "";
 }
 
-function compositionProposal(item) {
-  const identifier = state.bundle.summary.record_identifiers.device_families;
+function compositionProposal(family, absorber) {
+  const familyIdentifier = state.bundle.summary.record_identifiers.device_families;
   const results = state.bundle.manifest.quality_artifacts?.enrichment?.composition_results || [];
-  return results.find((result) => result.proposal?.[identifier] === item[identifier]) || null;
+  return results.find((result) => result.proposal?.absorber_id === absorber.absorber_id)
+    || ((family.absorbers || []).length === 1
+      ? results.find((result) => !result.proposal?.absorber_id && result.proposal?.[familyIdentifier] === family[familyIdentifier])
+      : null);
 }
 
-function sourceComposition(item) {
-  const formula = item.absorber_formula?.raw_value || "Formula not reported";
-  const constituents = (item.absorber_constituents || []).map((constituent) => {
+function sourceComposition(absorber) {
+  const formula = absorber.formula?.raw_value || "Formula not reported";
+  const constituents = (absorber.constituents || []).map((constituent) => {
     const amount = constituent.amount?.raw_value;
     return amount ? `${constituent.name} (${amount})` : constituent.name;
   });
@@ -97,12 +100,17 @@ function interpretedComposition(result) {
   ];
 }
 
-function compositionComparison(item) {
-  const result = compositionProposal(item);
-  return element("section", { className: "composition-comparison" }, [
-    element("div", {}, [element("span", { className: "eyebrow", text: "Source-reported composition" }), ...sourceComposition(item)]),
-    element("div", {}, [element("span", { className: "eyebrow", text: "Proposed site interpretation" }), ...interpretedComposition(result)]),
-  ]);
+function compositionComparison(family) {
+  const absorbers = family.absorbers || [];
+  if (!absorbers.length) return element("p", { className: "muted", text: "No absorber composition was extracted." });
+  return element("div", {}, absorbers.map((absorber) => {
+    const result = compositionProposal(family, absorber);
+    const scope = [absorber.label, absorber.layer_id].filter(Boolean).join(" · ");
+    return element("section", { className: "composition-comparison" }, [
+      element("div", {}, [element("span", { className: "eyebrow", text: `Source-reported composition${scope ? ` · ${scope}` : ""}` }), ...sourceComposition(absorber)]),
+      element("div", {}, [element("span", { className: "eyebrow", text: "Proposed site interpretation" }), ...interpretedComposition(result)]),
+    ]);
+  }));
 }
 
 async function loadSession() {
@@ -185,6 +193,7 @@ function renderQualityArtifacts() {
   const artifacts = state.bundle.manifest.quality_artifacts || {};
   const coverage = artifacts.coverage_audit;
   const refinement = artifacts.refinement_audit;
+  const repair = artifacts.targeted_repair;
   const sections = [];
   if (coverage?.counts) {
     sections.push(element("p", {
@@ -201,6 +210,13 @@ function renderQualityArtifacts() {
     sections.push(element("p", {
       className: "callout",
       text: `Quality-pass changes to inspect: ${changed.join(" · ")}.`,
+    }));
+  }
+  if (repair?.status) {
+    const itemCount = repair.worklist?.items?.length || 0;
+    sections.push(element("p", {
+      className: "callout",
+      text: `Targeted text-only repair: ${repair.status.replaceAll("_", " ")} · ${itemCount} audit item${itemCount === 1 ? "" : "s"}.`,
     }));
   }
   $("quality-artifacts").replaceChildren(...sections);
@@ -299,8 +315,8 @@ function attentionLabels(entry) {
   if (changes?.added_ids?.includes(identifier)) labels.push("added by quality pass");
   if (changes?.changed_ids?.includes(identifier)) labels.push("changed by quality pass");
   if (entry.kind === "device_families") {
-    const result = compositionProposal(entry.item);
-    if (result && result.status !== "accepted") labels.push(`composition ${result.status.replaceAll("_", " ")}`);
+    const results = (entry.item.absorbers || []).map((absorber) => compositionProposal(entry.item, absorber)).filter(Boolean);
+    if (results.some((result) => result.status !== "accepted")) labels.push("composition needs review");
   }
   return labels;
 }
@@ -343,7 +359,7 @@ function renderDeviceContext(entry) {
     contextField("Device status", device ? `${device.champion_status === "yes" ? "Champion" : "Not marked champion"} · ${device.selection_basis.replaceAll("_", " ")}` : null),
     contextField("Architecture", family?.architecture || family?.polarity),
     contextField("Layer stack", family?.full_stack_raw || (family?.layers || []).map((layer) => layer.material).join(" / ")),
-    contextField("Absorber", family?.absorber_formula?.raw_value),
+    contextField("Absorbers", (family?.absorbers || []).map((absorber) => absorber.formula?.raw_value || absorber.label).join(" · ")),
   ];
   return element("section", { className: "device-context" }, [
     element("div", { className: "context-heading" }, [element("strong", { text: "Device context" }), element("span", { className: "muted", text: "Shared context stays visible while reviewing this record" })]),

@@ -144,6 +144,7 @@ class ReviewApplication:
         configuration_bytes: bytes = b"",
         coverage_bytes: bytes = b"",
         refinement_bytes: bytes = b"",
+        repair_bytes: bytes = b"",
         enrichment_bytes: bytes = b"",
         reviewer_id: str,
     ) -> dict[str, Any]:
@@ -169,6 +170,9 @@ class ReviewApplication:
         refinement = self._decode_json(
             refinement_bytes, "refinement_audit.json", required=False
         )
+        repair = self._decode_json(
+            repair_bytes, "targeted_repair.json", required=False
+        )
         enrichment_payload = self._decode_json(
             enrichment_bytes, "enrichment.json", required=False
         )
@@ -187,6 +191,7 @@ class ReviewApplication:
                 "quality_artifacts": {
                     "coverage_audit": coverage,
                     "refinement_audit": refinement,
+                    "targeted_repair": repair,
                     "enrichment": enrichment,
                 },
                 "main_pdf_sha256": hashlib.sha256(pdf_bytes).hexdigest(),
@@ -578,6 +583,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         configuration_bytes=binary("run_configuration"),
                         coverage_bytes=binary("coverage_audit"),
                         refinement_bytes=binary("refinement_audit"),
+                        repair_bytes=binary("targeted_repair"),
                         enrichment_bytes=binary("enrichment"),
                         reviewer_id=user["id"],
                     )

@@ -40,6 +40,9 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | `--enrichment-max-output-tokens INTEGER` | `20000` | Completion limit for each enrichment call |
 | `--refinement / --no-refinement` | refinement | Re-read the same evidence to correct the extraction draft |
 | `--refinement-model TEXT` | extraction model | Optional different model for the quality pass |
+| `--targeted-repair / --no-targeted-repair` | targeted repair | Retry only gaps exposed by coverage and validation audits |
+| `--repair-model TEXT` | refinement or extraction model | Model for the evidence-local repair call |
+| `--repair-max-output-tokens INTEGER` | `30000` | Completion limit for the bounded repair response |
 
 Docling is the reproducible quality-first default. PyMuPDF is an explicit lightweight
 alternative; parser failures never silently change backends. Complete parser results
@@ -73,6 +76,8 @@ against frozen ground truth rather than treating lower spend as equivalent quali
 The command reports prompt tokens, completion tokens, cache hits, and provider-reported
 cost for each call. A cache hit has zero new usage in the aggregate `usage` object;
 the original call metadata remains under `calls[].cached_response_usage` for provenance.
+Requests contain parser-produced text and tables only. No option enables rendered-page
+or vision-model input in this workflow.
 
 ## Cache and logging
 

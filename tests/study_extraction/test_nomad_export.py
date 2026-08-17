@@ -13,6 +13,7 @@ from perla_extract.study_extraction.enrichment import (
     ProposedIon,
 )
 from perla_extract.study_extraction.models import (
+    AbsorberComponent,
     DeviceFamily,
     EvidenceCitation,
     IndividualDevice,
@@ -75,27 +76,35 @@ def study_fixture() -> StudyExtraction:
                 evidence=EVIDENCE,
             ),
         ],
-        absorber_formula=value("formula", "FAPbI3", None, None),
-        absorber_properties=[value("band gap", "1.50 eV", 1.5, "eV")],
-        absorber_constituents=[
-            MaterialConstituent(
-                name="FA",
-                role="A-site cation",
-                amount=coefficient,
+        absorbers=[
+            AbsorberComponent(
+                absorber_id="a1",
+                layer_id="absorber",
+                label="FA Pb I3 absorber",
+                formula=value("formula", "FAPbI3", None, None),
+                properties=[value("band gap", "1.50 eV", 1.5, "eV")],
+                constituents=[
+                    MaterialConstituent(
+                        name="FA",
+                        role="A-site cation",
+                        amount=coefficient,
+                        evidence=EVIDENCE,
+                    ),
+                    MaterialConstituent(
+                        name="Pb",
+                        role="B-site cation",
+                        amount=coefficient,
+                        evidence=EVIDENCE,
+                    ),
+                    MaterialConstituent(
+                        name="I",
+                        role="X-site anion",
+                        amount=value("stoichiometric coefficient", "3", 3, None),
+                        evidence=EVIDENCE,
+                    ),
+                ],
                 evidence=EVIDENCE,
-            ),
-            MaterialConstituent(
-                name="Pb",
-                role="B-site cation",
-                amount=coefficient,
-                evidence=EVIDENCE,
-            ),
-            MaterialConstituent(
-                name="I",
-                role="X-site anion",
-                amount=value("stoichiometric coefficient", "3", 3, None),
-                evidence=EVIDENCE,
-            ),
+            )
         ],
         processing_steps=[
             ProcessingStep(
@@ -219,9 +228,49 @@ def test_nomad_export_projects_only_explicit_chemistry_and_converts_units():
     assert absorber.deposition[0].duration == 600.0
 
 
+def test_nomad_export_preserves_tandem_absorbers_without_selecting_one():
+    study = study_fixture()
+    family = study.device_families[0]
+    second_layer = family.layers[0].model_copy(
+        update={
+            "layer_id": "absorber-narrow",
+            "sequence": 3,
+            "material": "FASnI3",
+        }
+    )
+    second_absorber = family.absorbers[0].model_copy(
+        deep=True,
+        update={
+            "absorber_id": "a2",
+            "layer_id": "absorber-narrow",
+            "label": "narrow-bandgap absorber",
+            "formula": value("formula", "FASnI3", None, None),
+            "constituents": [],
+        },
+    )
+    family.layers.append(second_layer)
+    family.absorbers.append(second_absorber)
+
+    exported = to_nomad_with_report(study)
+
+    assert [item.absorber_id for item in exported.composition_projections] == [
+        "a1",
+        "a2",
+    ]
+    assert all(
+        archive.data.perovskite_composition is None for archive in exported.archives
+    )
+    assert any(
+        issue.code == "multiple_absorbers_not_projectable"
+        for issue in exported.issues
+    )
+    context = json.loads(exported.archives[0].data.additional_notes)["family"]
+    assert [item["absorber_id"] for item in context["absorbers"]] == ["a1", "a2"]
+
+
 def test_formula_without_reported_site_assignments_is_reviewable_not_invented():
     study = study_fixture()
-    study.device_families[0].absorber_constituents = []
+    study.device_families[0].absorbers[0].constituents = []
 
     exported = to_nomad_with_report(study)
 
@@ -233,7 +282,7 @@ def test_formula_without_reported_site_assignments_is_reviewable_not_invented():
 
 def test_nomad_export_consumes_only_accepted_enrichment():
     study = study_fixture()
-    study.device_families[0].absorber_constituents = []
+    study.device_families[0].absorbers[0].constituents = []
     step = study.device_families[0].processing_steps[0]
     step.materials = ["FAI", "DMF", "chlorobenzene"]
     step.conditions.append(value("FAI concentration", "1 M", 1, "M"))
@@ -298,7 +347,7 @@ def test_nomad_export_consumes_only_accepted_enrichment():
 
 def test_nomad_export_revalidates_an_audit_marked_accepted():
     study = study_fixture()
-    study.device_families[0].absorber_constituents = []
+    study.device_families[0].absorbers[0].constituents = []
     forged = EnrichmentAudit(
         composition_results=[
             CompositionProposalResult(

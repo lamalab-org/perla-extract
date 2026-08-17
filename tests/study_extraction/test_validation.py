@@ -78,7 +78,8 @@ def test_reported_value_can_be_an_exact_join_of_multiple_verified_quotes():
     assert result["counts"]["source_verified_values"] == 1
     assert result["counts"]["source_assembled_values"] == 1
     assert (
-        result["verified_values"][0]["path"] == "$.device_families[0].absorber_formula"
+        result["verified_values"][0]["path"]
+        == "$.device_families[0].absorbers[0].formula"
     )
 
 

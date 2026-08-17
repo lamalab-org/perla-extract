@@ -17,10 +17,12 @@ from .enrichment import (
     EnrichmentAudit,
     ProcessingProposalResponse,
     ProcessingProposalResult,
+    composition_target_id,
     validate_composition_proposals,
     validate_processing_proposals,
 )
 from .models import (
+    AbsorberComponent,
     DeviceFamily,
     IndividualDevice,
     MaterialConstituent,
@@ -152,15 +154,16 @@ def _explicit_coefficient(constituent: MaterialConstituent) -> str | None:
 
 
 def _project_composition(
-    family: DeviceFamily,
+    family_id: str,
+    absorber: AbsorberComponent,
     enrichment: CompositionProposalResult | None = None,
 ) -> NOMADCompositionProjection:
-    """Map explicit site claims or an independently validated formula interpretation."""
+    """Map one scoped absorber without combining distinct subcells."""
 
-    raw_formula = family.absorber_formula.raw_value if family.absorber_formula else None
+    raw_formula = absorber.formula.raw_value if absorber.formula else None
     composition = NOMADComposition(long_form=raw_formula, formula=raw_formula)
     notes: list[str] = []
-    band_gap = _unique_value(family.absorber_properties, _BAND_GAP_NAMES)
+    band_gap = _unique_value(absorber.properties, _BAND_GAP_NAMES)
     band_gap_ev = (
         convert_reported_value(band_gap, "electron_volt") if band_gap else None
     )
@@ -168,7 +171,7 @@ def _project_composition(
         composition.band_gap = band_gap_ev
     elif band_gap is not None:
         notes.append("The reported band gap lacks an explicit eV-compatible value.")
-    dimensionality = _unique_value(family.absorber_properties, _DIMENSIONALITY_NAMES)
+    dimensionality = _unique_value(absorber.properties, _DIMENSIONALITY_NAMES)
     if dimensionality and dimensionality.raw_value in _DIMENSIONALITIES:
         composition.dimensionality = dimensionality.raw_value
     elif dimensionality is not None:
@@ -178,7 +181,7 @@ def _project_composition(
     explicit_sites = 0
     incomplete_sites = 0
     explicit_site_targets: set[str] = set()
-    for constituent in family.absorber_constituents:
+    for constituent in absorber.constituents:
         target = _SITE_ROLES.get(_key(constituent.role or ""))
         if target is None:
             continue
@@ -242,7 +245,8 @@ def _project_composition(
                 "The formula is preserved, but site ions were not explicit; the pinned NOMAD classic converter may require reviewed site assignments."
             )
     return NOMADCompositionProjection(
-        family_id=family.family_id,
+        family_id=family_id,
+        absorber_id=absorber.absorber_id,
         status=status,
         raw_formula=raw_formula,
         nomad_composition=result,
@@ -474,12 +478,7 @@ def _project_family(
             for step in family.processing_steps
             if not step.target_layer_ids
         ],
-        "absorber_properties": [
-            _payload(value) for value in family.absorber_properties
-        ],
-        "absorber_constituents": [
-            item.model_dump(mode="json") for item in family.absorber_constituents
-        ],
+        "absorbers": [absorber.model_dump(mode="json") for absorber in family.absorbers],
         "layer_reported_properties": [
             {
                 "layer_id": layer.layer_id,
@@ -607,9 +606,10 @@ def _accepted_enrichment(
         study, ProcessingProposalResponse(proposals=proposed_processing)
     )
     compositions = {
-        result.proposal.family_id: result
+        target_id: result
         for result in composition_results
         if result.status == "accepted"
+        and (target_id := composition_target_id(study, result.proposal)) is not None
     }
     processing = {
         result.proposal.step_id: result
@@ -669,10 +669,22 @@ def to_nomad_with_report(
         _accepted_enrichment(study, enrichment)
     )
     projections = [
-        _project_composition(family, composition_enrichment.get(family.family_id))
+        _project_composition(
+            family.family_id,
+            absorber,
+            composition_enrichment.get(absorber.absorber_id),
+        )
         for family in study.device_families
+        for absorber in family.absorbers
     ]
-    compositions = {item.family_id: item for item in projections}
+    projections_by_family: dict[str, list[NOMADCompositionProjection]] = {}
+    for projection in projections:
+        projections_by_family.setdefault(projection.family_id, []).append(projection)
+    compositions = {
+        family_id: family_projections[0]
+        for family_id, family_projections in projections_by_family.items()
+        if len(family_projections) == 1
+    }
     for projection in projections:
         for detail in projection.issues:
             _issue(
@@ -680,16 +692,26 @@ def to_nomad_with_report(
                 "composition_needs_review",
                 "device_family",
                 projection.family_id,
-                detail,
+                f"{projection.absorber_id}: {detail}",
+                "perovskite_composition",
+            )
+    for family_id, family_projections in projections_by_family.items():
+        if len(family_projections) > 1:
+            _issue(
+                issues,
+                "multiple_absorbers_not_projectable",
+                "device_family",
+                family_id,
+                "The pinned NOMAD cell schema has one perovskite_composition field; all scoped absorbers remain preserved in additional context.",
                 "perovskite_composition",
             )
     if enrichment:
-        for family_id in enrichment.unresolved_composition_ids:
+        for absorber_id in enrichment.unresolved_absorber_ids:
             _issue(
                 issues,
                 "enrichment_not_proposed",
-                "device_family",
-                family_id,
+                "absorber",
+                absorber_id,
                 "No composition interpretation was proposed.",
                 "perovskite_composition",
             )
@@ -707,8 +729,9 @@ def to_nomad_with_report(
                 _issue(
                     issues,
                     "enrichment_not_applied",
-                    "device_family",
-                    result.proposal.family_id,
+                    "absorber",
+                    composition_target_id(study, result.proposal)
+                    or result.proposal.family_id,
                     "; ".join(result.issues) or result.status,
                     "perovskite_composition",
                 )
@@ -726,12 +749,13 @@ def to_nomad_with_report(
             if result.status == "accepted":
                 continue
             kind: SourceKind = (
-                "device_family"
+                "absorber"
                 if isinstance(result, CompositionProposalResult)
                 else "processing_step"
             )
             source_id = (
-                result.proposal.family_id
+                composition_target_id(study, result.proposal)
+                or result.proposal.family_id
                 if isinstance(result, CompositionProposalResult)
                 else result.proposal.step_id
             )
@@ -937,7 +961,7 @@ def to_nomad_with_report(
         fields, family_note = _base_cell(
             study,
             family,
-            compositions[family.family_id],
+            compositions.get(family.family_id),
             processing_enrichment,
             model,
         )

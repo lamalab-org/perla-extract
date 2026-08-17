@@ -22,7 +22,8 @@ flowchart LR
     G --> R
     R --> H["Rich StudyExtraction"]
     H --> I["Citation repair, evidence checks, and coverage audit"]
-    I --> L["Audited composition and processing enrichment"]
+    I --> T["Targeted text/table repair with monotonic gates"]
+    T --> L["Audited composition and processing enrichment"]
     L --> J["Atomic NOMAD archives"]
     H --> K["Human ground-truth review"]
 ```

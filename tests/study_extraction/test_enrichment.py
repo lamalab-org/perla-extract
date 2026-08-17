@@ -12,6 +12,7 @@ from perla_extract.study_extraction.enrichment import (
     validate_processing_proposals,
 )
 from perla_extract.study_extraction.models import (
+    AbsorberComponent,
     DeviceFamily,
     EvidenceBlock,
     EvidenceCitation,
@@ -56,9 +57,17 @@ def study_fixture() -> StudyExtraction:
                         evidence=[CITATION],
                     )
                 ],
-                absorber_formula=value("formula", "FAPbI₃", None, None),
-                absorber_properties=[],
-                absorber_constituents=[],
+                absorbers=[
+                    AbsorberComponent(
+                        absorber_id="a1",
+                        layer_id="l1",
+                        label="FAPbI3 absorber",
+                        formula=value("formula", "FAPbI₃", None, None),
+                        properties=[],
+                        constituents=[],
+                        evidence=[CITATION],
+                    )
+                ],
                 processing_steps=[
                     ProcessingStep(
                         step_id="s1",
@@ -89,6 +98,7 @@ def study_fixture() -> StudyExtraction:
 def composition_proposal(formula_iodine_coefficient: str = "3") -> CompositionProposal:
     return CompositionProposal(
         family_id="f1",
+        absorber_id="a1",
         ions=[
             ProposedIon(site="A", abbreviation="FA", coefficient="1"),
             ProposedIon(site="B", abbreviation="Pb", coefficient="1"),
@@ -113,6 +123,31 @@ def test_composition_is_accepted_only_when_sites_reconstruct_reported_formula():
     assert accepted.status == "accepted"
     assert mismatch.status == "needs_review"
     assert "exactly reconstruct" in mismatch.issues[0]
+
+
+def test_parenthesized_x_site_multiplicity_preserves_fractional_occupancy():
+    study = study_fixture()
+    study.device_families[0].absorbers[0].formula = value(
+        "formula", "Cs0.3FA0.6DMA0.1Pb(I0.7Br0.3)3", None, None
+    )
+    proposal = CompositionProposal(
+        family_id="f1",
+        absorber_id="a1",
+        ions=[
+            ProposedIon(site="A", abbreviation="Cs", coefficient="0.3"),
+            ProposedIon(site="A", abbreviation="FA", coefficient="0.6"),
+            ProposedIon(site="A", abbreviation="DMA", coefficient="0.1"),
+            ProposedIon(site="B", abbreviation="Pb", coefficient="1"),
+            ProposedIon(site="X", abbreviation="I", coefficient="0.7"),
+            ProposedIon(site="X", abbreviation="Br", coefficient="0.3"),
+        ],
+    )
+
+    result = validate_composition_proposals(
+        study, CompositionProposalResponse(proposals=[proposal])
+    )[0]
+
+    assert result.status == "accepted"
 
 
 def test_composition_context_contains_only_cited_evidence():
@@ -215,14 +250,14 @@ def test_processing_accepts_only_resolvable_atomic_source_pointers():
     assert "out of range" in invalid.issues[0]
 
 
-def test_enrichment_batches_two_calls_and_reports_omitted_targets():
+def test_enrichment_retries_only_omitted_compositions_and_reports_them():
     class FakeClient:
         def __init__(self):
             self.kinds: list[str] = []
 
         def complete(self, **request):
             self.kinds.append(request["kind"])
-            if request["kind"] == "composition_enrichment":
+            if request["kind"].startswith("composition_enrichment"):
                 return CompositionProposalResponse(proposals=[])
             return ProcessingProposalResponse(proposals=[])
 
@@ -236,6 +271,10 @@ def test_enrichment_batches_two_calls_and_reports_omitted_targets():
         max_output_tokens=1000,
     )
 
-    assert client.kinds == ["composition_enrichment", "processing_enrichment"]
-    assert audit.unresolved_composition_ids == ["f1"]
+    assert client.kinds == [
+        "composition_enrichment",
+        "composition_enrichment_retry",
+        "processing_enrichment",
+    ]
+    assert audit.unresolved_absorber_ids == ["a1"]
     assert audit.unresolved_processing_step_ids == ["s1"]

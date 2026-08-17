@@ -21,6 +21,7 @@ NOMAD_M_DEF = (
 )
 
 SourceKind = Literal[
+    "absorber",
     "device_family",
     "individual_device",
     "performance_observation",
@@ -79,6 +80,7 @@ class NOMADCompositionProjection(_StrictModel):
     """Make chemical normalization readiness reviewable before NOMAD ingestion."""
 
     family_id: str
+    absorber_id: str
     status: CompositionStatus
     raw_formula: str | None
     nomad_composition: NOMADComposition | None

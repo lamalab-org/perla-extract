@@ -30,13 +30,20 @@ issue where a target field was rejected.
 
 ## Chemical composition
 
-The reported absorber formula is copied to both NOMAD `long_form` and `formula`.
+Each scoped absorber receives its own composition projection. For a family containing
+exactly one absorber, the reported formula is copied to both NOMAD `long_form` and
+`formula`.
 Perovskite site ions come either from explicit source claims or from an accepted
 enrichment proposal that exactly reconstructs that formula. Processing fields and
 solution roles likewise consume only accepted index-based proposals. See
 [Interpret composition and processing](enrichment.md).
 
-`composition_projection.json` records one of four states for every family:
+The classic NOMAD cell slot cannot faithfully represent several perovskite absorbers
+in one tandem. In that case the adapter does not choose one or create fictitious cells:
+all absorber records stay in structured additional context, every composition remains
+in `composition_projection.json`, and a conversion issue makes the limitation visible.
+
+`composition_projection.json` records one of four states for every absorber:
 
 - `ready`: assignments were explicit or passed exact formula reconstruction;
 - `partial`: a formula was preserved but no site assignment was explicit;

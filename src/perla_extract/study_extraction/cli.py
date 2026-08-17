@@ -60,6 +60,9 @@ def extract_study(
     enrichment_max_output_tokens: int = 20_000,
     use_refinement: bool = True,
     refinement_model: str | None = None,
+    use_targeted_repair: bool = True,
+    repair_model: str | None = None,
+    repair_max_output_tokens: int = 30_000,
     parser: str = "docling",
     mode: str = "auto",
     single_call_max_input_tokens: int = 90_000,
@@ -99,6 +102,9 @@ def extract_study(
         enrichment_max_output_tokens=enrichment_max_output_tokens,
         use_refinement=use_refinement,
         refinement_model=refinement_model,
+        use_targeted_repair=use_targeted_repair,
+        repair_model=repair_model,
+        repair_max_output_tokens=repair_max_output_tokens,
         parser=parser,
         mode=mode,
         single_call_max_input_tokens=single_call_max_input_tokens,
@@ -171,6 +177,18 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     default=None,
     help="LiteLLM model for the quality pass; defaults to --model.",
 )
+@click.option(
+    "--targeted-repair/--no-targeted-repair",
+    "use_targeted_repair",
+    default=True,
+    help="Retry only audit-visible gaps using their parser text and table evidence.",
+)
+@click.option(
+    "--repair-model",
+    default=None,
+    help="LiteLLM model for targeted repair; defaults to refinement model or --model.",
+)
+@click.option("--repair-max-output-tokens", type=click.IntRange(min=1), default=30_000)
 @click.option("--parser", type=click.Choice(available_parsers()), default="docling")
 @click.option(
     "--mode", type=click.Choice(("auto", "single", "windowed")), default="auto"

@@ -44,6 +44,12 @@ from .models import (
 from .nomad import NOMADExport, to_nomad_with_report
 from .partitioning import EvidenceWindowPlan, plan_evidence_windows
 from .refinement import REFINEMENT_PROMPT, refine_draft
+from .repair import (
+    REPAIR_PROMPT,
+    REPAIR_SYSTEM_PROMPT,
+    RepairAudit,
+    run_targeted_repair,
+)
 from .source import parse_documents
 from .transport import (
     compact_study_schema,
@@ -82,8 +88,10 @@ Rules:
   measurement or spectrum exists, without any reported outcome, is context rather than
   a performance observation. Non-numeric outcomes are valid when the source actually
   reports them; do not use a method name or specimen description as a metric value.
-- Extract the complete ordered layer stack, the explicitly reported absorber formula,
-  absorber constituents, additives or dopants, and all reported processing steps.
+- Extract the complete ordered layer stack and all reported processing steps. Create
+  one scoped absorber record per absorber layer or subcell, keeping each absorber's
+  formula, constituents, properties, additives, and dopants together. Never combine
+  wide-bandgap and narrow-bandgap tandem chemistry into one composition.
   Use one MaterialConstituent per named chemical; do not combine a list of chemicals
   into one constituent.
 - Put arbitrary reported material, geometry, processing, measurement, and stability
@@ -172,6 +180,8 @@ def prompt_sha256() -> str:
             COMPOSITION_ENRICHMENT_PROMPT,
             PROCESSING_ENRICHMENT_PROMPT,
             REFINEMENT_PROMPT,
+            REPAIR_SYSTEM_PROMPT,
+            REPAIR_PROMPT,
         ],
         ensure_ascii=False,
         separators=(",", ":"),
@@ -196,6 +206,9 @@ class ExtractionConfig:
     enrichment_max_output_tokens: int = 20_000
     use_refinement: bool = True
     refinement_model: str | None = None
+    use_targeted_repair: bool = True
+    repair_model: str | None = None
+    repair_max_output_tokens: int = 30_000
     parser: str = "docling"
     mode: str = "auto"
     single_call_max_input_tokens: int = 90_000
@@ -654,6 +667,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             config.max_output_tokens,
             config.inventory_max_output_tokens,
             config.enrichment_max_output_tokens,
+            config.repair_max_output_tokens,
         )
         <= 0
     ):
@@ -710,11 +724,13 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             + extraction_call_count * int(config.use_refinement)
             + int(config.use_inventory)
             + int(mode == "windowed" and extraction_call_count > 1)
-            + (2 if config.use_enrichment else 0),
+            + (3 if config.use_enrichment else 0)
+            + int(config.use_targeted_repair),
             "planned_refinement_calls": (
                 extraction_call_count if config.use_refinement else 0
             ),
-            "planned_enrichment_calls_max": 2 if config.use_enrichment else 0,
+            "planned_enrichment_calls_max": 3 if config.use_enrichment else 0,
+            "planned_targeted_repair_calls_max": int(config.use_targeted_repair),
             "source_parsing": source_events,
             "elapsed_seconds": round(time.monotonic() - started, 3),
         }
@@ -807,6 +823,9 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         "draft_coverage_audit.json",
         "refinement_audit.json",
         "quality_comparison.json",
+        "pre_repair_validation.json",
+        "pre_repair_coverage_audit.json",
+        "targeted_repair.json",
     ):
         (config.output_dir / name).unlink(missing_ok=True)
     for directory in ("draft_windows", "refinement_audits"):
@@ -827,6 +846,54 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         "quote_repairs": quote_repairs,
         "pointer_repairs": pointer_repairs,
     }
+    pre_repair_validation = validate_study(extraction, blocks)
+    pre_repair_validation_public = dict(pre_repair_validation)
+    pre_repair_validation_public.pop("verified_values")
+    pre_repair_coverage = (
+        audit_inventory_coverage(grounded_inventory, extraction)
+        if grounded_inventory is not None
+        else None
+    )
+    repair_audit: RepairAudit | None = None
+    if config.use_targeted_repair:
+        write_json_atomic(
+            config.output_dir / "pre_repair_validation.json",
+            pre_repair_validation_public,
+        )
+        if pre_repair_coverage is not None:
+            write_json_atomic(
+                config.output_dir / "pre_repair_coverage_audit.json",
+                pre_repair_coverage,
+            )
+        logger.info("Checking targeted text-only repair worklist")
+        extraction, repair_audit = run_targeted_repair(
+            client=client,
+            study=extraction,
+            blocks=blocks,
+            inventory=grounded_inventory,
+            coverage=pre_repair_coverage,
+            validation=pre_repair_validation_public,
+            model=config.repair_model or config.refinement_model or config.model,
+            reasoning_effort=config.reasoning_effort,
+            max_output_tokens=config.repair_max_output_tokens,
+        )
+        write_json_atomic(
+            config.output_dir / "targeted_repair.json",
+            repair_audit.model_dump(mode="json"),
+        )
+        if repair_audit.status == "accepted":
+            extraction, repair_quote_repairs = repair_noncontiguous_citation_quotes(
+                extraction, blocks
+            )
+            extraction, repair_pointer_repairs = repair_unique_citation_pointers(
+                extraction, blocks
+            )
+            citation_repairs["repair_count"] += (
+                repair_quote_repairs["repair_count"]
+                + repair_pointer_repairs["repair_count"]
+            )
+            citation_repairs["targeted_quote_repairs"] = repair_quote_repairs
+            citation_repairs["targeted_pointer_repairs"] = repair_pointer_repairs
     write_json_atomic(config.output_dir / "citation_repairs.json", citation_repairs)
 
     write_json_atomic(
@@ -977,6 +1044,8 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             "evidence_inventory",
             "composition_enrichment",
             "processing_enrichment",
+            "composition_enrichment_retry",
+            "targeted_study_repair",
         }
     ]
     enrichment_status = None
@@ -992,7 +1061,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
                 "needs_review"
                 if enrichment.errors
                 or any(result.status != "accepted" for result in results)
-                or enrichment.unresolved_composition_ids
+                or enrichment.unresolved_absorber_ids
                 or enrichment.unresolved_processing_step_ids
                 else "complete"
             )
@@ -1026,6 +1095,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             in {"study_refinement", "evidence_window_refinement"}
             for call in client.calls
         ),
+        "targeted_repair_status": repair_audit.status if repair_audit else "disabled",
         "quality_comparison": quality_comparison,
         "coverage": coverage_audit["counts"] if coverage_audit else None,
         "enrichment_status": enrichment_status,
@@ -1039,7 +1109,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             for result in (enrichment.processing_results if enrichment else [])
         ),
         "unresolved_composition_proposals": (
-            len(enrichment.unresolved_composition_ids) if enrichment else 0
+            len(enrichment.unresolved_absorber_ids) if enrichment else 0
         ),
         "unresolved_processing_proposals": (
             len(enrichment.unresolved_processing_step_ids) if enrichment else 0
