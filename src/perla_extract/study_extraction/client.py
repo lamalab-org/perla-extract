@@ -48,7 +48,7 @@ def _strict_schema(
     def close(value: object) -> None:
         if isinstance(value, dict):
             properties = value.get("properties")
-            if isinstance(properties, dict):
+            if value.get("type") == "object" and isinstance(properties, dict):
                 value["required"] = list(properties)
                 value["additionalProperties"] = False
             for item in value.values():

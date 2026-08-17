@@ -74,6 +74,26 @@ def test_provider_schema_requires_nullable_defaulted_fields():
     assert "default" not in family["properties"]["absorbers"]
     assert "absorber_formula" not in family["properties"]
     assert family["additionalProperties"] is False
+    absorber = schema["$defs"]["AbsorberComponent"]
+    property_values = absorber["properties"]["properties"]
+    assert property_values["type"] == "array"
+    assert "required" not in property_values
+    assert "additionalProperties" not in property_values
+
+    def assert_closed_objects_only(value):
+        if isinstance(value, dict):
+            if "required" in value:
+                assert value.get("type") == "object"
+                assert set(value["required"]) == set(value["properties"])
+            if "additionalProperties" in value:
+                assert value.get("type") == "object"
+            for child in value.values():
+                assert_closed_objects_only(child)
+        elif isinstance(value, list):
+            for child in value:
+                assert_closed_objects_only(child)
+
+    assert_closed_objects_only(schema)
 
 
 @pytest.mark.parametrize("invalid_cache", ["{", "[]"])
