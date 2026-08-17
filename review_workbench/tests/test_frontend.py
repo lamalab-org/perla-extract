@@ -69,6 +69,31 @@ def test_ui_tracks_record_review_and_avoids_prompt_based_creation():
     assert "window.prompt" not in source
 
 
+def test_record_review_is_a_device_context_queue():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+
+    assert "Review queue" in html
+    assert "record-status-filter" in html
+    assert "record-kind-filter" in html
+    assert "Device context" in source
+    assert "relatedContext" in source
+    assert "focusCitation" in source
+    assert 'key === "v"' in source
+    assert 'key === "u"' in source
+    assert 'key === "c"' in source
+
+
+def test_corrections_default_to_fields_and_existing_evidence():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+
+    assert "structured-editor" in html
+    assert "Advanced: edit complete validated JSON" in html
+    assert "renderStructuredEditor" in source
+    assert "citation?.block_id" in source
+
+
 def test_ui_builds_untrusted_content_with_dom_nodes():
     source = (APP / "app.js").read_text(encoding="utf-8")
     assert "innerHTML" not in source

@@ -74,21 +74,36 @@
 
           <div id="records-tab" class="tab-panel" hidden>
             <div class="records-toolbar">
-              <p>Correct coherent records. Every addition or correction requires an exact supplied evidence block.</p>
-              <div class="record-add">
-                <select id="new-record-kind" aria-label="New record type">
-                  <option value="device_families">Device family</option>
-                  <option value="individual_devices">Individual device</option>
-                  <option value="performance_observations">Performance observation</option>
-                  <option value="population_statistics">Population statistic</option>
-                  <option value="stability_tests">Stability test</option>
-                  <option value="identity_links">Cross-window identity link</option>
+              <div><h3>Review queue</h3><p id="queue-progress">Choose a record to begin.</p></div>
+              <div class="queue-filters">
+                <select id="record-status-filter" aria-label="Record status">
+                  <option value="remaining">Remaining</option>
+                  <option value="attention">Needs attention</option>
+                  <option value="all">All records</option>
+                  <option value="verified">Verified</option>
+                  <option value="uncertain">Uncertain</option>
                 </select>
-                <button id="add-record">Add record</button>
+                <select id="record-kind-filter" aria-label="Record type filter"><option value="all">All record types</option></select>
+                <details class="add-record-menu"><summary>Add missing record</summary><div class="record-add">
+                  <select id="new-record-kind" aria-label="New record type">
+                    <option value="device_families">Device family</option>
+                    <option value="individual_devices">Individual device</option>
+                    <option value="performance_observations">Performance observation</option>
+                    <option value="population_statistics">Population statistic</option>
+                    <option value="stability_tests">Stability test</option>
+                    <option value="identity_links">Cross-window identity link</option>
+                  </select>
+                  <button id="add-record">Add</button>
+                </div></details>
               </div>
             </div>
-            <div id="record-groups"></div>
-            <button data-stage="fields" class="complete-stage primary">Mark all record fields reviewed</button>
+            <div id="review-queue"></div>
+            <div class="queue-footer">
+              <button id="previous-record" aria-label="Previous record">← Previous</button>
+              <span id="queue-position"></span>
+              <button id="next-record" aria-label="Next record">Next →</button>
+              <button data-stage="fields" class="complete-stage primary">Mark all record fields reviewed</button>
+            </div>
           </div>
 
           <div id="completeness-tab" class="tab-panel" hidden>
@@ -110,12 +125,16 @@
   <dialog id="record-dialog">
     <form method="dialog" class="dialog-card">
       <div class="dialog-heading"><div><span id="record-kind" class="eyebrow"></span><h2 id="record-title">Edit record</h2></div><button value="cancel" aria-label="Close">×</button></div>
-      <label>Validated record JSON<textarea id="record-json" rows="18" spellcheck="false"></textarea></label>
-      <div class="evidence-picker">
-        <label>Find evidence<input id="evidence-query" type="search" placeholder="Search extracted evidence…" /></label>
-        <button id="search-evidence" type="button">Search</button>
-      </div>
-      <div id="evidence-results"></div>
+      <p class="muted">Correct the scientific fields below. Existing citations are preserved automatically.</p>
+      <div id="structured-editor" class="structured-editor"></div>
+      <details class="advanced-json"><summary>Advanced: edit complete validated JSON</summary><label>Record JSON<textarea id="record-json" rows="18" spellcheck="false"></textarea></label></details>
+      <details class="evidence-search"><summary>Use different supporting evidence</summary>
+        <div class="evidence-picker">
+          <label>Find evidence<input id="evidence-query" type="search" placeholder="Search extracted evidence…" /></label>
+          <button id="search-evidence" type="button">Search</button>
+        </div>
+        <div id="evidence-results"></div>
+      </details>
       <label>Evidence block ID<input id="citation-block" /></label>
       <label>Exact quote <span>Trim this to the smallest passage that supports the correction.</span><textarea id="citation-quote" rows="3"></textarea></label>
       <label>Decision note<input id="mutation-note" placeholder="Why is this correction needed?" /></label>

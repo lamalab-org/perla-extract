@@ -33,6 +33,20 @@ attention without treating either model artifact as truth. The app stores immuta
 seeds, compiled truth, event history, evidence blocks, and manifests under the
 ground-truth directory.
 
+## Review records efficiently
+
+After the blind census, the Records tab presents a device-centered queue rather than
+one long list. A family is followed by its population records, devices, observations,
+and stability tests so shared architecture, stack, absorber, and composition remain in
+view. The first cited source block opens in the paper automatically.
+
+The default **Remaining** view removes verified and uncertain records as the reviewer
+advances. **Needs attention** limits the queue to requested corrections, records
+changed by the quality pass, and composition proposals that need review. Use `V` to
+verify, `U` for uncertain, `C` to correct, and the arrow keys or `J`/`K` to move between
+records. Corrections open a field-oriented editor with existing evidence preselected;
+complete JSON remains available only as an advanced escape hatch.
+
 Review state is committed under `state/`. One immutable source bundle contains the
 seed, evidence document, manifest, and initial revision. Each accepted change writes
 one new revision snapshot containing both the validated truth and complete event

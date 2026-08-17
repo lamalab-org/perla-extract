@@ -19,7 +19,11 @@ const QUALITY_GATES = [
   "Every accepted reported value has source evidence",
   "Remaining uncertainty recorded without inventing a value",
 ];
-const state = { split: "calibration", papers: [], paperId: null, bundle: null, user: null, page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null };
+const state = {
+  split: "calibration", papers: [], paperId: null, bundle: null, user: null,
+  page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null,
+  queueIndex: 0, queueKey: null, evidenceCache: new Map(),
+};
 
 async function request(url, options = {}) {
   const token = localStorage.getItem("review-token");
@@ -134,6 +138,9 @@ function renderPapers() {
 async function selectPaper(paperId) {
   state.paperId = paperId;
   state.bundle = await request(`/api/paper/${state.split}/${encodeURIComponent(paperId)}`);
+  state.queueIndex = 0;
+  state.queueKey = null;
+  state.evidenceCache.clear();
   state.source = state.bundle.sources.includes("main") ? "main" : state.bundle.sources[0];
   state.page = 1;
   $("empty-state").hidden = true;
@@ -165,9 +172,9 @@ function renderStudy() {
     renderInventoryComparison();
     renderQualityArtifacts();
     renderRecordGroups("inventory-lists", true);
-    renderRecordGroups("record-groups", false);
+    renderReviewQueue();
   } else {
-    $("record-groups").replaceChildren(element("p", { className: "callout", text: "Submit the blind device census before reviewing model candidates." }));
+    $("review-queue").replaceChildren(element("p", { className: "callout", text: "Submit the blind device census before reviewing model candidates." }));
   }
   renderStageControls();
   renderQualityGates();
@@ -232,44 +239,205 @@ function renderInventoryComparison() {
   $("inventory-comparison").replaceChildren(...comparison);
 }
 
-function recordCard(kind, item, index, compact) {
-  const decision = recordDecision(kind, item, index);
+function recordCard(kind, item, index) {
   const summary = element("div", {}, [
     element("span", { className: "eyebrow", text: entityId(kind, item, index) }),
     element("h4", { text: entityTitle(kind, item, index) }),
     element("p", { text: entityDetail(kind, item) }),
   ]);
-  if (compact) return element("article", { className: `record-card ${decision}` }, [summary]);
-  const decisionSelect = element("select", {
-    properties: { value: decision },
-    attributes: { "aria-label": `Review decision for ${entityTitle(kind, item, index)}` },
-  }, [
-    element("option", { text: "Not reviewed", properties: { value: "" } }),
-    element("option", { text: "Verified", properties: { value: "verified" } }),
-    element("option", { text: "Uncertain", properties: { value: "uncertain" } }),
-    element("option", { text: "Needs correction", properties: { value: "needs_correction" } }),
-  ]);
-  decisionSelect.value = decision;
-  decisionSelect.addEventListener("change", () => decideRecord(decisionSelect, kind, index));
-  const actions = element("div", { className: "record-actions" }, [
-    decisionSelect,
-    element("button", { text: "Duplicate", events: { click: () => openRecord(kind, null, item) } }),
-    element("button", { text: "Review", events: { click: () => openRecord(kind, index) } }),
-  ]);
-  const guidance = kind === "device_families" ? compositionComparison(item) : null;
-  return element("article", { className: `record-card ${decision}` }, [summary, actions, guidance]);
+  return element("article", { className: "record-card" }, [summary]);
 }
 
-function renderRecordGroups(target, compact) {
+function renderRecordGroups(target) {
   const truth = state.bundle.ground_truth;
   const groups = Object.entries(COLLECTIONS).map(([kind, label]) => {
-    const records = truth[kind].map((item, index) => recordCard(kind, item, index, compact));
+    const records = truth[kind].map((item, index) => recordCard(kind, item, index));
     return element("section", { className: "record-group" }, [
       element("div", { className: "group-heading" }, [element("h3", { text: label }), element("span", { text: truth[kind].length })]),
       ...(records.length ? records : [element("p", { className: "muted", text: "No records" })]),
     ]);
   });
   $(target).replaceChildren(...groups);
+}
+
+function recordEntries() {
+  const truth = state.bundle.ground_truth;
+  const entries = Object.fromEntries(Object.keys(COLLECTIONS).map((kind) => [kind, truth[kind].map((item, index) => ({ kind, item, index }))]));
+  const familyField = state.bundle.summary.record_identifiers.device_families;
+  const deviceField = state.bundle.summary.record_identifiers.individual_devices;
+  const ordered = [];
+  const added = new Set();
+  const push = (entry) => {
+    const key = recordKey(entry.kind, entry.item, entry.index);
+    if (!added.has(key)) { ordered.push({ ...entry, key }); added.add(key); }
+  };
+  for (const family of entries.device_families) {
+    push(family);
+    entries.population_statistics.filter((entry) => entry.item[familyField] === family.item[familyField]).forEach(push);
+    for (const device of entries.individual_devices.filter((entry) => entry.item[familyField] === family.item[familyField])) {
+      push(device);
+      entries.performance_observations.filter((entry) => entry.item[deviceField] === device.item[deviceField]).forEach(push);
+      entries.stability_tests.filter((entry) => entry.item[deviceField] === device.item[deviceField]).forEach(push);
+    }
+    entries.stability_tests.filter((entry) => !entry.item[deviceField] && entry.item[familyField] === family.item[familyField]).forEach(push);
+  }
+  for (const device of entries.individual_devices) {
+    push(device);
+    entries.performance_observations.filter((entry) => entry.item[deviceField] === device.item[deviceField]).forEach(push);
+    entries.stability_tests.filter((entry) => entry.item[deviceField] === device.item[deviceField]).forEach(push);
+  }
+  Object.values(entries).flat().forEach(push);
+  return ordered;
+}
+
+function attentionLabels(entry) {
+  const labels = [];
+  const decision = recordDecision(entry.kind, entry.item, entry.index);
+  if (decision === "needs_correction") labels.push("correction required");
+  const changes = state.bundle.manifest.quality_artifacts?.refinement_audit?.collections?.[entry.kind];
+  const identifier = entityId(entry.kind, entry.item, entry.index);
+  if (changes?.added_ids?.includes(identifier)) labels.push("added by quality pass");
+  if (changes?.changed_ids?.includes(identifier)) labels.push("changed by quality pass");
+  if (entry.kind === "device_families") {
+    const result = compositionProposal(entry.item);
+    if (result && result.status !== "accepted") labels.push(`composition ${result.status.replaceAll("_", " ")}`);
+  }
+  return labels;
+}
+
+function filteredEntries() {
+  const kind = $("record-kind-filter").value;
+  const status = $("record-status-filter").value;
+  return recordEntries().filter((entry) => {
+    const decision = recordDecision(entry.kind, entry.item, entry.index);
+    if (kind !== "all" && entry.kind !== kind) return false;
+    if (status === "remaining") return decision !== "verified" && decision !== "uncertain";
+    if (status === "attention") return attentionLabels(entry).length > 0;
+    if (status === "all") return true;
+    return decision === status;
+  });
+}
+
+function relatedContext(entry) {
+  const truth = state.bundle.ground_truth;
+  const familyField = state.bundle.summary.record_identifiers.device_families;
+  const deviceField = state.bundle.summary.record_identifiers.individual_devices;
+  const find = (kind, value) => value ? truth[kind].find((item) => item[state.bundle.summary.record_identifiers[kind]] === value) : null;
+  let device = entry.kind === "individual_devices" ? entry.item : null;
+  if (!device && (entry.kind === "performance_observations" || entry.kind === "stability_tests")) device = find("individual_devices", entry.item[deviceField]);
+  let family = entry.kind === "device_families" ? entry.item : find("device_families", entry.item[familyField]);
+  if (!family && device) family = find("device_families", device[familyField]);
+  return { family, device };
+}
+
+function contextField(label, value) {
+  return value ? element("div", { className: "context-field" }, [element("span", { text: label }), element("strong", { text: value })]) : null;
+}
+
+function renderDeviceContext(entry) {
+  const { family, device } = relatedContext(entry);
+  if (!family && !device) return element("p", { className: "muted", text: "This record is not linked to a specific device or family." });
+  const fields = [
+    contextField("Device family", family?.label),
+    contextField("Individual device", device?.label),
+    contextField("Device status", device ? `${device.champion_status === "yes" ? "Champion" : "Not marked champion"} · ${device.selection_basis.replaceAll("_", " ")}` : null),
+    contextField("Architecture", family?.architecture || family?.polarity),
+    contextField("Layer stack", family?.full_stack_raw || (family?.layers || []).map((layer) => layer.material).join(" / ")),
+    contextField("Absorber", family?.absorber_formula?.raw_value),
+  ];
+  return element("section", { className: "device-context" }, [
+    element("div", { className: "context-heading" }, [element("strong", { text: "Device context" }), element("span", { className: "muted", text: "Shared context stays visible while reviewing this record" })]),
+    element("div", { className: "context-grid" }, fields),
+    family ? compositionComparison(family) : null,
+  ]);
+}
+
+async function focusCitation(citation, selectForCorrection = false) {
+  if (!citation?.block_id) return;
+  let block = state.evidenceCache.get(citation.block_id);
+  if (!block) {
+    const payload = await request(`/api/evidence/${state.split}/${encodeURIComponent(state.paperId)}?q=${encodeURIComponent(citation.block_id)}`);
+    block = payload.blocks.find((candidate) => candidate.block_id === citation.block_id);
+    if (block) state.evidenceCache.set(citation.block_id, block);
+  }
+  if (!block) return setStatus(`Evidence block ${citation.block_id} is unavailable.`, true);
+  state.source = block.source;
+  state.page = block.page;
+  $("pdf-source").value = state.source;
+  if (selectForCorrection) {
+    $("citation-block").value = block.block_id;
+    $("citation-quote").value = citation.quote || block.text.slice(0, 1600);
+  }
+  await renderPdf();
+}
+
+function renderRecordEvidence(entry) {
+  const citation = entry.item.evidence?.[0];
+  if (!citation) return element("section", { className: "record-evidence" }, [element("strong", { text: "No record-level evidence supplied" })]);
+  return element("section", { className: "record-evidence" }, [
+    element("div", { className: "evidence-heading" }, [
+      element("strong", { text: `Supporting evidence · ${citation.block_id}` }),
+      element("button", { text: "Show in paper", events: { click: () => focusCitation(citation) } }),
+    ]),
+    element("blockquote", { text: citation.quote }),
+  ]);
+}
+
+function currentEntry() {
+  const entries = filteredEntries();
+  if (state.queueKey) {
+    const preserved = entries.findIndex((entry) => entry.key === state.queueKey);
+    if (preserved >= 0) state.queueIndex = preserved;
+  }
+  state.queueIndex = Math.max(0, Math.min(state.queueIndex, entries.length - 1));
+  const entry = entries[state.queueIndex] || null;
+  state.queueKey = entry?.key || null;
+  return { entries, entry };
+}
+
+function renderReviewQueue() {
+  if ($("record-kind-filter").options.length === 1) {
+    $("record-kind-filter").append(...Object.entries(COLLECTIONS).map(([value, text]) => element("option", { text, properties: { value } })));
+  }
+  const { entries, entry } = currentEntry();
+  const total = state.bundle.summary.record_count;
+  const decisions = state.bundle.summary.record_decisions?.[state.user.id] || {};
+  const completed = Object.values(decisions).filter((value) => value === "verified" || value === "uncertain").length;
+  $("queue-progress").textContent = `${completed} of ${total} reviewed · ${total - completed} remaining`;
+  $("queue-position").textContent = entries.length ? `${state.queueIndex + 1} / ${entries.length}` : "0 / 0";
+  $("previous-record").disabled = state.queueIndex <= 0;
+  $("next-record").disabled = state.queueIndex >= entries.length - 1;
+  if (!entry) {
+    $("review-queue").replaceChildren(element("div", { className: "empty-queue" }, [element("h3", { text: "No records match this view" }), element("p", { text: "Change the filters or continue to the completeness check." })]));
+    return;
+  }
+  const decision = recordDecision(entry.kind, entry.item, entry.index);
+  const flags = attentionLabels(entry).map((text) => element("span", { className: "attention-flag", text }));
+  const actions = element("div", { className: "queue-actions" }, [
+    element("button", { className: decision === "verified" ? "active" : "", text: "Verify  V", events: { click: () => decideEntry(entry, "verified") } }),
+    element("button", { className: decision === "uncertain" ? "active" : "", text: "Uncertain  U", events: { click: () => decideEntry(entry, "uncertain") } }),
+    element("button", { className: decision === "needs_correction" ? "active" : "", text: "Correct  C", events: { click: () => beginCorrection(entry) } }),
+    element("span", { className: "spacer" }),
+    element("button", { text: "Duplicate", events: { click: () => openRecord(entry.kind, null, entry.item) } }),
+  ]);
+  $("review-queue").replaceChildren(element("article", { className: "queue-card" }, [
+    element("div", { className: "queue-heading" }, [
+      element("div", {}, [element("span", { className: "eyebrow", text: `${COLLECTIONS[entry.kind]} · ${entityId(entry.kind, entry.item, entry.index)}` }), element("h3", { text: entityTitle(entry.kind, entry.item, entry.index) }), element("p", { text: entityDetail(entry.kind, entry.item) })]),
+      element("div", { className: "attention-flags" }, flags),
+    ]),
+    renderDeviceContext(entry),
+    renderRecordEvidence(entry),
+    actions,
+  ]));
+}
+
+async function moveQueue(delta) {
+  const { entries } = currentEntry();
+  state.queueIndex = Math.max(0, Math.min(state.queueIndex + delta, entries.length - 1));
+  state.queueKey = entries[state.queueIndex]?.key || null;
+  renderReviewQueue();
+  const entry = currentEntry().entry;
+  if (entry?.item.evidence?.[0]) await focusCitation(entry.item.evidence[0]);
 }
 
 function renderQualityGates() {
@@ -343,31 +511,96 @@ async function submitAudit() {
 function openRecord(kind, index = null, template = null) {
   if (!hasAudit()) return setStatus("Complete the blind inventory audit first.", true);
   const item = template || (index == null ? {} : state.bundle.ground_truth[kind][index]);
-  state.edit = { kind, index };
+  state.edit = { kind, index, value: structuredClone(item) };
   $("record-kind").textContent = COLLECTIONS[kind];
   $("record-title").textContent = index == null ? (template ? "Duplicate record" : "Add record") : entityTitle(kind, item, index);
   $("record-json").value = JSON.stringify(item, null, 2);
-  $("citation-block").value = "";
-  $("citation-quote").value = "";
+  renderStructuredEditor();
+  const citation = item.evidence?.[0];
+  $("citation-block").value = citation?.block_id || "";
+  $("citation-quote").value = citation?.quote || "";
   $("mutation-note").value = "";
   $("remove-record").hidden = index == null;
   $("evidence-results").replaceChildren();
   $("dialog-status").textContent = "";
   $("record-dialog").showModal();
+  if (citation) focusCitation(citation);
 }
 
-async function decideRecord(select, kind, index) {
-  if (!select.value) return;
-  const item = state.bundle.ground_truth[kind][index];
-  select.disabled = true;
+function humanLabel(value) {
+  return String(value).replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function updateEditValue(path, rawValue, original) {
+  let parent = state.edit.value;
+  for (const part of path.slice(0, -1)) parent = parent[part];
+  let value = rawValue;
+  if (original === null) value = rawValue === "" ? null : rawValue;
+  else if (typeof original === "number") value = rawValue === "" ? null : Number(rawValue);
+  else if (typeof original === "boolean") value = rawValue === "true";
+  parent[path.at(-1)] = value;
+  $("record-json").value = JSON.stringify(state.edit.value, null, 2);
+}
+
+function structuredLeaf(label, value, path) {
+  let input;
+  if (typeof value === "boolean") {
+    input = element("select", {}, [element("option", { text: "true", properties: { value: "true" } }), element("option", { text: "false", properties: { value: "false" } })]);
+    input.value = String(value);
+  } else if (typeof value === "string" && value.length > 140) {
+    input = element("textarea", { text: value, properties: { rows: 3 } });
+  } else {
+    input = element("input", { properties: { value: value ?? "", type: typeof value === "number" ? "number" : "text", placeholder: value === null ? "Not reported" : "" } });
+  }
+  input.addEventListener("input", () => updateEditValue(path, input.value, value));
+  return element("label", {}, [humanLabel(label), input]);
+}
+
+function structuredNode(label, value, path, open = false) {
+  if (value == null || typeof value !== "object") return structuredLeaf(label, value, path);
+  const entries = Array.isArray(value)
+    ? value.map((item, index) => [item?.name || item?.material || item?.operation || `Item ${index + 1}`, item, index])
+    : Object.entries(value).filter(([key]) => key !== "evidence").map(([key, item]) => [key, item, key]);
+  const children = entries.map(([childLabel, item, key]) => structuredNode(childLabel, item, [...path, key]));
+  const count = Array.isArray(value) ? ` (${value.length})` : "";
+  return element("details", { className: "editor-group", properties: { open } }, [
+    element("summary", { text: `${humanLabel(label)}${count}` }),
+    element("div", { className: "editor-fields" }, children.length ? children : [element("p", { className: "muted", text: "No editable fields" })]),
+  ]);
+}
+
+function renderStructuredEditor() {
+  const fields = Object.entries(state.edit.value).filter(([key]) => key !== "evidence").map(([key, value]) => structuredNode(key, value, [key], true));
+  $("structured-editor").replaceChildren(...fields);
+}
+
+async function submitDecision(entry, decision) {
+  return request(`/api/record-decisions/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ collection: entry.kind, record_id: entityId(entry.kind, entry.item, entry.index), decision, base_revision: state.bundle.revision, note: "" }) });
+}
+
+async function decideEntry(entry, decision) {
+  const title = entityTitle(entry.kind, entry.item, entry.index);
+  const keepPosition = $("record-status-filter").value === "remaining";
   try {
-    state.bundle = await request(`/api/record-decisions/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ collection: kind, record_id: entityId(kind, item, index), decision: select.value, base_revision: state.bundle.revision, note: "" }) });
+    state.bundle = await submitDecision(entry, decision);
+    if (!keepPosition) state.queueIndex += 1;
+    state.queueKey = null;
     renderStudy();
-    setStatus(`Marked ${entityTitle(kind, item, index)} as ${select.value.replaceAll("_", " ")}.`);
+    const next = currentEntry().entry;
+    if (next?.item.evidence?.[0]) await focusCitation(next.item.evidence[0]);
+    setStatus(`Marked ${title} as ${decision.replaceAll("_", " ")}.`);
   } catch (error) {
-    select.disabled = false;
     setStatus(error.message, true);
   }
+}
+
+async function beginCorrection(entry) {
+  try {
+    if (recordDecision(entry.kind, entry.item, entry.index) !== "needs_correction") state.bundle = await submitDecision(entry, "needs_correction");
+    renderStudy();
+    const current = recordEntries().find((candidate) => candidate.key === entry.key) || entry;
+    openRecord(current.kind, current.index);
+  } catch (error) { setStatus(error.message, true); }
 }
 
 async function saveRecord() {
@@ -431,6 +664,11 @@ function setTab(tab) {
   state.tab = tab;
   document.querySelectorAll("[data-tab]").forEach((button) => button.classList.toggle("active", button.dataset.tab === tab));
   for (const name of ["inventory", "records", "completeness", "history"]) $(`${name}-tab`).hidden = name !== tab;
+  if (tab === "records" && hasAudit()) {
+    renderReviewQueue();
+    const citation = currentEntry().entry?.item.evidence?.[0];
+    if (citation) focusCitation(citation);
+  }
 }
 
 function setStatus(message, error = false) { $("status").textContent = message; $("status").className = error ? "error" : "success"; }
@@ -475,6 +713,10 @@ $("page-number").addEventListener("change", (event) => { state.page = Math.max(1
 document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", () => setTab(button.dataset.tab)));
 document.querySelectorAll(".complete-stage").forEach((button) => button.addEventListener("click", () => completeStage(button.dataset.stage)));
 $("add-record").addEventListener("click", () => openRecord($("new-record-kind").value));
+$("record-status-filter").addEventListener("change", () => { state.queueIndex = 0; state.queueKey = null; renderReviewQueue(); });
+$("record-kind-filter").addEventListener("change", () => { state.queueIndex = 0; state.queueKey = null; renderReviewQueue(); });
+$("previous-record").addEventListener("click", () => moveQueue(-1));
+$("next-record").addEventListener("click", () => moveQueue(1));
 $("save-record").addEventListener("click", saveRecord);
 $("remove-record").addEventListener("click", removeRecord);
 $("search-evidence").addEventListener("click", searchEvidence);
@@ -489,6 +731,19 @@ $("open-import").addEventListener("click", () => $("import-dialog").showModal())
 $("close-import").addEventListener("click", () => $("import-dialog").close());
 $("cancel-import").addEventListener("click", () => $("import-dialog").close());
 $("import-form").addEventListener("submit", importPaper);
+document.addEventListener("keydown", (event) => {
+  if (state.tab !== "records" || $("record-dialog").open || ["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName)) return;
+  const entry = currentEntry().entry;
+  if (!entry) return;
+  const key = event.key.toLowerCase();
+  if (key === "arrowright" || key === "j") moveQueue(1);
+  else if (key === "arrowleft" || key === "k") moveQueue(-1);
+  else if (key === "v") decideEntry(entry, "verified");
+  else if (key === "u") decideEntry(entry, "uncertain");
+  else if (key === "c") beginCorrection(entry);
+  else return;
+  event.preventDefault();
+});
 
 await loadSession();
 await loadPapers();
