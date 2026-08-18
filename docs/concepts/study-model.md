@@ -8,6 +8,7 @@ shape of a downstream database.
 ```mermaid
 erDiagram
     DEVICE_FAMILY ||--o{ INDIVIDUAL_DEVICE : "groups"
+    DEVICE_FAMILY ||--o{ LAYER : "contains"
     DEVICE_FAMILY ||--o{ ABSORBER_COMPONENT : "contains"
     DEVICE_FAMILY ||--o{ POPULATION_STATISTIC : "summarized by"
     INDIVIDUAL_DEVICE ||--o{ PERFORMANCE_OBSERVATION : "measured as"
@@ -21,6 +22,15 @@ erDiagram
         list layers
         list absorbers
         list processing_steps
+    }
+    LAYER {
+        string layer_id
+        string role
+        string material
+        list constituents
+        string material_form_raw
+        string material_form
+        list reported_properties
     }
     ABSORBER_COMPONENT {
         string absorber_id
@@ -71,8 +81,11 @@ A `DeviceFamily` holds information shared by a reported variant: the architectur
 polarity, full stack, ordered layers, scoped absorbers, and processing steps. Each
 `AbsorberComponent` keeps one absorber layer or subcell's formula, constituents, and
 properties together. A tandem can therefore contain separate wide-bandgap and
-narrow-bandgap absorbers without merging their ions. Layers identify their role and
-material while retaining arbitrary reported details as `ReportedValue` records.
+narrow-bandgap absorbers without merging their ions. Layers keep their electrical
+role, material name, chemical constituents, and physical form separate while
+retaining arbitrary reported details as `ReportedValue` records. For example, a
+2PACz layer can be a `hole_transport_layer`, contain `2PACz`, and have the normalized
+form `self_assembled_monolayer` without combining those facts into one material name.
 Processing steps similarly store an operation, target layers, materials, and generic
 conditions.
 
@@ -112,9 +125,9 @@ that apply throughout the test remain on `StabilityTest`.
 
 One `ReportedValue` denotes one semantic quantity. A reported uncertainty or range
 may remain in the same `raw_value`, but different metrics or table columns are separate
-objects. During model generation, repeated quotations are represented once in a
-temporary citation catalog; deterministic expansion restores the ordinary nested
-evidence objects before `extraction.json` is written.
+objects. During model generation, evidence arrays contain only deterministic span IDs;
+Python restores exact ordinary nested evidence objects before `extraction.json` is
+written.
 
 Bounds, ranges, approximations, and other qualifiers therefore remain visible in
 `raw_value` instead of being coerced into an exact scalar. Missing information is

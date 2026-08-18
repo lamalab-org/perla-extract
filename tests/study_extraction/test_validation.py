@@ -8,6 +8,7 @@ from perla_extract.study_extraction.models import (
     EvidenceBlock,
     EvidenceCitation,
     IndividualDevice,
+    Layer,
     PaperMetadata,
     PerformanceObservation,
     PopulationStatistic,
@@ -493,3 +494,55 @@ def test_validation_reports_duplicate_ids_for_every_entity_collection():
         "duplicate population_id",
         "duplicate test_id",
     } <= reasons.keys()
+
+
+def test_material_form_raw_is_checked_against_layer_evidence():
+    source = EvidenceBlock(
+        block_id="sam",
+        source="main",
+        page=1,
+        section_path=["Methods"],
+        kind="paragraph",
+        text="A self-assembled monolayer of 2PACz was deposited on ITO.",
+    )
+    citation = EvidenceCitation(block_id="sam", quote=source.text)
+    family = DeviceFamily(
+        family_id="f1",
+        label="SAM device",
+        variant=None,
+        architecture=None,
+        polarity="p-i-n",
+        full_stack_raw=None,
+        layers=[
+            Layer(
+                layer_id="l1",
+                sequence=1,
+                role="hole_transport_layer",
+                material="2PACz",
+                material_form_raw="self-assembled monolayer",
+                material_form="self_assembled_monolayer",
+                reported_properties=[],
+                evidence=[citation],
+            )
+        ],
+        absorbers=[],
+        processing_steps=[],
+        evidence=[citation],
+    )
+    extraction = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[family],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+
+    assert validate_study(extraction, [source])["status"] == "verified"
+
+    extraction.device_families[0].layers[0].material_form_raw = "SAM film"
+    result = validate_study(extraction, [source])
+    assert result["counts"]["issues_by_reason"] == {
+        "material_form_raw not found in cited evidence": 1
+    }

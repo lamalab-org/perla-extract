@@ -63,6 +63,20 @@ def validate_study(
                     source_verified_values += 1
                     source_assembled_values += int(raw_assembled and not raw_direct)
                     verified_values.append({"path": path, **value})
+            elif "material_form_raw" in value and isinstance(
+                value.get("evidence"), list
+            ):
+                evidence_supported(value["evidence"], path)
+                raw_form = value.get("material_form_raw")
+                if raw_form is not None and not any(
+                    (block := block_by_id.get(reference.get("block_id"))) is not None
+                    and source_contains_text(block.text, raw_form)
+                    for reference in value["evidence"]
+                ):
+                    issue(
+                        f"{path}.material_form_raw",
+                        "material_form_raw not found in cited evidence",
+                    )
             elif isinstance(value.get("evidence"), list):
                 evidence_supported(value["evidence"], path)
             for key, item in value.items():

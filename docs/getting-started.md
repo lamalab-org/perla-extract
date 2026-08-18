@@ -108,7 +108,11 @@ model-cache key.
 
 `run_configuration.json` records a small integer `schema_version` for intentional
 compatibility breaks and automatically computed SHA-256 fingerprints for the generated
-Pydantic schema and all model prompts. A schema or prompt edit therefore changes
-provenance and cache identity without relying on a date string or a manual patch bump.
-Version 3 adds device-scoped reported properties and checkpoint-scoped stability
-conditions; version-2 JSON remains readable because both collections default empty.
+Pydantic schema, all model prompts, and the exact deterministic evidence-span catalog.
+A schema, prompt, or citable-evidence change therefore changes provenance and cache
+identity without relying on a date string or a manual patch bump.
+Version 4 separates layer constituents and source-backed physical form and changes the
+model transport from generated quotations to deterministic evidence-span IDs. Older
+JSON remains readable because the new layer fields default to empty or
+`not_reported`; it is not exactly comparable to a version-4 extraction until those
+new fields have been reviewed or the seed has been regenerated.

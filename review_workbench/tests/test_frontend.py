@@ -93,6 +93,9 @@ def test_corrections_default_to_fields_and_existing_evidence():
     assert "Advanced: edit complete validated JSON" in html
     assert "renderStructuredEditor" in source
     assert "citation?.block_id" in source
+    assert "MATERIAL_FORMS" in source
+    assert "schema_compatibility" in source
+    assert "fields added since import still require review or regeneration" in source
 
 
 def test_ui_builds_untrusted_content_with_dom_nodes():

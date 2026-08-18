@@ -1,9 +1,9 @@
-"""Compact model responses without changing the public study schema.
+"""Translate compact model evidence references into the public study schema.
 
-The public schema keeps evidence beside every claim because that is convenient for
-review and export. Repeating the same quotation for every value is wasteful during
-generation, however. This module gives the model a normalized citation catalog and
-expands its citation references before Pydantic validates ``StudyExtraction``.
+The public schema keeps exact quotations beside every claim for review and export.
+The model-facing schema instead accepts only precomputed evidence-span identifiers.
+Python expands those identifiers after generation, so the model chooses evidence but
+never spends tokens copying it or introduces a subtly altered quotation.
 """
 
 from __future__ import annotations
@@ -11,91 +11,78 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Iterable
 
-from .models import StudyExtraction
+from pydantic import BaseModel
+
+from .evidence import source_contains_text
+from .spans import EvidenceSpan
 
 
-def _identifier_schema() -> dict[str, object]:
-    """Return the same bounded identifier contract used by the public models."""
+def _identifier_schema(values: Iterable[str] | None = None) -> dict[str, object]:
+    """Return the bounded identifier contract, optionally constrained to known IDs."""
 
-    return {"type": "string", "minLength": 1, "maxLength": 200}
-
-
-def compact_study_schema(block_ids: Iterable[str]) -> dict[str, object]:
-    """Build a study schema with shared citations and request-local block IDs.
-
-    The transformation is deliberately mechanical: every nested ``evidence`` field
-    already refers to the shared ``EvidenceCitation`` definition, so replacing that
-    definition with a citation ID normalizes the whole response without duplicating
-    the scientific entity models.
-    """
-
-    schema = deepcopy(StudyExtraction.model_json_schema())
-    definitions = schema["$defs"]
-    definitions["EvidenceCitation"] = _identifier_schema()
-    definitions["EvidenceCatalogEntry"] = {
-        "type": "object",
-        "properties": {
-            "citation_id": _identifier_schema(),
-            "block_id": {
-                **_identifier_schema(),
-                "enum": sorted(set(block_ids)),
-            },
-            "quote": {"type": "string", "minLength": 1, "maxLength": 1600},
-        },
-        "required": ["citation_id", "block_id", "quote"],
-        "additionalProperties": False,
+    schema: dict[str, object] = {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200,
     }
-    schema["properties"]["evidence_catalog"] = {
-        "type": "array",
-        "items": {"$ref": "#/$defs/EvidenceCatalogEntry"},
-    }
-    schema["required"] = [*schema.get("required", []), "evidence_catalog"]
+    if values is not None:
+        schema["enum"] = sorted(set(values))
     return schema
 
 
-def expand_compact_study(payload: object) -> dict[str, object]:
-    """Replace citation IDs with full citations before public-schema validation.
+def span_citation_schema(
+    response_model: type[BaseModel], spans: Iterable[EvidenceSpan]
+) -> dict[str, object]:
+    """Replace every model-facing citation object with a known evidence-span ID.
 
-    Unknown or duplicate citation IDs are rejected instead of becoming missing
-    evidence. Expansion changes representation only; it never edits a claim, quote,
-    value, or source pointer.
+    All response models share the same ``EvidenceCitation`` definition, including the
+    inventory, full extraction, identity-link, and targeted-repair calls. Applying one
+    mechanical schema transformation keeps citation behavior consistent everywhere.
     """
 
+    span_list = list(spans)
+    if not span_list:
+        raise ValueError("at least one evidence span is required")
+    schema = deepcopy(response_model.model_json_schema())
+    definitions = schema.get("$defs", {})
+    if "EvidenceCitation" not in definitions:
+        raise ValueError("response schema does not contain EvidenceCitation")
+    definitions["EvidenceCitation"] = _identifier_schema(
+        span.span_id for span in span_list
+    )
+    return schema
+
+
+def expand_span_citations(
+    payload: object, spans: Iterable[EvidenceSpan]
+) -> dict[str, object]:
+    """Restore exact public citations for model-selected evidence-span identifiers."""
+
     if not isinstance(payload, dict):
-        raise ValueError("compact study response must be an object")
+        raise ValueError("model response must be an object")
     data = deepcopy(payload)
-    entries = data.pop("evidence_catalog", None)
-    if not isinstance(entries, list):
-        raise ValueError("compact study response requires evidence_catalog")
-    catalog: dict[str, dict[str, str]] = {}
-    for entry in entries:
-        if not isinstance(entry, dict):
-            raise ValueError("evidence catalog entries must be objects")
-        citation_id = entry.get("citation_id")
-        block_id = entry.get("block_id")
-        quote = entry.get("quote")
-        if not all(
-            isinstance(item, str) and item for item in (citation_id, block_id, quote)
-        ):
-            raise ValueError("evidence catalog entries require non-empty strings")
-        if citation_id in catalog:
-            raise ValueError(f"duplicate citation_id: {citation_id}")
-        catalog[citation_id] = {"block_id": block_id, "quote": quote}
+    catalog = {
+        span.span_id: {"block_id": span.block_id, "quote": span.text}
+        for span in spans
+    }
+
+    def citation(reference: object) -> dict[str, str]:
+        if not isinstance(reference, str):
+            raise ValueError("model-facing evidence must contain span identifiers")
+        try:
+            return catalog[reference]
+        except KeyError as error:
+            raise ValueError(f"unknown evidence span: {reference}") from error
 
     def expand(value: object) -> None:
         if isinstance(value, dict):
             for key, item in value.items():
                 if key == "evidence":
-                    if not isinstance(item, list) or not all(
-                        isinstance(citation_id, str) for citation_id in item
-                    ):
-                        raise ValueError("evidence must contain citation IDs")
-                    try:
-                        value[key] = [catalog[citation_id] for citation_id in item]
-                    except KeyError as error:
-                        raise ValueError(
-                            f"unknown citation_id: {error.args[0]}"
-                        ) from error
+                    value[key] = (
+                        [citation(reference) for reference in item]
+                        if isinstance(item, list)
+                        else citation(item)
+                    )
                 else:
                     expand(item)
         elif isinstance(value, list):
@@ -106,39 +93,54 @@ def expand_compact_study(payload: object) -> dict[str, object]:
     return data
 
 
-def compact_study(study: StudyExtraction) -> dict[str, object]:
-    """Deduplicate an existing study's citations for another model request.
+def compact_to_span_citations(
+    payload: BaseModel | dict[str, object], spans: Iterable[EvidenceSpan]
+) -> dict[str, object]:
+    """Replace exact public citations with span IDs for a subsequent model prompt.
 
-    This is the mechanical inverse of ``expand_compact_study``. Refinement needs the
-    whole draft, but repeating a long table row beside every atomic value can dominate
-    its input. Stable encounter-order IDs retain all evidence while making that input
-    reproducible and substantially smaller.
+    Refinement and identity linking receive records produced from the same span
+    catalog. Failing on a non-matching citation is intentional: silently dropping or
+    approximating evidence would make the next model call less auditable.
     """
 
-    data = study.model_dump(mode="json")
-    citation_ids: dict[tuple[str, str], str] = {}
-    catalog: list[dict[str, str]] = []
+    data = deepcopy(
+        payload.model_dump(mode="json")
+        if isinstance(payload, BaseModel)
+        else payload
+    )
+    span_list = list(spans)
+    identities = {
+        (span.block_id, span.text): span.span_id for span in span_list
+    }
+
+    def compact_reference(reference: object) -> str:
+        if not isinstance(reference, dict):
+            raise ValueError("public evidence citation must be an object")
+        identity = (str(reference.get("block_id")), str(reference.get("quote")))
+        exact = identities.get(identity)
+        if exact is not None:
+            return exact
+        matches = [
+            span.span_id
+            for span in span_list
+            if span.block_id == identity[0]
+            and source_contains_text(span.text, identity[1])
+        ]
+        if len(matches) == 1:
+            return matches[0]
+        raise ValueError(
+            f"citation does not resolve to one generated evidence span: {identity[0]}"
+        )
 
     def compact(value: object) -> None:
         if isinstance(value, dict):
             for key, item in value.items():
-                if key == "evidence" and isinstance(item, list):
-                    references: list[str] = []
-                    for reference in item:
-                        identity = (str(reference["block_id"]), str(reference["quote"]))
-                        citation_id = citation_ids.get(identity)
-                        if citation_id is None:
-                            citation_id = f"citation-{len(catalog) + 1}"
-                            citation_ids[identity] = citation_id
-                            catalog.append(
-                                {
-                                    "citation_id": citation_id,
-                                    "block_id": identity[0],
-                                    "quote": identity[1],
-                                }
-                            )
-                        references.append(citation_id)
-                    value[key] = references
+                if key == "evidence":
+                    value[key] = (
+                        [compact_reference(reference) for reference in item]
+                        if isinstance(item, list)
+                        else compact_reference(item)
+                    )
                 else:
                     compact(item)
         elif isinstance(value, list):
@@ -146,18 +148,4 @@ def compact_study(study: StudyExtraction) -> dict[str, object]:
                 compact(item)
 
     compact(data)
-    data["evidence_catalog"] = catalog
     return data
-
-
-def constrain_evidence_block_ids(
-    schema: dict[str, object], block_ids: Iterable[str]
-) -> dict[str, object]:
-    """Constrain ordinary evidence citations to IDs present in one model request."""
-
-    constrained = deepcopy(schema)
-    citation = constrained.get("$defs", {}).get("EvidenceCitation", {})
-    block = citation.get("properties", {}).get("block_id")
-    if isinstance(block, dict):
-        block["enum"] = sorted(set(block_ids))
-    return constrained

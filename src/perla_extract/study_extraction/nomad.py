@@ -479,6 +479,20 @@ def _project_family(
             if not step.target_layer_ids
         ],
         "absorbers": [absorber.model_dump(mode="json") for absorber in family.absorbers],
+        "layer_details": [
+            {
+                "layer_id": layer.layer_id,
+                "role": layer.role,
+                "material": layer.material,
+                "constituents": [
+                    constituent.model_dump(mode="json")
+                    for constituent in layer.constituents
+                ],
+                "material_form_raw": layer.material_form_raw,
+                "material_form": layer.material_form,
+            }
+            for layer in family.layers
+        ],
         "layer_reported_properties": [
             {
                 "layer_id": layer.layer_id,

@@ -19,6 +19,11 @@ const QUALITY_GATES = [
   "Every accepted reported value has source evidence",
   "Remaining uncertainty recorded without inventing a value",
 ];
+const MATERIAL_FORMS = [
+  "self_assembled_monolayer", "monolayer", "compact_layer",
+  "mesoporous_layer", "nanostructured_layer", "bulk_heterojunction", "other",
+  "not_reported",
+];
 const state = {
   split: "calibration", papers: [], paperId: null, bundle: null, user: null,
   page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null,
@@ -58,8 +63,16 @@ function recordDecision(kind, item, index) {
 }
 function entityTitle(kind, item, index) { return item.label || item.specimen_label || entityId(kind, item, index); }
 function metrics(item) { return (item.metrics || item.reported_properties || item.conditions || []).map((value) => `${value.name}: ${value.raw_value}`).slice(0, 5).join(" · "); }
+function layerLabel(layer) {
+  const form = layer.material_form && layer.material_form !== "not_reported"
+    ? humanLabel(layer.material_form)
+    : null;
+  const constituents = (layer.constituents || []).map((item) => item.name).join(" + ");
+  return [layer.material, form, constituents && constituents !== layer.material ? constituents : null]
+    .filter(Boolean).join(" · ");
+}
 function entityDetail(kind, item) {
-  if (kind === "device_families") return item.full_stack_raw || (item.layers || []).map((layer) => layer.material).join(" / ") || item.variant;
+  if (kind === "device_families") return (item.layers || []).map(layerLabel).join(" / ") || item.full_stack_raw || item.variant;
   if (kind === "individual_devices") return metrics(item) || `${item.champion_status === "yes" ? "Champion · " : ""}${item.variant || "variant not reported"}`;
   if (kind === "identity_links") return `${item.entity_kind}: ${(item.candidate_ids || []).join(" = ")}`;
   return metrics(item) || item.statistic_type || item.measurement_type || item.link_status || "";
@@ -169,6 +182,14 @@ function renderStudy() {
   $("paper-title").textContent = truth.paper.title || state.paperId;
   $("paper-doi").textContent = truth.paper.doi || "DOI not reported";
   $("revision").textContent = `Revision ${state.bundle.revision}`;
+  const compatibility = state.bundle.schema_compatibility;
+  const compatibilityNotice = $("schema-compatibility");
+  compatibilityNotice.hidden = compatibility?.exact_match !== false;
+  if (compatibility?.exact_match === false) {
+    compatibilityNotice.textContent = compatibility.readable_by_current_schema
+      ? `This draft uses study schema v${compatibility.seed_schema_version ?? "unknown"}; the current extractor uses v${compatibility.current_schema_version}. It remains readable, but fields added since import still require review or regeneration.`
+      : `This draft is not readable by current study schema v${compatibility.current_schema_version}. Re-import a current extraction before review.`;
+  }
   $("pdf-source").replaceChildren(...state.bundle.sources.map((source) => element("option", {
     text: source === "main" ? "Main paper" : "Supplement",
     properties: { value: source, selected: source === state.source },
@@ -359,7 +380,7 @@ function renderDeviceContext(entry) {
     contextField("Device status", device ? `${device.champion_status === "yes" ? "Champion" : "Not marked champion"} · ${device.selection_basis.replaceAll("_", " ")}` : null),
     contextField("Device-specific values", (device?.reported_properties || []).map((value) => `${value.name}: ${value.raw_value}`).join(" · ")),
     contextField("Architecture", family?.architecture || family?.polarity),
-    contextField("Layer stack", family?.full_stack_raw || (family?.layers || []).map((layer) => layer.material).join(" / ")),
+    contextField("Layer stack", (family?.layers || []).map(layerLabel).join(" / ") || family?.full_stack_raw),
     contextField("Absorbers", (family?.absorbers || []).map((absorber) => absorber.formula?.raw_value || absorber.label).join(" · ")),
   ];
   return element("section", { className: "device-context" }, [
@@ -561,7 +582,11 @@ function updateEditValue(path, rawValue, original) {
 
 function structuredLeaf(label, value, path) {
   let input;
-  if (typeof value === "boolean") {
+  if (path.at(-1) === "material_form") {
+    input = element("select", {}, MATERIAL_FORMS.map((form) => element("option", {
+      text: humanLabel(form), properties: { value: form, selected: value === form },
+    })));
+  } else if (typeof value === "boolean") {
     input = element("select", {}, [element("option", { text: "true", properties: { value: "true" } }), element("option", { text: "false", properties: { value: "false" } })]);
     input.value = String(value);
   } else if (typeof value === "string" && value.length > 140) {

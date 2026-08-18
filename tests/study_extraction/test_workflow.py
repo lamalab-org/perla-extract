@@ -59,6 +59,7 @@ def test_dry_run_writes_a_complete_request_plan(tmp_path):
     assert report["evidence_blocks"] > 0
     assert report["planned_calls"] >= 1
     assert (tmp_path / "output" / "document.json").exists()
+    assert (tmp_path / "output" / "evidence_spans.json").exists()
     assert (tmp_path / "output" / "extraction.schema.json").exists()
     assert (tmp_path / "output" / "enrichment.schema.json").exists()
     assert (tmp_path / "output" / "report.json").exists()
@@ -70,7 +71,12 @@ def test_dry_run_writes_a_complete_request_plan(tmp_path):
     assert configuration["prompt_sha256"] == prompt_sha256()
     assert all(
         len(configuration[field]) == 64
-        for field in ("schema_sha256", "prompt_sha256", "configuration_sha256")
+        for field in (
+            "schema_sha256",
+            "prompt_sha256",
+            "evidence_spans_sha256",
+            "configuration_sha256",
+        )
     )
 
 

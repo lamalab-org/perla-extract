@@ -52,10 +52,11 @@ from .repair import (
     run_targeted_repair,
 )
 from .source import parse_documents
+from .spans import build_evidence_spans, evidence_payload, evidence_spans_sha256
 from .transport import (
-    compact_study_schema,
-    constrain_evidence_block_ids,
-    expand_compact_study,
+    compact_to_span_citations,
+    expand_span_citations,
+    span_citation_schema,
 )
 from .validation import validate_study
 
@@ -97,6 +98,16 @@ Rules:
   wide-bandgap and narrow-bandgap tandem chemistry into one composition.
   Use one MaterialConstituent per named chemical; do not combine a list of chemicals
   into one constituent.
+- For every layer, keep its electrical role, chemical constituents, and physical form
+  separate. Copy material_form_raw only when the source explicitly names the form,
+  then select the closest allowed material_form. Use other for an explicit form that
+  is outside the vocabulary and not_reported when the source states no form. A known
+  material name alone is not evidence that it is a self-assembled monolayer.
+  self_assembled_monolayer requires explicit SAM or self-assembled-monolayer wording;
+  monolayer requires explicit monolayer wording without a self-assembly claim;
+  compact_layer, mesoporous_layer, nanostructured_layer, and bulk_heterojunction
+  likewise require corresponding source wording. Do not derive form from deposition
+  method.
 - Put arbitrary reported material, geometry, processing, measurement, and stability
   values in generic ReportedValue records. Do not omit a value because it lacks a
   dedicated schema field.
@@ -104,13 +115,11 @@ Rules:
   uncertainty or range may stay with that quantity, but never pack different metrics,
   table columns, or a complete row into one name or raw_value. Emit one object per
   quantity even when several quantities share the same source row.
-- ReportedValue.raw_value and EvidenceCitation.quote must be copied from a supplied
-  block. Cite the smallest useful quote and only supplied block IDs.
+- ReportedValue.raw_value and material_form_raw must be copied from supplied evidence.
+  Every evidence array contains supplied span_id values, never copied quotation text
+  or block IDs. Reuse a span_id when several atomic values share one row or sentence.
   Typography-preserving renderings are source evidence and may be used for subscript
   or superscript notation.
-- Define each source quotation once in evidence_catalog and refer to its citation_id
-  from every evidence array. Reuse a citation_id when several atomic values share the
-  same source row or sentence.
 - Stability tests remain separate experiments with ordered checkpoints, even when
   linked to a performance device. Put a condition that changes between aging stages
   in the corresponding checkpoint.conditions; test.conditions contains only values
@@ -141,7 +150,7 @@ Rules:
   statistics, and separate stability specimens are distinct unless the candidate
   evidence explicitly establishes identity.
 - Each candidate may appear in at most one link of its entity kind.
-- Cite the smallest supplied candidate evidence quotes that support the identity link.
+- Cite the supplied evidence span IDs that support the identity link.
 - An empty identity_links list is correct when identity is uncertain.
 """
 
@@ -158,10 +167,9 @@ Also list blocks that are clearly irrelevant to extracting present-study device
 composition, processing, performance, measurement conditions, or stability. Exclude
 only obvious background literature, administrative material, or unrelated content.
 If a block might provide identity, composition, fabrication, measurement, or result
-context, retain it by omitting it from exclusions. Every inventory item needs a small
-verbatim quotation and a supplied block ID. Every exclusion also needs a verbatim
-quotation from the excluded block so the routing decision is auditable. Never invent
-block IDs.
+context, retain it by omitting it from exclusions. Every inventory item and exclusion
+needs a supplied evidence span ID so the decision remains auditable. Never invent
+span IDs.
 """
 
 INVENTORY_GUIDANCE = """The supplied independent inventory contains recall hints,
@@ -270,27 +278,17 @@ def _write_nomad_artifacts(output_dir: Path, exported: NOMADExport) -> None:
     )
 
 
-def _evidence_payload(blocks: list[EvidenceBlock]) -> list[dict[str, object]]:
-    """Send the model source content and locations without parser implementation data."""
-
-    return [
-        {
-            "block_id": block.block_id,
-            "source": block.source,
-            "page": block.page,
-            "section": block.section_path[-1] if block.section_path else None,
-            "kind": block.kind,
-            "text": block.text,
-        }
-        for block in blocks
-    ]
-
-
-def _inventory_payload(items: list[InventoryItem]) -> str:
+def _inventory_payload(
+    items: list[InventoryItem], blocks: list[EvidenceBlock]
+) -> str:
     """Serialize only source-grounded inventory candidates as extraction guidance."""
 
     return json.dumps(
-        [item.model_dump(mode="json") for item in items], ensure_ascii=False
+        [
+            compact_to_span_citations(item, build_evidence_spans(blocks))
+            for item in items
+        ],
+        ensure_ascii=False,
     )
 
 
@@ -304,9 +302,9 @@ def _direct_prompt(
         + "\n\nSOURCE-GROUNDED INDEPENDENT INVENTORY:\n"
         + INVENTORY_GUIDANCE
         + "\n"
-        + _inventory_payload(inventory_items)
+        + _inventory_payload(inventory_items, blocks)
         + "\n\nCOMPLETE STUDY EVIDENCE:\n"
-        + json.dumps(_evidence_payload(blocks), ensure_ascii=False)
+        + json.dumps(evidence_payload(blocks), ensure_ascii=False)
     )
 
 
@@ -316,7 +314,7 @@ def _inventory_prompt(blocks: list[EvidenceBlock]) -> str:
     return (
         INVENTORY_PROMPT
         + "\n\nCOMPLETE STUDY EVIDENCE:\n"
-        + json.dumps(_evidence_payload(blocks), ensure_ascii=False)
+        + json.dumps(evidence_payload(blocks), ensure_ascii=False)
     )
 
 
@@ -334,21 +332,26 @@ def _window_prompt(
         + "\n\nSOURCE-GROUNDED INVENTORY ITEMS IN THIS WINDOW:\n"
         + INVENTORY_GUIDANCE
         + "\n"
-        + _inventory_payload(inventory_items)
+        + _inventory_payload(inventory_items, [*primary, *context])
         + "\n\nCONTEXT EVIDENCE:\n"
-        + json.dumps(_evidence_payload(context), ensure_ascii=False)
+        + json.dumps(evidence_payload(context), ensure_ascii=False)
         + "\n\nPRIMARY EVIDENCE:\n"
-        + json.dumps(_evidence_payload(primary), ensure_ascii=False)
+        + json.dumps(evidence_payload(primary), ensure_ascii=False)
     )
 
 
-def _identity_link_prompt(candidates: StudyExtraction) -> str:
+def _identity_link_prompt(
+    candidates: StudyExtraction, blocks: list[EvidenceBlock]
+) -> str:
     """Ask only for identity links so the model cannot rewrite candidates."""
 
     return (
         IDENTITY_LINK_PROMPT
         + "\n\nCANDIDATE UNION:\n"
-        + candidates.model_dump_json(exclude={"identity_links"})
+        + json.dumps(
+            compact_to_span_citations(candidates, build_evidence_spans(blocks)),
+            ensure_ascii=False,
+        )
     )
 
 
@@ -395,7 +398,10 @@ def _summarize_usage(calls: list[dict[str, object]]) -> dict[str, float | int]:
 
 
 def _run_configuration(
-    config: ExtractionConfig, mode: str, source_events: list[dict]
+    config: ExtractionConfig,
+    mode: str,
+    source_events: list[dict],
+    evidence_blocks: list[EvidenceBlock],
 ) -> dict:
     """Persist a secret-free fingerprint of every scientifically relevant setting."""
 
@@ -411,6 +417,9 @@ def _run_configuration(
             "schema_version": STUDY_SCHEMA_VERSION,
             "schema_sha256": study_schema_sha256(),
             "prompt_sha256": prompt_sha256(),
+            "evidence_spans_sha256": evidence_spans_sha256(
+                build_evidence_spans(evidence_blocks)
+            ),
             "source_sha256": [
                 event.get("source_sha256")
                 for event in source_events
@@ -453,8 +462,12 @@ def _run_model_calls(
                 response_model=StudyExtraction,
                 max_output_tokens=config.max_output_tokens,
                 reasoning_effort=config.reasoning_effort,
-                request_schema=compact_study_schema(block.block_id for block in blocks),
-                decode=expand_compact_study,
+                request_schema=span_citation_schema(
+                    StudyExtraction, build_evidence_spans(blocks)
+                ),
+                decode=lambda payload: expand_span_citations(
+                    payload, build_evidence_spans(blocks)
+                ),
             )
         except ModelCallError as exc:
             errors.append(str(exc))
@@ -491,7 +504,15 @@ def _run_model_calls(
             for block in [*window.primary_blocks, *window.context_blocks]
         }
         local_inventory = [
-            item
+            item.model_copy(
+                update={
+                    "evidence": [
+                        citation
+                        for citation in item.evidence
+                        if citation.block_id in visible_ids
+                    ]
+                }
+            )
             for item in inventory_items
             if any(citation.block_id in visible_ids for citation in item.evidence)
         ]
@@ -515,11 +536,18 @@ def _run_model_calls(
                 response_model=StudyExtraction,
                 max_output_tokens=config.max_output_tokens,
                 reasoning_effort=config.reasoning_effort,
-                request_schema=compact_study_schema(
-                    block.block_id
-                    for block in [*window.primary_blocks, *window.context_blocks]
+                request_schema=span_citation_schema(
+                    StudyExtraction,
+                    build_evidence_spans(
+                        [*window.primary_blocks, *window.context_blocks]
+                    ),
                 ),
-                decode=expand_compact_study,
+                decode=lambda payload, visible_blocks=[
+                    *window.primary_blocks,
+                    *window.context_blocks,
+                ]: expand_span_citations(
+                    payload, build_evidence_spans(visible_blocks)
+                ),
             )
         except ModelCallError as exc:
             errors.append(f"{window.window_id}: {exc}")
@@ -585,13 +613,15 @@ def _run_model_calls(
                 slug="cross_window_identity_links",
                 model=config.model,
                 system=SYSTEM_PROMPT,
-                prompt=_identity_link_prompt(extraction),
+                prompt=_identity_link_prompt(extraction, blocks),
                 response_model=IdentityLinkProposal,
                 max_output_tokens=config.max_output_tokens,
                 reasoning_effort=config.reasoning_effort,
-                request_schema=constrain_evidence_block_ids(
-                    IdentityLinkProposal.model_json_schema(),
-                    (block.block_id for block in blocks),
+                request_schema=span_citation_schema(
+                    IdentityLinkProposal, build_evidence_spans(blocks)
+                ),
+                decode=lambda payload: expand_span_citations(
+                    payload, build_evidence_spans(blocks)
                 ),
             )
         except ModelCallError as exc:
@@ -622,7 +652,9 @@ def _plan_extraction(
 ) -> tuple[str, int, EvidenceWindowPlan | None]:
     """Choose one global call when routed evidence fits, otherwise plan windows."""
 
-    request_schema = compact_study_schema(block.block_id for block in blocks)
+    request_schema = span_citation_schema(
+        StudyExtraction, build_evidence_spans(blocks)
+    )
     approximate_tokens = _approximate_tokens(_direct_prompt(blocks, []), request_schema)
     mode = (
         config.mode
@@ -745,9 +777,18 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         config.output_dir / "document.json",
         {"blocks": [block.model_dump(mode="json") for block in blocks]},
     )
+    write_json_atomic(
+        config.output_dir / "evidence_spans.json",
+        {
+            "spans": [
+                span.model_dump(mode="json")
+                for span in build_evidence_spans(blocks)
+            ]
+        },
+    )
     schema = StudyExtraction.model_json_schema()
     mode, approximate_tokens, window_plan = _plan_extraction(config, blocks)
-    run_configuration = _run_configuration(config, mode, source_events)
+    run_configuration = _run_configuration(config, mode, source_events, blocks)
     write_json_atomic(config.output_dir / "run_configuration.json", run_configuration)
     write_json_atomic(config.output_dir / "extraction.schema.json", schema)
     write_json_atomic(
@@ -819,9 +860,11 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
                 response_model=EvidenceInventory,
                 max_output_tokens=config.inventory_max_output_tokens,
                 reasoning_effort=config.reasoning_effort,
-                request_schema=constrain_evidence_block_ids(
-                    EvidenceInventory.model_json_schema(),
-                    (block.block_id for block in blocks),
+                request_schema=span_citation_schema(
+                    EvidenceInventory, build_evidence_spans(blocks)
+                ),
+                decode=lambda payload: expand_span_citations(
+                    payload, build_evidence_spans(blocks)
                 ),
             )
         except ModelCallError as exc:
@@ -858,7 +901,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     mode, approximate_tokens, window_plan = _plan_extraction(config, selected_blocks)
     write_json_atomic(
         config.output_dir / "run_configuration.json",
-        _run_configuration(config, mode, source_events),
+        _run_configuration(config, mode, source_events, selected_blocks),
     )
     if window_plan is not None:
         write_json_atomic(

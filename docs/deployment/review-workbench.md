@@ -49,6 +49,11 @@ verify, `U` for uncertain, `C` to correct, and the arrow keys or `J`/`K` to move
 records. Corrections open a field-oriented editor with existing evidence preselected;
 complete JSON remains available only as an advanced escape hatch.
 
+The study header compares the immutable seed's schema version and generated schema
+hash with the running extractor. Older seeds that remain structurally readable are
+not silently presented as current outputs: the interface warns that newly introduced
+fields still need regeneration or explicit human review.
+
 Review state is committed under `state/`. One immutable source bundle contains the
 seed, evidence document, manifest, and initial revision. Each accepted change writes
 one new revision snapshot containing both the validated truth and complete event

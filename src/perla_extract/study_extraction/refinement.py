@@ -8,7 +8,12 @@ from pathlib import Path
 from .artifacts import write_json_atomic
 from .client import ModelCallError, ModelClient
 from .models import EvidenceBlock, StudyExtraction
-from .transport import compact_study, compact_study_schema, expand_compact_study
+from .spans import build_evidence_spans
+from .transport import (
+    compact_to_span_citations,
+    expand_span_citations,
+    span_citation_schema,
+)
 
 REFINEMENT_PROMPT = """Audit the supplied draft against all supplied evidence and
 return a complete corrected StudyExtraction.
@@ -26,13 +31,18 @@ not a patch or commentary.
 """
 
 
-def _prompt(evidence_prompt: str, draft: StudyExtraction) -> str:
+def _prompt(
+    evidence_prompt: str, draft: StudyExtraction, blocks: list[EvidenceBlock]
+) -> str:
     """Put the fallible draft before the unchanged extraction evidence and rules."""
 
     return (
         REFINEMENT_PROMPT
-        + "\n\nDRAFT EXTRACTION WITH SHARED EVIDENCE CATALOG:\n"
-        + json.dumps(compact_study(draft), ensure_ascii=False)
+        + "\n\nDRAFT EXTRACTION WITH EVIDENCE SPAN REFERENCES:\n"
+        + json.dumps(
+            compact_to_span_citations(draft, build_evidence_spans(blocks)),
+            ensure_ascii=False,
+        )
         + "\n\nEVIDENCE AND INVENTORY:\n"
         + evidence_prompt
     )
@@ -97,12 +107,16 @@ def refine_draft(
             slug=slug,
             model=model,
             system=system_prompt,
-            prompt=_prompt(evidence_prompt, draft),
+            prompt=_prompt(evidence_prompt, draft, blocks),
             response_model=StudyExtraction,
             max_output_tokens=max_output_tokens,
             reasoning_effort=reasoning_effort,
-            request_schema=compact_study_schema(block.block_id for block in blocks),
-            decode=expand_compact_study,
+            request_schema=span_citation_schema(
+                StudyExtraction, build_evidence_spans(blocks)
+            ),
+            decode=lambda payload: expand_span_citations(
+                payload, build_evidence_spans(blocks)
+            ),
         )
     except ModelCallError as exc:
         return draft, str(exc)

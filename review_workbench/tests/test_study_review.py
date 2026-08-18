@@ -83,6 +83,33 @@ def test_seed_is_immutable_and_truth_is_versioned(
     assert updated["revision"] == 2
     assert bundle["manifest"]["schema_version"] == STUDY_SCHEMA_VERSION
     assert bundle["manifest"]["schema_sha256"] == study_schema_sha256()
+    assert bundle["schema_compatibility"]["exact_match"] is True
+
+
+def test_bundle_marks_readable_older_schema_as_not_exactly_comparable(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    bundle = seed(store, empty_study, document_payload)
+    source = store.storage.load_source("calibration", "10.0000--example")
+    source.manifest["schema_version"] = 1
+    source.manifest["schema_sha256"] = "historical"
+    source_path = store.root / "state" / "sources" / "calibration" / "10.0000--example.json"
+    payload = json.loads(source_path.read_text())
+    payload["manifest"] = source.manifest
+    source_path.write_text(json.dumps(payload))
+
+    reloaded = store.load_bundle("calibration", "10.0000--example")
+
+    assert bundle["schema_compatibility"]["exact_match"] is True
+    assert reloaded["schema_compatibility"] == {
+        "seed_schema_version": 1,
+        "current_schema_version": STUDY_SCHEMA_VERSION,
+        "seed_schema_sha256": "historical",
+        "current_schema_sha256": study_schema_sha256(),
+        "exact_match": False,
+        "readable_by_current_schema": True,
+    }
 
 
 def test_human_citations_use_the_extraction_evidence_policy(

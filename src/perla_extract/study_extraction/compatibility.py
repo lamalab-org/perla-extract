@@ -308,6 +308,28 @@ def _project_family(family: DeviceFamily | None) -> tuple[dict, dict]:
             for layer in family.layers
             if layer.reported_properties
         ],
+        "layer_details": [
+            {
+                "layer_id": layer.layer_id,
+                "role": layer.role,
+                "material": layer.material,
+                "constituents": [
+                    {
+                        "name": constituent.name,
+                        "role": constituent.role,
+                        "amount": (
+                            _reported_value_payload(constituent.amount)
+                            if constituent.amount
+                            else None
+                        ),
+                    }
+                    for constituent in layer.constituents
+                ],
+                "material_form_raw": layer.material_form_raw,
+                "material_form": layer.material_form,
+            }
+            for layer in family.layers
+        ],
         "reduced_composition_omitted_reason": (
             "multiple scoped absorbers cannot be represented by the reduced schema"
             if len(family.absorbers) > 1

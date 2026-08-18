@@ -34,7 +34,7 @@ automatically and therefore require no manual version bump.
 ## Evidence citations
 
 Every scientific record carries one or more `EvidenceCitation` values. A citation names a
-supplied block and copies the smallest useful supporting quote. Every `ReportedValue.raw_value`
+supplied block and contains an exact supporting passage. Every `ReportedValue.raw_value`
 must also occur in at least one cited block. A value assembled from multiple exact
 quotes is accepted only when their normalized contents join to the complete raw value.
 Extraction validation and human corrections use the same conservative matcher, so
@@ -45,18 +45,20 @@ The extractor is instructed not to digitize plots, interpolate, infer unreported
 identity, or import values from cited background work. Human ground truth follows the
 same boundary.
 
-The model-facing response normalizes repeated quotations into a citation catalog.
-PERLA expands catalog references before writing the public `StudyExtraction`, so
-review and export continue to see ordinary nested citations while generation avoids
-repeating a table row for every atomic value.
+Before generation, parser blocks are deterministically divided into sentence,
+table-row, or bounded text spans with content-derived IDs. Model-facing responses use
+only those IDs. PERLA inserts the exact span text and parent block ID before writing
+the public `StudyExtraction`, so review and export continue to see ordinary nested
+citations while the model neither reproduces nor alters quotation text.
 
 If a citation points to the wrong or an unknown block, PERLA searches for its complete
 unchanged quotation. A unique normalized match repairs only the block pointer. A
 missing or ambiguous match is never guessed and remains visible in
 `citation_repairs.json` and `validation.json`.
 
-A model may also stitch two real passages from one block while omitting the text
-between them. That is not one verbatim quote. PERLA repairs it only when both
+Historical or manually imported data may contain a quotation that stitches two real
+passages from one block while omitting the text between them. That is not one verbatim
+quote. PERLA repairs it only when both
 normalized spans are at least 40 characters and together account for every normalized
 character in the model excerpt. A short claimed block becomes one exact block quote; a
 longer block becomes the two exact source citations when the evidence field has room.
@@ -71,9 +73,10 @@ After extraction, `validate_study` checks:
 2. evidence quotes occur in those blocks after conservative Unicode and whitespace
    normalization;
 3. reported values occur in their cited evidence;
-4. family and device identifiers are unique;
-5. device, observation, population, and stability links resolve; and
-6. linked candidates exist and are not claimed by more than one identity link.
+4. source-reported material-form wording occurs in its cited evidence;
+5. family and device identifiers are unique;
+6. device, observation, population, and stability links resolve; and
+7. linked candidates exist and are not claimed by more than one identity link.
 
 ```mermaid
 flowchart LR

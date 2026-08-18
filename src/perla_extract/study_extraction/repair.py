@@ -56,8 +56,8 @@ Rules:
 - Put specimen-specific fabrication values in IndividualDevice.reported_properties.
 - Put stage-specific aging conditions in StabilityCheckpoint.conditions.
 - Scope each formula, constituent, and absorber property to one absorber or subcell.
-- Copy raw values and citation quotes from the supplied evidence blocks.
-- Use only supplied block IDs. Do not repair unreadable chemistry by guessing.
+- Copy raw values from the supplied evidence spans.
+- Cite only supplied span IDs. Do not repair unreadable chemistry by guessing.
 - Do not delete records. Explain unresolved gaps in unresolved_notes.
 """
 
@@ -311,7 +311,12 @@ def run_targeted_repair(
     """Request and gate one text-only patch when deterministic audits expose work."""
 
     from .client import ModelCallError
-    from .transport import constrain_evidence_block_ids
+    from .spans import build_evidence_spans, evidence_payload
+    from .transport import (
+        compact_to_span_citations,
+        expand_span_citations,
+        span_citation_schema,
+    )
 
     worklist = build_repair_worklist(study, coverage, validation)
     known = {block.block_id: block for block in blocks}
@@ -339,23 +344,15 @@ def run_targeted_repair(
                 else "repair items had no resolvable parser evidence"
             ),
         )
-    evidence = [
-        {
-            "block_id": known[block_id].block_id,
-            "source": known[block_id].source,
-            "page": known[block_id].page,
-            "section_path": known[block_id].section_path,
-            "kind": known[block_id].kind,
-            "text": known[block_id].text,
-        }
-        for block_id in selected_ids
-    ]
+    selected_blocks = [known[block_id] for block_id in selected_ids]
+    evidence = evidence_payload(selected_blocks)
+    evidence_spans = build_evidence_spans(selected_blocks)
     record_ids = {
         record_id for item in worklist.items for record_id in item.record_ids
     }
     current_records = {
         collection: [
-            record.model_dump(mode="json")
+            compact_to_span_citations(record, evidence_spans)
             for record in getattr(study, collection)
             if str(getattr(record, id_field)) in record_ids
         ]
@@ -377,9 +374,8 @@ def run_targeted_repair(
             response_model=StudyRepair,
             max_output_tokens=max_output_tokens,
             reasoning_effort=reasoning_effort,
-            request_schema=constrain_evidence_block_ids(
-                StudyRepair.model_json_schema(), selected_ids
-            ),
+            request_schema=span_citation_schema(StudyRepair, evidence_spans),
+            decode=lambda payload: expand_span_citations(payload, evidence_spans),
         )
     except ModelCallError as exc:
         return study, RepairAudit(

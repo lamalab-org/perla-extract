@@ -325,6 +325,14 @@ class StudyReviewStore:
         source = self.storage.load_source(split, paper_id)
         revision = self.storage.load_revision(split, paper_id)
         self._materialize(split, paper_id, source, revision)
+        current_schema_hash = study_schema_sha256()
+        seed_schema_version = source.manifest.get("schema_version")
+        seed_schema_hash = source.manifest.get("schema_sha256")
+        try:
+            StudyExtraction.model_validate(revision.ground_truth)
+            readable_by_current_schema = True
+        except ValueError:
+            readable_by_current_schema = False
         return {
             "paper_id": paper_id,
             "split": split,
@@ -333,6 +341,17 @@ class StudyReviewStore:
             "seed_extraction": source.seed_extraction,
             "events": revision.events,
             "manifest": source.manifest,
+            "schema_compatibility": {
+                "seed_schema_version": seed_schema_version,
+                "current_schema_version": STUDY_SCHEMA_VERSION,
+                "seed_schema_sha256": seed_schema_hash,
+                "current_schema_sha256": current_schema_hash,
+                "exact_match": (
+                    seed_schema_version == STUDY_SCHEMA_VERSION
+                    and seed_schema_hash == current_schema_hash
+                ),
+                "readable_by_current_schema": readable_by_current_schema,
+            },
             "summary": self.summary(revision.ground_truth, revision.events),
         }
 

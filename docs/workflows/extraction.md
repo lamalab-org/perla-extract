@@ -113,17 +113,25 @@ the primary extractor.
 issue counts. It is a diagnostic, not an accuracy score: only reviewed ground truth
 can reveal false positive records or a semantically wrong but verbatim source value.
 
-## Compact transport and atomic values
+## Deterministic evidence spans and atomic values
 
-The model defines each quotation once in an `evidence_catalog` and refers to its ID
-from scientific records. PERLA expands those references into the ordinary nested
-`EvidenceCitation` objects before validating or writing `extraction.json`; the public
-schema therefore remains unchanged.
+PERLA divides parser blocks into stable sentence, table-row, or bounded text spans
+before a model call. Scientific records return only supplied `span_id` values. Python
+then inserts the span's exact text and parent `block_id` into ordinary nested
+`EvidenceCitation` objects before validation and writing `extraction.json`. The model
+chooses the evidence but never copies quotation text, which reduces completion tokens
+and makes altered or stitched model quotations impossible.
 
 Each `ReportedValue` represents one semantic quantity. An uncertainty or range may
 remain attached to that quantity, but a table row containing different metrics must
 be emitted as separate values. Shared citations keep that atomic representation from
-repeating the same source row in the model response.
+repeating the same source row in the model response. `evidence_spans.json` records the
+complete deterministic catalog used by the call.
+
+Layers separate electrical `role`, chemical `constituents`, exact
+`material_form_raw`, and normalized `material_form`. The normalized form is a small
+schema-constrained vocabulary. It may be filled only when the raw wording occurs in
+the layer's cited evidence; otherwise it remains `not_reported`.
 
 Device-specific process coordinates are stored in
 `IndividualDevice.reported_properties`; stage-specific aging conditions are stored in

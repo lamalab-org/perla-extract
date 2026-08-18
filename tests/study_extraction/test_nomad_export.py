@@ -209,11 +209,15 @@ def test_nomad_export_keeps_reporting_levels_in_separate_archives():
     assert json.loads(observation.additional_notes)["champion_status"] == "yes"
 
 
-def test_version_two_records_default_new_atomic_scopes_to_empty():
+def test_older_records_default_new_atomic_scopes_and_layer_semantics():
     payload = study_fixture().model_dump(mode="json")
     payload["individual_devices"][0].pop("reported_properties")
     for checkpoint in payload["stability_tests"][0]["checkpoints"]:
         checkpoint.pop("conditions")
+    for layer in payload["device_families"][0]["layers"]:
+        layer.pop("constituents")
+        layer.pop("material_form_raw")
+        layer.pop("material_form")
 
     migrated = StudyExtraction.model_validate(payload)
 
@@ -222,6 +226,35 @@ def test_version_two_records_default_new_atomic_scopes_to_empty():
         checkpoint.conditions == []
         for checkpoint in migrated.stability_tests[0].checkpoints
     )
+    assert all(not layer.constituents for layer in migrated.device_families[0].layers)
+    assert all(
+        layer.material_form == "not_reported"
+        for layer in migrated.device_families[0].layers
+    )
+
+
+def test_nomad_additional_notes_preserve_layer_form_and_constituents():
+    study = study_fixture()
+    layer = study.device_families[0].layers[0]
+    layer.material_form_raw = "reported value"
+    layer.material_form = "other"
+    layer.constituents = [
+        MaterialConstituent(
+            name="FAI",
+            role="precursor",
+            amount=None,
+            evidence=EVIDENCE,
+        )
+    ]
+
+    exported = to_nomad_with_report(study)
+    details = json.loads(exported.archives[0].data.additional_notes)["family"][
+        "layer_details"
+    ][0]
+
+    assert details["material_form"] == "other"
+    assert details["material_form_raw"] == "reported value"
+    assert details["constituents"][0]["name"] == "FAI"
 
 
 def test_nomad_export_projects_only_explicit_chemistry_and_converts_units():

@@ -47,9 +47,9 @@ This profile combines five independent safeguards:
 No stage sends rendered pages to a vision model. Parser failures in chemical notation
 remain visible for review instead of being silently reconstructed from an image.
 
-The refinement request normalizes repeated evidence into one citation catalog. This is
-a lossless transport optimization: the public `StudyExtraction` still contains ordinary
-nested citations after expansion.
+All extraction and refinement requests cite deterministic source-span IDs. Python
+restores exact quotations afterward, so the public `StudyExtraction` still contains
+ordinary nested citations without asking a model to reproduce source text.
 
 Do not select a seed merely because it has more records or because validation passes.
 Source verification proves that text exists, not that it has the correct semantic role.
@@ -75,6 +75,13 @@ Imported seeds are immutable. If a better extraction is produced before review b
 create a new review item or explicitly archive the unused seed; do not silently replace
 its provenance. Once any human decision exists, a new model output is a proposal, never
 a replacement for the reviewed revision.
+
+The workbench compares each seed's recorded schema version and schema hash with the
+running extractor. A readable older seed remains available for review, but a visible
+warning marks it as non-identical: default-valued migration cannot recover fields the
+older extraction never attempted to produce. Regenerate an untouched seed, or review
+the newly added fields explicitly; never treat schema readability as evaluation
+comparability.
 
 ## 3. Review without anchoring recall to the model
 

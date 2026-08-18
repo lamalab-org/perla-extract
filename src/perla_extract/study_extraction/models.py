@@ -23,7 +23,7 @@ EntityKind = Literal[
     "population_statistic",
     "stability_test",
 ]
-STUDY_SCHEMA_VERSION = 3
+STUDY_SCHEMA_VERSION = 4
 
 
 class StrictModel(BaseModel):
@@ -100,8 +100,25 @@ class MaterialConstituent(StrictModel):
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=8)]
 
 
+MaterialForm = Literal[
+    "self_assembled_monolayer",
+    "monolayer",
+    "compact_layer",
+    "mesoporous_layer",
+    "nanostructured_layer",
+    "bulk_heterojunction",
+    "other",
+    "not_reported",
+]
+
+
 class Layer(StrictModel):
-    """Preserve one physical layer's stack position, role, and source wording."""
+    """Separate a layer's function, constituents, and source-reported physical form.
+
+    A self-assembled monolayer can function as a transport layer and contain several
+    chemicals. Keeping those axes separate makes architectures comparable without
+    hiding the paper's exact material and form wording.
+    """
 
     layer_id: Identifier
     sequence: Annotated[int | None, Field(ge=1)]
@@ -120,8 +137,32 @@ class Layer(StrictModel):
         "not_reported",
     ]
     material: ShortText
+    constituents: Annotated[
+        list[MaterialConstituent], Field(default_factory=list, max_length=40)
+    ]
+    material_form_raw: Annotated[str | None, Field(max_length=500)] = None
+    material_form: Annotated[
+        MaterialForm,
+        Field(
+            description=(
+                "Small normalized physical-form vocabulary; crystallinity, measured "
+                "morphology, and deposition method belong in other fields."
+            )
+        ),
+    ] = "not_reported"
     reported_properties: Annotated[list[ReportedValue], Field(max_length=40)]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
+
+    @model_validator(mode="after")
+    def keep_material_form_source_backed(self) -> Layer:
+        """Require raw wording for every normalized form and vice versa."""
+
+        reported = self.material_form != "not_reported"
+        if reported != (self.material_form_raw is not None):
+            raise ValueError(
+                "material_form_raw and a reported material_form must occur together"
+            )
+        return self
 
 
 class ProcessingStep(StrictModel):
