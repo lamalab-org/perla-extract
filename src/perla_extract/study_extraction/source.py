@@ -32,7 +32,13 @@ DOCUMENT_CACHE_FORMAT_VERSION = 1
 
 
 def _package_version(name: str) -> str:
-    """Return a dependency version for cache invalidation."""
+    """Read the parser dependency version that forms part of the cache identity.
+
+    Parser upgrades can change ordering, tables, or text without changing our code.
+    The explicit missing marker prevents such an environment from sharing a cache key
+    with an installed but unknown release; ``parse_pdf`` then reports the missing
+    dependency before parsing.
+    """
 
     try:
         return importlib.metadata.version(name)
@@ -63,7 +69,12 @@ def _parser_implementation_sha256() -> str:
 
 @lru_cache(maxsize=1)
 def _evidence_schema_sha256() -> str:
-    """Fingerprint the serialized block contract independently of cache plumbing."""
+    """Invalidate parses when the serialized ``EvidenceBlock`` contract changes.
+
+    A parser can return the same text after a schema change while its cached JSON is no
+    longer a valid model input. Keeping this fingerprint separate from the cache-format
+    version means ordinary schema edits do not require a manual version bump.
+    """
 
     schema = json.dumps(
         EvidenceBlock.model_json_schema(),
@@ -74,21 +85,36 @@ def _evidence_schema_sha256() -> str:
 
 
 def _semantic_value(value: object) -> str:
-    """Normalize a parser enum without depending on the parser's Python types."""
+    """Compare parser labels by meaning rather than by release-specific Python type.
+
+    Docling has exposed labels as enums and strings across releases. Converting either
+    representation to the same lowercase underscore form keeps the adapter tolerant of
+    those API changes without teaching downstream extraction code about Docling.
+    """
 
     raw = getattr(value, "value", value)
     return re.sub(r"[-\s]+", "_", str(raw or "").strip().casefold())
 
 
 def _block_id(source: str, page: int, order: int, kind: str, text: str) -> str:
-    """Build a stable evidence ID from source location and content."""
+    """Give a parsed block a reproducible citation identifier.
+
+    Source, page, reading order, and kind make the location intelligible; the text hash
+    prevents changed parser output from retaining an old citation identity. The ID is
+    therefore stable across serialization but intentionally changes when evidence does.
+    """
 
     digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
     return f"{source}_p{page}_{order:04d}_{kind}_{digest}"
 
 
 def _normalize_layout_text(value: object) -> str:
-    """Normalize layout whitespace while retaining line boundaries."""
+    """Remove PDF-layout spacing noise without flattening meaningful rows and lines.
+
+    Repeated horizontal whitespace is rarely semantic in parser output, while line
+    boundaries remain useful for tables, formulas, and evidence review. Empty layout
+    fragments are discarded so they do not become standalone evidence.
+    """
 
     lines = [
         re.sub(r"[ \t]+", " ", line).strip() for line in str(value or "").splitlines()
@@ -97,7 +123,13 @@ def _normalize_layout_text(value: object) -> str:
 
 
 def _formatted_line(line: dict[str, Any]) -> str:
-    """Recover visually raised and lowered glyphs from native PDF geometry."""
+    """Represent probable subscript and superscript glyphs using PDF geometry.
+
+    Plain PDF text often turns chemical formulas such as raised charges or lowered
+    stoichiometric indices into an ambiguous character sequence. Smaller spans above or
+    below the dominant baseline are marked as ``^{...}`` or ``_{...}``. This rendering
+    supplements the untouched plain text; it never silently replaces the source text.
+    """
 
     spans = [span for span in line.get("spans", []) if span.get("text")]
     if not spans:
@@ -126,7 +158,12 @@ def _formatted_line(line: dict[str, Any]) -> str:
 
 
 def _overlap_fraction(first: list[float], second: list[float]) -> float:
-    """Measure how much of the first rectangle is covered by the second."""
+    """Measure the fraction of a text rectangle covered by a detected table.
+
+    The measure is deliberately asymmetric: it answers whether the first rectangle is
+    already represented by the second. It is used only to suppress duplicated table
+    text, not as a general geometric similarity score.
+    """
 
     x0, y0 = max(first[0], second[0]), max(first[1], second[1])
     x1, y1 = min(first[2], second[2]), min(first[3], second[3])
@@ -138,8 +175,12 @@ def _overlap_fraction(first: list[float], second: list[float]) -> float:
 def _pymupdf_layout_items(path: Path) -> list[dict[str, Any]]:
     """Recover native text and tables without emitting table contents twice.
 
-    Detected table rectangles suppress overlapping text blocks; all remaining
-    layout_items retain geometry so later ordering and evidence locations stay stable.
+    PyMuPDF exposes table cells and ordinary text through separate APIs, so accepting
+    both naïvely duplicates the same values. Plausible multirow tables are emitted once,
+    and text blocks substantially covered by their rectangles are suppressed. Remaining
+    items retain native geometry and typography so later reading order, headings, and
+    citations remain reproducible. Table-detection failure degrades to ordinary text
+    rather than failing the complete paper.
     """
 
     layout_items: list[dict[str, Any]] = []
@@ -237,7 +278,14 @@ def _pymupdf_layout_items(path: Path) -> list[dict[str, Any]]:
 
 
 def _classify_headings(layout_items: list[dict[str, Any]]) -> None:
-    """Infer document hierarchy from typography rather than journal-specific labels."""
+    """Infer headings from typography without maintaining publisher-specific names.
+
+    Native PDF text has no reliable section type. Short, non-sentence blocks that are
+    larger or substantially bolder than estimated body text are treated as headings;
+    relative font sizes provide hierarchy levels. The heuristic supplies section context
+    for evidence navigation, not scientific filtering, so a missed heading cannot remove
+    source content.
+    """
 
     body_sizes = [
         item["font_size"]
@@ -276,7 +324,13 @@ def _classify_headings(layout_items: list[dict[str, Any]]) -> None:
 def _evidence_blocks_from_layout(
     layout_items: list[dict[str, Any]], source: str, *, sort_geometry: bool = True
 ) -> list[EvidenceBlock]:
-    """Turn backend layout_items into stable evidence with inherited section paths."""
+    """Convert backend layout items into the parser-neutral evidence contract.
+
+    The current heading stack is copied onto each block as its section path, while page,
+    geometry, wording, and backend metadata remain attached to the block itself. Optional
+    geometry sorting is used for native PDFs; structured backends such as Docling can
+    preserve the reading order they already computed.
+    """
 
     _classify_headings(layout_items)
     if sort_geometry:
@@ -310,13 +364,23 @@ def _evidence_blocks_from_layout(
 
 
 def _parse_pymupdf(path: Path, source: str) -> list[EvidenceBlock]:
-    """Parse a born-digital PDF using the repository's required dependency."""
+    """Parse a born-digital PDF with the lightweight native-text backend.
+
+    This path is useful when Docling is unavailable or its extra layout processing is
+    unnecessary. It extracts embedded text and tables but deliberately does not pretend
+    to OCR image-only pages; missing source text remains visible as a parser limitation.
+    """
 
     return _evidence_blocks_from_layout(_pymupdf_layout_items(path), source)
 
 
 def _docling_bbox(item: object) -> list[float] | None:
-    """Read Docling provenance coordinates without depending on a specific release."""
+    """Translate optional Docling provenance into the common rectangle representation.
+
+    Attribute access rather than concrete Docling classes keeps this narrow adapter
+    compatible across releases. Returning ``None`` is explicit: the caller can provide
+    deterministic ordering geometry without inventing source coordinates.
+    """
 
     provenance = getattr(item, "prov", None) or []
     if not provenance:
@@ -336,7 +400,13 @@ def _native_typography_blocks(
     start_order: int,
     included_pages: set[int] | None = None,
 ) -> list[EvidenceBlock]:
-    """Supplement scientific pages with compact sub/superscript renderings."""
+    """Add native typography evidence where structural conversion may lose chemistry.
+
+    Docling provides the main document structure, but native PDF glyph positions can
+    preserve formula indices and charges that normalized text loses. Only differing
+    formatted lines from pages containing scientific evidence are added, keeping this a
+    compact supporting source rather than a duplicate parse of the paper.
+    """
 
     blocks: list[EvidenceBlock] = []
     with pymupdf.open(path) as document:
@@ -374,8 +444,11 @@ def _native_typography_blocks(
 def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
     """Adapt Docling structure without leaking its object model downstream.
 
-    Native typography blocks are added only as compact supporting evidence for
-    subscripts and superscripts that a layout conversion may normalize away.
+    Docling supplies reading order, headings, tables, provenance, and semantic content
+    labels. The adapter converts those once into ordinary layout items and records which
+    references or document furniture should be excluded from model evidence; filtering
+    happens later so the complete parse remains cacheable and inspectable. Compact native
+    typography blocks support subscripts and superscripts that conversion may normalize.
     """
 
     try:
@@ -501,7 +574,13 @@ def _scientific_evidence_blocks(
 def _cache_identity(
     *, source_hash: str, source: str, parser: str, parser_version: str
 ) -> dict[str, object]:
-    """Describe every input that can change the parsed block representation."""
+    """Describe all reproducibility-relevant inputs to a parsed document.
+
+    Content bytes, main-versus-supplement provenance, backend and dependency version,
+    adapter implementation, evidence schema, and cache envelope can all change the
+    resulting blocks. File paths and modification times are excluded because they do not
+    change scientific evidence.
+    """
 
     return {
         "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
@@ -618,7 +697,12 @@ def parse_pdf(
 
 
 def _normalized_block_text_key(block: EvidenceBlock) -> str:
-    """Normalize complete blocks only for cross-document duplicate detection."""
+    """Create a conservative equality key for complete-block deduplication.
+
+    Unicode compatibility, case, and whitespace differences are ignored, but wording is
+    otherwise required to match exactly. This is intentionally not fuzzy similarity:
+    two tables or paragraphs with small scientific differences must remain separate.
+    """
 
     text = unicodedata.normalize("NFKC", block.text).casefold()
     return re.sub(r"\s+", " ", text).strip()
@@ -627,7 +711,14 @@ def _normalized_block_text_key(block: EvidenceBlock) -> str:
 def _deduplicate_evidence_blocks(
     blocks: list[EvidenceBlock],
 ) -> tuple[list[EvidenceBlock], int]:
-    """Collapse a main-paper block repeated verbatim inside a concatenated SI."""
+    """Remove only full SI blocks that repeat a main-paper block verbatim.
+
+    Some downloaded supplements contain the article PDF concatenated before the actual
+    SI. Long normalized blocks that exactly match the main paper keep the main-paper
+    instance as canonical and record the skipped SI location in its metadata. Short
+    boilerplate, near matches, unique SI evidence, and duplicates within one source are
+    retained to avoid recall loss.
+    """
 
     main: dict[str, EvidenceBlock] = {}
     for block in blocks:
@@ -662,7 +753,13 @@ def parse_documents(
     refresh_cache: bool = False,
     heartbeat_seconds: float = 20,
 ) -> tuple[list[EvidenceBlock], list[dict[str, object]]]:
-    """Parse a main article and optional SI without dropping unique evidence."""
+    """Build one evidence stream from a main article and optional supplement.
+
+    Both documents use the same selected backend but retain distinct ``main`` and
+    ``supplement`` provenance in every block and parse event. After parsing, only exact
+    cross-document repetitions are collapsed. The returned events expose cache use,
+    parser versions, source hashes, exclusions, and deduplication for the run manifest.
+    """
 
     blocks, main_event = parse_pdf(
         pdf,
