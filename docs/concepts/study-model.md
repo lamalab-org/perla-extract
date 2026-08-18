@@ -101,11 +101,11 @@ condition.
 
 | Source statement | Record type | Why |
 | --- | --- | --- |
-| One cell has a reverse and a forward JV scan | One `IndividualDevice`, two `PerformanceObservation` records | Protocol-specific measurements of the same cell |
-| Mean PCE over 20 cells | `PopulationStatistic` | An aggregate is not an individual device |
+| “Device A reached 24.1% in the reverse scan and 23.7% in the forward scan.” | One `IndividualDevice` named Device A and two linked `PerformanceObservation` records | Both numbers were measured on Device A using different scan directions |
+| “The mean efficiency of 20 devices was 22.8%.” | One `PopulationStatistic` with `sample_size=20` | The mean describes the group and is not assigned to Device A or another individual cell |
 | “Champion device” with a reported JV curve | `IndividualDevice` with `champion_status=yes` plus an observation | Champion status is explicit source semantics |
 | Best voltage among variants | Usually no champion claim | An extremum for one property does not establish champion identity |
-| Retained efficiency after aging | `StabilityTest` with ordered checkpoints | A stability experiment is not a JV observation |
+| “Unencapsulated specimens retained 90% after 1000 hours.” | One `StabilityTest`; `device_id` remains empty unless the paper names the aged device | An unnamed aged specimen must not silently inherit Device A's JV measurements |
 
 Unknown relationships remain unknown. A stability record can link to a family, an
 individual device, or only a separately described specimen through `link_status`.
