@@ -35,6 +35,20 @@ attention without treating any model artifact as truth. The app stores immutable
 seeds, compiled truth, event history, evidence blocks, and manifests under the
 ground-truth directory.
 
+For a validated batch, use the same import contract non-interactively:
+
+```bash
+python review_workbench/import_runs.py \
+  --runs-dir study_extraction/calibration-v4 \
+  --pdf-dir review_data/pdfs \
+  --review-data review_data/current \
+  --split calibration
+```
+
+The command refuses incomplete runs and any run with unresolved evidence-validation
+issues. Existing review items are still protected by the immutable-seed storage
+contract, so rerunning it cannot silently replace a seed.
+
 ## Review records efficiently
 
 After the blind census, the Records tab presents a device-centered queue rather than
@@ -53,6 +67,14 @@ The study header compares the immutable seed's schema version and generated sche
 hash with the running extractor. Older seeds that remain structurally readable are
 not silently presented as current outputs: the interface warns that newly introduced
 fields still need regeneration or explicit human review.
+
+Before introducing a regenerated dataset, copy the previous production state to a
+versioned private Blob path and verify its digest. Keep the old `papers/` prefix
+read-only; when a regenerated item with the same paper ID uses different PDF bytes,
+also preserve the old PDF below the versioned legacy path. Import the new records into
+a separate split such as `calibration`; do not overwrite the legacy state object or
+reuse an existing rich review item. This keeps historical drafts recoverable while
+preventing reviewers from comparing flat and rich records as equivalent annotations.
 
 Review state is committed under `state/`. One immutable source bundle contains the
 seed, evidence document, manifest, and initial revision. Each accepted change writes
@@ -86,12 +108,16 @@ vercel link --cwd review_workbench/.vercel-build --yes \
 vercel deploy --cwd review_workbench/.vercel-build --prebuilt
 ```
 
-The deployed adapter stores private PDFs under `papers/`, immutable source bundles
-under `workbench/review-sources/`, and immutable revision snapshots under
-`workbench/review-revisions/` in Vercel Blob. Creating revision `N + 1` with overwrite
-disabled is the compare-and-swap operation: if two serverless instances review
-revision `N`, exactly one can create the next path and the other receives a stale
-revision error. No process-local lock or mutable whole-dataset blob is involved.
+The deployed adapter stores new private PDFs under
+`workbench/review-pdfs/<split>/`, immutable source bundles under
+`workbench/review-sources/`, and immutable revision snapshots under
+`workbench/review-revisions/` in Vercel Blob. Split-scoped PDF paths prevent a newly
+generated calibration item from silently reusing a historical PDF with the same DOI.
+The older `papers/` prefix remains a read-only fallback for legacy deployments.
+Creating revision `N + 1` with overwrite disabled is the compare-and-swap operation:
+if two serverless instances review revision `N`, exactly one can create the next path
+and the other receives a stale revision error. No process-local lock or mutable
+whole-dataset blob is involved.
 
 Configure `BLOB_READ_WRITE_TOKEN`; the server-side token is never sent to the browser.
 

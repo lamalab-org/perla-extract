@@ -44,6 +44,13 @@ This profile combines five independent safeguards:
    text/table blocks, then monotonic gates prevent it from trading away grounded data;
    separate enrichment calls propose composition and processing interpretations.
 
+Refinement and repair are also checked together against the immutable draft before the
+seed is written. The final candidate may not increase validation issues, lose reported
+or source-verified values, or worsen inventory coverage. This second gate matters
+because a repair can be locally non-worsening relative to a refinement while the pair
+is still worse than the original draft. No weighted score is allowed to trade evidence
+correctness for additional records.
+
 No stage sends rendered pages to a vision model. Parser failures in chemical notation
 remain visible for review instead of being silently reconstructed from an image.
 
@@ -75,6 +82,12 @@ Imported seeds are immutable. If a better extraction is produced before review b
 create a new review item or explicitly archive the unused seed; do not silently replace
 its provenance. Once any human decision exists, a new model output is a proposal, never
 a replacement for the reviewed revision.
+
+When replacing a historical dataset generation, preserve its mutable state under a
+versioned, read-only legacy path, retain its source documents, and import current seeds
+into a separate split or dataset namespace. Schema readability is not evidence that
+two generations are comparable, and a legacy flat-schema draft must never be rewritten
+in place as if it had been produced by the current rich extractor.
 
 The workbench compares each seed's recorded schema version and schema hash with the
 running extractor. A readable older seed remains available for review, but a visible

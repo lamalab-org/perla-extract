@@ -14,6 +14,7 @@ from perla_extract.study_extraction.models import (
 )
 from perla_extract.study_extraction.workflow import (
     ExtractionConfig,
+    _gate_final_candidate_against_draft,
     _run_model_calls,
     _select_refinement_candidate,
     prompt_sha256,
@@ -173,3 +174,121 @@ def test_refinement_is_rejected_when_the_grounded_draft_strictly_dominates():
     assert audit["draft_quality"]["source_verified_values"] == 1
     assert audit["refinement_quality"]["source_verified_values"] == 0
     assert audit["refinement_quality"]["reported_values"] == 2
+
+
+def test_final_candidate_cannot_trade_validation_for_more_values():
+    block = EvidenceBlock(
+        block_id="result",
+        source="main",
+        page=1,
+        kind="text",
+        text="Device A used a 40 ms delay.",
+    )
+    citation = EvidenceCitation(block_id="result", quote="Device A used a 40 ms delay.")
+
+    def candidate(values: list[tuple[str, float]]) -> StudyExtraction:
+        return StudyExtraction(
+            paper=PaperMetadata(title=None, doi=None),
+            device_families=[],
+            individual_devices=[
+                IndividualDevice(
+                    device_id="device-a",
+                    family_id=None,
+                    label="Device A",
+                    variant=None,
+                    champion_status="not_reported",
+                    selection_basis="not_reported",
+                    reported_properties=[
+                        ReportedValue(
+                            name="delay",
+                            raw_value=raw_value,
+                            value_number=value_number,
+                            unit="ms",
+                            evidence=[citation],
+                        )
+                        for raw_value, value_number in values
+                    ],
+                    evidence=[citation],
+                )
+            ],
+            performance_observations=[],
+            population_statistics=[],
+            stability_tests=[],
+            unresolved_notes=[],
+        )
+
+    draft = candidate([("40 ms", 40)])
+    candidate_with_extra_unsupported_value = candidate(
+        [("40 ms", 40), ("80 ms", 80)]
+    )
+    selected, audit = _gate_final_candidate_against_draft(
+        draft,
+        candidate_with_extra_unsupported_value,
+        [block],
+        None,
+        {"selected": "refinement", "reason": "provisional"},
+    )
+
+    assert selected == draft
+    assert audit["pre_repair_selected"] == "refinement"
+    assert audit["selected"] == "draft"
+    assert audit["final_candidate_quality"]["reported_values"] == 2
+    assert audit["final_candidate_quality"]["validation_issues"] == 1
+
+
+def test_final_candidate_is_kept_when_all_grounded_signals_are_non_worsening():
+    block = EvidenceBlock(
+        block_id="result",
+        source="main",
+        page=1,
+        kind="text",
+        text="Device A used delays of 40 ms and 80 ms.",
+    )
+    citation = EvidenceCitation(
+        block_id="result", quote="Device A used delays of 40 ms and 80 ms."
+    )
+
+    def candidate(values: list[tuple[str, float]]) -> StudyExtraction:
+        return StudyExtraction(
+            paper=PaperMetadata(title=None, doi=None),
+            device_families=[],
+            individual_devices=[
+                IndividualDevice(
+                    device_id="device-a",
+                    family_id=None,
+                    label="Device A",
+                    variant=None,
+                    champion_status="not_reported",
+                    selection_basis="not_reported",
+                    reported_properties=[
+                        ReportedValue(
+                            name="delay",
+                            raw_value=raw_value,
+                            value_number=value_number,
+                            unit="ms",
+                            evidence=[citation],
+                        )
+                        for raw_value, value_number in values
+                    ],
+                    evidence=[citation],
+                )
+            ],
+            performance_observations=[],
+            population_statistics=[],
+            stability_tests=[],
+            unresolved_notes=[],
+        )
+
+    draft = candidate([("40 ms", 40)])
+    richer = candidate([("40 ms", 40), ("80 ms", 80)])
+    selected, audit = _gate_final_candidate_against_draft(
+        draft,
+        richer,
+        [block],
+        None,
+        {"selected": "refinement", "reason": "provisional"},
+    )
+
+    assert selected == richer
+    assert audit["selected"] == "refinement"
+    assert audit["final_candidate_quality"]["source_verified_values"] == 2

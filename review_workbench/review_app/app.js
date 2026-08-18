@@ -526,9 +526,9 @@ function renderHistory() {
 
 async function renderPdf() {
   if (!state.paperId || !state.source) return;
-  const query = `source=${state.source}&page=${state.page}&scale=1.5`;
+  const query = `source=${state.source}&split=${state.split}&page=${state.page}&scale=1.5`;
   $("pdf-page").src = `/api/pdf-page/${encodeURIComponent(state.paperId)}?${query}&t=${Date.now()}`;
-  const text = await request(`/api/pdf-text/${encodeURIComponent(state.paperId)}?source=${state.source}&page=${state.page}`);
+  const text = await request(`/api/pdf-text/${encodeURIComponent(state.paperId)}?source=${state.source}&split=${state.split}&page=${state.page}`);
   state.pageCount = text.page_count;
   $("page-number").value = state.page;
   $("page-number").max = state.pageCount;

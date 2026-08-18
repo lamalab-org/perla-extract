@@ -60,7 +60,12 @@ class ReviewApplication:
         self.ground_truth_dir = self.store.root
         self.static_dir = REPO_ROOT / "review_workbench" / "review_app"
 
-    def pdf_path(self, paper_id: str, source: str = "main") -> Path:
+    def pdf_path(
+        self, paper_id: str, source: str = "main", split: str | None = None
+    ) -> Path:
+        """Resolve a source PDF; local storage remains flat for CLI compatibility."""
+
+        del split
         self.store.validate_identity("dev", paper_id)
         if source == "main":
             return self.pdf_dir / f"{paper_id}.pdf"
@@ -74,7 +79,7 @@ class ReviewApplication:
             paper["sources"] = [
                 source
                 for source in ("main", "supplement")
-                if self.pdf_path(paper["id"], source).exists()
+                if self.pdf_path(paper["id"], source, split).exists()
             ]
         return papers
 
@@ -88,7 +93,7 @@ class ReviewApplication:
         bundle["sources"] = [
             source
             for source in ("main", "supplement")
-            if self.pdf_path(paper_id, source).exists()
+            if self.pdf_path(paper_id, source, str(bundle["split"])).exists()
         ]
         return bundle
 
@@ -203,10 +208,10 @@ class ReviewApplication:
             },
             reviewer_id=reviewer_id,
         )
-        main_path = self.pdf_path(paper_id, "main")
+        main_path = self.pdf_path(paper_id, "main", split)
         main_path.write_bytes(pdf_bytes)
         if supplement_bytes:
-            self.pdf_path(paper_id, "supplement").write_bytes(supplement_bytes)
+            self.pdf_path(paper_id, "supplement", split).write_bytes(supplement_bytes)
         return self._with_sources(bundle)
 
     def mutate(
@@ -278,15 +283,26 @@ class ReviewApplication:
         return ground_truth_zip(build_ground_truth_export(self.store, split, paper_id))
 
     @lru_cache(maxsize=128)
-    def _pages(self, paper_id: str, source: str, modified_ns: int) -> tuple[str, ...]:
+    def _pages(
+        self,
+        paper_id: str,
+        source: str,
+        modified_ns: int,
+        split: str | None = None,
+    ) -> tuple[str, ...]:
         del modified_ns
-        with fitz.open(self.pdf_path(paper_id, source)) as document:
+        with fitz.open(self.pdf_path(paper_id, source, split)) as document:
             return tuple(page.get_text() for page in document)
 
     def render_pdf_page(
-        self, paper_id: str, source: str, page_number: int, scale: float = 1.5
+        self,
+        paper_id: str,
+        source: str,
+        page_number: int,
+        scale: float = 1.5,
+        split: str | None = None,
     ) -> tuple[bytes, int]:
-        path = self.pdf_path(paper_id, source)
+        path = self.pdf_path(paper_id, source, split)
         if not path.exists():
             raise FileNotFoundError(path)
         if not 0.75 <= scale <= 3:
@@ -300,9 +316,13 @@ class ReviewApplication:
             return pixmap.tobytes("png"), len(document)
 
     def pdf_page_text(
-        self, paper_id: str, source: str, page_number: int
+        self,
+        paper_id: str,
+        source: str,
+        page_number: int,
+        split: str | None = None,
     ) -> dict[str, Any]:
-        path = self.pdf_path(paper_id, source)
+        path = self.pdf_path(paper_id, source, split)
         if not path.exists():
             raise FileNotFoundError(path)
         with fitz.open(path) as document:
@@ -338,9 +358,13 @@ class ReviewApplication:
             }
 
     def search_pdf(
-        self, paper_id: str, source: str, query: str
+        self,
+        paper_id: str,
+        source: str,
+        query: str,
+        split: str | None = None,
     ) -> list[dict[str, Any]]:
-        path = self.pdf_path(paper_id, source)
+        path = self.pdf_path(paper_id, source, split)
         if not path.exists():
             raise FileNotFoundError(path)
         query = query.strip()
@@ -501,31 +525,40 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 ):
                     paper_id = parts[2]
                     source = query.get("source", ["main"])[0]
+                    split = query.get("split", [None])[0]
                     if parts[1] == "pdf-page":
                         body, count = application.render_pdf_page(
                             paper_id,
                             source,
                             int(query.get("page", ["1"])[0]),
                             float(query.get("scale", ["1.5"])[0]),
+                            split,
                         )
                         self.send_bytes(body, "image/png", {"X-PDF-Pages": str(count)})
                     elif parts[1] == "pdf-text":
                         self.send_json(
                             application.pdf_page_text(
-                                paper_id, source, int(query.get("page", ["1"])[0])
+                                paper_id,
+                                source,
+                                int(query.get("page", ["1"])[0]),
+                                split,
                             )
                         )
                     elif parts[1] == "search":
                         self.send_json(
                             {
                                 "results": application.search_pdf(
-                                    paper_id, source, query.get("q", [""])[0]
+                                    paper_id,
+                                    source,
+                                    query.get("q", [""])[0],
+                                    split,
                                 )
                             }
                         )
                     else:
                         self.send_file(
-                            application.pdf_path(paper_id, source), "application/pdf"
+                            application.pdf_path(paper_id, source, split),
+                            "application/pdf",
                         )
                     return
                 asset = "index.html" if parsed.path == "/" else parsed.path.lstrip("/")

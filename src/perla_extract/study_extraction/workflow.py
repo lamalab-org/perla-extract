@@ -49,6 +49,7 @@ from .repair import (
     REPAIR_SYSTEM_PROMPT,
     RepairAudit,
     candidate_quality,
+    is_monotonic_quality,
     run_targeted_repair,
 )
 from .source import parse_documents
@@ -735,6 +736,43 @@ def _select_refinement_candidate(
     )
 
 
+def _gate_final_candidate_against_draft(
+    draft: StudyExtraction,
+    candidate: StudyExtraction,
+    blocks: list[EvidenceBlock],
+    inventory: EvidenceInventory | None,
+    selection: dict[str, object],
+) -> tuple[StudyExtraction, dict[str, object]]:
+    """Prevent refinement and repair from jointly degrading a safe draft.
+
+    The targeted repair gate compares a patch with the candidate it received, but a
+    repaired refinement can still be worse than the original draft.  This final gate
+    keeps the richer candidate only when validation, source-verified values, reported
+    values, and inventory coverage are all non-worsening relative to that immutable
+    baseline.  It deliberately makes no weighted trade-off between correctness and
+    recall for a ground-truth pre-annotation.
+    """
+
+    draft_quality = candidate_quality(draft, blocks, inventory)
+    candidate_quality_summary = candidate_quality(candidate, blocks, inventory)
+    accepted = is_monotonic_quality(draft_quality, candidate_quality_summary)
+    result = dict(selection)
+    result["pre_repair_selected"] = selection["selected"]
+    result["draft_quality"] = draft_quality
+    result["final_candidate_quality"] = candidate_quality_summary
+    if accepted:
+        result["selected"] = str(selection["selected"])
+        result["reason"] = (
+            "final candidate is non-worsening relative to the source-grounded draft"
+        )
+        return candidate, result
+    result["selected"] = "draft"
+    result["reason"] = (
+        "final candidate regressed validation, grounded values, or inventory coverage"
+    )
+    return draft, result
+
+
 def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     """Write a complete, inspectable extraction run and return its report.
 
@@ -944,6 +982,9 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     )
     extraction, pointer_repairs = repair_unique_citation_pointers(extraction, blocks)
     refinement_selection: dict[str, object] | None = None
+    comparable_draft: StudyExtraction | None = None
+    draft_quote_repairs: dict[str, object] | None = None
+    draft_pointer_repairs: dict[str, object] | None = None
     if initial_extraction is not None:
         comparable_draft, draft_quote_repairs = repair_noncontiguous_citation_quotes(
             initial_extraction, blocks
@@ -965,9 +1006,6 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             logger.warning(
                 "Retaining the draft because the refinement did not improve grounding"
             )
-        write_json_atomic(
-            config.output_dir / "refinement_selection.json", refinement_selection
-        )
     citation_repairs = {
         "repair_count": quote_repairs["repair_count"]
         + pointer_repairs["repair_count"],
@@ -1022,6 +1060,34 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             )
             citation_repairs["targeted_quote_repairs"] = repair_quote_repairs
             citation_repairs["targeted_pointer_repairs"] = repair_pointer_repairs
+
+    if comparable_draft is not None and refinement_selection is not None:
+        final_candidate = extraction
+        extraction, refinement_selection = _gate_final_candidate_against_draft(
+            comparable_draft,
+            final_candidate,
+            blocks,
+            grounded_inventory,
+            refinement_selection,
+        )
+        if extraction is comparable_draft and final_candidate != comparable_draft:
+            assert draft_quote_repairs is not None
+            assert draft_pointer_repairs is not None
+            discarded_repairs = citation_repairs
+            citation_repairs = {
+                "repair_count": int(draft_quote_repairs["repair_count"])
+                + int(draft_pointer_repairs["repair_count"]),
+                "quote_repairs": draft_quote_repairs,
+                "pointer_repairs": draft_pointer_repairs,
+                "discarded_candidate_repairs": discarded_repairs,
+            }
+            logger.warning(
+                "Retaining the draft because the final candidate regressed a "
+                "grounded quality signal"
+            )
+        write_json_atomic(
+            config.output_dir / "refinement_selection.json", refinement_selection
+        )
     write_json_atomic(config.output_dir / "citation_repairs.json", citation_repairs)
 
     write_json_atomic(

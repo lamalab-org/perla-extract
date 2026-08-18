@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote, unquote, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlparse
 from urllib.request import Request, urlopen
 
 MODULE_PATH = Path(__file__).resolve()
@@ -199,11 +199,12 @@ class VercelReviewApplication(ReviewApplication):
 
     users_pathname = "workbench/review-users.json"
     pdf_prefix = "papers/"
+    review_pdf_prefix = "workbench/review-pdfs/"
 
     def __init__(self, blob: BlobStore, workspace: Path):
         self.blob = blob
         self.workspace = workspace
-        self.remote_pdfs: dict[tuple[str, str], dict] = {}
+        self.remote_pdfs: dict[tuple[str | None, str, str], dict] = {}
         ground_truth, pdfs = workspace / "review_data", workspace / "pdfs"
         ground_truth.mkdir(parents=True, exist_ok=True)
         pdfs.mkdir(parents=True, exist_ok=True)
@@ -222,14 +223,25 @@ class VercelReviewApplication(ReviewApplication):
                 json.loads(self.blob.download(users_blob)),
             )
         for blob in self.blob.list(self.pdf_prefix):
-            name = Path(str(blob.get("pathname", ""))).name
-            if not name.endswith(".pdf"):
-                continue
-            if name.endswith(".supplement.pdf"):
-                paper_id, source = name.removesuffix(".supplement.pdf"), "supplement"
-            else:
-                paper_id, source = name.removesuffix(".pdf"), "main"
-            self.remote_pdfs[(paper_id, source)] = blob
+            self._index_pdf(blob, split=None)
+        for blob in self.blob.list(self.review_pdf_prefix):
+            pathname = str(blob.get("pathname", ""))
+            relative = pathname.removeprefix(self.review_pdf_prefix)
+            split, separator, _ = relative.partition("/")
+            if separator and split in {"calibration", "dev", "test"}:
+                self._index_pdf(blob, split=split)
+
+    def _index_pdf(self, blob: dict, *, split: str | None) -> None:
+        """Index one private PDF without conflating dataset generations."""
+
+        name = Path(str(blob.get("pathname", ""))).name
+        if not name.endswith(".pdf"):
+            return
+        if name.endswith(".supplement.pdf"):
+            paper_id, source = name.removesuffix(".supplement.pdf"), "supplement"
+        else:
+            paper_id, source = name.removesuffix(".pdf"), "main"
+        self.remote_pdfs[(split, paper_id, source)] = blob
 
     def _sync_users(self) -> None:
         """Persist the non-scientific reviewer directory separately from paper state."""
@@ -242,23 +254,46 @@ class VercelReviewApplication(ReviewApplication):
                 "application/json",
             )
 
-    def ensure_pdf(self, paper_id: str, source: str) -> Path:
-        """Download a private source PDF lazily into this runtime's workspace."""
+    def _pdf_cache_path(
+        self, paper_id: str, source: str, split: str | None
+    ) -> Path:
+        """Keep split-scoped downloads separate inside an ephemeral runtime."""
 
-        path = super().pdf_path(paper_id, source)
+        self.store.validate_identity(split or "dev", paper_id)
+        if source not in {"main", "supplement"}:
+            raise ValueError("source must be main or supplement")
+        if split is None:
+            return super().pdf_path(paper_id, source)
+        directory = self.pdf_dir / split
+        directory.mkdir(parents=True, exist_ok=True)
+        suffix = ".supplement.pdf" if source == "supplement" else ".pdf"
+        return directory / f"{paper_id}{suffix}"
+
+    def ensure_pdf(
+        self, paper_id: str, source: str, split: str | None = None
+    ) -> Path:
+        """Download the split-scoped source, falling back only to legacy storage."""
+
+        exact_key = (split, paper_id, source)
+        legacy_key = (None, paper_id, source)
+        key = exact_key if exact_key in self.remote_pdfs else legacy_key
+        path = self._pdf_cache_path(paper_id, source, key[0])
         if path.exists() and path.stat().st_size:
             return path
-        blob = self.remote_pdfs.get((paper_id, source))
+        blob = self.remote_pdfs.get(key)
         if not blob:
             raise FileNotFoundError(path)
         path.write_bytes(self.blob.download(blob))
         return path
 
-    def pdf_path(self, paper_id: str, source: str = "main") -> Path:
-        path = super().pdf_path(paper_id, source)
-        if (paper_id, source) in getattr(self, "remote_pdfs", {}):
-            return self.ensure_pdf(paper_id, source)
-        return path
+    def pdf_path(
+        self, paper_id: str, source: str = "main", split: str | None = None
+    ) -> Path:
+        if (split, paper_id, source) in getattr(self, "remote_pdfs", {}):
+            return self.ensure_pdf(paper_id, source, split)
+        if (None, paper_id, source) in getattr(self, "remote_pdfs", {}):
+            return self.ensure_pdf(paper_id, source, None)
+        return self._pdf_cache_path(paper_id, source, split)
 
     def ensure_authenticated_user(self, user: dict[str, str]) -> dict[str, str]:
         result = super().ensure_authenticated_user(user)
@@ -282,17 +317,21 @@ class VercelReviewApplication(ReviewApplication):
             split, paper_id, pdf_bytes, extraction_bytes, **kwargs
         )
         main = self.blob.put(
-            f"{self.pdf_prefix}{paper_id}.pdf", pdf_bytes, "application/pdf"
+            f"{self.review_pdf_prefix}{split}/{paper_id}.pdf",
+            pdf_bytes,
+            "application/pdf",
+            overwrite=False,
         )
-        self.remote_pdfs[(paper_id, "main")] = main
+        self.remote_pdfs[(split, paper_id, "main")] = main
         supplement = kwargs.get("supplement_bytes", b"")
         if supplement:
             item = self.blob.put(
-                f"{self.pdf_prefix}{paper_id}.supplement.pdf",
+                f"{self.review_pdf_prefix}{split}/{paper_id}.supplement.pdf",
                 supplement,
                 "application/pdf",
+                overwrite=False,
             )
-            self.remote_pdfs[(paper_id, "supplement")] = item
+            self.remote_pdfs[(split, paper_id, "supplement")] = item
         return result
 
 
@@ -332,16 +371,11 @@ class handler(BaseHandler):
             )
         ):
             paper_id = unquote(parsed.path.split("/", 3)[-1])
-            source = (
-                dict(
-                    item.split("=", 1)
-                    for item in parsed.query.split("&")
-                    if "=" in item
-                ).get("source")
-                or "main"
-            )
+            query = parse_qs(parsed.query)
+            source = query.get("source", ["main"])[0]
+            split = query.get("split", [None])[0]
             try:
-                review_application.ensure_pdf(paper_id, source)
+                review_application.ensure_pdf(paper_id, source, split)
             except FileNotFoundError:
                 pass
         super().do_GET()
