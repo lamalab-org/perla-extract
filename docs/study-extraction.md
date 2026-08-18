@@ -54,11 +54,17 @@ a failed evidence check lowers confidence without silently deleting model output
 
 ## Why records are separated
 
-A reverse scan and a forward scan may belong to the same device. A mean over 20
-devices does not. A stability specimen may have no supported link to the device
-whose JV curve is shown. `StudyExtraction` represents these cases explicitly, so
-the exporter never silently treats a mean, champion result, and stability point
-as measurements of one cell.
+A paper might report all three of the following:
+
+| Statement in the paper | Representation in `StudyExtraction` |
+| --- | --- |
+| “Device A reached 24.1% in the reverse scan and 23.7% in the forward scan.” | One individual device named Device A, with two performance observations linked to it |
+| “The mean efficiency of 20 devices was 22.8%.” | One population statistic with `sample_size=20`; the mean is not assigned to Device A |
+| “Unencapsulated specimens retained 90% after 1000 hours.” | One stability test; it is linked to Device A only if the paper explicitly says that Device A was the aged specimen |
+
+Keeping these as separate records prevents an export from accidentally describing one
+cell as simultaneously having the champion result, the 20-device mean, and an aging
+result measured on an unnamed specimen.
 
 ## Long supplementary information
 
