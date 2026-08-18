@@ -1,4 +1,11 @@
-"""Combine window-level candidates without silently deleting model output."""
+"""Combine records extracted from separate parts of a long paper.
+
+When a paper is too long for one model request, the workflow divides its evidence
+blocks into windows and extracts a complete ``StudyExtraction`` from each window.
+Those partial extractions are candidates because records mentioned in multiple
+windows may or may not describe the same physical device. This module keeps every
+candidate and makes its identifiers unique until explicit evidence links identities.
+"""
 
 from __future__ import annotations
 
@@ -64,11 +71,15 @@ def namespace_window_candidates(
 def combine_window_candidates(
     window_extractions: Sequence[tuple[str, StudyExtraction]],
 ) -> StudyExtraction:
-    """Return the lossless union of namespaced window-level candidates.
+    """Combine partial extractions produced from different evidence windows.
 
-    This function intentionally does not deduplicate or rewrite candidates.
-    Identity linking should return explicit links between source IDs; it must not
-    replace this auditable union.
+    Each input contains the device and measurement records found while the model read
+    one bounded group of text and table blocks from the paper. The same source device
+    can therefore appear in more than one input, but similar labels alone do not prove
+    that the records are identical. The function prefixes IDs with the window ID and
+    returns every record without deduplicating or rewriting it. A later identity-
+    linking step may add evidence-backed links between candidates, but does not remove
+    them from this auditable union.
     """
 
     if not window_extractions:
