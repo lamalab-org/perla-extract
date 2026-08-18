@@ -34,7 +34,10 @@ This profile combines five independent safeguards:
 1. Docling preserves document structure in parser-independent evidence blocks.
 2. A value-free inventory searches for reporting-level candidates and guides recall.
 3. The frontier extraction model creates a complete draft, followed by an
-   evidence-complete refinement pass over the same sources.
+   evidence-complete refinement pass over the same sources. If the draft has no more
+   grounding issues and no fewer source-verified values, with at least one strict
+   improvement, it remains the review seed; the alternate refinement is retained for
+   audit rather than silently replacing it.
 4. Deterministic validation checks exact evidence, atomic values, identifiers, and
    links.
 5. One bounded repair call revisits only audit-visible gaps using implicated parser

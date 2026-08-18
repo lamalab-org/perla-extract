@@ -6,13 +6,16 @@ from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
     EvidenceBlock,
     EvidenceCitation,
+    IndividualDevice,
     PaperMetadata,
+    ReportedValue,
     StudyExtraction,
     study_schema_sha256,
 )
 from perla_extract.study_extraction.workflow import (
     ExtractionConfig,
     _run_model_calls,
+    _select_refinement_candidate,
     prompt_sha256,
     run_extraction,
 )
@@ -109,3 +112,58 @@ def test_quality_pass_receives_grounded_inventory_and_retains_draft(tmp_path):
     assert draft.unresolved_notes == ["pass 1"]
     audit = json.loads((tmp_path / "refinement_audit.json").read_text())
     assert audit["collections"]["device_families"]["before_count"] == 0
+
+
+def test_refinement_is_rejected_when_the_grounded_draft_strictly_dominates():
+    block = EvidenceBlock(
+        block_id="result",
+        source="main",
+        page=1,
+        kind="text",
+        text="Device A used a 40 ms delay.",
+    )
+    citation = EvidenceCitation(block_id="result", quote="Device A")
+
+    def candidate(values: list[tuple[str, float]]) -> StudyExtraction:
+        return StudyExtraction(
+            paper=PaperMetadata(title=None, doi=None),
+            device_families=[],
+            individual_devices=[
+                IndividualDevice(
+                    device_id="device-a",
+                    family_id=None,
+                    label="Device A",
+                    variant=None,
+                    champion_status="not_reported",
+                    selection_basis="not_reported",
+                    reported_properties=[
+                        ReportedValue(
+                            name="delay",
+                            raw_value=raw_value,
+                            value_number=value_number,
+                            unit="ms",
+                            evidence=[citation],
+                        )
+                        for raw_value, value_number in values
+                    ],
+                    evidence=[citation],
+                )
+            ],
+            performance_observations=[],
+            population_statistics=[],
+            stability_tests=[],
+            unresolved_notes=[],
+        )
+
+    draft = candidate([("40 ms", 40)])
+    refinement = candidate([("60 ms", 60), ("80 ms", 80)])
+
+    selected, audit = _select_refinement_candidate(
+        draft, refinement, [block], None
+    )
+
+    assert selected == draft
+    assert audit["selected"] == "draft"
+    assert audit["draft_quality"]["source_verified_values"] == 1
+    assert audit["refinement_quality"]["source_verified_values"] == 0
+    assert audit["refinement_quality"]["reported_values"] == 2

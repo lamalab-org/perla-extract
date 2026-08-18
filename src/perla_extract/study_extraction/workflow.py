@@ -48,6 +48,7 @@ from .repair import (
     REPAIR_PROMPT,
     REPAIR_SYSTEM_PROMPT,
     RepairAudit,
+    candidate_quality,
     run_targeted_repair,
 )
 from .source import parse_documents
@@ -649,6 +650,59 @@ def _plan_extraction(
     )
 
 
+def _select_refinement_candidate(
+    draft: StudyExtraction,
+    refinement: StudyExtraction,
+    blocks: list[EvidenceBlock],
+    inventory: EvidenceInventory | None,
+) -> tuple[StudyExtraction, dict[str, object]]:
+    """Reject a refinement when the draft has strictly stronger source grounding.
+
+    Refinement can make legitimate precision/recall trade-offs that deterministic
+    checks cannot adjudicate. A refinement is therefore retained unless it made no
+    change, or the draft has both no more validation issues and no fewer source-
+    verified values, with a strict improvement in at least one. Inventory coverage
+    remains visible in the audit and drives targeted repair; it cannot make an
+    ungrounded full rewrite replace a better-grounded seed.
+    """
+
+    draft_quality = candidate_quality(draft, blocks, inventory)
+    refinement_quality = candidate_quality(refinement, blocks, inventory)
+    same_candidate = draft == refinement
+    draft_grounding_no_worse = (
+        draft_quality["validation_issues"]
+        <= refinement_quality["validation_issues"]
+        and draft_quality["source_verified_values"]
+        >= refinement_quality["source_verified_values"]
+    )
+    draft_grounding_strictly_better = (
+        draft_quality["validation_issues"]
+        < refinement_quality["validation_issues"]
+        or draft_quality["source_verified_values"]
+        > refinement_quality["source_verified_values"]
+    )
+    selected = (
+        "draft"
+        if same_candidate
+        or (draft_grounding_no_worse and draft_grounding_strictly_better)
+        else "refinement"
+    )
+    reason = "refinement is not strictly source-grounding-dominated by the draft"
+    if same_candidate:
+        reason = "refinement produced no candidate change"
+    elif selected == "draft":
+        reason = "draft strictly dominates refinement on source grounding"
+    return (
+        draft if selected == "draft" else refinement,
+        {
+            "selected": selected,
+            "reason": reason,
+            "draft_quality": draft_quality,
+            "refinement_quality": refinement_quality,
+        },
+    )
+
+
 def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     """Write a complete, inspectable extraction run and return its report.
 
@@ -826,6 +880,8 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         "draft_validation.json",
         "draft_coverage_audit.json",
         "refinement_audit.json",
+        "refinement_extraction.json",
+        "refinement_selection.json",
         "quality_comparison.json",
         "pre_repair_validation.json",
         "pre_repair_coverage_audit.json",
@@ -844,6 +900,31 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         extraction, blocks
     )
     extraction, pointer_repairs = repair_unique_citation_pointers(extraction, blocks)
+    refinement_selection: dict[str, object] | None = None
+    if initial_extraction is not None:
+        comparable_draft, draft_quote_repairs = repair_noncontiguous_citation_quotes(
+            initial_extraction, blocks
+        )
+        comparable_draft, draft_pointer_repairs = repair_unique_citation_pointers(
+            comparable_draft, blocks
+        )
+        if extraction != comparable_draft:
+            write_json_atomic(
+                config.output_dir / "refinement_extraction.json",
+                extraction.model_dump(mode="json"),
+            )
+        extraction, refinement_selection = _select_refinement_candidate(
+            comparable_draft, extraction, blocks, grounded_inventory
+        )
+        if refinement_selection["selected"] == "draft":
+            quote_repairs = draft_quote_repairs
+            pointer_repairs = draft_pointer_repairs
+            logger.warning(
+                "Retaining the draft because the refinement did not improve grounding"
+            )
+        write_json_atomic(
+            config.output_dir / "refinement_selection.json", refinement_selection
+        )
     citation_repairs = {
         "repair_count": quote_repairs["repair_count"]
         + pointer_repairs["repair_count"],
@@ -1101,6 +1182,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         ),
         "targeted_repair_status": repair_audit.status if repair_audit else "disabled",
         "quality_comparison": quality_comparison,
+        "refinement_selection": refinement_selection,
         "coverage": coverage_audit["counts"] if coverage_audit else None,
         "enrichment_status": enrichment_status,
         "enrichment_errors": enrichment.errors if enrichment else [],

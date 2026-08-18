@@ -251,12 +251,12 @@ def apply_repair(study: StudyExtraction, repair: StudyRepair) -> StudyExtraction
     return study.model_copy(update=changes)
 
 
-def _quality(
+def candidate_quality(
     study: StudyExtraction,
     blocks: list[EvidenceBlock],
     inventory: EvidenceInventory | None,
 ) -> dict[str, int]:
-    """Summarize monotonic acceptance criteria for a proposed scientific patch."""
+    """Summarize grounded signals for comparing two extraction candidates."""
 
     validation = validate_study(study, blocks)
     uncovered = 0
@@ -271,8 +271,8 @@ def _quality(
     }
 
 
-def _is_monotonic(before: dict[str, int], after: dict[str, int]) -> bool:
-    """Reject repairs that trade away grounded facts merely to fix another field."""
+def is_monotonic_quality(before: dict[str, int], after: dict[str, int]) -> bool:
+    """Return whether a candidate avoids trading away any grounded signal."""
 
     return (
         after["validation_issues"] <= before["validation_issues"]
@@ -323,7 +323,7 @@ def run_targeted_repair(
             if block_id in known
         }
     )
-    before = _quality(study, blocks, inventory)
+    before = candidate_quality(study, blocks, inventory)
     empty_counts = {name: 0 for name, _ in _COLLECTIONS.values()}
     if not worklist.items or not selected_ids:
         return study, RepairAudit(
@@ -426,8 +426,8 @@ def run_targeted_repair(
             after_quality=before,
             reason="the patch did not change the extraction",
         )
-    after = _quality(candidate, blocks, inventory)
-    accepted = _is_monotonic(before, after)
+    after = candidate_quality(candidate, blocks, inventory)
+    accepted = is_monotonic_quality(before, after)
     return (
         candidate if accepted else study,
         RepairAudit(
