@@ -52,6 +52,8 @@ def test_compact_schema_shares_citations_and_constrains_source_ids():
     entry = schema["$defs"]["EvidenceCatalogEntry"]
     assert entry["properties"]["block_id"]["enum"] == ["b1", "b2"]
     assert "evidence_catalog" in schema["required"]
+    assert "reported_properties" in schema["$defs"]["IndividualDevice"]["properties"]
+    assert "conditions" in schema["$defs"]["StabilityCheckpoint"]["properties"]
 
 
 def test_compact_response_expands_to_the_public_schema():

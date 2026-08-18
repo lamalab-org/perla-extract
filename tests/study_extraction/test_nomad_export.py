@@ -209,6 +209,21 @@ def test_nomad_export_keeps_reporting_levels_in_separate_archives():
     assert json.loads(observation.additional_notes)["champion_status"] == "yes"
 
 
+def test_version_two_records_default_new_atomic_scopes_to_empty():
+    payload = study_fixture().model_dump(mode="json")
+    payload["individual_devices"][0].pop("reported_properties")
+    for checkpoint in payload["stability_tests"][0]["checkpoints"]:
+        checkpoint.pop("conditions")
+
+    migrated = StudyExtraction.model_validate(payload)
+
+    assert migrated.individual_devices[0].reported_properties == []
+    assert all(
+        checkpoint.conditions == []
+        for checkpoint in migrated.stability_tests[0].checkpoints
+    )
+
+
 def test_nomad_export_projects_only_explicit_chemistry_and_converts_units():
     exported = to_nomad_with_report(study_fixture())
     projection = exported.composition_projections[0]
@@ -226,6 +241,38 @@ def test_nomad_export_projects_only_explicit_chemistry_and_converts_units():
     assert absorber.thickness == pytest.approx(500.0)
     assert absorber.deposition[0].temperature == pytest.approx(100.0)
     assert absorber.deposition[0].duration == 600.0
+
+
+@pytest.mark.parametrize(
+    "unit",
+    ["mA cm−2", "mA cm -2", "mA cm⁻²", "mA/cm²", "mA cm \uf02d 2"],
+)
+def test_nomad_export_accepts_equivalent_current_density_typography(unit):
+    study = study_fixture()
+    metric = study.performance_observations[0].metrics[1]
+    metric.unit = unit
+
+    exported = to_nomad_with_report(study)
+
+    assert exported.archives[0].data.jsc == 25.0
+    assert not any(
+        issue.code == "incompatible_metric" and issue.path == "jsc"
+        for issue in exported.issues
+    )
+
+
+@pytest.mark.parametrize("unit", ["°C", "° C", "℃"])
+def test_nomad_export_accepts_equivalent_temperature_typography(unit):
+    study = study_fixture()
+    temperature = study.device_families[0].processing_steps[0].conditions[0]
+    temperature.raw_value = f"100 {unit}"
+    temperature.value_number = 100.0
+    temperature.unit = unit
+
+    exported = to_nomad_with_report(study)
+
+    absorber = exported.archives[0].data.layers[1]
+    assert absorber.deposition[0].temperature == pytest.approx(100.0)
 
 
 def test_nomad_export_preserves_tandem_absorbers_without_selecting_one():

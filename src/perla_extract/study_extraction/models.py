@@ -23,7 +23,7 @@ EntityKind = Literal[
     "population_statistic",
     "stability_test",
 ]
-STUDY_SCHEMA_VERSION = 2
+STUDY_SCHEMA_VERSION = 3
 
 
 class StrictModel(BaseModel):
@@ -263,7 +263,12 @@ class DeviceFamily(StrictModel):
 
 
 class IndividualDevice(StrictModel):
-    """Identify a measured device without treating a population as a device."""
+    """Identify a measured device without treating a population as a device.
+
+    ``reported_properties`` holds values that distinguish this specimen from its
+    family, such as one row's fabrication setting. Keeping those values here avoids
+    turning a table of device variants into contradictory family-wide conditions.
+    """
 
     device_id: Identifier
     family_id: Identifier | None
@@ -271,6 +276,9 @@ class IndividualDevice(StrictModel):
     variant: Annotated[str | None, Field(max_length=500)]
     champion_status: Literal["yes", "no", "not_reported"]
     selection_basis: Literal["champion", "representative", "other", "not_reported"]
+    reported_properties: Annotated[
+        list[ReportedValue], Field(default_factory=list, max_length=60)
+    ]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
 
@@ -325,10 +333,18 @@ class PopulationStatistic(StrictModel):
 
 
 class StabilityCheckpoint(StrictModel):
-    """Preserve one reported outcome and its time within an ordered stability test."""
+    """Preserve conditions and outcomes that apply at one point or aging stage.
+
+    A protocol can change temperature, atmosphere, illumination, or another condition
+    between stages. Storing those values beside the checkpoint prevents a compound
+    test-level string from hiding which condition applied to which outcome.
+    """
 
     checkpoint_id: Identifier
     time: ReportedValue | None
+    conditions: Annotated[
+        list[ReportedValue], Field(default_factory=list, max_length=40)
+    ]
     outcomes: Annotated[list[ReportedValue], Field(min_length=1, max_length=40)]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 

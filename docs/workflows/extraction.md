@@ -125,6 +125,11 @@ remain attached to that quantity, but a table row containing different metrics m
 be emitted as separate values. Shared citations keep that atomic representation from
 repeating the same source row in the model response.
 
+Device-specific process coordinates are stored in
+`IndividualDevice.reported_properties`; stage-specific aging conditions are stored in
+`StabilityCheckpoint.conditions`. These scopes are part of the model response schema,
+so the extractor does not need property-specific post-processing rules.
+
 ## Long supplements
 
 Window planning operates on parser-produced source blocks, pages, and section paths;

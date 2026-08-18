@@ -31,9 +31,13 @@ def _pint_unit(unit: str) -> str:
     superscript = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺", "0123456789-+")
     value = (
         unit.strip()
+        .replace("℃", "degree_Celsius")
         .replace("°C", "degree_Celsius")
+        .replace("° C", "degree_Celsius")
         .replace("·", " * ")
         .replace("−", "-")
+        .replace("–", "-")
+        .replace("\uf02d", "-")
     )
     value = re.sub(
         r"[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+",
@@ -41,6 +45,8 @@ def _pint_unit(unit: str) -> str:
         value,
     )
     value = value.replace("^", "**")
+    value = re.sub(r"([+-])\s+(?=\d)", r"\1", value)
+    value = re.sub(r"(?<=[A-Za-z])([+-]\d+)(?=\s|$|[/)*])", r"**\1", value)
     return re.sub(r"(?<=[A-Za-z])\s+([+-]?\d+)(?=\s|$|[/)*])", r"**\1", value)
 
 

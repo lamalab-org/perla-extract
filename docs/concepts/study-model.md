@@ -35,6 +35,7 @@ erDiagram
         string family_id
         string champion_status
         string selection_basis
+        list reported_properties
     }
     PERFORMANCE_OBSERVATION {
         string observation_id
@@ -56,6 +57,11 @@ erDiagram
         string device_id
         string link_status
         list checkpoints
+    }
+    STABILITY_CHECKPOINT {
+        ReportedValue time
+        list conditions
+        list outcomes
     }
 ```
 
@@ -90,6 +96,10 @@ condition.
 
 Unknown relationships remain unknown. A stability record can link to a family, an
 individual device, or only a separately described specimen through `link_status`.
+Values shared by a family stay on its processing steps; values that distinguish one
+measured specimen use `IndividualDevice.reported_properties`. A condition that changes
+during an aging sequence belongs to the corresponding checkpoint, while conditions
+that apply throughout the test remain on `StabilityTest`.
 
 ## Reported values and qualifiers
 

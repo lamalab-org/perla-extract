@@ -28,6 +28,10 @@ unambiguously to a NOMAD field. Everything else remains in structured
 `additional_notes`, with source IDs and evidence block IDs, and produces a conversion
 issue where a target field was rejected.
 
+Before conversion, unit typography is normalized without changing meaning. Equivalent
+forms such as Unicode or OCR minus signs, superscript exponents, spaced exponents, and
+common degree-Celsius glyph variants therefore reach the same dimensional conversion.
+
 ## Chemical composition
 
 Each scoped absorber receives its own composition projection. For a family containing

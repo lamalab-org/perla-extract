@@ -53,6 +53,8 @@ Rules:
 - Return a complete replacement record when correcting an existing ID, or a complete
   new record when recovering an omitted entity. Do not return unchanged records.
 - Keep every ReportedValue atomic: one semantic quantity per object.
+- Put specimen-specific fabrication values in IndividualDevice.reported_properties.
+- Put stage-specific aging conditions in StabilityCheckpoint.conditions.
 - Scope each formula, constituent, and absorber property to one absorber or subcell.
 - Copy raw values and citation quotes from the supplied evidence blocks.
 - Use only supplied block IDs. Do not repair unreadable chemistry by guessing.

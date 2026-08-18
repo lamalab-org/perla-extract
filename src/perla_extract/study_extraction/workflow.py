@@ -75,6 +75,8 @@ the evidence supports the connection.
 Rules:
 - Preserve a device as one coherent object. Do not create one device per metric,
   paragraph, layer, scan direction, or stability checkpoint.
+- Put a fabrication or material value that distinguishes one measured specimen in
+  that IndividualDevice's reported_properties, not among family-wide conditions.
 - Keep individual devices and population statistics in separate top-level arrays.
   Means, medians, distributions, sample sizes, ranges, and population maxima are not
   individual-device measurements.
@@ -109,7 +111,9 @@ Rules:
   from every evidence array. Reuse a citation_id when several atomic values share the
   same source row or sentence.
 - Stability tests remain separate experiments with ordered checkpoints, even when
-  linked to a performance device.
+  linked to a performance device. Put a condition that changes between aging stages
+  in the corresponding checkpoint.conditions; test.conditions contains only values
+  that apply to the complete test.
 - Exclude background examples, prior literature, reference entries, review material,
   and devices not made or measured in this study.
 - Use null or not_reported for unknown identity or context. Do not guess.

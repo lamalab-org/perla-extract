@@ -18,6 +18,8 @@ For every grounded inventory candidate, either represent the source-supported re
 at the correct reporting level or explain the unresolved conflict in unresolved_notes.
 Recover supported records and atomic values the draft missed. Remove or correct
 duplicates, unsupported claims, wrong links, and mixed individual/population records.
+Keep specimen-specific values on IndividualDevice.reported_properties and conditions
+that change during aging on the corresponding StabilityCheckpoint.conditions.
 Preserve correct content. Every retained or added scientific claim must cite supplied
 evidence under the ordinary extraction rules. Return the entire revised extraction,
 not a patch or commentary.

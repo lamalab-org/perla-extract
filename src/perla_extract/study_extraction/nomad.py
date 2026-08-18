@@ -828,6 +828,11 @@ def to_nomad_with_report(
                 "measurement_type": observation.measurement_type,
                 "scan_direction": observation.scan_direction,
                 "champion_status": device.champion_status if device else None,
+                "device_reported_properties": [
+                    _payload(value) for value in device.reported_properties
+                ]
+                if device
+                else [],
                 "family": family_note,
                 "unprojected_metrics": remainder,
             },
@@ -914,6 +919,11 @@ def to_nomad_with_report(
                 "source_id": stability.test_id,
                 "device_id": stability.device_id,
                 "link_status": stability.link_status,
+                "device_reported_properties": [
+                    _payload(value) for value in device.reported_properties
+                ]
+                if device
+                else [],
                 "family": family_note,
                 "conditions": [_payload(value) for value in stability.conditions],
                 "checkpoints": [
@@ -947,6 +957,9 @@ def to_nomad_with_report(
                 "source_id": device.device_id,
                 "label": device.label,
                 "variant": device.variant,
+                "reported_properties": [
+                    _payload(value) for value in device.reported_properties
+                ],
                 "champion_status": device.champion_status,
                 "selection_basis": device.selection_basis,
                 "family": family_note,

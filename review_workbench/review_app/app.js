@@ -57,10 +57,10 @@ function recordDecision(kind, item, index) {
   return state.bundle.summary.record_decisions?.[state.user.id]?.[recordKey(kind, item, index)] || "";
 }
 function entityTitle(kind, item, index) { return item.label || item.specimen_label || entityId(kind, item, index); }
-function metrics(item) { return (item.metrics || item.conditions || []).map((value) => `${value.name}: ${value.raw_value}`).slice(0, 5).join(" · "); }
+function metrics(item) { return (item.metrics || item.reported_properties || item.conditions || []).map((value) => `${value.name}: ${value.raw_value}`).slice(0, 5).join(" · "); }
 function entityDetail(kind, item) {
   if (kind === "device_families") return item.full_stack_raw || (item.layers || []).map((layer) => layer.material).join(" / ") || item.variant;
-  if (kind === "individual_devices") return `${item.champion_status === "yes" ? "Champion · " : ""}${item.variant || "variant not reported"}`;
+  if (kind === "individual_devices") return metrics(item) || `${item.champion_status === "yes" ? "Champion · " : ""}${item.variant || "variant not reported"}`;
   if (kind === "identity_links") return `${item.entity_kind}: ${(item.candidate_ids || []).join(" = ")}`;
   return metrics(item) || item.statistic_type || item.measurement_type || item.link_status || "";
 }
@@ -357,6 +357,7 @@ function renderDeviceContext(entry) {
     contextField("Device family", family?.label),
     contextField("Individual device", device?.label),
     contextField("Device status", device ? `${device.champion_status === "yes" ? "Champion" : "Not marked champion"} · ${device.selection_basis.replaceAll("_", " ")}` : null),
+    contextField("Device-specific values", (device?.reported_properties || []).map((value) => `${value.name}: ${value.raw_value}`).join(" · ")),
     contextField("Architecture", family?.architecture || family?.polarity),
     contextField("Layer stack", family?.full_stack_raw || (family?.layers || []).map((layer) => layer.material).join(" / ")),
     contextField("Absorbers", (family?.absorbers || []).map((absorber) => absorber.formula?.raw_value || absorber.label).join(" · ")),

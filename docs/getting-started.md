@@ -110,3 +110,5 @@ model-cache key.
 compatibility breaks and automatically computed SHA-256 fingerprints for the generated
 Pydantic schema and all model prompts. A schema or prompt edit therefore changes
 provenance and cache identity without relying on a date string or a manual patch bump.
+Version 3 adds device-scoped reported properties and checkpoint-scoped stability
+conditions; version-2 JSON remains readable because both collections default empty.

@@ -446,6 +446,11 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
             ),
             "champion_status": (device.champion_status if device else "not_reported"),
             "selection_basis": (device.selection_basis if device else "not_reported"),
+            "device_reported_properties": [
+                _reported_value_payload(value) for value in device.reported_properties
+            ]
+            if device
+            else [],
             "unprojected_metrics": remainder,
         }
         add_reduced_cell(
@@ -491,6 +496,10 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                     ),
                     "champion_status": device.champion_status,
                     "selection_basis": device.selection_basis,
+                    "reported_properties": [
+                        _reported_value_payload(value)
+                        for value in device.reported_properties
+                    ],
                     "family": family_note,
                 },
             ),
@@ -580,6 +589,10 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                     "time": _reported_value_payload(checkpoint.time)
                     if checkpoint.time
                     else None,
+                    "conditions": [
+                        _reported_value_payload(reported_value)
+                        for reported_value in checkpoint.conditions
+                    ],
                     "outcomes": [
                         _reported_value_payload(reported_value)
                         for reported_value in checkpoint.outcomes
@@ -600,6 +613,12 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                     "family_id": family_id,
                     "specimen_label": test.specimen_label,
                     "link_status": test.link_status,
+                    "device_reported_properties": [
+                        _reported_value_payload(value)
+                        for value in device.reported_properties
+                    ]
+                    if device
+                    else [],
                     "family": family_note,
                     "rich_stability": raw_stability,
                 },
