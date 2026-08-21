@@ -40,7 +40,8 @@ The [documentation site](docs/index.md) explains:
 - [single-call and long-supplement extraction](docs/workflows/extraction.md);
 - [human ground-truth review](docs/workflows/ground-truth-review.md);
 - [audited composition and processing interpretation](docs/workflows/enrichment.md);
-- [direct NOMAD export](docs/workflows/nomad-export.md); and
+- [direct NOMAD export](docs/workflows/nomad-export.md);
+- [paper discovery and Zotero journal-club intake](docs/workflows/papersbot.md); and
 - [the optional reduced-schema compatibility boundary](docs/compatibility/reduced-schema.md).
 
 Build it locally with:

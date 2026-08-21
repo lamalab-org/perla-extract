@@ -106,9 +106,10 @@ behavior. RSS discovery and the policy's OpenAlex topics are enabled by default.
 `--no-rss` and `--no-openalex` isolate sources; `--openalex-start-date` and
 `--openalex-end-date` run an explicit `YYYY-MM-DD` backfill window.
 `--zotero-group-id` adds a Zotero group as a discovery source, and
-`--zotero-collection-key` limits it to one collection. `--zotero-curated` makes that
-collection a human-approved extraction queue. `--zotero-save` mirrors all DOI-bearing
-discovery outcomes using non-destructive namespaced tags and requires `ZOTERO_API_KEY`;
+`--zotero-collection-key` limits it to one collection using Zotero's API key for that
+collection, not its display name. `--zotero-curated` makes that collection a
+human-approved extraction queue. `--zotero-save` mirrors DOI-bearing discoveries and
+updates namespaced status tags; it requires `ZOTERO_API_KEY`.
 `--zotero-output-collection-key` keeps bot-created records out of the curated queue.
 `--zotero-pdf-policy research-group` uploads downloaded PDFs only after verifying that
 the destination group is private and has file storage enabled. Merely providing read
