@@ -13,15 +13,18 @@ flowchart LR
     B["OpenAlex topics and date window"] --> C
     Z["Zotero group or collection"] --> C
     C --> D["DOI-first merge"]
-    D --> E["Configurable relevance policy"]
-    E --> F["Crossref enrichment when needed"]
-    F --> ZA{"Stored Zotero PDF?"}
+    D --> E{"Curated Zotero item?"}
+    E -->|"yes"| P["Process approved paper"]
+    E -->|"no"| F["Policy; Crossref when needed"]
+    F -->|"accepted"| P
+    F -->|"rejected"| K["Per-run outcomes and statistics"]
+    P --> ZA{"Stored Zotero PDF?"}
     ZA -->|"yes"| H["Validated PDF download"]
-    ZA -->|"no"| G["Open-access PDF lookup"]
-    G --> H["Validated PDF download"]
+    ZA -->|"no"| O["Open-access PDF lookup"]
+    O --> H
     D --> I["Paper state and source provenance"]
     B --> J["Successful-date checkpoint"]
-    E --> K["Per-run outcomes and statistics"]
+    P --> K
     H --> K
     K -. "opt-in metadata and status writeback" .-> Z
     H -. "opt-in private-group PDF upload" .-> Z
@@ -91,10 +94,13 @@ Pass the file with `--selection-file selection.json`. Selection details can ther
 evolve without adding property-specific logic to either PapersBot or the scientific
 extractor.
 
-The packaged OpenAlex topics cover perovskite materials, solar-cell technology, and
-solar-cell performance. Topic retrieval is intentionally a high-recall discovery
-step, not the final relevance decision: the same local policy is applied to OpenAlex
-and feed metadata. Change the IDs in the policy when the project scope changes.
+The packaged policy uses OpenAlex topics
+[`T10247`](https://openalex.org/T10247) (perovskite materials),
+[`T10624`](https://openalex.org/T10624) (silicon and solar-cell technology), and
+[`T12309`](https://openalex.org/T12309) (solar-cell performance optimization). Topic
+retrieval is intentionally a broad, high-recall discovery step, not the final
+relevance decision: the same local policy is applied to OpenAlex and feed metadata.
+Change the IDs in the policy when the project scope changes.
 
 On its first run, PapersBot queries the configured lookback period. Later runs start
 at the last successful end date minus the overlap, which catches delayed indexing.
@@ -123,8 +129,10 @@ perla-papersbot papers \
   --zotero-group-id 123456
 ```
 
-Pass `--zotero-collection-key ABCD1234` to ingest only one collection. Private groups
-and all writes also require a key:
+Pass `--zotero-collection-key ABCD1234` to ingest only one collection. This is the
+Zotero API collection key—typically the final eight-character component of a
+collection URL—not the collection's display name. Private groups and all writes also
+require an API key:
 
 ```bash
 export ZOTERO_API_KEY="your-zotero-key"
@@ -150,7 +158,7 @@ keyword policy:
 ```bash
 perla-papersbot papers \
   --zotero-group-id 123456 \
-  --zotero-collection-key JOURNAL_CLUB_INBOX \
+  --zotero-collection-key ABCD1234 \
   --zotero-curated
 ```
 
@@ -173,6 +181,11 @@ perla:access:open-access
 perla:curated
 ```
 
+Configuring a group, collection, or API key is read-only by itself.
+`--zotero-curated` changes selection but still does not write. `--zotero-save` permits
+bibliographic-item creation and status-tag updates; PDF bytes require the additional
+`--zotero-pdf-policy research-group` opt-in.
+
 Use a separate output collection when curated intake and automated discovery share a
 group. Otherwise bot-created rejected items would enter the human-approved queue on
 the next run:
@@ -180,8 +193,8 @@ the next run:
 ```bash
 perla-papersbot papers \
   --zotero-group-id 123456 \
-  --zotero-collection-key JOURNAL_CLUB_INBOX \
-  --zotero-output-collection-key BOT_DISCOVERED \
+  --zotero-collection-key ABCD1234 \
+  --zotero-output-collection-key WXYZ5678 \
   --zotero-curated \
   --zotero-save
 ```
@@ -199,17 +212,18 @@ API reports that the destination group is private and permits file storage:
 ```bash
 perla-papersbot papers \
   --zotero-group-id 123456 \
-  --zotero-collection-key JOURNAL_CLUB_INBOX \
-  --zotero-output-collection-key BOT_DISCOVERED \
+  --zotero-collection-key ABCD1234 \
+  --zotero-output-collection-key WXYZ5678 \
   --zotero-curated \
   --zotero-save \
   --zotero-pdf-policy research-group
 ```
 
-Existing PDF children are reused and never replaced. New attachment notes record the
-source URL, access basis, acquisition purpose, and SHA-256 fingerprint. The API key is
-sent only to Zotero; redirected downloads and storage-host uploads deliberately omit
-it. An interrupted upload reuses its child attachment on the next run.
+Existing stored PDF children are reused and never replaced. New attachment notes
+record the source URL, access basis, acquisition purpose, and SHA-256 fingerprint. The
+API key is sent only to Zotero; redirected downloads and storage-host uploads
+deliberately omit it. An interrupted upload reuses its child attachment on the next
+run.
 
 This policy is intended for a defined internal scientific research and verification
 group. It does not make a PDF publicly redistributable. Contributors remain responsible
@@ -219,11 +233,21 @@ German research organization, the relevant controlled-access and secure-retentio
 conditions are described in [§ 60d UrhG](https://www.gesetze-im-internet.de/urhg/__60d.html).
 Confirm the project policy with the responsible university library or legal office.
 
-The environment equivalents are `ZOTERO_GROUP_ID`, `ZOTERO_COLLECTION_KEY`,
-`ZOTERO_OUTPUT_COLLECTION_KEY`, `ZOTERO_API_KEY`, `ZOTERO_CURATED=true`,
-`ZOTERO_SAVE=true`, and `ZOTERO_PDF_POLICY=research-group`. The API key is never written
-to `state.json`, run ledgers, or logs. In GitHub Actions, configure all non-secret
-settings as repository variables and the key as a repository secret.
+For unattended runs, the Zotero options have direct environment equivalents:
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `ZOTERO_GROUP_ID` | unset | Numeric group library ID |
+| `ZOTERO_COLLECTION_KEY` | unset | Optional input collection API key |
+| `ZOTERO_OUTPUT_COLLECTION_KEY` | unset | Optional collection API key for bot-created records |
+| `ZOTERO_API_KEY` | unset | Credential for private reads or explicit writes |
+| `ZOTERO_CURATED` | `false` | Treat the configured input collection as human-approved |
+| `ZOTERO_SAVE` | `false` | Permit item creation and PERLA-owned status-tag updates |
+| `ZOTERO_PDF_POLICY` | `never` | Set to `research-group` for verified-private-group upload |
+
+Boolean opt-ins accept `1`, `true`, `yes`, or `on` (case-insensitive). The API key is
+never written to `state.json`, run ledgers, or logs. In GitHub Actions, configure all
+non-secret settings as repository variables and the key as a repository secret.
 
 These controls follow Zotero's official [Web API basics](https://www.zotero.org/support/dev/web_api/v3/basics)
 and [write-request protocol](https://www.zotero.org/support/dev/web_api/v3/write_requests).
@@ -237,21 +261,21 @@ which PapersBot follows for authorization, storage transfer, and registration.
 is available. Each record retains all discovery sources, OpenAlex metadata, status,
 attempt count, resolved PDF URL, downloaded path, last error, and update time. It also
 stores the last fully successful OpenAlex date. Version-one feed identifiers are
-migrated to DOI keys as papers reappear. Terminal entries are not processed again.
+migrated to DOI keys as papers reappear. Terminal entries are not processed again
+unless a member newly adds a previously rejected paper to the curated collection.
 Transient errors and papers without an open PDF are retried up to `--max-attempts`.
 
 Every invocation also checkpoints `STATE_DIR/runs/<run-id>.json` and
 `STATE_DIR/last_run.json`. A run record contains timestamps, a non-secret configuration
 fingerprint, source/date configuration, raw and DOI-deduplicated discovery counts,
-OpenAlex pages/results/reported API cost, Zotero item updates and PDF transfers, aggregate
-outcome/skip/retry counts, source failures, and one outcome for every unique paper
-processed or skipped. The per-run file
-is therefore the source for longitudinal statistics; console logs are only the live
-operational view. An
-interrupted invocation remains marked `running` or `failed` rather than masquerading
-as a successful empty run. Retry counts retain the preceding status (`error` or
-`no_pdf`), while skip counts retain both the reason and existing paper status, such as
-`terminal:downloaded` or `max_attempts:no_pdf`.
+OpenAlex pages/results/reported API cost, Zotero item updates and PDF transfers,
+aggregate outcome/skip/retry counts, source failures, and one outcome for every unique
+paper processed or skipped. The per-run file is therefore the source for longitudinal
+statistics; console logs are only the live operational view. An interrupted invocation
+remains marked `running` or `failed` rather than masquerading as a successful empty
+run. Retry counts retain the preceding status (`error` or `no_pdf`), while skip counts
+retain both the reason and existing paper status, such as `terminal:downloaded` or
+`max_attempts:no_pdf`.
 
 The files are ordinary JSON, so no application-specific reader is required:
 
