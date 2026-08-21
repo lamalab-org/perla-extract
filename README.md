@@ -54,9 +54,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development and test commands.
 
 ## Discover new papers
 
-PapersBot checks the packaged journal feeds, applies a replaceable JSON selection
-policy, resolves open-access PDF links, and records incremental state as readable
-JSON. It is deliberately separate from scientific data extraction:
+PapersBot combines packaged journal feeds, OpenAlex topic searches, and an optional
+Zotero group; applies one replaceable JSON selection policy; retrieves available PDFs;
+and records incremental state as readable JSON. It is deliberately separate from
+scientific data extraction:
 
 ```bash
 pip install 'perla-extract[papersbot]'
@@ -64,8 +65,13 @@ perla-papersbot downloaded_papers --state-dir .papersbot-state
 ```
 
 Use `--feeds-file` or repeated `--feed` options to replace the journal list and
-`--selection-file` to replace the relevance policy. The daily GitHub workflow caches
-the state and publishes newly downloaded PDFs as a run artifact.
+`--selection-file` to replace the relevance policy. `--zotero-group-id` also ingests a
+Zotero group (including its stored PDF attachments); `--zotero-save` explicitly saves
+and status-tags discoveries back to that group. A configured collection can be a
+journal-club-curated intake queue, and `--zotero-pdf-policy research-group` stores PDFs
+only after verifying a private group. The daily GitHub workflow caches state and
+publishes inspectable logs; PDF artifacts require the explicit
+`PAPERSBOT_ARCHIVE_PDFS=true` repository variable.
 
 ## Authors
 
