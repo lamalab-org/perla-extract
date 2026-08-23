@@ -53,6 +53,13 @@ then committed together as one immutable revision, so concurrent reviewers canno
 produce a truth/event mismatch. Editing a record changes its content digest and
 invalidates the previous record decision automatically.
 
+Reviewers can inspect **My annotations** at any time and download their own persisted
+event ledger for the selected split. The server derives this response from immutable
+revisions using the authenticated reviewer identity; it does not accept another user
+ID from the browser. The personal export includes exact mutations, evidence, decisions,
+audits, stages, and current-versus-superseded decision state, but it is not a substitute
+for the administrator's adjudicated data-PR bundle.
+
 ## Stored artifacts
 
 For each paper, the workbench keeps authoritative immutable state:

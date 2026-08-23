@@ -86,6 +86,73 @@ def test_seed_is_immutable_and_truth_is_versioned(
     assert bundle["schema_compatibility"]["exact_match"] is True
 
 
+def test_reviewer_progress_contains_only_that_reviewers_persisted_work(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    store.import_seed(
+        "calibration",
+        "10.0000--example",
+        empty_study,
+        document=document_payload,
+        manifest={},
+        reviewer_id="seed-import",
+    )
+    audited = store.inventory_audit(
+        "calibration",
+        "10.0000--example",
+        InventoryAuditRequest(
+            base_revision=1,
+            searched_sources=["main"],
+            expected_counts={"individual_devices": 0},
+            missing_or_ambiguous="No missing devices found.",
+        ),
+        "ada",
+    )
+    corrected = store.mutate(
+        "calibration",
+        "10.0000--example",
+        MutationRequest(
+            action="replace",
+            path="/unresolved_notes/0",
+            value="Ada checked this note",
+            evidence=[{"block_id": "main_p1_text_1", "quote": "champion device"}],
+            note="Checked against the source",
+            base_revision=audited["revision"],
+        ),
+        "ada",
+    )
+    store.mutate(
+        "calibration",
+        "10.0000--example",
+        MutationRequest(
+            action="replace",
+            path="/unresolved_notes/0",
+            value="Grace checked this note",
+            evidence=[{"block_id": "main_p1_text_1", "quote": "champion device"}],
+            base_revision=corrected["revision"],
+        ),
+        "grace",
+    )
+
+    progress = store.reviewer_progress("calibration", "ada")
+
+    assert (progress["paper_count"], progress["annotation_count"]) == (1, 2)
+    paper = progress["papers"][0]
+    assert paper["paper_id"] == "10.0000--example"
+    assert [event["kind"] for event in paper["events"]] == [
+        "inventory_audit",
+        "mutation",
+    ]
+    assert paper["events"][1]["before"] == "Initial model note"
+    assert paper["events"][1]["after"] == "Ada checked this note"
+    assert paper["current_inventory_audit"]["missing_or_ambiguous"] == (
+        "No missing devices found."
+    )
+    assert all(event["reviewer_id"] == "ada" for event in paper["events"])
+    assert store.reviewer_progress("calibration", "nobody")["papers"] == []
+
+
 def test_bundle_marks_readable_older_schema_as_not_exactly_comparable(
     tmp_path, empty_study, document_payload
 ):

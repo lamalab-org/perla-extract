@@ -82,6 +82,14 @@ one new revision snapshot containing both the validated truth and complete event
 history. The familiar `seeds/`, `events/`, `documents/`, `manifests/`, and split
 directories are refreshed as derived, inspectable exports.
 
+Every authenticated reviewer can open **My annotations** from the header. This view
+reads the persisted revision log across the selected split and shows only that
+reviewer's census submissions, record decisions, corrections, evidence, notes, and
+stage completions. Decisions are marked current or superseded when later edits change
+the reviewed record. **Download my annotations** saves the same reviewer-scoped ledger
+as readable JSON, including exact before/after values and revision timestamps. It is a
+personal progress export and is deliberately separate from adjudicated ground truth.
+
 After the final administrator adjudication, **Download PR bundle** produces a
 deterministic ZIP containing the rich ground truth, immutable seed, complete review
 events, and provenance manifest. The download is disabled if any edit occurred after

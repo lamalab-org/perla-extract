@@ -111,3 +111,18 @@ def test_only_admins_can_download_an_adjudicated_pr_bundle():
     assert "ground-truth-export" in source
     assert 'state.user.role === "admin"' in source
     assert 'finalEvent?.details?.stage === "adjudication"' in source
+
+
+def test_reviewers_can_inspect_and_download_their_persisted_annotations():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    server = (APP.parent / "server.py").read_text(encoding="utf-8")
+
+    assert "My annotations" in html
+    assert "Download my annotations" in html
+    assert "/api/reviewer-progress/" in source
+    assert "current_record_decisions" in source
+    assert 'text: "Before"' in source
+    assert 'text: "After"' in source
+    assert "Inspect exact saved event" in source
+    assert 'application.reviewer_progress(parts[2], user["id"])' in server

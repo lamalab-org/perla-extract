@@ -13,6 +13,7 @@ import hashlib
 import json
 import re
 import uuid
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
@@ -156,6 +157,33 @@ class ReviewEvent(BaseModel):
     evidence: list[Citation] = Field(default_factory=list)
     note: str = ""
     details: dict[str, Any] = Field(default_factory=dict)
+
+
+class ReviewerPaperProgress(BaseModel):
+    """Expose one reviewer's saved work without presenting it as final truth."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    paper_id: str
+    current_revision: int = Field(ge=1)
+    last_saved_at: str
+    event_counts: dict[str, int]
+    completed_stages: list[ReviewStage]
+    current_inventory_audit: dict[str, Any] | None = None
+    current_record_decisions: dict[str, RecordDecision] = Field(default_factory=dict)
+    events: list[ReviewEvent]
+
+
+class ReviewerProgress(BaseModel):
+    """Bundle the authenticated reviewer's persisted annotations for one split."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    reviewer_id: str
+    split: Split
+    paper_count: int = Field(ge=0)
+    annotation_count: int = Field(ge=0)
+    papers: list[ReviewerPaperProgress]
 
 
 def _decode_pointer(path: str) -> list[str]:
@@ -354,6 +382,61 @@ class StudyReviewStore:
             },
             "summary": self.summary(revision.ground_truth, revision.events),
         }
+
+    def reviewer_progress(self, split: str, reviewer_id: str) -> dict[str, Any]:
+        """Return only the authenticated reviewer's persisted annotation events.
+
+        The immutable event log is the authoritative account of what a person saved.
+        Current decisions and stage state are included separately because later edits
+        may legitimately invalidate an earlier record decision without erasing its
+        history. Seed-import events are administrative setup, not annotations.
+        """
+
+        if split not in {"calibration", "dev", "test"}:
+            raise ValueError("split must be calibration, dev, or test")
+        if not reviewer_id:
+            raise ValueError("reviewer_id is required")
+        papers: list[ReviewerPaperProgress] = []
+        for paper_id in self.storage.list_paper_ids(split):
+            revision = self.storage.load_revision(split, paper_id)
+            events = [
+                ReviewEvent.model_validate(event)
+                for event in revision.events
+                if event.get("reviewer_id") == reviewer_id
+                and event.get("kind") != "seed_imported"
+            ]
+            if not events:
+                continue
+            summary = self.summary(revision.ground_truth, revision.events)
+            completed_stages = [
+                stage
+                for stage in ("inventory", "fields", "completeness", "adjudication")
+                if reviewer_id in summary["completed_stages"].get(stage, [])
+            ]
+            papers.append(
+                ReviewerPaperProgress(
+                    paper_id=paper_id,
+                    current_revision=revision.revision,
+                    last_saved_at=events[-1].timestamp,
+                    event_counts=dict(Counter(event.kind for event in events)),
+                    completed_stages=completed_stages,
+                    current_inventory_audit=summary["inventory_audits"].get(
+                        reviewer_id
+                    ),
+                    current_record_decisions=summary["record_decisions"].get(
+                        reviewer_id, {}
+                    ),
+                    events=events,
+                )
+            )
+        result = ReviewerProgress(
+            reviewer_id=reviewer_id,
+            split=split,
+            paper_count=len(papers),
+            annotation_count=sum(len(paper.events) for paper in papers),
+            papers=papers,
+        )
+        return result.model_dump(mode="json")
 
     @staticmethod
     def summary(truth: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any]:

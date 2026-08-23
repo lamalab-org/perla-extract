@@ -27,7 +27,7 @@ const MATERIAL_FORMS = [
 const state = {
   split: "calibration", papers: [], paperId: null, bundle: null, user: null,
   page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null,
-  queueIndex: 0, queueKey: null, evidenceCache: new Map(),
+  queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
 };
 
 async function request(url, options = {}) {
@@ -715,6 +715,100 @@ function setTab(tab) {
 
 function setStatus(message, error = false) { $("status").textContent = message; $("status").className = error ? "error" : "success"; }
 
+function annotationSubject(event) {
+  if (event.kind === "mutation") return `${event.action} ${event.path}`;
+  if (event.kind === "record_decision") return `${event.details.record_key} · ${humanLabel(event.details.decision)}`;
+  if (event.kind === "stage_complete") return `${humanLabel(event.details.stage)} stage completed`;
+  if (event.kind === "inventory_audit") {
+    const counts = Object.entries(event.details.expected_counts || {}).map(([name, count]) => `${humanLabel(name)}: ${count}`);
+    return counts.join(" · ") || "Blind inventory saved";
+  }
+  return event.note || humanLabel(event.kind);
+}
+
+function annotationIsCurrent(paper, event) {
+  if (event.kind === "record_decision") return paper.current_record_decisions?.[event.details.record_key] === event.details.decision;
+  if (event.kind === "inventory_audit") return JSON.stringify(paper.current_inventory_audit) === JSON.stringify(event.details);
+  if (event.kind === "stage_complete") return paper.completed_stages.includes(event.details.stage);
+  return null;
+}
+
+function annotationValue(value) {
+  if (value === undefined) return "Not recorded";
+  if (typeof value === "string") return value;
+  return JSON.stringify(value, null, 2);
+}
+
+function annotationEvent(paper, event) {
+  const current = annotationIsCurrent(paper, event);
+  const stateLabel = current === true ? "current" : current === false ? "superseded" : "saved";
+  return element("article", { className: "annotation-event" }, [
+    element("div", { className: "annotation-event-heading" }, [
+      element("strong", { text: `r${event.revision} · ${humanLabel(event.kind)}` }),
+      element("span", { className: `annotation-state ${stateLabel}`, text: stateLabel }),
+    ]),
+    element("p", { text: annotationSubject(event) }),
+    element("span", { className: "muted", text: new Date(event.timestamp).toLocaleString() }),
+    ...(event.note ? [element("p", { className: "annotation-note", text: event.note })] : []),
+    ...(event.kind === "mutation" ? [element("div", { className: "annotation-change" }, [
+      element("div", {}, [element("span", { className: "eyebrow", text: "Before" }), element("pre", { text: annotationValue(event.before) })]),
+      element("div", {}, [element("span", { className: "eyebrow", text: "After" }), element("pre", { text: annotationValue(event.after) })]),
+    ])] : []),
+    element("details", { className: "annotation-json" }, [
+      element("summary", { text: "Inspect exact saved event" }),
+      element("pre", { text: JSON.stringify(event, null, 2) }),
+    ]),
+  ]);
+}
+
+function renderReviewerProgress(progress) {
+  $("annotation-summary").replaceChildren(element("p", {
+    text: `${progress.annotation_count} saved annotation${progress.annotation_count === 1 ? "" : "s"} across ${progress.paper_count} paper${progress.paper_count === 1 ? "" : "s"} in ${progress.split}.`,
+  }));
+  const papers = [...progress.papers].sort((left, right) => right.last_saved_at.localeCompare(left.last_saved_at));
+  const cards = papers.map((paper) => element("section", { className: "annotation-paper" }, [
+    element("div", { className: "annotation-paper-heading" }, [
+      element("div", {}, [
+        element("strong", { text: paper.paper_id }),
+        element("span", { className: "muted", text: `Current paper revision ${paper.current_revision}` }),
+      ]),
+      element("span", { className: "pill", text: `${paper.events.length} saved` }),
+    ]),
+    ...(paper.completed_stages.length ? [element("p", { className: "muted", text: `Completed stages: ${paper.completed_stages.map(humanLabel).join(" · ")}` })] : []),
+    ...[...paper.events].reverse().map((event) => annotationEvent(paper, event)),
+  ]));
+  $("annotation-list").replaceChildren(...(cards.length ? cards : [
+    element("p", { className: "empty-queue", text: "You have not saved annotations in this dataset yet." }),
+  ]));
+}
+
+async function loadReviewerProgress() {
+  const progress = await request(`/api/reviewer-progress/${encodeURIComponent(state.split)}`);
+  state.annotations = progress;
+  renderReviewerProgress(progress);
+  return progress;
+}
+
+async function openReviewerProgress() {
+  $("annotations-dialog").showModal();
+  $("annotation-summary").replaceChildren(element("p", { className: "muted", text: "Loading your saved work…" }));
+  $("annotation-list").replaceChildren();
+  $("annotation-status").textContent = "";
+  $("annotation-status").className = "";
+  try { await loadReviewerProgress(); }
+  catch (error) { $("annotation-status").textContent = error.message; $("annotation-status").className = "error"; }
+}
+
+async function downloadReviewerProgress() {
+  const progress = await loadReviewerProgress();
+  const blob = new Blob([`${JSON.stringify(progress, null, 2)}\n`], { type: "application/json" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `perla-${state.user.id}-${state.split}-annotations.json`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
 async function downloadGroundTruth() {
   const token = localStorage.getItem("review-token");
   const response = await fetch(`/api/ground-truth-export/${state.split}/${encodeURIComponent(state.paperId)}`, {
@@ -745,7 +839,7 @@ async function importPaper(event) {
   } catch (error) { $("import-status").textContent = error.message; }
 }
 
-$("split").addEventListener("change", async (event) => { state.split = event.target.value; state.paperId = null; state.bundle = null; $("workspace").hidden = true; $("empty-state").hidden = false; await loadPapers(); });
+$("split").addEventListener("change", async (event) => { state.split = event.target.value; state.paperId = null; state.bundle = null; state.annotations = null; $("workspace").hidden = true; $("empty-state").hidden = false; await loadPapers(); });
 $("paper-filter").addEventListener("input", renderPapers);
 $("submit-audit").addEventListener("click", submitAudit);
 $("pdf-source").addEventListener("change", (event) => { state.source = event.target.value; state.page = 1; renderPdf(); });
@@ -768,6 +862,14 @@ $("download-truth").addEventListener("click", async () => {
     await downloadGroundTruth();
     setStatus("Downloaded the adjudicated PR bundle.");
   } catch (error) { setStatus(error.message, true); }
+});
+$("open-annotations").addEventListener("click", openReviewerProgress);
+$("download-annotations").addEventListener("click", async () => {
+  try {
+    await downloadReviewerProgress();
+    $("annotation-status").textContent = "Downloaded your current persisted annotations.";
+    $("annotation-status").className = "success";
+  } catch (error) { $("annotation-status").textContent = error.message; $("annotation-status").className = "error"; }
 });
 $("open-import").addEventListener("click", () => $("import-dialog").showModal());
 $("close-import").addEventListener("click", () => $("import-dialog").close());

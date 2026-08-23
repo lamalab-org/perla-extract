@@ -258,6 +258,11 @@ class ReviewApplication:
             )
         )
 
+    def reviewer_progress(self, split: str, reviewer_id: str) -> dict[str, Any]:
+        """Return the authenticated reviewer's saved activity across one split."""
+
+        return self.store.reviewer_progress(split, reviewer_id)
+
     def evidence_blocks(
         self, split: str, paper_id: str, query: str = ""
     ) -> list[dict[str, Any]]:
@@ -492,6 +497,10 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     self.send_json({"users": application.users()})
                     return
                 parts = self.route_parts(parsed.path)
+                if parts[:2] == ["api", "reviewer-progress"] and len(parts) == 3:
+                    user = self.current_user()
+                    self.send_json(application.reviewer_progress(parts[2], user["id"]))
+                    return
                 if parts[:2] == ["api", "paper"] and len(parts) == 4:
                     self.send_json(application.get_paper(parts[2], parts[3]))
                     return
