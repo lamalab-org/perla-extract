@@ -26,7 +26,7 @@
 
     <section id="empty-state" class="empty-state">
       <h2>Choose a paper</h2>
-      <p>Import the best current extraction, then establish independent record and main-text figure censuses before reviewing its candidates.</p>
+      <p>Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures.</p>
     </section>
 
     <section id="workspace" hidden>
@@ -54,23 +54,23 @@
             <div><span id="citation-page-label" class="eyebrow"></span><strong id="citation-block-label"></strong><span id="citation-match-label" class="citation-match"></span><blockquote id="citation-location-quote"></blockquote></div>
             <button id="clear-citation" aria-label="Clear evidence location">×</button>
           </div>
-          <div id="pdf-stage" aria-busy="false"><p id="pdf-message" class="pdf-message" role="status" hidden></p><div id="pdf-canvas"><img id="pdf-page" alt="Rendered PDF page" /><div id="pdf-highlights" aria-hidden="true"></div></div></div>
+          <div id="pdf-stage" aria-busy="false"><p id="pdf-message" class="pdf-message" role="status" hidden></p><button id="retry-pdf" type="button" hidden>Try loading this page again</button><div id="pdf-canvas"><img id="pdf-page" alt="Rendered PDF page" /><div id="pdf-highlights" aria-hidden="true"></div></div></div>
           <details class="source-text"><summary>Selectable page text</summary><pre id="pdf-text"></pre></details>
         </section>
 
         <section class="review-panel">
           <nav class="tabs">
-            <button data-tab="inventory" class="active">1 · Inventory</button>
+            <button data-tab="inventory" class="active">1 · Census</button>
             <button data-tab="records">2 · Records</button>
             <button data-tab="completeness">3 · Completeness</button>
             <button data-tab="history">History</button>
           </nav>
-          <p id="workflow-gate" class="callout workflow-gate">Complete and submit the blind inventory first. This keeps the model candidates from influencing your independent count; record review unlocks immediately afterward.</p>
+          <p id="census-status" class="callout workflow-note">You can inspect and correct Records now. Save the census before marking the first review step complete.</p>
 
           <div id="inventory-tab" class="tab-panel">
-            <div id="blind-audit">
-              <h3>Blind record and figure census</h3>
-              <p class="callout">Search every imported source before revealing the model candidates. Submitting records the main paper and available SI as the inventory scope; it does not treat either source as an extraction result.</p>
+            <div id="census-form">
+              <h3>Paper and figure census</h3>
+              <p class="callout">Count the records supported by the main paper and available SI. You may inspect the extracted Records while doing this; use the census to record the corrected paper-level total.</p>
               <details class="record-definitions" open><summary>What counts as a family, device, or measurement?</summary><div id="inventory-definitions"></div></details>
               <div id="inventory-counts" class="count-grid"></div>
               <section class="figure-census">
@@ -86,12 +86,12 @@
                 <label>Figure-only examples or ambiguities<textarea id="figure-census-notes" rows="3" placeholder="For example: Fig. 3 contains two stability checkpoints not stated in its caption or the text."></textarea></label>
               </section>
               <label>Missing, ambiguous, or difficult records<textarea id="inventory-notes" rows="4" placeholder="Describe devices or measurements that still need review…"></textarea></label>
-              <button id="submit-audit" class="primary">Submit censuses and reveal candidates</button>
+              <button id="submit-audit" class="primary">Save census</button>
             </div>
             <div id="inventory-revealed" hidden>
               <div id="inventory-comparison"></div>
               <div id="quality-artifacts"></div>
-              <div id="inventory-lists"></div>
+              <button id="edit-census" type="button">Edit saved census</button>
               <button data-stage="inventory" class="complete-stage primary">Mark inventory reviewed</button>
             </div>
           </div>
@@ -121,9 +121,14 @@
                 </div></details>
               </div>
             </div>
-            <p class="callout record-guidance"><strong>What does “Needs attention” mean?</strong> It shows records you marked for correction, records added or revised during the model's second evidence read, and device families with an A/B/X assignment that did not pass every automated check. These are review priorities, not claims that a record is correct or incorrect.</p>
-            <p class="callout record-guidance"><strong>Wrong number of devices or measurements?</strong> Add a missing record from the menu above, or copy the current record when it is a useful starting point. For an extra record, choose <strong>Remove extra record</strong>. Removal is blocked until linked measurements have been reassigned or removed.</p>
-            <p class="callout record-guidance"><strong>Choose one outcome for the complete record shown below.</strong> <strong>All fields match source</strong> means every displayed field is supported and the record belongs in the dataset. Use <strong>Cannot establish</strong> when the paper is genuinely ambiguous, or <strong>Correct fields</strong> when something is wrong or missing.</p>
+            <details class="record-guidance">
+              <summary>How to review records and fix missing or extra records</summary>
+              <div>
+                <p><strong>Needs attention</strong> shows records you marked for correction, records changed during the model's second evidence read, and A/B/X assignments that need a manual check. These are priorities, not correctness claims.</p>
+                <p><strong>Wrong number of records?</strong> Add or copy a missing record. Use <strong>Remove extra record</strong> for an unsupported one; linked measurements must be reassigned or removed first.</p>
+                <p><strong>Choose one outcome for the complete record.</strong> Use <strong>All fields match source</strong>, <strong>Cannot establish</strong>, or <strong>Correct fields</strong>.</p>
+              </div>
+            </details>
             <div id="review-queue"></div>
             <div class="queue-footer">
               <button id="previous-record" aria-label="Previous record">← Previous</button>
@@ -177,7 +182,7 @@
   <dialog id="annotations-dialog">
     <form method="dialog" class="dialog-card">
       <div class="dialog-heading"><div><span class="eyebrow">Saved reviewer activity</span><h2>My annotations and edits</h2></div><button value="cancel" aria-label="Close">×</button></div>
-      <p class="callout">This is your persisted activity log for the selected dataset. Use <strong>Undo this saved edit</strong> to reverse a correction that has not since been changed. Undo creates another saved, validated audit event; it never erases history.</p>
+      <p class="callout">This is your complete saved activity. An <strong>Undo this saved edit</strong> button appears beside a correction only while it is safe to reverse. Record decisions can be changed in Records, and a saved census can be updated in Census. Nothing is erased from history.</p>
       <div id="annotation-summary"></div>
       <div id="annotation-list" class="annotation-list"></div>
       <div class="dialog-actions"><span></span><button value="cancel">Close</button><button id="download-annotations" type="button" class="primary">Download my annotations</button></div>

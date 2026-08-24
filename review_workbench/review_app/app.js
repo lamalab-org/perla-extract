@@ -80,7 +80,8 @@ const state = {
   split: "calibration", papers: [], paperId: null, bundle: null, user: null,
   page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null,
   queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
-  studySchema: null, activeCitation: null, pdfRequest: 0,
+  studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
+  pdfObjectUrl: null, censusDraft: null, editingCensus: false,
 };
 
 async function request(url, options = {}) {
@@ -93,21 +94,47 @@ async function request(url, options = {}) {
     const payload = response.headers.get("content-type")?.includes("json") ? await response.json() : await response.text();
     const error = new Error(payload.error || `Request failed (${response.status})`);
     error.code = payload.code || "request_failed";
+    error.status = response.status;
     if (error.code === "review_revision_conflict") showRevisionConflictActions();
     throw error;
   }
   if (responseType === "blob") return response.blob();
+  if (responseType === "pdfPage") return {
+    blob: await response.blob(),
+    pageCount: Number(response.headers.get("X-PDF-Pages")) || null,
+  };
   return response.headers.get("content-type")?.includes("json") ? response.json() : response.text();
 }
 
-async function loadAuthenticatedImage(image, url) {
-  const blob = await request(url, { responseType: "blob" });
+function transientRequest(error) {
+  return error.name !== "AbortError" && (!error.status || error.status === 408 || error.status === 429 || error.status >= 500);
+}
+
+async function requestWithRetry(url, options = {}, attempts = 2) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try { return await request(url, options); }
+    catch (error) {
+      lastError = error;
+      if (attempt === attempts || !transientRequest(error)) throw error;
+      console.warn(`Retrying ${url} after a temporary failure (${attempt}/${attempts})`, error);
+      await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+    }
+  }
+  throw lastError;
+}
+
+async function loadPdfPage(url, signal) {
+  const { blob, pageCount } = await requestWithRetry(url, { responseType: "pdfPage", signal });
   const objectUrl = URL.createObjectURL(blob);
+  const preview = new Image();
   try {
-    image.src = objectUrl;
-    await image.decode();
-  } finally {
+    preview.src = objectUrl;
+    await preview.decode();
+    return { objectUrl, pageCount };
+  } catch (error) {
     URL.revokeObjectURL(objectUrl);
+    throw error;
   }
 }
 
@@ -249,6 +276,8 @@ async function selectPaper(paperId) {
   state.queueKey = null;
   state.evidenceCache.clear();
   state.activeCitation = null;
+  state.censusDraft = null;
+  state.editingCensus = false;
   state.source = state.bundle.sources.includes("main") ? "main" : state.bundle.sources[0];
   state.page = 1;
   $("empty-state").hidden = true;
@@ -283,18 +312,14 @@ function renderStudy() {
   })));
   $("download-main-pdf").hidden = !state.bundle.sources.includes("main");
   $("download-supplement-pdf").hidden = !state.bundle.sources.includes("supplement");
-  $("blind-audit").hidden = hasAudit();
+  $("census-form").hidden = hasAudit() && !state.editingCensus;
   $("inventory-revealed").hidden = !hasAudit();
-  $("workflow-gate").hidden = hasAudit();
-  if (!hasAudit() && ["records", "completeness"].includes(state.tab)) setTab("inventory");
+  $("census-status").hidden = hasAudit();
   renderInventoryForm();
+  renderReviewQueue();
   if (hasAudit()) {
     renderInventoryComparison();
     renderQualityArtifacts();
-    renderRecordGroups("inventory-lists", true);
-    renderReviewQueue();
-  } else {
-    $("review-queue").replaceChildren(element("p", { className: "callout", text: "Submit the blind device census before reviewing model candidates." }));
   }
   renderStageControls();
   renderQualityGates();
@@ -334,7 +359,37 @@ function renderQualityArtifacts() {
   $("quality-artifacts").replaceChildren(...sections);
 }
 
+function savedCensusDraft() {
+  const audit = state.bundle?.summary.inventory_audits?.[state.user.id];
+  return audit ? {
+    expected_counts: structuredClone(audit.expected_counts || {}),
+    main_text_figure_census: structuredClone(audit.main_text_figure_census || {}),
+    missing_or_ambiguous: audit.missing_or_ambiguous || "",
+  } : {
+    expected_counts: {},
+    main_text_figure_census: {},
+    missing_or_ambiguous: "",
+  };
+}
+
+function updateCensusDraft() {
+  if (!document.querySelector("[data-count]")) return;
+  state.censusDraft = {
+    expected_counts: Object.fromEntries([...document.querySelectorAll("[data-count]")].map((input) => [input.dataset.count, Number(input.value)])),
+    main_text_figure_census: {
+      figures_reviewed: Number($("figures-reviewed").value),
+      schema_relevant_figures: Number($("schema-relevant-figures").value),
+      figure_only_records: Number($("figure-only-records").value),
+      figure_only_atomic_values: Number($("figure-only-values").value),
+      notes: $("figure-census-notes").value,
+    },
+    missing_or_ambiguous: $("inventory-notes").value,
+  };
+}
+
 function renderInventoryForm() {
+  state.censusDraft ||= savedCensusDraft();
+  const draft = state.censusDraft;
   const definitions = Object.entries(COLLECTIONS)
     .filter(([key]) => key !== "identity_links")
     .map(([key, label]) => element("article", {}, [
@@ -347,12 +402,25 @@ function renderInventoryForm() {
     .map(([key, label]) => element("label", {}, [
       element("strong", { text: label }),
       element("span", { text: RECORD_GUIDANCE[key].census }),
-      element("input", { properties: { type: "number", min: "0", value: "0" }, dataset: { count: key } }),
+      element("input", { properties: { type: "number", min: "0", value: String(draft.expected_counts[key] ?? 0) }, dataset: { count: key } }),
     ]));
   $("inventory-counts").replaceChildren(...inputs);
-  for (const id of ["figures-reviewed", "schema-relevant-figures", "figure-only-records", "figure-only-values"]) $(id).value = "0";
-  $("figure-census-notes").value = "";
-  $("inventory-notes").value = "";
+  const figures = draft.main_text_figure_census;
+  $("figures-reviewed").value = figures.figures_reviewed ?? 0;
+  $("schema-relevant-figures").value = figures.schema_relevant_figures ?? 0;
+  $("figure-only-records").value = figures.figure_only_records ?? 0;
+  $("figure-only-values").value = figures.figure_only_atomic_values ?? 0;
+  $("figure-census-notes").value = figures.notes || "";
+  $("inventory-notes").value = draft.missing_or_ambiguous;
+  for (const input of document.querySelectorAll("#census-form input, #census-form textarea")) input.addEventListener("input", updateCensusDraft);
+  $("submit-audit").textContent = hasAudit() ? "Update census" : "Save census";
+}
+
+function editSavedCensus() {
+  state.censusDraft = savedCensusDraft();
+  state.editingCensus = true;
+  renderStudy();
+  $("census-form").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function renderInventoryComparison() {
@@ -368,9 +436,9 @@ function renderInventoryComparison() {
       element("td", { className: expected === extracted ? "match" : "difference", text: difference }),
     ]);
   });
-  const header = element("tr", {}, ["Record type", "Your census", "Current truth", "Difference"].map((label) => element("th", { text: label })));
+  const header = element("tr", {}, ["Record type", "Your census", "Current records", "Difference"].map((label) => element("th", { text: label })));
   const comparison = [
-    element("h3", { text: "Census versus candidates" }),
+    element("h3", { text: "Saved census versus current records" }),
     element("table", {}, [element("thead", {}, [header]), element("tbody", {}, rows)]),
   ];
   const figures = audit.main_text_figure_census;
@@ -383,27 +451,6 @@ function renderInventoryComparison() {
     : element("p", { className: "callout", text: "This legacy inventory did not record a main-text figure census." }));
   if (audit.missing_or_ambiguous) comparison.push(element("p", { className: "callout", text: audit.missing_or_ambiguous }));
   $("inventory-comparison").replaceChildren(...comparison);
-}
-
-function recordCard(kind, item, index) {
-  const summary = element("div", {}, [
-    element("span", { className: "eyebrow", text: entityId(kind, item, index) }),
-    element("h4", { text: entityTitle(kind, item, index) }),
-    element("p", { text: entityDetail(kind, item) }),
-  ]);
-  return element("article", { className: "record-card" }, [summary]);
-}
-
-function renderRecordGroups(target) {
-  const truth = state.bundle.ground_truth;
-  const groups = Object.entries(COLLECTIONS).map(([kind, label]) => {
-    const records = truth[kind].map((item, index) => recordCard(kind, item, index));
-    return element("section", { className: "record-group" }, [
-      element("div", { className: "group-heading" }, [element("h3", { text: label }), element("span", { text: truth[kind].length })]),
-      ...(records.length ? records : [element("p", { className: "muted", text: "No records" })]),
-    ]);
-  });
-  $(target).replaceChildren(...groups);
 }
 
 function recordEntries() {
@@ -874,13 +921,14 @@ function renderStageControls() {
   $("download-truth").hidden = state.user.role !== "admin";
   $("download-truth").disabled = !canExport;
   $("final-export-help").hidden = state.user.role !== "admin" || canExport;
-  $("add-record").disabled = !hasAudit();
-  $("new-record-kind").disabled = !hasAudit();
-  for (const tab of ["records", "completeness"]) {
-    const button = document.querySelector(`[data-tab="${tab}"]`);
-    button.disabled = !hasAudit();
-    button.title = hasAudit() ? "" : "Submit the blind inventory to unlock this step.";
-  }
+  $("add-record").disabled = false;
+  $("new-record-kind").disabled = false;
+  const recordsTab = document.querySelector('[data-tab="records"]');
+  recordsTab.disabled = false;
+  recordsTab.title = "Review extracted records at any time.";
+  const completenessTab = document.querySelector('[data-tab="completeness"]');
+  completenessTab.disabled = !hasAudit();
+  completenessTab.title = hasAudit() ? "" : "Save the census before opening the final completeness check.";
 }
 
 function renderHistory() {
@@ -900,6 +948,9 @@ function renderHistory() {
 
 async function renderPdf() {
   if (!state.paperId || !state.source) return false;
+  state.pdfAbortController?.abort();
+  const controller = new AbortController();
+  state.pdfAbortController = controller;
   const requestId = ++state.pdfRequest;
   const paperId = state.paperId;
   const source = state.source;
@@ -913,56 +964,79 @@ async function renderPdf() {
   message.hidden = false;
   message.className = "pdf-message";
   message.textContent = `Loading ${sourceLabel}, page ${page}… Large SI files can take a few seconds the first time.`;
+  $("retry-pdf").hidden = true;
   $("pdf-canvas").hidden = true;
   $("pdf-text").textContent = "";
-  for (const control of [$("pdf-source"), $("previous-page"), $("next-page"), $("page-number")]) control.disabled = true;
-  let text;
+  for (const control of [$("previous-page"), $("next-page"), $("page-number")]) control.disabled = true;
+  $("pdf-source").disabled = false;
   try {
-    [text] = await Promise.all([
-      request(`/api/pdf-text/${encodeURIComponent(paperId)}?source=${source}&split=${split}&page=${page}`),
-      loadAuthenticatedImage(image, `/api/pdf-page/${encodeURIComponent(paperId)}?${query}`),
-    ]);
+    const loadedPage = await loadPdfPage(
+      `/api/pdf-page/${encodeURIComponent(paperId)}?${query}`,
+      controller.signal,
+    );
+    if (requestId !== state.pdfRequest || paperId !== state.paperId || source !== state.source || page !== state.page) {
+      URL.revokeObjectURL(loadedPage.objectUrl);
+      return false;
+    }
+    if (state.pdfObjectUrl) URL.revokeObjectURL(state.pdfObjectUrl);
+    state.pdfObjectUrl = loadedPage.objectUrl;
+    image.src = loadedPage.objectUrl;
+    if (loadedPage.pageCount) state.pageCount = loadedPage.pageCount;
+    $("page-number").value = page;
+    $("page-number").max = state.pageCount;
+    $("page-count").textContent = `/ ${state.pageCount}`;
+    $("pdf-canvas").hidden = false;
+    message.hidden = true;
+    for (const control of [$("previous-page"), $("next-page"), $("page-number")]) control.disabled = false;
+
+    const text = await requestWithRetry(
+      `/api/pdf-text/${encodeURIComponent(paperId)}?source=${source}&split=${split}&page=${page}`,
+      { signal: controller.signal },
+    ).then((value) => ({ value })).catch((error) => ({ error }));
+    if (requestId !== state.pdfRequest || paperId !== state.paperId || source !== state.source || page !== state.page) return false;
+    if (text.value) {
+      if (text.value.page_count) state.pageCount = text.value.page_count;
+      $("page-number").max = state.pageCount;
+      $("page-count").textContent = `/ ${state.pageCount}`;
+      $("pdf-text").textContent = text.value.text;
+      renderCitationLocation(text.value.lines || []);
+    } else if (text.error?.name !== "AbortError") {
+      $("pdf-text").textContent = "Selectable text is temporarily unavailable. The PDF page above is still ready for review.";
+      renderCitationLocation([]);
+    }
+    return true;
   } catch (error) {
-    if (requestId !== state.pdfRequest) return false;
+    if (error.name === "AbortError" || requestId !== state.pdfRequest) return false;
+    controller.abort();
     message.className = "pdf-message error";
     message.textContent = `Could not open the ${sourceLabel}. ${error.message}`;
+    $("retry-pdf").hidden = false;
     throw error;
   } finally {
     if (requestId === state.pdfRequest) {
       $("pdf-stage").setAttribute("aria-busy", "false");
-      for (const control of [$("pdf-source"), $("previous-page"), $("next-page"), $("page-number")]) control.disabled = false;
+      $("pdf-source").disabled = false;
+      if (!$("pdf-canvas").hidden) {
+        for (const control of [$("previous-page"), $("next-page"), $("page-number")]) control.disabled = false;
+      }
+      if (state.pdfAbortController === controller) state.pdfAbortController = null;
     }
   }
-  if (requestId !== state.pdfRequest || paperId !== state.paperId || source !== state.source || page !== state.page) return false;
-  state.pageCount = text.page_count;
-  $("page-number").value = page;
-  $("page-number").max = state.pageCount;
-  $("page-count").textContent = `/ ${state.pageCount}`;
-  $("pdf-text").textContent = text.text;
-  renderCitationLocation(text.lines || []);
-  $("pdf-canvas").hidden = false;
-  message.hidden = true;
-  return true;
 }
 
 async function submitAudit() {
-  const counts = Object.fromEntries([...document.querySelectorAll("[data-count]")].map((input) => [input.dataset.count, Number(input.value)]));
-  const mainTextFigureCensus = {
-    figures_reviewed: Number($("figures-reviewed").value),
-    schema_relevant_figures: Number($("schema-relevant-figures").value),
-    figure_only_records: Number($("figure-only-records").value),
-    figure_only_atomic_values: Number($("figure-only-values").value),
-    notes: $("figure-census-notes").value,
-  };
+  updateCensusDraft();
+  const draft = state.censusDraft;
   try {
-    state.bundle = await request(`/api/inventory-audits/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ base_revision: state.bundle.revision, review_scope_sources: state.bundle.sources, expected_counts: counts, main_text_figure_census: mainTextFigureCensus, missing_or_ambiguous: $("inventory-notes").value }) });
+    state.bundle = await request(`/api/inventory-audits/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ base_revision: state.bundle.revision, review_scope_sources: state.bundle.sources, ...draft }) });
+    state.censusDraft = savedCensusDraft();
+    state.editingCensus = false;
     renderStudy();
-    setStatus("Record and main-text figure censuses saved. Model candidates are now visible.");
+    setStatus("Record and main-text figure census saved.");
   } catch (error) { setStatus(error.message, true); }
 }
 
 function openRecord(kind, index = null, template = null, intent = index == null ? "add" : "edit") {
-  if (!hasAudit()) return setStatus("Complete the blind inventory audit first.", true);
   const source = template || (index == null ? newRecordDraft(kind) : state.bundle.ground_truth[kind][index]);
   const item = index == null && template ? copiedRecordDraft(kind, source) : structuredClone(source);
   const entry = index == null ? null : { kind, index, item, key: recordKey(kind, item, index) };
@@ -1108,10 +1182,6 @@ async function submitDecision(entry, decision) {
 }
 
 async function decideEntry(entry, decision) {
-  if (!hasAudit()) {
-    setTab("inventory");
-    return setStatus("Submit the blind inventory before recording a source-review decision.", true);
-  }
   const title = entityTitle(entry.kind, entry.item, entry.index);
   const keepPosition = $("record-status-filter").value === "remaining";
   const actionButtons = [...document.querySelectorAll(".queue-actions button")];
@@ -1135,7 +1205,6 @@ async function decideEntry(entry, decision) {
 }
 
 async function beginCorrection(entry) {
-  if (!hasAudit()) return setStatus("Submit the blind inventory before correcting model candidates.", true);
   try {
     if (recordDecision(entry.kind, entry.item, entry.index) !== "needs_correction") state.bundle = await submitDecision(entry, "needs_correction");
     renderStudy();
@@ -1145,7 +1214,6 @@ async function beginCorrection(entry) {
 }
 
 async function beginRemoval(entry) {
-  if (!hasAudit()) return setStatus("Submit the blind inventory before removing model candidates.", true);
   try {
     if (recordDecision(entry.kind, entry.item, entry.index) !== "needs_correction") state.bundle = await submitDecision(entry, "needs_correction");
     renderStudy();
@@ -1250,14 +1318,14 @@ async function completeStage(stage) {
 }
 
 function setTab(tab) {
-  if (["records", "completeness"].includes(tab) && !hasAudit()) {
-    setStatus("Submit the blind inventory before opening model-assisted record review.", true);
+  if (tab === "completeness" && !hasAudit()) {
+    setStatus("Save the census before opening the final completeness check.", true);
     return;
   }
   state.tab = tab;
   document.querySelectorAll("[data-tab]").forEach((button) => button.classList.toggle("active", button.dataset.tab === tab));
   for (const name of ["inventory", "records", "completeness", "history"]) $(`${name}-tab`).hidden = name !== tab;
-  if (tab === "records" && hasAudit()) {
+  if (tab === "records") {
     renderReviewQueue();
     const citation = currentEntry().entry?.item.evidence?.[0];
     if (citation) focusCitation(citation, false, false);
@@ -1327,15 +1395,29 @@ function annotationIsCurrent(paper, event) {
 }
 
 function annotationMutationState(paper, event) {
-  if (paper.undone_event_ids?.includes(event.event_id)) return "undone";
-  if (paper.undoable_event_ids?.includes(event.event_id)) return "can undo";
-  return "saved history";
+  if (paper.undone_event_ids?.includes(event.event_id)) return "already undone";
+  if (paper.undoable_event_ids?.includes(event.event_id)) return "undo available";
+  return "kept in history";
 }
 
 function annotationValue(value) {
   if (value === undefined) return "Not recorded";
   if (typeof value === "string") return value;
   return JSON.stringify(value, null, 2);
+}
+
+function annotationActionHelp(paper, event, canUndo, current) {
+  if (canUndo) return "This correction is still the current version and can be safely reversed.";
+  if (event.kind === "record_decision") return current
+    ? "To change this decision, open the paper's Records tab and choose a different outcome."
+    : "A newer decision replaced this one; it remains here as history.";
+  if (event.kind === "inventory_audit") return current
+    ? "To change these counts, open the paper's Census tab and choose Edit saved census."
+    : "A newer census replaced these counts; this entry remains as history.";
+  if (event.kind === "stage_complete") return "Review milestones remain in the audit history and are not field edits.";
+  if (paper.undone_event_ids?.includes(event.event_id)) return "This correction has already been undone.";
+  if (["mutation", "spreadsheet_review"].includes(event.kind)) return "This older correction cannot be safely undone because the affected record changed afterward.";
+  return "This saved action is part of the audit history and has no reversible data change.";
 }
 
 function annotationEvent(paper, event) {
@@ -1347,6 +1429,7 @@ function annotationEvent(paper, event) {
       : current === true ? "current" : current === false ? "superseded" : "saved";
   const stateClass = stateLabel.replaceAll(" ", "-");
   const canUndo = paper.undoable_event_ids?.includes(event.event_id);
+  const actionHelp = annotationActionHelp(paper, event, canUndo, current);
   return element("article", { className: "annotation-event" }, [
     element("div", { className: "annotation-event-heading" }, [
       element("strong", { text: `r${event.revision} · ${humanLabel(event.kind)}` }),
@@ -1363,6 +1446,7 @@ function annotationEvent(paper, event) {
       element("summary", { text: `Inspect ${event.details.record_replacements.length} corrected record${event.details.record_replacements.length === 1 ? "" : "s"}` }),
       element("pre", { text: JSON.stringify(event.details.record_replacements, null, 2) }),
     ])] : []),
+    element("p", { className: "annotation-action-help", text: actionHelp }),
     ...(canUndo ? [element("button", {
       text: "Undo this saved edit",
       properties: { type: "button" },
@@ -1411,9 +1495,16 @@ async function undoAnnotation(paper, event, button) {
 }
 
 function renderReviewerProgress(progress) {
-  $("annotation-summary").replaceChildren(element("p", {
-    text: `${progress.annotation_count} saved annotation${progress.annotation_count === 1 ? "" : "s"} across ${progress.paper_count} paper${progress.paper_count === 1 ? "" : "s"} in ${progress.split}.`,
-  }));
+  const undoableCount = progress.papers.reduce((count, paper) => count + (paper.undoable_event_ids?.length || 0), 0);
+  $("annotation-summary").replaceChildren(
+    element("p", { text: `${progress.annotation_count} saved annotation${progress.annotation_count === 1 ? "" : "s"} across ${progress.paper_count} paper${progress.paper_count === 1 ? "" : "s"} in ${progress.split}.` }),
+    element("p", {
+      className: undoableCount ? "callout" : "muted",
+      text: undoableCount
+        ? `${undoableCount} saved correction${undoableCount === 1 ? " is" : "s are"} currently safe to undo. The button appears beside ${undoableCount === 1 ? "it" : "each one"} below.`
+        : "No saved field correction is currently safe to undo. Decisions can still be changed in Records, and census counts can be updated in Census.",
+    }),
+  );
   const papers = [...progress.papers].sort((left, right) => right.last_saved_at.localeCompare(left.last_saved_at));
   const cards = papers.map((paper) => element("section", { className: "annotation-paper" }, [
     element("div", { className: "annotation-paper-heading" }, [
@@ -1575,9 +1666,11 @@ async function importPaper(event) {
   } catch (error) { $("import-status").textContent = error.message; }
 }
 
-$("split").addEventListener("change", async (event) => { state.split = event.target.value; state.paperId = null; state.bundle = null; state.annotations = null; $("workspace").hidden = true; $("empty-state").hidden = false; await loadPapers(); });
+$("split").addEventListener("change", async (event) => { state.pdfAbortController?.abort(); state.split = event.target.value; state.paperId = null; state.bundle = null; state.annotations = null; state.censusDraft = null; state.editingCensus = false; $("workspace").hidden = true; $("empty-state").hidden = false; await loadPapers(); });
 $("paper-filter").addEventListener("input", renderPapers);
 $("submit-audit").addEventListener("click", submitAudit);
+$("edit-census").addEventListener("click", editSavedCensus);
+$("retry-pdf").addEventListener("click", () => navigatePdf(state.source, state.page));
 $("pdf-source").addEventListener("change", (event) => navigatePdf(event.target.value, 1));
 $("previous-page").addEventListener("click", () => navigatePdf(state.source, state.page - 1));
 $("next-page").addEventListener("click", () => navigatePdf(state.source, state.page + 1));

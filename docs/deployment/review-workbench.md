@@ -28,9 +28,10 @@ SI, and optional run configuration. Import `coverage_audit.json` and
 `targeted_repair.json` to show the evidence-local recovery worklist and whether its
 patch passed the quality gates. Import `enrichment.json` to
 show source-reported absorber composition beside proposed A/B/X assignments, including
-their acceptance status and issues. These files remain provenance aids:
-after the blind record and main-text figure censuses are submitted, the interface
-highlights unmatched inventory candidates and the record groups changed by refinement
+their acceptance status and issues. These files remain provenance aids. The Records
+tab is available immediately, while the Census tab records corrected paper-level
+totals and the main-text figure gap. After the census is saved, the interface
+highlights count differences and the record groups changed by refinement
 so reviewers can focus their attention without treating any model artifact as truth.
 The app stores immutable seeds, compiled truth, event history, evidence blocks, and
 manifests under the ground-truth directory.
@@ -38,7 +39,7 @@ manifests under the ground-truth directory.
 The figure census is deliberately limited to numbered figures in the main paper. It
 records how many figures contain schema-relevant content and how many schema records or
 atomic values are available only from those figures. The app records all imported
-sources as the blind record-search scope; reviewers do not toggle main/SI checkboxes,
+sources as the record-search scope; reviewers do not toggle main/SI checkboxes,
 because those flags are not measurements of figure-extraction loss.
 
 For a validated batch, use the same import contract non-interactively:
@@ -57,12 +58,14 @@ contract, so rerunning it cannot silently replace a seed.
 
 ## Review records efficiently
 
-After the blind census, the Records tab presents a device-centered queue rather than
-one long list. A family is followed by its population records, devices, observations,
+The Records tab is available before or after the census and presents a device-centered
+queue rather than one long list. A family is followed by its population records, devices, observations,
 and stability tests so shared architecture, stack, absorber, and composition remain in
-view. Before the census is submitted, Records and Completeness are visibly locked so
-candidate records cannot influence the independent count. The first cited source block
-opens in the paper automatically.
+view. Reviewers may inspect and correct records while compiling the census. The final
+Completeness tab remains locked until the census is saved. The first cited source block
+opens in the paper automatically. This is a model-assisted correction workflow, not a
+blind recall measurement; the separate figure census measures the specific text-only
+loss the benchmark is intended to quantify.
 
 The selected record is the primary review surface; related device context appears
 after it as collapsible supporting information. For stability tests, the workbench

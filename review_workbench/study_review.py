@@ -143,7 +143,7 @@ class MainTextFigureCensus(BaseModel):
 
 
 class InventoryAuditRequest(BaseModel):
-    """Capture a blind record census and main-text figure gap before candidates show."""
+    """Capture corrected record totals and the main-text figure extraction gap."""
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
@@ -1229,7 +1229,7 @@ class StudyReviewStore:
         request: InventoryAuditRequest,
         reviewer_id: str,
     ) -> dict[str, Any]:
-        """Persist the independent device census performed before candidates are shown."""
+        """Persist a reviewer census without changing the current scientific records."""
 
         current_revision = self._validate_revision(
             split, paper_id, request.base_revision
@@ -1255,7 +1255,7 @@ class StudyReviewStore:
     ) -> dict[str, Any]:
         """Advance review only after the evidence-based prerequisites are satisfied.
 
-        Inventory requires a blind audit, field review requires a current decision for
+        Inventory requires a saved census, field review requires a current decision for
         every record, and later stages require the preceding stage. These constraints
         keep interface clicks from bypassing the ground-truth protocol.
         """
@@ -1277,7 +1277,7 @@ class StudyReviewStore:
             event["kind"] == "inventory_audit" for event in reviewer_events
         ):
             raise ValueError(
-                "submit a blind inventory audit before completing inventory"
+                "save the paper census before completing inventory"
             )
         prerequisite = {
             "fields": "inventory",

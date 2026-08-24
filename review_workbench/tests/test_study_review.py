@@ -728,12 +728,12 @@ def test_referenced_records_must_be_reassigned_or_removed_before_their_target(
     assert removed["ground_truth"]["individual_devices"] == []
 
 
-def test_blind_inventory_precedes_inventory_completion(
+def test_census_precedes_inventory_completion(
     tmp_path, empty_study, document_payload
 ):
     store = StudyReviewStore(tmp_path)
     seed(store, empty_study, document_payload)
-    with pytest.raises(ValueError, match="blind inventory"):
+    with pytest.raises(ValueError, match="paper census"):
         store.complete_stage(
             "calibration",
             "10.0000--example",

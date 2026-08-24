@@ -3,13 +3,15 @@ from pathlib import Path
 APP = Path(__file__).resolve().parents[1] / "review_app"
 
 
-def test_ui_enforces_inventory_before_candidates():
+def test_ui_allows_record_review_before_the_census():
     html = (APP / "index.html").read_text(encoding="utf-8")
     javascript = (APP / "app.js").read_text(encoding="utf-8")
-    assert "Blind record and figure census" in html
+    assert "Paper and figure census" in html
     assert "submit-audit" in html
     assert "hasAudit()" in javascript
-    assert "Model candidates are now visible" in javascript
+    assert "renderReviewQueue();" in javascript
+    assert "Review extracted records at any time" in javascript
+    assert "model-assisted record review" not in javascript
     assert "renderQualityArtifacts()" in javascript
 
 
@@ -58,8 +60,8 @@ def test_pipeline_statuses_are_explained_as_review_priorities():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
 
-    assert "What does “Needs attention” mean?" in html
-    assert "These are review priorities, not claims" in html
+    assert "How to review records and fix missing or extra records" in html
+    assert "These are priorities, not correctness claims" in html
     assert "Passed automated checks" in source
     assert "It still requires human comparison with the source" in source
     assert "You marked this for correction" in source
@@ -134,7 +136,7 @@ def test_record_review_prioritizes_the_current_record_over_device_context():
     assert 'key === "c"' in source
 
 
-def test_inventory_defines_record_counts_and_gates_candidate_review():
+def test_inventory_defines_counts_without_hiding_records():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
 
@@ -142,9 +144,11 @@ def test_inventory_defines_record_counts_and_gates_candidate_review():
     assert "One shared recipe or architecture variant" in source
     assert "One particular measured specimen" in source
     assert "Multiple measurements of the same cell are not additional devices" in source
-    assert 'id="workflow-gate"' in html
-    assert "Submit the blind inventory to unlock this step" in source
-    assert '["records", "completeness"].includes(tab) && !hasAudit()' in source
+    assert 'id="census-status"' in html
+    assert "You can inspect and correct Records now" in html
+    assert "Edit saved census" in html
+    assert 'tab === "completeness" && !hasAudit()' in source
+    assert '["records", "completeness"].includes(tab) && !hasAudit()' not in source
 
 
 def test_stability_review_shows_every_atomic_value_before_related_context():
@@ -175,7 +179,7 @@ def test_show_in_paper_has_direct_lookup_visible_location_and_race_protection():
     assert "citation-match-label" in html
     assert "/api/evidence-block/" in source
     assert "scrollIntoView" in source
-    assert "image.decode()" in source
+    assert "preview.decode()" in source
     assert 'event.key === "Enter"' in source
     assert "requestId !== state.pdfRequest" in source
     assert "application.evidence_block(parts[2], parts[3], parts[4])" in server
@@ -190,9 +194,12 @@ def test_pdf_source_switch_is_visible_cached_and_waits_for_the_new_page():
     assert 'id="pdf-message"' in html
     assert 'setAttribute("aria-busy", "true")' in source
     assert "Large SI files can take a few seconds" in source
-    assert "image.decode()" in source
-    assert 'responseType: "blob"' in source
-    assert "loadAuthenticatedImage" in source
+    assert "preview.decode()" in source
+    assert 'responseType: "pdfPage"' in source
+    assert "loadPdfPage" in source
+    assert "requestWithRetry" in source
+    assert "AbortController" in source
+    assert 'id="retry-pdf"' in html
     assert "URL.createObjectURL" in source
     assert server.count("private, max-age=3600, immutable") == 2
 
@@ -204,7 +211,7 @@ def test_record_count_corrections_are_explicit_and_reference_guarded():
 
     assert "Copy as missing record" in source
     assert "Remove extra record" in html
-    assert "Removal is blocked until linked measurements" in html
+    assert "linked measurements must be reassigned or removed first" in html
     assert "/api/study-schema" in source
     assert "draftFromSchema" in source
     assert "recordReferences" in source
@@ -262,7 +269,10 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     assert "undoAnnotation" in source
     assert "/api/mutation-undos/" in source
     assert "undoable_event_ids" in source
-    assert "never erases history" in html
+    assert "Nothing is erased from history" in html
+    assert "No saved field correction is currently safe to undo" in source
+    assert "change this decision" in source
+    assert "Edit saved census" in source
     assert 'application.reviewer_progress(parts[2], user["id"])' in server
     assert 'application.undo_mutation(' in server
 

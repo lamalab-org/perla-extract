@@ -99,14 +99,15 @@ older extraction never attempted to produce. Regenerate an untouched seed, or re
 the newly added fields explicitly; never treat schema readability as evaluation
 comparability.
 
-## 3. Review without anchoring recall to the model
+## 3. Review records and measure completeness
 
-The reviewer first records a blind paper-wide record inventory. Model candidates and
-coverage audits remain hidden until that census is submitted. The same step separately
-counts main-text figures, schema-relevant figures, and schema records or atomic values
-that occur only in those figures. This measures the loss from text-only extraction
-without conflating it with whether the reviewer searched the main paper or SI. Review
-then proceeds through:
+The reviewer may inspect the extracted records immediately and correct them beside the
+paper. The Census tab records the corrected paper-wide totals and separately counts
+main-text figures, schema-relevant figures, and schema records or atomic values that
+occur only in those figures. The record totals are therefore model-assisted and must
+not be reported as a blind recall estimate. The figure counts measure the narrower loss
+from text-only extraction without conflating it with whether the reviewer searched the
+main paper or SI. Review then proceeds through:
 
 1. entity identity and reporting level;
 2. composition, layers, and processing;
