@@ -92,11 +92,14 @@ one new revision snapshot containing both the validated truth and complete event
 history. The familiar `seeds/`, `events/`, `documents/`, `manifests/`, and split
 directories are refreshed as derived, inspectable exports.
 
-Every authenticated reviewer can open **My annotations** from the header. This view
+Every authenticated reviewer can open **My edits & undo** from the header. This view
 reads the persisted revision log across the selected split and shows only that
 reviewer's census submissions, record decisions, corrections, evidence, notes, and
 stage completions. Decisions are marked current or superseded when later edits change
-the reviewed record. **Download my annotations** saves the same reviewer-scoped ledger
+the reviewed record. Corrections that are still untouched offer **Undo this saved
+edit**. Undo writes a linked, validated revision instead of deleting history; the
+action is unavailable once later work changes the same value. **Download my
+annotations** saves the same reviewer-scoped ledger
 as readable JSON, including exact before/after values and revision timestamps. It is a
 personal progress export and is deliberately separate from adjudicated ground truth.
 

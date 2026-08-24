@@ -1102,7 +1102,9 @@ async function reloadLatestPaper() {
 }
 
 function annotationSubject(event) {
-  if (event.kind === "mutation") return `${event.action} ${event.path}`;
+  if (event.kind === "mutation") return event.details?.undoes_event_id
+    ? "Reversed an earlier saved correction"
+    : `${event.action} ${event.path}`;
   if (event.kind === "record_decision") return `${event.details.record_key} · ${humanLabel(event.details.decision)}`;
   if (event.kind === "stage_complete") return `${humanLabel(event.details.stage)} stage completed`;
   if (event.kind === "inventory_audit") {
@@ -1121,6 +1123,12 @@ function annotationIsCurrent(paper, event) {
   return null;
 }
 
+function annotationMutationState(paper, event) {
+  if (paper.undone_event_ids?.includes(event.event_id)) return "undone";
+  if (paper.undoable_event_ids?.includes(event.event_id)) return "can undo";
+  return "saved history";
+}
+
 function annotationValue(value) {
   if (value === undefined) return "Not recorded";
   if (typeof value === "string") return value;
@@ -1129,11 +1137,15 @@ function annotationValue(value) {
 
 function annotationEvent(paper, event) {
   const current = annotationIsCurrent(paper, event);
-  const stateLabel = current === true ? "current" : current === false ? "superseded" : "saved";
+  const stateLabel = event.kind === "mutation"
+    ? annotationMutationState(paper, event)
+    : current === true ? "current" : current === false ? "superseded" : "saved";
+  const stateClass = stateLabel.replaceAll(" ", "-");
+  const canUndo = paper.undoable_event_ids?.includes(event.event_id);
   return element("article", { className: "annotation-event" }, [
     element("div", { className: "annotation-event-heading" }, [
       element("strong", { text: `r${event.revision} · ${humanLabel(event.kind)}` }),
-      element("span", { className: `annotation-state ${stateLabel}`, text: stateLabel }),
+      element("span", { className: `annotation-state ${stateClass}`, text: stateLabel }),
     ]),
     element("p", { text: annotationSubject(event) }),
     element("span", { className: "muted", text: new Date(event.timestamp).toLocaleString() }),
@@ -1142,11 +1154,51 @@ function annotationEvent(paper, event) {
       element("div", {}, [element("span", { className: "eyebrow", text: "Before" }), element("pre", { text: annotationValue(event.before) })]),
       element("div", {}, [element("span", { className: "eyebrow", text: "After" }), element("pre", { text: annotationValue(event.after) })]),
     ])] : []),
+    ...(canUndo ? [element("button", {
+      text: "Undo this saved edit",
+      properties: { type: "button" },
+      events: { click: (clickEvent) => undoAnnotation(paper, event, clickEvent.currentTarget) },
+    })] : []),
     element("details", { className: "annotation-json" }, [
       element("summary", { text: "Inspect exact saved event" }),
       element("pre", { text: JSON.stringify(event, null, 2) }),
     ]),
   ]);
+}
+
+async function undoAnnotation(paper, event, button) {
+  if (!window.confirm("Undo this saved correction? The workbench will preserve both the original edit and the undo in its history.")) return;
+  button.disabled = true;
+  $("annotation-status").textContent = "Undoing and validating the complete study…";
+  $("annotation-status").className = "";
+  try {
+    const bundle = await request(`/api/mutation-undos/${state.split}/${encodeURIComponent(paper.paper_id)}`, {
+      method: "POST",
+      body: JSON.stringify({ event_id: event.event_id, base_revision: paper.current_revision }),
+    });
+    if (state.paperId === paper.paper_id) {
+      state.bundle = bundle;
+      renderStudy();
+    }
+    await loadReviewerProgress();
+    $("annotation-status").textContent = "Saved edit undone. Both actions remain visible in the audit history.";
+    $("annotation-status").className = "success";
+  } catch (error) {
+    if (error.code === "review_revision_conflict") {
+      await loadReviewerProgress();
+      if (state.paperId === paper.paper_id) {
+        state.bundle = await request(`/api/paper/${state.split}/${encodeURIComponent(paper.paper_id)}`);
+        renderStudy();
+      }
+      clearRevisionConflictActions();
+    }
+    $("annotation-status").textContent = error.code === "review_revision_conflict"
+      ? "This paper changed in another session. The latest activity is loaded; check the edit and try Undo again."
+      : error.message;
+    $("annotation-status").className = "error";
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function renderReviewerProgress(progress) {

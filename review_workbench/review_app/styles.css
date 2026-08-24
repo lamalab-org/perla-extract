@@ -116,8 +116,10 @@ th,td { padding:.55rem; border-bottom:1px solid var(--line); text-align:left; } 
 .annotation-event p { margin:.35rem 0; overflow-wrap:anywhere; }
 .annotation-state { border-radius:99px; padding:.2rem .5rem; font-size:.68rem; font-weight:700; text-transform:uppercase; }
 .annotation-state.current { color:var(--brand); background:var(--brand-soft); }
-.annotation-state.saved { color:#44514c; background:#edf1ef; }
+.annotation-state.can-undo { color:var(--brand); background:var(--brand-soft); }
+.annotation-state.saved,.annotation-state.saved-history { color:#44514c; background:#edf1ef; }
 .annotation-state.superseded { color:#7a5910; background:#fff1cc; }
+.annotation-state.undone { color:#44514c; background:#edf1ef; }
 .annotation-note { color:var(--muted); font-size:.78rem; }
 .annotation-change { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:.65rem 0; }
 .annotation-change > div { min-width:0; }

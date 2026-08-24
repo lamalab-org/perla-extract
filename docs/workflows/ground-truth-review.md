@@ -105,10 +105,17 @@ immutable revision, so concurrent reviewers cannot produce a truth/event mismatc
 Editing a record changes its content digest and invalidates the previous record
 decision automatically.
 
-Reviewers can inspect **My annotations** at any time and download their own persisted
-event ledger for the selected split. The server derives this response from immutable
-revisions using the authenticated reviewer identity; it does not accept another user
-ID from the browser. The personal export includes exact mutations, evidence, decisions,
+Reviewers can open **My edits & undo** at any time and download their own persisted
+event ledger for the selected split. A correction can be undone while its saved result
+is still the current value. Undo creates a new validated event that points to the
+original edit; it does not delete either action from history. If somebody subsequently
+changed the same value, the undo action is unavailable so it cannot overwrite that
+newer work. Record decisions can be changed by selecting a different decision during
+record review.
+
+The server derives the personal activity response from immutable revisions using the
+authenticated reviewer identity; it does not accept another user ID from the browser.
+The personal export includes exact mutations, evidence, decisions,
 audits, stages, and current-versus-superseded decision state, but it is not a substitute
 for the administrator's adjudicated data-PR bundle.
 

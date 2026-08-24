@@ -215,14 +215,21 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     source = (APP / "app.js").read_text(encoding="utf-8")
     server = (APP.parent / "server.py").read_text(encoding="utf-8")
 
-    assert "My annotations" in html
+    assert "My edits &amp; undo" in html
+    assert "My annotations and edits" in html
     assert "Download my annotations" in html
     assert "/api/reviewer-progress/" in source
     assert "current_record_decisions" in source
     assert 'text: "Before"' in source
     assert 'text: "After"' in source
     assert "Inspect exact saved event" in source
+    assert "Undo this saved edit" in html
+    assert "undoAnnotation" in source
+    assert "/api/mutation-undos/" in source
+    assert "undoable_event_ids" in source
+    assert "never erases history" in html
     assert 'application.reviewer_progress(parts[2], user["id"])' in server
+    assert 'application.undo_mutation(' in server
 
 
 def test_reviewers_can_download_source_pdfs_and_current_study_json():

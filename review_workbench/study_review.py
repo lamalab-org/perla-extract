@@ -91,6 +91,15 @@ class MutationRequest(BaseModel):
         return self
 
 
+class UndoMutationRequest(BaseModel):
+    """Identify one saved correction to reverse against the latest paper state."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    event_id: str = Field(min_length=1, max_length=200)
+    base_revision: int = Field(ge=0)
+
+
 class MainTextFigureCensus(BaseModel):
     """Measure schema content lost when main-text figures are not extracted.
 
@@ -208,6 +217,8 @@ class ReviewerPaperProgress(BaseModel):
     completed_stages: list[ReviewStage]
     current_inventory_audit: dict[str, Any] | None = None
     current_record_decisions: dict[str, RecordDecision] = Field(default_factory=dict)
+    undoable_event_ids: list[str] = Field(default_factory=list)
+    undone_event_ids: list[str] = Field(default_factory=list)
     events: list[ReviewEvent]
 
 
@@ -267,6 +278,74 @@ def _apply(
     else:
         del parent[key]
     return before, result
+
+
+def _reverse_mutation(
+    document: dict[str, Any], event: ReviewEvent
+) -> tuple[MutationAction, str, Any, Any, dict[str, Any]]:
+    """Reverse one mutation only while its saved result is still untouched.
+
+    Matching the current value to the event's ``after`` value prevents an undo from
+    overwriting later corrections. List additions recorded with ``/-`` are located by
+    their complete saved value because their numeric position was not known earlier.
+    """
+
+    if event.kind != "mutation" or not event.action or not event.path:
+        raise ValueError("only saved corrections can be undone")
+    if event.details.get("undoes_event_id"):
+        raise ValueError("an undo event cannot itself be undone")
+
+    result = copy.deepcopy(document)
+    parent, key = _parent(result, event.path)
+    if event.action == "add":
+        if isinstance(parent, list):
+            if key == "-":
+                matches = [
+                    index for index, value in enumerate(parent) if value == event.after
+                ]
+                if len(matches) != 1:
+                    raise ValueError("the added value has since changed")
+                index = matches[0]
+                resolved_path = f"{event.path[:-1]}{index}"
+            else:
+                index = int(key)
+                if index >= len(parent) or parent[index] != event.after:
+                    raise ValueError("the added value has since changed")
+                resolved_path = event.path
+            current = copy.deepcopy(parent[index])
+            parent.pop(index)
+        else:
+            if key not in parent or parent[key] != event.after:
+                raise ValueError("the added value has since changed")
+            current = copy.deepcopy(parent[key])
+            del parent[key]
+            resolved_path = event.path
+        return "remove", resolved_path, current, None, result
+
+    if event.action == "replace":
+        if isinstance(parent, list):
+            index = int(key)
+            if index >= len(parent) or parent[index] != event.after:
+                raise ValueError("the corrected value has since changed")
+            current = copy.deepcopy(parent[index])
+            parent[index] = copy.deepcopy(event.before)
+        else:
+            if key not in parent or parent[key] != event.after:
+                raise ValueError("the corrected value has since changed")
+            current = copy.deepcopy(parent[key])
+            parent[key] = copy.deepcopy(event.before)
+        return "replace", event.path, current, event.before, result
+
+    if isinstance(parent, list):
+        index = int(key)
+        if index > len(parent) or event.before in parent:
+            raise ValueError("the removed value cannot be restored safely")
+        parent.insert(index, copy.deepcopy(event.before))
+    else:
+        if key in parent:
+            raise ValueError("the removed value cannot be restored safely")
+        parent[key] = copy.deepcopy(event.before)
+    return "add", event.path, None, event.before, result
 
 
 def _digest(value: object) -> str:
@@ -517,6 +596,22 @@ class StudyReviewStore:
             "summary": self.summary(revision.ground_truth, revision.events),
         }
 
+    @staticmethod
+    def _prepare_mutation_undo(
+        truth: dict[str, Any], event: ReviewEvent
+    ) -> tuple[MutationAction, str, Any, Any, dict[str, Any]]:
+        """Apply every undo safety rule used by both discovery and execution."""
+
+        action, path, before, after, proposed = _reverse_mutation(truth, event)
+        if action == "remove":
+            location = _removed_record_location(path)
+            if location is not None and _record_references(truth, *location):
+                raise ValueError(
+                    "this edit cannot be undone while newer records refer to its value"
+                )
+        validated = StudyExtraction.model_validate(proposed).model_dump(mode="json")
+        return action, path, before, after, validated
+
     def reviewer_progress(self, split: str, reviewer_id: str) -> dict[str, Any]:
         """Return only the authenticated reviewer's persisted annotation events.
 
@@ -541,6 +636,20 @@ class StudyReviewStore:
             ]
             if not events:
                 continue
+            undone_event_ids = {
+                str(event.get("details", {}).get("undoes_event_id"))
+                for event in revision.events
+                if event.get("details", {}).get("undoes_event_id")
+            }
+            undoable_event_ids: list[str] = []
+            for event in events:
+                if event.kind != "mutation" or event.event_id in undone_event_ids:
+                    continue
+                try:
+                    self._prepare_mutation_undo(revision.ground_truth, event)
+                except (IndexError, KeyError, TypeError, ValueError):
+                    continue
+                undoable_event_ids.append(event.event_id)
             summary = self.summary(revision.ground_truth, revision.events)
             completed_stages = [
                 stage
@@ -560,6 +669,8 @@ class StudyReviewStore:
                     current_record_decisions=summary["record_decisions"].get(
                         reviewer_id, {}
                     ),
+                    undoable_event_ids=undoable_event_ids,
+                    undone_event_ids=sorted(undone_event_ids),
                     events=events,
                 )
             )
@@ -760,6 +871,68 @@ class StudyReviewStore:
             after=request.value if request.action != "remove" else None,
             evidence=request.evidence,
             note=request.note,
+        ).model_dump(mode="json")
+        return self._commit(split, paper_id, current_revision, validated, event)
+
+    def undo_mutation(
+        self,
+        split: str,
+        paper_id: str,
+        request: UndoMutationRequest,
+        reviewer_id: str,
+    ) -> dict[str, Any]:
+        """Reverse one still-current correction without erasing its audit history.
+
+        The original and inverse events remain attributable. Undo is rejected when a
+        later edit changed the same value, when the event belongs to another reviewer,
+        or when reversing it would violate references or the current study schema.
+        """
+
+        current_revision = self._validate_revision(
+            split, paper_id, request.base_revision
+        )
+        target_data = next(
+            (
+                event
+                for event in current_revision.events
+                if event.get("event_id") == request.event_id
+            ),
+            None,
+        )
+        if target_data is None:
+            raise ValueError("saved correction was not found")
+        target = ReviewEvent.model_validate(target_data)
+        if target.reviewer_id != reviewer_id:
+            raise PermissionError("you can undo only your own saved corrections")
+        if any(
+            event.get("details", {}).get("undoes_event_id") == target.event_id
+            for event in current_revision.events
+        ):
+            raise ValueError("this saved correction has already been undone")
+
+        (
+            inverse_action,
+            inverse_path,
+            before,
+            after,
+            validated,
+        ) = self._prepare_mutation_undo(
+            current_revision.ground_truth,
+            target,
+        )
+        event = ReviewEvent(
+            event_id=str(uuid.uuid4()),
+            revision=current_revision.revision + 1,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            reviewer_id=reviewer_id,
+            kind="mutation",
+            action=inverse_action,
+            path=inverse_path,
+            before=before,
+            after=after,
+            evidence=target.evidence,
+            note="Undid a previously saved correction.",
+            details={"undoes_event_id": target.event_id},
         ).model_dump(mode="json")
         return self._commit(split, paper_id, current_revision, validated, event)
 

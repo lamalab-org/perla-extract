@@ -11,7 +11,7 @@
     <div><span class="eyebrow">PERLA</span><h1>Study ground-truth review</h1></div>
     <div class="header-actions">
       <label>Dataset <select id="split"><option>calibration</option><option>dev</option><option>test</option></select></label>
-      <button id="open-annotations">My annotations</button>
+      <button id="open-annotations">My edits &amp; undo</button>
       <button id="open-import">Import extraction</button>
       <span id="reviewer" class="pill">Loading reviewer…</span>
     </div>
@@ -158,8 +158,8 @@
 
   <dialog id="annotations-dialog">
     <form method="dialog" class="dialog-card">
-      <div class="dialog-heading"><div><span class="eyebrow">Saved reviewer activity</span><h2>My annotations</h2></div><button value="cancel" aria-label="Close">×</button></div>
-      <p class="callout">This is your persisted activity log for the selected dataset. It is a personal progress record, not adjudicated ground truth.</p>
+      <div class="dialog-heading"><div><span class="eyebrow">Saved reviewer activity</span><h2>My annotations and edits</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <p class="callout">This is your persisted activity log for the selected dataset. Use <strong>Undo this saved edit</strong> to reverse a correction that has not since been changed. Undo creates another saved, validated audit event; it never erases history.</p>
       <div id="annotation-summary"></div>
       <div id="annotation-list" class="annotation-list"></div>
       <div class="dialog-actions"><span></span><button value="cancel">Close</button><button id="download-annotations" type="button" class="primary">Download my annotations</button></div>

@@ -42,6 +42,7 @@ from review_workbench.study_review import (  # noqa: E402
     RecordDecisionRequest,
     StageRequest,
     StudyReviewStore,
+    UndoMutationRequest,
 )
 
 REVISION_CONFLICT_RESPONSE = {
@@ -232,6 +233,20 @@ class ReviewApplication:
         return self._with_sources(
             self.store.mutate(
                 split, paper_id, MutationRequest.model_validate(payload), reviewer_id
+            )
+        )
+
+    def undo_mutation(
+        self, split: str, paper_id: str, payload: object, reviewer_id: str
+    ) -> dict[str, Any]:
+        """Validate an undo request before reversing one attributable correction."""
+
+        return self._with_sources(
+            self.store.undo_mutation(
+                split,
+                paper_id,
+                UndoMutationRequest.model_validate(payload),
+                reviewer_id,
             )
         )
 
@@ -708,6 +723,14 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 if len(parts) == 4 and parts[:2] == ["api", "mutations"]:
                     self.send_json(
                         application.mutate(
+                            parts[2], parts[3], self.read_json(), user["id"]
+                        ),
+                        HTTPStatus.CREATED,
+                    )
+                    return
+                if len(parts) == 4 and parts[:2] == ["api", "mutation-undos"]:
+                    self.send_json(
+                        application.undo_mutation(
                             parts[2], parts[3], self.read_json(), user["id"]
                         ),
                         HTTPStatus.CREATED,

@@ -17,6 +17,7 @@ from review_workbench.study_review import (
     RecordDecisionRequest,
     StageRequest,
     StudyReviewStore,
+    UndoMutationRequest,
 )
 
 
@@ -85,6 +86,154 @@ def test_seed_is_immutable_and_truth_is_versioned(
     assert bundle["manifest"]["schema_version"] == STUDY_SCHEMA_VERSION
     assert bundle["manifest"]["schema_sha256"] == study_schema_sha256()
     assert bundle["schema_compatibility"]["exact_match"] is True
+
+
+def test_reviewer_can_undo_an_untouched_saved_correction(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    seed(store, empty_study, document_payload)
+    corrected = store.mutate(
+        "calibration",
+        "10.0000--example",
+        MutationRequest(
+            action="replace",
+            path="/unresolved_notes/0",
+            value="Checked against the paper",
+            evidence=[{"block_id": "main_p1_text_1", "quote": "champion device"}],
+            base_revision=1,
+        ),
+        "ada",
+    )
+    correction_id = corrected["events"][-1]["event_id"]
+
+    progress = store.reviewer_progress("calibration", "ada")["papers"][0]
+    assert progress["undoable_event_ids"] == [correction_id]
+
+    with pytest.raises(PermissionError, match="only your own"):
+        store.undo_mutation(
+            "calibration",
+            "10.0000--example",
+            UndoMutationRequest(event_id=correction_id, base_revision=2),
+            "grace",
+        )
+
+    undone = store.undo_mutation(
+        "calibration",
+        "10.0000--example",
+        UndoMutationRequest(event_id=correction_id, base_revision=2),
+        "ada",
+    )
+
+    assert undone["ground_truth"]["unresolved_notes"] == ["Initial model note"]
+    assert undone["events"][-1]["details"] == {"undoes_event_id": correction_id}
+    assert undone["events"][-1]["before"] == "Checked against the paper"
+    assert undone["events"][-1]["after"] == "Initial model note"
+    progress = store.reviewer_progress("calibration", "ada")["papers"][0]
+    assert progress["undoable_event_ids"] == []
+    assert progress["undone_event_ids"] == [correction_id]
+
+    with pytest.raises(ValueError, match="already been undone"):
+        store.undo_mutation(
+            "calibration",
+            "10.0000--example",
+            UndoMutationRequest(event_id=correction_id, base_revision=3),
+            "ada",
+        )
+
+
+def test_undo_finds_an_appended_value_but_never_overwrites_later_work(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    seed(store, empty_study, document_payload)
+    added = store.mutate(
+        "calibration",
+        "10.0000--example",
+        MutationRequest(
+            action="add",
+            path="/unresolved_notes/-",
+            value="Temporary reviewer note",
+            evidence=[{"block_id": "main_p1_text_1", "quote": "champion device"}],
+            base_revision=1,
+        ),
+        "ada",
+    )
+    added_id = added["events"][-1]["event_id"]
+    restored = store.undo_mutation(
+        "calibration",
+        "10.0000--example",
+        UndoMutationRequest(event_id=added_id, base_revision=2),
+        "ada",
+    )
+    assert restored["ground_truth"]["unresolved_notes"] == ["Initial model note"]
+    assert restored["events"][-1]["path"] == "/unresolved_notes/1"
+
+    corrected = store.mutate(
+        "calibration",
+        "10.0000--example",
+        MutationRequest(
+            action="replace",
+            path="/unresolved_notes/0",
+            value="Ada's correction",
+            evidence=[{"block_id": "main_p1_text_1", "quote": "champion device"}],
+            base_revision=restored["revision"],
+        ),
+        "ada",
+    )
+    correction_id = corrected["events"][-1]["event_id"]
+    later = store.mutate(
+        "calibration",
+        "10.0000--example",
+        MutationRequest(
+            action="replace",
+            path="/unresolved_notes/0",
+            value="Grace's later correction",
+            evidence=[{"block_id": "main_p1_text_1", "quote": "champion device"}],
+            base_revision=corrected["revision"],
+        ),
+        "grace",
+    )
+
+    progress = store.reviewer_progress("calibration", "ada")["papers"][0]
+    assert correction_id not in progress["undoable_event_ids"]
+    with pytest.raises(ValueError, match="has since changed"):
+        store.undo_mutation(
+            "calibration",
+            "10.0000--example",
+            UndoMutationRequest(
+                event_id=correction_id, base_revision=later["revision"]
+            ),
+            "ada",
+        )
+
+
+def test_undo_can_restore_a_removed_value(tmp_path, empty_study, document_payload):
+    store = StudyReviewStore(tmp_path)
+    seed(store, empty_study, document_payload)
+    removed = store.mutate(
+        "calibration",
+        "10.0000--example",
+        MutationRequest(
+            action="remove",
+            path="/unresolved_notes/0",
+            note="Removed this note by mistake",
+            base_revision=1,
+        ),
+        "ada",
+    )
+
+    restored = store.undo_mutation(
+        "calibration",
+        "10.0000--example",
+        UndoMutationRequest(
+            event_id=removed["events"][-1]["event_id"], base_revision=2
+        ),
+        "ada",
+    )
+
+    assert restored["ground_truth"]["unresolved_notes"] == ["Initial model note"]
+    assert restored["events"][-1]["action"] == "add"
 
 
 def test_reviewer_progress_contains_only_that_reviewers_persisted_work(
