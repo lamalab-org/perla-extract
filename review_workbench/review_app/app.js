@@ -873,6 +873,7 @@ function renderStageControls() {
   const canExport = state.user.role === "admin" && finalEvent?.kind === "stage_complete" && finalEvent?.details?.stage === "adjudication";
   $("download-truth").hidden = state.user.role !== "admin";
   $("download-truth").disabled = !canExport;
+  $("final-export-help").hidden = state.user.role !== "admin" || canExport;
   $("add-record").disabled = !hasAudit();
   $("new-record-kind").disabled = !hasAudit();
   for (const tab of ["records", "completeness"]) {
@@ -1511,7 +1512,6 @@ async function uploadReviewWorkbook(file) {
     renderStudy();
     await loadReviewerProgress();
     setStatus("Reviewed workbook saved as one validated revision. The import is visible in My edits & undo.");
-    $("review-downloads").open = false;
   } catch (error) {
     setStatus(error.message, true);
   } finally {
@@ -1527,17 +1527,31 @@ async function downloadPaper(source) {
 }
 
 async function runDownload(button, loadingMessage, completeMessage, operation) {
+  const label = button.textContent;
   button.disabled = true;
-  setStatus(loadingMessage);
+  button.setAttribute("aria-busy", "true");
+  button.textContent = "Preparing…";
+  setFileStatus(loadingMessage);
   try {
     const result = await operation();
-    $("review-downloads").open = false;
-    setStatus(typeof completeMessage === "function" ? completeMessage(result) : completeMessage);
+    setFileStatus(typeof completeMessage === "function" ? completeMessage(result) : completeMessage);
   } catch (error) {
-    setStatus(error.message, true);
+    setFileStatus(error.message, true);
   } finally {
     button.disabled = false;
+    button.removeAttribute("aria-busy");
+    button.textContent = label;
   }
+}
+
+function setFileStatus(message, error = false) {
+  for (const id of ["file-action-status", "files-status"]) {
+    const status = $(id);
+    status.hidden = false;
+    status.textContent = message;
+    status.className = error ? "error" : "success";
+  }
+  setStatus(message, error);
 }
 
 async function downloadGroundTruth() {
@@ -1590,12 +1604,13 @@ $("reload-paper").addEventListener("click", reloadLatestPaper);
 $("reload-paper-dialog").addEventListener("click", reloadLatestPaper);
 $("search-evidence").addEventListener("click", searchEvidence);
 $("evidence-query").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); searchEvidence(); } });
-$("download-truth").addEventListener("click", async () => {
-  try {
-    await downloadGroundTruth();
-    setStatus("Downloaded the adjudicated PR bundle.");
-  } catch (error) { setStatus(error.message, true); }
-});
+$("open-files").addEventListener("click", () => $("files-dialog").showModal());
+$("download-truth").addEventListener("click", (event) => runDownload(
+  event.currentTarget,
+  "Preparing the adjudicated PR bundle…",
+  "Downloaded the adjudicated PR bundle.",
+  downloadGroundTruth,
+));
 $("download-study-json").addEventListener("click", (event) => runDownload(
   event.currentTarget,
   "Preparing the latest validated study JSON…",
@@ -1603,6 +1618,12 @@ $("download-study-json").addEventListener("click", (event) => runDownload(
   downloadStudyJson,
 ));
 $("download-review-workbook").addEventListener("click", (event) => runDownload(
+  event.currentTarget,
+  "Preparing an editable workbook for the latest paper revision…",
+  "Downloaded the all-record Excel review workbook.",
+  () => downloadReviewWorkbook(),
+));
+$("download-review-workbook-dialog").addEventListener("click", (event) => runDownload(
   event.currentTarget,
   "Preparing an editable workbook for the latest paper revision…",
   "Downloaded the all-record Excel review workbook.",

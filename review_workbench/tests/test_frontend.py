@@ -239,7 +239,7 @@ def test_ui_builds_untrusted_content_with_dom_nodes():
 def test_only_admins_can_download_an_adjudicated_pr_bundle():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
-    assert "Download PR bundle" in html
+    assert "Download adjudicated PR bundle" in html
     assert "ground-truth-export" in source
     assert 'state.user.role === "admin"' in source
     assert 'finalEvent?.details?.stage === "adjudication"' in source
@@ -267,14 +267,30 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     assert 'application.undo_mutation(' in server
 
 
+def test_file_actions_are_direct_responsive_and_show_progress():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    styles = (APP / "styles.css").read_text(encoding="utf-8")
+
+    assert 'id="download-review-workbook"' in html
+    assert 'id="open-files"' in html
+    assert 'id="files-dialog"' in html
+    assert "download-menu" not in html
+    assert "Preparing…" in source
+    assert 'button.setAttribute("aria-busy", "true")' in source
+    assert "setFileStatus" in source
+    assert "@media (max-width:650px)" in styles
+    assert "main { display:block" in styles
+
+
 def test_reviewers_can_download_source_pdfs_and_current_study_json():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
 
-    assert "Download review files" in html
-    assert "Current study JSON" in html
-    assert "Main paper PDF" in html
-    assert "Supporting information PDF" in html
+    assert "Files for review" in html
+    assert "Download study JSON" in html
+    assert "Download main paper" in html
+    assert "Download supporting information" in html
     assert "bundle.ground_truth" in source
     assert ".study.json" in source
     assert "/api/pdf/" in source
@@ -287,8 +303,8 @@ def test_reviewers_can_round_trip_a_device_or_paper_excel_review():
     source = (APP / "app.js").read_text(encoding="utf-8")
     server = (APP.parent / "server.py").read_text(encoding="utf-8")
 
-    assert "Editable Excel workbook (all records)" in html
-    assert "Upload reviewed Excel workbook" in html
+    assert "Download editable Excel" in html
+    assert "Upload completed workbook" in html
     assert "Download Excel for this device" in source
     assert "downloadReviewWorkbook" in source
     assert "uploadReviewWorkbook" in source

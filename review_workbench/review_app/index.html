@@ -34,19 +34,10 @@
         <div><span id="paper-split" class="eyebrow"></span><h2 id="paper-title"></h2><p id="paper-doi"></p></div>
         <div class="study-actions">
           <span id="revision" class="pill"></span>
-          <details id="review-downloads" class="download-menu">
-            <summary>Download review files</summary>
-            <div class="download-menu-panel">
-              <p>Use Excel for an offline review of record decisions and scalar values. Uploading a reviewed workbook validates and saves all of its changes together. Add or remove complete records in the browser.</p>
-              <button id="download-review-workbook" type="button">Editable Excel workbook (all records)</button>
-              <label class="workbook-upload">Upload reviewed Excel workbook<input id="review-workbook-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /></label>
-              <button id="download-study-json" type="button">Current study JSON</button>
-              <button id="download-main-pdf" type="button">Main paper PDF</button>
-              <button id="download-supplement-pdf" type="button">Supporting information PDF</button>
-            </div>
-          </details>
-          <button id="download-truth" hidden>Download PR bundle</button>
+          <button id="download-review-workbook" type="button" class="primary">Download Excel</button>
+          <button id="open-files" type="button">Files &amp; upload</button>
         </div>
+        <p id="file-action-status" class="file-action-status" role="status" hidden></p>
       </div>
       <p id="schema-compatibility" class="callout" hidden></p>
 
@@ -160,6 +151,28 @@
       </div>
     </section>
   </main>
+
+  <dialog id="files-dialog">
+    <form method="dialog" class="dialog-card files-dialog-card">
+      <div class="dialog-heading"><div><span class="eyebrow">Current paper</span><h2>Files for review</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <section class="file-section file-section-primary">
+        <div><h3>Review in Excel</h3><p>Download all records, edit decisions and scalar values offline, then upload the same workbook. The upload is validated and saved as one revision.</p></div>
+        <button id="download-review-workbook-dialog" type="button" class="primary">Download editable Excel</button>
+        <label class="workbook-upload"><span>Upload completed workbook</span><input id="review-workbook-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /></label>
+      </section>
+      <section class="file-section">
+        <div><h3>Source documents</h3><p>Keep the paper beside a local review or inspect the supporting information separately.</p></div>
+        <div class="file-actions"><button id="download-main-pdf" type="button">Download main paper</button><button id="download-supplement-pdf" type="button">Download supporting information</button></div>
+      </section>
+      <section class="file-section">
+        <div><h3>Structured data</h3><p>Download the current validated study record. Administrators can export a PR bundle after adjudication.</p></div>
+        <div class="file-actions"><button id="download-study-json" type="button">Download study JSON</button><button id="download-truth" type="button" hidden>Download adjudicated PR bundle</button></div>
+        <p id="final-export-help" class="muted" hidden>PR export becomes available after an administrator completes adjudication.</p>
+      </section>
+      <p id="files-status" role="status"></p>
+      <div class="dialog-actions"><span></span><button value="cancel">Close</button></div>
+    </form>
+  </dialog>
 
   <dialog id="annotations-dialog">
     <form method="dialog" class="dialog-card">

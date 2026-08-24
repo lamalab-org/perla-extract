@@ -25,17 +25,20 @@ label { display:grid; gap:.35rem; font-size:.82rem; color:var(--muted); }
 .paper-card.selected { border-color:var(--brand); background:var(--brand-soft); }
 .empty-state { place-self:center; max-width:460px; text-align:center; color:var(--muted); }
 #workspace { min-width:0; overflow:auto; padding:18px; }
-.study-heading { background:white; border:1px solid var(--line); border-radius:12px; padding:14px 18px; margin-bottom:14px; }
+.study-heading { background:white; border:1px solid var(--line); border-radius:12px; padding:14px 18px; margin-bottom:14px; flex-wrap:wrap; align-items:flex-start; }
+.study-heading > div:first-child { flex:1 1 280px; min-width:0; }
 .study-heading p { margin:0; color:var(--muted); }
-.download-menu { position:relative; }
-.download-menu > summary { list-style:none; border:1px solid var(--line); border-radius:8px; padding:.55rem .8rem; cursor:pointer; }
-.download-menu > summary::-webkit-details-marker { display:none; }
-.download-menu[open] > summary { border-color:var(--brand); }
-.download-menu-panel { position:absolute; right:0; top:calc(100% + 7px); z-index:4; display:grid; gap:7px; width:290px; padding:12px; border:1px solid var(--line); border-radius:10px; background:white; box-shadow:0 8px 24px #0002; }
-.download-menu-panel p { font-size:.75rem; line-height:1.4; }
-.download-menu-panel button { text-align:left; }
-.workbook-upload { display:grid; gap:4px; padding:8px; border:1px solid var(--line); border-radius:8px; font-size:.8rem; }
-.workbook-upload input { max-width:100%; font-size:.75rem; }
+.study-actions { flex-wrap:wrap; justify-content:flex-end; }
+.file-action-status { flex:1 0 100%; padding-top:8px; font-size:.78rem; }
+.files-dialog-card { width:min(720px,92vw); }
+.file-section { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px 18px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:10px; }
+.file-section-primary { border-color:#a9cfc2; background:#f7fcfa; }
+.file-section h3 { margin:0 0 .3rem; font-size:1rem; }
+.file-section p { margin:0; color:var(--muted); font-size:.8rem; line-height:1.45; }
+.file-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:7px; }
+.workbook-upload { grid-column:1 / -1; display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:10px; padding:10px; border:1px dashed #9eb5ad; border-radius:8px; background:white; font-size:.8rem; }
+.workbook-upload input { width:100%; max-width:100%; font-size:.78rem; }
+#files-status { min-height:1.25em; margin:0; }
 .workspace-grid { display:grid; grid-template-columns:minmax(420px, 1.05fr) minmax(430px, .95fr); gap:14px; height:calc(100vh - 190px); }
 .pdf-panel,.review-panel { background:white; border:1px solid var(--line); border-radius:12px; overflow:auto; }
 .panel-toolbar { position:sticky; top:0; background:white; padding:10px; border-bottom:1px solid var(--line); z-index:2; }
@@ -187,4 +190,4 @@ dialog::backdrop { background:#16201dbb; }
 .muted { color:var(--muted); font-size:.82rem; }
 button:disabled,select:disabled { cursor:not-allowed; opacity:.55; }
 @media (max-width:1050px) { main { grid-template-columns:220px 1fr; }.workspace-grid { grid-template-columns:1fr; height:auto; }.pdf-panel { max-height:70vh; } }
-@media (max-width:650px) { .composition-comparison,.context-grid,.record-facts,.editor-fields,.annotation-change { grid-template-columns:1fr; }.decision-actions,.record-management-actions { flex-wrap:wrap; }.decision-actions button { flex:1 1 100%; }.records-toolbar { position:static; }.reported-value { display:grid; } }
+@media (max-width:650px) { header { height:auto; min-height:76px; align-items:flex-start; padding:12px; gap:12px; flex-wrap:wrap; }.header-actions { width:100%; flex-wrap:wrap; }.header-actions > * { flex:1 1 auto; } main { display:block; height:auto; min-height:calc(100vh - 76px); }.paper-rail { max-height:250px; border-right:0; border-bottom:1px solid var(--line); }.paper-list { grid-template-columns:repeat(2,minmax(0,1fr)); } #workspace { padding:10px; overflow:visible; }.study-heading { padding:12px; }.study-actions { width:100%; justify-content:flex-start; }.study-actions button { flex:1 1 auto; }.file-section { grid-template-columns:1fr; }.file-section > button,.file-actions button { width:100%; }.file-actions { display:grid; }.workbook-upload { grid-column:1; grid-template-columns:1fr; }.composition-comparison,.context-grid,.record-facts,.editor-fields,.annotation-change { grid-template-columns:1fr; }.decision-actions,.record-management-actions { flex-wrap:wrap; }.decision-actions button { flex:1 1 100%; }.records-toolbar { position:static; }.reported-value { display:grid; } }
