@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from collections.abc import Callable
+from copy import deepcopy
 from pathlib import Path
 from typing import TypeVar
 
@@ -36,15 +38,17 @@ class ModelCallError(RuntimeError):
         self.retryable = retryable
 
 
-def _strict_schema(model: type[BaseModel]) -> dict:
+def _strict_schema(
+    model: type[BaseModel], schema: dict[str, object] | None = None
+) -> dict:
     """Close every object because strict structured-output APIs require it."""
 
-    schema = model.model_json_schema()
+    schema = deepcopy(schema) if schema is not None else model.model_json_schema()
 
     def close(value: object) -> None:
         if isinstance(value, dict):
             properties = value.get("properties")
-            if isinstance(properties, dict):
+            if value.get("type") == "object" and isinstance(properties, dict):
                 value["required"] = list(properties)
                 value["additionalProperties"] = False
             for item in value.values():
@@ -71,7 +75,8 @@ class ModelClient:
     LiteLLM translates the provider-prefixed model name and normalizes transport
     errors. PERLA deliberately retains the policies that affect reproducibility:
     complete-request hashing, Pydantic validation before cache admission, preserved
-    failure artifacts, and one bounded application-level retry.
+    failure artifacts, and one bounded application-level retry. Failed responses stay
+    beside the run artifacts so provider errors cannot become silent data loss.
     """
 
     def __init__(
@@ -199,10 +204,17 @@ class ModelClient:
         response_model: type[ResponseModel],
         max_output_tokens: int,
         reasoning_effort: str | None,
+        request_schema: dict[str, object] | None = None,
+        decode: Callable[[object], object] | None = None,
     ) -> ResponseModel:
-        """Return only locally Pydantic-validated cached or live output."""
+        """Return a schema-valid response from cache or a bounded live request.
 
-        schema = _strict_schema(response_model)
+        Cache entries are validated again on read. Invalid JSON, schema failures, and
+        transport errors are written under ``requests/`` before ``ModelCallError`` is
+        raised, so downstream code never receives an unvalidated partial object.
+        """
+
+        schema = _strict_schema(response_model, request_schema)
         body = self._request(
             model=model,
             system=system,
@@ -261,12 +273,17 @@ class ModelClient:
                     "Calling model provider for {} (attempt {}/2)", kind, attempt
                 )
                 raw_result, usage = self._live(body, failure_path)
-                validated = response_model.model_validate(raw_result)
-            except ValidationError as exc:
+                decoded_result = decode(raw_result) if decode else raw_result
+                validated = response_model.model_validate(decoded_result)
+            except (TypeError, ValueError) as exc:
                 write_json_atomic(
                     failure_path,
                     {
-                        "validation_errors": exc.errors(include_url=False),
+                        "validation_errors": (
+                            exc.errors(include_url=False)
+                            if isinstance(exc, ValidationError)
+                            else [{"type": type(exc).__name__, "message": str(exc)}]
+                        ),
                         "result": raw_result,
                     },
                 )

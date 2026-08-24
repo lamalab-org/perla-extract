@@ -1,0 +1,2 @@
+prune src/perla_extract/data
+global-exclude __pycache__ *.py[cod]
