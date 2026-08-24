@@ -79,6 +79,15 @@ the JSON immediately and keeps the raw editor open when it is invalid. Saving ei
 view still checks the complete `StudyExtraction`, including links and evidence, so raw
 editing does not bypass scientific validation.
 
+Review-priority labels describe provenance or the current reviewer's action; they are
+not correctness judgments. **Added during the second extraction read** means the record
+was absent from the first draft. **Revised during the second extraction read** means at
+least one field changed between the first and second model reads. **You marked this for
+correction** records the reviewer's own pending decision. Composition status **Passed
+automated checks** means only that the proposed A/B/X assignment satisfied deterministic
+consistency checks; it still requires comparison with the source. The workbench shows
+these explanations beside each affected record.
+
 Use **Remove extra record** only when the paper does not support that record. The
 workbench deletes only the selected record and never cascades to linked measurements.
 If another record still refers to it, removal is disabled and each dependency is shown

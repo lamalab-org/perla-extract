@@ -63,8 +63,11 @@ and stability tests so shared architecture, stack, absorber, and composition rem
 view. The first cited source block opens in the paper automatically.
 
 The default **Remaining** view removes verified and uncertain records as the reviewer
-advances. **Needs attention** limits the queue to requested corrections, records
-changed by the quality pass, and composition proposals that need review. Use `V` to
+advances. **Needs attention** limits the queue to records the reviewer marked for
+correction, records added or revised during the model's second evidence read, and A/B/X
+assignments that did not pass every automated check. These are review priorities, not
+correctness judgments. Every displayed reason includes a plain-language explanation.
+Use `V` to
 verify, `U` for uncertain, `C` to correct, and the arrow keys or `J`/`K` to move between
 records. Corrections open with existing evidence preselected. Reviewers can switch
 directly between the field-oriented editor, where every label includes its JSON
@@ -84,7 +87,7 @@ reuse an existing rich review item. This keeps historical drafts recoverable whi
 preventing reviewers from comparing flat and rich records as equivalent annotations.
 
 Review state is committed under `state/`. One immutable source bundle contains the
-seed, evidence document, manifest, and initial revision. Each accepted change writes
+seed, evidence document, manifest, and initial revision. Each saved human change writes
 one new revision snapshot containing both the validated truth and complete event
 history. The familiar `seeds/`, `events/`, `documents/`, `manifests/`, and split
 directories are refreshed as derived, inspectable exports.

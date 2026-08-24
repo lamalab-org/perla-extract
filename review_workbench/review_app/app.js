@@ -16,7 +16,7 @@ const QUALITY_GATES = [
   "Composition, layer stack, and processing details checked",
   "Stability specimens, conditions, and checkpoints checked",
   "Every cross-window identity link explicitly justified",
-  "Every accepted reported value has source evidence",
+  "Every retained reported value has source evidence",
   "Remaining uncertainty recorded without inventing a value",
 ];
 const MATERIAL_FORMS = [
@@ -24,6 +24,27 @@ const MATERIAL_FORMS = [
   "mesoporous_layer", "nanostructured_layer", "bulk_heterojunction", "other",
   "not_reported",
 ];
+const COMPOSITION_STATUS_TEXT = {
+  accepted: {
+    label: "Passed automated checks",
+    explanation: "The proposed A/B/X assignment is internally consistent with the extracted formula. It still requires human comparison with the source.",
+  },
+  needs_review: {
+    label: "Manual check needed",
+    explanation: "Automated checks found an incomplete or ambiguous A/B/X assignment. Verify or leave the interpretation unresolved.",
+  },
+  rejected: {
+    label: "Not usable downstream",
+    explanation: "The proposed A/B/X assignment failed automated checks and will not be used for export.",
+  },
+};
+const REPAIR_STATUS_TEXT = {
+  accepted: "The targeted text reread proposed changes that passed automated validation and are included in this draft; they are not yet human-verified.",
+  rejected: "The targeted text reread proposed changes, but they failed automated validation and were not included.",
+  no_change: "The targeted text reread completed without changing the draft.",
+  not_needed: "The automated audit found no targeted text reread to perform.",
+  failed: "The targeted text reread failed; no repair result was applied.",
+};
 const state = {
   split: "calibration", papers: [], paperId: null, bundle: null, user: null,
   page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null,
@@ -99,6 +120,10 @@ function sourceComposition(absorber) {
 
 function interpretedComposition(result) {
   if (!result) return [element("p", { className: "muted", text: "No A/B/X-site proposal was supplied." })];
+  const status = COMPOSITION_STATUS_TEXT[result.status] || {
+    label: humanLabel(result.status),
+    explanation: "This automated interpretation has an unknown status and requires manual review.",
+  };
   const bySite = (result.proposal.ions || []).reduce((groups, ion) => {
     (groups[ion.site] ||= []).push(ion);
     return groups;
@@ -108,7 +133,8 @@ function interpretedComposition(result) {
     return `${site}: ${ions.length ? ions.join(" + ") : "—"}`;
   });
   return [
-    element("span", { className: `proposal-status ${result.status}`, text: result.status.replaceAll("_", " ") }),
+    element("span", { className: `proposal-status ${result.status}`, text: status.label, attributes: { title: status.explanation } }),
+    element("p", { className: "proposal-explanation", text: status.explanation }),
     element("p", { text: sites.join(" · ") }),
     ...((result.issues || []).length ? [element("p", { className: "proposal-issues", text: result.issues.join(" · ") })] : []),
   ];
@@ -238,14 +264,14 @@ function renderQualityArtifacts() {
   if (changed.length) {
     sections.push(element("p", {
       className: "callout",
-      text: `Quality-pass changes to inspect: ${changed.join(" · ")}.`,
+      text: `Second extraction read changed the current draft (${changed.join(" · ")}). Compare these records with their evidence; a change is a review priority, not a correctness claim.`,
     }));
   }
   if (repair?.status) {
     const itemCount = repair.worklist?.items?.length || 0;
     sections.push(element("p", {
       className: "callout",
-      text: `Targeted text-only repair: ${repair.status.replaceAll("_", " ")} · ${itemCount} audit item${itemCount === 1 ? "" : "s"}.`,
+      text: `${REPAIR_STATUS_TEXT[repair.status] || `Targeted text reread status: ${humanLabel(repair.status)}.`} ${itemCount} audit item${itemCount === 1 ? "" : "s"} prompted this step.`,
     }));
   }
   $("quality-artifacts").replaceChildren(...sections);
@@ -345,19 +371,31 @@ function recordEntries() {
   return ordered;
 }
 
-function attentionLabels(entry) {
-  const labels = [];
+function attentionReasons(entry) {
+  const reasons = [];
   const decision = recordDecision(entry.kind, entry.item, entry.index);
-  if (decision === "needs_correction") labels.push("correction required");
+  if (decision === "needs_correction") reasons.push({
+    label: "You marked this for correction",
+    explanation: "You selected Correct fields for this record. Save the correction, remove the unsupported record, or choose another review decision.",
+  });
   const changes = state.bundle.manifest.quality_artifacts?.refinement_audit?.collections?.[entry.kind];
   const identifier = entityId(entry.kind, entry.item, entry.index);
-  if (changes?.added_ids?.includes(identifier)) labels.push("added by quality pass");
-  if (changes?.changed_ids?.includes(identifier)) labels.push("changed by quality pass");
+  if (changes?.added_ids?.includes(identifier)) reasons.push({
+    label: "Added during the second extraction read",
+    explanation: "This record was absent from the first model draft and added when the model reread the evidence. Verify it against the cited source.",
+  });
+  if (changes?.changed_ids?.includes(identifier)) reasons.push({
+    label: "Revised during the second extraction read",
+    explanation: "The record existed in the first model draft, but one or more fields changed when the model reread the evidence. The current values still need human verification.",
+  });
   if (entry.kind === "device_families") {
     const results = (entry.item.absorbers || []).map((absorber) => compositionProposal(entry.item, absorber)).filter(Boolean);
-    if (results.some((result) => result.status !== "accepted")) labels.push("composition needs review");
+    if (results.some((result) => result.status !== "accepted")) reasons.push({
+      label: "A/B/X assignment needs checking",
+      explanation: "At least one automated perovskite-site interpretation is incomplete, ambiguous, or rejected. Review the source formula and the proposed assignment below.",
+    });
   }
-  return labels;
+  return reasons;
 }
 
 function filteredEntries() {
@@ -367,7 +405,7 @@ function filteredEntries() {
     const decision = recordDecision(entry.kind, entry.item, entry.index);
     if (kind !== "all" && entry.kind !== kind) return false;
     if (status === "remaining") return decision !== "verified" && decision !== "uncertain";
-    if (status === "attention") return attentionLabels(entry).length > 0;
+    if (status === "attention") return attentionReasons(entry).length > 0;
     if (status === "all") return true;
     return decision === status;
   });
@@ -595,7 +633,8 @@ function renderReviewQueue() {
     return;
   }
   const decision = recordDecision(entry.kind, entry.item, entry.index);
-  const flags = attentionLabels(entry).map((text) => element("span", { className: "attention-flag", text }));
+  const attention = attentionReasons(entry);
+  const flags = attention.map((reason) => element("span", { className: "attention-flag", text: reason.label, attributes: { title: reason.explanation } }));
   const actions = element("div", { className: "queue-actions" }, [
     element("button", { className: decision === "verified" ? "active" : "", text: "Verify  V", events: { click: () => decideEntry(entry, "verified") } }),
     element("button", { className: decision === "uncertain" ? "active" : "", text: "Uncertain  U", events: { click: () => decideEntry(entry, "uncertain") } }),
@@ -609,6 +648,10 @@ function renderReviewQueue() {
       element("div", {}, [element("span", { className: "eyebrow", text: `${COLLECTIONS[entry.kind]} · ${entityId(entry.kind, entry.item, entry.index)}` }), element("h3", { text: entityTitle(entry.kind, entry.item, entry.index) }), element("p", { text: entityDetail(entry.kind, entry.item) })]),
       element("div", { className: "attention-flags" }, flags),
     ]),
+    ...(attention.length ? [element("div", { className: "attention-explanations" }, attention.map((reason) => element("p", {}, [
+      element("strong", { text: `${reason.label}: ` }),
+      reason.explanation,
+    ])))] : []),
     renderDeviceContext(entry),
     renderRecordEvidence(entry),
     actions,

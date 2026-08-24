@@ -75,8 +75,11 @@ Before import, require:
 - `targeted_repair.json`, including its worklist and acceptance decision; and
 - the exact main-paper and supplement hashes.
 
-Keep enrichment decisions in `enrichment.json`. An accepted deterministic proposal may
-support NOMAD export, but it does not rewrite the source-reported ground truth.
+Keep enrichment decisions in `enrichment.json`. The machine-readable status `accepted`
+means only that a deterministic proposal passed automated consistency checks. It may
+support NOMAD export, but it is not a human verification and does not rewrite the
+source-reported ground truth. The workbench therefore displays this state as **Passed
+automated checks**.
 
 Imported seeds are immutable. If a better extraction is produced before review begins,
 create a new review item or explicitly archive the unused seed; do not silently replace

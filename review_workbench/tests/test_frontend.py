@@ -54,6 +54,23 @@ def test_ui_shows_reported_composition_beside_enrichment_proposals():
     assert "result.status" in javascript
 
 
+def test_pipeline_statuses_are_explained_as_review_priorities():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+
+    assert "What does “Needs attention” mean?" in html
+    assert "These are review priorities, not claims" in html
+    assert "Passed automated checks" in source
+    assert "It still requires human comparison with the source" in source
+    assert "You marked this for correction" in source
+    assert "Added during the second extraction read" in source
+    assert "Revised during the second extraction read" in source
+    assert "a change is a review priority, not a correctness claim" in source
+    assert "correction required" not in source
+    assert "changed by quality pass" not in source
+    assert "added by quality pass" not in source
+
+
 def test_ui_does_not_reintroduce_flat_cell_editor():
     source = (APP / "app.js").read_text(encoding="utf-8")
     assert "cellCorrection" not in source
