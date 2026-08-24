@@ -783,6 +783,7 @@ function renderReviewQueue() {
   const decision = recordDecision(entry.kind, entry.item, entry.index);
   const attention = attentionReasons(entry);
   const flags = attention.map((reason) => element("span", { className: "attention-flag", text: reason.label, attributes: { title: reason.explanation } }));
+  const context = relatedContext(entry);
   const actions = element("div", { className: "queue-actions" }, [
     element("div", { className: "decision-actions" }, [
       element("button", { className: decision === "verified" ? "active" : "", text: "All fields match source  V", attributes: { title: DECISION_GUIDANCE.verified }, events: { click: () => decideEntry(entry, "verified") } }),
@@ -794,6 +795,16 @@ function renderReviewQueue() {
       element("button", { text: "Copy as missing record", events: { click: () => copyMissingRecord(entry) } }),
       element("button", { className: "remove-extra", text: "Remove extra record", events: { click: () => beginRemoval(entry) } }),
     ]),
+    ...(context.device ? [element("button", {
+      text: "Download Excel for this device",
+      attributes: { title: "Includes this device, its family, linked performance, family statistics, and linked stability tests." },
+      events: { click: (event) => runDownload(
+        event.currentTarget,
+        "Preparing the device review workbook…",
+        "Downloaded an Excel workbook for this device and its linked context.",
+        () => downloadReviewWorkbook(context.device[state.bundle.summary.record_identifiers.individual_devices]),
+      ) },
+    })] : []),
   ]);
   $("review-queue").replaceChildren(element("article", { className: "queue-card" }, [
     element("div", { className: "queue-heading" }, [
@@ -1277,6 +1288,13 @@ function annotationSubject(event) {
   if (event.kind === "mutation") return event.details?.undoes_event_id
     ? "Reversed an earlier saved correction"
     : `${event.action} ${event.path}`;
+  if (event.kind === "spreadsheet_review") {
+    if (event.details?.undoes_event_id) return "Reversed an earlier reviewed workbook";
+    const corrections = event.details?.changed_fields?.length || 0;
+    const decisions = event.details?.decisions?.length || 0;
+    const scope = event.details?.scope?.device ? ` for device ${event.details.scope.device}` : "";
+    return `${corrections} scalar correction${corrections === 1 ? "" : "s"} and ${decisions} record decision${decisions === 1 ? "" : "s"}${scope}`;
+  }
   if (event.kind === "record_decision") return `${event.details.record_key} · ${DECISION_GUIDANCE[event.details.decision] || humanLabel(event.details.decision)}`;
   if (event.kind === "stage_complete") return `${humanLabel(event.details.stage)} stage completed`;
   if (event.kind === "inventory_audit") {
@@ -1309,7 +1327,7 @@ function annotationValue(value) {
 
 function annotationEvent(paper, event) {
   const current = annotationIsCurrent(paper, event);
-  const stateLabel = event.kind === "mutation"
+  const stateLabel = ["mutation", "spreadsheet_review"].includes(event.kind)
     ? annotationMutationState(paper, event)
     : event.kind === "record_decision"
       ? current === true ? "current decision" : "no longer current"
@@ -1327,6 +1345,10 @@ function annotationEvent(paper, event) {
     ...(event.kind === "mutation" ? [element("div", { className: "annotation-change" }, [
       element("div", {}, [element("span", { className: "eyebrow", text: "Before" }), element("pre", { text: annotationValue(event.before) })]),
       element("div", {}, [element("span", { className: "eyebrow", text: "After" }), element("pre", { text: annotationValue(event.after) })]),
+    ])] : []),
+    ...(event.kind === "spreadsheet_review" && event.details?.record_replacements?.length ? [element("details", { className: "annotation-json" }, [
+      element("summary", { text: `Inspect ${event.details.record_replacements.length} corrected record${event.details.record_replacements.length === 1 ? "" : "s"}` }),
+      element("pre", { text: JSON.stringify(event.details.record_replacements, null, 2) }),
     ])] : []),
     ...(canUndo ? [element("button", {
       text: "Undo this saved edit",
@@ -1449,6 +1471,42 @@ async function downloadStudyJson() {
   return bundle.revision;
 }
 
+async function downloadReviewWorkbook(deviceId = null) {
+  const { paperId, split } = state;
+  const query = deviceId ? `?device=${encodeURIComponent(deviceId)}` : "";
+  const scope = deviceId ? `.${deviceId}` : "";
+  await downloadResponse(
+    `/api/review-workbook/${split}/${encodeURIComponent(paperId)}${query}`,
+    `${paperId}${scope}.review.xlsx`,
+  );
+}
+
+async function uploadReviewWorkbook(file) {
+  if (!file) return;
+  if (!window.confirm("Upload this reviewed workbook? Valid corrections and record decisions will be saved together as one review revision.")) {
+    $("review-workbook-file").value = "";
+    return;
+  }
+  const form = new FormData();
+  form.append("workbook", file);
+  form.append("filename", file.name);
+  setStatus("Validating the workbook and the complete study…");
+  try {
+    state.bundle = await request(
+      `/api/review-workbook/${state.split}/${encodeURIComponent(state.paperId)}`,
+      { method: "POST", body: form },
+    );
+    renderStudy();
+    await loadReviewerProgress();
+    setStatus("Reviewed workbook saved as one validated revision. The import is visible in My edits & undo.");
+    $("review-downloads").open = false;
+  } catch (error) {
+    setStatus(error.message, true);
+  } finally {
+    $("review-workbook-file").value = "";
+  }
+}
+
 async function downloadPaper(source) {
   const { paperId, split } = state;
   const suffix = source === "supplement" ? ".supplement.pdf" : ".pdf";
@@ -1532,6 +1590,13 @@ $("download-study-json").addEventListener("click", (event) => runDownload(
   (revision) => `Downloaded study JSON from revision ${revision}. Local changes are not saved in the workbench.`,
   downloadStudyJson,
 ));
+$("download-review-workbook").addEventListener("click", (event) => runDownload(
+  event.currentTarget,
+  "Preparing an editable workbook for the latest paper revision…",
+  "Downloaded the all-record Excel review workbook.",
+  () => downloadReviewWorkbook(),
+));
+$("review-workbook-file").addEventListener("change", (event) => uploadReviewWorkbook(event.target.files[0]));
 $("download-main-pdf").addEventListener("click", (event) => runDownload(
   event.currentTarget,
   "Preparing the main paper PDF…",

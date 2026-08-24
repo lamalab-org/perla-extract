@@ -277,3 +277,19 @@ def test_reviewers_can_download_source_pdfs_and_current_study_json():
     assert "/api/pdf/" in source
     assert 'sources.includes("supplement")' in source
     assert "Local changes are not saved in the workbench" in source
+
+
+def test_reviewers_can_round_trip_a_device_or_paper_excel_review():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    server = (APP.parent / "server.py").read_text(encoding="utf-8")
+
+    assert "Editable Excel workbook (all records)" in html
+    assert "Upload reviewed Excel workbook" in html
+    assert "Download Excel for this device" in source
+    assert "downloadReviewWorkbook" in source
+    assert "uploadReviewWorkbook" in source
+    assert "/api/review-workbook/" in source
+    assert "application.review_workbook(" in server
+    assert "application.import_review_workbook(" in server
+    assert "one validated revision" in source

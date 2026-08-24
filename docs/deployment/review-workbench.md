@@ -83,6 +83,24 @@ Corrections open with existing evidence preselected. Reviewers can switch
 directly between the field-oriented editor, where every label includes its JSON
 Pointer, and the complete JSON for that record.
 
+Reviewers who prefer a spreadsheet can download an Excel workbook for the whole
+paper from **Download review files**, or a smaller workbook for the device currently
+in context from the record queue. The device workbook includes its family, individual
+device, linked performance observations, family population statistics, and stability
+tests explicitly linked to that device or only to its family. The short **Record
+review** sheet is the primary checklist; **Field corrections** contains one atomic
+schema value per row with its JSON path and nearest citation. Yellow cells are
+editable, and rows may be sorted or filtered. Identifiers and row membership are
+intentionally read-only.
+
+Uploading the returned workbook checks its paper, schema hash, original truth digest,
+and revision; reconstructs the expected rows; validates every correction citation;
+and validates the complete `StudyExtraction`. All corrections and decisions are then
+saved together as one attributable revision. A stale or structurally changed workbook
+is rejected. The import appears in **My edits & undo** and can be reversed while none
+of its corrected records has since changed. Excel does not add or delete complete
+records; those structural changes stay in the browser so links remain explicit.
+
 The study header compares the immutable seed's schema version and generated schema
 hash with the running extractor. Older seeds that remain structurally readable are
 not silently presented as current outputs: the interface warns that newly introduced
@@ -106,8 +124,8 @@ Every authenticated reviewer can open **My edits & undo** from the header. This 
 reads the persisted revision log across the selected split and shows only that
 reviewer's census submissions, record decisions, corrections, evidence, notes, and
 stage completions. Decisions are marked current or superseded when later edits change
-the reviewed record. Corrections that are still untouched offer **Undo this saved
-edit**. Undo writes a linked, validated revision instead of deleting history; the
+the reviewed record. Corrections and workbook imports that are still untouched offer
+**Undo this saved edit**. Undo writes a linked, validated revision instead of deleting history; the
 action is unavailable once later work changes the same value. **Download my
 annotations** saves the same reviewer-scoped ledger
 as readable JSON, including exact before/after values and revision timestamps. It is a

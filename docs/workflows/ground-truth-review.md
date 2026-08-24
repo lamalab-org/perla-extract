@@ -129,12 +129,29 @@ audits, stages, and current-versus-superseded decision state, but it is not a su
 for the administrator's adjudicated data-PR bundle.
 
 **Download review files** supports an offline handoff. Any reviewer can download the
-original main-paper PDF, the SI when one was imported, and the latest validated
-`StudyExtraction` as standalone JSON. The JSON filename records the dataset split and
-source revision and remains directly readable by the Pydantic model. It deliberately
-does not contain the event ledger or wrapper metadata. Editing this local copy does not
-change the workbench: send it through the agreed review handoff or apply its corrections
-in the record editor so they become attributable revision events.
+original main-paper PDF, the SI when one was imported, the latest validated
+`StudyExtraction` as standalone JSON, and an editable Excel review workbook. The
+paper workbook contains every record; **Download Excel for this device** produces a
+smaller form with the device and the family, performance, population, and stability
+context needed to judge it. Each field row contains exactly one scalar value, its JSON
+Pointer, type, and evidence. Reviewers select a complete-record outcome on the first
+sheet and change only yellow value, type, note, and evidence cells on the second.
+Rows may be sorted or filtered; their stable identity and membership may not change.
+
+Upload the reviewed `.xlsx` from the same menu. The workbench accepts it only if its
+paper, schema, source truth, revision, sheets, rows, paths, and identifiers still match
+the generated contract. Corrections require exact evidence, and the complete rich
+study must pass Pydantic validation. The entire import becomes one reviewer-attributed
+revision with its workbook hash, before/after records, field notes, and decisions; a
+conflict saves nothing. It is visible and undoable in **My edits & undo**. Adding,
+copying, reassigning, or removing records remains a browser task because those changes
+affect record identity and links.
+
+The JSON filename records the dataset split and source revision and remains directly
+readable by the Pydantic model. It deliberately does not contain the event ledger or
+wrapper metadata. Editing that local JSON does not change the workbench; use the Excel
+return path or apply corrections in the record editor so they become attributable
+revision events.
 
 ## Stored artifacts
 

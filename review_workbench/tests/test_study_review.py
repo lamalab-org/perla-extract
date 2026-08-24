@@ -3,8 +3,10 @@ from __future__ import annotations
 import copy
 import json
 from concurrent.futures import ThreadPoolExecutor
+from io import BytesIO
 
 import pytest
+from openpyxl import load_workbook
 
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
@@ -139,6 +141,102 @@ def test_reviewer_can_undo_an_untouched_saved_correction(
             "10.0000--example",
             UndoMutationRequest(event_id=correction_id, base_revision=3),
             "ada",
+        )
+
+
+def test_review_workbook_import_is_atomic_attributable_and_undoable(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    seed(store, study_with_family(empty_study), document_payload)
+    data = store.review_workbook("calibration", "10.0000--example", "ada")
+    book = load_workbook(BytesIO(data))
+    assert book.sheetnames == [
+        "Instructions",
+        "Record review",
+        "Field corrections",
+        "_meta",
+    ]
+    book["Record review"]["G2"] = "All fields match source"
+    fields = book["Field corrections"]
+    label_row = next(
+        row
+        for row in range(2, fields.max_row + 1)
+        if fields.cell(row, 5).value == "label"
+    )
+    fields.cell(label_row, 8).value = "Reviewed control"
+    fields.cell(label_row, 11).value = "Corrected the family label."
+    output = BytesIO()
+    book.save(output)
+
+    updated = store.import_review_workbook(
+        "calibration",
+        "10.0000--example",
+        output.getvalue(),
+        "ada",
+        filename="family-review.xlsx",
+    )
+
+    assert updated["revision"] == 2
+    assert updated["ground_truth"]["device_families"][0]["label"] == (
+        "Reviewed control"
+    )
+    event = updated["events"][-1]
+    assert event["kind"] == "spreadsheet_review"
+    assert event["reviewer_id"] == "ada"
+    assert event["details"]["filename"] == "family-review.xlsx"
+    assert event["details"]["changed_fields"] == [
+        {
+            "path": "/device_families/0/label",
+            "note": "Corrected the family label.",
+        }
+    ]
+    assert updated["summary"]["record_decisions"]["ada"] == {
+        "device_families:family-control": "verified"
+    }
+
+    progress = store.reviewer_progress("calibration", "ada")["papers"][0]
+    assert progress["undoable_event_ids"] == [event["event_id"]]
+    undone = store.undo_mutation(
+        "calibration",
+        "10.0000--example",
+        UndoMutationRequest(event_id=event["event_id"], base_revision=2),
+        "ada",
+    )
+    assert undone["ground_truth"]["device_families"][0]["label"] == "Control"
+    assert undone["summary"]["record_decisions"].get("ada", {}) == {}
+
+
+def test_review_workbook_rejects_stale_or_structurally_changed_files(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    seed(store, study_with_family(empty_study), document_payload)
+    original = store.review_workbook("calibration", "10.0000--example", "ada")
+
+    altered_book = load_workbook(BytesIO(original))
+    altered_book["Record review"].delete_rows(2)
+    altered = BytesIO()
+    altered_book.save(altered)
+    with pytest.raises(ValueError, match="added, removed"):
+        store.import_review_workbook(
+            "calibration", "10.0000--example", altered.getvalue(), "ada"
+        )
+
+    store.decide_record(
+        "calibration",
+        "10.0000--example",
+        RecordDecisionRequest(
+            collection="device_families",
+            record_id="family-control",
+            decision="verified",
+            base_revision=1,
+        ),
+        "ada",
+    )
+    with pytest.raises(ValueError, match="older paper revision"):
+        store.import_review_workbook(
+            "calibration", "10.0000--example", original, "ada"
         )
 
 

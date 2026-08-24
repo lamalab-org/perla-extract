@@ -55,6 +55,7 @@ def prepare(output: Path) -> Path:
         "review_workbench/ground_truth_export.py",
         "review_workbench/review_storage.py",
         "review_workbench/server.py",
+        "review_workbench/spreadsheet_review.py",
         "review_workbench/study_review.py",
         "src/perla_extract/__init__.py",
         "src/perla_extract/study_extraction/__init__.py",

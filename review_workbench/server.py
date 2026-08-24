@@ -290,6 +290,41 @@ class ReviewApplication:
 
         return self.store.reviewer_progress(split, reviewer_id)
 
+    def review_workbook(
+        self,
+        split: str,
+        paper_id: str,
+        reviewer_id: str,
+        *,
+        device_id: str | None = None,
+    ) -> bytes:
+        """Build an offline form from the current reviewer-visible revision."""
+
+        return self.store.review_workbook(
+            split, paper_id, reviewer_id, device_id=device_id
+        )
+
+    def import_review_workbook(
+        self,
+        split: str,
+        paper_id: str,
+        data: bytes,
+        reviewer_id: str,
+        *,
+        filename: str,
+    ) -> dict[str, Any]:
+        """Validate one returned workbook and attach its event to the reviewer."""
+
+        return self._with_sources(
+            self.store.import_review_workbook(
+                split,
+                paper_id,
+                data,
+                reviewer_id,
+                filename=filename,
+            )
+        )
+
     def evidence_blocks(
         self, split: str, paper_id: str, query: str = ""
     ) -> list[dict[str, Any]]:
@@ -602,6 +637,27 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         },
                     )
                     return
+                if parts[:2] == ["api", "review-workbook"] and len(parts) == 4:
+                    user = self.current_user()
+                    paper_id = parts[3]
+                    device_id = query.get("device", [None])[0]
+                    safe_device = re.sub(r"[^A-Za-z0-9._-]+", "-", device_id or "")
+                    scope = f".{safe_device}" if safe_device else ""
+                    self.send_bytes(
+                        application.review_workbook(
+                            parts[2],
+                            paper_id,
+                            user["id"],
+                            device_id=device_id,
+                        ),
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        {
+                            "Content-Disposition": (
+                                f'attachment; filename="{paper_id}{scope}.review.xlsx"'
+                            )
+                        },
+                    )
+                    return
                 if len(parts) == 3 and parts[:2] in (
                     ["api", "pdf-page"],
                     ["api", "pdf-text"],
@@ -732,6 +788,22 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     self.send_json(
                         application.undo_mutation(
                             parts[2], parts[3], self.read_json(), user["id"]
+                        ),
+                        HTTPStatus.CREATED,
+                    )
+                    return
+                if len(parts) == 4 and parts[:2] == ["api", "review-workbook"]:
+                    form = self.read_multipart()
+                    workbook = form.get("workbook", b"")
+                    if not isinstance(workbook, bytes):
+                        raise ValueError("review workbook is required")
+                    self.send_json(
+                        application.import_review_workbook(
+                            parts[2],
+                            parts[3],
+                            workbook,
+                            user["id"],
+                            filename=str(form.get("filename", "review.xlsx")),
                         ),
                         HTTPStatus.CREATED,
                     )

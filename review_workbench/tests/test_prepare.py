@@ -9,6 +9,7 @@ def test_prepare_bundles_only_runtime_and_rich_schema(tmp_path):
     output = prepare(tmp_path / "deployment")
     assert (output / "api/index.py").exists()
     assert (output / "review_workbench/study_review.py").exists()
+    assert (output / "review_workbench/spreadsheet_review.py").exists()
     assert (output / "review_workbench/ground_truth_export.py").exists()
     assert (output / "src/perla_extract/study_extraction/models.py").exists()
     assert (output / "src/perla_extract/study_extraction/enrichment.py").exists()

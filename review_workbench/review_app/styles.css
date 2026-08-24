@@ -34,6 +34,8 @@ label { display:grid; gap:.35rem; font-size:.82rem; color:var(--muted); }
 .download-menu-panel { position:absolute; right:0; top:calc(100% + 7px); z-index:4; display:grid; gap:7px; width:290px; padding:12px; border:1px solid var(--line); border-radius:10px; background:white; box-shadow:0 8px 24px #0002; }
 .download-menu-panel p { font-size:.75rem; line-height:1.4; }
 .download-menu-panel button { text-align:left; }
+.workbook-upload { display:grid; gap:4px; padding:8px; border:1px solid var(--line); border-radius:8px; font-size:.8rem; }
+.workbook-upload input { max-width:100%; font-size:.75rem; }
 .workspace-grid { display:grid; grid-template-columns:minmax(420px, 1.05fr) minmax(430px, .95fr); gap:14px; height:calc(100vh - 190px); }
 .pdf-panel,.review-panel { background:white; border:1px solid var(--line); border-radius:12px; overflow:auto; }
 .panel-toolbar { position:sticky; top:0; background:white; padding:10px; border-bottom:1px solid var(--line); z-index:2; }

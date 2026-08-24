@@ -37,7 +37,9 @@
           <details id="review-downloads" class="download-menu">
             <summary>Download review files</summary>
             <div class="download-menu-panel">
-              <p>Work locally with the current validated JSON and the original source files. Local edits do not sync back automatically.</p>
+              <p>Use Excel for an offline review of record decisions and scalar values. Uploading a reviewed workbook validates and saves all of its changes together. Add or remove complete records in the browser.</p>
+              <button id="download-review-workbook" type="button">Editable Excel workbook (all records)</button>
+              <label class="workbook-upload">Upload reviewed Excel workbook<input id="review-workbook-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /></label>
               <button id="download-study-json" type="button">Current study JSON</button>
               <button id="download-main-pdf" type="button">Main paper PDF</button>
               <button id="download-supplement-pdf" type="button">Supporting information PDF</button>

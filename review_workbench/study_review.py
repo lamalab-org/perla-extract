@@ -34,6 +34,10 @@ from review_workbench.review_storage import (
     ReviewStateStorage,
     StaleRevisionError,
 )
+from review_workbench.spreadsheet_review import (
+    create_review_workbook,
+    read_review_workbook,
+)
 
 PAPER_ID = re.compile(r"^[A-Za-z0-9.-]+--[A-Za-z0-9._-]+$")
 Split = Literal["calibration", "dev", "test"]
@@ -56,6 +60,14 @@ RECORD_IDENTIFIERS: dict[str, str] = {
     "population_statistics": "population_id",
     "stability_tests": "test_id",
     "identity_links": "link_id",
+}
+RECORD_LABELS: dict[str, str] = {
+    "device_families": "Device family",
+    "individual_devices": "Individual device",
+    "performance_observations": "Performance observation",
+    "population_statistics": "Population statistic",
+    "stability_tests": "Stability test",
+    "identity_links": "Cross-window identity link",
 }
 
 
@@ -191,6 +203,7 @@ class ReviewEvent(BaseModel):
     reviewer_id: str
     kind: Literal[
         "mutation",
+        "spreadsheet_review",
         "inventory_audit",
         "record_decision",
         "stage_complete",
@@ -366,6 +379,44 @@ def _record_catalog(truth: dict[str, Any]) -> dict[str, str]:
             record_id = str(record[identifier_field])
             catalog[f"{collection}:{record_id}"] = _digest(record)
     return catalog
+
+
+def _record(
+    truth: dict[str, Any], collection: str, record_id: str
+) -> dict[str, Any]:
+    """Resolve a stable top-level record identity without relying on list position."""
+
+    identifier = RECORD_IDENTIFIERS[collection]
+    match = next(
+        (item for item in truth[collection] if str(item[identifier]) == record_id),
+        None,
+    )
+    if match is None:
+        raise ValueError(f"unknown {collection} record {record_id}")
+    return match
+
+
+def _reverse_spreadsheet_review(
+    truth: dict[str, Any], event: ReviewEvent
+) -> dict[str, Any]:
+    """Reverse a workbook import only when every corrected record is untouched."""
+
+    if event.kind != "spreadsheet_review":
+        raise ValueError("only a spreadsheet review can be reversed here")
+    if event.details.get("undoes_event_id"):
+        raise ValueError("an undo event cannot itself be undone")
+    result = copy.deepcopy(truth)
+    for replacement in event.details.get("record_replacements", []):
+        collection = str(replacement["collection"])
+        record_id = str(replacement["record_id"])
+        current = _record(result, collection, record_id)
+        if current != replacement["after"]:
+            raise ValueError(
+                f"{collection}:{record_id} has changed since the workbook import"
+            )
+        current.clear()
+        current.update(copy.deepcopy(replacement["before"]))
+    return StudyExtraction.model_validate(result).model_dump(mode="json")
 
 
 def _contains_record_reference(
@@ -643,10 +694,16 @@ class StudyReviewStore:
             }
             undoable_event_ids: list[str] = []
             for event in events:
-                if event.kind != "mutation" or event.event_id in undone_event_ids:
+                if event.kind not in {
+                    "mutation",
+                    "spreadsheet_review",
+                } or event.event_id in undone_event_ids:
                     continue
                 try:
-                    self._prepare_mutation_undo(revision.ground_truth, event)
+                    if event.kind == "mutation":
+                        self._prepare_mutation_undo(revision.ground_truth, event)
+                    else:
+                        _reverse_spreadsheet_review(revision.ground_truth, event)
                 except (IndexError, KeyError, TypeError, ValueError):
                     continue
                 undoable_event_ids.append(event.event_id)
@@ -695,7 +752,14 @@ class StudyReviewStore:
         audits: dict[str, dict[str, Any]] = {}
         decisions: dict[str, dict[str, str]] = {}
         catalog = _record_catalog(truth)
+        undone_event_ids = {
+            str(event.get("details", {}).get("undoes_event_id"))
+            for event in events
+            if event.get("details", {}).get("undoes_event_id")
+        }
         for event in events:
+            if event.get("event_id") in undone_event_ids:
+                continue
             if event["kind"] == "stage_complete":
                 stages.setdefault(event["details"]["stage"], []).append(
                     event["reviewer_id"]
@@ -712,6 +776,13 @@ class StudyReviewStore:
                     decisions.setdefault(event["reviewer_id"], {})[record_key] = str(
                         details["decision"]
                     )
+            elif event["kind"] == "spreadsheet_review":
+                for details in event["details"].get("decisions", []):
+                    record_key = str(details["record_key"])
+                    if catalog.get(record_key) == details.get("record_digest"):
+                        decisions.setdefault(event["reviewer_id"], {})[record_key] = str(
+                            details["decision"]
+                        )
         return {
             "device_families": len(truth["device_families"]),
             "individual_devices": len(truth["individual_devices"]),
@@ -829,6 +900,149 @@ class StudyReviewStore:
                     f"quote is not present in evidence block {citation.block_id}"
                 )
 
+    def review_workbook(
+        self,
+        split: str,
+        paper_id: str,
+        reviewer_id: str,
+        *,
+        device_id: str | None = None,
+    ) -> bytes:
+        """Create a reviewer-specific XLSX bound to the latest paper revision."""
+
+        self.validate_identity(split, paper_id)
+        revision = self.storage.load_revision(split, paper_id)
+        decisions = self.summary(revision.ground_truth, revision.events)[
+            "record_decisions"
+        ].get(reviewer_id, {})
+        return create_review_workbook(
+            truth=revision.ground_truth,
+            identifiers=RECORD_IDENTIFIERS,
+            labels=RECORD_LABELS,
+            paper_id=paper_id,
+            split=split,
+            revision=revision.revision,
+            schema_sha256=study_schema_sha256(),
+            current_decisions=decisions,
+            device_id=device_id,
+        )
+
+    def import_review_workbook(
+        self,
+        split: str,
+        paper_id: str,
+        data: bytes,
+        reviewer_id: str,
+        *,
+        filename: str = "review.xlsx",
+    ) -> dict[str, Any]:
+        """Commit all validated workbook corrections and decisions as one revision.
+
+        Parsing first reconstructs the expected workbook from the current truth, so
+        edited identifiers, missing rows, and stale downloads never become mutations.
+        The resulting study is Pydantic-validated only after every scalar correction
+        has been applied, preventing partially imported workbooks.
+        """
+
+        self.validate_identity(split, paper_id)
+        current = self.storage.load_revision(split, paper_id)
+        review = read_review_workbook(
+            data,
+            truth=current.ground_truth,
+            identifiers=RECORD_IDENTIFIERS,
+            labels=RECORD_LABELS,
+            paper_id=paper_id,
+            split=split,
+            revision=current.revision,
+            schema_sha256=study_schema_sha256(),
+        )
+        # Read again through the normal transition guard immediately before commit.
+        current = self._validate_revision(split, paper_id, review.base_revision)
+        proposed = copy.deepcopy(current.ground_truth)
+        changed_keys: set[tuple[str, str]] = set()
+        evidence: list[Citation] = []
+        changed_paths: list[dict[str, str]] = []
+        for change in review.changes:
+            citations = [Citation.model_validate(item) for item in change.evidence]
+            self._validate_citations(split, paper_id, citations)
+            request = MutationRequest(
+                action="replace",
+                path=change.path,
+                value=change.value,
+                evidence=citations,
+                note=change.note,
+                base_revision=current.revision,
+            )
+            before, proposed = _apply(proposed, request)
+            if before == change.value:
+                continue
+            changed_keys.add((change.collection, change.record_id))
+            evidence.extend(citations)
+            changed_paths.append(
+                {"path": change.path, "note": change.note}
+            )
+        validated = StudyExtraction.model_validate(proposed).model_dump(mode="json")
+        replacements = [
+            {
+                "collection": collection,
+                "record_id": record_id,
+                "before": copy.deepcopy(
+                    _record(current.ground_truth, collection, record_id)
+                ),
+                "after": copy.deepcopy(_record(validated, collection, record_id)),
+            }
+            for collection, record_id in sorted(changed_keys)
+        ]
+
+        existing_decisions = self.summary(
+            current.ground_truth, current.events
+        )["record_decisions"].get(reviewer_id, {})
+        decision_details = []
+        for decision in review.decisions:
+            record_key = f"{decision.collection}:{decision.record_id}"
+            record = _record(validated, decision.collection, decision.record_id)
+            digest = _digest(record)
+            if (
+                existing_decisions.get(record_key) == decision.decision
+                and (decision.collection, decision.record_id) not in changed_keys
+            ):
+                continue
+            decision_details.append(
+                {
+                    "record_key": record_key,
+                    "record_digest": digest,
+                    "decision": decision.decision,
+                    "note": decision.note,
+                }
+            )
+        if not replacements and not decision_details:
+            raise ValueError("review workbook contains no new decisions or corrections")
+        unique_evidence = list(
+            {
+                (item.block_id, item.quote): item
+                for item in evidence
+            }.values()
+        )
+        safe_filename = Path(filename).name[:240] or "review.xlsx"
+        event = ReviewEvent(
+            event_id=str(uuid.uuid4()),
+            revision=current.revision + 1,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            reviewer_id=reviewer_id,
+            kind="spreadsheet_review",
+            evidence=unique_evidence,
+            note=f"Imported reviewed workbook {safe_filename}.",
+            details={
+                "workbook_sha256": review.sha256,
+                "filename": safe_filename,
+                "scope": {"device": review.scope_device_id},
+                "record_replacements": replacements,
+                "changed_fields": changed_paths,
+                "decisions": decision_details,
+            },
+        ).model_dump(mode="json")
+        return self._commit(split, paper_id, current, validated, event)
+
     def mutate(
         self, split: str, paper_id: str, request: MutationRequest, reviewer_id: str
     ) -> dict[str, Any]:
@@ -910,30 +1124,58 @@ class StudyReviewStore:
         ):
             raise ValueError("this saved correction has already been undone")
 
-        (
-            inverse_action,
-            inverse_path,
-            before,
-            after,
-            validated,
-        ) = self._prepare_mutation_undo(
-            current_revision.ground_truth,
-            target,
-        )
-        event = ReviewEvent(
-            event_id=str(uuid.uuid4()),
-            revision=current_revision.revision + 1,
-            timestamp=datetime.now(timezone.utc).isoformat(),
-            reviewer_id=reviewer_id,
-            kind="mutation",
-            action=inverse_action,
-            path=inverse_path,
-            before=before,
-            after=after,
-            evidence=target.evidence,
-            note="Undid a previously saved correction.",
-            details={"undoes_event_id": target.event_id},
-        ).model_dump(mode="json")
+        if target.kind == "spreadsheet_review":
+            validated = _reverse_spreadsheet_review(
+                current_revision.ground_truth, target
+            )
+            inverse_replacements = [
+                {
+                    **replacement,
+                    "before": copy.deepcopy(replacement["after"]),
+                    "after": copy.deepcopy(replacement["before"]),
+                }
+                for replacement in target.details.get("record_replacements", [])
+            ]
+            event = ReviewEvent(
+                event_id=str(uuid.uuid4()),
+                revision=current_revision.revision + 1,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                reviewer_id=reviewer_id,
+                kind="spreadsheet_review",
+                evidence=target.evidence,
+                note="Undid a previously imported review workbook.",
+                details={
+                    "undoes_event_id": target.event_id,
+                    "record_replacements": inverse_replacements,
+                    "changed_fields": target.details.get("changed_fields", []),
+                    "decisions": [],
+                },
+            ).model_dump(mode="json")
+        else:
+            (
+                inverse_action,
+                inverse_path,
+                before,
+                after,
+                validated,
+            ) = self._prepare_mutation_undo(
+                current_revision.ground_truth,
+                target,
+            )
+            event = ReviewEvent(
+                event_id=str(uuid.uuid4()),
+                revision=current_revision.revision + 1,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                reviewer_id=reviewer_id,
+                kind="mutation",
+                action=inverse_action,
+                path=inverse_path,
+                before=before,
+                after=after,
+                evidence=target.evidence,
+                note="Undid a previously saved correction.",
+                details={"undoes_event_id": target.event_id},
+            ).model_dump(mode="json")
         return self._commit(split, paper_id, current_revision, validated, event)
 
     def decide_record(
