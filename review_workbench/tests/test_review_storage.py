@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from review_workbench.api.index import BlobReviewStateStorage
+from review_workbench.api.index import BlobReviewStateStorage, BlobStore
 from review_workbench.review_storage import (
     ReviewPaperSource,
     ReviewRevision,
@@ -47,6 +47,30 @@ class MemoryBlobStore:
             raise RuntimeError("blob already exists")
         self.objects[pathname] = body
         return {"pathname": pathname}
+
+
+class DirectoryOnlyBlobStore(BlobStore):
+    """Reproduce Vercel's directory-only prefix lookup behavior."""
+
+    def __init__(self, pathname: str):
+        self.pathname = pathname
+        self.prefixes: list[str] = []
+
+    def list(self, prefix: str) -> list[dict[str, str]]:
+        self.prefixes.append(prefix)
+        return (
+            [{"pathname": self.pathname}]
+            if prefix == self.pathname.rpartition("/")[0] + "/"
+            else []
+        )
+
+
+def test_blob_find_lists_the_parent_directory_before_matching_exact_path():
+    pathname = "workbench/review-sources/calibration/example.json"
+    blob = DirectoryOnlyBlobStore(pathname)
+
+    assert blob.find(pathname) == {"pathname": pathname}
+    assert blob.prefixes == ["workbench/review-sources/calibration/"]
 
 
 def revision(number: int, note: str) -> ReviewRevision:

@@ -79,8 +79,18 @@ class BlobStore:
         ).get("blobs", [])
 
     def find(self, pathname: str) -> dict | None:
+        """Find an exact pathname through its containing Blob directory.
+
+        Vercel Blob's list endpoint accepts directory prefixes but may return an
+        empty result when the prefix is a complete filename. Listing the parent and
+        comparing pathnames keeps reads consistent with the directory listing used
+        to discover papers.
+        """
+
+        parent, separator, _ = pathname.rpartition("/")
+        prefix = f"{parent}/" if separator else ""
         return next(
-            (item for item in self.list(pathname) if item.get("pathname") == pathname),
+            (item for item in self.list(prefix) if item.get("pathname") == pathname),
             None,
         )
 
