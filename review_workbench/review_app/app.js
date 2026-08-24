@@ -200,6 +200,8 @@ function renderStudy() {
     text: source === "main" ? "Main paper" : "Supporting information (SI)",
     properties: { value: source, selected: source === state.source },
   })));
+  $("download-main-pdf").hidden = !state.bundle.sources.includes("main");
+  $("download-supplement-pdf").hidden = !state.bundle.sources.includes("supplement");
   $("blind-audit").hidden = hasAudit();
   $("inventory-revealed").hidden = !hasAudit();
   renderInventoryForm();
@@ -1091,27 +1093,65 @@ async function openReviewerProgress() {
 async function downloadReviewerProgress() {
   const progress = await loadReviewerProgress();
   const blob = new Blob([`${JSON.stringify(progress, null, 2)}\n`], { type: "application/json" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `perla-${state.user.id}-${state.split}-annotations.json`;
-  link.click();
-  URL.revokeObjectURL(link.href);
+  saveBlob(blob, `perla-${state.user.id}-${state.split}-annotations.json`);
 }
 
-async function downloadGroundTruth() {
+function saveBlob(blob, filename) {
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(link.href), 0);
+}
+
+async function downloadResponse(url, filename) {
   const token = localStorage.getItem("review-token");
-  const response = await fetch(`/api/ground-truth-export/${state.split}/${encodeURIComponent(state.paperId)}`, {
+  const response = await fetch(url, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!response.ok) {
-    const payload = await response.json();
+    const payload = await response.json().catch(() => ({}));
     throw new Error(payload.error || `Request failed (${response.status})`);
   }
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(await response.blob());
-  link.download = `${state.paperId}.ground-truth.zip`;
-  link.click();
-  URL.revokeObjectURL(link.href);
+  saveBlob(await response.blob(), filename);
+}
+
+async function downloadStudyJson() {
+  const { paperId, split } = state;
+  const bundle = await request(`/api/paper/${split}/${encodeURIComponent(paperId)}`);
+  const blob = new Blob([`${JSON.stringify(bundle.ground_truth, null, 2)}\n`], { type: "application/json" });
+  saveBlob(blob, `${paperId}.${split}.revision-${bundle.revision}.study.json`);
+  return bundle.revision;
+}
+
+async function downloadPaper(source) {
+  const { paperId, split } = state;
+  const suffix = source === "supplement" ? ".supplement.pdf" : ".pdf";
+  const url = `/api/pdf/${encodeURIComponent(paperId)}?source=${source}&split=${encodeURIComponent(split)}`;
+  await downloadResponse(url, `${paperId}${suffix}`);
+}
+
+async function runDownload(button, loadingMessage, completeMessage, operation) {
+  button.disabled = true;
+  setStatus(loadingMessage);
+  try {
+    const result = await operation();
+    $("review-downloads").open = false;
+    setStatus(typeof completeMessage === "function" ? completeMessage(result) : completeMessage);
+  } catch (error) {
+    setStatus(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function downloadGroundTruth() {
+  await downloadResponse(
+    `/api/ground-truth-export/${state.split}/${encodeURIComponent(state.paperId)}`,
+    `${state.paperId}.ground-truth.zip`,
+  );
 }
 
 async function importPaper(event) {
@@ -1161,6 +1201,24 @@ $("download-truth").addEventListener("click", async () => {
     setStatus("Downloaded the adjudicated PR bundle.");
   } catch (error) { setStatus(error.message, true); }
 });
+$("download-study-json").addEventListener("click", (event) => runDownload(
+  event.currentTarget,
+  "Preparing the latest validated study JSON…",
+  (revision) => `Downloaded study JSON from revision ${revision}. Local changes are not saved in the workbench.`,
+  downloadStudyJson,
+));
+$("download-main-pdf").addEventListener("click", (event) => runDownload(
+  event.currentTarget,
+  "Preparing the main paper PDF…",
+  "Downloaded the main paper PDF.",
+  () => downloadPaper("main"),
+));
+$("download-supplement-pdf").addEventListener("click", (event) => runDownload(
+  event.currentTarget,
+  "Preparing the supporting information PDF…",
+  "Downloaded the supporting information PDF.",
+  () => downloadPaper("supplement"),
+));
 $("open-annotations").addEventListener("click", openReviewerProgress);
 $("download-annotations").addEventListener("click", async () => {
   try {

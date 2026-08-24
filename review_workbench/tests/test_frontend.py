@@ -175,3 +175,18 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     assert 'text: "After"' in source
     assert "Inspect exact saved event" in source
     assert 'application.reviewer_progress(parts[2], user["id"])' in server
+
+
+def test_reviewers_can_download_source_pdfs_and_current_study_json():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+
+    assert "Download review files" in html
+    assert "Current study JSON" in html
+    assert "Main paper PDF" in html
+    assert "Supporting information PDF" in html
+    assert "bundle.ground_truth" in source
+    assert ".study.json" in source
+    assert "/api/pdf/" in source
+    assert 'sources.includes("supplement")' in source
+    assert "Local changes are not saved in the workbench" in source

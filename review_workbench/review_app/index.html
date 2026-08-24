@@ -32,7 +32,19 @@
     <section id="workspace" hidden>
       <div class="study-heading">
         <div><span id="paper-split" class="eyebrow"></span><h2 id="paper-title"></h2><p id="paper-doi"></p></div>
-        <div><span id="revision" class="pill"></span><button id="download-truth" hidden>Download PR bundle</button></div>
+        <div class="study-actions">
+          <span id="revision" class="pill"></span>
+          <details id="review-downloads" class="download-menu">
+            <summary>Download review files</summary>
+            <div class="download-menu-panel">
+              <p>Work locally with the current validated JSON and the original source files. Local edits do not sync back automatically.</p>
+              <button id="download-study-json" type="button">Current study JSON</button>
+              <button id="download-main-pdf" type="button">Main paper PDF</button>
+              <button id="download-supplement-pdf" type="button">Supporting information PDF</button>
+            </div>
+          </details>
+          <button id="download-truth" hidden>Download PR bundle</button>
+        </div>
       </div>
       <p id="schema-compatibility" class="callout" hidden></p>
 
