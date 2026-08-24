@@ -197,7 +197,7 @@ function renderStudy() {
       : `This draft is not readable by current study schema v${compatibility.current_schema_version}. Re-import a current extraction before review.`;
   }
   $("pdf-source").replaceChildren(...state.bundle.sources.map((source) => element("option", {
-    text: source === "main" ? "Main paper" : "Supplement",
+    text: source === "main" ? "Main paper" : "Supporting information (SI)",
     properties: { value: source, selected: source === state.source },
   })));
   $("blind-audit").hidden = hasAudit();
@@ -665,15 +665,35 @@ async function renderPdf() {
   const source = state.source;
   const page = state.page;
   const split = state.split;
+  const sourceLabel = source === "supplement" ? "supporting information" : "main paper";
   const query = `source=${source}&split=${split}&page=${page}&scale=1.5`;
   const image = $("pdf-page");
-  image.src = `/api/pdf-page/${encodeURIComponent(paperId)}?${query}&t=${Date.now()}`;
-  const [text] = await Promise.all([
-    request(`/api/pdf-text/${encodeURIComponent(paperId)}?source=${source}&split=${split}&page=${page}`),
-    image.decode().catch((error) => {
-      if (requestId === state.pdfRequest) throw new Error(`PDF page image failed to load: ${error.message}`);
-    }),
-  ]);
+  const message = $("pdf-message");
+  $("pdf-stage").setAttribute("aria-busy", "true");
+  message.hidden = false;
+  message.className = "pdf-message";
+  message.textContent = `Loading ${sourceLabel}, page ${page}… Large SI files can take a few seconds the first time.`;
+  $("pdf-canvas").hidden = true;
+  $("pdf-text").textContent = "";
+  for (const control of [$("pdf-source"), $("previous-page"), $("next-page"), $("page-number")]) control.disabled = true;
+  image.src = `/api/pdf-page/${encodeURIComponent(paperId)}?${query}`;
+  let text;
+  try {
+    [text] = await Promise.all([
+      request(`/api/pdf-text/${encodeURIComponent(paperId)}?source=${source}&split=${split}&page=${page}`),
+      image.decode(),
+    ]);
+  } catch (error) {
+    if (requestId !== state.pdfRequest) return false;
+    message.className = "pdf-message error";
+    message.textContent = `Could not open the ${sourceLabel}. ${error.message}`;
+    throw error;
+  } finally {
+    if (requestId === state.pdfRequest) {
+      $("pdf-stage").setAttribute("aria-busy", "false");
+      for (const control of [$("pdf-source"), $("previous-page"), $("next-page"), $("page-number")]) control.disabled = false;
+    }
+  }
   if (requestId !== state.pdfRequest || paperId !== state.paperId || source !== state.source || page !== state.page) return false;
   state.pageCount = text.page_count;
   $("page-number").value = page;
@@ -681,6 +701,8 @@ async function renderPdf() {
   $("page-count").textContent = `/ ${state.pageCount}`;
   $("pdf-text").textContent = text.text;
   renderCitationLocation(text.lines || []);
+  $("pdf-canvas").hidden = false;
+  message.hidden = true;
   return true;
 }
 
@@ -721,6 +743,7 @@ function openRecord(kind, index = null, template = null, intent = index == null 
   $("save-record").textContent = adding ? "Add missing record" : "Save field correction";
   $("save-record").hidden = intent === "remove";
   renderStructuredEditor();
+  setRecordEditorMode("fields", false);
   const citation = item.evidence?.[0];
   $("citation-block").value = citation?.block_id || "";
   $("citation-quote").value = citation?.quote || "";
@@ -750,6 +773,32 @@ function openRecord(kind, index = null, template = null, intent = index == null 
 
 function humanLabel(value) {
   return String(value).replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function recordFieldPath(path) {
+  const recordIndex = state.edit.index == null ? "-" : state.edit.index;
+  return `/${[state.edit.kind, recordIndex, ...path].map(pointerPart).join("/")}`;
+}
+
+function setRecordEditorMode(mode, syncFromJson = true) {
+  if (mode === "fields" && syncFromJson && !$("json-editor-panel").hidden) {
+    try {
+      state.edit.value = JSON.parse($("record-json").value);
+      renderStructuredEditor();
+      $("dialog-status").textContent = "";
+    } catch (error) {
+      $("dialog-status").textContent = `Raw JSON is not valid: ${error.message}`;
+      return false;
+    }
+  }
+  const fields = mode === "fields";
+  $("fields-editor-panel").hidden = !fields;
+  $("json-editor-panel").hidden = fields;
+  $("show-fields-editor").classList.toggle("active", fields);
+  $("show-fields-editor").setAttribute("aria-pressed", String(fields));
+  $("show-json-editor").classList.toggle("active", !fields);
+  $("show-json-editor").setAttribute("aria-pressed", String(!fields));
+  return true;
 }
 
 function singularCollection(kind) {
@@ -784,7 +833,11 @@ function structuredLeaf(label, value, path) {
     input = element("input", { properties: { value: value ?? "", type: typeof value === "number" ? "number" : "text", placeholder: value === null ? "Not reported" : "" } });
   }
   input.addEventListener("input", () => updateEditValue(path, input.value, value));
-  return element("label", {}, [humanLabel(label), input]);
+  return element("label", {}, [
+    element("span", { text: humanLabel(label) }),
+    element("code", { className: "json-path", text: recordFieldPath(path) }),
+    input,
+  ]);
 }
 
 function structuredNode(label, value, path, open = false) {
@@ -1096,6 +1149,8 @@ $("record-status-filter").addEventListener("change", () => { state.queueIndex = 
 $("record-kind-filter").addEventListener("change", () => { state.queueIndex = 0; state.queueKey = null; renderReviewQueue(); });
 $("previous-record").addEventListener("click", () => moveQueue(-1));
 $("next-record").addEventListener("click", () => moveQueue(1));
+$("show-fields-editor").addEventListener("click", () => setRecordEditorMode("fields"));
+$("show-json-editor").addEventListener("click", () => setRecordEditorMode("json"));
 $("save-record").addEventListener("click", saveRecord);
 $("remove-record").addEventListener("click", removeRecord);
 $("search-evidence").addEventListener("click", searchEvidence);

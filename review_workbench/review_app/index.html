@@ -39,7 +39,7 @@
       <div class="workspace-grid">
         <section class="pdf-panel">
           <div class="panel-toolbar">
-            <select id="pdf-source"><option value="main">Main paper</option><option value="supplement">Supplement</option></select>
+            <select id="pdf-source" aria-label="Paper source"><option value="main">Main paper</option><option value="supplement">Supporting information (SI)</option></select>
             <button id="previous-page" aria-label="Previous page">←</button>
             <label>Page <input id="page-number" type="number" min="1" value="1" /></label>
             <span id="page-count"></span>
@@ -49,7 +49,7 @@
             <div><span id="citation-page-label" class="eyebrow"></span><strong id="citation-block-label"></strong><span id="citation-match-label" class="citation-match"></span><blockquote id="citation-location-quote"></blockquote></div>
             <button id="clear-citation" aria-label="Clear evidence location">×</button>
           </div>
-          <div id="pdf-stage"><div id="pdf-canvas"><img id="pdf-page" alt="Rendered PDF page" /><div id="pdf-highlights" aria-hidden="true"></div></div></div>
+          <div id="pdf-stage" aria-busy="false"><p id="pdf-message" class="pdf-message" role="status" hidden></p><div id="pdf-canvas"><img id="pdf-page" alt="Rendered PDF page" /><div id="pdf-highlights" aria-hidden="true"></div></div></div>
           <details class="source-text"><summary>Selectable page text</summary><pre id="pdf-text"></pre></details>
         </section>
 
@@ -145,8 +145,12 @@
       <div class="dialog-heading"><div><span id="record-kind" class="eyebrow"></span><h2 id="record-title">Edit record</h2></div><button value="cancel" aria-label="Close">×</button></div>
       <p id="record-dialog-help" class="callout"></p>
       <div id="record-dependencies" class="dependency-warning" hidden></div>
-      <div id="structured-editor" class="structured-editor"></div>
-      <details class="advanced-json"><summary>Advanced: edit complete validated JSON</summary><label>Record JSON<textarea id="record-json" rows="18" spellcheck="false"></textarea></label></details>
+      <div class="editor-mode" role="group" aria-label="Record editor">
+        <button id="show-fields-editor" type="button" class="active" aria-pressed="true">Fields</button>
+        <button id="show-json-editor" type="button" aria-pressed="false">Raw record JSON</button>
+      </div>
+      <div id="fields-editor-panel"><p class="muted">Each label includes its exact path in the study JSON.</p><div id="structured-editor" class="structured-editor"></div></div>
+      <div id="json-editor-panel" hidden><p class="callout">Edit the complete JSON for this one record. Saving still validates the entire study and its evidence.</p><label>Raw record JSON<textarea id="record-json" rows="22" spellcheck="false"></textarea></label></div>
       <details class="evidence-search"><summary id="evidence-search-label">Choose correction evidence</summary>
         <div class="evidence-picker">
           <label>Find evidence<input id="evidence-query" type="search" placeholder="Search extracted evidence…" /></label>

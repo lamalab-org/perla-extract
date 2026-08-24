@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import os
 import sys
+import tempfile
+import threading
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, quote, unquote, urlparse
@@ -25,6 +27,25 @@ from review_workbench.review_storage import (  # noqa: E402
     StaleRevisionError,
 )
 from review_workbench.server import ReviewApplication, make_handler  # noqa: E402
+
+
+def _write_bytes_atomic(path: Path, content: bytes) -> None:
+    """Make a downloaded PDF visible only after all of its bytes are present."""
+
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as stream:
+            temporary = Path(stream.name)
+            stream.write(content)
+        temporary.replace(path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 class BlobStore:
@@ -205,6 +226,7 @@ class VercelReviewApplication(ReviewApplication):
         self.blob = blob
         self.workspace = workspace
         self.remote_pdfs: dict[tuple[str | None, str, str], dict] = {}
+        self._pdf_download_lock = threading.Lock()
         ground_truth, pdfs = workspace / "review_data", workspace / "pdfs"
         ground_truth.mkdir(parents=True, exist_ok=True)
         pdfs.mkdir(parents=True, exist_ok=True)
@@ -283,7 +305,11 @@ class VercelReviewApplication(ReviewApplication):
         blob = self.remote_pdfs.get(key)
         if not blob:
             raise FileNotFoundError(path)
-        path.write_bytes(self.blob.download(blob))
+        # The page image and text arrive as concurrent browser requests. Serialize
+        # their first access so a large SI is downloaded once, never read halfway.
+        with self._pdf_download_lock:
+            if not path.exists() or not path.stat().st_size:
+                _write_bytes_atomic(path, self.blob.download(blob))
         return path
 
     def pdf_path(

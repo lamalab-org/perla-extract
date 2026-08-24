@@ -427,12 +427,21 @@ def make_handler(application: ReviewApplication, authenticator=None):
     """Build an HTTP handler while keeping authentication optional for local use."""
 
     class Handler(BaseHTTPRequestHandler):
-        def send_json(self, payload: object, status: HTTPStatus = HTTPStatus.OK):
+        def send_json(
+            self,
+            payload: object,
+            status: HTTPStatus = HTTPStatus.OK,
+            headers: dict[str, str] | None = None,
+        ):
             body = json.dumps(payload, ensure_ascii=False).encode()
+            response_headers = headers or {}
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
+            if "Cache-Control" not in response_headers:
+                self.send_header("Cache-Control", "no-store")
+            for key, value in response_headers.items():
+                self.send_header(key, value)
             self.end_headers()
             self.wfile.write(body)
 
@@ -455,11 +464,13 @@ def make_handler(application: ReviewApplication, authenticator=None):
         def send_bytes(
             self, body: bytes, content_type: str, headers: dict[str, str] | None = None
         ):
+            response_headers = headers or {}
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
-            for key, value in (headers or {}).items():
+            if "Cache-Control" not in response_headers:
+                self.send_header("Cache-Control", "no-store")
+            for key, value in response_headers.items():
                 self.send_header(key, value)
             self.end_headers()
             self.wfile.write(body)
@@ -582,7 +593,14 @@ def make_handler(application: ReviewApplication, authenticator=None):
                             float(query.get("scale", ["1.5"])[0]),
                             split,
                         )
-                        self.send_bytes(body, "image/png", {"X-PDF-Pages": str(count)})
+                        self.send_bytes(
+                            body,
+                            "image/png",
+                            {
+                                "X-PDF-Pages": str(count),
+                                "Cache-Control": "private, max-age=3600, immutable",
+                            },
+                        )
                     elif parts[1] == "pdf-text":
                         self.send_json(
                             application.pdf_page_text(
@@ -590,7 +608,10 @@ def make_handler(application: ReviewApplication, authenticator=None):
                                 source,
                                 int(query.get("page", ["1"])[0]),
                                 split,
-                            )
+                            ),
+                            headers={
+                                "Cache-Control": "private, max-age=3600, immutable"
+                            },
                         )
                     elif parts[1] == "search":
                         self.send_json(

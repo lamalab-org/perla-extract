@@ -101,6 +101,19 @@ def test_show_in_paper_has_direct_lookup_visible_location_and_race_protection():
     assert "application.evidence_block(parts[2], parts[3], parts[4])" in server
 
 
+def test_pdf_source_switch_is_visible_cached_and_waits_for_the_new_page():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    server = (APP.parent / "server.py").read_text(encoding="utf-8")
+
+    assert "Supporting information (SI)" in html
+    assert 'id="pdf-message"' in html
+    assert 'setAttribute("aria-busy", "true")' in source
+    assert "Large SI files can take a few seconds" in source
+    assert "image.decode()" in source
+    assert server.count("private, max-age=3600, immutable") == 2
+
+
 def test_record_count_corrections_are_explicit_and_reference_guarded():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
@@ -123,8 +136,11 @@ def test_corrections_default_to_fields_and_existing_evidence():
     source = (APP / "app.js").read_text(encoding="utf-8")
 
     assert "structured-editor" in html
-    assert "Advanced: edit complete validated JSON" in html
+    assert "Raw record JSON" in html
+    assert "Fields" in html
     assert "renderStructuredEditor" in source
+    assert "setRecordEditorMode" in source
+    assert "recordFieldPath" in source
     assert "citation?.block_id" in source
     assert "MATERIAL_FORMS" in source
     assert "schema_compatibility" in source

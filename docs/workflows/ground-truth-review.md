@@ -56,12 +56,26 @@ be opened but the quote cannot be matched exactly, the workbench says so instead
 pretending that a highlight succeeded. Manual source or page navigation clears the
 active citation.
 
+Use the source selector above the paper to move between **Main paper** and
+**Supporting information (SI)**. The workbench clears the previous page while the new
+source loads, reports which source and page it is opening, and shows a visible error if
+that request fails. A large SI can take several seconds on its first hosted load; its
+rendered page and text are then cached by the browser for faster revisits.
+
 Use **Correct fields** when the record exists but a value is wrong. Use **Copy as
 missing record** when the current record is a useful starting point for another device
 or measurement; the copy receives a new ID and the original remains unchanged. Use
 **Add missing record** for a blank draft generated from the current Pydantic schema.
 Both additions require evidence and are validated as part of the complete study before
 they are saved.
+
+The correction dialog offers two views of the same record. **Fields** is the guided
+form; every field label shows its exact JSON Pointer path in the full study, such as
+`/individual_devices/0/device_id`. **Raw record JSON** exposes the complete selected
+record for reviewers who prefer direct structured editing. Moving back to Fields parses
+the JSON immediately and keeps the raw editor open when it is invalid. Saving either
+view still checks the complete `StudyExtraction`, including links and evidence, so raw
+editing does not bypass scientific validation.
 
 Use **Remove extra record** only when the paper does not support that record. The
 workbench deletes only the selected record and never cascades to linked measurements.
