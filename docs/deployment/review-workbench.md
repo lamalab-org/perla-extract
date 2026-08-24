@@ -83,15 +83,17 @@ Corrections open with existing evidence preselected. Reviewers can switch
 directly between the field-oriented editor, where every label includes its JSON
 Pointer, and the complete JSON for that record.
 
-Reviewers who prefer a spreadsheet can download an Excel workbook for the whole
-paper from **Download review files**, or a smaller workbook for the device currently
-in context from the record queue. The device workbook includes its family, individual
-device, linked performance observations, family population statistics, and stability
-tests explicitly linked to that device or only to its family. The short **Record
-review** sheet is the primary checklist; **Field corrections** contains one atomic
-schema value per row with its JSON path and nearest citation. Yellow cells are
-editable, and rows may be sorted or filtered. Identifiers and row membership are
-intentionally read-only.
+Reviewers who prefer a spreadsheet can use **Download Excel** for the whole paper,
+or download a smaller workbook for the device currently in context from the record
+queue. The device workbook includes its family, individual device, linked performance
+observations, family population statistics, and stability tests explicitly linked to
+that device or only to its family. The short **Record review** sheet is the primary
+checklist. Scalar corrections are grouped into separate sheets for the scientific
+record types present in that paper, such as **Device Families**, **Individual
+Devices**, **Performance Observations**, **Population Statistics**, and **Stability
+Tests**. Each row remains one atomic schema value with its JSON path and nearest
+citation. Yellow cells are editable, and rows may be sorted or filtered. Identifiers
+and row membership are intentionally read-only.
 
 Uploading the returned workbook checks its paper, schema hash, original truth digest,
 and revision; reconstructs the expected rows; validates every correction citation;

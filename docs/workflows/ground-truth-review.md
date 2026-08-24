@@ -128,15 +128,16 @@ The personal export includes exact mutations, evidence, decisions,
 audits, stages, and current-versus-superseded decision state, but it is not a substitute
 for the administrator's adjudicated data-PR bundle.
 
-**Download review files** supports an offline handoff. Any reviewer can download the
-original main-paper PDF, the SI when one was imported, the latest validated
-`StudyExtraction` as standalone JSON, and an editable Excel review workbook. The
-paper workbook contains every record; **Download Excel for this device** produces a
-smaller form with the device and the family, performance, population, and stability
-context needed to judge it. Each field row contains exactly one scalar value, its JSON
-Pointer, type, and evidence. Reviewers select a complete-record outcome on the first
-sheet and change only yellow value, type, note, and evidence cells on the second.
-Rows may be sorted or filtered; their stable identity and membership may not change.
+**Files & upload** supports an offline handoff. Any reviewer can download the original
+main-paper PDF, the SI when one was imported, the latest validated `StudyExtraction`
+as standalone JSON, and an editable Excel review workbook. The paper workbook contains
+every record; **Download Excel for this device** produces a smaller form with the
+device and the family, performance, population, and stability context needed to judge
+it. Reviewers select a complete-record outcome on **Record review**. Field corrections
+are separated into one tab per scientific record type present in the paper. Each field
+row contains exactly one scalar value, its JSON Pointer, type, and evidence. Reviewers
+change only yellow value, type, note, and evidence cells. Rows may be sorted or
+filtered; their stable identity and membership may not change.
 
 Upload the reviewed `.xlsx` from the same menu. The workbench accepts it only if its
 paper, schema, source truth, revision, sheets, rows, paths, and identifiers still match

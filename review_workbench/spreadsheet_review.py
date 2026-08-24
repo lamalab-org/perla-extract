@@ -24,8 +24,8 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
 FORMAT_NAME = "perla-review-workbook"
-FORMAT_VERSION = 1
-SHEETS = ("Instructions", "Record review", "Field corrections", "_meta")
+FORMAT_VERSION = 2
+FIXED_SHEETS = ("Instructions", "Record review")
 RECORD_HEADERS = (
     "Record type",
     "record_type",
@@ -286,6 +286,68 @@ def _style_sheet(sheet: Any, widths: tuple[int, ...]) -> None:
             cell.alignment = Alignment(wrap_text=True, vertical="top")
 
 
+def _field_sheet_name(collection: str) -> str:
+    """Turn a schema collection name into a stable, readable Excel tab name.
+
+    Collection keys are the durable grouping already defined by the scientific
+    schema. Reusing them avoids maintaining a second list of domain categories in
+    the spreadsheet layer. Excel limits worksheet titles to 31 characters.
+    """
+
+    return collection.replace("_", " ").title()[:31]
+
+
+def _field_rows_by_collection(
+    field_rows: Iterable[_FieldRow], identifiers: dict[str, str]
+) -> dict[str, list[_FieldRow]]:
+    """Group flattened scalar rows by their existing top-level record collection."""
+
+    grouped: dict[str, list[_FieldRow]] = {collection: [] for collection in identifiers}
+    for row in field_rows:
+        grouped[str(row.values[1])].append(row)
+    return {collection: rows for collection, rows in grouped.items() if rows}
+
+
+def _add_field_sheet(
+    book: Workbook, collection: str, field_rows: list[_FieldRow]
+) -> None:
+    """Add one filterable correction tab for a scientific record collection."""
+
+    sheet = book.create_sheet(_field_sheet_name(collection))
+    sheet.append(FIELD_HEADERS)
+    for field_row in field_rows:
+        sheet.append(field_row.values)
+    _keep_source_strings_literal(sheet)
+    _style_sheet(sheet, (19, 27, 32, 34, 23, 48, 28, 28, 13, 11, 38, 28, 68))
+    sheet.freeze_panes = "D2"
+    sheet.add_table(
+        Table(
+            displayName=f"Fields_{collection}",
+            ref=f"A1:M{len(field_rows) + 1}",
+            tableStyleInfo=TableStyleInfo(
+                name="TableStyleMedium2",
+                showRowStripes=True,
+                showColumnStripes=False,
+            ),
+        )
+    )
+    type_validation = DataValidation(
+        type="list", formula1='"text,integer,number,boolean,null"'
+    )
+    sheet.add_data_validation(type_validation)
+    type_validation.add(f"I2:I{len(field_rows) + 1}")
+    for row_index, field_row in enumerate(field_rows, 2):
+        fill = "FFF3BF" if field_row.editable else "E7E9E8"
+        for column in (8, 9, 11, 12, 13):
+            sheet.cell(row_index, column).fill = PatternFill("solid", fgColor=fill)
+    sheet.conditional_formatting.add(
+        f"A2:M{len(field_rows) + 1}",
+        FormulaRule(
+            formula=["$G2<>$H2"], fill=PatternFill("solid", fgColor="FFE0B2")
+        ),
+    )
+
+
 def _keep_source_strings_literal(sheet: Any) -> None:
     """Prevent source text beginning with ``=`` from becoming an Excel formula."""
 
@@ -319,8 +381,6 @@ def create_review_workbook(
     instructions = book.active
     instructions.title = "Instructions"
     records = book.create_sheet("Record review")
-    fields = book.create_sheet("Field corrections")
-    meta = book.create_sheet("_meta")
 
     instructions.sheet_view.showGridLines = False
     instructions.merge_cells("A1:B1")
@@ -331,7 +391,7 @@ def create_review_workbook(
         ("Paper", truth.get("paper", {}).get("title") or paper_id),
         ("Scope", f"Device {device_id} plus linked context" if device_id else "All paper records"),
         ("1", "Give one outcome for each complete record on Record review."),
-        ("2", "Correct only wrong scalar values on Field corrections. Edit yellow cells; identifiers are read-only."),
+        ("2", "Correct wrong scalar values on the record-type tabs that follow. Edit yellow cells; identifiers are read-only."),
         ("3", "Keep atomic values separate. Do not combine multiple measurements, conditions, or outcomes in one cell."),
         ("4", "Every correction needs a short note and an exact evidence block and quote."),
         ("5", "You may sort or filter rows. Do not add, delete, or rename rows or sheets; add or remove complete records in the browser."),
@@ -372,34 +432,11 @@ def create_review_workbook(
         for cell in row:
             cell.fill = PatternFill("solid", fgColor="FFF3BF")
 
-    fields.append(FIELD_HEADERS)
-    for field_row in field_rows:
-        fields.append(field_row.values)
-    _keep_source_strings_literal(fields)
-    _style_sheet(fields, (19, 27, 32, 34, 23, 48, 28, 28, 13, 11, 38, 28, 68))
-    fields.freeze_panes = "D2"
-    fields.add_table(
-        Table(
-            displayName="FieldCorrectionsTable",
-            ref=f"A1:M{len(field_rows) + 1}",
-            tableStyleInfo=TableStyleInfo(
-                name="TableStyleMedium2", showRowStripes=True, showColumnStripes=False
-            ),
-        )
-    )
-    type_validation = DataValidation(
-        type="list", formula1='"text,integer,number,boolean,null"'
-    )
-    fields.add_data_validation(type_validation)
-    type_validation.add(f"I2:I{len(field_rows) + 1}")
-    for row_index, field_row in enumerate(field_rows, 2):
-        fill = "FFF3BF" if field_row.editable else "E7E9E8"
-        for column in (8, 9, 11, 12, 13):
-            fields.cell(row_index, column).fill = PatternFill("solid", fgColor=fill)
-    fields.conditional_formatting.add(
-        f"A2:M{len(field_rows) + 1}",
-        FormulaRule(formula=["$G2<>$H2"], fill=PatternFill("solid", fgColor="FFE0B2")),
-    )
+    grouped_fields = _field_rows_by_collection(field_rows, identifiers)
+    for collection, collection_rows in grouped_fields.items():
+        _add_field_sheet(book, collection, collection_rows)
+
+    meta = book.create_sheet("_meta")
 
     metadata = {
         "format": FORMAT_NAME,
@@ -510,8 +547,8 @@ def read_review_workbook(
         )
     except Exception as error:  # malformed OOXML can fail in several XML readers
         raise ValueError("review workbook is not a readable XLSX file") from error
-    if tuple(book.sheetnames) != SHEETS:
-        raise ValueError("review workbook sheets were added, removed, or renamed")
+    if "_meta" not in book.sheetnames:
+        raise ValueError("review workbook metadata sheet is missing")
     metadata = _metadata(book["_meta"])
     expected_meta = {
         "format": FORMAT_NAME,
@@ -529,13 +566,32 @@ def read_review_workbook(
                     "this workbook was downloaded from an older paper revision; "
                     "download a new workbook and transfer the reviewed changes"
                 )
+            if key == "format_version":
+                raise ValueError(
+                    "this workbook uses an older layout; download a fresh workbook"
+                )
             raise ValueError(f"review workbook metadata does not match {key}")
     device_id = _cell_text(metadata.get("scope_device_id")) or None
     expected_records, expected_fields = _contract(
         truth, identifiers, labels, device_id
     )
+    grouped_fields = _field_rows_by_collection(expected_fields, identifiers)
+    expected_sheets = (
+        *FIXED_SHEETS,
+        *(_field_sheet_name(collection) for collection in grouped_fields),
+        "_meta",
+    )
+    if tuple(book.sheetnames) != expected_sheets:
+        raise ValueError("review workbook sheets were added, removed, or renamed")
     record_rows = _rows(book["Record review"], RECORD_HEADERS)
-    field_rows = _rows(book["Field corrections"], FIELD_HEADERS)
+    field_rows = [
+        (sheet_name, row_number, row)
+        for collection in grouped_fields
+        for sheet_name in (_field_sheet_name(collection),)
+        for row_number, row in enumerate(
+            _rows(book[sheet_name], FIELD_HEADERS), start=2
+        )
+    ]
     if len(record_rows) != len(expected_records) or len(field_rows) != len(expected_fields):
         raise ValueError("review workbook rows were added, removed, or left incomplete")
 
@@ -564,13 +620,13 @@ def read_review_workbook(
             )
 
     expected_field_map = {str(row.values[5]): row for row in expected_fields}
-    actual_field_keys = [_cell_text(row[5]) for row in field_rows]
+    actual_field_keys = [_cell_text(row[5]) for _, _, row in field_rows]
     if len(set(actual_field_keys)) != len(actual_field_keys) or set(
         actual_field_keys
     ) != set(expected_field_map):
         raise ValueError("Field correction paths were added, removed, or duplicated")
     changes: list[WorkbookChange] = []
-    for row_number, actual in enumerate(field_rows, 2):
+    for sheet_name, row_number, actual in field_rows:
         expected = expected_field_map[_cell_text(actual[5])]
         expected_values = expected.values
         immutable_text_columns = (0, 1, 2, 3, 4, 5, 9)
@@ -578,34 +634,34 @@ def read_review_workbook(
             _cell_text(actual[index]) != _cell_text(expected_values[index])
             for index in immutable_text_columns
         ):
-            raise ValueError(f"Field corrections row {row_number} identity was changed")
+            raise ValueError(f"{sheet_name} row {row_number} identity was changed")
         try:
             current = _decode_value(actual[6], _value_type(expected.current_value))
         except (TypeError, ValueError) as error:
             raise ValueError(
-                f"Field corrections row {row_number} current value was changed"
+                f"{sheet_name} row {row_number} current value was changed"
             ) from error
         if current != expected.current_value:
-            raise ValueError(f"Field corrections row {row_number} current value was changed")
+            raise ValueError(f"{sheet_name} row {row_number} current value was changed")
         reviewed_type = _cell_text(actual[8])
         try:
             reviewed = _decode_value(actual[7], reviewed_type)
         except (TypeError, ValueError) as error:
             raise ValueError(
-                f"Field corrections row {row_number} has an invalid reviewed value: {error}"
+                f"{sheet_name} row {row_number} has an invalid reviewed value: {error}"
             ) from error
         if reviewed == expected.current_value and reviewed_type == _value_type(
             expected.current_value
         ):
             continue
         if not expected.editable:
-            raise ValueError(f"Field corrections row {row_number} is read-only")
+            raise ValueError(f"{sheet_name} row {row_number} is read-only")
         note = _cell_text(actual[10])
         block_id, quote = _cell_text(actual[11]), _cell_text(actual[12])
         if not note:
-            raise ValueError(f"Field corrections row {row_number} needs a reviewer note")
+            raise ValueError(f"{sheet_name} row {row_number} needs a reviewer note")
         if not block_id or not quote:
-            raise ValueError(f"Field corrections row {row_number} needs exact evidence")
+            raise ValueError(f"{sheet_name} row {row_number} needs exact evidence")
         changes.append(
             WorkbookChange(
                 collection=str(actual[1]),

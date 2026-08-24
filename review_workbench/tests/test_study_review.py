@@ -154,11 +154,11 @@ def test_review_workbook_import_is_atomic_attributable_and_undoable(
     assert book.sheetnames == [
         "Instructions",
         "Record review",
-        "Field corrections",
+        "Device Families",
         "_meta",
     ]
     book["Record review"]["G2"] = "All fields match source"
-    fields = book["Field corrections"]
+    fields = book["Device Families"]
     label_row = next(
         row
         for row in range(2, fields.max_row + 1)
@@ -207,6 +207,68 @@ def test_review_workbook_import_is_atomic_attributable_and_undoable(
     assert undone["summary"]["record_decisions"].get("ada", {}) == {}
 
 
+def test_review_workbook_groups_fields_by_scientific_record_type(
+    tmp_path, empty_study, document_payload
+):
+    study = study_with_family(empty_study)
+    citation = {"block_id": "main_p1_text_1", "quote": "champion device"}
+    study["individual_devices"] = [
+        {
+            "device_id": "device-1",
+            "family_id": "family-control",
+            "label": "Champion device",
+            "variant": None,
+            "champion_status": "yes",
+            "selection_basis": "champion",
+            "reported_properties": [],
+            "evidence": [citation],
+        }
+    ]
+    study["performance_observations"] = [
+        {
+            "observation_id": "observation-1",
+            "device_id": "device-1",
+            "measurement_type": "jv_scan",
+            "scan_direction": "not_reported",
+            "metrics": [
+                {
+                    "name": "PCE",
+                    "raw_value": "24.1%",
+                    "value_number": 24.1,
+                    "unit": "%",
+                    "evidence": [citation],
+                }
+            ],
+            "evidence": [citation],
+        }
+    ]
+    store = StudyReviewStore(tmp_path)
+    seed(store, study, document_payload)
+
+    book = load_workbook(
+        BytesIO(store.review_workbook("calibration", "10.0000--example", "ada"))
+    )
+
+    assert book.sheetnames == [
+        "Instructions",
+        "Record review",
+        "Device Families",
+        "Individual Devices",
+        "Performance Observations",
+        "_meta",
+    ]
+    assert {row[1].value for row in book["Device Families"].iter_rows(min_row=2)} == {
+        "device_families"
+    }
+    assert {
+        row[1].value for row in book["Individual Devices"].iter_rows(min_row=2)
+    } == {"individual_devices"}
+    assert {
+        row[1].value
+        for row in book["Performance Observations"].iter_rows(min_row=2)
+    } == {"performance_observations"}
+
+
 def test_review_workbook_rejects_stale_or_structurally_changed_files(
     tmp_path, empty_study, document_payload
 ):
@@ -221,6 +283,20 @@ def test_review_workbook_rejects_stale_or_structurally_changed_files(
     with pytest.raises(ValueError, match="added, removed"):
         store.import_review_workbook(
             "calibration", "10.0000--example", altered.getvalue(), "ada"
+        )
+
+    legacy_book = load_workbook(BytesIO(original))
+    format_row = next(
+        row
+        for row in range(2, legacy_book["_meta"].max_row + 1)
+        if legacy_book["_meta"].cell(row, 1).value == "format_version"
+    )
+    legacy_book["_meta"].cell(format_row, 2).value = 1
+    legacy = BytesIO()
+    legacy_book.save(legacy)
+    with pytest.raises(ValueError, match="older layout"):
+        store.import_review_workbook(
+            "calibration", "10.0000--example", legacy.getvalue(), "ada"
         )
 
     store.decide_record(
