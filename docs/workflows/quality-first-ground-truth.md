@@ -98,8 +98,12 @@ comparability.
 
 ## 3. Review without anchoring recall to the model
 
-The reviewer first records a blind paper-wide inventory. Model candidates and coverage
-audits remain hidden until that census is submitted. Review then proceeds through:
+The reviewer first records a blind paper-wide record inventory. Model candidates and
+coverage audits remain hidden until that census is submitted. The same step separately
+counts main-text figures, schema-relevant figures, and schema records or atomic values
+that occur only in those figures. This measures the loss from text-only extraction
+without conflating it with whether the reviewer searched the main paper or SI. Review
+then proceeds through:
 
 1. entity identity and reporting level;
 2. composition, layers, and processing;

@@ -30,9 +30,11 @@ stateDiagram-v2
     Adjudication --> FrozenRevision
 ```
 
-1. **Blind inventory.** Search the paper and SI and record expected counts before the
-   interface reveals model candidates. Count device families, individual devices,
-   performance observations, population statistics, and stability tests.
+1. **Blind inventory.** Search every imported source and record expected counts before
+   the interface reveals model candidates. Count device families, individual devices,
+   performance observations, population statistics, and stability tests. The submitted
+   source list is workflow coverage, not an extraction outcome.
+   Separately census the numbered figures in the main paper as described below.
    After submission, use the imported coverage, refinement, and targeted-repair
    audits as attention queues—not as evidence or automatic corrections.
 2. **Identity.** Separate variants, individual devices, protocols, aggregates, and
@@ -180,6 +182,38 @@ selection is no longer held out. Move it to calibration or development; do not r
 Sample across publishers, SI length, table density, parser difficulty, device count,
 architecture, stability reporting, and chemical complexity. Exclude reviews, news,
 views, and perspectives before extraction.
+
+## Main-text figure-loss analysis
+
+The inventory includes a mandatory, separate census of numbered main-text figures.
+It does not census SI figures, and the main/SI scope is no longer represented by
+reviewer checkboxes. Submitting the inventory records all imported sources as the
+paper-wide record-search scope; figure counts answer a different question: what would
+a text-and-table-only extractor miss because it does not inspect main-text figures?
+
+Record four counts per paper:
+
+- **figures reviewed:** numbered main-text figures, with a multi-panel figure counted
+  once;
+- **schema-relevant figures:** reviewed figures containing at least one fact that fits
+  `StudyExtraction`, even when the fact is repeated in text or a caption;
+- **figure-only records:** complete schema records supported by a figure but not
+  explicitly reported in running text, captions, or tables; and
+- **figure-only atomic values:** individual schema field instances that would otherwise
+  be missing. Count stored values, not pixels, curve samples, or inferred values.
+
+Do not digitize traces or guess visually ambiguous values during this census, and do
+not insert an approximate visual reading into the text-evidenced ground truth. After
+adjudication, calculate:
+
+- record loss as `figure_only_records / (final_records + figure_only_records)`; and
+- field-value loss as `figure_only_atomic_values /
+  (final_populated_atomic_values + figure_only_atomic_values)`.
+
+These estimate the share of otherwise recoverable schema content excluded by a
+text-only boundary. Separately,
+`schema_relevant_figures / figures_reviewed` states how often main-text figures matter
+at all.
 
 ## Evaluation
 

@@ -29,11 +29,17 @@ SI, and optional run configuration. Import `coverage_audit.json` and
 patch passed the quality gates. Import `enrichment.json` to
 show source-reported absorber composition beside proposed A/B/X assignments, including
 their acceptance status and issues. These files remain provenance aids:
-after the blind census is submitted, the interface highlights unmatched inventory
-candidates and the record groups changed by refinement so reviewers can focus their
-attention without treating any model artifact as truth. The app stores immutable
-seeds, compiled truth, event history, evidence blocks, and manifests under the
-ground-truth directory.
+after the blind record and main-text figure censuses are submitted, the interface
+highlights unmatched inventory candidates and the record groups changed by refinement
+so reviewers can focus their attention without treating any model artifact as truth.
+The app stores immutable seeds, compiled truth, event history, evidence blocks, and
+manifests under the ground-truth directory.
+
+The figure census is deliberately limited to numbered figures in the main paper. It
+records how many figures contain schema-relevant content and how many schema records or
+atomic values are available only from those figures. The app records all imported
+sources as the blind record-search scope; reviewers do not toggle main/SI checkboxes,
+because those flags are not measurements of figure-extraction loss.
 
 For a validated batch, use the same import contract non-interactively:
 
@@ -60,8 +66,9 @@ The default **Remaining** view removes verified and uncertain records as the rev
 advances. **Needs attention** limits the queue to requested corrections, records
 changed by the quality pass, and composition proposals that need review. Use `V` to
 verify, `U` for uncertain, `C` to correct, and the arrow keys or `J`/`K` to move between
-records. Corrections open a field-oriented editor with existing evidence preselected;
-complete JSON remains available only as an advanced escape hatch.
+records. Corrections open with existing evidence preselected. Reviewers can switch
+directly between the field-oriented editor, where every label includes its JSON
+Pointer, and the complete JSON for that record.
 
 The study header compares the immutable seed's schema version and generated schema
 hash with the running extractor. Older seeds that remain structurally readable are

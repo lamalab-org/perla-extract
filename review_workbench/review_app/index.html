@@ -26,7 +26,7 @@
 
     <section id="empty-state" class="empty-state">
       <h2>Choose a paper</h2>
-      <p>Import the best current extraction, then establish a device census before reviewing its candidates.</p>
+      <p>Import the best current extraction, then establish independent record and main-text figure censuses before reviewing its candidates.</p>
     </section>
 
     <section id="workspace" hidden>
@@ -75,12 +75,23 @@
 
           <div id="inventory-tab" class="tab-panel">
             <div id="blind-audit">
-              <h3>Blind device census</h3>
-              <p class="callout">Inspect the paper and SI before revealing the model candidates. This protects recall estimates from model anchoring.</p>
-              <div class="check-row"><label><input id="searched-main" type="checkbox" checked /> Main paper searched</label><label><input id="searched-supplement" type="checkbox" /> SI searched</label></div>
+              <h3>Blind record and figure census</h3>
+              <p class="callout">Search every imported source before revealing the model candidates. Submitting records the main paper and available SI as the inventory scope; it does not treat either source as an extraction result.</p>
               <div id="inventory-counts" class="count-grid"></div>
+              <section class="figure-census">
+                <h4>Main-text figure gap</h4>
+                <p>Count only numbered figures in the main paper—not SI figures. We use these counts to estimate what the text-only extractor misses by ignoring figures.</p>
+                <div class="count-grid">
+                  <label>Main-text figures reviewed<input id="figures-reviewed" type="number" min="0" value="0" required /></label>
+                  <label>Figures relevant to the schema<input id="schema-relevant-figures" type="number" min="0" value="0" required /></label>
+                  <label>Figure-only records<input id="figure-only-records" type="number" min="0" value="0" required /></label>
+                  <label>Figure-only atomic values<input id="figure-only-values" type="number" min="0" value="0" required /></label>
+                </div>
+                <p class="muted"><strong>Figure-only</strong> means the record or atomic field value belongs in the schema but is not explicitly reported in the caption, running text, or a table. Count one numbered figure once, not each panel. Count field instances—not pixels or sampled points—and do not infer or digitize uncertain values.</p>
+                <label>Figure-only examples or ambiguities<textarea id="figure-census-notes" rows="3" placeholder="For example: Fig. 3 contains two stability checkpoints not stated in its caption or the text."></textarea></label>
+              </section>
               <label>Missing, ambiguous, or difficult records<textarea id="inventory-notes" rows="4" placeholder="Describe devices or measurements that still need review…"></textarea></label>
-              <button id="submit-audit" class="primary">Submit census and reveal candidates</button>
+              <button id="submit-audit" class="primary">Submit censuses and reveal candidates</button>
             </div>
             <div id="inventory-revealed" hidden>
               <div id="inventory-comparison"></div>

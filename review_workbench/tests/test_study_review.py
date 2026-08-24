@@ -12,6 +12,7 @@ from perla_extract.study_extraction.models import (
 )
 from review_workbench.study_review import (
     InventoryAuditRequest,
+    MainTextFigureCensus,
     MutationRequest,
     RecordDecisionRequest,
     StageRequest,
@@ -105,6 +106,13 @@ def test_reviewer_progress_contains_only_that_reviewers_persisted_work(
             base_revision=1,
             searched_sources=["main"],
             expected_counts={"individual_devices": 0},
+            main_text_figure_census=MainTextFigureCensus(
+                figures_reviewed=4,
+                schema_relevant_figures=2,
+                figure_only_records=1,
+                figure_only_atomic_values=3,
+                notes="Figure 3 contains stability values absent from the caption.",
+            ),
             missing_or_ambiguous="No missing devices found.",
         ),
         "ada",
@@ -149,8 +157,45 @@ def test_reviewer_progress_contains_only_that_reviewers_persisted_work(
     assert paper["current_inventory_audit"]["missing_or_ambiguous"] == (
         "No missing devices found."
     )
+    assert paper["current_inventory_audit"]["review_scope_sources"] == ["main"]
+    assert "searched_sources" not in paper["current_inventory_audit"]
+    assert paper["current_inventory_audit"]["main_text_figure_census"] == {
+        "figures_reviewed": 4,
+        "schema_relevant_figures": 2,
+        "figure_only_records": 1,
+        "figure_only_atomic_values": 3,
+        "notes": "Figure 3 contains stability values absent from the caption.",
+    }
     assert all(event["reviewer_id"] == "ada" for event in paper["events"])
     assert store.reviewer_progress("calibration", "nobody")["papers"] == []
+
+
+def test_main_text_figure_census_rejects_incoherent_counts():
+    with pytest.raises(ValueError, match="cannot exceed figures reviewed"):
+        MainTextFigureCensus(figures_reviewed=1, schema_relevant_figures=2)
+
+    with pytest.raises(ValueError, match="require a schema-relevant figure"):
+        MainTextFigureCensus(
+            figures_reviewed=3,
+            schema_relevant_figures=0,
+            figure_only_atomic_values=1,
+        )
+
+
+def test_summary_renames_legacy_searched_sources_without_rewriting_the_event(
+    empty_study,
+):
+    event = {
+        "kind": "inventory_audit",
+        "reviewer_id": "ada",
+        "details": {"searched_sources": ["main"], "expected_counts": {}},
+    }
+
+    summary = StudyReviewStore.summary(empty_study, [event])
+
+    assert summary["inventory_audits"]["ada"]["review_scope_sources"] == ["main"]
+    assert "searched_sources" not in summary["inventory_audits"]["ada"]
+    assert event["details"]["searched_sources"] == ["main"]
 
 
 def test_bundle_marks_readable_older_schema_as_not_exactly_comparable(

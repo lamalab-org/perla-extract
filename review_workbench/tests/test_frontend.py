@@ -6,11 +6,27 @@ APP = Path(__file__).resolve().parents[1] / "review_app"
 def test_ui_enforces_inventory_before_candidates():
     html = (APP / "index.html").read_text(encoding="utf-8")
     javascript = (APP / "app.js").read_text(encoding="utf-8")
-    assert "Blind device census" in html
+    assert "Blind record and figure census" in html
     assert "submit-audit" in html
     assert "hasAudit()" in javascript
     assert "Model candidates are now visible" in javascript
     assert "renderQualityArtifacts()" in javascript
+
+
+def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    javascript = (APP / "app.js").read_text(encoding="utf-8")
+
+    assert "searched-main" not in html
+    assert "searched-supplement" not in html
+    assert "Main-text figure gap" in html
+    assert "Figure-only atomic values" in html
+    assert "not explicitly reported in the caption, running text, or a table" in html
+    assert "not each panel" in html
+    assert "do not infer or digitize uncertain values" in html
+    assert "main_text_figure_census" in javascript
+    assert "review_scope_sources: state.bundle.sources" in javascript
+    assert "This legacy inventory did not record a main-text figure census" in javascript
 
 
 def test_ui_covers_every_rich_record_collection():

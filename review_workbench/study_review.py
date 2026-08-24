@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
 
 from perla_extract.study_extraction.artifacts import write_json_atomic
 from perla_extract.study_extraction.evidence import source_contains_text
@@ -90,14 +90,50 @@ class MutationRequest(BaseModel):
         return self
 
 
+class MainTextFigureCensus(BaseModel):
+    """Measure schema content lost when main-text figures are not extracted.
+
+    Counts stay aggregate because reviewers should identify missing structured facts,
+    not digitize plot traces or create a second annotation interface for figures.
+    """
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    figures_reviewed: int = Field(default=0, ge=0)
+    schema_relevant_figures: int = Field(default=0, ge=0)
+    figure_only_records: int = Field(default=0, ge=0)
+    figure_only_atomic_values: int = Field(default=0, ge=0)
+    notes: str = Field(default="", max_length=4000)
+
+    @model_validator(mode="after")
+    def validate_figure_counts(self) -> "MainTextFigureCensus":
+        """Keep the denominator and claimed figure-only contribution coherent."""
+
+        if self.schema_relevant_figures > self.figures_reviewed:
+            raise ValueError("schema-relevant figures cannot exceed figures reviewed")
+        if (
+            self.figure_only_records or self.figure_only_atomic_values
+        ) and not self.schema_relevant_figures:
+            raise ValueError(
+                "figure-only records or values require a schema-relevant figure"
+            )
+        return self
+
+
 class InventoryAuditRequest(BaseModel):
-    """Capture a blind device census before showing model candidates."""
+    """Capture a blind record census and main-text figure gap before candidates show."""
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
     base_revision: int = Field(ge=0)
-    searched_sources: list[Literal["main", "supplement"]] = Field(min_length=1)
+    review_scope_sources: list[Literal["main", "supplement"]] = Field(
+        min_length=1,
+        validation_alias=AliasChoices("review_scope_sources", "searched_sources"),
+    )
     expected_counts: dict[str, int]
+    main_text_figure_census: MainTextFigureCensus = Field(
+        default_factory=MainTextFigureCensus
+    )
     missing_or_ambiguous: str = Field(default="", max_length=4000)
 
     @model_validator(mode="after")
@@ -553,7 +589,10 @@ class StudyReviewStore:
                     event["reviewer_id"]
                 )
             elif event["kind"] == "inventory_audit":
-                audits[event["reviewer_id"]] = event["details"]
+                details = copy.deepcopy(event["details"])
+                if "review_scope_sources" not in details and "searched_sources" in details:
+                    details["review_scope_sources"] = details.pop("searched_sources")
+                audits[event["reviewer_id"]] = details
             elif event["kind"] == "record_decision":
                 details = event["details"]
                 record_key = str(details["record_key"])

@@ -259,7 +259,9 @@ function renderInventoryForm() {
       element("input", { properties: { type: "number", min: "0", value: "0" }, dataset: { count: key } }),
     ]));
   $("inventory-counts").replaceChildren(...inputs);
-  $("searched-supplement").disabled = !state.bundle.sources.includes("supplement");
+  for (const id of ["figures-reviewed", "schema-relevant-figures", "figure-only-records", "figure-only-values"]) $(id).value = "0";
+  $("figure-census-notes").value = "";
+  $("inventory-notes").value = "";
 }
 
 function renderInventoryComparison() {
@@ -280,6 +282,14 @@ function renderInventoryComparison() {
     element("h3", { text: "Census versus candidates" }),
     element("table", {}, [element("thead", {}, [header]), element("tbody", {}, rows)]),
   ];
+  const figures = audit.main_text_figure_census;
+  comparison.push(figures
+    ? element("section", { className: "figure-census-result" }, [
+      element("h4", { text: "Main-text figure gap" }),
+      element("p", { text: `${figures.schema_relevant_figures} of ${figures.figures_reviewed} reviewed figures contained schema-relevant information. A text-only extraction would miss ${figures.figure_only_records} record${figures.figure_only_records === 1 ? "" : "s"} and ${figures.figure_only_atomic_values} atomic value${figures.figure_only_atomic_values === 1 ? "" : "s"} reported only in those figures.` }),
+      ...(figures.notes ? [element("p", { className: "callout", text: figures.notes })] : []),
+    ])
+    : element("p", { className: "callout", text: "This legacy inventory did not record a main-text figure census." }));
   if (audit.missing_or_ambiguous) comparison.push(element("p", { className: "callout", text: audit.missing_or_ambiguous }));
   $("inventory-comparison").replaceChildren(...comparison);
 }
@@ -709,12 +719,18 @@ async function renderPdf() {
 }
 
 async function submitAudit() {
-  const searched = [$("searched-main").checked && "main", $("searched-supplement").checked && "supplement"].filter(Boolean);
   const counts = Object.fromEntries([...document.querySelectorAll("[data-count]")].map((input) => [input.dataset.count, Number(input.value)]));
+  const mainTextFigureCensus = {
+    figures_reviewed: Number($("figures-reviewed").value),
+    schema_relevant_figures: Number($("schema-relevant-figures").value),
+    figure_only_records: Number($("figure-only-records").value),
+    figure_only_atomic_values: Number($("figure-only-values").value),
+    notes: $("figure-census-notes").value,
+  };
   try {
-    state.bundle = await request(`/api/inventory-audits/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ base_revision: state.bundle.revision, searched_sources: searched, expected_counts: counts, missing_or_ambiguous: $("inventory-notes").value }) });
+    state.bundle = await request(`/api/inventory-audits/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ base_revision: state.bundle.revision, review_scope_sources: state.bundle.sources, expected_counts: counts, main_text_figure_census: mainTextFigureCensus, missing_or_ambiguous: $("inventory-notes").value }) });
     renderStudy();
-    setStatus("Inventory census recorded. Model candidates are now visible.");
+    setStatus("Record and main-text figure censuses saved. Model candidates are now visible.");
   } catch (error) { setStatus(error.message, true); }
 }
 
@@ -1012,6 +1028,8 @@ function annotationSubject(event) {
   if (event.kind === "stage_complete") return `${humanLabel(event.details.stage)} stage completed`;
   if (event.kind === "inventory_audit") {
     const counts = Object.entries(event.details.expected_counts || {}).map(([name, count]) => `${humanLabel(name)}: ${count}`);
+    const figures = event.details.main_text_figure_census;
+    if (figures) counts.push(`Main-text figure-only values: ${figures.figure_only_atomic_values}`);
     return counts.join(" · ") || "Blind inventory saved";
   }
   return event.note || humanLabel(event.kind);
