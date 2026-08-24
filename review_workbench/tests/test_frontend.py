@@ -85,6 +85,39 @@ def test_record_review_is_a_device_context_queue():
     assert 'key === "c"' in source
 
 
+def test_show_in_paper_has_direct_lookup_visible_location_and_race_protection():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    server = (APP.parent / "server.py").read_text(encoding="utf-8")
+
+    assert "citation-location" in html
+    assert "pdf-highlights" in html
+    assert "citation-match-label" in html
+    assert "/api/evidence-block/" in source
+    assert "scrollIntoView" in source
+    assert "image.decode()" in source
+    assert 'event.key === "Enter"' in source
+    assert "requestId !== state.pdfRequest" in source
+    assert "application.evidence_block(parts[2], parts[3], parts[4])" in server
+
+
+def test_record_count_corrections_are_explicit_and_reference_guarded():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    backend = (APP.parent / "study_review.py").read_text(encoding="utf-8")
+
+    assert "Copy as missing record" in source
+    assert "Remove extra record" in html
+    assert "Removal is blocked until linked measurements" in html
+    assert "/api/study-schema" in source
+    assert "draftFromSchema" in source
+    assert "recordReferences" in source
+    assert "reviewReferencedRecord" in source
+    assert "Add missing record" in source
+    assert "Save field correction" in source
+    assert "other records refer to it" in backend
+
+
 def test_corrections_default_to_fields_and_existing_evidence():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")

@@ -33,7 +33,16 @@ label { display:grid; gap:.35rem; font-size:.82rem; color:var(--muted); }
 .panel-toolbar label { display:flex; align-items:center; gap:.35rem; }
 .panel-toolbar input { width:70px; }
 #pdf-stage { background:#d8ddda; padding:18px; min-height:500px; text-align:center; }
-#pdf-page { max-width:100%; box-shadow:0 3px 18px #0003; background:white; }
+#pdf-canvas { display:inline-block; position:relative; max-width:100%; }
+#pdf-page { display:block; max-width:100%; box-shadow:0 3px 18px #0003; background:white; }
+#pdf-highlights { position:absolute; inset:0; pointer-events:none; }
+.pdf-highlight { position:absolute; background:#ffd84d66; border:2px solid #c59100; border-radius:3px; box-shadow:0 0 0 2px #fff8; }
+.citation-location { display:flex; justify-content:space-between; gap:12px; padding:10px 12px; border-bottom:1px solid #d7bd6c; background:#fff8db; }
+.citation-location[hidden] { display:none; }
+.citation-location blockquote { margin:.3rem 0 0; max-height:5.8em; overflow:auto; font-size:.78rem; line-height:1.4; }
+.citation-match { display:block; margin-top:.2rem; color:#6e5a19; font-size:.7rem; }
+.citation-location button { align-self:flex-start; border:0; background:transparent; }
+.pdf-panel.citation-active { outline:3px solid #d7bd6c; outline-offset:-3px; }
 .source-text { margin:10px; } .source-text pre { white-space:pre-wrap; font:12px/1.45 ui-monospace, monospace; }
 .tabs { position:sticky; top:0; display:flex; background:white; padding:10px; border-bottom:1px solid var(--line); z-index:2; }
 .tabs button { border:0; border-radius:0; color:var(--muted); }
@@ -54,6 +63,7 @@ th,td { padding:.55rem; border-bottom:1px solid var(--line); text-align:left; } 
 .record-actions { align-self:center; }.record-actions select { max-width:150px; }
 .records-toolbar { display:grid; align-items:start; position:sticky; top:58px; z-index:1; background:white; padding-bottom:10px; border-bottom:1px solid var(--line); }
 .records-toolbar h3,.records-toolbar p { margin-bottom:.2rem; }.queue-filters { flex-wrap:wrap; justify-content:flex-start; }.queue-filters select { max-width:170px; }
+.record-guidance { margin-top:12px; font-size:.8rem; }
 .add-record-menu { position:relative; font-size:.78rem; color:var(--brand); }.add-record-menu summary { cursor:pointer; white-space:nowrap; }.add-record-menu .record-add { position:absolute; right:0; top:26px; z-index:3; width:260px; padding:8px; border:1px solid var(--line); border-radius:8px; background:white; box-shadow:0 8px 24px #17201d20; }.add-record-menu .record-add select { flex:1; min-width:0; }
 .queue-card { display:grid; gap:14px; padding:14px 0 72px; }
 .queue-heading { display:flex; justify-content:space-between; gap:14px; align-items:flex-start; }
@@ -66,6 +76,7 @@ th,td { padding:.55rem; border-bottom:1px solid var(--line); text-align:left; } 
 .context-field { min-width:0; }.context-field span { display:block; color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; }.context-field strong { display:block; font-size:.82rem; overflow-wrap:anywhere; }
 .queue-actions { position:sticky; bottom:0; z-index:1; padding:10px; margin:0 -8px; border:1px solid var(--line); border-radius:10px; background:#fffffff2; box-shadow:0 -5px 18px #17201d12; }
 .queue-actions .spacer { flex:1; }.queue-actions button.active { outline:2px solid var(--brand); }
+.queue-actions .remove-extra { color:var(--danger); border-color:#e5b8b5; }
 .shortcut { color:var(--muted); font-size:.7rem; margin-left:.2rem; }
 .queue-footer { justify-content:center; padding:10px; background:white; border-top:1px solid var(--line); }
 .queue-footer .complete-stage { margin-left:auto; }
@@ -103,6 +114,9 @@ dialog { border:0; border-radius:14px; padding:0; box-shadow:0 12px 60px #0005; 
 dialog::backdrop { background:#16201dbb; }
 .dialog-card { display:grid; gap:12px; padding:20px; max-height:90vh; overflow:auto; }
 .dialog-heading button { border:0; font-size:1.4rem; }.dialog-actions span { flex:1; }
+.dependency-warning { border:1px solid #e5b8b5; border-radius:8px; padding:10px; background:#fff7f6; color:var(--danger); font-size:.8rem; }
+.dependency-warning ul { display:grid; gap:.35rem; margin:.45rem 0 0; padding-left:1.25rem; }
+.dependency-warning button { padding:.35rem .55rem; text-align:left; color:var(--danger); border-color:#e5b8b5; }
 #record-json { font:12px/1.4 ui-monospace, monospace; tab-size:2; }
 .structured-editor { display:grid; gap:8px; }
 .editor-group { border:1px solid var(--line); border-radius:8px; padding:8px; }

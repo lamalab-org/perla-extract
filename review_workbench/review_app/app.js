@@ -28,6 +28,7 @@ const state = {
   split: "calibration", papers: [], paperId: null, bundle: null, user: null,
   page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null,
   queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
+  studySchema: null, activeCitation: null, pdfRequest: 0,
 };
 
 async function request(url, options = {}) {
@@ -132,6 +133,10 @@ async function loadSession() {
   $("reviewer").textContent = payload.user.name;
 }
 
+async function loadStudySchema() {
+  state.studySchema = await request("/api/study-schema");
+}
+
 async function loadPapers() {
   const payload = await request(`/api/papers?split=${encodeURIComponent(state.split)}`);
   state.papers = payload.papers;
@@ -162,6 +167,7 @@ async function selectPaper(paperId) {
   state.queueIndex = 0;
   state.queueKey = null;
   state.evidenceCache.clear();
+  state.activeCitation = null;
   state.source = state.bundle.sources.includes("main") ? "main" : state.bundle.sources[0];
   state.page = 1;
   $("empty-state").hidden = true;
@@ -390,23 +396,150 @@ function renderDeviceContext(entry) {
   ]);
 }
 
-async function focusCitation(citation, selectForCorrection = false) {
-  if (!citation?.block_id) return;
-  let block = state.evidenceCache.get(citation.block_id);
-  if (!block) {
-    const payload = await request(`/api/evidence/${state.split}/${encodeURIComponent(state.paperId)}?q=${encodeURIComponent(citation.block_id)}`);
-    block = payload.blocks.find((candidate) => candidate.block_id === citation.block_id);
-    if (block) state.evidenceCache.set(citation.block_id, block);
+function resolvedSchema(node) {
+  let result = node || {};
+  while (result.$ref) result = state.studySchema.$defs[result.$ref.split("/").at(-1)];
+  return result;
+}
+
+function draftFromSchema(node, fieldName = "") {
+  const schema = resolvedSchema(node);
+  if (Object.hasOwn(schema, "default")) return structuredClone(schema.default);
+  if (fieldName === "evidence") return [];
+  const choices = schema.anyOf || schema.oneOf;
+  if (choices) {
+    if (choices.some((choice) => resolvedSchema(choice).type === "null")) return null;
+    return draftFromSchema(choices[0], fieldName);
   }
-  if (!block) return setStatus(`Evidence block ${citation.block_id} is unavailable.`, true);
-  state.source = block.source;
-  state.page = block.page;
+  if (schema.enum) return schema.enum.includes("not_reported") ? "not_reported" : schema.enum[0];
+  if (schema.type === "object" || schema.properties) {
+    return Object.fromEntries(Object.entries(schema.properties || {}).map(([name, child]) => [name, draftFromSchema(child, name)]));
+  }
+  if (schema.type === "array") {
+    return Array.from({ length: schema.minItems || 0 }, () => draftFromSchema(schema.items));
+  }
+  if (schema.type === "integer" || schema.type === "number") return schema.minimum ?? 0;
+  if (schema.type === "boolean") return false;
+  return "";
+}
+
+function newRecordDraft(kind) {
+  return draftFromSchema(state.studySchema.properties[kind].items);
+}
+
+function copiedRecordDraft(kind, item) {
+  const draft = structuredClone(item);
+  const identifier = state.bundle.summary.record_identifiers[kind];
+  const used = new Set(state.bundle.ground_truth[kind].map((record) => String(record[identifier])));
+  const stem = `${draft[identifier] || kind}-review-copy`;
+  let candidate = stem;
+  let suffix = 2;
+  while (used.has(candidate)) candidate = `${stem}-${suffix++}`;
+  draft[identifier] = candidate;
+  return draft;
+}
+
+function recordReferences(entry) {
+  const keys = new Set(state.bundle.summary.record_references?.[entry.key] || []);
+  return recordEntries().filter((candidate) => keys.has(candidate.key));
+}
+
+function normalizedCitation(value) {
+  let result = "";
+  for (const character of String(value || "").normalize("NFKC").replaceAll("−", "-").replaceAll("–", "-").replaceAll("—", "-")) {
+    for (const folded of character.toLocaleLowerCase()) {
+      if (/[\p{L}\p{N}_.%<>~=+\/-]/u.test(folded)) result += folded;
+    }
+  }
+  return result;
+}
+
+function citationLineIndexes(lines, quote) {
+  const needle = normalizedCitation(quote);
+  if (!needle) return new Set();
+  let haystack = "";
+  const owners = [];
+  lines.forEach((line, index) => {
+    const normalized = normalizedCitation(line.text);
+    haystack += normalized;
+    owners.push(...Array(normalized.length).fill(index));
+  });
+  const start = haystack.indexOf(needle);
+  return start < 0 ? new Set() : new Set(owners.slice(start, start + needle.length));
+}
+
+function renderCitationLocation(lines = []) {
+  const citation = state.activeCitation;
+  const visible = citation && citation.source === state.source && citation.page === state.page;
+  $("citation-location").hidden = !visible;
+  document.querySelector(".pdf-panel").classList.toggle("citation-active", Boolean(visible));
+  if (!visible) return $("pdf-highlights").replaceChildren();
+  $("citation-page-label").textContent = `${citation.source === "main" ? "Main paper" : "Supplement"} · page ${citation.page}`;
+  $("citation-block-label").textContent = citation.block_id;
+  $("citation-location-quote").textContent = citation.quote;
+  const indexes = citationLineIndexes(lines, citation.quote);
+  const highlights = [...indexes].flatMap((index) => {
+    const box = lines[index]?.bbox;
+    if (!box || ![box.x, box.y, box.width, box.height].every(Number.isFinite)) return [];
+    return [element("span", {
+      className: "pdf-highlight",
+      attributes: { style: `left:${box.x * 100}%;top:${box.y * 100}%;width:${box.width * 100}%;height:${box.height * 100}%` },
+    })];
+  });
+  $("pdf-highlights").replaceChildren(...highlights);
+  $("citation-match-label").textContent = highlights.length
+    ? "Matching text highlighted on this page"
+    : "Page opened; the exact quote could not be matched to the PDF text layer";
+}
+
+function clearCitation() {
+  state.activeCitation = null;
+  renderCitationLocation();
+}
+
+async function navigatePdf(source, page) {
+  clearCitation();
+  state.source = source;
+  const requestedPage = Number(page);
+  state.page = Number.isFinite(requestedPage) ? Math.max(1, Math.min(state.pageCount, requestedPage)) : 1;
   $("pdf-source").value = state.source;
-  if (selectForCorrection) {
-    $("citation-block").value = block.block_id;
-    $("citation-quote").value = citation.quote || block.text.slice(0, 1600);
+  try {
+    if (await renderPdf()) setStatus(`Showing ${state.source === "main" ? "the main paper" : "the supplement"}, page ${state.page}.`);
   }
-  await renderPdf();
+  catch (error) { setStatus(`Could not render this PDF page: ${error.message}`, true); }
+}
+
+async function focusCitation(citation, selectForCorrection = false, scroll = true) {
+  if (!citation?.block_id) return setStatus("This record has no evidence block to show.", true);
+  try {
+    let block = state.evidenceCache.get(citation.block_id);
+    if (!block) {
+      block = await request(`/api/evidence-block/${state.split}/${encodeURIComponent(state.paperId)}/${encodeURIComponent(citation.block_id)}`);
+      state.evidenceCache.set(citation.block_id, block);
+    }
+    const page = Number(block.page);
+    if (!state.bundle.sources.includes(block.source)) throw new Error(`The ${block.source} PDF is not available for this paper.`);
+    if (!Number.isInteger(page) || page < 1) throw new Error(`Evidence block ${block.block_id} has no valid PDF page.`);
+    state.source = block.source;
+    state.page = page;
+    state.activeCitation = { block_id: block.block_id, source: block.source, page, quote: citation.quote || block.text };
+    $("pdf-source").value = state.source;
+    if (selectForCorrection) {
+      $("citation-block").value = block.block_id;
+      $("citation-quote").value = citation.quote || block.text.slice(0, 1600);
+    }
+    if (!await renderPdf()) return false;
+    if (scroll) {
+      const panel = document.querySelector(".pdf-panel");
+      panel.scrollTo({ top: 0, behavior: "smooth" });
+      panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    setStatus(`Showing ${block.block_id} in ${block.source === "main" ? "the main paper" : "the supplement"}, page ${page}.`);
+    return true;
+  } catch (error) {
+    setStatus(`Could not show this citation: ${error.message}`, true);
+    return false;
+  }
 }
 
 function renderRecordEvidence(entry) {
@@ -454,9 +587,10 @@ function renderReviewQueue() {
   const actions = element("div", { className: "queue-actions" }, [
     element("button", { className: decision === "verified" ? "active" : "", text: "Verify  V", events: { click: () => decideEntry(entry, "verified") } }),
     element("button", { className: decision === "uncertain" ? "active" : "", text: "Uncertain  U", events: { click: () => decideEntry(entry, "uncertain") } }),
-    element("button", { className: decision === "needs_correction" ? "active" : "", text: "Correct  C", events: { click: () => beginCorrection(entry) } }),
+    element("button", { className: decision === "needs_correction" ? "active" : "", text: "Correct fields  C", events: { click: () => beginCorrection(entry) } }),
     element("span", { className: "spacer" }),
-    element("button", { text: "Duplicate", events: { click: () => openRecord(entry.kind, null, entry.item) } }),
+    element("button", { text: "Copy as missing record", events: { click: () => copyMissingRecord(entry) } }),
+    element("button", { className: "remove-extra", text: "Remove extra record", events: { click: () => beginRemoval(entry) } }),
   ]);
   $("review-queue").replaceChildren(element("article", { className: "queue-card" }, [
     element("div", { className: "queue-heading" }, [
@@ -475,7 +609,7 @@ async function moveQueue(delta) {
   state.queueKey = entries[state.queueIndex]?.key || null;
   renderReviewQueue();
   const entry = currentEntry().entry;
-  if (entry?.item.evidence?.[0]) await focusCitation(entry.item.evidence[0]);
+  if (entry?.item.evidence?.[0]) await focusCitation(entry.item.evidence[0], false, false);
 }
 
 function renderQualityGates() {
@@ -525,15 +659,29 @@ function renderHistory() {
 }
 
 async function renderPdf() {
-  if (!state.paperId || !state.source) return;
-  const query = `source=${state.source}&split=${state.split}&page=${state.page}&scale=1.5`;
-  $("pdf-page").src = `/api/pdf-page/${encodeURIComponent(state.paperId)}?${query}&t=${Date.now()}`;
-  const text = await request(`/api/pdf-text/${encodeURIComponent(state.paperId)}?source=${state.source}&split=${state.split}&page=${state.page}`);
+  if (!state.paperId || !state.source) return false;
+  const requestId = ++state.pdfRequest;
+  const paperId = state.paperId;
+  const source = state.source;
+  const page = state.page;
+  const split = state.split;
+  const query = `source=${source}&split=${split}&page=${page}&scale=1.5`;
+  const image = $("pdf-page");
+  image.src = `/api/pdf-page/${encodeURIComponent(paperId)}?${query}&t=${Date.now()}`;
+  const [text] = await Promise.all([
+    request(`/api/pdf-text/${encodeURIComponent(paperId)}?source=${source}&split=${split}&page=${page}`),
+    image.decode().catch((error) => {
+      if (requestId === state.pdfRequest) throw new Error(`PDF page image failed to load: ${error.message}`);
+    }),
+  ]);
+  if (requestId !== state.pdfRequest || paperId !== state.paperId || source !== state.source || page !== state.page) return false;
   state.pageCount = text.page_count;
-  $("page-number").value = state.page;
+  $("page-number").value = page;
   $("page-number").max = state.pageCount;
   $("page-count").textContent = `/ ${state.pageCount}`;
   $("pdf-text").textContent = text.text;
+  renderCitationLocation(text.lines || []);
+  return true;
 }
 
 async function submitAudit() {
@@ -546,27 +694,68 @@ async function submitAudit() {
   } catch (error) { setStatus(error.message, true); }
 }
 
-function openRecord(kind, index = null, template = null) {
+function openRecord(kind, index = null, template = null, intent = index == null ? "add" : "edit") {
   if (!hasAudit()) return setStatus("Complete the blind inventory audit first.", true);
-  const item = template || (index == null ? {} : state.bundle.ground_truth[kind][index]);
-  state.edit = { kind, index, value: structuredClone(item) };
+  const source = template || (index == null ? newRecordDraft(kind) : state.bundle.ground_truth[kind][index]);
+  const item = index == null && template ? copiedRecordDraft(kind, source) : structuredClone(source);
+  const entry = index == null ? null : { kind, index, item, key: recordKey(kind, item, index) };
+  const references = entry ? recordReferences(entry) : [];
+  state.edit = { kind, index, value: item, intent, references };
   $("record-kind").textContent = COLLECTIONS[kind];
-  $("record-title").textContent = index == null ? (template ? "Duplicate record" : "Add record") : entityTitle(kind, item, index);
+  $("record-title").textContent = index == null
+    ? `Add missing ${singularCollection(kind).toLowerCase()}`
+    : entityTitle(kind, item, index);
+  $("record-dialog-help").textContent = intent === "copy"
+    ? "This is a new record copied from the current one as a structurally valid starting point. The original stays unchanged. Check every copied value and its evidence before saving."
+    : intent === "remove"
+      ? "Remove this record only if it should not exist in the ground truth. Linked records are never deleted automatically."
+      : index == null
+        ? "Fill the missing record from the paper. The draft shape comes from the current schema; blank required fields must be completed before it can be saved."
+        : "Correct this record's scientific fields. Saving replaces this record only; it does not create another device or measurement.";
   $("record-json").value = JSON.stringify(item, null, 2);
+  const adding = index == null;
+  $("evidence-search-label").textContent = adding ? "Choose evidence for this missing record" : "Choose correction evidence";
+  $("mutation-note-label").textContent = intent === "remove" ? "Reason for removal" : adding ? "Review note" : "Reason for correction";
+  $("mutation-note-help").textContent = intent === "remove" ? "Required: explain why this record is not supported by the paper." : adding ? "Optional: explain why this record was missing." : "Explain what the extraction got wrong.";
+  $("mutation-note").placeholder = intent === "remove" ? "Why should this record not exist?" : adding ? "Why was this record added?" : "What did the extraction get wrong?";
+  $("save-record").textContent = adding ? "Add missing record" : "Save field correction";
+  $("save-record").hidden = intent === "remove";
   renderStructuredEditor();
   const citation = item.evidence?.[0];
   $("citation-block").value = citation?.block_id || "";
   $("citation-quote").value = citation?.quote || "";
   $("mutation-note").value = "";
   $("remove-record").hidden = index == null;
+  $("remove-record").disabled = references.length > 0;
+  const dependency = $("record-dependencies");
+  dependency.hidden = references.length === 0;
+  dependency.replaceChildren();
+  if (references.length) {
+    dependency.append(
+      element("strong", { text: "This record cannot be removed yet." }),
+      element("p", { text: "Correct these linked records first: reassign them to the right device or family, or remove them if they are also extra." }),
+      element("ul", {}, references.map((reference) => element("li", {}, [element("button", {
+        text: `Review ${COLLECTIONS[reference.kind]} · ${entityId(reference.kind, reference.item, reference.index)}`,
+        properties: { type: "button" },
+        events: { click: () => reviewReferencedRecord(reference) },
+      })]))),
+    );
+  }
   $("evidence-results").replaceChildren();
   $("dialog-status").textContent = "";
   $("record-dialog").showModal();
-  if (citation) focusCitation(citation);
+  if (intent === "remove") $("mutation-note").focus();
+  if (citation) focusCitation(citation, false, false);
 }
 
 function humanLabel(value) {
   return String(value).replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function singularCollection(kind) {
+  const label = COLLECTIONS[kind];
+  if (label.endsWith("ies")) return `${label.slice(0, -3)}y`;
+  return label.endsWith("s") ? label.slice(0, -1) : label;
 }
 
 function updateEditValue(path, rawValue, original) {
@@ -629,7 +818,7 @@ async function decideEntry(entry, decision) {
     state.queueKey = null;
     renderStudy();
     const next = currentEntry().entry;
-    if (next?.item.evidence?.[0]) await focusCitation(next.item.evidence[0]);
+    if (next?.item.evidence?.[0]) await focusCitation(next.item.evidence[0], false, false);
     setStatus(`Marked ${title} as ${decision.replaceAll("_", " ")}.`);
   } catch (error) {
     setStatus(error.message, true);
@@ -641,8 +830,44 @@ async function beginCorrection(entry) {
     if (recordDecision(entry.kind, entry.item, entry.index) !== "needs_correction") state.bundle = await submitDecision(entry, "needs_correction");
     renderStudy();
     const current = recordEntries().find((candidate) => candidate.key === entry.key) || entry;
-    openRecord(current.kind, current.index);
+    openRecord(current.kind, current.index, null, "edit");
   } catch (error) { setStatus(error.message, true); }
+}
+
+async function beginRemoval(entry) {
+  try {
+    if (recordDecision(entry.kind, entry.item, entry.index) !== "needs_correction") state.bundle = await submitDecision(entry, "needs_correction");
+    renderStudy();
+    const current = recordEntries().find((candidate) => candidate.key === entry.key) || entry;
+    openRecord(current.kind, current.index, null, "remove");
+  } catch (error) { setStatus(error.message, true); }
+}
+
+function copyMissingRecord(entry) {
+  openRecord(entry.kind, null, entry.item, "copy");
+}
+
+function addMissingRecord() {
+  document.querySelector(".add-record-menu").open = false;
+  openRecord($("new-record-kind").value, null, null, "add");
+}
+
+async function reviewReferencedRecord(reference) {
+  $("record-dialog").close();
+  $("record-status-filter").value = "all";
+  $("record-kind-filter").value = reference.kind;
+  state.queueIndex = 0;
+  state.queueKey = reference.key;
+  renderReviewQueue();
+  if (reference.item.evidence?.[0]) await focusCitation(reference.item.evidence[0], false, false);
+  setStatus(`Reviewing the linked ${singularCollection(reference.kind).toLowerCase()} before removing the original record.`);
+}
+
+function attachMissingEvidence(value, citation) {
+  if (Array.isArray(value)) return value.forEach((item) => attachMissingEvidence(item, citation));
+  if (!value || typeof value !== "object") return;
+  if (Array.isArray(value.evidence) && value.evidence.length === 0) value.evidence = [structuredClone(citation)];
+  Object.values(value).forEach((item) => attachMissingEvidence(item, citation));
 }
 
 async function saveRecord() {
@@ -652,21 +877,32 @@ async function saveRecord() {
     const blockId = $("citation-block").value.trim();
     const quote = $("citation-quote").value.trim();
     if (!blockId || !quote) throw new Error("Choose an evidence block and provide an exact quote.");
-    const payload = { action: index == null ? "add" : "replace", path: `/${pointerPart(kind)}/${index == null ? "-" : index}`, value, evidence: [{ block_id: blockId, quote }], note: $("mutation-note").value, base_revision: state.bundle.revision };
+    const citation = { block_id: blockId, quote };
+    attachMissingEvidence(value, citation);
+    const payload = { action: index == null ? "add" : "replace", path: `/${pointerPart(kind)}/${index == null ? "-" : index}`, value, evidence: [citation], note: $("mutation-note").value, base_revision: state.bundle.revision };
     state.bundle = await request(`/api/mutations/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify(payload) });
     $("record-dialog").close();
     renderStudy();
-    setStatus("Correction saved and the complete study schema revalidated.");
+    setStatus(index == null ? `Added the missing ${singularCollection(kind).toLowerCase()} and revalidated the study.` : "Correction saved and the complete study schema revalidated.");
   } catch (error) { $("dialog-status").textContent = error.message; }
 }
 
 async function removeRecord() {
-  if (!window.confirm("Remove this record from ground truth?")) return;
+  const note = $("mutation-note").value.trim();
+  if (state.edit.references.length) return $("dialog-status").textContent = "Correct the linked records listed above before removing this record.";
+  if (!note) {
+    $("dialog-status").textContent = "Explain why the paper does not support this record before removing it.";
+    $("mutation-note").focus();
+    return;
+  }
+  const title = entityTitle(state.edit.kind, state.edit.value, state.edit.index);
+  if (!window.confirm(`Remove ${title}? Only this record will be deleted; linked records are never removed automatically.`)) return;
   try {
     const { kind, index } = state.edit;
-    state.bundle = await request(`/api/mutations/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ action: "remove", path: `/${pointerPart(kind)}/${index}`, note: $("mutation-note").value, evidence: [], base_revision: state.bundle.revision }) });
+    state.bundle = await request(`/api/mutations/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ action: "remove", path: `/${pointerPart(kind)}/${index}`, note, evidence: [], base_revision: state.bundle.revision }) });
     $("record-dialog").close();
     renderStudy();
+    setStatus(`Removed ${title}. No linked records were deleted.`);
   } catch (error) { $("dialog-status").textContent = error.message; }
 }
 
@@ -689,7 +925,7 @@ function chooseEvidence(block) {
     state.source = block.source;
     state.page = block.page;
     $("pdf-source").value = state.source;
-    renderPdf();
+    renderPdf().catch((error) => { $("dialog-status").textContent = `Could not render this evidence page: ${error.message}`; });
   }
 }
 
@@ -709,7 +945,7 @@ function setTab(tab) {
   if (tab === "records" && hasAudit()) {
     renderReviewQueue();
     const citation = currentEntry().entry?.item.evidence?.[0];
-    if (citation) focusCitation(citation);
+    if (citation) focusCitation(citation, false, false);
   }
 }
 
@@ -842,13 +1078,20 @@ async function importPaper(event) {
 $("split").addEventListener("change", async (event) => { state.split = event.target.value; state.paperId = null; state.bundle = null; state.annotations = null; $("workspace").hidden = true; $("empty-state").hidden = false; await loadPapers(); });
 $("paper-filter").addEventListener("input", renderPapers);
 $("submit-audit").addEventListener("click", submitAudit);
-$("pdf-source").addEventListener("change", (event) => { state.source = event.target.value; state.page = 1; renderPdf(); });
-$("previous-page").addEventListener("click", () => { state.page = Math.max(1, state.page - 1); renderPdf(); });
-$("next-page").addEventListener("click", () => { state.page = Math.min(state.pageCount, state.page + 1); renderPdf(); });
-$("page-number").addEventListener("change", (event) => { state.page = Math.max(1, Math.min(state.pageCount, Number(event.target.value))); renderPdf(); });
+$("pdf-source").addEventListener("change", (event) => navigatePdf(event.target.value, 1));
+$("previous-page").addEventListener("click", () => navigatePdf(state.source, state.page - 1));
+$("next-page").addEventListener("click", () => navigatePdf(state.source, state.page + 1));
+$("page-number").addEventListener("change", (event) => navigatePdf(state.source, Number(event.target.value)));
+$("page-number").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    navigatePdf(state.source, Number(event.target.value));
+  }
+});
+$("clear-citation").addEventListener("click", clearCitation);
 document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", () => setTab(button.dataset.tab)));
 document.querySelectorAll(".complete-stage").forEach((button) => button.addEventListener("click", () => completeStage(button.dataset.stage)));
-$("add-record").addEventListener("click", () => openRecord($("new-record-kind").value));
+$("add-record").addEventListener("click", addMissingRecord);
 $("record-status-filter").addEventListener("change", () => { state.queueIndex = 0; state.queueKey = null; renderReviewQueue(); });
 $("record-kind-filter").addEventListener("change", () => { state.queueIndex = 0; state.queueKey = null; renderReviewQueue(); });
 $("previous-record").addEventListener("click", () => moveQueue(-1));
@@ -889,5 +1132,6 @@ document.addEventListener("keydown", (event) => {
   event.preventDefault();
 });
 
+await loadStudySchema();
 await loadSession();
 await loadPapers();

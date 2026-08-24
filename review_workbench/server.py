@@ -27,6 +27,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from perla_extract.study_extraction.artifacts import write_json_atomic  # noqa: E402
 from perla_extract.study_extraction.enrichment import EnrichmentAudit  # noqa: E402
+from perla_extract.study_extraction.models import StudyExtraction  # noqa: E402
 from review_workbench.ground_truth_export import (  # noqa: E402
     build_ground_truth_export,
     ground_truth_zip,
@@ -282,6 +283,36 @@ class ReviewApplication:
             ]
         return blocks[:100]
 
+    def evidence_block(
+        self, split: str, paper_id: str, block_id: str
+    ) -> dict[str, Any]:
+        """Resolve one citation directly so navigation never depends on search."""
+
+        payload = self.store.load_document(split, paper_id)
+        blocks = (
+            payload.get("blocks", [])
+            if isinstance(payload, dict)
+            else payload or []
+        )
+        block = next(
+            (
+                candidate
+                for candidate in blocks
+                if isinstance(candidate, dict)
+                and candidate.get("block_id") == block_id
+            ),
+            None,
+        )
+        if block is None:
+            raise FileNotFoundError(f"evidence block {block_id} is unavailable")
+        return block
+
+    @staticmethod
+    def study_schema() -> dict[str, Any]:
+        """Expose the authoritative schema for generic missing-record drafts."""
+
+        return StudyExtraction.model_json_schema()
+
     def ground_truth_archive(self, split: str, paper_id: str) -> bytes:
         """Build the adjudicated, citation-validated bundle used in data PRs."""
 
@@ -496,6 +527,9 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 if parsed.path == "/api/users":
                     self.send_json({"users": application.users()})
                     return
+                if parsed.path == "/api/study-schema":
+                    self.send_json(application.study_schema())
+                    return
                 parts = self.route_parts(parsed.path)
                 if parts[:2] == ["api", "reviewer-progress"] and len(parts) == 3:
                     user = self.current_user()
@@ -511,6 +545,11 @@ def make_handler(application: ReviewApplication, authenticator=None):
                                 parts[2], parts[3], query.get("q", [""])[0]
                             )
                         }
+                    )
+                    return
+                if parts[:2] == ["api", "evidence-block"] and len(parts) == 5:
+                    self.send_json(
+                        application.evidence_block(parts[2], parts[3], parts[4])
                     )
                     return
                 if parts[:2] == ["api", "ground-truth-export"] and len(parts) == 4:

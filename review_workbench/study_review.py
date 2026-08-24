@@ -252,6 +252,103 @@ def _record_catalog(truth: dict[str, Any]) -> dict[str, str]:
     return catalog
 
 
+def _contains_record_reference(
+    value: object,
+    reference_field: str,
+    target_id: str,
+    *,
+    root_identifier: str | None = None,
+    at_root: bool = True,
+) -> bool:
+    """Find explicit identifier references without interpreting scientific fields.
+
+    Reference fields use the same names as the target collection identifiers. The
+    root record's own identifier is excluded, while identity-link candidate lists are
+    also recognized. This keeps deletion protection derived from the schema's IDs
+    instead of a hand-maintained graph of record types.
+    """
+
+    if isinstance(value, dict):
+        for field, child in value.items():
+            if at_root and field == root_identifier:
+                continue
+            if field == reference_field and child is not None and str(child) == target_id:
+                return True
+            if field == "candidate_ids" and isinstance(child, list):
+                if any(str(candidate) == target_id for candidate in child):
+                    return True
+            if _contains_record_reference(
+                child,
+                reference_field,
+                target_id,
+                root_identifier=root_identifier,
+                at_root=False,
+            ):
+                return True
+    elif isinstance(value, list):
+        return any(
+            _contains_record_reference(
+                child,
+                reference_field,
+                target_id,
+                root_identifier=root_identifier,
+                at_root=False,
+            )
+            for child in value
+        )
+    return False
+
+
+def _record_references(
+    truth: dict[str, Any], collection: str, index: int
+) -> list[str]:
+    """List records that must be corrected before a referenced record is removed."""
+
+    target = truth[collection][index]
+    reference_field = RECORD_IDENTIFIERS[collection]
+    target_id = str(target[reference_field])
+    references: list[str] = []
+    for candidate_collection, candidate_identifier in RECORD_IDENTIFIERS.items():
+        for candidate_index, candidate in enumerate(truth[candidate_collection]):
+            if candidate_collection == collection and candidate_index == index:
+                continue
+            if _contains_record_reference(
+                candidate,
+                reference_field,
+                target_id,
+                root_identifier=candidate_identifier,
+            ):
+                references.append(
+                    f"{candidate_collection}:{candidate[candidate_identifier]}"
+                )
+    return references
+
+
+def _record_reference_catalog(truth: dict[str, Any]) -> dict[str, list[str]]:
+    """Expose deletion dependencies from the same check enforced on mutation."""
+
+    references: dict[str, list[str]] = {}
+    for collection, identifier in RECORD_IDENTIFIERS.items():
+        for index, record in enumerate(truth[collection]):
+            linked = _record_references(truth, collection, index)
+            if linked:
+                references[f"{collection}:{record[identifier]}"] = linked
+    return references
+
+
+def _removed_record_location(path: str) -> tuple[str, int] | None:
+    """Recognize deletion of a complete top-level record collection item."""
+
+    parts = _decode_pointer(path)
+    if (
+        len(parts) == 2
+        and parts[0] in RECORD_IDENTIFIERS
+        and parts[1].isdigit()
+    ):
+        return parts[0], int(parts[1])
+    return None
+
+
 class StudyReviewStore:
     """Keep model output, current truth, and human decisions independently auditable.
 
@@ -476,6 +573,7 @@ class StudyReviewStore:
             "record_decisions": decisions,
             "record_count": len(catalog),
             "record_identifiers": RECORD_IDENTIFIERS,
+            "record_references": _record_reference_catalog(truth),
         }
 
     def import_seed(
@@ -594,6 +692,18 @@ class StudyReviewStore:
             split, paper_id, request.base_revision
         )
         self._validate_citations(split, paper_id, request.evidence)
+        if request.action == "remove":
+            location = _removed_record_location(request.path)
+            if location is not None:
+                references = _record_references(
+                    current_revision.ground_truth, *location
+                )
+                if references:
+                    joined = ", ".join(references)
+                    raise ValueError(
+                        "cannot remove a record while other records refer to it; "
+                        f"correct or remove these linked records first: {joined}"
+                    )
         before, proposed = _apply(current_revision.ground_truth, request)
         if request.action == "replace" and before == request.value:
             raise ValueError("replacement does not change the record")

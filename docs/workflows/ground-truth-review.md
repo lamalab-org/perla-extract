@@ -47,6 +47,29 @@ stateDiagram-v2
 6. **Adjudication.** An administrator resolves reviewer disagreement before freezing
    the ground-truth revision.
 
+### Correct records in the workbench
+
+**Show in paper** resolves the citation by its exact evidence-block ID, opens the
+correct main-paper or supplement page, and displays the block ID and quote above the
+PDF. Matching text is highlighted when the PDF text layer contains it. If the page can
+be opened but the quote cannot be matched exactly, the workbench says so instead of
+pretending that a highlight succeeded. Manual source or page navigation clears the
+active citation.
+
+Use **Correct fields** when the record exists but a value is wrong. Use **Copy as
+missing record** when the current record is a useful starting point for another device
+or measurement; the copy receives a new ID and the original remains unchanged. Use
+**Add missing record** for a blank draft generated from the current Pydantic schema.
+Both additions require evidence and are validated as part of the complete study before
+they are saved.
+
+Use **Remove extra record** only when the paper does not support that record. The
+workbench deletes only the selected record and never cascades to linked measurements.
+If another record still refers to it, removal is disabled and each dependency is shown
+as a link. Review those linked records first: reassign a valid measurement to the right
+device or family, or remove the linked record if it is also extra. The backend applies
+the same reference check, so an invalid removal cannot be forced through the API.
+
 Edits use a known base revision and are rejected when stale. The full
 `StudyExtraction` is validated after every mutation. Truth and its new audit event are
 then committed together as one immutable revision, so concurrent reviewers cannot

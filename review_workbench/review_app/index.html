@@ -45,7 +45,11 @@
             <span id="page-count"></span>
             <button id="next-page" aria-label="Next page">→</button>
           </div>
-          <div id="pdf-stage"><img id="pdf-page" alt="Rendered PDF page" /></div>
+          <div id="citation-location" class="citation-location" hidden>
+            <div><span id="citation-page-label" class="eyebrow"></span><strong id="citation-block-label"></strong><span id="citation-match-label" class="citation-match"></span><blockquote id="citation-location-quote"></blockquote></div>
+            <button id="clear-citation" aria-label="Clear evidence location">×</button>
+          </div>
+          <div id="pdf-stage"><div id="pdf-canvas"><img id="pdf-page" alt="Rendered PDF page" /><div id="pdf-highlights" aria-hidden="true"></div></div></div>
           <details class="source-text"><summary>Selectable page text</summary><pre id="pdf-text"></pre></details>
         </section>
 
@@ -95,10 +99,11 @@
                     <option value="stability_tests">Stability test</option>
                     <option value="identity_links">Cross-window identity link</option>
                   </select>
-                  <button id="add-record">Add</button>
+                  <button id="add-record">Create draft</button>
                 </div></details>
               </div>
             </div>
+            <p class="callout record-guidance"><strong>Wrong number of devices or measurements?</strong> Add a missing record from the menu above, or copy the current record when it is a useful starting point. For an extra record, choose <strong>Remove extra record</strong>. Removal is blocked until linked measurements have been reassigned or removed.</p>
             <div id="review-queue"></div>
             <div class="queue-footer">
               <button id="previous-record" aria-label="Previous record">← Previous</button>
@@ -138,10 +143,11 @@
   <dialog id="record-dialog">
     <form method="dialog" class="dialog-card">
       <div class="dialog-heading"><div><span id="record-kind" class="eyebrow"></span><h2 id="record-title">Edit record</h2></div><button value="cancel" aria-label="Close">×</button></div>
-      <p class="muted">Correct the scientific fields below. Existing citations are preserved automatically.</p>
+      <p id="record-dialog-help" class="callout"></p>
+      <div id="record-dependencies" class="dependency-warning" hidden></div>
       <div id="structured-editor" class="structured-editor"></div>
       <details class="advanced-json"><summary>Advanced: edit complete validated JSON</summary><label>Record JSON<textarea id="record-json" rows="18" spellcheck="false"></textarea></label></details>
-      <details class="evidence-search"><summary>Use different supporting evidence</summary>
+      <details class="evidence-search"><summary id="evidence-search-label">Choose correction evidence</summary>
         <div class="evidence-picker">
           <label>Find evidence<input id="evidence-query" type="search" placeholder="Search extracted evidence…" /></label>
           <button id="search-evidence" type="button">Search</button>
@@ -150,8 +156,8 @@
       </details>
       <label>Evidence block ID<input id="citation-block" /></label>
       <label>Exact quote <span>Trim this to the smallest passage that supports the correction.</span><textarea id="citation-quote" rows="3"></textarea></label>
-      <label>Decision note<input id="mutation-note" placeholder="Why is this correction needed?" /></label>
-      <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove record</button><span></span><button value="cancel">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
+      <label><span id="mutation-note-label">Reason for correction</span> <span id="mutation-note-help">Explain what the extraction got wrong.</span><input id="mutation-note" placeholder="What did the extraction get wrong?" /></label>
+      <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove extra record</button><span></span><button value="cancel">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
       <p id="dialog-status" role="status"></p>
     </form>
   </dialog>

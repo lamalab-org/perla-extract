@@ -243,6 +243,79 @@ def test_no_op_replacements_are_rejected(tmp_path, empty_study, document_payload
         store.mutate("calibration", "10.0000--example", request, "ada")
 
 
+def test_referenced_records_must_be_reassigned_or_removed_before_their_target(
+    tmp_path, empty_study, document_payload
+):
+    study = copy.deepcopy(empty_study)
+    citation = {"block_id": "main_p1_text_1", "quote": "champion device"}
+    study["individual_devices"] = [
+        {
+            "device_id": "device-1",
+            "family_id": None,
+            "label": "Champion device",
+            "variant": None,
+            "champion_status": "yes",
+            "selection_basis": "champion",
+            "reported_properties": [],
+            "evidence": [citation],
+        }
+    ]
+    study["performance_observations"] = [
+        {
+            "observation_id": "observation-1",
+            "device_id": "device-1",
+            "measurement_type": "jv_scan",
+            "scan_direction": "not_reported",
+            "metrics": [
+                {
+                    "name": "PCE",
+                    "raw_value": "24.1%",
+                    "value_number": 24.1,
+                    "unit": "%",
+                    "evidence": [citation],
+                }
+            ],
+            "evidence": [citation],
+        }
+    ]
+    store = StudyReviewStore(tmp_path)
+    seed(store, study, document_payload)
+    bundle = store.load_bundle("calibration", "10.0000--example")
+    assert bundle["summary"]["record_references"] == {
+        "individual_devices:device-1": [
+            "performance_observations:observation-1"
+        ]
+    }
+
+    remove_device = MutationRequest(
+        action="remove",
+        path="/individual_devices/0",
+        note="This duplicate device is not supported.",
+        base_revision=1,
+    )
+    with pytest.raises(ValueError, match="performance_observations:observation-1"):
+        store.mutate("calibration", "10.0000--example", remove_device, "ada")
+
+    without_observation = store.mutate(
+        "calibration",
+        "10.0000--example",
+        MutationRequest(
+            action="remove",
+            path="/performance_observations/0",
+            note="The observation belongs to the duplicate record.",
+            base_revision=1,
+        ),
+        "ada",
+    )
+    removed = store.mutate(
+        "calibration",
+        "10.0000--example",
+        remove_device.model_copy(update={"base_revision": without_observation["revision"]}),
+        "ada",
+    )
+    assert removed["ground_truth"]["individual_devices"] == []
+
+
 def test_blind_inventory_precedes_inventory_completion(
     tmp_path, empty_study, document_payload
 ):
