@@ -290,6 +290,7 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     assert "My edits &amp; undo" in html
     assert "My annotations and edits" in html
     assert "Download my annotations" in html
+    assert "Reset current review state" in html
     assert "/api/reviewer-progress/" in source
     assert "current_record_decisions" in source
     assert 'text: "Before"' in source
@@ -298,6 +299,9 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     assert "Undo this saved edit" in html
     assert "undoAnnotation" in source
     assert "/api/mutation-undos/" in source
+    assert "/api/reviewer-resets/" in source
+    assert "resetReviewerProgress" in source
+    assert "resettable_review_count" in source
     assert "undoable_event_ids" in source
     assert "Nothing is erased from history" in html
     assert "No saved field correction is currently safe to undo" in source
@@ -305,6 +309,7 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     assert "Edit saved census" in source
     assert 'application.reviewer_progress(parts[2], user["id"])' in server
     assert 'application.undo_mutation(' in server
+    assert 'application.reset_reviewer_state(' in server
 
 
 def test_file_actions_are_direct_responsive_and_show_progress():

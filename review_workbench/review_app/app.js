@@ -1453,6 +1453,12 @@ function annotationSubject(event) {
   }
   if (event.kind === "record_decision") return `${event.details.record_key} · ${DECISION_GUIDANCE[event.details.decision] || humanLabel(event.details.decision)}`;
   if (event.kind === "stage_complete") return `${humanLabel(event.details.stage)} stage completed`;
+  if (event.kind === "review_reset") {
+    const cleared = event.details?.cleared_record_decisions || 0;
+    const census = event.details?.cleared_inventory_audit ? " · census cleared" : "";
+    const stages = event.details?.cleared_stages?.length || 0;
+    return `${cleared} record decision${cleared === 1 ? "" : "s"} cleared${census} · ${stages} completed stage${stages === 1 ? "" : "s"} cleared`;
+  }
   if (event.kind === "inventory_audit") {
     const counts = Object.entries(event.details.expected_counts || {}).map(([name, count]) => `${humanLabel(name)}: ${count}`);
     const figures = event.details.main_text_figure_census;
@@ -1485,11 +1491,12 @@ function annotationActionHelp(paper, event, canUndo, current) {
   if (canUndo) return "This correction is still the current version and can be safely reversed.";
   if (event.kind === "record_decision") return current
     ? "To change this decision, open the paper's Records tab and choose a different outcome."
-    : "A newer decision replaced this one; it remains here as history.";
+    : "This decision is no longer part of your current review state; it remains here as history.";
   if (event.kind === "inventory_audit") return current
     ? "To change these counts, open the paper's Census tab and choose Edit saved census."
     : "A newer census replaced these counts; this entry remains as history.";
   if (event.kind === "stage_complete") return "Review milestones remain in the audit history and are not field edits.";
+  if (event.kind === "review_reset") return "The reset cleared reviewer-specific progress without changing the shared scientific data.";
   if (paper.undone_event_ids?.includes(event.event_id)) return "This correction has already been undone.";
   if (["mutation", "spreadsheet_review"].includes(event.kind)) return "This older correction cannot be safely undone because the affected record changed afterward.";
   return "This saved action is part of the audit history and has no reversible data change.";
@@ -1572,7 +1579,7 @@ async function undoAnnotation(paper, event, button) {
 function renderReviewerProgress(progress) {
   const undoableCount = progress.papers.reduce((count, paper) => count + (paper.undoable_event_ids?.length || 0), 0);
   $("annotation-summary").replaceChildren(
-    element("p", { text: `${progress.annotation_count} saved annotation${progress.annotation_count === 1 ? "" : "s"} across ${progress.paper_count} paper${progress.paper_count === 1 ? "" : "s"} in ${progress.split}.` }),
+    element("p", { text: `${progress.resettable_review_count} current decision or progress item${progress.resettable_review_count === 1 ? "" : "s"} can be reset. ${progress.annotation_count} saved action${progress.annotation_count === 1 ? "" : "s"} across ${progress.paper_count} paper${progress.paper_count === 1 ? "" : "s"} remain in the audit history.` }),
     element("p", {
       className: undoableCount ? "callout" : "muted",
       text: undoableCount
@@ -1580,6 +1587,7 @@ function renderReviewerProgress(progress) {
         : "No saved field correction is currently safe to undo. Decisions can still be changed in Records, and census counts can be updated in Census.",
     }),
   );
+  $("reset-annotations").disabled = progress.resettable_review_count === 0;
   const papers = [...progress.papers].sort((left, right) => right.last_saved_at.localeCompare(left.last_saved_at));
   const cards = papers.map((paper) => element("section", { className: "annotation-paper" }, [
     element("div", { className: "annotation-paper-heading" }, [
@@ -1587,7 +1595,7 @@ function renderReviewerProgress(progress) {
         element("strong", { text: paper.paper_id }),
         element("span", { className: "muted", text: `Current paper revision ${paper.current_revision}` }),
       ]),
-      element("span", { className: "pill", text: `${paper.events.length} saved` }),
+      element("span", { className: "pill", text: `${paper.resettable_review_count} resettable · ${paper.events.length} saved` }),
     ]),
     ...(paper.completed_stages.length ? [element("p", { className: "muted", text: `Completed stages: ${paper.completed_stages.map(humanLabel).join(" · ")}` })] : []),
     ...[...paper.events].reverse().map((event) => annotationEvent(paper, event)),
@@ -1595,6 +1603,50 @@ function renderReviewerProgress(progress) {
   $("annotation-list").replaceChildren(...(cards.length ? cards : [
     element("p", { className: "empty-queue", text: "You have not saved annotations in this dataset yet." }),
   ]));
+}
+
+async function resetReviewerProgress() {
+  const button = $("reset-annotations");
+  try {
+    const progress = await loadReviewerProgress();
+    const papers = progress.papers.filter((paper) => paper.resettable_review_count > 0);
+    if (!papers.length) {
+      $("annotation-status").textContent = "There is no current review state to reset in this dataset.";
+      return;
+    }
+    if (!window.confirm(`Reset ${progress.resettable_review_count} current decision or progress item${progress.resettable_review_count === 1 ? "" : "s"} across ${papers.length} paper${papers.length === 1 ? "" : "s"} in ${progress.split}? This clears your record decisions, census, and completed stages. Scientific corrections and the audit history are kept.`)) return;
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    $("annotation-status").textContent = "Resetting current review state…";
+    $("annotation-status").className = "";
+    const failures = [];
+    let resetCount = 0;
+    for (const paper of papers) {
+      try {
+        const bundle = await request(`/api/reviewer-resets/${state.split}/${encodeURIComponent(paper.paper_id)}`, {
+          method: "POST",
+          body: JSON.stringify({ base_revision: paper.current_revision }),
+        });
+        resetCount += 1;
+        if (state.paperId === paper.paper_id) state.bundle = bundle;
+      } catch (error) { failures.push(`${paper.paper_id}: ${error.message}`); }
+    }
+    await loadReviewerProgress();
+    if (state.bundle) renderStudy();
+    if (failures.length) {
+      $("annotation-status").textContent = `${resetCount} paper${resetCount === 1 ? "" : "s"} reset. Could not reset ${failures.join("; ")}`;
+      $("annotation-status").className = "error";
+    } else {
+      $("annotation-status").textContent = `Current review state reset for ${resetCount} paper${resetCount === 1 ? "" : "s"}. The saved audit history is unchanged.`;
+      $("annotation-status").className = "success";
+    }
+  } catch (error) {
+    $("annotation-status").textContent = error.message;
+    $("annotation-status").className = "error";
+  } finally {
+    button.removeAttribute("aria-busy");
+    button.disabled = Boolean(state.annotations) && state.annotations.resettable_review_count === 0;
+  }
 }
 
 async function loadReviewerProgress() {
@@ -1813,6 +1865,7 @@ $("download-supplement-pdf").addEventListener("click", (event) => runDownload(
   () => downloadPaper("supplement"),
 ));
 $("open-annotations").addEventListener("click", openReviewerProgress);
+$("reset-annotations").addEventListener("click", resetReviewerProgress);
 $("download-annotations").addEventListener("click", async () => {
   try {
     await downloadReviewerProgress();

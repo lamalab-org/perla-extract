@@ -192,6 +192,14 @@ class RecordDecisionRequest(BaseModel):
     note: str = Field(default="", max_length=2000)
 
 
+class ReviewerResetRequest(BaseModel):
+    """Clear one reviewer's current decisions and progress for a paper."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    base_revision: int = Field(ge=0)
+
+
 class ReviewEvent(BaseModel):
     """Append-only audit record for a mutation, census, or stage decision."""
 
@@ -207,6 +215,7 @@ class ReviewEvent(BaseModel):
         "inventory_audit",
         "record_decision",
         "stage_complete",
+        "review_reset",
         "seed_imported",
     ]
     action: MutationAction | None = None
@@ -230,6 +239,7 @@ class ReviewerPaperProgress(BaseModel):
     completed_stages: list[ReviewStage]
     current_inventory_audit: dict[str, Any] | None = None
     current_record_decisions: dict[str, RecordDecision] = Field(default_factory=dict)
+    resettable_review_count: int = Field(ge=0)
     undoable_event_ids: list[str] = Field(default_factory=list)
     undone_event_ids: list[str] = Field(default_factory=list)
     events: list[ReviewEvent]
@@ -244,6 +254,7 @@ class ReviewerProgress(BaseModel):
     split: Split
     paper_count: int = Field(ge=0)
     annotation_count: int = Field(ge=0)
+    resettable_review_count: int = Field(ge=0)
     papers: list[ReviewerPaperProgress]
 
 
@@ -713,6 +724,10 @@ class StudyReviewStore:
                 for stage in ("inventory", "fields", "completeness", "adjudication")
                 if reviewer_id in summary["completed_stages"].get(stage, [])
             ]
+            current_inventory_audit = summary["inventory_audits"].get(reviewer_id)
+            current_record_decisions = summary["record_decisions"].get(
+                reviewer_id, {}
+            )
             papers.append(
                 ReviewerPaperProgress(
                     paper_id=paper_id,
@@ -720,11 +735,12 @@ class StudyReviewStore:
                     last_saved_at=events[-1].timestamp,
                     event_counts=dict(Counter(event.kind for event in events)),
                     completed_stages=completed_stages,
-                    current_inventory_audit=summary["inventory_audits"].get(
-                        reviewer_id
-                    ),
-                    current_record_decisions=summary["record_decisions"].get(
-                        reviewer_id, {}
+                    current_inventory_audit=current_inventory_audit,
+                    current_record_decisions=current_record_decisions,
+                    resettable_review_count=(
+                        len(completed_stages)
+                        + len(current_record_decisions)
+                        + int(current_inventory_audit is not None)
                     ),
                     undoable_event_ids=undoable_event_ids,
                     undone_event_ids=sorted(undone_event_ids),
@@ -736,6 +752,9 @@ class StudyReviewStore:
             split=split,
             paper_count=len(papers),
             annotation_count=sum(len(paper.events) for paper in papers),
+            resettable_review_count=sum(
+                paper.resettable_review_count for paper in papers
+            ),
             papers=papers,
         )
         return result.model_dump(mode="json")
@@ -783,6 +802,14 @@ class StudyReviewStore:
                         decisions.setdefault(event["reviewer_id"], {})[record_key] = str(
                             details["decision"]
                         )
+            elif event["kind"] == "review_reset":
+                reviewer_id = event["reviewer_id"]
+                audits.pop(reviewer_id, None)
+                decisions.pop(reviewer_id, None)
+                for reviewers in stages.values():
+                    reviewers[:] = [
+                        candidate for candidate in reviewers if candidate != reviewer_id
+                    ]
         return {
             "device_families": len(truth["device_families"]),
             "individual_devices": len(truth["individual_devices"]),
@@ -1250,6 +1277,57 @@ class StudyReviewStore:
             event,
         )
 
+    def reset_reviewer_state(
+        self,
+        split: str,
+        paper_id: str,
+        request: ReviewerResetRequest,
+        reviewer_id: str,
+    ) -> dict[str, Any]:
+        """Clear a reviewer's current markers without rewriting scientific data.
+
+        Decisions, census results, and completed stages are reviewer-specific derived
+        state, so a single compensating event can clear them while preserving the
+        audit trail. Scientific corrections affect the shared ground truth and remain
+        governed by the stricter mutation-undo checks instead of being bulk-reverted.
+        """
+
+        current_revision = self._validate_revision(
+            split, paper_id, request.base_revision
+        )
+        summary = self.summary(
+            current_revision.ground_truth, current_revision.events
+        )
+        decisions = summary["record_decisions"].get(reviewer_id, {})
+        inventory = summary["inventory_audits"].get(reviewer_id)
+        stages = [
+            stage
+            for stage, reviewers in summary["completed_stages"].items()
+            if reviewer_id in reviewers
+        ]
+        if not decisions and inventory is None and not stages:
+            raise ValueError("there is no current review state to reset for this paper")
+        event = ReviewEvent(
+            event_id=str(uuid.uuid4()),
+            revision=current_revision.revision + 1,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            reviewer_id=reviewer_id,
+            kind="review_reset",
+            note="Reset current reviewer decisions and progress.",
+            details={
+                "cleared_record_decisions": len(decisions),
+                "cleared_inventory_audit": inventory is not None,
+                "cleared_stages": stages,
+            },
+        ).model_dump(mode="json")
+        return self._commit(
+            split,
+            paper_id,
+            current_revision,
+            current_revision.ground_truth,
+            event,
+        )
+
     def complete_stage(
         self, split: str, paper_id: str, request: StageRequest, reviewer_id: str
     ) -> dict[str, Any]:
@@ -1264,17 +1342,13 @@ class StudyReviewStore:
             split, paper_id, request.base_revision
         )
         events = current_revision.events
-        reviewer_events = [
-            event for event in events if event["reviewer_id"] == reviewer_id
-        ]
-        if any(
-            event["kind"] == "stage_complete"
-            and event["details"].get("stage") == request.stage
-            for event in reviewer_events
-        ):
+        current_summary = self.summary(current_revision.ground_truth, events)
+        completed = current_summary["completed_stages"]
+        if reviewer_id in completed.get(request.stage, []):
             raise ValueError(f"{request.stage} stage is already complete")
-        if request.stage == "inventory" and not any(
-            event["kind"] == "inventory_audit" for event in reviewer_events
+        if (
+            request.stage == "inventory"
+            and reviewer_id not in current_summary["inventory_audits"]
         ):
             raise ValueError(
                 "save the paper census before completing inventory"
@@ -1284,15 +1358,11 @@ class StudyReviewStore:
             "completeness": "fields",
             "adjudication": "completeness",
         }.get(request.stage)
-        if prerequisite and not any(
-            event["kind"] == "stage_complete"
-            and event["details"].get("stage") == prerequisite
-            for event in reviewer_events
-        ):
+        if prerequisite and reviewer_id not in completed.get(prerequisite, []):
             raise ValueError(f"complete the {prerequisite} stage first")
         if request.stage == "fields":
             truth = current_revision.ground_truth
-            decisions = self.summary(truth, events)["record_decisions"].get(
+            decisions = current_summary["record_decisions"].get(
                 reviewer_id, {}
             )
             unresolved = [

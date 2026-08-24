@@ -184,10 +184,10 @@
   <dialog id="annotations-dialog">
     <form method="dialog" class="dialog-card">
       <div class="dialog-heading"><div><span class="eyebrow">Saved reviewer activity</span><h2>My annotations and edits</h2></div><button value="cancel" aria-label="Close">×</button></div>
-      <p class="callout">This is your complete saved activity. An <strong>Undo this saved edit</strong> button appears beside a correction only while it is safe to reverse. Record decisions can be changed in Records, and a saved census can be updated in Census. Nothing is erased from history.</p>
+      <p class="callout">This is your complete saved activity. <strong>Reset current review state</strong> clears your decisions, census, and completed stages in this dataset. Scientific corrections affect the shared data; an <strong>Undo this saved edit</strong> button appears only while reversal is safe. Nothing is erased from history.</p>
       <div id="annotation-summary"></div>
       <div id="annotation-list" class="annotation-list"></div>
-      <div class="dialog-actions"><span></span><button value="cancel">Close</button><button id="download-annotations" type="button" class="primary">Download my annotations</button></div>
+      <div class="dialog-actions"><button id="reset-annotations" type="button" class="danger">Reset current review state</button><span></span><button value="cancel">Close</button><button id="download-annotations" type="button" class="primary">Download my annotations</button></div>
       <p id="annotation-status" role="status"></p>
     </form>
   </dialog>

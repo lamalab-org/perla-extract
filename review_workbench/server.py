@@ -40,6 +40,7 @@ from review_workbench.study_review import (  # noqa: E402
     InventoryAuditRequest,
     MutationRequest,
     RecordDecisionRequest,
+    ReviewerResetRequest,
     StageRequest,
     StudyReviewStore,
     UndoMutationRequest,
@@ -296,6 +297,20 @@ class ReviewApplication:
         """Return the authenticated reviewer's saved activity across one split."""
 
         return self.store.reviewer_progress(split, reviewer_id)
+
+    def reset_reviewer_state(
+        self, split: str, paper_id: str, payload: object, reviewer_id: str
+    ) -> dict[str, Any]:
+        """Clear current reviewer markers while retaining the append-only history."""
+
+        return self._with_sources(
+            self.store.reset_reviewer_state(
+                split,
+                paper_id,
+                ReviewerResetRequest.model_validate(payload),
+                reviewer_id,
+            )
+        )
 
     def review_workbook(
         self,
@@ -826,6 +841,14 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 if len(parts) == 4 and parts[:2] == ["api", "record-decisions"]:
                     self.send_json(
                         application.decide_record(
+                            parts[2], parts[3], self.read_json(), user["id"]
+                        ),
+                        HTTPStatus.CREATED,
+                    )
+                    return
+                if len(parts) == 4 and parts[:2] == ["api", "reviewer-resets"]:
+                    self.send_json(
+                        application.reset_reviewer_state(
                             parts[2], parts[3], self.read_json(), user["id"]
                         ),
                         HTTPStatus.CREATED,

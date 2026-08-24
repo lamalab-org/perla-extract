@@ -122,7 +122,11 @@ is still the current value. Undo creates a new validated event that points to th
 original edit; it does not delete either action from history. If somebody subsequently
 changed the same value, the undo action is unavailable so it cannot overwrite that
 newer work. Record decisions can be changed by selecting a different decision during
-record review.
+record review. **Reset current review state** clears all current decisions, census
+results, and completed stages for the reviewer in the selected dataset. The immutable
+history remains available. Because scientific corrections change shared ground truth,
+the reset does not bulk-revert them; each remains individually undoable only while its
+saved value is untouched and schema-valid.
 
 The server derives the personal activity response from immutable revisions using the
 authenticated reviewer identity; it does not accept another user ID from the browser.

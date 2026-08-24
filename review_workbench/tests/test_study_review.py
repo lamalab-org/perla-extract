@@ -17,6 +17,7 @@ from review_workbench.study_review import (
     MainTextFigureCensus,
     MutationRequest,
     RecordDecisionRequest,
+    ReviewerResetRequest,
     StageRequest,
     StudyReviewStore,
     UndoMutationRequest,
@@ -889,6 +890,99 @@ def test_stage_cannot_be_completed_twice(tmp_path, empty_study, document_payload
             "calibration",
             "10.0000--example",
             StageRequest(stage="inventory", base_revision=completed["revision"]),
+            "ada",
+        )
+
+
+def test_reviewer_can_reset_current_progress_without_erasing_history_or_others(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    store.import_seed(
+        "calibration",
+        "10.0000--example",
+        study_with_family(empty_study),
+        document=document_payload,
+        manifest={},
+        reviewer_id="ada",
+    )
+    corrected = store.mutate(
+        "calibration",
+        "10.0000--example",
+        MutationRequest(
+            action="replace",
+            path="/unresolved_notes/0",
+            value="Reviewed scientific note",
+            evidence=[{"block_id": "main_p1_text_1", "quote": "champion device"}],
+            base_revision=1,
+        ),
+        "ada",
+    )
+    audited = store.inventory_audit(
+        "calibration",
+        "10.0000--example",
+        InventoryAuditRequest(
+            base_revision=corrected["revision"],
+            searched_sources=["main"],
+            expected_counts={"device_families": 1},
+        ),
+        "ada",
+    )
+    completed = store.complete_stage(
+        "calibration",
+        "10.0000--example",
+        StageRequest(stage="inventory", base_revision=audited["revision"]),
+        "ada",
+    )
+    decided = store.decide_record(
+        "calibration",
+        "10.0000--example",
+        RecordDecisionRequest(
+            collection="device_families",
+            record_id="family-control",
+            decision="verified",
+            base_revision=completed["revision"],
+        ),
+        "ada",
+    )
+    grace = store.decide_record(
+        "calibration",
+        "10.0000--example",
+        RecordDecisionRequest(
+            collection="device_families",
+            record_id="family-control",
+            decision="uncertain",
+            base_revision=decided["revision"],
+        ),
+        "grace",
+    )
+
+    reset = store.reset_reviewer_state(
+        "calibration",
+        "10.0000--example",
+        ReviewerResetRequest(base_revision=grace["revision"]),
+        "ada",
+    )
+
+    assert reset["summary"]["record_decisions"].get("ada", {}) == {}
+    assert reset["summary"]["inventory_audits"].get("ada") is None
+    assert reset["summary"]["completed_stages"].get("inventory", []) == []
+    assert reset["summary"]["record_decisions"]["grace"]
+    assert reset["ground_truth"]["unresolved_notes"] == ["Reviewed scientific note"]
+    assert reset["events"][-1]["kind"] == "review_reset"
+    progress = store.reviewer_progress("calibration", "ada")
+    assert progress["annotation_count"] == 5
+    assert progress["resettable_review_count"] == 0
+    assert progress["papers"][0]["resettable_review_count"] == 0
+    assert progress["papers"][0]["undoable_event_ids"] == [
+        corrected["events"][-1]["event_id"]
+    ]
+
+    with pytest.raises(ValueError, match="paper census"):
+        store.complete_stage(
+            "calibration",
+            "10.0000--example",
+            StageRequest(stage="inventory", base_revision=reset["revision"]),
             "ada",
         )
 

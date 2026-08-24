@@ -137,7 +137,10 @@ Every authenticated reviewer can open **My edits & undo** from the header. This 
 reads the persisted revision log across the selected split and shows only that
 reviewer's census submissions, record decisions, corrections, evidence, notes, and
 stage completions. Decisions are marked current or superseded when later edits change
-the reviewed record. Corrections and workbook imports that are still untouched offer
+the reviewed record. **Reset current review state** clears that reviewer's current
+record decisions, census, and completed stages across the selected dataset. It writes
+compensating reset events, so prior activity remains inspectable instead of being
+deleted. Corrections and workbook imports that are still untouched offer
 **Undo this saved edit**. Undo writes a linked, validated revision instead of deleting history; the
 action is unavailable once later work changes the same value. **Download my
 annotations** saves the same reviewer-scoped ledger
