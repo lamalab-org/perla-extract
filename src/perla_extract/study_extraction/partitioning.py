@@ -28,16 +28,16 @@ class EvidenceWindow(StrictModel):
     def character_count(self) -> int:
         """Count characters sent when this extraction window is evaluated."""
 
-        return sum(block.character_count for block in self.call_blocks)
+        return sum(block.character_count for block in self.request_blocks)
 
     @property
-    def call_blocks(self) -> list[EvidenceBlock]:
+    def request_blocks(self) -> list[EvidenceBlock]:
         """Return context followed by primary evidence in stable source order."""
 
         return [*self.context_blocks, *self.primary_blocks]
 
 
-class WindowPlan(StrictModel):
+class EvidenceWindowPlan(StrictModel):
     """Record the complete and auditable partition of source evidence."""
 
     block_ids: list[Identifier]
@@ -45,7 +45,7 @@ class WindowPlan(StrictModel):
     max_characters: int = Field(gt=0)
 
     @model_validator(mode="after")
-    def validate_coverage(self) -> WindowPlan:
+    def validate_coverage(self) -> EvidenceWindowPlan:
         """Fail if a source block is missing, duplicated, or exceeds the plan cap."""
 
         expected = set(self.block_ids)
@@ -83,7 +83,9 @@ def _section_key(block: EvidenceBlock) -> tuple[str, str]:
     return block.source, section
 
 
-def _contiguous_groups(blocks: Sequence[EvidenceBlock]) -> list[list[EvidenceBlock]]:
+def _group_contiguous_sections(
+    blocks: Sequence[EvidenceBlock],
+) -> list[list[EvidenceBlock]]:
     """Keep consecutive section blocks together before enforcing the size cap."""
 
     groups: list[list[EvidenceBlock]] = []
@@ -94,7 +96,7 @@ def _contiguous_groups(blocks: Sequence[EvidenceBlock]) -> list[list[EvidenceBlo
     return groups
 
 
-def _split_group(
+def _split_oversized_group(
     group: Sequence[EvidenceBlock], budget: int
 ) -> list[list[EvidenceBlock]]:
     """Split an oversized section at block boundaries, preferring page boundaries."""
@@ -114,7 +116,7 @@ def _split_group(
     return units
 
 
-def _pack(
+def _pack_structural_groups(
     groups: Iterable[Sequence[EvidenceBlock]], budget: int
 ) -> list[list[EvidenceBlock]]:
     """Greedily pack ordered structural groups while retaining every block."""
@@ -135,7 +137,7 @@ def _pack(
         if current:
             packed.append(current)
             current, current_size = [], 0
-        for unit in _split_group(group, budget):
+        for unit in _split_oversized_group(group, budget):
             unit_size = sum(block.character_count for block in unit)
             if current and current_size + unit_size > budget:
                 packed.append(current)
@@ -150,13 +152,13 @@ def _pack(
     return packed
 
 
-def plan_windows(
+def plan_evidence_windows(
     blocks: Sequence[EvidenceBlock],
     *,
     max_characters: int = 60_000,
     main_source: str = "main",
     max_context_characters: int = 20_000,
-) -> WindowPlan:
+) -> EvidenceWindowPlan:
     """Create complete section-aware windows for a paper and arbitrarily long SI.
 
     The entire main paper is repeated as context only when it fits the context
@@ -199,7 +201,9 @@ def plan_windows(
     for source in source_order:
         source_context = context if source != main_source else []
         budget = max_characters - sum(item.character_count for item in source_context)
-        primary_groups = _pack(_contiguous_groups(by_source[source]), budget)
+        primary_groups = _pack_structural_groups(
+            _group_contiguous_sections(by_source[source]), budget
+        )
         for index, primary in enumerate(primary_groups, start=1):
             primary_size = sum(item.character_count for item in primary)
             context_size = sum(item.character_count for item in source_context)
@@ -215,7 +219,7 @@ def plan_windows(
                 )
             )
 
-    return WindowPlan(
+    return EvidenceWindowPlan(
         block_ids=[block.block_id for block in blocks],
         windows=windows,
         max_characters=max_characters,

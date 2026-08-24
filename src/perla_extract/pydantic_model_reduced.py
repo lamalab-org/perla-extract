@@ -1,8 +1,18 @@
-from pydantic import BaseModel, Field, confloat, model_validator
+"""Historical flat PERLA schema retained as a compatibility boundary.
+
+New extraction uses the device-centered ``StudyExtraction`` model. These classes
+remain the authoritative shape for existing reduced datasets and exports; their field
+descriptions carry the legacy unit and vocabulary constraints.
+"""
+
 from typing import List, Literal, Optional
+
+from pydantic import BaseModel, Field, confloat, model_validator
 
 
 class Ion(BaseModel):
+    """Describe one crystallographic-site constituent in the reduced composition."""
+
     abbreviation: Optional[str] = Field(
         None,
         description="The abbreviation used for the ion when writing the perovskite composition such as: 'Cs', 'MA', 'FA', 'PEA'",
@@ -25,6 +35,8 @@ class Ion(BaseModel):
 
 
 class UnitValue(BaseModel):
+    """Pair a numeric value with one of a leaf model's permitted units."""
+
     value: Optional[float] = Field(None)
     unit: Optional[str] = Field(None)
 
@@ -325,6 +337,14 @@ class Layer(BaseModel):
 
 
 class PerovskiteSolarCell(BaseModel):
+    """Represent one flat compatibility row, not necessarily one physical cell.
+
+    Depending on its source record, a row can encode an individual device, champion,
+    population summary, stabilized result, or stability experiment. Rich identity and
+    provenance that do not fit this schema are serialized in ``additional_notes`` by
+    the adapter.
+    """
+
     perovskite_composition: Optional[PerovskiteComposition] = Field(None)
     device_architecture: Optional[
         Literal["pin", "nip", "Back contacted", "Front contacted", "Other"]
@@ -376,4 +396,6 @@ class PerovskiteSolarCell(BaseModel):
 
 
 class PerovskiteSolarCells(BaseModel):
+    """Wrap reduced rows in the container expected by historical PERLA consumers."""
+
     cells: Optional[List[PerovskiteSolarCell]] = Field(None)

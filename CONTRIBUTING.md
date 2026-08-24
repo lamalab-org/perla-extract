@@ -8,10 +8,10 @@ This project uses the [GitHub Flow](https://guides.github.com/introduction/flow)
 model for code contributions. Follow these steps:
 
 1. [Create a fork](https://help.github.com/articles/fork-a-repo) of the upstream
-   repository at [`lamalab-org/perovskite-extraction`](https://github.com/lamalab-org/perovskite-extraction)
+   repository at [`lamalab-org/perla-extract`](https://github.com/lamalab-org/perla-extract)
    on your GitHub account (or in one of your organizations)
 2. [Clone your fork](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
-   with `git clone https://github.com/<your namespace here>/perovskite-extraction.git`
+   with `git clone https://github.com/<your namespace here>/perla-extract.git`
 3. Make and commit changes to your fork with `git commit`
 4. Push changes to your fork with `git push`
 5. Repeat steps 3 and 4 as needed
@@ -31,9 +31,47 @@ acceptance and merge into the main branch. This has several benefits:
 
 ### Code formatting, etc.
 
-We use pre-commit hooks that format the code according to standard conventions.
+Install the development environment and run the local checks with:
+
+```bash
+pip install -e '.[dev]'
+ruff check src tests
+pytest -q
+```
+
+The slower Docling contract test is deliberately outside the fast suite:
+
+```bash
+pip install -e '.[dev]'
+PERLA_RUN_DOCLING_TESTS=1 pytest -q tests/study_extraction/test_docling_integration.py
+```
+
+The heavy NOMAD contract is pinned and runs in its manual CI job:
+
+```bash
+pip install -e '.[dev,nomad]'
+PERLA_RUN_NOMAD_TESTS=1 pytest -q tests/study_extraction/test_nomad_integration.py
+```
+
+Build the documentation with strict link and reference checks:
+
+```bash
+pip install -e '.[docs]'
+mkdocs build --strict
+```
+
+Use `mkdocs serve` while editing the site locally.
+
+Docstrings are expected at public APIs, scientific model boundaries, persistence
+transitions, and non-obvious algorithms. Explain invariants, side effects, or why a
+choice exists; do not add a docstring to obvious private plumbing merely to restate its
+name. Field descriptions remain the preferred place for leaf-schema constraints.
+
+We also provide pre-commit hooks that format the code according to standard
+conventions.
 
 To set up the hooks:
+
 1. Install pre-commit: `pip install pre-commit`
 2. Install the hooks: `pre-commit install`
 

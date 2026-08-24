@@ -1,4 +1,4 @@
-"""Centralize identifier invariants shared by merging and reconciliation."""
+"""Centralize identifier invariants shared by candidate collection and linking."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def duplicate_entity_ids(study: StudyExtraction) -> dict[EntityKind, list[str]]:
 
 
 def window_namespace(identifier: str) -> str | None:
-    """Recover the extraction-window prefix added during lossless merging."""
+    """Recover the extraction-window prefix added during candidate collection."""
 
     namespace, separator, _ = identifier.partition(":")
     return namespace if separator and namespace else None

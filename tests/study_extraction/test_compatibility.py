@@ -3,23 +3,23 @@ import json
 from perla_extract.study_extraction.compatibility import to_reduced_with_report
 from perla_extract.study_extraction.models import (
     DeviceFamily,
-    EvidenceRef,
-    Fact,
+    EvidenceCitation,
     IndividualDevice,
     Layer,
-    Paper,
+    PaperMetadata,
     PerformanceObservation,
     PopulationStatistic,
+    ReportedValue,
     StabilityCheckpoint,
     StabilityTest,
     StudyExtraction,
 )
 
-EVIDENCE = [EvidenceRef(block_id="table-1", quote="PCE 24.0%")]
+EVIDENCE = [EvidenceCitation(block_id="table-1", quote="PCE 24.0%")]
 
 
-def fact(name: str, value: float, unit: str) -> Fact:
-    return Fact(
+def reported_value(name: str, value: float, unit: str) -> ReportedValue:
+    return ReportedValue(
         name=name,
         raw_value=f"{value} {unit}",
         value_number=value,
@@ -42,7 +42,7 @@ def test_reduced_export_does_not_mix_champion_average_and_stability():
                 sequence=1,
                 role="absorber",
                 material="perovskite",
-                details=[fact("thickness", 500, "nm")],
+                reported_properties=[reported_value("thickness", 500, "nm")],
                 evidence=EVIDENCE,
             )
         ],
@@ -62,7 +62,7 @@ def test_reduced_export_does_not_mix_champion_average_and_stability():
         evidence=EVIDENCE,
     )
     study = StudyExtraction(
-        paper=Paper(title="Paper", doi="10.1/test"),
+        paper=PaperMetadata(title="PaperMetadata", doi="10.1/test"),
         device_families=[family],
         individual_devices=[device],
         performance_observations=[
@@ -71,7 +71,7 @@ def test_reduced_export_does_not_mix_champion_average_and_stability():
                 device_id="d1",
                 measurement_type="jv_scan",
                 scan_direction="reverse",
-                metrics=[fact("PCE", 24.0, "%")],
+                metrics=[reported_value("PCE", 24.0, "%")],
                 evidence=EVIDENCE,
             )
         ],
@@ -82,7 +82,7 @@ def test_reduced_export_does_not_mix_champion_average_and_stability():
                 label="12-device mean",
                 statistic_type="mean",
                 sample_size=12,
-                metrics=[fact("PCE", 22.0, "%")],
+                metrics=[reported_value("PCE", 22.0, "%")],
                 evidence=EVIDENCE,
             )
         ],
@@ -97,8 +97,8 @@ def test_reduced_export_does_not_mix_champion_average_and_stability():
                 checkpoints=[
                     StabilityCheckpoint(
                         checkpoint_id="c1",
-                        time=fact("time", 1000, "h"),
-                        outcomes=[fact("retained PCE", 90, "%")],
+                        time=reported_value("time", 1000, "h"),
+                        outcomes=[reported_value("retained PCE", 90, "%")],
                         evidence=EVIDENCE,
                     )
                 ],
@@ -115,9 +115,9 @@ def test_reduced_export_does_not_mix_champion_average_and_stability():
     assert champion.pce.value == 24.0
     assert champion.layers[0].thickness is None
     assert (
-        json.loads(champion.additional_notes)["family"]["layer_details"][0]["details"][
-            0
-        ]["raw_value"]
+        json.loads(champion.additional_notes)["family"]["layer_reported_properties"][0][
+            "reported_properties"
+        ][0]["raw_value"]
         == "500 nm"
     )
     assert mean.performance_aggregation == "mean"
@@ -133,7 +133,7 @@ def test_reduced_export_does_not_mix_champion_average_and_stability():
 
 
 def test_unitless_metric_is_retained_but_not_invented():
-    observation_fact = Fact(
+    observation_value = ReportedValue(
         name="PCE",
         raw_value="24.0",
         value_number=24.0,
@@ -141,7 +141,7 @@ def test_unitless_metric_is_retained_but_not_invented():
         evidence=EVIDENCE,
     )
     study = StudyExtraction(
-        paper=Paper(title=None, doi=None),
+        paper=PaperMetadata(title=None, doi=None),
         device_families=[],
         individual_devices=[
             IndividualDevice(
@@ -160,7 +160,7 @@ def test_unitless_metric_is_retained_but_not_invented():
                 device_id="d1",
                 measurement_type="not_reported",
                 scan_direction="not_reported",
-                metrics=[observation_fact],
+                metrics=[observation_value],
                 evidence=EVIDENCE,
             )
         ],
@@ -176,9 +176,9 @@ def test_unitless_metric_is_retained_but_not_invented():
 
 
 def test_common_unicode_unit_spelling_maps_without_numeric_conversion():
-    source = fact("Jsc", 25.1, "mA/cm²")
+    source = reported_value("Jsc", 25.1, "mA/cm²")
     study = StudyExtraction(
-        paper=Paper(title=None, doi=None),
+        paper=PaperMetadata(title=None, doi=None),
         device_families=[],
         individual_devices=[
             IndividualDevice(
