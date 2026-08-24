@@ -6,7 +6,14 @@ import json
 import fitz
 import pytest
 
-from review_workbench.server import ReviewApplication
+from review_workbench.server import REVISION_CONFLICT_RESPONSE, ReviewApplication
+
+
+def test_revision_conflict_message_is_actionable_without_internal_details():
+    assert REVISION_CONFLICT_RESPONSE["code"] == "review_revision_conflict"
+    assert "Load the latest saved version" in REVISION_CONFLICT_RESPONSE["error"]
+    assert "revision 2" not in REVISION_CONFLICT_RESPONSE["error"]
+    assert "stale" not in REVISION_CONFLICT_RESPONSE["error"]
 
 
 def pdf_bytes(text: str) -> bytes:

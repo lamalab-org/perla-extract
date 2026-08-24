@@ -124,6 +124,8 @@ th,td { padding:.55rem; border-bottom:1px solid var(--line); text-align:left; } 
 .annotation-change pre { max-height:150px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; font:11px/1.45 ui-monospace,monospace; background:var(--wash); padding:8px; border-radius:7px; }
 .annotation-json summary { cursor:pointer; color:var(--brand); font-size:.75rem; }
 .annotation-json pre { max-height:260px; overflow:auto; white-space:pre-wrap; font:11px/1.45 ui-monospace,monospace; background:var(--wash); padding:8px; border-radius:7px; }
+.status-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.status-actions p { flex:1; min-width:220px; }
 #status,.success { color:var(--brand); }.error,#dialog-status,#import-status { color:var(--danger); }
 dialog { border:0; border-radius:14px; padding:0; box-shadow:0 12px 60px #0005; width:min(760px,92vw); }
 dialog::backdrop { background:#16201dbb; }

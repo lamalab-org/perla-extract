@@ -147,7 +147,10 @@
           </div>
 
           <div id="history-tab" class="tab-panel" hidden><div id="event-history"></div></div>
-          <p id="status" role="status"></p>
+          <div class="status-actions">
+            <p id="status" role="status"></p>
+            <button id="reload-paper" type="button" hidden>Load latest saved version</button>
+          </div>
         </section>
       </div>
     </section>
@@ -185,7 +188,7 @@
       <label>Evidence block ID<input id="citation-block" /></label>
       <label>Exact quote <span>Trim this to the smallest passage that supports the correction.</span><textarea id="citation-quote" rows="3"></textarea></label>
       <label><span id="mutation-note-label">Reason for correction</span> <span id="mutation-note-help">Explain what the extraction got wrong.</span><input id="mutation-note" placeholder="What did the extraction get wrong?" /></label>
-      <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove extra record</button><span></span><button value="cancel">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
+      <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove extra record</button><span></span><button id="reload-paper-dialog" type="button" hidden>Discard this edit and load latest</button><button value="cancel">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
       <p id="dialog-status" role="status"></p>
     </form>
   </dialog>

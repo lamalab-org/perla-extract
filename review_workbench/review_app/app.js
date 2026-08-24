@@ -58,7 +58,12 @@ async function request(url, options = {}) {
   if (options.body && !(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
   const response = await fetch(url, { ...options, headers });
   const payload = response.headers.get("content-type")?.includes("json") ? await response.json() : await response.text();
-  if (!response.ok) throw new Error(payload.error || `Request failed (${response.status})`);
+  if (!response.ok) {
+    const error = new Error(payload.error || `Request failed (${response.status})`);
+    error.code = payload.code || "request_failed";
+    if (error.code === "review_revision_conflict") showRevisionConflictActions();
+    throw error;
+  }
   return payload;
 }
 
@@ -1063,7 +1068,38 @@ function setTab(tab) {
   }
 }
 
-function setStatus(message, error = false) { $("status").textContent = message; $("status").className = error ? "error" : "success"; }
+function showRevisionConflictActions() {
+  $("reload-paper").hidden = false;
+  $("reload-paper-dialog").hidden = false;
+}
+
+function clearRevisionConflictActions() {
+  $("reload-paper").hidden = true;
+  $("reload-paper-dialog").hidden = true;
+}
+
+function setStatus(message, error = false) {
+  $("status").textContent = message;
+  $("status").className = error ? "error" : "success";
+  if (!error) clearRevisionConflictActions();
+}
+
+async function reloadLatestPaper() {
+  if (!state.paperId) return;
+  $("reload-paper").disabled = true;
+  $("reload-paper-dialog").disabled = true;
+  if ($("record-dialog").open) $("record-dialog").close();
+  setStatus("Loading the latest saved version…");
+  try {
+    await selectPaper(state.paperId);
+    setStatus("Latest saved version loaded. Review your change again before saving.");
+  } catch (error) {
+    setStatus(error.message, true);
+  } finally {
+    $("reload-paper").disabled = false;
+    $("reload-paper-dialog").disabled = false;
+  }
+}
 
 function annotationSubject(event) {
   if (event.kind === "mutation") return `${event.action} ${event.path}`;
@@ -1254,6 +1290,8 @@ $("show-fields-editor").addEventListener("click", () => setRecordEditorMode("fie
 $("show-json-editor").addEventListener("click", () => setRecordEditorMode("json"));
 $("save-record").addEventListener("click", saveRecord);
 $("remove-record").addEventListener("click", removeRecord);
+$("reload-paper").addEventListener("click", reloadLatestPaper);
+$("reload-paper-dialog").addEventListener("click", reloadLatestPaper);
 $("search-evidence").addEventListener("click", searchEvidence);
 $("evidence-query").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); searchEvidence(); } });
 $("download-truth").addEventListener("click", async () => {

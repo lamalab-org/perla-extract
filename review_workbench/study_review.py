@@ -32,6 +32,7 @@ from review_workbench.review_storage import (
     ReviewPaperSource,
     ReviewRevision,
     ReviewStateStorage,
+    StaleRevisionError,
 )
 
 PAPER_ID = re.compile(r"^[A-Za-z0-9.-]+--[A-Za-z0-9._-]+$")
@@ -679,7 +680,7 @@ class StudyReviewStore:
         self.validate_identity(split, paper_id)
         revision = self.storage.load_revision(split, paper_id)
         if base_revision != revision.revision:
-            raise ValueError(
+            raise StaleRevisionError(
                 f"stale revision {base_revision}; current revision is {revision.revision}"
             )
         return revision

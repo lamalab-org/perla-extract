@@ -95,11 +95,15 @@ as a link. Review those linked records first: reassign a valid measurement to th
 device or family, or remove the linked record if it is also extra. The backend applies
 the same reference check, so an invalid removal cannot be forced through the API.
 
-Edits use a known base revision and are rejected when stale. The full
-`StudyExtraction` is validated after every mutation. Truth and its new audit event are
-then committed together as one immutable revision, so concurrent reviewers cannot
-produce a truth/event mismatch. Editing a record changes its content digest and
-invalidates the previous record decision automatically.
+Each edit names the saved version it started from. If somebody else saves the same
+paper first, the workbench does not overwrite their work. It asks the reviewer to load
+the latest saved version, check the intended change again, and resubmit it. Exact
+revision numbers remain in server logs for diagnosis rather than appearing in the
+reviewer interface. The full `StudyExtraction` is validated after every mutation.
+Truth and its new audit event are then committed together as one
+immutable revision, so concurrent reviewers cannot produce a truth/event mismatch.
+Editing a record changes its content digest and invalidates the previous record
+decision automatically.
 
 Reviewers can inspect **My annotations** at any time and download their own persisted
 event ledger for the selected split. The server derives this response from immutable

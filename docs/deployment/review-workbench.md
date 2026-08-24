@@ -134,8 +134,9 @@ generated calibration item from silently reusing a historical PDF with the same 
 The older `papers/` prefix remains a read-only fallback for legacy deployments.
 Creating revision `N + 1` with overwrite disabled is the compare-and-swap operation:
 if two serverless instances review revision `N`, exactly one can create the next path
-and the other receives a stale revision error. No process-local lock or mutable
-whole-dataset blob is involved.
+and the other receives an HTTP 409 conflict. The reviewer is asked to load the latest
+saved version and reconsider their change; exact revision numbers are kept in server
+logs for diagnosis. No process-local lock or mutable whole-dataset blob is involved.
 
 Configure `BLOB_READ_WRITE_TOKEN`; the server-side token is never sent to the browser.
 

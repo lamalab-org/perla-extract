@@ -32,7 +32,10 @@ from review_workbench.ground_truth_export import (  # noqa: E402
     build_ground_truth_export,
     ground_truth_zip,
 )
-from review_workbench.review_storage import ReviewStateStorage  # noqa: E402
+from review_workbench.review_storage import (  # noqa: E402
+    ReviewStateStorage,
+    StaleRevisionError,
+)
 from review_workbench.study_review import (  # noqa: E402
     InventoryAuditRequest,
     MutationRequest,
@@ -40,6 +43,14 @@ from review_workbench.study_review import (  # noqa: E402
     StageRequest,
     StudyReviewStore,
 )
+
+REVISION_CONFLICT_RESPONSE = {
+    "code": "review_revision_conflict",
+    "error": (
+        "This paper changed in another review session. Load the latest saved version, "
+        "review your change again, and then save it."
+    ),
+}
 
 
 class ReviewApplication:
@@ -637,6 +648,9 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 self.send_file(application.static_dir / asset)
             except FileNotFoundError as error:
                 self.send_json({"error": str(error)}, HTTPStatus.NOT_FOUND)
+            except StaleRevisionError as error:
+                logger.warning("Review revision conflict: {}", error)
+                self.send_json(REVISION_CONFLICT_RESPONSE, HTTPStatus.CONFLICT)
             except (ValueError, ValidationError, json.JSONDecodeError) as error:
                 self.send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
             except PermissionError as error:
@@ -732,6 +746,9 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 self.send_error(HTTPStatus.NOT_FOUND)
             except FileNotFoundError as error:
                 self.send_json({"error": str(error)}, HTTPStatus.NOT_FOUND)
+            except StaleRevisionError as error:
+                logger.warning("Review revision conflict: {}", error)
+                self.send_json(REVISION_CONFLICT_RESPONSE, HTTPStatus.CONFLICT)
             except (ValueError, ValidationError, json.JSONDecodeError) as error:
                 self.send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
             except PermissionError as error:

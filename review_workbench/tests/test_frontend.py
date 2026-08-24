@@ -71,6 +71,21 @@ def test_pipeline_statuses_are_explained_as_review_priorities():
     assert "added by quality pass" not in source
 
 
+def test_revision_conflicts_use_reviewer_language_and_offer_recovery():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    server = (APP.parent / "server.py").read_text(encoding="utf-8")
+
+    assert "Load latest saved version" in html
+    assert "Discard this edit and load latest" in html
+    assert "review_revision_conflict" in source
+    assert "reloadLatestPaper" in source
+    assert "HTTPStatus.CONFLICT" in server
+    assert "This paper changed in another review session" in server
+    assert "stale revision" not in html
+    assert "stale revision" not in source
+
+
 def test_ui_does_not_reintroduce_flat_cell_editor():
     source = (APP / "app.js").read_text(encoding="utf-8")
     assert "cellCorrection" not in source
