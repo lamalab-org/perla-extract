@@ -183,11 +183,12 @@
 
   <dialog id="annotations-dialog">
     <form method="dialog" class="dialog-card">
-      <div class="dialog-heading"><div><span class="eyebrow">Saved reviewer activity</span><h2>My annotations and edits</h2></div><button value="cancel" aria-label="Close">×</button></div>
-      <p class="callout">This is your complete saved activity. <strong>Reset current review state</strong> clears your decisions, census, and completed stages in this dataset. Scientific corrections affect the shared data; an <strong>Undo this saved edit</strong> button appears only while reversal is safe. Nothing is erased from history.</p>
+      <div class="dialog-heading"><div><span class="eyebrow">Your work in this dataset</span><h2>My review progress</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <div class="editor-mode" role="group" aria-label="Saved work view"><button id="show-current-annotations" type="button" class="active" aria-pressed="true">Current work</button><button id="show-annotation-history" type="button" aria-pressed="false">History</button></div>
+      <p id="annotation-help" class="callout"></p>
       <div id="annotation-summary"></div>
       <div id="annotation-list" class="annotation-list"></div>
-      <div class="dialog-actions"><button id="reset-annotations" type="button" class="danger">Reset current review state</button><span></span><button value="cancel">Close</button><button id="download-annotations" type="button" class="primary">Download my annotations</button></div>
+      <div class="dialog-actions"><button id="reset-annotations" type="button" class="danger">Reset all current progress</button><span></span><button value="cancel">Close</button><button id="download-annotations" type="button" class="primary">Download activity JSON</button></div>
       <p id="annotation-status" role="status"></p>
     </form>
   </dialog>

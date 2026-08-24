@@ -168,3 +168,27 @@ def test_blob_paper_heads_do_not_download_full_studies():
         ("paper-b", 1),
     ]
     assert blob.downloads == 0
+
+
+def test_blob_current_revision_does_not_download_immutable_source_again():
+    blob = MemoryBlobStore()
+    storage = BlobReviewStateStorage(blob)  # type: ignore[arg-type]
+    storage.create(
+        "dev",
+        "10.0000--example",
+        ReviewPaperSource(
+            seed_extraction={"note": "seed"},
+            manifest={},
+            initial_revision=revision(1, "seed"),
+        ),
+    )
+    blob.put(
+        "workbench/review-revisions/dev/10.0000--example/00000002.json",
+        revision(2, "reviewed").model_dump_json().encode(),
+        "application/json",
+    )
+
+    loaded = storage.load_revision("dev", "10.0000--example")
+
+    assert loaded.revision == 2
+    assert blob.downloads == 1

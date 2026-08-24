@@ -148,6 +148,17 @@ th,td { padding:.55rem; border-bottom:1px solid var(--line); text-align:left; } 
 .annotation-paper { border:1px solid var(--line); border-radius:10px; padding:12px; }
 .annotation-paper-heading,.annotation-event-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
 .annotation-paper-heading > div { display:grid; gap:2px; }
+.current-work-paper { display:grid; gap:10px; }
+.current-work-counts { display:flex; flex-wrap:wrap; gap:6px; }
+.current-work-counts span { padding:.28rem .5rem; border-radius:99px; background:var(--wash); color:var(--muted); font-size:.72rem; }
+.current-decisions summary { cursor:pointer; color:var(--brand); font-size:.78rem; font-weight:700; }
+.current-decisions ul { display:grid; gap:6px; margin:.6rem 0 0; padding:0; list-style:none; }
+.current-decisions li { display:grid; gap:2px; padding:7px; border-radius:7px; background:var(--wash); }
+.current-decisions code { overflow-wrap:anywhere; font-size:.7rem; }
+.current-decisions span { color:var(--muted); font-size:.75rem; }
+.current-corrections { display:grid; gap:8px; padding-top:9px; border-top:1px solid var(--line); }
+.annotation-paper-actions { display:flex; flex-wrap:wrap; gap:7px; padding-top:4px; }
+.annotation-paper-actions button:first-child { background:var(--brand); color:white; border-color:var(--brand); }
 .annotation-event { border-top:1px solid var(--line); margin-top:10px; padding-top:10px; }
 .annotation-event p { margin:.35rem 0; overflow-wrap:anywhere; }
 .annotation-state { border-radius:99px; padding:.2rem .5rem; font-size:.68rem; font-weight:700; text-transform:uppercase; }
@@ -189,4 +200,4 @@ dialog::backdrop { background:#16201dbb; }
 .muted { color:var(--muted); font-size:.82rem; }
 button:disabled,select:disabled { cursor:not-allowed; opacity:.55; }
 @media (max-width:1050px) { main { grid-template-columns:220px 1fr; }.workspace-grid { grid-template-columns:1fr; height:auto; }.pdf-panel { max-height:70vh; } }
-@media (max-width:650px) { header { height:auto; min-height:76px; align-items:flex-start; padding:12px; gap:12px; flex-wrap:wrap; }.header-actions { width:100%; flex-wrap:wrap; }.header-actions > * { flex:1 1 auto; } main { display:block; height:auto; min-height:calc(100vh - 76px); }.paper-rail { max-height:250px; border-right:0; border-bottom:1px solid var(--line); }.paper-list { grid-template-columns:repeat(2,minmax(0,1fr)); } #workspace { padding:10px; overflow:visible; }.study-heading { padding:12px; }.study-actions { width:100%; justify-content:flex-start; }.study-actions button { flex:1 1 auto; }.file-section { grid-template-columns:1fr; }.file-section > button,.file-actions button { width:100%; }.file-actions { display:grid; }.workbook-upload { grid-column:1; grid-template-columns:1fr; }.composition-comparison,.context-grid,.record-facts,.editor-fields,.annotation-change { grid-template-columns:1fr; }.decision-actions,.record-management-actions { flex-wrap:wrap; }.decision-actions button { flex:1 1 100%; }.records-toolbar { position:static; }.reported-value { display:grid; } }
+@media (max-width:650px) { header { height:auto; min-height:76px; align-items:flex-start; padding:12px; gap:12px; flex-wrap:wrap; }.header-actions { width:100%; flex-wrap:wrap; }.header-actions > * { flex:1 1 auto; } main { display:block; height:auto; min-height:calc(100vh - 76px); }.paper-rail { max-height:250px; border-right:0; border-bottom:1px solid var(--line); }.paper-list { grid-template-columns:repeat(2,minmax(0,1fr)); } #workspace { padding:10px; overflow:visible; }.study-heading { padding:12px; }.study-actions { width:100%; justify-content:flex-start; }.study-actions button { flex:1 1 auto; }.file-section { grid-template-columns:1fr; }.file-section > button,.file-actions button { width:100%; }.file-actions { display:grid; }.workbook-upload { grid-column:1; grid-template-columns:1fr; }.composition-comparison,.context-grid,.record-facts,.editor-fields,.annotation-change { grid-template-columns:1fr; }.decision-actions,.record-management-actions { flex-wrap:wrap; }.decision-actions button { flex:1 1 100%; }.records-toolbar { position:static; }.reported-value { display:grid; }.annotation-paper-actions button { flex:1 1 100%; }.dialog-actions { flex-wrap:wrap; } }

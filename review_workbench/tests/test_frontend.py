@@ -288,25 +288,30 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     server = (APP.parent / "server.py").read_text(encoding="utf-8")
 
     assert "My edits &amp; undo" in html
-    assert "My annotations and edits" in html
-    assert "Download my annotations" in html
-    assert "Reset current review state" in html
+    assert "My review progress" in html
+    assert "Current work" in html
+    assert "History" in html
+    assert "Download activity JSON" in html
+    assert "Reset all current progress" in html
     assert "/api/reviewer-progress/" in source
     assert "current_record_decisions" in source
     assert 'text: "Before"' in source
     assert 'text: "After"' in source
     assert "Inspect exact saved event" in source
-    assert "Undo this saved edit" in html
+    assert "Undo this saved edit" in source
     assert "undoAnnotation" in source
     assert "/api/mutation-undos/" in source
     assert "/api/reviewer-resets/" in source
     assert "resetReviewerProgress" in source
+    assert "resetPaperProgress" in source
+    assert "Continue reviewing records" in source
+    assert "sessionStorage.setItem(reviewerProgressCacheKey()" in source
     assert "resettable_review_count" in source
+    assert "current_event_ids" in source
     assert "undoable_event_ids" in source
-    assert "Nothing is erased from history" in html
-    assert "No saved field correction is currently safe to undo" in source
+    assert "Saved history is unchanged" in source
+    assert "does not alter scientific corrections or the audit history" in source
     assert "change this decision" in source
-    assert "Edit saved census" in source
     assert 'application.reviewer_progress(parts[2], user["id"])' in server
     assert 'application.undo_mutation(' in server
     assert 'application.reset_reviewer_state(' in server

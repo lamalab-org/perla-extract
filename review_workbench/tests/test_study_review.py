@@ -204,6 +204,7 @@ def test_review_workbook_import_is_atomic_attributable_and_undoable(
 
     progress = store.reviewer_progress("calibration", "ada")["papers"][0]
     assert progress["undoable_event_ids"] == [event["event_id"]]
+    assert progress["current_event_ids"] == [event["event_id"]]
     undone = store.undo_mutation(
         "calibration",
         "10.0000--example",
@@ -212,6 +213,8 @@ def test_review_workbook_import_is_atomic_attributable_and_undoable(
     )
     assert undone["ground_truth"]["device_families"][0]["label"] == "Control"
     assert undone["summary"]["record_decisions"].get("ada", {}) == {}
+    progress = store.reviewer_progress("calibration", "ada")["papers"][0]
+    assert progress["current_event_ids"] == []
 
 
 def test_review_workbook_groups_fields_by_scientific_record_type(
@@ -534,6 +537,7 @@ def test_reviewer_progress_contains_only_that_reviewers_persisted_work(
         "figure_only_atomic_values": 3,
         "notes": "Figure 3 contains stability values absent from the caption.",
     }
+    assert paper["current_event_ids"] == [audited["events"][-1]["event_id"]]
     assert all(event["reviewer_id"] == "ada" for event in paper["events"])
     assert store.reviewer_progress("calibration", "nobody")["papers"] == []
 
@@ -974,6 +978,7 @@ def test_reviewer_can_reset_current_progress_without_erasing_history_or_others(
     assert progress["annotation_count"] == 5
     assert progress["resettable_review_count"] == 0
     assert progress["papers"][0]["resettable_review_count"] == 0
+    assert progress["papers"][0]["current_event_ids"] == []
     assert progress["papers"][0]["undoable_event_ids"] == [
         corrected["events"][-1]["event_id"]
     ]

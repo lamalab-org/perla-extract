@@ -179,12 +179,11 @@ class BlobReviewStateStorage:
         return self._read(self._source_path(split, paper_id), ReviewPaperSource)
 
     def load_revision(self, split: str, paper_id: str) -> ReviewRevision:
-        source = self.load_source(split, paper_id)
         revisions = self.blob.list(self._revision_prefix(split, paper_id))
-        if not revisions:
-            return source.initial_revision
-        latest = max(revisions, key=lambda item: str(item.get("pathname", "")))
-        return ReviewRevision.model_validate_json(self.blob.download(latest))
+        if revisions:
+            latest = max(revisions, key=lambda item: str(item.get("pathname", "")))
+            return ReviewRevision.model_validate_json(self.blob.download(latest))
+        return self.load_source(split, paper_id).initial_revision
 
     def compare_and_swap(
         self,

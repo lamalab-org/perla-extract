@@ -82,6 +82,7 @@ const state = {
   queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
   studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
   pdfObjectUrl: null, censusDraft: null, editingCensus: false, loadingPaperId: null,
+  annotationView: "current",
 };
 
 async function request(url, options = {}) {
@@ -1469,9 +1470,7 @@ function annotationSubject(event) {
 }
 
 function annotationIsCurrent(paper, event) {
-  if (event.kind === "record_decision") return paper.current_record_decisions?.[event.details.record_key] === event.details.decision;
-  if (event.kind === "inventory_audit") return JSON.stringify(paper.current_inventory_audit) === JSON.stringify(event.details);
-  if (event.kind === "stage_complete") return paper.completed_stages.includes(event.details.stage);
+  if (["record_decision", "inventory_audit", "stage_complete"].includes(event.kind)) return paper.current_event_ids?.includes(event.event_id) || false;
   return null;
 }
 
@@ -1576,33 +1575,143 @@ async function undoAnnotation(paper, event, button) {
   }
 }
 
-function renderReviewerProgress(progress) {
-  const undoableCount = progress.papers.reduce((count, paper) => count + (paper.undoable_event_ids?.length || 0), 0);
-  $("annotation-summary").replaceChildren(
-    element("p", { text: `${progress.resettable_review_count} current decision or progress item${progress.resettable_review_count === 1 ? "" : "s"} can be reset. ${progress.annotation_count} saved action${progress.annotation_count === 1 ? "" : "s"} across ${progress.paper_count} paper${progress.paper_count === 1 ? "" : "s"} remain in the audit history.` }),
-    element("p", {
-      className: undoableCount ? "callout" : "muted",
-      text: undoableCount
-        ? `${undoableCount} saved correction${undoableCount === 1 ? " is" : "s are"} currently safe to undo. The button appears beside ${undoableCount === 1 ? "it" : "each one"} below.`
-        : "No saved field correction is currently safe to undo. Decisions can still be changed in Records, and census counts can be updated in Census.",
-    }),
-  );
-  $("reset-annotations").disabled = progress.resettable_review_count === 0;
-  const papers = [...progress.papers].sort((left, right) => right.last_saved_at.localeCompare(left.last_saved_at));
-  const cards = papers.map((paper) => element("section", { className: "annotation-paper" }, [
+function paperCurrentCounts(paper) {
+  return {
+    decisions: Object.keys(paper.current_record_decisions || {}).length,
+    census: Number(paper.current_inventory_audit != null),
+    stages: paper.completed_stages?.length || 0,
+    corrections: paper.undoable_event_ids?.length || 0,
+  };
+}
+
+async function openProgressPaper(paper, tab = "records") {
+  $("annotations-dialog").close();
+  try {
+    if (state.paperId !== paper.paper_id) await selectPaper(paper.paper_id);
+    if (state.paperId !== paper.paper_id) return;
+    setTab(tab);
+  } catch (error) { setStatus(`Could not open ${paper.paper_id}: ${error.message}`, true); }
+}
+
+function currentWorkPaper(paper) {
+  const counts = paperCurrentCounts(paper);
+  const decisionItems = Object.entries(paper.current_record_decisions || {}).map(([key, decision]) => element("li", {}, [
+    element("code", { text: key }),
+    element("span", { text: DECISION_GUIDANCE[decision] || humanLabel(decision) }),
+  ]));
+  const corrections = paper.events.filter((event) => paper.undoable_event_ids?.includes(event.event_id));
+  return element("section", { className: "annotation-paper current-work-paper" }, [
+    element("div", { className: "annotation-paper-heading" }, [
+      element("div", {}, [
+        element("strong", { text: paper.paper_id }),
+        element("span", { className: "muted", text: `Last saved ${new Date(paper.last_saved_at).toLocaleString()}` }),
+      ]),
+      element("span", { className: "pill", text: `${counts.decisions + counts.census + counts.stages} progress item${counts.decisions + counts.census + counts.stages === 1 ? "" : "s"}` }),
+    ]),
+    element("div", { className: "current-work-counts" }, [
+      element("span", { text: `${counts.decisions} record decision${counts.decisions === 1 ? "" : "s"}` }),
+      element("span", { text: counts.census ? "Census saved" : "No census saved" }),
+      element("span", { text: `${counts.stages} stage${counts.stages === 1 ? "" : "s"} completed` }),
+      ...(counts.corrections ? [element("span", { text: `${counts.corrections} reversible scientific edit${counts.corrections === 1 ? "" : "s"}` })] : []),
+    ]),
+    ...(decisionItems.length ? [element("details", { className: "current-decisions" }, [
+      element("summary", { text: `Inspect ${decisionItems.length} current record decision${decisionItems.length === 1 ? "" : "s"}` }),
+      element("ul", {}, decisionItems),
+    ])] : []),
+    ...(paper.completed_stages.length ? [element("p", { className: "muted", text: `Completed: ${paper.completed_stages.map(humanLabel).join(" · ")}` })] : []),
+    ...(corrections.length ? [element("div", { className: "current-corrections" }, [
+      element("strong", { text: "Scientific edits that can still be undone" }),
+      ...corrections.map((event) => annotationEvent(paper, event)),
+    ])] : []),
+    element("div", { className: "annotation-paper-actions" }, [
+      element("button", { text: "Continue reviewing records", properties: { type: "button" }, events: { click: () => openProgressPaper(paper, "records") } }),
+      element("button", { text: counts.census ? "Open saved census" : "Open census", properties: { type: "button" }, events: { click: () => openProgressPaper(paper, "inventory") } }),
+      ...(paper.resettable_review_count ? [element("button", { className: "danger", text: "Reset this paper", properties: { type: "button" }, events: { click: (event) => resetPaperProgress(paper, event.currentTarget) } })] : []),
+    ]),
+  ]);
+}
+
+function historyPaper(paper) {
+  return element("section", { className: "annotation-paper" }, [
     element("div", { className: "annotation-paper-heading" }, [
       element("div", {}, [
         element("strong", { text: paper.paper_id }),
         element("span", { className: "muted", text: `Current paper revision ${paper.current_revision}` }),
       ]),
-      element("span", { className: "pill", text: `${paper.resettable_review_count} resettable · ${paper.events.length} saved` }),
+      element("span", { className: "pill", text: `${paper.events.length} saved` }),
     ]),
-    ...(paper.completed_stages.length ? [element("p", { className: "muted", text: `Completed stages: ${paper.completed_stages.map(humanLabel).join(" · ")}` })] : []),
     ...[...paper.events].reverse().map((event) => annotationEvent(paper, event)),
-  ]));
-  $("annotation-list").replaceChildren(...(cards.length ? cards : [
-    element("p", { className: "empty-queue", text: "You have not saved annotations in this dataset yet." }),
-  ]));
+  ]);
+}
+
+function renderReviewerProgress(progress) {
+  state.annotations = progress;
+  const history = [...progress.papers].sort((left, right) => right.last_saved_at.localeCompare(left.last_saved_at));
+  const current = history.filter((paper) => paper.resettable_review_count > 0 || paper.undoable_event_ids?.length);
+  const reversibleEdits = current.reduce((count, paper) => count + (paper.undoable_event_ids?.length || 0), 0);
+  const showingCurrent = state.annotationView === "current";
+  $("show-current-annotations").classList.toggle("active", showingCurrent);
+  $("show-current-annotations").setAttribute("aria-pressed", String(showingCurrent));
+  $("show-annotation-history").classList.toggle("active", !showingCurrent);
+  $("show-annotation-history").setAttribute("aria-pressed", String(!showingCurrent));
+  $("annotation-help").textContent = showingCurrent
+    ? "Continue a paper or reset reviewer-only progress here. Reset clears your decisions, census, and completed stages; it does not alter scientific corrections or the audit history."
+    : "This is the complete append-only history of what you saved. Current and superseded labels describe whether an action still affects your review state.";
+  $("annotation-summary").replaceChildren(element("p", { text: showingCurrent
+    ? `${progress.resettable_review_count} current decision or progress item${progress.resettable_review_count === 1 ? "" : "s"} and ${reversibleEdits} reversible scientific edit${reversibleEdits === 1 ? "" : "s"} across ${current.length} paper${current.length === 1 ? "" : "s"}.`
+    : `${progress.annotation_count} saved action${progress.annotation_count === 1 ? "" : "s"} across ${progress.paper_count} paper${progress.paper_count === 1 ? "" : "s"}.` }));
+  $("reset-annotations").hidden = !showingCurrent;
+  $("reset-annotations").disabled = progress.resettable_review_count === 0;
+  const papers = showingCurrent ? current : history;
+  const cards = papers.map(showingCurrent ? currentWorkPaper : historyPaper);
+  $("annotation-list").replaceChildren(...(cards.length ? cards : [element("div", { className: "empty-queue" }, [
+    element("strong", { text: showingCurrent ? "No current review work" : "No saved activity" }),
+    element("p", { text: showingCurrent ? "Your decisions, census, and completed stages are clear in this dataset. Open History to inspect earlier actions." : "You have not saved review activity in this dataset yet." }),
+  ])]));
+}
+
+function setAnnotationView(view) {
+  state.annotationView = view;
+  if (state.annotations) renderReviewerProgress(state.annotations);
+}
+
+async function applyReviewerResets(papers, button) {
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  const failures = [];
+  let resetCount = 0;
+  for (const paper of papers) {
+    try {
+      const bundle = await request(`/api/reviewer-resets/${state.split}/${encodeURIComponent(paper.paper_id)}`, {
+        method: "POST",
+        body: JSON.stringify({ base_revision: paper.current_revision }),
+      });
+      resetCount += 1;
+      if (state.paperId === paper.paper_id) state.bundle = bundle;
+    } catch (error) { failures.push(`${paper.paper_id}: ${error.message}`); }
+  }
+  await loadReviewerProgress();
+  if (state.bundle) renderStudy();
+  button.removeAttribute("aria-busy");
+  return { resetCount, failures };
+}
+
+function reportReviewerReset({ resetCount, failures }) {
+  if (failures.length) {
+    $("annotation-status").textContent = `${resetCount} paper${resetCount === 1 ? "" : "s"} reset. Could not reset ${failures.join("; ")}`;
+    $("annotation-status").className = "error";
+  } else {
+    $("annotation-status").textContent = `Current review progress reset for ${resetCount} paper${resetCount === 1 ? "" : "s"}. Saved history is unchanged.`;
+    $("annotation-status").className = "success";
+  }
+}
+
+async function resetPaperProgress(paper, button) {
+  if (!window.confirm(`Reset your current record decisions, census, and completed stages for ${paper.paper_id}? Scientific corrections and saved history are kept.`)) return;
+  $("annotation-status").textContent = `Resetting current progress for ${paper.paper_id}…`;
+  $("annotation-status").className = "";
+  try { reportReviewerReset(await applyReviewerResets([paper], button)); }
+  catch (error) { $("annotation-status").textContent = error.message; $("annotation-status").className = "error"; button.disabled = false; button.removeAttribute("aria-busy"); }
 }
 
 async function resetReviewerProgress() {
@@ -1610,59 +1719,46 @@ async function resetReviewerProgress() {
   try {
     const progress = await loadReviewerProgress();
     const papers = progress.papers.filter((paper) => paper.resettable_review_count > 0);
-    if (!papers.length) {
-      $("annotation-status").textContent = "There is no current review state to reset in this dataset.";
-      return;
-    }
-    if (!window.confirm(`Reset ${progress.resettable_review_count} current decision or progress item${progress.resettable_review_count === 1 ? "" : "s"} across ${papers.length} paper${papers.length === 1 ? "" : "s"} in ${progress.split}? This clears your record decisions, census, and completed stages. Scientific corrections and the audit history are kept.`)) return;
-    button.disabled = true;
-    button.setAttribute("aria-busy", "true");
-    $("annotation-status").textContent = "Resetting current review state…";
+    if (!papers.length) return;
+    if (!window.confirm(`Reset all ${progress.resettable_review_count} current decision or progress item${progress.resettable_review_count === 1 ? "" : "s"} across ${papers.length} paper${papers.length === 1 ? "" : "s"} in ${progress.split}? Scientific corrections and saved history are kept.`)) return;
+    $("annotation-status").textContent = "Resetting current review progress…";
     $("annotation-status").className = "";
-    const failures = [];
-    let resetCount = 0;
-    for (const paper of papers) {
-      try {
-        const bundle = await request(`/api/reviewer-resets/${state.split}/${encodeURIComponent(paper.paper_id)}`, {
-          method: "POST",
-          body: JSON.stringify({ base_revision: paper.current_revision }),
-        });
-        resetCount += 1;
-        if (state.paperId === paper.paper_id) state.bundle = bundle;
-      } catch (error) { failures.push(`${paper.paper_id}: ${error.message}`); }
-    }
-    await loadReviewerProgress();
-    if (state.bundle) renderStudy();
-    if (failures.length) {
-      $("annotation-status").textContent = `${resetCount} paper${resetCount === 1 ? "" : "s"} reset. Could not reset ${failures.join("; ")}`;
-      $("annotation-status").className = "error";
-    } else {
-      $("annotation-status").textContent = `Current review state reset for ${resetCount} paper${resetCount === 1 ? "" : "s"}. The saved audit history is unchanged.`;
-      $("annotation-status").className = "success";
-    }
-  } catch (error) {
-    $("annotation-status").textContent = error.message;
-    $("annotation-status").className = "error";
-  } finally {
-    button.removeAttribute("aria-busy");
-    button.disabled = Boolean(state.annotations) && state.annotations.resettable_review_count === 0;
-  }
+    reportReviewerReset(await applyReviewerResets(papers, button));
+  } catch (error) { $("annotation-status").textContent = error.message; $("annotation-status").className = "error"; button.disabled = false; button.removeAttribute("aria-busy"); }
+}
+
+function reviewerProgressCacheKey() { return `perla-review-progress:${state.user.id}:${state.split}`; }
+
+function saveReviewerProgressCache(progress) {
+  try { sessionStorage.setItem(reviewerProgressCacheKey(), JSON.stringify(progress)); }
+  catch (error) { console.warn("Could not cache review progress", error); }
+}
+
+function cachedReviewerProgress() {
+  try { return JSON.parse(sessionStorage.getItem(reviewerProgressCacheKey()) || "null"); }
+  catch { sessionStorage.removeItem(reviewerProgressCacheKey()); return null; }
 }
 
 async function loadReviewerProgress() {
   const progress = await request(`/api/reviewer-progress/${encodeURIComponent(state.split)}`);
   state.annotations = progress;
+  saveReviewerProgressCache(progress);
   renderReviewerProgress(progress);
   return progress;
 }
 
 async function openReviewerProgress() {
+  state.annotationView = "current";
   $("annotations-dialog").showModal();
-  $("annotation-summary").replaceChildren(element("p", { className: "muted", text: "Loading your saved work…" }));
-  $("annotation-list").replaceChildren();
-  $("annotation-status").textContent = "";
+  const cached = state.annotations || cachedReviewerProgress();
+  if (cached) renderReviewerProgress(cached);
+  else {
+    $("annotation-summary").replaceChildren(element("p", { className: "muted", text: "Loading your current review work…" }));
+    $("annotation-list").replaceChildren();
+  }
+  $("annotation-status").textContent = cached ? "Refreshing saved progress…" : "";
   $("annotation-status").className = "";
-  try { await loadReviewerProgress(); }
+  try { await loadReviewerProgress(); $("annotation-status").textContent = ""; }
   catch (error) { $("annotation-status").textContent = error.message; $("annotation-status").className = "error"; }
 }
 
@@ -1865,6 +1961,8 @@ $("download-supplement-pdf").addEventListener("click", (event) => runDownload(
   () => downloadPaper("supplement"),
 ));
 $("open-annotations").addEventListener("click", openReviewerProgress);
+$("show-current-annotations").addEventListener("click", () => setAnnotationView("current"));
+$("show-annotation-history").addEventListener("click", () => setAnnotationView("history"));
 $("reset-annotations").addEventListener("click", resetReviewerProgress);
 $("download-annotations").addEventListener("click", async () => {
   try {

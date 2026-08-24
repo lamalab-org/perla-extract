@@ -133,14 +133,16 @@ one new revision snapshot containing both the validated truth and complete event
 history. The familiar `seeds/`, `events/`, `documents/`, `manifests/`, and split
 directories are refreshed as derived, inspectable exports.
 
-Every authenticated reviewer can open **My edits & undo** from the header. This view
-reads the persisted revision log across the selected split and shows only that
-reviewer's census submissions, record decisions, corrections, evidence, notes, and
-stage completions. Decisions are marked current or superseded when later edits change
-the reviewed record. **Reset current review state** clears that reviewer's current
-record decisions, census, and completed stages across the selected dataset. It writes
-compensating reset events, so prior activity remains inspectable instead of being
-deleted. Corrections and workbook imports that are still untouched offer
+Every authenticated reviewer can open **My edits & undo** from the header. **Current
+work** is the default view: it groups active decisions, census state, completed stages,
+and safely reversible scientific edits by paper, with direct actions to continue the
+paper or reset only that paper. **History** contains the complete reviewer-specific
+revision log. Decisions are attached to exact event IDs, so an older decision cannot
+appear current merely because a later decision chose the same outcome. **Reset all
+current progress** clears the reviewer's current record decisions, census, and
+completed stages across the selected dataset. Both reset actions write compensating
+events, so prior activity remains inspectable instead of being deleted. Corrections and
+workbook imports that are still untouched offer
 **Undo this saved edit**. Undo writes a linked, validated revision instead of deleting history; the
 action is unavailable once later work changes the same value. **Download my
 annotations** saves the same reviewer-scoped ledger
@@ -183,6 +185,9 @@ The deployed paper rail reads only source and revision pathnames. It does not do
 every full extraction merely to show the list; the selected study is fetched on demand.
 The browser keeps the last authenticated paper list as a fast-start cache and refreshes
 it against Blob storage.
+The progress dialog reuses its last response for the current browser session while a
+fresh response loads. Current paper revisions are fetched concurrently, and an existing
+revision is read without redundantly downloading its immutable source bundle.
 Creating revision `N + 1` with overwrite disabled is the compare-and-swap operation:
 if two serverless instances review revision `N`, exactly one can create the next path
 and the other receives an HTTP 409 conflict. The reviewer is asked to load the latest

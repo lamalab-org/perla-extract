@@ -116,8 +116,10 @@ immutable revision, so concurrent reviewers cannot produce a truth/event mismatc
 Editing a record changes its content digest and invalidates the previous record
 decision automatically.
 
-Reviewers can open **My edits & undo** at any time and download their own persisted
-event ledger for the selected split. A correction can be undone while its saved result
+Reviewers can open **My edits & undo** at any time. **Current work** gives each paper a
+direct route back to Records or Census and offers a paper-scoped reset. **History**
+contains the append-only event ledger, which can also be downloaded for the selected
+split. A correction can be undone while its saved result
 is still the current value. Undo creates a new validated event that points to the
 original edit; it does not delete either action from history. If somebody subsequently
 changed the same value, the undo action is unavailable so it cannot overwrite that

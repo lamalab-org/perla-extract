@@ -14,6 +14,7 @@ import json
 import re
 import uuid
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
@@ -239,6 +240,7 @@ class ReviewerPaperProgress(BaseModel):
     completed_stages: list[ReviewStage]
     current_inventory_audit: dict[str, Any] | None = None
     current_record_decisions: dict[str, RecordDecision] = Field(default_factory=dict)
+    current_event_ids: list[str] = Field(default_factory=list)
     resettable_review_count: int = Field(ge=0)
     undoable_event_ids: list[str] = Field(default_factory=list)
     undone_event_ids: list[str] = Field(default_factory=list)
@@ -687,66 +689,19 @@ class StudyReviewStore:
             raise ValueError("split must be calibration, dev, or test")
         if not reviewer_id:
             raise ValueError("reviewer_id is required")
-        papers: list[ReviewerPaperProgress] = []
-        for paper_id in self.storage.list_paper_ids(split):
-            revision = self.storage.load_revision(split, paper_id)
-            events = [
-                ReviewEvent.model_validate(event)
-                for event in revision.events
-                if event.get("reviewer_id") == reviewer_id
-                and event.get("kind") != "seed_imported"
-            ]
-            if not events:
-                continue
-            undone_event_ids = {
-                str(event.get("details", {}).get("undoes_event_id"))
-                for event in revision.events
-                if event.get("details", {}).get("undoes_event_id")
-            }
-            undoable_event_ids: list[str] = []
-            for event in events:
-                if event.kind not in {
-                    "mutation",
-                    "spreadsheet_review",
-                } or event.event_id in undone_event_ids:
-                    continue
-                try:
-                    if event.kind == "mutation":
-                        self._prepare_mutation_undo(revision.ground_truth, event)
-                    else:
-                        _reverse_spreadsheet_review(revision.ground_truth, event)
-                except (IndexError, KeyError, TypeError, ValueError):
-                    continue
-                undoable_event_ids.append(event.event_id)
-            summary = self.summary(revision.ground_truth, revision.events)
-            completed_stages = [
-                stage
-                for stage in ("inventory", "fields", "completeness", "adjudication")
-                if reviewer_id in summary["completed_stages"].get(stage, [])
-            ]
-            current_inventory_audit = summary["inventory_audits"].get(reviewer_id)
-            current_record_decisions = summary["record_decisions"].get(
-                reviewer_id, {}
+        paper_ids = self.storage.list_paper_ids(split)
+        with ThreadPoolExecutor(max_workers=min(8, len(paper_ids) or 1)) as executor:
+            revisions = executor.map(
+                lambda paper_id: self.storage.load_revision(split, paper_id),
+                paper_ids,
             )
-            papers.append(
-                ReviewerPaperProgress(
-                    paper_id=paper_id,
-                    current_revision=revision.revision,
-                    last_saved_at=events[-1].timestamp,
-                    event_counts=dict(Counter(event.kind for event in events)),
-                    completed_stages=completed_stages,
-                    current_inventory_audit=current_inventory_audit,
-                    current_record_decisions=current_record_decisions,
-                    resettable_review_count=(
-                        len(completed_stages)
-                        + len(current_record_decisions)
-                        + int(current_inventory_audit is not None)
-                    ),
-                    undoable_event_ids=undoable_event_ids,
-                    undone_event_ids=sorted(undone_event_ids),
-                    events=events,
+            papers = []
+            for paper_id, revision in zip(paper_ids, revisions, strict=True):
+                paper = self._reviewer_paper_progress(
+                    paper_id, revision, reviewer_id
                 )
-            )
+                if paper is not None:
+                    papers.append(paper)
         result = ReviewerProgress(
             reviewer_id=reviewer_id,
             split=split,
@@ -758,6 +713,106 @@ class StudyReviewStore:
             papers=papers,
         )
         return result.model_dump(mode="json")
+
+    def _reviewer_paper_progress(
+        self, paper_id: str, revision: ReviewRevision, reviewer_id: str
+    ) -> ReviewerPaperProgress | None:
+        """Derive current markers and immutable history for one paper."""
+
+        events = [
+            ReviewEvent.model_validate(event)
+            for event in revision.events
+            if event.get("reviewer_id") == reviewer_id
+            and event.get("kind") != "seed_imported"
+        ]
+        if not events:
+            return None
+        undone_event_ids = {
+            str(event.get("details", {}).get("undoes_event_id"))
+            for event in revision.events
+            if event.get("details", {}).get("undoes_event_id")
+        }
+        undoable_event_ids: list[str] = []
+        for event in events:
+            if event.kind not in {
+                "mutation",
+                "spreadsheet_review",
+            } or event.event_id in undone_event_ids:
+                continue
+            try:
+                if event.kind == "mutation":
+                    self._prepare_mutation_undo(revision.ground_truth, event)
+                else:
+                    _reverse_spreadsheet_review(revision.ground_truth, event)
+            except (IndexError, KeyError, TypeError, ValueError):
+                continue
+            undoable_event_ids.append(event.event_id)
+        summary = self.summary(revision.ground_truth, revision.events)
+        completed_stages = [
+            stage
+            for stage in ("inventory", "fields", "completeness", "adjudication")
+            if reviewer_id in summary["completed_stages"].get(stage, [])
+        ]
+        current_inventory_audit = summary["inventory_audits"].get(reviewer_id)
+        current_record_decisions = summary["record_decisions"].get(reviewer_id, {})
+        return ReviewerPaperProgress(
+            paper_id=paper_id,
+            current_revision=revision.revision,
+            last_saved_at=events[-1].timestamp,
+            event_counts=dict(Counter(event.kind for event in events)),
+            completed_stages=completed_stages,
+            current_inventory_audit=current_inventory_audit,
+            current_record_decisions=current_record_decisions,
+            current_event_ids=self._current_reviewer_event_ids(
+                revision, reviewer_id
+            ),
+            resettable_review_count=(
+                len(completed_stages)
+                + len(current_record_decisions)
+                + int(current_inventory_audit is not None)
+            ),
+            undoable_event_ids=undoable_event_ids,
+            undone_event_ids=sorted(undone_event_ids),
+            events=events,
+        )
+
+    @staticmethod
+    def _current_reviewer_event_ids(
+        revision: ReviewRevision, reviewer_id: str
+    ) -> list[str]:
+        """Identify the exact events behind current badges in the activity view."""
+
+        catalog = _record_catalog(revision.ground_truth)
+        current: dict[str, str] = {}
+        parsed_events = [
+            ReviewEvent.model_validate(event) for event in revision.events
+        ]
+        undone_event_ids = {
+            str(event.details.get("undoes_event_id"))
+            for event in parsed_events
+            if event.details.get("undoes_event_id")
+        }
+        for event in parsed_events:
+            if event.reviewer_id != reviewer_id or event.event_id in undone_event_ids:
+                continue
+            if event.kind == "review_reset":
+                current.clear()
+            elif event.kind == "record_decision":
+                key = str(event.details.get("record_key", ""))
+                if catalog.get(key) == event.details.get("record_digest"):
+                    current[f"decision:{key}"] = event.event_id
+            elif event.kind == "spreadsheet_review":
+                for decision in event.details.get("decisions", []):
+                    key = str(decision.get("record_key", ""))
+                    if catalog.get(key) == decision.get("record_digest"):
+                        current[f"decision:{key}"] = event.event_id
+            elif event.kind == "inventory_audit":
+                current["inventory"] = event.event_id
+            elif event.kind == "stage_complete":
+                stage = str(event.details.get("stage", ""))
+                current[f"stage:{stage}"] = event.event_id
+        current_ids = set(current.values())
+        return [event.event_id for event in parsed_events if event.event_id in current_ids]
 
     @staticmethod
     def summary(truth: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any]:
