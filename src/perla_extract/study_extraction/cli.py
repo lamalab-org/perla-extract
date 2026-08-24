@@ -10,7 +10,12 @@ import click
 
 from .logging import configure_logging, logger
 from .source import available_parsers
-from .workflow import ExtractionConfig, run_extraction
+from .workflow import (
+    DEFAULT_EXTRACTION_MODEL,
+    DEFAULT_INVENTORY_MODEL,
+    ExtractionConfig,
+    run_extraction,
+)
 
 REASONING_LEVELS = ("omit", "none", "minimal", "low", "medium", "high")
 
@@ -45,9 +50,20 @@ def extract_study(
     pdf: str | Path,
     supplement: str | Path | None = None,
     output_dir: str | Path = "study_extraction",
-    model: str = "openrouter/openai/gpt-5.6-sol:exacto",
-    reasoning_effort: str = "medium",
-    parser: str = "auto",
+    model: str = DEFAULT_EXTRACTION_MODEL,
+    reasoning_effort: str = "omit",
+    use_inventory: bool = True,
+    inventory_model: str | None = DEFAULT_INVENTORY_MODEL,
+    inventory_max_output_tokens: int = 20_000,
+    use_enrichment: bool = True,
+    enrichment_model: str | None = None,
+    enrichment_max_output_tokens: int = 20_000,
+    use_refinement: bool = True,
+    refinement_model: str | None = None,
+    use_targeted_repair: bool = True,
+    repair_model: str | None = None,
+    repair_max_output_tokens: int = 30_000,
+    parser: str = "docling",
     mode: str = "auto",
     single_call_max_input_tokens: int = 90_000,
     window_input_tokens: int = 60_000,
@@ -58,10 +74,18 @@ def extract_study(
     document_cache_dir: str | Path = ".perla-cache/documents",
     model_cache_dir: str | Path = ".perla-cache/models",
     refresh_document_cache: bool = False,
+    reduced_export: bool = False,
     dry_run: bool = False,
     env_file: str | Path | None = None,
 ) -> dict[str, object]:
-    """Build an extraction configuration and run it from Python or the CLI."""
+    """Run the artifact-producing extraction workflow from Python.
+
+    This is the programmatic counterpart of ``perla-extract``: it writes the rich
+    extraction, validation, provenance, report, and compatibility artifacts to
+    ``output_dir`` and returns the final report. LiteLLM resolves credentials for the
+    provider prefix in ``model``; ``dry_run`` parses and caches documents without
+    requiring any provider credential.
+    """
 
     _load_env(Path(env_file) if env_file else Path(".env.local"))
     config = ExtractionConfig(
@@ -70,6 +94,17 @@ def extract_study(
         output_dir=Path(output_dir),
         model=model,
         reasoning_effort=_reasoning(reasoning_effort),
+        use_inventory=use_inventory,
+        inventory_model=inventory_model,
+        inventory_max_output_tokens=inventory_max_output_tokens,
+        use_enrichment=use_enrichment,
+        enrichment_model=enrichment_model,
+        enrichment_max_output_tokens=enrichment_max_output_tokens,
+        use_refinement=use_refinement,
+        refinement_model=refinement_model,
+        use_targeted_repair=use_targeted_repair,
+        repair_model=repair_model,
+        repair_max_output_tokens=repair_max_output_tokens,
         parser=parser,
         mode=mode,
         single_call_max_input_tokens=single_call_max_input_tokens,
@@ -81,6 +116,7 @@ def extract_study(
         document_cache_dir=Path(document_cache_dir),
         model_cache_dir=Path(model_cache_dir),
         refresh_document_cache=refresh_document_cache,
+        reduced_export=reduced_export,
         dry_run=dry_run,
     )
     return run_extraction(config)
@@ -98,13 +134,62 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 @click.option("--output-dir", type=OUTPUT_DIRECTORY, default="study_extraction")
 @click.option(
     "--model",
-    default="openrouter/openai/gpt-5.6-sol:exacto",
+    default=DEFAULT_EXTRACTION_MODEL,
     help="LiteLLM provider-prefixed model name.",
 )
+@click.option("--reasoning-effort", type=click.Choice(REASONING_LEVELS), default="omit")
 @click.option(
-    "--reasoning-effort", type=click.Choice(REASONING_LEVELS), default="medium"
+    "--inventory/--no-inventory",
+    "use_inventory",
+    default=True,
+    help="Run an independent record inventory for routing and recall review.",
 )
-@click.option("--parser", type=click.Choice(available_parsers()), default="auto")
+@click.option(
+    "--inventory-model",
+    default=DEFAULT_INVENTORY_MODEL,
+    help="LiteLLM model for the compact inventory.",
+)
+@click.option(
+    "--inventory-max-output-tokens", type=click.IntRange(min=1), default=20_000
+)
+@click.option(
+    "--enrichment/--no-enrichment",
+    "use_enrichment",
+    default=True,
+    help="Interpret composition sites and processing roles in separate audited calls.",
+)
+@click.option(
+    "--enrichment-model",
+    default=None,
+    help="LiteLLM model for enrichment; defaults to --model.",
+)
+@click.option(
+    "--enrichment-max-output-tokens", type=click.IntRange(min=1), default=20_000
+)
+@click.option(
+    "--refinement/--no-refinement",
+    "use_refinement",
+    default=True,
+    help="Re-read the evidence to correct omissions and unsupported draft records.",
+)
+@click.option(
+    "--refinement-model",
+    default=None,
+    help="LiteLLM model for the quality pass; defaults to --model.",
+)
+@click.option(
+    "--targeted-repair/--no-targeted-repair",
+    "use_targeted_repair",
+    default=True,
+    help="Retry only audit-visible gaps using their parser text and table evidence.",
+)
+@click.option(
+    "--repair-model",
+    default=None,
+    help="LiteLLM model for targeted repair; defaults to refinement model or --model.",
+)
+@click.option("--repair-max-output-tokens", type=click.IntRange(min=1), default=30_000)
+@click.option("--parser", type=click.Choice(available_parsers()), default="docling")
 @click.option(
     "--mode", type=click.Choice(("auto", "single", "windowed")), default="auto"
 )
@@ -121,10 +206,13 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 @click.option(
     "--document-cache-dir", type=OUTPUT_DIRECTORY, default=".perla-cache/documents"
 )
-@click.option(
-    "--model-cache-dir", type=OUTPUT_DIRECTORY, default=".perla-cache/models"
-)
+@click.option("--model-cache-dir", type=OUTPUT_DIRECTORY, default=".perla-cache/models")
 @click.option("--refresh-document-cache", is_flag=True)
+@click.option(
+    "--reduced-export",
+    is_flag=True,
+    help="Also write the historical reduced PERLA compatibility files.",
+)
 @click.option("--dry-run", is_flag=True, help="Parse and plan without calling a model.")
 @click.option("--env-file", type=click.Path(path_type=Path, dir_okay=False))
 @click.option(

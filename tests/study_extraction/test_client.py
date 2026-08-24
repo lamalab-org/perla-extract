@@ -9,12 +9,12 @@ from perla_extract.study_extraction.client import (
     ModelClient,
     _strict_schema,
 )
-from perla_extract.study_extraction.models import Paper, StudyExtraction
+from perla_extract.study_extraction.models import PaperMetadata, StudyExtraction
 
 
 def empty_result() -> dict:
     return StudyExtraction(
-        paper=Paper(title=None, doi=None),
+        paper=PaperMetadata(title=None, doi=None),
         device_families=[],
         individual_devices=[],
         performance_observations=[],
@@ -70,9 +70,30 @@ def test_only_validated_model_results_enter_cache(tmp_path, monkeypatch):
 def test_provider_schema_requires_nullable_defaulted_fields():
     schema = _strict_schema(StudyExtraction)
     family = schema["$defs"]["DeviceFamily"]
-    assert "absorber_formula" in family["required"]
-    assert "default" not in family["properties"]["absorber_formula"]
+    assert "absorbers" in family["required"]
+    assert "default" not in family["properties"]["absorbers"]
+    assert "absorber_formula" not in family["properties"]
     assert family["additionalProperties"] is False
+    absorber = schema["$defs"]["AbsorberComponent"]
+    property_values = absorber["properties"]["properties"]
+    assert property_values["type"] == "array"
+    assert "required" not in property_values
+    assert "additionalProperties" not in property_values
+
+    def assert_closed_objects_only(value):
+        if isinstance(value, dict):
+            if "required" in value:
+                assert value.get("type") == "object"
+                assert set(value["required"]) == set(value["properties"])
+            if "additionalProperties" in value:
+                assert value.get("type") == "object"
+            for child in value.values():
+                assert_closed_objects_only(child)
+        elif isinstance(value, list):
+            for child in value:
+                assert_closed_objects_only(child)
+
+    assert_closed_objects_only(schema)
 
 
 @pytest.mark.parametrize("invalid_cache", ["{", "[]"])
@@ -215,6 +236,32 @@ def test_litellm_request_preserves_schema_and_provider_prefix(tmp_path):
     assert request["response_format"]["json_schema"]["strict"] is True
     assert request["timeout"] == 42
     assert "temperature" not in request
+
+
+def test_model_boundary_decodes_compact_transport_before_validation(
+    tmp_path, monkeypatch
+):
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+    )
+    compact = {"transport": empty_result()}
+    monkeypatch.setattr(client, "_live", lambda body, failure: (compact, {}))
+
+    result = client.complete(
+        kind="test",
+        slug="compact",
+        model="test/model",
+        system="system",
+        prompt="prompt",
+        response_model=StudyExtraction,
+        max_output_tokens=100,
+        reasoning_effort=None,
+        request_schema={"type": "object", "properties": {}},
+        decode=lambda value: value["transport"],
+    )
+
+    assert result.model_dump(mode="json") == empty_result()
 
 
 def test_litellm_response_is_normalized_to_result_and_usage(tmp_path, monkeypatch):
