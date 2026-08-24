@@ -60,16 +60,26 @@ contract, so rerunning it cannot silently replace a seed.
 After the blind census, the Records tab presents a device-centered queue rather than
 one long list. A family is followed by its population records, devices, observations,
 and stability tests so shared architecture, stack, absorber, and composition remain in
-view. The first cited source block opens in the paper automatically.
+view. Before the census is submitted, Records and Completeness are visibly locked so
+candidate records cannot influence the independent count. The first cited source block
+opens in the paper automatically.
 
-The default **Remaining** view removes verified and uncertain records as the reviewer
-advances. **Needs attention** limits the queue to records the reviewer marked for
+The selected record is the primary review surface; related device context appears
+after it as collapsible supporting information. For stability tests, the workbench
+shows the specimen link, every test-wide condition, and every checkpoint's time,
+checkpoint-specific conditions, and outcomes. Atomic values are not collapsed into a
+single summary: each value shows its raw wording, numeric normalization, JSON path,
+and direct evidence action.
+
+The default **Remaining** view removes records marked **All fields match source** or
+**Cannot establish** as the reviewer advances. **Needs attention** limits the queue to records the reviewer marked for
 correction, records added or revised during the model's second evidence read, and A/B/X
 assignments that did not pass every automated check. These are review priorities, not
 correctness judgments. Every displayed reason includes a plain-language explanation.
-Use `V` to
-verify, `U` for uncertain, `C` to correct, and the arrow keys or `J`/`K` to move between
-records. Corrections open with existing evidence preselected. Reviewers can switch
+Use `V` for **All fields match source**, `U` for **Cannot establish**, `C` to correct,
+and the arrow keys or `J`/`K` to move between records. The decision applies to the
+complete selected record, not only its first number or related device context.
+Corrections open with existing evidence preselected. Reviewers can switch
 directly between the field-oriented editor, where every label includes its JSON
 Pointer, and the complete JSON for that record.
 

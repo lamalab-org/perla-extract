@@ -118,19 +118,51 @@ def test_ui_tracks_record_review_and_avoids_prompt_based_creation():
     assert "window.prompt" not in source
 
 
-def test_record_review_is_a_device_context_queue():
+def test_record_review_prioritizes_the_current_record_over_device_context():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
 
     assert "Review queue" in html
     assert "record-status-filter" in html
     assert "record-kind-filter" in html
-    assert "Device context" in source
+    assert "Current review target" in source
+    assert "Related device context (expand if needed)" in source
     assert "relatedContext" in source
     assert "focusCitation" in source
     assert 'key === "v"' in source
     assert 'key === "u"' in source
     assert 'key === "c"' in source
+
+
+def test_inventory_defines_record_counts_and_gates_candidate_review():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+
+    assert "What counts as a family, device, or measurement?" in html
+    assert "One shared recipe or architecture variant" in source
+    assert "One particular measured specimen" in source
+    assert "Multiple measurements of the same cell are not additional devices" in source
+    assert 'id="workflow-gate"' in html
+    assert "Submit the blind inventory to unlock this step" in source
+    assert '["records", "completeness"].includes(tab) && !hasAudit()' in source
+
+
+def test_stability_review_shows_every_atomic_value_before_related_context():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+
+    assert "renderStabilityRecord" in source
+    assert "Test-wide conditions" in source
+    assert "Checkpoint-specific conditions" in source
+    assert 'reportedValueGroup(entry, "Outcomes"' in source
+    assert "Show value in paper" in source
+    assert "recordJsonPath" in source
+    assert source.index("renderReviewTarget(entry)") < source.index("renderDeviceContext(entry)", source.index("renderReviewTarget(entry)"))
+    assert "All fields match source" in html
+    assert "All fields match source  V" in source
+    assert "Cannot establish from source  U" in source
+    assert "Your decision applies to the complete current record" in source
+    assert "Verify  V" not in source
 
 
 def test_show_in_paper_has_direct_lookup_visible_location_and_race_protection():

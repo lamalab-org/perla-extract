@@ -72,11 +72,13 @@
             <button data-tab="completeness">3 · Completeness</button>
             <button data-tab="history">History</button>
           </nav>
+          <p id="workflow-gate" class="callout workflow-gate">Complete and submit the blind inventory first. This keeps the model candidates from influencing your independent count; record review unlocks immediately afterward.</p>
 
           <div id="inventory-tab" class="tab-panel">
             <div id="blind-audit">
               <h3>Blind record and figure census</h3>
               <p class="callout">Search every imported source before revealing the model candidates. Submitting records the main paper and available SI as the inventory scope; it does not treat either source as an extraction result.</p>
+              <details class="record-definitions" open><summary>What counts as a family, device, or measurement?</summary><div id="inventory-definitions"></div></details>
               <div id="inventory-counts" class="count-grid"></div>
               <section class="figure-census">
                 <h4>Main-text figure gap</h4>
@@ -109,8 +111,8 @@
                   <option value="remaining">Remaining</option>
                   <option value="attention">Needs attention</option>
                   <option value="all">All records</option>
-                  <option value="verified">Verified</option>
-                  <option value="uncertain">Uncertain</option>
+                  <option value="verified">All fields match source</option>
+                  <option value="uncertain">Cannot establish from source</option>
                 </select>
                 <select id="record-kind-filter" aria-label="Record type filter"><option value="all">All record types</option></select>
                 <details class="add-record-menu"><summary>Add missing record</summary><div class="record-add">
@@ -128,6 +130,7 @@
             </div>
             <p class="callout record-guidance"><strong>What does “Needs attention” mean?</strong> It shows records you marked for correction, records added or revised during the model's second evidence read, and device families with an A/B/X assignment that did not pass every automated check. These are review priorities, not claims that a record is correct or incorrect.</p>
             <p class="callout record-guidance"><strong>Wrong number of devices or measurements?</strong> Add a missing record from the menu above, or copy the current record when it is a useful starting point. For an extra record, choose <strong>Remove extra record</strong>. Removal is blocked until linked measurements have been reassigned or removed.</p>
+            <p class="callout record-guidance"><strong>Choose one outcome for the complete record shown below.</strong> <strong>All fields match source</strong> means every displayed field is supported and the record belongs in the dataset. Use <strong>Cannot establish</strong> when the paper is genuinely ambiguous, or <strong>Correct fields</strong> when something is wrong or missing.</p>
             <div id="review-queue"></div>
             <div class="queue-footer">
               <button id="previous-record" aria-label="Previous record">← Previous</button>

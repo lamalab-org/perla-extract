@@ -34,14 +34,23 @@ stateDiagram-v2
    the interface reveals model candidates. Count device families, individual devices,
    performance observations, population statistics, and stability tests. The submitted
    source list is workflow coverage, not an extraction outcome.
+   A **device family** is one group-level recipe or architecture variant, such as a
+   control or treatment design that may have several fabricated specimens. An
+   **individual device** is one particular measured specimen, such as a champion,
+   representative, or certified cell. Several scans or stability checkpoints on that
+   specimen do not create more devices; a mean or distribution is a population
+   statistic rather than a device. A stability test contains all checkpoints belonging
+   to one aging experiment.
    Separately census the numbered figures in the main paper as described below.
    After submission, use the imported coverage, refinement, and targeted-repair
    audits as attention queues—not as evidence or automatic corrections.
 2. **Identity.** Separate variants, individual devices, protocols, aggregates, and
    stability specimens. Accept an identity link only with positive source evidence.
 3. **Scientific fields.** Review stack order, each absorber or subcell's formula and
-   constituents, processing, performance, and stability. Mark every complete record
-   as verified, uncertain, or needing correction.
+   constituents, processing, performance, and stability. Choose **All fields match
+   source** only when every displayed field and the record itself are supported. Choose
+   **Cannot establish** for genuine source ambiguity or **Correct fields** when a value
+   is wrong or missing.
 4. **Evidence.** Additions and replacements require an exact quote from an imported
    evidence block. Removals require a counterevidence explanation.
 5. **Completeness.** Repeat a paper-wide search for missing records and finish every

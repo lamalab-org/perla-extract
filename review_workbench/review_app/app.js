@@ -7,6 +7,37 @@ const COLLECTIONS = {
   stability_tests: "Stability tests",
   identity_links: "Cross-window identity links",
 };
+const RECORD_GUIDANCE = {
+  device_families: {
+    census: "One shared recipe or architecture variant, such as a control or treatment group. Do not count a champion, scan direction, or mean as another family.",
+    review: "Check the shared stack, composition, architecture, and fabrication recipe. Performance numbers belong in linked observations or population statistics.",
+  },
+  individual_devices: {
+    census: "One particular measured specimen that the paper distinguishes, such as a champion, representative, or certified cell. Multiple measurements of the same cell are not additional devices.",
+    review: "Check that this is a distinct specimen, that its family link and champion or selection status are supported, and that its specimen-specific properties are correct.",
+  },
+  performance_observations: {
+    census: "One measurement protocol on one device. Forward and reverse scans, stabilized output, and certification are separate observations—not separate devices.",
+    review: "Check the linked device, measurement type, scan direction, and every atomic metric shown below.",
+  },
+  population_statistics: {
+    census: "One reported aggregate over multiple devices, such as a mean, median, range, or distribution. Do not count it as an individual device.",
+    review: "Check the family, statistic type, sample size, and every aggregate metric. Do not accept a champion value as a population statistic.",
+  },
+  stability_tests: {
+    census: "One aging experiment on a stated specimen or device group. Its checkpoints and multiple reported outcomes remain inside that test.",
+    review: "Check what specimen was aged, how confidently it links to a device or family, all test-wide conditions, and every checkpoint's time, local conditions, and outcomes.",
+  },
+  identity_links: {
+    census: "One explicit claim that records extracted from different text regions refer to the same real-world entity.",
+    review: "Check that the cited evidence supports identity; similarity alone is not enough.",
+  },
+};
+const DECISION_GUIDANCE = {
+  verified: "All fields match the source",
+  uncertain: "Cannot establish from the source",
+  needs_correction: "One or more fields need correction",
+};
 const QUALITY_GATES = [
   "Main-paper device variants checked",
   "Supporting-information device variants checked",
@@ -31,7 +62,7 @@ const COMPOSITION_STATUS_TEXT = {
   },
   needs_review: {
     label: "Manual check needed",
-    explanation: "Automated checks found an incomplete or ambiguous A/B/X assignment. Verify or leave the interpretation unresolved.",
+    explanation: "Automated checks found an incomplete or ambiguous A/B/X assignment. Compare it with the source or leave the interpretation unresolved.",
   },
   rejected: {
     label: "Not usable downstream",
@@ -101,6 +132,12 @@ function layerLabel(layer) {
 function entityDetail(kind, item) {
   if (kind === "device_families") return (item.layers || []).map(layerLabel).join(" / ") || item.full_stack_raw || item.variant;
   if (kind === "individual_devices") return metrics(item) || `${item.champion_status === "yes" ? "Champion · " : ""}${item.variant || "variant not reported"}`;
+  if (kind === "stability_tests") {
+    const conditionCount = (item.conditions || []).length;
+    const checkpoints = item.checkpoints || [];
+    const outcomeCount = checkpoints.reduce((count, checkpoint) => count + (checkpoint.outcomes || []).length, 0);
+    return `${conditionCount} test-wide condition${conditionCount === 1 ? "" : "s"} · ${checkpoints.length} checkpoint${checkpoints.length === 1 ? "" : "s"} · ${outcomeCount} outcome${outcomeCount === 1 ? "" : "s"}`;
+  }
   if (kind === "identity_links") return `${item.entity_kind}: ${(item.candidate_ids || []).join(" = ")}`;
   return metrics(item) || item.statistic_type || item.measurement_type || item.link_status || "";
 }
@@ -185,7 +222,7 @@ function renderPapers() {
       events: { click: () => selectPaper(paper.id) },
     }, [
       element("strong", { text: paper.id }),
-      element("span", { text: `${paper.individual_devices} devices · ${paper.performance_observations} observations` }),
+      element("span", { text: `${paper.device_families} families · ${paper.individual_devices} individual devices · ${paper.performance_observations} observations` }),
       element("span", { text: `${completed.length}/4 review stages · revision ${paper.revision}` }),
     ]);
   });
@@ -235,6 +272,8 @@ function renderStudy() {
   $("download-supplement-pdf").hidden = !state.bundle.sources.includes("supplement");
   $("blind-audit").hidden = hasAudit();
   $("inventory-revealed").hidden = !hasAudit();
+  $("workflow-gate").hidden = hasAudit();
+  if (!hasAudit() && ["records", "completeness"].includes(state.tab)) setTab("inventory");
   renderInventoryForm();
   if (hasAudit()) {
     renderInventoryComparison();
@@ -283,10 +322,18 @@ function renderQualityArtifacts() {
 }
 
 function renderInventoryForm() {
+  const definitions = Object.entries(COLLECTIONS)
+    .filter(([key]) => key !== "identity_links")
+    .map(([key, label]) => element("article", {}, [
+      element("strong", { text: label }),
+      element("p", { text: RECORD_GUIDANCE[key].census }),
+    ]));
+  $("inventory-definitions").replaceChildren(...definitions);
   const inputs = Object.entries(COLLECTIONS)
     .filter(([key]) => key !== "identity_links")
     .map(([key, label]) => element("label", {}, [
-      label,
+      element("strong", { text: label }),
+      element("span", { text: RECORD_GUIDANCE[key].census }),
       element("input", { properties: { type: "number", min: "0", value: "0" }, dataset: { count: key } }),
     ]));
   $("inventory-counts").replaceChildren(...inputs);
@@ -387,7 +434,7 @@ function attentionReasons(entry) {
   const identifier = entityId(entry.kind, entry.item, entry.index);
   if (changes?.added_ids?.includes(identifier)) reasons.push({
     label: "Added during the second extraction read",
-    explanation: "This record was absent from the first model draft and added when the model reread the evidence. Verify it against the cited source.",
+    explanation: "This record was absent from the first model draft and added when the model reread the evidence. Compare every field with the cited source.",
   });
   if (changes?.changed_ids?.includes(identifier)) reasons.push({
     label: "Revised during the second extraction read",
@@ -428,6 +475,101 @@ function relatedContext(entry) {
   return { family, device };
 }
 
+function recordJsonPath(entry, ...parts) {
+  return `/${[entry.kind, entry.index, ...parts].map(pointerPart).join("/")}`;
+}
+
+function reportedValueItem(entry, value, path) {
+  const normalized = value.value_number == null
+    ? "No unambiguous numeric normalization"
+    : `Parsed as ${value.value_number}${value.unit ? ` ${value.unit}` : ""}`;
+  const citations = value.evidence || [];
+  return element("li", { className: "reported-value" }, [
+    element("div", {}, [
+      element("strong", { text: value.name }),
+      element("span", { className: "reported-raw", text: value.raw_value }),
+      element("span", { className: "muted", text: normalized }),
+      element("code", { className: "json-path", text: recordJsonPath(entry, ...path) }),
+    ]),
+    citations.length ? element("div", { className: "value-evidence-actions" }, citations.map((citation, index) => element("button", {
+      text: citations.length === 1 ? "Show value in paper" : `Show source ${index + 1}`,
+      properties: { type: "button" },
+      events: { click: () => focusCitation(citation) },
+    }))) : null,
+  ]);
+}
+
+function reportedValueGroup(entry, title, values, path, emptyText = "None reported", indexed = true) {
+  return element("section", { className: "reported-value-group" }, [
+    element("h5", { text: `${title} (${values.length})` }),
+    ...(values.length
+      ? [element("ul", {}, values.map((value, index) => reportedValueItem(entry, value, indexed ? [...path, index] : path)))]
+      : [element("p", { className: "muted", text: emptyText })]),
+  ]);
+}
+
+function renderStabilityRecord(entry) {
+  const test = entry.item;
+  const checkpoints = test.checkpoints || [];
+  const familyField = state.bundle.summary.record_identifiers.device_families;
+  const deviceField = state.bundle.summary.record_identifiers.individual_devices;
+  return [
+    element("div", { className: "record-facts" }, [
+      contextField("Aged specimen", test.specimen_label),
+      contextField("Identity link", humanLabel(test.link_status)),
+      contextField("Linked device", test[deviceField] || "No device link"),
+      contextField("Linked family", test[familyField] || "No family link"),
+    ]),
+    reportedValueGroup(entry, "Test-wide conditions", test.conditions || [], ["conditions"]),
+    element("section", { className: "checkpoint-list" }, [
+      element("h4", { text: `Checkpoints (${checkpoints.length})` }),
+      ...checkpoints.map((checkpoint, checkpointIndex) => element("details", {
+        className: "stability-checkpoint",
+        properties: { open: checkpointIndex === 0 },
+      }, [
+        element("summary", { text: `${checkpoint.checkpoint_id}${checkpoint.time ? ` · ${checkpoint.time.raw_value}` : " · time not reported"}` }),
+        element("div", { className: "checkpoint-content" }, [
+          reportedValueGroup(entry, "Time", checkpoint.time ? [checkpoint.time] : [], ["checkpoints", checkpointIndex, "time"], "Time not reported", false),
+          reportedValueGroup(entry, "Checkpoint-specific conditions", checkpoint.conditions || [], ["checkpoints", checkpointIndex, "conditions"]),
+          reportedValueGroup(entry, "Outcomes", checkpoint.outcomes || [], ["checkpoints", checkpointIndex, "outcomes"], "No outcome extracted"),
+        ]),
+      ])),
+    ]),
+  ];
+}
+
+function renderReviewTarget(entry) {
+  const content = [];
+  if (entry.kind === "stability_tests") content.push(...renderStabilityRecord(entry));
+  else if (entry.kind === "performance_observations") {
+    const deviceField = state.bundle.summary.record_identifiers.individual_devices;
+    content.push(element("div", { className: "record-facts" }, [
+      contextField("Measurement type", humanLabel(entry.item.measurement_type)),
+      contextField("Scan direction", humanLabel(entry.item.scan_direction)),
+      contextField("Linked device", entry.item[deviceField]),
+    ]));
+    content.push(reportedValueGroup(entry, "Performance metrics", entry.item.metrics || [], ["metrics"]));
+  } else if (entry.kind === "population_statistics") {
+    const familyField = state.bundle.summary.record_identifiers.device_families;
+    content.push(element("div", { className: "record-facts" }, [
+      contextField("Statistic", humanLabel(entry.item.statistic_type)),
+      contextField("Sample size", entry.item.sample_size == null ? "Not reported" : String(entry.item.sample_size)),
+      contextField("Linked family", entry.item[familyField] || "No family link"),
+    ]));
+    content.push(reportedValueGroup(entry, "Aggregate metrics", entry.item.metrics || [], ["metrics"]));
+  } else if (entry.kind === "individual_devices") {
+    content.push(reportedValueGroup(entry, "Specimen-specific properties", entry.item.reported_properties || [], ["reported_properties"]));
+  }
+  return element("section", { className: "review-target" }, [
+    element("div", { className: "review-target-heading" }, [
+      element("span", { className: "eyebrow", text: "Current review target" }),
+      element("h4", { text: `Review this ${singularCollection(entry.kind).toLowerCase()}` }),
+    ]),
+    element("p", { className: "review-instruction", text: RECORD_GUIDANCE[entry.kind].review }),
+    ...content,
+  ]);
+}
+
 function contextField(label, value) {
   return value ? element("div", { className: "context-field" }, [element("span", { text: label }), element("strong", { text: value })]) : null;
 }
@@ -444,8 +586,9 @@ function renderDeviceContext(entry) {
     contextField("Layer stack", (family?.layers || []).map(layerLabel).join(" / ") || family?.full_stack_raw),
     contextField("Absorbers", (family?.absorbers || []).map((absorber) => absorber.formula?.raw_value || absorber.label).join(" · ")),
   ];
-  return element("section", { className: "device-context" }, [
-    element("div", { className: "context-heading" }, [element("strong", { text: "Device context" }), element("span", { className: "muted", text: "Shared context stays visible while reviewing this record" })]),
+  const primaryDeviceRecord = ["device_families", "individual_devices"].includes(entry.kind);
+  return element("details", { className: "device-context", properties: { open: primaryDeviceRecord } }, [
+    element("summary", { text: primaryDeviceRecord ? "Device structure and composition" : "Related device context (expand if needed)" }),
     element("div", { className: "context-grid" }, fields),
     family ? compositionComparison(family) : null,
   ]);
@@ -641,12 +784,16 @@ function renderReviewQueue() {
   const attention = attentionReasons(entry);
   const flags = attention.map((reason) => element("span", { className: "attention-flag", text: reason.label, attributes: { title: reason.explanation } }));
   const actions = element("div", { className: "queue-actions" }, [
-    element("button", { className: decision === "verified" ? "active" : "", text: "Verify  V", events: { click: () => decideEntry(entry, "verified") } }),
-    element("button", { className: decision === "uncertain" ? "active" : "", text: "Uncertain  U", events: { click: () => decideEntry(entry, "uncertain") } }),
-    element("button", { className: decision === "needs_correction" ? "active" : "", text: "Correct fields  C", events: { click: () => beginCorrection(entry) } }),
-    element("span", { className: "spacer" }),
-    element("button", { text: "Copy as missing record", events: { click: () => copyMissingRecord(entry) } }),
-    element("button", { className: "remove-extra", text: "Remove extra record", events: { click: () => beginRemoval(entry) } }),
+    element("div", { className: "decision-actions" }, [
+      element("button", { className: decision === "verified" ? "active" : "", text: "All fields match source  V", attributes: { title: DECISION_GUIDANCE.verified }, events: { click: () => decideEntry(entry, "verified") } }),
+      element("button", { className: decision === "uncertain" ? "active" : "", text: "Cannot establish from source  U", attributes: { title: DECISION_GUIDANCE.uncertain }, events: { click: () => decideEntry(entry, "uncertain") } }),
+      element("button", { className: decision === "needs_correction" ? "active" : "", text: "Correct fields  C", attributes: { title: DECISION_GUIDANCE.needs_correction }, events: { click: () => beginCorrection(entry) } }),
+    ]),
+    element("div", { className: "record-management-actions" }, [
+      element("span", { className: "muted", text: "Record structure" }),
+      element("button", { text: "Copy as missing record", events: { click: () => copyMissingRecord(entry) } }),
+      element("button", { className: "remove-extra", text: "Remove extra record", events: { click: () => beginRemoval(entry) } }),
+    ]),
   ]);
   $("review-queue").replaceChildren(element("article", { className: "queue-card" }, [
     element("div", { className: "queue-heading" }, [
@@ -657,8 +804,11 @@ function renderReviewQueue() {
       element("strong", { text: `${reason.label}: ` }),
       reason.explanation,
     ])))] : []),
-    renderDeviceContext(entry),
+    renderReviewTarget(entry),
     renderRecordEvidence(entry),
+    renderDeviceContext(entry),
+    element("p", { className: "decision-help", text: "Your decision applies to the complete current record above—not only the first number or the linked device context." }),
+    element("p", { className: "queue-decision-status", attributes: { id: "queue-decision-status", role: "status" } }),
     actions,
   ]));
 }
@@ -701,12 +851,17 @@ function renderStageControls() {
   $("download-truth").disabled = !canExport;
   $("add-record").disabled = !hasAudit();
   $("new-record-kind").disabled = !hasAudit();
+  for (const tab of ["records", "completeness"]) {
+    const button = document.querySelector(`[data-tab="${tab}"]`);
+    button.disabled = !hasAudit();
+    button.title = hasAudit() ? "" : "Submit the blind inventory to unlock this step.";
+  }
 }
 
 function renderHistory() {
   const events = [...state.bundle.events].reverse().map((event) => {
     const subject = event.path || event.details?.record_key || event.details?.stage || event.note || "";
-    const decision = event.details?.decision ? ` · ${event.details.decision.replaceAll("_", " ")}` : "";
+    const decision = event.details?.decision ? ` · ${DECISION_GUIDANCE[event.details.decision] || humanLabel(event.details.decision)}` : "";
     return element("article", { className: "event" }, [
       element("div", {}, [
         element("strong", { text: `r${event.revision} · ${event.kind.replaceAll("_", " ")}` }),
@@ -929,22 +1084,34 @@ async function submitDecision(entry, decision) {
 }
 
 async function decideEntry(entry, decision) {
+  if (!hasAudit()) {
+    setTab("inventory");
+    return setStatus("Submit the blind inventory before recording a source-review decision.", true);
+  }
   const title = entityTitle(entry.kind, entry.item, entry.index);
   const keepPosition = $("record-status-filter").value === "remaining";
+  const actionButtons = [...document.querySelectorAll(".queue-actions button")];
   try {
+    actionButtons.forEach((button) => { button.disabled = true; });
+    $("queue-decision-status").textContent = `Saving “${DECISION_GUIDANCE[decision]}”…`;
+    setStatus(`Saving “${DECISION_GUIDANCE[decision]}” for ${title}…`);
     state.bundle = await submitDecision(entry, decision);
     if (!keepPosition) state.queueIndex += 1;
     state.queueKey = null;
     renderStudy();
     const next = currentEntry().entry;
     if (next?.item.evidence?.[0]) await focusCitation(next.item.evidence[0], false, false);
-    setStatus(`Marked ${title} as ${decision.replaceAll("_", " ")}.`);
+    setStatus(`${title}: ${DECISION_GUIDANCE[decision]}.`);
   } catch (error) {
+    $("queue-decision-status").textContent = error.message;
+    $("queue-decision-status").className = "queue-decision-status error";
+    actionButtons.forEach((button) => { button.disabled = false; });
     setStatus(error.message, true);
   }
 }
 
 async function beginCorrection(entry) {
+  if (!hasAudit()) return setStatus("Submit the blind inventory before correcting model candidates.", true);
   try {
     if (recordDecision(entry.kind, entry.item, entry.index) !== "needs_correction") state.bundle = await submitDecision(entry, "needs_correction");
     renderStudy();
@@ -954,6 +1121,7 @@ async function beginCorrection(entry) {
 }
 
 async function beginRemoval(entry) {
+  if (!hasAudit()) return setStatus("Submit the blind inventory before removing model candidates.", true);
   try {
     if (recordDecision(entry.kind, entry.item, entry.index) !== "needs_correction") state.bundle = await submitDecision(entry, "needs_correction");
     renderStudy();
@@ -1058,6 +1226,10 @@ async function completeStage(stage) {
 }
 
 function setTab(tab) {
+  if (["records", "completeness"].includes(tab) && !hasAudit()) {
+    setStatus("Submit the blind inventory before opening model-assisted record review.", true);
+    return;
+  }
   state.tab = tab;
   document.querySelectorAll("[data-tab]").forEach((button) => button.classList.toggle("active", button.dataset.tab === tab));
   for (const name of ["inventory", "records", "completeness", "history"]) $(`${name}-tab`).hidden = name !== tab;
@@ -1105,7 +1277,7 @@ function annotationSubject(event) {
   if (event.kind === "mutation") return event.details?.undoes_event_id
     ? "Reversed an earlier saved correction"
     : `${event.action} ${event.path}`;
-  if (event.kind === "record_decision") return `${event.details.record_key} · ${humanLabel(event.details.decision)}`;
+  if (event.kind === "record_decision") return `${event.details.record_key} · ${DECISION_GUIDANCE[event.details.decision] || humanLabel(event.details.decision)}`;
   if (event.kind === "stage_complete") return `${humanLabel(event.details.stage)} stage completed`;
   if (event.kind === "inventory_audit") {
     const counts = Object.entries(event.details.expected_counts || {}).map(([name, count]) => `${humanLabel(name)}: ${count}`);
@@ -1139,7 +1311,9 @@ function annotationEvent(paper, event) {
   const current = annotationIsCurrent(paper, event);
   const stateLabel = event.kind === "mutation"
     ? annotationMutationState(paper, event)
-    : current === true ? "current" : current === false ? "superseded" : "saved";
+    : event.kind === "record_decision"
+      ? current === true ? "current decision" : "no longer current"
+      : current === true ? "current" : current === false ? "superseded" : "saved";
   const stateClass = stateLabel.replaceAll(" ", "-");
   const canUndo = paper.undoable_event_ids?.includes(event.event_id);
   return element("article", { className: "annotation-event" }, [
