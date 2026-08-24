@@ -84,18 +84,31 @@ const state = {
 };
 
 async function request(url, options = {}) {
+  const { responseType, ...fetchOptions } = options;
   const token = localStorage.getItem("review-token");
   const headers = { ...(options.headers || {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) };
   if (options.body && !(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
-  const response = await fetch(url, { ...options, headers });
-  const payload = response.headers.get("content-type")?.includes("json") ? await response.json() : await response.text();
+  const response = await fetch(url, { ...fetchOptions, headers });
   if (!response.ok) {
+    const payload = response.headers.get("content-type")?.includes("json") ? await response.json() : await response.text();
     const error = new Error(payload.error || `Request failed (${response.status})`);
     error.code = payload.code || "request_failed";
     if (error.code === "review_revision_conflict") showRevisionConflictActions();
     throw error;
   }
-  return payload;
+  if (responseType === "blob") return response.blob();
+  return response.headers.get("content-type")?.includes("json") ? response.json() : response.text();
+}
+
+async function loadAuthenticatedImage(image, url) {
+  const blob = await request(url, { responseType: "blob" });
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    image.src = objectUrl;
+    await image.decode();
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 function element(tag, options = {}, children = []) {
@@ -902,12 +915,11 @@ async function renderPdf() {
   $("pdf-canvas").hidden = true;
   $("pdf-text").textContent = "";
   for (const control of [$("pdf-source"), $("previous-page"), $("next-page"), $("page-number")]) control.disabled = true;
-  image.src = `/api/pdf-page/${encodeURIComponent(paperId)}?${query}`;
   let text;
   try {
     [text] = await Promise.all([
       request(`/api/pdf-text/${encodeURIComponent(paperId)}?source=${source}&split=${split}&page=${page}`),
-      image.decode(),
+      loadAuthenticatedImage(image, `/api/pdf-page/${encodeURIComponent(paperId)}?${query}`),
     ]);
   } catch (error) {
     if (requestId !== state.pdfRequest) return false;

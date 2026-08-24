@@ -331,15 +331,21 @@ class VercelReviewApplication(ReviewApplication):
             return self.ensure_pdf(paper_id, source, None)
         return self._pdf_cache_path(paper_id, source, split)
 
-    def ensure_authenticated_user(self, user: dict[str, str]) -> dict[str, str]:
-        result = super().ensure_authenticated_user(user)
-        self._sync_users()
-        return result
+    def available_sources(self, paper_id: str, split: str) -> list[str]:
+        """Use the hydrated Blob index without downloading source documents."""
 
-    def add_reviewer(self, payload: object) -> dict[str, str]:
-        result = super().add_reviewer(payload)
+        return [
+            source
+            for source in ("main", "supplement")
+            if (split, paper_id, source) in self.remote_pdfs
+            or (None, paper_id, source) in self.remote_pdfs
+        ]
+
+    def _write_users(self, users: list[dict[str, str]]) -> None:
+        """Persist remotely only when the shared application changed the directory."""
+
+        super()._write_users(users)
         self._sync_users()
-        return result
 
     def import_paper(
         self,

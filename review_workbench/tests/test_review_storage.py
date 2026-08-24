@@ -4,7 +4,11 @@ from typing import Any
 
 import pytest
 
-from review_workbench.api.index import BlobReviewStateStorage, BlobStore
+from review_workbench.api.index import (
+    BlobReviewStateStorage,
+    BlobStore,
+    VercelReviewApplication,
+)
 from review_workbench.review_storage import (
     ReviewPaperSource,
     ReviewRevision,
@@ -71,6 +75,44 @@ def test_blob_find_lists_the_parent_directory_before_matching_exact_path():
 
     assert blob.find(pathname) == {"pathname": pathname}
     assert blob.prefixes == ["workbench/review-sources/calibration/"]
+
+
+def test_vercel_source_inventory_does_not_download_pdfs():
+    app = object.__new__(VercelReviewApplication)
+    app.remote_pdfs = {
+        ("calibration", "paper", "main"): {"pathname": "main.pdf"},
+        (None, "paper", "supplement"): {"pathname": "supplement.pdf"},
+    }
+
+    assert app.available_sources("paper", "calibration") == [
+        "main",
+        "supplement",
+    ]
+
+
+class RecordingBlobStore:
+    """Record user-directory writes without providing other Blob behavior."""
+
+    configured = True
+
+    def __init__(self):
+        self.puts = 0
+
+    def put(self, *args, **kwargs) -> None:
+        del args, kwargs
+        self.puts += 1
+
+
+def test_vercel_syncs_user_directory_only_when_the_user_changes(tmp_path):
+    app = object.__new__(VercelReviewApplication)
+    app.ground_truth_dir = tmp_path
+    app.blob = RecordingBlobStore()
+    user = {"id": "ada", "name": "Ada", "email": "ada@example.org", "role": "reviewer"}
+
+    app.ensure_authenticated_user(user)
+    app.ensure_authenticated_user(user)
+
+    assert app.blob.puts == 1
 
 
 def revision(number: int, note: str) -> ReviewRevision:

@@ -89,25 +89,32 @@ class ReviewApplication:
     def list_papers(self, split: str) -> list[dict[str, Any]]:
         papers = self.store.list_papers(split)
         for paper in papers:
-            paper["sources"] = [
-                source
-                for source in ("main", "supplement")
-                if self.pdf_path(paper["id"], source, split).exists()
-            ]
+            paper["sources"] = self.available_sources(paper["id"], split)
         return papers
 
     def get_paper(self, split: str, paper_id: str) -> dict[str, Any]:
         return self._with_sources(self.store.load_bundle(split, paper_id))
 
+    def available_sources(self, paper_id: str, split: str) -> list[str]:
+        """Report available documents without imposing a storage implementation.
+
+        Local review uses file existence. Remote adapters can override this boundary
+        to consult an object index without downloading every PDF while listing papers.
+        """
+
+        return [
+            source
+            for source in ("main", "supplement")
+            if self.pdf_path(paper_id, source, split).exists()
+        ]
+
     def _with_sources(self, bundle: dict[str, Any]) -> dict[str, Any]:
         """Attach available source documents to every bundle returned to the UI."""
 
         paper_id = str(bundle["paper_id"])
-        bundle["sources"] = [
-            source
-            for source in ("main", "supplement")
-            if self.pdf_path(paper_id, source, str(bundle["split"])).exists()
-        ]
+        bundle["sources"] = self.available_sources(
+            paper_id, str(bundle["split"])
+        )
         return bundle
 
     def users(self) -> list[dict[str, str]]:

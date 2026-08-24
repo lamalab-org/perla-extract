@@ -191,6 +191,9 @@ def test_pdf_source_switch_is_visible_cached_and_waits_for_the_new_page():
     assert 'setAttribute("aria-busy", "true")' in source
     assert "Large SI files can take a few seconds" in source
     assert "image.decode()" in source
+    assert 'responseType: "blob"' in source
+    assert "loadAuthenticatedImage" in source
+    assert "URL.createObjectURL" in source
     assert server.count("private, max-age=3600, immutable") == 2
 
 
