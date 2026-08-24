@@ -219,6 +219,36 @@ def test_record_count_corrections_are_explicit_and_reference_guarded():
     assert "Add missing record" in source
     assert "Save field correction" in source
     assert "other records refer to it" in backend
+    assert 'dependency.hidden = intent !== "remove"' in source
+    assert '$("remove-record").hidden = intent !== "remove"' in source
+    assert '$("cancel-record").addEventListener("click", () => $("record-dialog").close())' in source
+    assert "linkedRecordSummary" in source
+    assert "pointing to something that no longer exists" in source
+
+
+def test_startup_defers_schema_and_shows_real_loading_states():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+
+    assert 'id="paper-load-status"' in html
+    assert 'id="retry-startup"' in html
+    assert "Loading review workspace…" in source
+    assert "Your saved reviews are unchanged" in source
+    assert "paperCacheKey" in source
+    assert source.rstrip().endswith("await startApp();")
+    assert not source.rstrip().endswith("await loadStudySchema();")
+    assert 'if (!state.studySchema)' in source
+
+
+def test_correction_and_removal_dialogs_open_without_saving_a_decision_first():
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    correction = source[source.index("function beginCorrection"):source.index("function beginRemoval")]
+    removal = source[source.index("function beginRemoval"):source.index("function copyMissingRecord")]
+
+    assert "openRecord" in correction
+    assert "submitDecision" not in correction
+    assert "openRecord" in removal
+    assert "submitDecision" not in removal
 
 
 def test_corrections_default_to_fields_and_existing_evidence():

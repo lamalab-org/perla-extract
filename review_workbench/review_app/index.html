@@ -21,12 +21,14 @@
     <aside class="paper-rail">
       <div class="rail-heading"><h2>Papers</h2><span id="paper-count"></span></div>
       <input id="paper-filter" type="search" placeholder="Filter papers…" />
+      <p id="paper-load-status" class="muted" role="status">Loading papers…</p>
       <div id="paper-list" class="paper-list"></div>
     </aside>
 
     <section id="empty-state" class="empty-state">
-      <h2>Choose a paper</h2>
-      <p>Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures.</p>
+      <h2 id="empty-title">Choose a paper</h2>
+      <p id="empty-message">Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures.</p>
+      <button id="retry-startup" type="button" hidden>Try loading again</button>
     </section>
 
     <section id="workspace" hidden>
@@ -192,7 +194,7 @@
 
   <dialog id="record-dialog">
     <form method="dialog" class="dialog-card">
-      <div class="dialog-heading"><div><span id="record-kind" class="eyebrow"></span><h2 id="record-title">Edit record</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <div class="dialog-heading"><div><span id="record-kind" class="eyebrow"></span><h2 id="record-title">Edit record</h2></div><button id="close-record" type="button" aria-label="Close">×</button></div>
       <p id="record-dialog-help" class="callout"></p>
       <div id="record-dependencies" class="dependency-warning" hidden></div>
       <div class="editor-mode" role="group" aria-label="Record editor">
@@ -211,7 +213,7 @@
       <label>Evidence block ID<input id="citation-block" /></label>
       <label>Exact quote <span>Trim this to the smallest passage that supports the correction.</span><textarea id="citation-quote" rows="3"></textarea></label>
       <label><span id="mutation-note-label">Reason for correction</span> <span id="mutation-note-help">Explain what the extraction got wrong.</span><input id="mutation-note" placeholder="What did the extraction get wrong?" /></label>
-      <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove extra record</button><span></span><button id="reload-paper-dialog" type="button" hidden>Discard this edit and load latest</button><button value="cancel">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
+      <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove extra record</button><span></span><button id="reload-paper-dialog" type="button" hidden>Discard this edit and load latest</button><button id="cancel-record" type="button">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
       <p id="dialog-status" role="status"></p>
     </form>
   </dialog>

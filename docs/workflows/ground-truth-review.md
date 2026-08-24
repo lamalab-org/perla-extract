@@ -99,9 +99,11 @@ these explanations beside each affected record.
 
 Use **Remove extra record** only when the paper does not support that record. The
 workbench deletes only the selected record and never cascades to linked measurements.
-If another record still refers to it, removal is disabled and each dependency is shown
-as a link. Review those linked records first: reassign a valid measurement to the right
-device or family, or remove the linked record if it is also extra. The backend applies
+Dependency guidance appears only after the reviewer explicitly chooses removal—not
+while correcting fields. If another record still refers to it, removal is disabled and
+the interface states how many devices, measurements, or tests would lose their link and
+provides a button for each. Reassign a valid linked record to the right device or family,
+or remove that linked record if it is also unsupported. The backend applies
 the same reference check, so an invalid removal cannot be forced through the API.
 
 Each edit names the saved version it started from. If somebody else saves the same

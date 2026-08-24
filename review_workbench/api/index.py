@@ -7,6 +7,7 @@ import os
 import sys
 import tempfile
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, quote, unquote, urlparse
@@ -219,6 +220,29 @@ class BlobReviewStateStorage:
             if str(item.get("pathname", "")).endswith(".json")
         )
 
+    def list_paper_heads(self, split: str) -> list[tuple[str, int]]:
+        """List paper IDs and current revisions without downloading study records.
+
+        Source and revision pathnames already contain this information. Reading every
+        full extraction merely to build the paper rail made startup proportional to
+        the size of all studies, so revision directories are inspected concurrently
+        and their JSON bodies stay untouched until a reviewer opens one paper.
+        """
+
+        paper_ids = self.list_paper_ids(split)
+
+        def head(paper_id: str) -> tuple[str, int]:
+            revisions = self.blob.list(self._revision_prefix(split, paper_id))
+            numbers = [
+                int(Path(str(item.get("pathname", ""))).stem)
+                for item in revisions
+                if Path(str(item.get("pathname", ""))).stem.isdigit()
+            ]
+            return paper_id, max(numbers, default=1)
+
+        with ThreadPoolExecutor(max_workers=min(8, len(paper_ids) or 1)) as executor:
+            return list(executor.map(head, paper_ids))
+
 
 class VercelReviewApplication(ReviewApplication):
     """Adapt the filesystem-oriented review core to Vercel's ephemeral runtime.
@@ -248,20 +272,39 @@ class VercelReviewApplication(ReviewApplication):
 
         if not self.blob.configured:
             return
-        users_blob = self.blob.find(self.users_pathname)
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            users_request = executor.submit(self.blob.find, self.users_pathname)
+            legacy_pdfs = executor.submit(self.blob.list, self.pdf_prefix)
+            review_pdfs = executor.submit(self.blob.list, self.review_pdf_prefix)
+            users_blob = users_request.result()
+            legacy_pdf_items = legacy_pdfs.result()
+            review_pdf_items = review_pdfs.result()
         if users_blob:
             write_json_atomic(
                 self.ground_truth_dir / "users.json",
                 json.loads(self.blob.download(users_blob)),
             )
-        for blob in self.blob.list(self.pdf_prefix):
+        for blob in legacy_pdf_items:
             self._index_pdf(blob, split=None)
-        for blob in self.blob.list(self.review_pdf_prefix):
+        for blob in review_pdf_items:
             pathname = str(blob.get("pathname", ""))
             relative = pathname.removeprefix(self.review_pdf_prefix)
             split, separator, _ = relative.partition("/")
             if separator and split in {"calibration", "dev", "test"}:
                 self._index_pdf(blob, split=split)
+
+    def list_papers(self, split: str) -> list[dict[str, Any]]:
+        """Return a lightweight paper rail and defer full study reads until selection."""
+
+        self.store.validate_identity(split, "10.0000--placeholder")
+        return [
+            {
+                "id": paper_id,
+                "revision": revision,
+                "sources": self.available_sources(paper_id, split),
+            }
+            for paper_id, revision in self.store.storage.list_paper_heads(split)
+        ]
 
     def _index_pdf(self, blob: dict, *, split: str | None) -> None:
         """Index one private PDF without conflating dataset generations."""

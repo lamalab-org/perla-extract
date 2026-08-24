@@ -84,7 +84,11 @@ and the arrow keys or `J`/`K` to move between records. The decision applies to t
 complete selected record, not only its first number or related device context.
 Corrections open with existing evidence preselected. Reviewers can switch
 directly between the field-oriented editor, where every label includes its JSON
-Pointer, and the complete JSON for that record.
+Pointer, and the complete JSON for that record. Opening **Correct fields** does not
+save a decision or wait for a server round trip; only the submitted correction creates
+a revision. Removal is a separate action. Its dependency explanation appears only
+after **Remove extra record** is chosen and names the linked record types that must be
+reassigned or removed first.
 
 Reviewers who prefer a spreadsheet can use **Download Excel** for the whole paper,
 or download a smaller workbook for the device currently in context from the record
@@ -172,6 +176,10 @@ The deployed adapter stores new private PDFs under
 `workbench/review-revisions/` in Vercel Blob. Split-scoped PDF paths prevent a newly
 generated calibration item from silently reusing a historical PDF with the same DOI.
 The older `papers/` prefix remains a read-only fallback for legacy deployments.
+The deployed paper rail reads only source and revision pathnames. It does not download
+every full extraction merely to show the list; the selected study is fetched on demand.
+The browser keeps the last authenticated paper list as a fast-start cache and refreshes
+it against Blob storage.
 Creating revision `N + 1` with overwrite disabled is the compare-and-swap operation:
 if two serverless instances review revision `N`, exactly one can create the next path
 and the other receives an HTTP 409 conflict. The reviewer is asked to load the latest

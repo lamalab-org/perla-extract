@@ -22,6 +22,7 @@ class MemoryBlobStore:
     def __init__(self):
         self.objects: dict[str, bytes] = {}
         self.hide_revision_lists = False
+        self.downloads = 0
 
     def find(self, pathname: str) -> dict[str, str] | None:
         return {"pathname": pathname} if pathname in self.objects else None
@@ -36,6 +37,7 @@ class MemoryBlobStore:
         ]
 
     def download(self, blob: dict[str, str]) -> bytes:
+        self.downloads += 1
         return self.objects[blob["pathname"]]
 
     def put(
@@ -147,3 +149,22 @@ def test_blob_revision_paths_are_compare_and_swap_commits():
     assert stored.revision == 2
     assert stored.ground_truth == {"note": "ada"}
     assert len(blob.objects) == 2
+
+
+def test_blob_paper_heads_do_not_download_full_studies():
+    blob = MemoryBlobStore()
+    storage = BlobReviewStateStorage(blob)  # type: ignore[arg-type]
+    blob.objects.update(
+        {
+            "workbench/review-sources/calibration/paper-a.json": b"large source",
+            "workbench/review-sources/calibration/paper-b.json": b"large source",
+            "workbench/review-revisions/calibration/paper-a/00000002.json": b"large revision",
+            "workbench/review-revisions/calibration/paper-a/00000007.json": b"large revision",
+        }
+    )
+
+    assert storage.list_paper_heads("calibration") == [
+        ("paper-a", 7),
+        ("paper-b", 1),
+    ]
+    assert blob.downloads == 0

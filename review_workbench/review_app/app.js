@@ -81,7 +81,7 @@ const state = {
   page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null,
   queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
   studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
-  pdfObjectUrl: null, censusDraft: null, editingCensus: false,
+  pdfObjectUrl: null, censusDraft: null, editingCensus: false, loadingPaperId: null,
 };
 
 async function request(url, options = {}) {
@@ -245,10 +245,37 @@ async function loadStudySchema() {
   state.studySchema = await request("/api/study-schema");
 }
 
+function paperCacheKey() { return `perla-paper-list:${state.split}`; }
+
+function savePaperCache() {
+  try { localStorage.setItem(paperCacheKey(), JSON.stringify(state.papers)); }
+  catch (error) { console.warn("Could not cache the paper list", error); }
+}
+
 async function loadPapers() {
-  const payload = await request(`/api/papers?split=${encodeURIComponent(state.split)}`);
-  state.papers = payload.papers;
-  renderPapers();
+  const status = $("paper-load-status");
+  status.hidden = false;
+  status.textContent = "Loading papers…";
+  if (!state.papers.length) {
+    try {
+      state.papers = JSON.parse(localStorage.getItem(paperCacheKey()) || "[]");
+      if (state.papers.length) renderPapers();
+    } catch { localStorage.removeItem(paperCacheKey()); }
+  }
+  try {
+    const payload = await request(`/api/papers?split=${encodeURIComponent(state.split)}`);
+    const known = new Map(state.papers.map((paper) => [paper.id, paper]));
+    state.papers = payload.papers.map((paper) => {
+      const cached = known.get(paper.id);
+      return cached?.revision === paper.revision ? { ...cached, ...paper } : paper;
+    });
+    savePaperCache();
+    renderPapers();
+    status.hidden = true;
+  } catch (error) {
+    if (!state.papers.length) throw error;
+    status.textContent = "Showing the saved paper list while the latest list reconnects.";
+  }
 }
 
 function renderPapers() {
@@ -256,22 +283,53 @@ function renderPapers() {
   const papers = state.papers.filter((paper) => paper.id.toLowerCase().includes(query));
   $("paper-count").textContent = papers.length;
   const cards = papers.map((paper) => {
-    const completed = Object.keys(paper.completed_stages || {});
+    const completed = paper.completed_stages ? Object.keys(paper.completed_stages) : [];
+    const hasCounts = Number.isInteger(paper.device_families)
+      && Number.isInteger(paper.individual_devices)
+      && Number.isInteger(paper.performance_observations);
+    const loading = paper.id === state.loadingPaperId;
     return element("button", {
-      className: `paper-card ${paper.id === state.paperId ? "selected" : ""}`,
+      className: `paper-card ${paper.id === state.paperId ? "selected" : ""} ${loading ? "loading" : ""}`,
+      properties: { disabled: loading },
+      attributes: loading ? { "aria-busy": "true" } : {},
       events: { click: () => selectPaper(paper.id) },
     }, [
       element("strong", { text: paper.id }),
-      element("span", { text: `${paper.device_families} families · ${paper.individual_devices} individual devices · ${paper.performance_observations} observations` }),
-      element("span", { text: `${completed.length}/4 review stages · revision ${paper.revision}` }),
+      element("span", { text: hasCounts
+        ? `${paper.device_families} families · ${paper.individual_devices} individual devices · ${paper.performance_observations} observations`
+        : "Open to inspect extracted records" }),
+      element("span", { text: loading
+        ? "Loading review…"
+        : `${paper.completed_stages ? `${completed.length}/4 review stages · ` : ""}revision ${paper.revision}` }),
     ]);
   });
   $("paper-list").replaceChildren(...(cards.length ? cards : [element("p", { className: "muted", text: "No imported papers in this split." })]));
 }
 
 async function selectPaper(paperId) {
+  if (state.loadingPaperId) return;
+  state.loadingPaperId = paperId;
+  renderPapers();
+  if (state.bundle) setStatus(`Loading ${paperId}…`);
+  else {
+    $("empty-title").textContent = "Loading paper…";
+    $("empty-message").textContent = "Fetching the review records. The paper will appear as soon as they are ready.";
+  }
+  let bundle;
+  try {
+    bundle = await request(`/api/paper/${state.split}/${encodeURIComponent(paperId)}`);
+  } catch (error) {
+    $("empty-title").textContent = "Could not open this paper";
+    $("empty-message").textContent = error.message;
+    $("empty-state").hidden = false;
+    if (state.bundle) setStatus(`Could not open ${paperId}: ${error.message}`, true);
+    return;
+  } finally {
+    state.loadingPaperId = null;
+    renderPapers();
+  }
   state.paperId = paperId;
-  state.bundle = await request(`/api/paper/${state.split}/${encodeURIComponent(paperId)}`);
+  state.bundle = bundle;
   state.queueIndex = 0;
   state.queueKey = null;
   state.evidenceCache.clear();
@@ -282,9 +340,10 @@ async function selectPaper(paperId) {
   state.page = 1;
   $("empty-state").hidden = true;
   $("workspace").hidden = false;
-  renderPapers();
   renderStudy();
-  await renderPdf();
+  savePaperCache();
+  try { await renderPdf(); }
+  catch (error) { setStatus(`The records are ready, but the PDF page did not load: ${error.message}`, true); }
 }
 
 function hasAudit() { return Boolean(state.bundle?.summary.inventory_audits?.[state.user.id]); }
@@ -702,6 +761,17 @@ function recordReferences(entry) {
   return recordEntries().filter((candidate) => keys.has(candidate.key));
 }
 
+function linkedRecordSummary(references) {
+  const counts = references.reduce((result, reference) => {
+    result[reference.kind] = (result[reference.kind] || 0) + 1;
+    return result;
+  }, {});
+  return Object.entries(counts).map(([kind, count]) => {
+    const label = count === 1 ? singularCollection(kind) : COLLECTIONS[kind];
+    return `${count} ${label.toLowerCase()}`;
+  }).join(" and ");
+}
+
 function normalizedCitation(value) {
   let result = "";
   for (const character of String(value || "").normalize("NFKC").replaceAll("−", "-").replaceAll("–", "-").replaceAll("—", "-")) {
@@ -1067,17 +1137,20 @@ function openRecord(kind, index = null, template = null, intent = index == null 
   $("citation-block").value = citation?.block_id || "";
   $("citation-quote").value = citation?.quote || "";
   $("mutation-note").value = "";
-  $("remove-record").hidden = index == null;
+  $("remove-record").hidden = intent !== "remove";
   $("remove-record").disabled = references.length > 0;
+  $("remove-record").textContent = references.length ? "Resolve linked records first" : "Remove extra record";
   const dependency = $("record-dependencies");
-  dependency.hidden = references.length === 0;
+  dependency.hidden = intent !== "remove" || references.length === 0;
   dependency.replaceChildren();
-  if (references.length) {
+  if (intent === "remove" && references.length) {
+    const type = singularCollection(kind).toLowerCase();
     dependency.append(
-      element("strong", { text: "This record cannot be removed yet." }),
-      element("p", { text: "Correct these linked records first: reassign them to the right device or family, or remove them if they are also extra." }),
+      element("strong", { text: `${references.length} linked record${references.length === 1 ? " must" : "s must"} be handled first` }),
+      element("p", { text: `This ${type} is used by ${linkedRecordSummary(references)}. Removing it now would leave ${references.length === 1 ? "that record" : "those records"} pointing to something that no longer exists.` }),
+      element("p", { text: "Open each linked record below and change its family or device link. If the linked record is also unsupported by the paper, remove it instead." }),
       element("ul", {}, references.map((reference) => element("li", {}, [element("button", {
-        text: `Review ${COLLECTIONS[reference.kind]} · ${entityId(reference.kind, reference.item, reference.index)}`,
+        text: `Open ${singularCollection(reference.kind).toLowerCase()} · ${entityId(reference.kind, reference.item, reference.index)}`,
         properties: { type: "button" },
         events: { click: () => reviewReferencedRecord(reference) },
       })]))),
@@ -1204,31 +1277,33 @@ async function decideEntry(entry, decision) {
   }
 }
 
-async function beginCorrection(entry) {
-  try {
-    if (recordDecision(entry.kind, entry.item, entry.index) !== "needs_correction") state.bundle = await submitDecision(entry, "needs_correction");
-    renderStudy();
-    const current = recordEntries().find((candidate) => candidate.key === entry.key) || entry;
-    openRecord(current.kind, current.index, null, "edit");
-  } catch (error) { setStatus(error.message, true); }
+function beginCorrection(entry) {
+  openRecord(entry.kind, entry.index, null, "edit");
 }
 
-async function beginRemoval(entry) {
-  try {
-    if (recordDecision(entry.kind, entry.item, entry.index) !== "needs_correction") state.bundle = await submitDecision(entry, "needs_correction");
-    renderStudy();
-    const current = recordEntries().find((candidate) => candidate.key === entry.key) || entry;
-    openRecord(current.kind, current.index, null, "remove");
-  } catch (error) { setStatus(error.message, true); }
+function beginRemoval(entry) {
+  openRecord(entry.kind, entry.index, null, "remove");
 }
 
 function copyMissingRecord(entry) {
   openRecord(entry.kind, null, entry.item, "copy");
 }
 
-function addMissingRecord() {
+async function addMissingRecord() {
   document.querySelector(".add-record-menu").open = false;
-  openRecord($("new-record-kind").value, null, null, "add");
+  const button = $("add-record");
+  try {
+    if (!state.studySchema) {
+      button.disabled = true;
+      button.textContent = "Preparing…";
+      await loadStudySchema();
+    }
+    openRecord($("new-record-kind").value, null, null, "add");
+  } catch (error) { setStatus(`Could not prepare a new record: ${error.message}`, true); }
+  finally {
+    button.disabled = false;
+    button.textContent = "Create draft";
+  }
 }
 
 async function reviewReferencedRecord(reference) {
@@ -1268,7 +1343,7 @@ async function saveRecord() {
 
 async function removeRecord() {
   const note = $("mutation-note").value.trim();
-  if (state.edit.references.length) return $("dialog-status").textContent = "Correct the linked records listed above before removing this record.";
+  if (state.edit.references.length) return $("dialog-status").textContent = "Open and resolve each linked record listed above. This record can then be removed safely.";
   if (!note) {
     $("dialog-status").textContent = "Explain why the paper does not support this record before removing it.";
     $("mutation-note").focus();
@@ -1666,7 +1741,7 @@ async function importPaper(event) {
   } catch (error) { $("import-status").textContent = error.message; }
 }
 
-$("split").addEventListener("change", async (event) => { state.pdfAbortController?.abort(); state.split = event.target.value; state.paperId = null; state.bundle = null; state.annotations = null; state.censusDraft = null; state.editingCensus = false; $("workspace").hidden = true; $("empty-state").hidden = false; await loadPapers(); });
+$("split").addEventListener("change", async (event) => { state.pdfAbortController?.abort(); state.split = event.target.value; state.papers = []; state.paperId = null; state.bundle = null; state.annotations = null; state.censusDraft = null; state.editingCensus = false; $("workspace").hidden = true; $("empty-title").textContent = "Choose a paper"; $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures."; $("empty-state").hidden = false; try { await loadPapers(); } catch (error) { showStartupError(error); } });
 $("paper-filter").addEventListener("input", renderPapers);
 $("submit-audit").addEventListener("click", submitAudit);
 $("edit-census").addEventListener("click", editSavedCensus);
@@ -1691,6 +1766,8 @@ $("previous-record").addEventListener("click", () => moveQueue(-1));
 $("next-record").addEventListener("click", () => moveQueue(1));
 $("show-fields-editor").addEventListener("click", () => setRecordEditorMode("fields"));
 $("show-json-editor").addEventListener("click", () => setRecordEditorMode("json"));
+$("close-record").addEventListener("click", () => $("record-dialog").close());
+$("cancel-record").addEventListener("click", () => $("record-dialog").close());
 $("save-record").addEventListener("click", saveRecord);
 $("remove-record").addEventListener("click", removeRecord);
 $("reload-paper").addEventListener("click", reloadLatestPaper);
@@ -1761,6 +1838,26 @@ document.addEventListener("keydown", (event) => {
   event.preventDefault();
 });
 
-await loadStudySchema();
-await loadSession();
-await loadPapers();
+function showStartupError(error) {
+  $("paper-load-status").hidden = true;
+  $("empty-title").textContent = "The review workspace did not load";
+  $("empty-message").textContent = `${error.message} Your saved reviews are unchanged.`;
+  $("retry-startup").hidden = false;
+  $("reviewer").textContent = state.user?.name || "Connection problem";
+}
+
+async function startApp() {
+  $("retry-startup").hidden = true;
+  $("empty-title").textContent = "Loading review workspace…";
+  $("empty-message").textContent = "Signing you in and fetching the paper list.";
+  try {
+    if (!state.user) await loadSession();
+    await loadPapers();
+    $("empty-title").textContent = "Choose a paper";
+    $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures.";
+  } catch (error) { showStartupError(error); }
+}
+
+$("retry-startup").addEventListener("click", startApp);
+
+await startApp();
