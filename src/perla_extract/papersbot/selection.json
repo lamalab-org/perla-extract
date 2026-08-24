@@ -1,0 +1,20 @@
+{
+  "required_groups": [
+    ["perovskite", "perovskites", "PSC", "PSCs"],
+    [
+      "solar cell",
+      "solar cells",
+      "photovoltaic",
+      "photovoltaics",
+      "power conversion efficiency",
+      "PCE"
+    ]
+  ],
+  "excluded_title_terms": [
+    "review",
+    "perspective",
+    "viewpoint",
+    "news",
+    "editorial"
+  ]
+}

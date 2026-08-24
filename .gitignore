@@ -183,12 +183,19 @@ celerybeat.pid
 
 # Environments
 .env
+.env.local
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+.perla-cache/
+/extractions/
+/study_extraction/
+/review_data/
+/review_workbench/.vercel-build/
+/.vercel/
 
 # Spyder project settings
 .spyderproject
