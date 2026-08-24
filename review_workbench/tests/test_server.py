@@ -4,8 +4,16 @@ import hashlib
 import json
 
 import fitz
+import pytest
 
-from review_workbench.server import ReviewApplication
+from review_workbench.server import REVISION_CONFLICT_RESPONSE, ReviewApplication
+
+
+def test_revision_conflict_message_is_actionable_without_internal_details():
+    assert REVISION_CONFLICT_RESPONSE["code"] == "review_revision_conflict"
+    assert "Load the latest saved version" in REVISION_CONFLICT_RESPONSE["error"]
+    assert "revision 2" not in REVISION_CONFLICT_RESPONSE["error"]
+    assert "stale" not in REVISION_CONFLICT_RESPONSE["error"]
 
 
 def pdf_bytes(text: str) -> bytes:
@@ -63,3 +71,10 @@ def test_evidence_search_returns_source_and_page(tmp_path, empty_study, document
     assert app.evidence_blocks("calibration", "10.0000--example", "main_p1")[0][
         "block_id"
     ] == "main_p1_text_1"
+    assert app.evidence_block(
+        "calibration", "10.0000--example", "supplement_p3_table_1"
+    )["page"] == 3
+    assert app.study_schema()["properties"]["individual_devices"]["type"] == "array"
+
+    with pytest.raises(FileNotFoundError, match="evidence block missing"):
+        app.evidence_block("calibration", "10.0000--example", "missing")

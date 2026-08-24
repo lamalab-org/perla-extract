@@ -5,6 +5,7 @@ requires-python = ">=3.10"
 dependencies = [
   "click>=8.1",
   "loguru>=0.7",
+  "openpyxl>=3.1",
   "pydantic>=2.8",
   "PyMuPDF>=1.24",
   "PyJWT[crypto]>=2.10",

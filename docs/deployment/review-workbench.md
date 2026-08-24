@@ -29,11 +29,17 @@ SI, and optional run configuration. Import `coverage_audit.json` and
 patch passed the quality gates. Import `enrichment.json` to
 show source-reported absorber composition beside proposed A/B/X assignments, including
 their acceptance status and issues. These files remain provenance aids:
-after the blind census is submitted, the interface highlights unmatched inventory
-candidates and the record groups changed by refinement so reviewers can focus their
-attention without treating any model artifact as truth. The app stores immutable
-seeds, compiled truth, event history, evidence blocks, and manifests under the
-ground-truth directory.
+after the blind record and main-text figure censuses are submitted, the interface
+highlights unmatched inventory candidates and the record groups changed by refinement
+so reviewers can focus their attention without treating any model artifact as truth.
+The app stores immutable seeds, compiled truth, event history, evidence blocks, and
+manifests under the ground-truth directory.
+
+The figure census is deliberately limited to numbered figures in the main paper. It
+records how many figures contain schema-relevant content and how many schema records or
+atomic values are available only from those figures. The app records all imported
+sources as the blind record-search scope; reviewers do not toggle main/SI checkboxes,
+because those flags are not measurements of figure-extraction loss.
 
 For a validated batch, use the same import contract non-interactively:
 
@@ -54,14 +60,46 @@ contract, so rerunning it cannot silently replace a seed.
 After the blind census, the Records tab presents a device-centered queue rather than
 one long list. A family is followed by its population records, devices, observations,
 and stability tests so shared architecture, stack, absorber, and composition remain in
-view. The first cited source block opens in the paper automatically.
+view. Before the census is submitted, Records and Completeness are visibly locked so
+candidate records cannot influence the independent count. The first cited source block
+opens in the paper automatically.
 
-The default **Remaining** view removes verified and uncertain records as the reviewer
-advances. **Needs attention** limits the queue to requested corrections, records
-changed by the quality pass, and composition proposals that need review. Use `V` to
-verify, `U` for uncertain, `C` to correct, and the arrow keys or `J`/`K` to move between
-records. Corrections open a field-oriented editor with existing evidence preselected;
-complete JSON remains available only as an advanced escape hatch.
+The selected record is the primary review surface; related device context appears
+after it as collapsible supporting information. For stability tests, the workbench
+shows the specimen link, every test-wide condition, and every checkpoint's time,
+checkpoint-specific conditions, and outcomes. Atomic values are not collapsed into a
+single summary: each value shows its raw wording, numeric normalization, JSON path,
+and direct evidence action.
+
+The default **Remaining** view removes records marked **All fields match source** or
+**Cannot establish** as the reviewer advances. **Needs attention** limits the queue to records the reviewer marked for
+correction, records added or revised during the model's second evidence read, and A/B/X
+assignments that did not pass every automated check. These are review priorities, not
+correctness judgments. Every displayed reason includes a plain-language explanation.
+Use `V` for **All fields match source**, `U` for **Cannot establish**, `C` to correct,
+and the arrow keys or `J`/`K` to move between records. The decision applies to the
+complete selected record, not only its first number or related device context.
+Corrections open with existing evidence preselected. Reviewers can switch
+directly between the field-oriented editor, where every label includes its JSON
+Pointer, and the complete JSON for that record.
+
+Reviewers who prefer a spreadsheet can download an Excel workbook for the whole
+paper from **Download review files**, or a smaller workbook for the device currently
+in context from the record queue. The device workbook includes its family, individual
+device, linked performance observations, family population statistics, and stability
+tests explicitly linked to that device or only to its family. The short **Record
+review** sheet is the primary checklist; **Field corrections** contains one atomic
+schema value per row with its JSON path and nearest citation. Yellow cells are
+editable, and rows may be sorted or filtered. Identifiers and row membership are
+intentionally read-only.
+
+Uploading the returned workbook checks its paper, schema hash, original truth digest,
+and revision; reconstructs the expected rows; validates every correction citation;
+and validates the complete `StudyExtraction`. All corrections and decisions are then
+saved together as one attributable revision. A stale or structurally changed workbook
+is rejected. The import appears in **My edits & undo** and can be reversed while none
+of its corrected records has since changed. Excel does not add or delete complete
+records; those structural changes stay in the browser so links remain explicit.
 
 The study header compares the immutable seed's schema version and generated schema
 hash with the running extractor. Older seeds that remain structurally readable are
@@ -77,10 +115,21 @@ reuse an existing rich review item. This keeps historical drafts recoverable whi
 preventing reviewers from comparing flat and rich records as equivalent annotations.
 
 Review state is committed under `state/`. One immutable source bundle contains the
-seed, evidence document, manifest, and initial revision. Each accepted change writes
+seed, evidence document, manifest, and initial revision. Each saved human change writes
 one new revision snapshot containing both the validated truth and complete event
 history. The familiar `seeds/`, `events/`, `documents/`, `manifests/`, and split
 directories are refreshed as derived, inspectable exports.
+
+Every authenticated reviewer can open **My edits & undo** from the header. This view
+reads the persisted revision log across the selected split and shows only that
+reviewer's census submissions, record decisions, corrections, evidence, notes, and
+stage completions. Decisions are marked current or superseded when later edits change
+the reviewed record. Corrections and workbook imports that are still untouched offer
+**Undo this saved edit**. Undo writes a linked, validated revision instead of deleting history; the
+action is unavailable once later work changes the same value. **Download my
+annotations** saves the same reviewer-scoped ledger
+as readable JSON, including exact before/after values and revision timestamps. It is a
+personal progress export and is deliberately separate from adjudicated ground truth.
 
 After the final administrator adjudication, **Download PR bundle** produces a
 deterministic ZIP containing the rich ground truth, immutable seed, complete review
@@ -116,8 +165,9 @@ generated calibration item from silently reusing a historical PDF with the same 
 The older `papers/` prefix remains a read-only fallback for legacy deployments.
 Creating revision `N + 1` with overwrite disabled is the compare-and-swap operation:
 if two serverless instances review revision `N`, exactly one can create the next path
-and the other receives a stale revision error. No process-local lock or mutable
-whole-dataset blob is involved.
+and the other receives an HTTP 409 conflict. The reviewer is asked to load the latest
+saved version and reconsider their change; exact revision numbers are kept in server
+logs for diagnosis. No process-local lock or mutable whole-dataset blob is involved.
 
 Configure `BLOB_READ_WRITE_TOKEN`; the server-side token is never sent to the browser.
 

@@ -77,7 +77,19 @@ erDiagram
 
 ## Device families and composition
 
-A `DeviceFamily` holds information shared by a reported variant: the architecture,
+A `DeviceFamily` is one group-level recipe or architecture variant that can describe
+several fabricated specimens. Split families when the paper presents a control,
+treatment, composition, stack, or fabrication recipe as a distinct reusable design.
+Do not create another family for a champion label, scan direction, measurement
+protocol, stability checkpoint, or summary statistic.
+
+An `IndividualDevice` is one particular measured specimen distinguished by the paper,
+for example a champion, representative, or certified cell. Multiple measurements on
+that specimen link back to it rather than being counted as additional devices. When
+the paper reports only a group mean or distribution, create a `PopulationStatistic`
+and do not invent individual devices.
+
+A `DeviceFamily` holds information shared by its reported variant: the architecture,
 polarity, full stack, ordered layers, scoped absorbers, and processing steps. Each
 `AbsorberComponent` keeps one absorber layer or subcell's formula, constituents, and
 properties together. A tandem can therefore contain separate wide-bandgap and

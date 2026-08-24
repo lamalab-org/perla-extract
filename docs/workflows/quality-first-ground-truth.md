@@ -75,8 +75,11 @@ Before import, require:
 - `targeted_repair.json`, including its worklist and acceptance decision; and
 - the exact main-paper and supplement hashes.
 
-Keep enrichment decisions in `enrichment.json`. An accepted deterministic proposal may
-support NOMAD export, but it does not rewrite the source-reported ground truth.
+Keep enrichment decisions in `enrichment.json`. The machine-readable status `accepted`
+means only that a deterministic proposal passed automated consistency checks. It may
+support NOMAD export, but it is not a human verification and does not rewrite the
+source-reported ground truth. The workbench therefore displays this state as **Passed
+automated checks**.
 
 Imported seeds are immutable. If a better extraction is produced before review begins,
 create a new review item or explicitly archive the unused seed; do not silently replace
@@ -98,8 +101,12 @@ comparability.
 
 ## 3. Review without anchoring recall to the model
 
-The reviewer first records a blind paper-wide inventory. Model candidates and coverage
-audits remain hidden until that census is submitted. Review then proceeds through:
+The reviewer first records a blind paper-wide record inventory. Model candidates and
+coverage audits remain hidden until that census is submitted. The same step separately
+counts main-text figures, schema-relevant figures, and schema records or atomic values
+that occur only in those figures. This measures the loss from text-only extraction
+without conflating it with whether the reviewer searched the main paper or SI. Review
+then proceeds through:
 
 1. entity identity and reporting level;
 2. composition, layers, and processing;

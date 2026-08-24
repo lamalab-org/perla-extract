@@ -27,18 +27,31 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from perla_extract.study_extraction.artifacts import write_json_atomic  # noqa: E402
 from perla_extract.study_extraction.enrichment import EnrichmentAudit  # noqa: E402
+from perla_extract.study_extraction.models import StudyExtraction  # noqa: E402
 from review_workbench.ground_truth_export import (  # noqa: E402
     build_ground_truth_export,
     ground_truth_zip,
 )
-from review_workbench.review_storage import ReviewStateStorage  # noqa: E402
+from review_workbench.review_storage import (  # noqa: E402
+    ReviewStateStorage,
+    StaleRevisionError,
+)
 from review_workbench.study_review import (  # noqa: E402
     InventoryAuditRequest,
     MutationRequest,
     RecordDecisionRequest,
     StageRequest,
     StudyReviewStore,
+    UndoMutationRequest,
 )
+
+REVISION_CONFLICT_RESPONSE = {
+    "code": "review_revision_conflict",
+    "error": (
+        "This paper changed in another review session. Load the latest saved version, "
+        "review your change again, and then save it."
+    ),
+}
 
 
 class ReviewApplication:
@@ -223,6 +236,20 @@ class ReviewApplication:
             )
         )
 
+    def undo_mutation(
+        self, split: str, paper_id: str, payload: object, reviewer_id: str
+    ) -> dict[str, Any]:
+        """Validate an undo request before reversing one attributable correction."""
+
+        return self._with_sources(
+            self.store.undo_mutation(
+                split,
+                paper_id,
+                UndoMutationRequest.model_validate(payload),
+                reviewer_id,
+            )
+        )
+
     def inventory_audit(
         self, split: str, paper_id: str, payload: object, reviewer_id: str
     ) -> dict[str, Any]:
@@ -258,6 +285,46 @@ class ReviewApplication:
             )
         )
 
+    def reviewer_progress(self, split: str, reviewer_id: str) -> dict[str, Any]:
+        """Return the authenticated reviewer's saved activity across one split."""
+
+        return self.store.reviewer_progress(split, reviewer_id)
+
+    def review_workbook(
+        self,
+        split: str,
+        paper_id: str,
+        reviewer_id: str,
+        *,
+        device_id: str | None = None,
+    ) -> bytes:
+        """Build an offline form from the current reviewer-visible revision."""
+
+        return self.store.review_workbook(
+            split, paper_id, reviewer_id, device_id=device_id
+        )
+
+    def import_review_workbook(
+        self,
+        split: str,
+        paper_id: str,
+        data: bytes,
+        reviewer_id: str,
+        *,
+        filename: str,
+    ) -> dict[str, Any]:
+        """Validate one returned workbook and attach its event to the reviewer."""
+
+        return self._with_sources(
+            self.store.import_review_workbook(
+                split,
+                paper_id,
+                data,
+                reviewer_id,
+                filename=filename,
+            )
+        )
+
     def evidence_blocks(
         self, split: str, paper_id: str, query: str = ""
     ) -> list[dict[str, Any]]:
@@ -276,6 +343,36 @@ class ReviewApplication:
                 or query in str(block.get("block_id", "")).lower()
             ]
         return blocks[:100]
+
+    def evidence_block(
+        self, split: str, paper_id: str, block_id: str
+    ) -> dict[str, Any]:
+        """Resolve one citation directly so navigation never depends on search."""
+
+        payload = self.store.load_document(split, paper_id)
+        blocks = (
+            payload.get("blocks", [])
+            if isinstance(payload, dict)
+            else payload or []
+        )
+        block = next(
+            (
+                candidate
+                for candidate in blocks
+                if isinstance(candidate, dict)
+                and candidate.get("block_id") == block_id
+            ),
+            None,
+        )
+        if block is None:
+            raise FileNotFoundError(f"evidence block {block_id} is unavailable")
+        return block
+
+    @staticmethod
+    def study_schema() -> dict[str, Any]:
+        """Expose the authoritative schema for generic missing-record drafts."""
+
+        return StudyExtraction.model_json_schema()
 
     def ground_truth_archive(self, split: str, paper_id: str) -> bytes:
         """Build the adjudicated, citation-validated bundle used in data PRs."""
@@ -391,12 +488,21 @@ def make_handler(application: ReviewApplication, authenticator=None):
     """Build an HTTP handler while keeping authentication optional for local use."""
 
     class Handler(BaseHTTPRequestHandler):
-        def send_json(self, payload: object, status: HTTPStatus = HTTPStatus.OK):
+        def send_json(
+            self,
+            payload: object,
+            status: HTTPStatus = HTTPStatus.OK,
+            headers: dict[str, str] | None = None,
+        ):
             body = json.dumps(payload, ensure_ascii=False).encode()
+            response_headers = headers or {}
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
+            if "Cache-Control" not in response_headers:
+                self.send_header("Cache-Control", "no-store")
+            for key, value in response_headers.items():
+                self.send_header(key, value)
             self.end_headers()
             self.wfile.write(body)
 
@@ -419,11 +525,13 @@ def make_handler(application: ReviewApplication, authenticator=None):
         def send_bytes(
             self, body: bytes, content_type: str, headers: dict[str, str] | None = None
         ):
+            response_headers = headers or {}
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
-            for key, value in (headers or {}).items():
+            if "Cache-Control" not in response_headers:
+                self.send_header("Cache-Control", "no-store")
+            for key, value in response_headers.items():
                 self.send_header(key, value)
             self.end_headers()
             self.wfile.write(body)
@@ -491,7 +599,14 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 if parsed.path == "/api/users":
                     self.send_json({"users": application.users()})
                     return
+                if parsed.path == "/api/study-schema":
+                    self.send_json(application.study_schema())
+                    return
                 parts = self.route_parts(parsed.path)
+                if parts[:2] == ["api", "reviewer-progress"] and len(parts) == 3:
+                    user = self.current_user()
+                    self.send_json(application.reviewer_progress(parts[2], user["id"]))
+                    return
                 if parts[:2] == ["api", "paper"] and len(parts) == 4:
                     self.send_json(application.get_paper(parts[2], parts[3]))
                     return
@@ -504,6 +619,11 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         }
                     )
                     return
+                if parts[:2] == ["api", "evidence-block"] and len(parts) == 5:
+                    self.send_json(
+                        application.evidence_block(parts[2], parts[3], parts[4])
+                    )
+                    return
                 if parts[:2] == ["api", "ground-truth-export"] and len(parts) == 4:
                     self.current_user(require_admin=True)
                     paper_id = parts[3]
@@ -513,6 +633,27 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         {
                             "Content-Disposition": (
                                 f'attachment; filename="{paper_id}.ground-truth.zip"'
+                            )
+                        },
+                    )
+                    return
+                if parts[:2] == ["api", "review-workbook"] and len(parts) == 4:
+                    user = self.current_user()
+                    paper_id = parts[3]
+                    device_id = query.get("device", [None])[0]
+                    safe_device = re.sub(r"[^A-Za-z0-9._-]+", "-", device_id or "")
+                    scope = f".{safe_device}" if safe_device else ""
+                    self.send_bytes(
+                        application.review_workbook(
+                            parts[2],
+                            paper_id,
+                            user["id"],
+                            device_id=device_id,
+                        ),
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        {
+                            "Content-Disposition": (
+                                f'attachment; filename="{paper_id}{scope}.review.xlsx"'
                             )
                         },
                     )
@@ -534,7 +675,14 @@ def make_handler(application: ReviewApplication, authenticator=None):
                             float(query.get("scale", ["1.5"])[0]),
                             split,
                         )
-                        self.send_bytes(body, "image/png", {"X-PDF-Pages": str(count)})
+                        self.send_bytes(
+                            body,
+                            "image/png",
+                            {
+                                "X-PDF-Pages": str(count),
+                                "Cache-Control": "private, max-age=3600, immutable",
+                            },
+                        )
                     elif parts[1] == "pdf-text":
                         self.send_json(
                             application.pdf_page_text(
@@ -542,7 +690,10 @@ def make_handler(application: ReviewApplication, authenticator=None):
                                 source,
                                 int(query.get("page", ["1"])[0]),
                                 split,
-                            )
+                            ),
+                            headers={
+                                "Cache-Control": "private, max-age=3600, immutable"
+                            },
                         )
                     elif parts[1] == "search":
                         self.send_json(
@@ -568,6 +719,9 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 self.send_file(application.static_dir / asset)
             except FileNotFoundError as error:
                 self.send_json({"error": str(error)}, HTTPStatus.NOT_FOUND)
+            except StaleRevisionError as error:
+                logger.warning("Review revision conflict: {}", error)
+                self.send_json(REVISION_CONFLICT_RESPONSE, HTTPStatus.CONFLICT)
             except (ValueError, ValidationError, json.JSONDecodeError) as error:
                 self.send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
             except PermissionError as error:
@@ -630,6 +784,30 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         HTTPStatus.CREATED,
                     )
                     return
+                if len(parts) == 4 and parts[:2] == ["api", "mutation-undos"]:
+                    self.send_json(
+                        application.undo_mutation(
+                            parts[2], parts[3], self.read_json(), user["id"]
+                        ),
+                        HTTPStatus.CREATED,
+                    )
+                    return
+                if len(parts) == 4 and parts[:2] == ["api", "review-workbook"]:
+                    form = self.read_multipart()
+                    workbook = form.get("workbook", b"")
+                    if not isinstance(workbook, bytes):
+                        raise ValueError("review workbook is required")
+                    self.send_json(
+                        application.import_review_workbook(
+                            parts[2],
+                            parts[3],
+                            workbook,
+                            user["id"],
+                            filename=str(form.get("filename", "review.xlsx")),
+                        ),
+                        HTTPStatus.CREATED,
+                    )
+                    return
                 if len(parts) == 4 and parts[:2] == ["api", "inventory-audits"]:
                     self.send_json(
                         application.inventory_audit(
@@ -663,6 +841,9 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 self.send_error(HTTPStatus.NOT_FOUND)
             except FileNotFoundError as error:
                 self.send_json({"error": str(error)}, HTTPStatus.NOT_FOUND)
+            except StaleRevisionError as error:
+                logger.warning("Review revision conflict: {}", error)
+                self.send_json(REVISION_CONFLICT_RESPONSE, HTTPStatus.CONFLICT)
             except (ValueError, ValidationError, json.JSONDecodeError) as error:
                 self.send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
             except PermissionError as error:
