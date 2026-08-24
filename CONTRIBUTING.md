@@ -39,12 +39,33 @@ ruff check src tests
 pytest -q
 ```
 
-The optional Docling contract test is deliberately outside the fast suite:
+The slower Docling contract test is deliberately outside the fast suite:
 
 ```bash
-pip install -e '.[dev,docling]'
+pip install -e '.[dev]'
 PERLA_RUN_DOCLING_TESTS=1 pytest -q tests/study_extraction/test_docling_integration.py
 ```
+
+The heavy NOMAD contract is pinned and runs in its manual CI job:
+
+```bash
+pip install -e '.[dev,nomad]'
+PERLA_RUN_NOMAD_TESTS=1 pytest -q tests/study_extraction/test_nomad_integration.py
+```
+
+Build the documentation with strict link and reference checks:
+
+```bash
+pip install -e '.[docs]'
+mkdocs build --strict
+```
+
+Use `mkdocs serve` while editing the site locally.
+
+Docstrings are expected at public APIs, scientific model boundaries, persistence
+transitions, and non-obvious algorithms. Explain invariants, side effects, or why a
+choice exists; do not add a docstring to obvious private plumbing merely to restate its
+name. Field descriptions remain the preferred place for leaf-schema constraints.
 
 We also provide pre-commit hooks that format the code according to standard
 conventions.

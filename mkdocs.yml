@@ -1,0 +1,62 @@
+# generated-by: gsd-doc-writer
+site_name: PERLA Extract
+site_description: Evidence-backed extraction of photovoltaic studies
+repo_url: https://github.com/lamalab-org/perla-extract
+repo_name: lamalab-org/perla-extract
+
+theme:
+  name: material
+  features:
+    - navigation.footer
+    - navigation.indexes
+    - navigation.sections
+    - content.code.copy
+
+nav:
+  - Overview: index.md
+  - Getting started: getting-started.md
+  - Concepts:
+      - Study model: concepts/study-model.md
+      - Evidence and validation: concepts/evidence.md
+  - Workflows:
+      - Extract a study: workflows/extraction.md
+      - Interpret composition and processing: workflows/enrichment.md
+      - Export to NOMAD: workflows/nomad-export.md
+      - Discover papers: workflows/papersbot.md
+      - Build ground truth: workflows/ground-truth-review.md
+      - Quality-first seeds and cost ablations: workflows/quality-first-ground-truth.md
+  - Compatibility:
+      - Reduced PERLA schema: compatibility/reduced-schema.md
+  - Reference:
+      - Command line: reference/cli.md
+      - Python API: reference/python-api.md
+  - Deployment:
+      - Review workbench: deployment/review-workbench.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_root_heading: true
+            show_source: false
+            members_order: source
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+strict: true

@@ -7,6 +7,18 @@ on:
   workflow_dispatch:
 
 jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install documentation tools
+        run: python -m pip install ".[docs]"
+      - name: Build documentation
+        run: python -m mkdocs build --strict
+
   test:
     strategy:
       matrix:
@@ -39,3 +51,18 @@ jobs:
         env:
           PERLA_RUN_DOCLING_TESTS: "1"
         run: python -m pytest -q tests/study_extraction/test_docling_integration.py
+
+  nomad:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install pinned NOMAD integration
+        run: python -m pip install ".[dev,nomad]"
+      - name: Test outbound NOMAD schema contract
+        env:
+          PERLA_RUN_NOMAD_TESTS: "1"
+        run: python -m pytest -q tests/study_extraction/test_nomad_integration.py

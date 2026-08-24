@@ -20,9 +20,9 @@ from perla_extract.pydantic_model_reduced import (
 
 from .models import (
     DeviceFamily,
-    Fact,
     IndividualDevice,
     ProcessingStep,
+    ReportedValue,
     StudyExtraction,
 )
 
@@ -47,7 +47,11 @@ class RecordMapping(BaseModel):
 
 
 class ReducedExport(BaseModel):
-    """Bundle reduced cells with provenance and unavoidable conversion losses."""
+    """Pair reduced rows with traceable mappings and unavoidable information loss.
+
+    Consumers should inspect ``issues`` rather than treating a schema-valid reduced
+    row as proof that every rich field was represented faithfully.
+    """
 
     model_config = ConfigDict(extra="forbid")
     cells: PerovskiteSolarCells
@@ -71,7 +75,7 @@ _ROLE_NAMES = {
 }
 
 
-def _key(value: str) -> str:
+def _normalized_key(value: str) -> str:
     """Normalize labels only for declared schema-to-schema field matching."""
 
     normalized = (
@@ -85,45 +89,45 @@ def _key(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", normalized)
 
 
-def _issue(
+def _record_conversion_issue(
     issues: list[ConversionIssue], code: str, kind: str, source_id: str, detail: str
 ) -> None:
-    """Append a consistently shaped conversion issue."""
-
     issues.append(
         ConversionIssue(code=code, source_kind=kind, source_id=source_id, detail=detail)
     )
 
 
-def _fact_payload(fact: Fact) -> dict:
-    """Serialize an unprojected fact without discarding its evidence references."""
+def _reported_value_payload(reported_value: ReportedValue) -> dict:
+    """Serialize an unprojected value without discarding its evidence citations."""
 
     return {
-        "name": fact.name,
-        "raw_value": fact.raw_value,
-        "value_number": fact.value_number,
-        "unit": fact.unit,
-        "evidence_blocks": [ref.block_id for ref in fact.evidence],
+        "name": reported_value.name,
+        "raw_value": reported_value.raw_value,
+        "value_number": reported_value.value_number,
+        "unit": reported_value.unit,
+        "evidence_blocks": [ref.block_id for ref in reported_value.evidence],
     }
 
 
-def _metric_field(fact: Fact) -> str | None:
-    """Return the reduced metric field for an explicitly supported fact name."""
+def _metric_field(reported_value: ReportedValue) -> str | None:
+    """Apply legacy metric aliases only at export, never during extraction."""
 
-    name = _key(fact.name)
+    name = _normalized_key(reported_value.name)
     return next(
         (field for field, aliases in _METRIC_NAMES.items() if name in aliases), None
     )
 
 
-def _project_metric(fact: Fact, field: str) -> dict | None:
+def _project_metric(reported_value: ReportedValue, field: str) -> dict | None:
     """Project a metric only when its number and unit already fit the reduced schema."""
 
-    if fact.value_number is None:
+    if reported_value.value_number is None:
         return None
-    unit = _key(fact.unit or "")
-    if field == "pce" and (fact.unit == "%" or unit in {"percent", "percentage"}):
-        return {"value": fact.value_number, "unit": "%"}
+    unit = _normalized_key(reported_value.unit or "")
+    if field == "pce" and (
+        reported_value.unit == "%" or unit in {"percent", "percentage"}
+    ):
+        return {"value": reported_value.value_number, "unit": "%"}
     if field == "jsc":
         units = {
             "macm2": "mA cm^-2",
@@ -133,43 +137,57 @@ def _project_metric(fact: Fact, field: str) -> dict | None:
             "uacm2": "uA cm^-2",
         }
         normalized = units.get(unit)
-        return {"value": fact.value_number, "unit": normalized} if normalized else None
+        return (
+            {"value": reported_value.value_number, "unit": normalized}
+            if normalized
+            else None
+        )
     if field == "voc" and unit in {"v", "mv"}:
-        return {"value": fact.value_number, "unit": "V" if unit == "v" else "mV"}
-    if field == "ff" and (fact.unit == "%" or unit in {"percent", "percentage"}):
-        return {"value": fact.value_number}
+        return {
+            "value": reported_value.value_number,
+            "unit": "V" if unit == "v" else "mV",
+        }
+    if field == "ff" and (
+        reported_value.unit == "%" or unit in {"percent", "percentage"}
+    ):
+        return {"value": reported_value.value_number}
     return None
 
 
-def _metrics(
-    facts: Iterable[Fact], kind: str, source_id: str, issues: list[ConversionIssue]
+def _project_performance_metrics(
+    reported_values: Iterable[ReportedValue],
+    kind: str,
+    source_id: str,
+    issues: list[ConversionIssue],
 ) -> tuple[dict, list[dict]]:
-    """Project unambiguous performance facts and return every remainder verbatim."""
+    """Project unambiguous performance values and return every remainder verbatim."""
 
-    candidates: dict[str, list[Fact]] = {}
+    values_by_metric: dict[str, list[ReportedValue]] = {}
     remainder: list[dict] = []
-    for fact in facts:
-        field = _metric_field(fact)
+    for reported_value in reported_values:
+        field = _metric_field(reported_value)
         if field is None:
-            remainder.append(_fact_payload(fact))
+            remainder.append(_reported_value_payload(reported_value))
         else:
-            candidates.setdefault(field, []).append(fact)
+            values_by_metric.setdefault(field, []).append(reported_value)
     projected: dict = {}
-    for field, matching in candidates.items():
+    for field, matching in values_by_metric.items():
         if len(matching) != 1:
-            remainder.extend(_fact_payload(fact) for fact in matching)
-            _issue(
+            remainder.extend(
+                _reported_value_payload(reported_value) for reported_value in matching
+            )
+            _record_conversion_issue(
                 issues,
                 "ambiguous_metric",
                 kind,
                 source_id,
-                f"Multiple {field} facts were not flattened.",
+                f"Multiple {field} reported values were not flattened.",
             )
             continue
         value = _project_metric(matching[0], field)
         if value is None:
-            remainder.append(_fact_payload(matching[0]))
-            _issue(
+            remainder.append(_reported_value_payload(matching[0]))
+            _record_conversion_issue(
                 issues,
                 "incompatible_metric_unit",
                 kind,
@@ -181,8 +199,8 @@ def _metrics(
     return projected, remainder
 
 
-def _processing(step: ProcessingStep) -> dict:
-    """Keep generic processing conditions in the reduced extension dictionary."""
+def _reduced_processing_step(step: ProcessingStep) -> dict:
+    """Preserve arbitrary processing values instead of forcing a lossy projection."""
 
     return {
         "step_name": step.operation,
@@ -191,13 +209,21 @@ def _processing(step: ProcessingStep) -> dict:
         "additional_parameters": {
             "source_step_id": step.step_id,
             "materials": step.materials,
-            "conditions": [_fact_payload(fact) for fact in step.conditions],
+            "conditions": [
+                _reported_value_payload(reported_value)
+                for reported_value in step.conditions
+            ],
         },
     }
 
 
-def _family_fields(family: DeviceFamily | None) -> tuple[dict, dict]:
-    """Project stack structure while returning rich-only family data for notes."""
+def _project_family(family: DeviceFamily | None) -> tuple[dict, dict]:
+    """Project stack structure while keeping multi-absorber data out of a flat slot.
+
+    The historical reduced schema can represent only one composition.  Choosing one
+    side of a tandem would silently change meaning, so only an unambiguous single
+    absorber is projected and every scoped absorber remains available in notes.
+    """
 
     if family is None:
         return {}, {}
@@ -208,15 +234,18 @@ def _family_fields(family: DeviceFamily | None) -> tuple[dict, dict]:
         "other": "Other",
         "not_reported": None,
     }[family.polarity]
+    absorber = family.absorbers[0] if len(family.absorbers) == 1 else None
     composition: dict = (
-        {"formula": family.absorber_formula.raw_value}
-        if family.absorber_formula
+        {"formula": absorber.formula.raw_value}
+        if absorber is not None and absorber.formula is not None
         else {}
     )
     steps_by_layer: dict[str, list[dict]] = {}
     for step in family.processing_steps:
         for layer_id in step.target_layer_ids:
-            steps_by_layer.setdefault(layer_id, []).append(_processing(step))
+            steps_by_layer.setdefault(layer_id, []).append(
+                _reduced_processing_step(step)
+            )
     layers = []
     for layer in sorted(family.layers, key=lambda item: item.sequence or 10_000):
         layer_data = {
@@ -236,32 +265,78 @@ def _family_fields(family: DeviceFamily | None) -> tuple[dict, dict]:
         "variant": family.variant,
         "architecture_raw": family.architecture,
         "full_stack_raw": family.full_stack_raw,
-        "absorber_constituents": [
+        "absorbers": [
             {
-                "name": item.name,
-                "role": item.role,
-                "amount": _fact_payload(item.amount) if item.amount else None,
+                "absorber_id": item.absorber_id,
+                "layer_id": item.layer_id,
+                "label": item.label,
+                "formula": (
+                    _reported_value_payload(item.formula) if item.formula else None
+                ),
+                "constituents": [
+                    {
+                        "name": constituent.name,
+                        "role": constituent.role,
+                        "amount": (
+                            _reported_value_payload(constituent.amount)
+                            if constituent.amount
+                            else None
+                        ),
+                        "evidence_blocks": [
+                            ref.block_id for ref in constituent.evidence
+                        ],
+                    }
+                    for constituent in item.constituents
+                ],
+                "properties": [
+                    _reported_value_payload(reported_value)
+                    for reported_value in item.properties
+                ],
                 "evidence_blocks": [ref.block_id for ref in item.evidence],
             }
-            for item in family.absorber_constituents
+            for item in family.absorbers
         ],
-        "absorber_formula": (
-            _fact_payload(family.absorber_formula) if family.absorber_formula else None
-        ),
-        "layer_details": [
+        "layer_reported_properties": [
             {
                 "layer_id": layer.layer_id,
                 "material": layer.material,
-                "details": [_fact_payload(fact) for fact in layer.details],
+                "reported_properties": [
+                    _reported_value_payload(reported_value)
+                    for reported_value in layer.reported_properties
+                ],
             }
             for layer in family.layers
-            if layer.details
+            if layer.reported_properties
         ],
-        "unprojected_absorber_properties": [
-            _fact_payload(fact) for fact in family.absorber_properties
+        "layer_details": [
+            {
+                "layer_id": layer.layer_id,
+                "role": layer.role,
+                "material": layer.material,
+                "constituents": [
+                    {
+                        "name": constituent.name,
+                        "role": constituent.role,
+                        "amount": (
+                            _reported_value_payload(constituent.amount)
+                            if constituent.amount
+                            else None
+                        ),
+                    }
+                    for constituent in layer.constituents
+                ],
+                "material_form_raw": layer.material_form_raw,
+                "material_form": layer.material_form,
+            }
+            for layer in family.layers
         ],
+        "reduced_composition_omitted_reason": (
+            "multiple scoped absorbers cannot be represented by the reduced schema"
+            if len(family.absorbers) > 1
+            else None
+        ),
         "unassigned_processing_steps": [
-            _processing(step)
+            _reduced_processing_step(step)
             for step in family.processing_steps
             if not step.target_layer_ids
         ],
@@ -273,7 +348,9 @@ def _family_fields(family: DeviceFamily | None) -> tuple[dict, dict]:
     }, rich_only
 
 
-def _device_aggregation(device: IndividualDevice | None, measurement_type: str) -> str:
+def _reduced_performance_aggregation(
+    device: IndividualDevice | None, measurement_type: str
+) -> str:
     """Choose aggregation from explicit source semantics, never metric magnitude."""
 
     if measurement_type == "stabilized_power_output":
@@ -285,7 +362,7 @@ def _device_aggregation(device: IndividualDevice | None, measurement_type: str) 
     return "single_device"
 
 
-def _cell(fields: dict, note: dict) -> PerovskiteSolarCell:
+def _build_reduced_cell(fields: dict, note: dict) -> PerovskiteSolarCell:
     """Validate one reduced row and store its rich provenance as stable JSON."""
 
     supported = PerovskiteSolarCell.model_fields
@@ -298,21 +375,27 @@ def _cell(fields: dict, note: dict) -> PerovskiteSolarCell:
 
 
 def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
-    """Export every rich record type to a separate reduced cell with a loss report."""
+    """Project rich records without collapsing scientifically distinct results.
+
+    Every observation, population statistic, and stability test becomes a separate
+    reduced row. Values that cannot be represented faithfully stay in structured
+    ``additional_notes`` and produce an issue; identity links are reported but
+    never used to merge candidates heuristically.
+    """
 
     issues: list[ConversionIssue] = []
-    for group in study.equivalence_groups:
-        _issue(
+    for link in study.identity_links:
+        _record_conversion_issue(
             issues,
-            "equivalence_not_collapsed",
-            group.entity_kind,
-            group.equivalence_id,
-            "Equivalent rich candidates remain separate reduced rows so conversion does not discard or heuristically merge conflicting details.",
+            "identity_link_not_collapsed",
+            link.entity_kind,
+            link.link_id,
+            "Identity-linked rich candidates remain separate reduced rows so conversion does not discard or heuristically merge conflicting details.",
         )
     families: dict[str, DeviceFamily] = {}
     for family in study.device_families:
         if family.family_id in families:
-            _issue(
+            _record_conversion_issue(
                 issues,
                 "duplicate_id",
                 "device_family",
@@ -324,7 +407,7 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
     devices: dict[str, IndividualDevice] = {}
     for device in study.individual_devices:
         if device.device_id in devices:
-            _issue(
+            _record_conversion_issue(
                 issues,
                 "duplicate_id",
                 "individual_device",
@@ -334,7 +417,7 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
         else:
             devices[device.device_id] = device
         if device.family_id and device.family_id not in families:
-            _issue(
+            _record_conversion_issue(
                 issues,
                 "dangling_reference",
                 "individual_device",
@@ -346,7 +429,7 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
     represented_devices: set[str] = set()
     represented_families: set[str] = set()
 
-    def add(kind: str, source_id: str, cell: PerovskiteSolarCell) -> None:
+    def add_reduced_cell(kind: str, source_id: str, cell: PerovskiteSolarCell) -> None:
         index = len(cells)
         cells.append(cell)
         mappings.append(
@@ -358,7 +441,7 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
     for observation in study.performance_observations:
         device = devices.get(observation.device_id)
         if device is None:
-            _issue(
+            _record_conversion_issue(
                 issues,
                 "dangling_reference",
                 "performance_observation",
@@ -366,8 +449,8 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                 f"Unknown device_id {observation.device_id!r}; metrics are still exported.",
             )
         family = families.get(device.family_id) if device and device.family_id else None
-        family_fields, family_note = _family_fields(family)
-        metric_fields, remainder = _metrics(
+        family_fields, family_note = _project_family(family)
+        metric_fields, remainder = _project_performance_metrics(
             observation.metrics,
             "performance_observation",
             observation.observation_id,
@@ -380,19 +463,26 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
             "family": family_note,
             "measurement_type": observation.measurement_type,
             "scan_direction": observation.scan_direction,
-            "aggregation": _device_aggregation(device, observation.measurement_type),
+            "aggregation": _reduced_performance_aggregation(
+                device, observation.measurement_type
+            ),
             "champion_status": (device.champion_status if device else "not_reported"),
             "selection_basis": (device.selection_basis if device else "not_reported"),
+            "device_reported_properties": [
+                _reported_value_payload(value) for value in device.reported_properties
+            ]
+            if device
+            else [],
             "unprojected_metrics": remainder,
         }
-        add(
+        add_reduced_cell(
             "performance_observation",
             observation.observation_id,
-            _cell(
+            _build_reduced_cell(
                 {
                     **family_fields,
                     **metric_fields,
-                    "performance_aggregation": _device_aggregation(
+                    "performance_aggregation": _reduced_performance_aggregation(
                         device, observation.measurement_type
                     ),
                 },
@@ -407,14 +497,14 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
         if device.device_id in represented_devices:
             continue
         family = families.get(device.family_id) if device.family_id else None
-        family_fields, family_note = _family_fields(family)
-        add(
+        family_fields, family_note = _project_family(family)
+        add_reduced_cell(
             "individual_device",
             device.device_id,
-            _cell(
+            _build_reduced_cell(
                 {
                     **family_fields,
-                    "performance_aggregation": _device_aggregation(
+                    "performance_aggregation": _reduced_performance_aggregation(
                         device, "not_reported"
                     ),
                 },
@@ -423,9 +513,15 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                     "device_id": device.device_id,
                     "label": device.label,
                     "variant": device.variant,
-                    "aggregation": _device_aggregation(device, "not_reported"),
+                    "aggregation": _reduced_performance_aggregation(
+                        device, "not_reported"
+                    ),
                     "champion_status": device.champion_status,
                     "selection_basis": device.selection_basis,
+                    "reported_properties": [
+                        _reported_value_payload(value)
+                        for value in device.reported_properties
+                    ],
                     "family": family_note,
                 },
             ),
@@ -441,24 +537,24 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
     for population in study.population_statistics:
         family = families.get(population.family_id) if population.family_id else None
         if population.family_id and family is None:
-            _issue(
+            _record_conversion_issue(
                 issues,
                 "dangling_reference",
                 "population_statistic",
                 population.population_id,
                 f"Unknown family_id {population.family_id!r}; metrics are still exported.",
             )
-        family_fields, family_note = _family_fields(family)
-        metric_fields, remainder = _metrics(
+        family_fields, family_note = _project_family(family)
+        metric_fields, remainder = _project_performance_metrics(
             population.metrics, "population_statistic", population.population_id, issues
         )
         aggregation = population_aggregation.get(
             population.statistic_type, "distribution"
         )
-        add(
+        add_reduced_cell(
             "population_statistic",
             population.population_id,
-            _cell(
+            _build_reduced_cell(
                 {
                     **family_fields,
                     **metric_fields,
@@ -485,7 +581,7 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
     for test in study.stability_tests:
         device = devices.get(test.device_id) if test.device_id else None
         if test.device_id and device is None:
-            _issue(
+            _record_conversion_issue(
                 issues,
                 "dangling_reference",
                 "stability_test",
@@ -495,30 +591,42 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
         family_id = test.family_id or (device.family_id if device else None)
         family = families.get(family_id) if family_id else None
         if family_id and family is None:
-            _issue(
+            _record_conversion_issue(
                 issues,
                 "dangling_reference",
                 "stability_test",
                 test.test_id,
                 f"Unknown family_id {family_id!r}; the test is still exported.",
             )
-        family_fields, family_note = _family_fields(family)
+        family_fields, family_note = _project_family(family)
         raw_stability = {
             "test_id": test.test_id,
-            "conditions": [_fact_payload(fact) for fact in test.conditions],
+            "conditions": [
+                _reported_value_payload(reported_value)
+                for reported_value in test.conditions
+            ],
             "checkpoints": [
                 {
                     "checkpoint_id": checkpoint.checkpoint_id,
-                    "time": _fact_payload(checkpoint.time) if checkpoint.time else None,
-                    "outcomes": [_fact_payload(fact) for fact in checkpoint.outcomes],
+                    "time": _reported_value_payload(checkpoint.time)
+                    if checkpoint.time
+                    else None,
+                    "conditions": [
+                        _reported_value_payload(reported_value)
+                        for reported_value in checkpoint.conditions
+                    ],
+                    "outcomes": [
+                        _reported_value_payload(reported_value)
+                        for reported_value in checkpoint.outcomes
+                    ],
                 }
                 for checkpoint in test.checkpoints
             ],
         }
-        add(
+        add_reduced_cell(
             "stability_test",
             test.test_id,
-            _cell(
+            _build_reduced_cell(
                 family_fields,
                 {
                     "record_kind": "stability_test",
@@ -527,12 +635,18 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                     "family_id": family_id,
                     "specimen_label": test.specimen_label,
                     "link_status": test.link_status,
+                    "device_reported_properties": [
+                        _reported_value_payload(value)
+                        for value in device.reported_properties
+                    ]
+                    if device
+                    else [],
                     "family": family_note,
                     "rich_stability": raw_stability,
                 },
             ),
         )
-        _issue(
+        _record_conversion_issue(
             issues,
             "rich_stability_in_notes",
             "stability_test",
@@ -545,11 +659,11 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
     for family in study.device_families:
         if family.family_id in represented_families:
             continue
-        family_fields, family_note = _family_fields(family)
-        add(
+        family_fields, family_note = _project_family(family)
+        add_reduced_cell(
             "device_family",
             family.family_id,
-            _cell(
+            _build_reduced_cell(
                 family_fields, {"record_kind": "device_family", "family": family_note}
             ),
         )
@@ -560,6 +674,10 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
 
 
 def to_reduced(study: StudyExtraction) -> PerovskiteSolarCells:
-    """Return the deterministic reduced export when a report is not required."""
+    """Return reduced rows while deliberately discarding the conversion report.
+
+    Prefer :func:`to_reduced_with_report` for scientific pipelines, where explicit
+    mappings and losses are normally part of the provenance record.
+    """
 
     return to_reduced_with_report(study).cells

@@ -85,9 +85,28 @@
         },
         "lamp": null
       },
-      "encapsulated": false,
-      "additional_notes": null,
-      "stability": null,
+      "encapsulated": true,
+      "additional_notes": "The encapsulated single-junction NBG cell retained 93.7% of its initial PCE after approximately 250 h under 1 sun in air (30-65% RH, approximately 30 °C). The current schema cannot encode relative PCE retention or ranges/approximation qualifiers directly.",
+      "stability": {
+        "time": {
+          "value": 900000.0,
+          "unit": "s"
+        },
+        "light_intensity": {
+          "value": 100.0,
+          "unit": "mW cm^-2"
+        },
+        "humidity": null,
+        "temperature": {
+          "value": 30.0,
+          "unit": "°C"
+        },
+        "PCE_T80": null,
+        "PCE_at_the_start_of_the_experiment": null,
+        "PCE_after_1000_hours": null,
+        "PCE_at_the_end_of_experiment": null,
+        "potential_bias": "Constant resistance"
+      },
       "layers": [
         {
           "name": "Glass",

@@ -91,6 +91,14 @@ def test_public_entry_points_share_scientific_defaults() -> None:
     names = {
         "model",
         "reasoning_effort",
+        "use_inventory",
+        "inventory_model",
+        "inventory_max_output_tokens",
+        "use_enrichment",
+        "enrichment_model",
+        "enrichment_max_output_tokens",
+        "use_refinement",
+        "refinement_model",
         "parser",
         "mode",
         "single_call_max_input_tokens",
@@ -119,6 +127,8 @@ def test_public_entry_points_share_scientific_defaults() -> None:
     }
 
     def comparable(name, value):
+        if name == "reasoning_effort" and value == "omit":
+            return None
         return Path(value).parts if name.endswith("_dir") else value
 
     assert {key: comparable(key, value) for key, value in python_defaults.items()} == {
@@ -127,3 +137,5 @@ def test_public_entry_points_share_scientific_defaults() -> None:
     assert {key: comparable(key, value) for key, value in click_defaults.items()} == {
         key: comparable(key, value) for key, value in config_defaults.items()
     }
+    assert config_defaults["parser"] == "docling"
+    assert config_defaults["reasoning_effort"] is None
