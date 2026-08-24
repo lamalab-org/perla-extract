@@ -135,9 +135,13 @@ every record; **Download Excel for this device** produces a smaller form with th
 device and the family, performance, population, and stability context needed to judge
 it. Reviewers select a complete-record outcome on **Record review**. Field corrections
 are separated into one tab per scientific record type present in the paper. Each field
-row contains exactly one scalar value, its JSON Pointer, type, and evidence. Reviewers
-change only yellow value, type, note, and evidence cells. Rows may be sorted or
-filtered; their stable identity and membership may not change.
+row contains exactly one scalar value, its JSON Pointer, type, and evidence. The first
+columns repeat the readable record, family, and device context. **Device family only**
+marks a family-level link—not a claim that a particular individual device contributed
+to a population statistic. **No explicit family/device link** remains visibly
+unlinked rather than being guessed. Reviewers change only yellow value, type, note,
+and evidence cells. Rows may be sorted or filtered; their stable identity,
+relationship context, and membership may not change.
 
 Upload the reviewed `.xlsx` from the same menu. The workbench accepts it only if its
 paper, schema, source truth, revision, sheets, rows, paths, and identifiers still match

@@ -157,15 +157,21 @@ def test_review_workbook_import_is_atomic_attributable_and_undoable(
         "Device Families",
         "_meta",
     ]
-    book["Record review"]["G2"] = "All fields match source"
+    record_headers = [cell.value for cell in book["Record review"][1]]
+    outcome_column = record_headers.index("Review outcome") + 1
+    book["Record review"].cell(2, outcome_column).value = "All fields match source"
     fields = book["Device Families"]
+    field_headers = [cell.value for cell in fields[1]]
+    field_column = field_headers.index("Field") + 1
+    reviewed_column = field_headers.index("Reviewed value") + 1
+    note_column = field_headers.index("Reviewer note") + 1
     label_row = next(
         row
         for row in range(2, fields.max_row + 1)
-        if fields.cell(row, 5).value == "label"
+        if fields.cell(row, field_column).value == "label"
     )
-    fields.cell(label_row, 8).value = "Reviewed control"
-    fields.cell(label_row, 11).value = "Corrected the family label."
+    fields.cell(label_row, reviewed_column).value = "Reviewed control"
+    fields.cell(label_row, note_column).value = "Corrected the family label."
     output = BytesIO()
     book.save(output)
 
@@ -242,6 +248,25 @@ def test_review_workbook_groups_fields_by_scientific_record_type(
             "evidence": [citation],
         }
     ]
+    study["population_statistics"] = [
+        {
+            "population_id": "population-1",
+            "family_id": "family-control",
+            "label": "Mean performance",
+            "statistic_type": "mean",
+            "sample_size": 10,
+            "metrics": [
+                {
+                    "name": "PCE",
+                    "raw_value": "20.0%",
+                    "value_number": 20.0,
+                    "unit": "%",
+                    "evidence": [citation],
+                }
+            ],
+            "evidence": [citation],
+        }
+    ]
     store = StudyReviewStore(tmp_path)
     seed(store, study, document_payload)
 
@@ -255,18 +280,37 @@ def test_review_workbook_groups_fields_by_scientific_record_type(
         "Device Families",
         "Individual Devices",
         "Performance Observations",
+        "Population Statistics",
         "_meta",
     ]
-    assert {row[1].value for row in book["Device Families"].iter_rows(min_row=2)} == {
-        "device_families"
+    for sheet_name, collection in {
+        "Device Families": "device_families",
+        "Individual Devices": "individual_devices",
+        "Performance Observations": "performance_observations",
+        "Population Statistics": "population_statistics",
+    }.items():
+        sheet = book[sheet_name]
+        headers = [cell.value for cell in sheet[1]]
+        collection_column = headers.index("record_type")
+        assert {row[collection_column].value for row in sheet.iter_rows(min_row=2)} == {
+            collection
+        }
+
+    records = book["Record review"]
+    headers = [cell.value for cell in records[1]]
+    record_id_column = headers.index("record_id")
+    rows = {
+        row[record_id_column].value: {
+            headers[index]: cell.value for index, cell in enumerate(row)
+        }
+        for row in records.iter_rows(min_row=2)
     }
-    assert {
-        row[1].value for row in book["Individual Devices"].iter_rows(min_row=2)
-    } == {"individual_devices"}
-    assert {
-        row[1].value
-        for row in book["Performance Observations"].iter_rows(min_row=2)
-    } == {"performance_observations"}
+    assert rows["observation-1"]["Link scope"] == "Individual device"
+    assert rows["observation-1"]["Family"] == "Control [family-control]"
+    assert rows["observation-1"]["Device"] == "Champion device [device-1]"
+    assert rows["population-1"]["Link scope"] == "Device family only"
+    assert rows["population-1"]["Family"] == "Control [family-control]"
+    assert rows["population-1"]["Device"] is None
 
 
 def test_review_workbook_rejects_stale_or_structurally_changed_files(

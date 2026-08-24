@@ -91,8 +91,12 @@ that device or only to its family. The short **Record review** sheet is the prim
 checklist. Scalar corrections are grouped into separate sheets for the scientific
 record types present in that paper, such as **Device Families**, **Individual
 Devices**, **Performance Observations**, **Population Statistics**, and **Stability
-Tests**. Each row remains one atomic schema value with its JSON path and nearest
-citation. Yellow cells are editable, and rows may be sorted or filtered. Identifiers
+Tests**. Both the checklist and correction tabs begin with readable record, family,
+and device context followed by the stable IDs. **Individual device** means the schema
+contains an explicit device link. **Device family only** deliberately does not imply
+that any listed individual device belonged to the reported population. Each row
+remains one atomic schema value with its JSON path and nearest citation. Yellow cells
+are editable, and rows may be sorted or filtered. Identifiers, relationship context,
 and row membership are intentionally read-only.
 
 Uploading the returned workbook checks its paper, schema hash, original truth digest,
