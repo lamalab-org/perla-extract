@@ -294,3 +294,57 @@ class ClerkAuthenticator:
             "name": name or email,
             "role": "admin" if email in self.admin_emails else "reviewer",
         }
+
+
+class InternalOrClerkAuthenticator:
+    """Keep fixed accounts usable while reviewers move to recoverable sign-in.
+
+    Internal sessions use HS256 and Clerk sessions use its asymmetric signing keys,
+    so the JWT header can route a request without attempting both providers. This is
+    intentionally a migration boundary: Clerk supplies email recovery, while existing
+    project passwords continue to work until every reviewer has moved across.
+    """
+
+    def __init__(
+        self,
+        internal: InternalAuthenticator | None = None,
+        clerk: ClerkAuthenticator | None = None,
+    ):
+        self.internal = internal or InternalAuthenticator()
+        self.clerk = clerk or ClerkAuthenticator()
+
+    @property
+    def configured(self) -> bool:
+        return self.internal.configured and self.clerk.configured
+
+    def public_config(self) -> dict[str, object]:
+        config = self.clerk.public_config()
+        return {**config, "enabled": self.configured, "mode": "internal_or_clerk"}
+
+    def login(self, email: str, password: str) -> tuple[str, dict[str, str]]:
+        """Preserve the fixed-account login endpoint during the migration."""
+
+        return self.internal.login(email, password)
+
+    def authenticate(self, headers) -> dict[str, str]:
+        """Route bearer sessions by their signed algorithm; Clerk also accepts cookies."""
+
+        token = self.internal._token(headers)
+        if not token:
+            return self._preserve_internal_identity(self.clerk.authenticate(headers))
+        try:
+            algorithm = jwt.get_unverified_header(token).get("alg")
+        except Exception as error:
+            raise AuthenticationError("The session is invalid or expired") from error
+        if algorithm == "HS256":
+            return self.internal.authenticate(headers)
+        return self._preserve_internal_identity(self.clerk.authenticate(headers))
+
+    def _preserve_internal_identity(self, user: dict[str, str]) -> dict[str, str]:
+        """Keep one review history when the same email changes sign-in provider."""
+
+        email = user.get("email", "").lower()
+        account = self.internal.accounts.get(email)
+        if not account:
+            return user
+        return {**user, "id": self.internal._user(email, account)["id"]}

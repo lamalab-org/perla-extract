@@ -9,9 +9,13 @@ def test_deployed_authentication_has_a_recoverable_sign_in_flow():
 
     assert 'id="auth-gate"' in html
     assert 'id="internal-sign-in"' in html
+    assert 'id="use-email-sign-in"' in html
+    assert "Forgot your password? Use email recovery" in html
     assert 'id="sign-out"' in html
     assert 'fetch("/api/auth/config")' in javascript
     assert 'fetch("/api/auth/login"' in javascript
+    assert 'state.authMode === "internal_or_clerk"' in javascript
+    assert "Choose Forgot password in the form" in javascript
     assert "Your session expired. Sign in again" in javascript
     assert 'localStorage.removeItem(REVIEW_TOKEN_KEY)' in javascript
     assert '"Connection problem"' not in javascript

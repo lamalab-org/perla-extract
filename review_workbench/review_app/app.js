@@ -261,17 +261,42 @@ function loadScript(src, attributes = {}) {
   });
 }
 
+function internalSignInEnabled() {
+  return state.authMode === "internal" || state.authMode === "internal_or_clerk";
+}
+
+function clerkSignInEnabled() {
+  return state.authMode === "clerk" || state.authMode === "internal_or_clerk";
+}
+
+function showInternalSignIn() {
+  $("internal-sign-in").hidden = !internalSignInEnabled();
+  $("clerk-sign-in").hidden = true;
+  $("use-email-sign-in").hidden = !clerkSignInEnabled();
+  $("use-project-password").hidden = true;
+  $("auth-help").textContent = "Use the review password provided by the project team.";
+}
+
+function showClerkSignIn() {
+  $("internal-sign-in").hidden = true;
+  $("clerk-sign-in").hidden = false;
+  $("use-email-sign-in").hidden = true;
+  $("use-project-password").hidden = !internalSignInEnabled();
+  $("auth-help").textContent = "Sign in with your email account. Choose Forgot password in the form to receive a recovery code.";
+}
+
 function showSignIn(message = "") {
   $("workbench").hidden = true;
   $("auth-gate").hidden = false;
   $("login-status").textContent = message;
-  $("internal-sign-in").hidden = state.authMode !== "internal";
+  if (internalSignInEnabled()) showInternalSignIn();
+  else if (clerkSignInEnabled()) showClerkSignIn();
 }
 
 function showWorkbench() {
   $("auth-gate").hidden = true;
   $("workbench").hidden = false;
-  $("sign-out").hidden = state.authMode !== "internal";
+  $("sign-out").hidden = !localStorage.getItem(REVIEW_TOKEN_KEY);
 }
 
 async function initializeAuthentication() {
@@ -286,7 +311,9 @@ async function initializeAuthentication() {
     }
     return true;
   }
-  if (state.authMode === "clerk") {
+  if (state.authMode === "internal_or_clerk" && localStorage.getItem(REVIEW_TOKEN_KEY)) return true;
+  if (state.authMode === "internal_or_clerk") showSignIn();
+  if (clerkSignInEnabled()) {
     await loadScript(`${config.frontend_api}/npm/@clerk/ui@1/dist/ui.browser.js`, { crossorigin: "anonymous" });
     await loadScript(`${config.frontend_api}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`, {
       crossorigin: "anonymous", "data-clerk-publishable-key": config.publishable_key,
@@ -294,7 +321,7 @@ async function initializeAuthentication() {
     await window.Clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
     state.clerk = window.Clerk;
     if (!state.clerk.isSignedIn) {
-      showSignIn();
+      if (state.authMode === "clerk") showSignIn();
       state.clerk.mountSignIn($("clerk-sign-in"));
       return false;
     }
@@ -2052,7 +2079,7 @@ document.addEventListener("keydown", (event) => {
 function showStartupError(error) {
   if (error.status === 401) {
     state.user = null;
-    if (state.authMode === "internal") localStorage.removeItem(REVIEW_TOKEN_KEY);
+    if (internalSignInEnabled()) localStorage.removeItem(REVIEW_TOKEN_KEY);
     showSignIn("Your session expired. Sign in again to continue; your saved reviews are unchanged.");
     return;
   }
@@ -2076,6 +2103,9 @@ async function startApp() {
 }
 
 $("retry-startup").addEventListener("click", startApp);
+
+$("use-email-sign-in").addEventListener("click", showClerkSignIn);
+$("use-project-password").addEventListener("click", showInternalSignIn);
 
 $("internal-sign-in").addEventListener("submit", async (event) => {
   event.preventDefault();

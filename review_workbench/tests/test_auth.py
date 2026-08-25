@@ -5,12 +5,13 @@ import json
 
 import pytest
 
-pytest.importorskip("jwt", reason="JWT support is isolated to the Vercel workbench")
+jwt = pytest.importorskip("jwt", reason="JWT support is isolated to the Vercel workbench")
 
 from review_workbench.auth import (
     AuthenticationError,
     ClerkAuthenticator,
     InternalAuthenticator,
+    InternalOrClerkAuthenticator,
     hash_password,
 )
 from review_workbench.server import ReviewApplication
@@ -167,3 +168,45 @@ def test_internal_authenticator_merges_additive_accounts(monkeypatch):
 
     assert auth.login("existing@example.org", "existing")[1]["email"] == "existing@example.org"
     assert auth.login("new@example.org", "new password")[1]["name"] == "New Reviewer"
+
+
+def test_internal_or_clerk_authenticator_preserves_password_login_and_routes_tokens(
+    monkeypatch,
+):
+    internal = InternalAuthenticator(
+        json.dumps(
+            {
+                "reviewer@example.org": {
+                    "password_hash": hash_password("existing", iterations=1_000)
+                }
+            }
+        ),
+        "s" * 32,
+    )
+    clerk = ClerkAuthenticator(
+        publishable_key=publishable_key(),
+        secret_key="sk_test_example",
+        admin_emails="",
+        reviewer_emails="reviewer@example.org",
+    )
+    auth = InternalOrClerkAuthenticator(internal, clerk)
+
+    internal_token, internal_user = auth.login("reviewer@example.org", "existing")
+    assert auth.authenticate({"Authorization": f"Bearer {internal_token}"}) == internal_user
+
+    clerk_user = {
+        "id": "user_123",
+        "email": "reviewer@example.org",
+        "name": "Email Reviewer",
+        "role": "reviewer",
+    }
+    monkeypatch.setattr(clerk, "authenticate", lambda headers: clerk_user)
+    clerk_token = jwt.encode({"sub": "user_123"}, "k" * 48, algorithm="HS384")
+    migrated_user = {**clerk_user, "id": internal_user["id"]}
+    assert auth.authenticate({"Authorization": f"Bearer {clerk_token}"}) == migrated_user
+    assert auth.authenticate({"Cookie": "__session=clerk-cookie"}) == migrated_user
+
+    config = auth.public_config()
+    assert config["enabled"] is True
+    assert config["mode"] == "internal_or_clerk"
+    assert config["frontend_api"] == "https://example.clerk.accounts.dev"

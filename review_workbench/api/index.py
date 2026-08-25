@@ -424,11 +424,17 @@ review_application = VercelReviewApplication(
     blob_store, Path("/tmp/perla-study-review")
 )
 authenticator = None
-if os.environ.get("REVIEW_INTERNAL_ACCOUNTS"):
+has_internal_accounts = bool(os.environ.get("REVIEW_INTERNAL_ACCOUNTS"))
+has_clerk = bool(os.environ.get("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"))
+if has_internal_accounts and has_clerk:
+    from review_workbench.auth import InternalOrClerkAuthenticator
+
+    authenticator = InternalOrClerkAuthenticator()
+elif has_internal_accounts:
     from review_workbench.auth import InternalAuthenticator
 
     authenticator = InternalAuthenticator()
-elif os.environ.get("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"):
+elif has_clerk:
     from review_workbench.auth import ClerkAuthenticator
 
     authenticator = ClerkAuthenticator()

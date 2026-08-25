@@ -205,7 +205,10 @@ Configure `BLOB_READ_WRITE_TOKEN`; the server-side token is never sent to the br
 
 ## Authentication
 
-Choose one authentication mode.
+Configure either authentication mode, or both during migration. When both are present,
+reviewers can keep using their existing project password while migrated accounts gain
+Clerk's email-code password recovery. The sign-in screen exposes both choices without
+changing reviewer identities or saved annotations.
 
 ### Fixed internal accounts
 
@@ -236,3 +239,9 @@ python review_workbench/invite_users.py \
 
 The server checks the allowlist after validating the Clerk session. Keep all secret
 values in deployment configuration or a local ignored env file; do not commit them.
+
+With both sets of variables configured, **Forgot your password? Use email recovery**
+opens Clerk's prebuilt sign-in form. The reviewer chooses **Forgot password**, receives
+a code at the verified email address, and sets a new password there. Fixed internal
+passwords remain available only as a migration fallback; the application never emails,
+stores, or logs a plaintext password itself.

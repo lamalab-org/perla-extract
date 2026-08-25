@@ -11,13 +11,15 @@
     <div class="auth-card">
       <span class="eyebrow">PERLA</span>
       <h1>Sign in to review ground truth</h1>
-      <p>Use the review account provided by the project team.</p>
+      <p id="auth-help">Use the review account provided by the project team.</p>
       <form id="internal-sign-in" class="internal-sign-in" hidden>
         <label>Email<input id="login-email" type="email" autocomplete="username" required /></label>
         <label>Password<input id="login-password" type="password" autocomplete="current-password" required /></label>
         <button type="submit" class="primary">Sign in</button>
       </form>
-      <div id="clerk-sign-in"></div>
+      <button id="use-email-sign-in" class="auth-switch" type="button" hidden>Forgot your password? Use email recovery</button>
+      <div id="clerk-sign-in" hidden></div>
+      <button id="use-project-password" class="auth-switch" type="button" hidden>Use the project password instead</button>
       <p id="login-status" role="alert"></p>
     </div>
   </section>

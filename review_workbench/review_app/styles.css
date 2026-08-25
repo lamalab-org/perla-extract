@@ -8,6 +8,9 @@ body { margin:0; color:var(--ink); background:var(--wash); }
 .internal-sign-in { display:grid; gap:14px; margin-top:20px; }
 .internal-sign-in input { width:100%; }
 .internal-sign-in button { justify-self:start; min-width:100px; }
+.auth-switch { margin-top:16px; border:0; padding:0; color:var(--brand); background:transparent; text-decoration:underline; text-underline-offset:3px; }
+.auth-switch:hover { border:0; color:#0e513d; }
+#clerk-sign-in:not([hidden]) { display:flex; justify-content:center; margin-top:18px; }
 #login-status { min-height:1.25em; margin:14px 0 0; color:var(--danger); }
 button, input, select, textarea { font:inherit; }
 button { border:1px solid var(--line); background:white; border-radius:8px; padding:.55rem .8rem; cursor:pointer; color:var(--ink); }
