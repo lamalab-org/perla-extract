@@ -35,7 +35,14 @@ dependencies = [
 
 [project.optional-dependencies]
 papersbot = ["feedparser>=6.0", "requests>=2.31"]
-dev = ["build", "feedparser>=6.0", "pytest", "requests>=2.31", "ruff"]
+dev = [
+    "build",
+    "feedparser>=6.0",
+    "PyJWT[crypto]>=2.10",
+    "pytest",
+    "requests>=2.31",
+    "ruff",
+]
 nomad = [
     "perovskite-solar-cell-database==1.2.14",
     # Undeclared imports in that pinned release; keep them outside normal installs.
