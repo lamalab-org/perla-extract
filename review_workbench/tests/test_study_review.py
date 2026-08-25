@@ -7,6 +7,7 @@ from io import BytesIO
 
 import pytest
 from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
 
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
@@ -164,7 +165,7 @@ def test_review_workbook_import_is_atomic_attributable_and_undoable(
     fields = book["Device Families"]
     field_headers = [cell.value for cell in fields[1]]
     field_column = field_headers.index("Field") + 1
-    reviewed_column = field_headers.index("Reviewed value") + 1
+    reviewed_column = field_headers.index("Corrected value") + 1
     note_column = field_headers.index("Reviewer note") + 1
     label_row = next(
         row
@@ -302,26 +303,78 @@ def test_review_workbook_groups_fields_by_scientific_record_type(
     }.items():
         sheet = book[sheet_name]
         headers = [cell.value for cell in sheet[1]]
-        collection_column = headers.index("record_type")
+        collection_column = headers.index("_record_collection")
         assert {row[collection_column].value for row in sheet.iter_rows(min_row=2)} == {
             collection
         }
 
     records = book["Record review"]
     headers = [cell.value for cell in records[1]]
-    record_id_column = headers.index("record_id")
+    assert headers[:4] == [
+        "Review outcome",
+        "Reviewer note",
+        "Record kind",
+        "Record label",
+    ]
+    for technical in ("_record_collection", "_record_id"):
+        column = get_column_letter(headers.index(technical) + 1)
+        assert records.column_dimensions[column].hidden
+    record_id_column = headers.index("_record_id")
     rows = {
         row[record_id_column].value: {
             headers[index]: cell.value for index, cell in enumerate(row)
         }
         for row in records.iter_rows(min_row=2)
     }
-    assert rows["observation-1"]["Link scope"] == "Individual device"
+    assert rows["observation-1"]["Linked at"] == "Individual device"
     assert rows["observation-1"]["Family"] == "Control [family-control]"
-    assert rows["observation-1"]["Device"] == "Champion device [device-1]"
-    assert rows["population-1"]["Link scope"] == "Device family only"
+    assert rows["observation-1"]["Individual device"] == (
+        "Champion device [device-1]"
+    )
+    assert rows["population-1"]["Linked at"] == (
+        "Device family (no individual device link)"
+    )
     assert rows["population-1"]["Family"] == "Control [family-control]"
-    assert rows["population-1"]["Device"] is None
+    assert rows["population-1"]["Individual device"] is None
+    assert [row[record_id_column].value for row in records.iter_rows(min_row=2)] == [
+        "family-control",
+        "population-1",
+        "device-1",
+        "observation-1",
+    ]
+
+    fields = book["Performance Observations"]
+    field_headers = [cell.value for cell in fields[1]]
+    assert field_headers[:7] == [
+        "Record label",
+        "Field group",
+        "Field",
+        "Extracted value",
+        "Corrected value",
+        "Corrected value type",
+        "Reviewer note",
+    ]
+    for technical in (
+        "_editable",
+        "_record_collection",
+        "_record_id",
+        "Record kind",
+    ):
+        column = get_column_letter(field_headers.index(technical) + 1)
+        assert fields.column_dimensions[column].hidden
+    field_column = field_headers.index("Field") + 1
+    id_row = next(
+        row
+        for row in range(2, fields.max_row + 1)
+        if fields.cell(row, field_column).value == "observation_id"
+    )
+    assert fields.row_dimensions[id_row].hidden
+
+    instructions = " ".join(
+        str(cell.value or "") for row in book["Instructions"] for cell in row
+    )
+    assert "you do not need to review every row on the detail tabs" in instructions
+    assert "Family-only statistics are not silently assigned" in instructions
 
 
 def test_review_workbook_rejects_stale_or_structurally_changed_files(

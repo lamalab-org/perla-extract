@@ -95,16 +95,23 @@ or download a smaller workbook for the device currently in context from the reco
 queue. The device workbook includes its family, individual device, linked performance
 observations, family population statistics, and stability tests explicitly linked to
 that device or only to its family. The short **Record review** sheet is the primary
-checklist. Scalar corrections are grouped into separate sheets for the scientific
+checklist: its outcome and note columns come first, records are grouped by their
+explicit family and device links, and family-only statistics remain visibly distinct
+from measurements of an individual device. Reviewers do not need to inspect every
+flattened scalar row. They open a detail sheet only when a record contains a wrong
+value. Scalar corrections are grouped into separate sheets for the scientific
 record types present in that paper, such as **Device Families**, **Individual
 Devices**, **Performance Observations**, **Population Statistics**, and **Stability
 Tests**. Both the checklist and correction tabs begin with readable record, family,
-and device context followed by the stable IDs. **Individual device** means the schema
-contains an explicit device link. **Device family only** deliberately does not imply
+and device context; importer-only identity columns remain in the file but are hidden.
+Yellow cells are the only reviewer inputs, while structural identity rows are hidden
+because complete-record additions, removals, and relinking stay in the browser.
+**Individual device** means the schema
+contains an explicit device link. **Device family (no individual device link)** deliberately does not imply
 that any listed individual device belonged to the reported population. Each row
 remains one atomic schema value with its JSON path and nearest citation. Yellow cells
-are editable, and rows may be sorted or filtered. Identifiers, relationship context,
-and row membership are intentionally read-only.
+are editable, and rows may be sorted or filtered. Relationship context and row
+membership are intentionally read-only.
 
 Uploading the returned workbook checks its paper, schema hash, original truth digest,
 and revision; reconstructs the expected rows; validates every correction citation;

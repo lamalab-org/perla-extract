@@ -370,6 +370,8 @@ def test_reviewers_can_round_trip_a_device_or_paper_excel_review():
 
     assert "Download editable Excel" in html
     assert "Upload completed workbook" in html
+    assert "Work down the short Record review checklist" in html
+    assert "only when a scalar value is wrong" in html
     assert "Download Excel for this device" in source
     assert "downloadReviewWorkbook" in source
     assert "uploadReviewWorkbook" in source

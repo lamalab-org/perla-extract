@@ -19,55 +19,55 @@ from zipfile import BadZipFile, ZipFile
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.formatting.rule import FormulaRule
-from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
 FORMAT_NAME = "perla-review-workbook"
-FORMAT_VERSION = 3
+FORMAT_VERSION = 4
 FIXED_SHEETS = ("Instructions", "Record review")
 RECORD_HEADERS = (
-    "Record type",
-    "Record label",
-    "Link scope",
-    "Family",
-    "Device",
-    "record_type",
-    "record_id",
     "Review outcome",
     "Reviewer note",
+    "Record kind",
+    "Record label",
+    "Linked at",
+    "Family",
+    "Individual device",
+    "_record_collection",
+    "_record_id",
 )
 FIELD_HEADERS = (
-    "Record type",
     "Record label",
-    "Link scope",
-    "Family",
-    "Device",
-    "record_type",
-    "record_id",
     "Field group",
     "Field",
-    "JSON path",
-    "Current value",
-    "Reviewed value",
-    "Value type",
-    "Editable",
+    "Extracted value",
+    "Corrected value",
+    "Corrected value type",
     "Reviewer note",
-    "Evidence block",
     "Evidence quote",
+    "Evidence block",
+    "Linked at",
+    "Family",
+    "Individual device",
+    "Schema path",
+    "_editable",
+    "_record_collection",
+    "_record_id",
+    "Record kind",
 )
-RECORD_COLLECTION_COLUMN = RECORD_HEADERS.index("record_type")
-RECORD_ID_COLUMN = RECORD_HEADERS.index("record_id")
+RECORD_COLLECTION_COLUMN = RECORD_HEADERS.index("_record_collection")
+RECORD_ID_COLUMN = RECORD_HEADERS.index("_record_id")
 RECORD_OUTCOME_COLUMN = RECORD_HEADERS.index("Review outcome")
 RECORD_NOTE_COLUMN = RECORD_HEADERS.index("Reviewer note")
-FIELD_COLLECTION_COLUMN = FIELD_HEADERS.index("record_type")
-FIELD_ID_COLUMN = FIELD_HEADERS.index("record_id")
-FIELD_PATH_COLUMN = FIELD_HEADERS.index("JSON path")
-FIELD_CURRENT_COLUMN = FIELD_HEADERS.index("Current value")
-FIELD_REVIEWED_COLUMN = FIELD_HEADERS.index("Reviewed value")
-FIELD_TYPE_COLUMN = FIELD_HEADERS.index("Value type")
-FIELD_EDITABLE_COLUMN = FIELD_HEADERS.index("Editable")
+FIELD_COLLECTION_COLUMN = FIELD_HEADERS.index("_record_collection")
+FIELD_ID_COLUMN = FIELD_HEADERS.index("_record_id")
+FIELD_PATH_COLUMN = FIELD_HEADERS.index("Schema path")
+FIELD_CURRENT_COLUMN = FIELD_HEADERS.index("Extracted value")
+FIELD_REVIEWED_COLUMN = FIELD_HEADERS.index("Corrected value")
+FIELD_TYPE_COLUMN = FIELD_HEADERS.index("Corrected value type")
+FIELD_EDITABLE_COLUMN = FIELD_HEADERS.index("_editable")
 FIELD_NOTE_COLUMN = FIELD_HEADERS.index("Reviewer note")
 FIELD_EVIDENCE_BLOCK_COLUMN = FIELD_HEADERS.index("Evidence block")
 FIELD_EVIDENCE_QUOTE_COLUMN = FIELD_HEADERS.index("Evidence quote")
@@ -80,6 +80,11 @@ DECISION_TO_OUTCOME = {value: key for key, value in OUTCOME_TO_DECISION.items()}
 NO_OUTCOME = "Not reviewed"
 MAX_WORKBOOK_BYTES = 15 * 1024 * 1024
 MAX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024
+BRAND = "176B52"
+BRAND_SOFT = "E2F2EC"
+EDITABLE_FILL = "FFF3BF"
+READ_ONLY_FILL = "E7E9E8"
+CHANGED_FILL = "FFE0B2"
 
 
 @dataclass(frozen=True)
@@ -208,23 +213,23 @@ def _scalar_rows(
     )
     yield _FieldRow(
         values=(
-            label,
             context.record_label,
-            context.link_scope,
-            context.family,
-            context.device,
-            collection,
-            record_id,
             " › ".join(str(part) for part in path[:-1]),
             field,
-            json_path,
             value,
             value,
             _value_type(value),
-            "Yes" if editable else "No",
             "",
-            str(citation.get("block_id", "")) if citation else "",
             str(citation.get("quote", "")) if citation else "",
+            str(citation.get("block_id", "")) if citation else "",
+            context.link_scope,
+            context.family,
+            context.device,
+            json_path,
+            "Yes" if editable else "No",
+            collection,
+            record_id,
+            label,
         ),
         current_value=value,
         editable=editable,
@@ -318,9 +323,9 @@ def _record_context(
     if device_id:
         link_scope = "Individual device"
     elif family_id:
-        link_scope = "Device family only"
+        link_scope = "Device family (no individual device link)"
     else:
-        link_scope = "No explicit family/device link"
+        link_scope = "No explicit device or family link"
     return _RecordContext(
         record_label=str(
             record.get("label") or record.get("specimen_label") or record_id
@@ -345,6 +350,8 @@ def _contract(
         context = _record_context(truth, record, record_id, identifiers)
         records.append(
             (
+                NO_OUTCOME,
+                "",
                 labels[collection],
                 context.record_label,
                 context.link_scope,
@@ -352,8 +359,6 @@ def _contract(
                 context.device,
                 collection,
                 record_id,
-                NO_OUTCOME,
-                "",
             )
         )
         fields.extend(
@@ -361,6 +366,22 @@ def _contract(
                 collection, record_id, index, record, labels[collection], context
             )
         )
+    priority = {
+        "device_families": 0,
+        "population_statistics": 1,
+        "individual_devices": 2,
+        "performance_observations": 3,
+        "stability_tests": 4,
+        "identity_links": 5,
+    }
+    records.sort(
+        key=lambda row: (
+            str(row[RECORD_HEADERS.index("Family")]),
+            str(row[RECORD_HEADERS.index("Individual device")]),
+            priority.get(str(row[RECORD_COLLECTION_COLUMN]), 99),
+            str(row[RECORD_HEADERS.index("Record label")]),
+        )
+    )
     return records, fields
 
 
@@ -377,12 +398,22 @@ def _style_sheet(sheet: Any, widths: tuple[int, ...]) -> None:
     for index, width in enumerate(widths, 1):
         sheet.column_dimensions[get_column_letter(index)].width = width
     for cell in sheet[1]:
-        cell.fill = PatternFill("solid", fgColor="176B52")
+        cell.fill = PatternFill("solid", fgColor=BRAND)
         cell.font = Font(bold=True, color="FFFFFF")
-        cell.alignment = Alignment(wrap_text=True, vertical="top")
+        cell.alignment = Alignment(wrap_text=True, vertical="center")
     for row in sheet.iter_rows(min_row=2):
         for cell in row:
             cell.alignment = Alignment(wrap_text=True, vertical="top")
+
+
+def _hide_columns(sheet: Any, *headers: str) -> None:
+    """Keep importer metadata in the workbook without burdening reviewers."""
+
+    for header in headers:
+        index = next(
+            index for index, cell in enumerate(sheet[1], 1) if cell.value == header
+        )
+        sheet.column_dimensions[get_column_letter(index)].hidden = True
 
 
 def _field_sheet_name(collection: str) -> str:
@@ -419,9 +450,17 @@ def _add_field_sheet(
     _keep_source_strings_literal(sheet)
     _style_sheet(
         sheet,
-        (20, 42, 25, 42, 42, 27, 32, 34, 23, 48, 28, 28, 13, 11, 38, 28, 68),
+        (42, 34, 24, 24, 24, 19, 38, 68, 28, 34, 42, 42, 52, 11, 27, 32, 20),
     )
-    sheet.freeze_panes = "F2"
+    sheet.freeze_panes = "D2"
+    sheet.sheet_properties.tabColor = "5F8A7B"
+    _hide_columns(
+        sheet,
+        "_editable",
+        "_record_collection",
+        "_record_id",
+        "Record kind",
+    )
     last_column = get_column_letter(len(FIELD_HEADERS))
     sheet.add_table(
         Table(
@@ -441,7 +480,7 @@ def _add_field_sheet(
     type_column = get_column_letter(FIELD_TYPE_COLUMN + 1)
     type_validation.add(f"{type_column}2:{type_column}{len(field_rows) + 1}")
     for row_index, field_row in enumerate(field_rows, 2):
-        fill = "FFF3BF" if field_row.editable else "E7E9E8"
+        fill = EDITABLE_FILL if field_row.editable else READ_ONLY_FILL
         for column in (
             FIELD_REVIEWED_COLUMN,
             FIELD_TYPE_COLUMN,
@@ -452,13 +491,15 @@ def _add_field_sheet(
             sheet.cell(row_index, column + 1).fill = PatternFill(
                 "solid", fgColor=fill
             )
+        if not field_row.editable:
+            sheet.row_dimensions[row_index].hidden = True
     current_column = get_column_letter(FIELD_CURRENT_COLUMN + 1)
     reviewed_column = get_column_letter(FIELD_REVIEWED_COLUMN + 1)
     sheet.conditional_formatting.add(
         f"A2:{last_column}{len(field_rows) + 1}",
         FormulaRule(
             formula=[f"${current_column}2<>${reviewed_column}2"],
-            fill=PatternFill("solid", fgColor="FFE0B2"),
+            fill=PatternFill("solid", fgColor=CHANGED_FILL),
         ),
     )
 
@@ -498,29 +539,53 @@ def create_review_workbook(
     records = book.create_sheet("Record review")
 
     instructions.sheet_view.showGridLines = False
+    instructions.sheet_properties.tabColor = BRAND
     instructions.merge_cells("A1:B1")
     instructions["A1"] = "PERLA offline review workbook"
-    instructions["A1"].fill = PatternFill("solid", fgColor="176B52")
+    instructions["A1"].fill = PatternFill("solid", fgColor=BRAND)
     instructions["A1"].font = Font(bold=True, color="FFFFFF", size=16)
+    instructions["A1"].alignment = Alignment(vertical="center")
+    instructions.row_dimensions[1].height = 28
     guidance = (
         ("Paper", truth.get("paper", {}).get("title") or paper_id),
         ("Scope", f"Device {device_id} plus linked context" if device_id else "All paper records"),
-        ("Links", "Family and Device show explicit schema relationships using readable labels plus stable IDs. Device family only means the record is not linked to an individual device; do not infer which devices formed a reported population."),
-        ("1", "Give one outcome for each complete record on Record review."),
-        ("2", "Correct wrong scalar values on the record-type tabs that follow. Edit yellow cells; identifiers are read-only."),
-        ("3", "Keep atomic values separate. Do not combine multiple measurements, conditions, or outcomes in one cell."),
-        ("4", "Every correction needs a short note and an exact evidence block and quote."),
-        ("5", "You may sort or filter rows. Do not add, delete, or rename rows or sheets; add or remove complete records in the browser."),
-        ("6", "Upload this file to the same paper. Stale or structurally changed workbooks are rejected."),
+        ("Start here", "Use Record review as the checklist. Choose one outcome for each complete record; you do not need to review every row on the detail tabs."),
+        ("If correct", "Choose All fields match source. No detail-sheet edits are needed."),
+        ("If uncertain", "Choose Cannot establish from source and explain the uncertainty in Reviewer note."),
+        ("If wrong", "Choose Correct fields, then open that record type's tab and edit only the wrong scalar rows."),
+        ("Corrections", "Yellow cells accept input. Keep each value atomic and provide a short note plus the exact supporting evidence quote and block."),
+        ("Relationships", "Linked at, Family, and Individual device are explicit schema links. Family-only statistics are not silently assigned to one of the family's devices."),
+        ("Structure", "Do not add, delete, or rename rows or sheets. Add, remove, or relink complete records in the browser."),
+        ("Finish", "Upload this file to the same paper. The app validates all changes together and rejects stale or structurally altered workbooks."),
     )
     for row in guidance:
         instructions.append(row)
-    instructions.column_dimensions["A"].width = 18
-    instructions.column_dimensions["B"].width = 90
-    for row in instructions.iter_rows(min_row=3):
-        row[0].fill = PatternFill("solid", fgColor="E2F2EC")
-        row[0].font = Font(bold=True, color="176B52")
+    instructions.append(("", ""))
+    instructions.append(
+        ("Workbook map", "Open a tab below only when you need its records or scalar values.")
+    )
+    instructions.append(("Record review", f"Main checklist · {len(record_rows)} complete records"))
+    for collection, rows in _field_rows_by_collection(field_rows, identifiers).items():
+        instructions.append(
+            (
+                _field_sheet_name(collection),
+                f"Corrections for {labels[collection].lower()} records · "
+                f"{sum(row.editable for row in rows)} editable scalar fields",
+            )
+        )
+    instructions.column_dimensions["A"].width = 22
+    instructions.column_dimensions["B"].width = 105
+    separator = Side(style="thin", color="DCE3DF")
+    for row in instructions.iter_rows(min_row=2):
+        row[0].fill = PatternFill("solid", fgColor=BRAND_SOFT)
+        row[0].font = Font(bold=True, color=BRAND)
+        row[0].alignment = Alignment(wrap_text=True, vertical="top")
         row[1].alignment = Alignment(wrap_text=True, vertical="top")
+        for cell in row:
+            cell.border = Border(bottom=separator)
+    for row_index in range(2, instructions.max_row + 1):
+        instructions.row_dimensions[row_index].height = 34
+    instructions.freeze_panes = "A2"
 
     records.append(RECORD_HEADERS)
     for row in record_rows:
@@ -530,8 +595,10 @@ def create_review_workbook(
         values[RECORD_OUTCOME_COLUMN] = outcome
         records.append(values)
     _keep_source_strings_literal(records)
-    _style_sheet(records, (20, 54, 25, 54, 54, 27, 32, 28, 45))
-    records.freeze_panes = "F2"
+    _style_sheet(records, (28, 44, 20, 48, 34, 46, 46, 27, 32))
+    records.freeze_panes = "E2"
+    records.sheet_properties.tabColor = BRAND
+    _hide_columns(records, "_record_collection", "_record_id")
     record_last_column = get_column_letter(len(RECORD_HEADERS))
     records.add_table(
         Table(
@@ -557,7 +624,20 @@ def create_review_workbook(
         max_col=RECORD_NOTE_COLUMN + 1,
     ):
         for cell in row:
-            cell.fill = PatternFill("solid", fgColor="FFF3BF")
+            cell.fill = PatternFill("solid", fgColor=EDITABLE_FILL)
+    record_range = f"A2:{record_last_column}{len(record_rows) + 1}"
+    for outcome, fill in (
+        ("All fields match source", "DDF2E8"),
+        ("Cannot establish from source", EDITABLE_FILL),
+        ("Correct fields", CHANGED_FILL),
+    ):
+        records.conditional_formatting.add(
+            record_range,
+            FormulaRule(
+                formula=[f'$A2="{outcome}"'],
+                fill=PatternFill("solid", fgColor=fill),
+            ),
+        )
 
     grouped_fields = _field_rows_by_collection(field_rows, identifiers)
     for collection, collection_rows in grouped_fields.items():
