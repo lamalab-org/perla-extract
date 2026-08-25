@@ -25,6 +25,26 @@ class AuthenticationError(PermissionError):
         self.status = status
 
 
+def _account_mapping(raw: str, variable: str) -> dict:
+    """Parse one account layer so deployments can add or rotate users independently."""
+
+    try:
+        loaded = json.loads(raw) if raw else {}
+    except json.JSONDecodeError as error:
+        raise ValueError(f"{variable} is not valid JSON") from error
+    if not isinstance(loaded, dict):
+        raise ValueError(f"{variable} must be a JSON object")
+    return loaded
+
+
+def clerk_key_allowed(publishable_key: str, deployment: str | None) -> bool:
+    """Prevent a development identity instance from serving a production deployment."""
+
+    return bool(publishable_key) and (
+        deployment != "production" or publishable_key.startswith("pk_live_")
+    )
+
+
 def hash_password(password: str, *, iterations: int = 600_000) -> str:
     """Return a portable PBKDF2 hash suitable for a Vercel environment value."""
     salt = secrets.token_bytes(16)
@@ -79,22 +99,12 @@ class InternalAuthenticator:
         self.session_secret = session_secret or os.environ.get(
             "REVIEW_SESSION_SECRET", ""
         )
-        try:
-            loaded = json.loads(raw_accounts) if raw_accounts else {}
-        except json.JSONDecodeError as error:
-            raise ValueError("REVIEW_INTERNAL_ACCOUNTS is not valid JSON") from error
-        if not isinstance(loaded, dict):
-            raise ValueError("REVIEW_INTERNAL_ACCOUNTS must be a JSON object")
-        raw_additions = os.environ.get("REVIEW_INTERNAL_ACCOUNT_ADDITIONS", "")
-        try:
-            additions = json.loads(raw_additions) if raw_additions else {}
-        except json.JSONDecodeError as error:
-            raise ValueError(
-                "REVIEW_INTERNAL_ACCOUNT_ADDITIONS is not valid JSON"
-            ) from error
-        if not isinstance(additions, dict):
-            raise ValueError("REVIEW_INTERNAL_ACCOUNT_ADDITIONS must be a JSON object")
-        loaded = {**loaded, **additions}
+        loaded = _account_mapping(raw_accounts, "REVIEW_INTERNAL_ACCOUNTS")
+        for variable in (
+            "REVIEW_INTERNAL_ACCOUNT_ADDITIONS",
+            "REVIEW_INTERNAL_ACCOUNT_OVERRIDES",
+        ):
+            loaded.update(_account_mapping(os.environ.get(variable, ""), variable))
         self.accounts = {
             str(email).strip().lower(): account
             for email, account in loaded.items()

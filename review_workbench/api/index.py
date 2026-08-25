@@ -22,6 +22,7 @@ PROJECT_ROOT = (
 sys.path[:0] = [str(PROJECT_ROOT), str(PROJECT_ROOT / "src")]
 
 from perla_extract.study_extraction.artifacts import write_json_atomic  # noqa: E402
+from review_workbench.auth import clerk_key_allowed  # noqa: E402
 from review_workbench.review_storage import (  # noqa: E402
     ReviewPaperSource,
     ReviewRevision,
@@ -425,7 +426,11 @@ review_application = VercelReviewApplication(
 )
 authenticator = None
 has_internal_accounts = bool(os.environ.get("REVIEW_INTERNAL_ACCOUNTS"))
-has_clerk = bool(os.environ.get("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"))
+clerk_publishable_key = os.environ.get("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "")
+has_clerk = clerk_key_allowed(
+    clerk_publishable_key,
+    os.environ.get("VERCEL_ENV"),
+)
 if has_internal_accounts and has_clerk:
     from review_workbench.auth import InternalOrClerkAuthenticator
 

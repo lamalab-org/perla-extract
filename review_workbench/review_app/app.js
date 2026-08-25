@@ -318,7 +318,20 @@ async function initializeAuthentication() {
     await loadScript(`${config.frontend_api}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`, {
       crossorigin: "anonymous", "data-clerk-publishable-key": config.publishable_key,
     });
-    await window.Clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
+    await window.Clerk.load({
+      ui: { ClerkUI: window.__internal_ClerkUICtor },
+      appearance: {
+        options: { elevation: "flush", socialButtonsPlacement: "bottom" },
+        variables: {
+          colorPrimary: "#176b52",
+          colorForeground: "#17201d",
+          colorMutedForeground: "#66716d",
+          colorBackground: "#ffffff",
+          borderRadius: "0.5rem",
+          fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+        },
+      },
+    });
     state.clerk = window.Clerk;
     if (!state.clerk.isSignedIn) {
       if (state.authMode === "clerk") showSignIn();

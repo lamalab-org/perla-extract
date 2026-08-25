@@ -216,6 +216,7 @@ changing reviewer identities or saved annotations.
 | --- | --- |
 | `REVIEW_INTERNAL_ACCOUNTS` | JSON object keyed by reviewer email with name, role, and PBKDF2 password hash |
 | `REVIEW_INTERNAL_ACCOUNT_ADDITIONS` | Optional JSON object merged into the primary account list |
+| `REVIEW_INTERNAL_ACCOUNT_OVERRIDES` | Optional final account layer for an independently deployable password rotation |
 | `REVIEW_SESSION_SECRET` | At least 32 characters; signs seven-day sessions |
 
 An account role is `reviewer` unless it is explicitly `admin`.
@@ -240,7 +241,11 @@ python review_workbench/invite_users.py \
 The server checks the allowlist after validating the Clerk session. Keep all secret
 values in deployment configuration or a local ignored env file; do not commit them.
 
-With both sets of variables configured, **Forgot your password? Use email recovery**
+In production, email recovery is enabled only when the Clerk publishable key begins
+with `pk_live_`. Development (`pk_test_`) instances remain usable in local and preview
+deployments but are deliberately ignored by the production workbench.
+
+With both production-ready sets of variables configured, **Forgot your password? Use email recovery**
 opens Clerk's prebuilt sign-in form. The reviewer chooses **Forgot password**, receives
 a code at the verified email address, and sets a new password there. Fixed internal
 passwords remain available only as a migration fallback; the application never emails,

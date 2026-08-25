@@ -12,6 +12,7 @@ from review_workbench.auth import (
     ClerkAuthenticator,
     InternalAuthenticator,
     InternalOrClerkAuthenticator,
+    clerk_key_allowed,
     hash_password,
 )
 from review_workbench.server import ReviewApplication
@@ -20,6 +21,12 @@ from review_workbench.server import ReviewApplication
 def publishable_key(domain="example.clerk.accounts.dev"):
     encoded = base64.urlsafe_b64encode(f"{domain}$".encode()).decode().rstrip("=")
     return f"pk_test_{encoded}"
+
+
+def test_development_clerk_keys_are_not_used_in_production():
+    assert clerk_key_allowed("pk_test_example", "preview") is True
+    assert clerk_key_allowed("pk_test_example", "production") is False
+    assert clerk_key_allowed("pk_live_example", "production") is True
 
 
 def test_clerk_authenticator_maps_allowlisted_account_to_admin(monkeypatch):
@@ -168,6 +175,35 @@ def test_internal_authenticator_merges_additive_accounts(monkeypatch):
 
     assert auth.login("existing@example.org", "existing")[1]["email"] == "existing@example.org"
     assert auth.login("new@example.org", "new password")[1]["name"] == "New Reviewer"
+
+
+def test_internal_authenticator_applies_password_overrides_last(monkeypatch):
+    monkeypatch.setenv(
+        "REVIEW_INTERNAL_ACCOUNT_OVERRIDES",
+        json.dumps(
+            {
+                "reviewer@example.org": {
+                    "name": "Current Reviewer",
+                    "password_hash": hash_password("rotated", iterations=1_000),
+                }
+            }
+        ),
+    )
+    auth = InternalAuthenticator(
+        json.dumps(
+            {
+                "reviewer@example.org": {
+                    "name": "Old Reviewer",
+                    "password_hash": hash_password("old", iterations=1_000),
+                }
+            }
+        ),
+        "s" * 32,
+    )
+
+    assert auth.login("reviewer@example.org", "rotated")[1]["name"] == "Current Reviewer"
+    with pytest.raises(AuthenticationError, match="incorrect"):
+        auth.login("reviewer@example.org", "old")
 
 
 def test_internal_or_clerk_authenticator_preserves_password_login_and_routes_tokens(

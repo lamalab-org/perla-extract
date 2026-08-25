@@ -17,6 +17,8 @@ def test_deployed_authentication_has_a_recoverable_sign_in_flow():
     assert 'fetch("/api/auth/login"' in javascript
     assert 'state.authMode === "internal_or_clerk"' in javascript
     assert "Choose Forgot password in the form" in javascript
+    assert 'elevation: "flush"' in javascript
+    assert 'colorPrimary: "#176b52"' in javascript
     assert "Your session expired. Sign in again" in javascript
     assert 'localStorage.removeItem(REVIEW_TOKEN_KEY)' in javascript
     assert '"Connection problem"' not in javascript
