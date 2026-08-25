@@ -421,10 +421,12 @@ async function selectPaper(paperId) {
   try {
     bundle = await request(`/api/paper/${state.split}/${encodeURIComponent(paperId)}`);
   } catch (error) {
-    $("empty-title").textContent = "Could not open this paper";
-    $("empty-message").textContent = error.message;
-    $("empty-state").hidden = false;
     if (state.bundle) setStatus(`Could not open ${paperId}: ${error.message}`, true);
+    else {
+      $("empty-title").textContent = "Could not open this paper";
+      $("empty-message").textContent = error.message;
+      $("empty-state").hidden = false;
+    }
     return;
   } finally {
     state.loadingPaperId = null;
@@ -1080,11 +1082,16 @@ function renderStageControls() {
   const decisions = state.bundle.summary.record_decisions?.[state.user.id] || {};
   const reviewed = Object.values(decisions).filter((decision) => decision === "verified" || decision === "uncertain").length;
   const remaining = state.bundle.summary.record_count - reviewed;
-  const labels = { inventory: "Mark inventory reviewed", fields: "Mark all record fields reviewed", completeness: "Complete paper review", adjudication: "Complete adjudication" };
+  const labels = {
+    inventory: ["Mark census reviewed", "Census reviewed"],
+    fields: ["Mark all record fields reviewed", "Record fields reviewed"],
+    completeness: ["Complete paper review", "Paper review completed"],
+    adjudication: ["Complete adjudication", "Adjudication completed"],
+  };
   document.querySelectorAll(".complete-stage").forEach((button) => {
     const prerequisites = { inventory: hasAudit(), fields: mine("inventory") && remaining === 0, completeness: mine("fields"), adjudication: mine("completeness") };
     button.disabled = mine(button.dataset.stage) || !prerequisites[button.dataset.stage];
-    button.textContent = mine(button.dataset.stage) ? `${button.dataset.stage} completed` : labels[button.dataset.stage];
+    button.textContent = labels[button.dataset.stage][mine(button.dataset.stage) ? 1 : 0];
     if (button.dataset.stage === "fields" && remaining > 0 && !mine("fields")) button.textContent = `Review ${remaining} remaining record${remaining === 1 ? "" : "s"}`;
   });
   $("complete-adjudication").hidden = state.user.role !== "admin";
@@ -1565,7 +1572,7 @@ function annotationSubject(event) {
     const counts = Object.entries(event.details.expected_counts || {}).map(([name, count]) => `${humanLabel(name)}: ${count}`);
     const figures = event.details.main_text_figure_census;
     if (figures) counts.push(`Main-text figure-only values: ${figures.figure_only_atomic_values}`);
-    return counts.join(" · ") || "Blind inventory saved";
+    return counts.join(" · ") || "Census saved";
   }
   return event.note || humanLabel(event.kind);
 }
@@ -1849,6 +1856,10 @@ async function loadReviewerProgress() {
 }
 
 async function openReviewerProgress() {
+  if (!state.user) {
+    setStatus("Sign in before opening saved review progress.", true);
+    return;
+  }
   state.annotationView = "current";
   $("annotations-dialog").showModal();
   const cached = state.annotations || cachedReviewerProgress();

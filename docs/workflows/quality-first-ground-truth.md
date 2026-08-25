@@ -9,7 +9,7 @@ which model calls can be made cheaper or removed.
 flowchart LR
     A["Paper + complete SI"] --> B["Quality-first extraction"]
     B --> C["Immutable model seed"]
-    C --> D["Blind inventory"]
+    C --> D["Record and figure census"]
     D --> E["Correction and record decisions"]
     E --> F["Completeness check"]
     F --> G["Adjudication"]

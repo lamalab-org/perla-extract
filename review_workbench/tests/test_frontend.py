@@ -36,6 +36,9 @@ def test_ui_allows_record_review_before_the_census():
     assert "Review extracted records at any time" in javascript
     assert "model-assisted record review" not in javascript
     assert "renderQualityArtifacts()" in javascript
+    assert "Mark census reviewed" in html
+    assert "Mark inventory reviewed" not in html
+    assert "Blind inventory" not in javascript
 
 
 def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes():
@@ -262,6 +265,18 @@ def test_startup_defers_schema_and_shows_real_loading_states():
     assert "await startApp();" in source
     assert not source.rstrip().endswith("await loadStudySchema();")
     assert 'if (!state.studySchema)' in source
+
+
+def test_failed_navigation_keeps_an_open_paper_and_progress_requires_a_session():
+    source = (APP / "app.js").read_text(encoding="utf-8")
+
+    selection = source[source.index("async function selectPaper"):source.index("function renderStudy")]
+    progress = source[source.index("async function openReviewerProgress"):source.index("async function downloadReviewerProgress")]
+    assert 'if (state.bundle) setStatus(`Could not open ${paperId}' in selection
+    assert 'else {\n      $("empty-title").textContent = "Could not open this paper";' in selection
+    assert "if (!state.user)" in progress
+    assert 'setStatus("Sign in before opening saved review progress.", true);' in progress
+    assert progress.index("if (!state.user)") < progress.index('$("annotations-dialog").showModal()')
 
 
 def test_correction_and_removal_dialogs_open_without_saving_a_decision_first():

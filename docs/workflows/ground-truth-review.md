@@ -21,8 +21,8 @@ ambiguity in `unresolved_notes`.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> BlindInventory
-    BlindInventory --> Identity
+    [*] --> Census
+    Census --> Identity
     Identity --> ScientificFields
     ScientificFields --> Evidence
     Evidence --> Completeness
@@ -30,8 +30,10 @@ stateDiagram-v2
     Adjudication --> FrozenRevision
 ```
 
-1. **Blind inventory.** Search every imported source and record expected counts before
-   the interface reveals model candidates. Count device families, individual devices,
+1. **Record and figure census.** Search every imported source and record expected
+   counts independently of the model extraction. The interface keeps model candidates
+   visible because their device context helps reviewers navigate the paper, but their
+   number is not the census answer. Count device families, individual devices,
    performance observations, population statistics, and stability tests. The submitted
    source list is workflow coverage, not an extraction outcome.
    A **device family** is one group-level recipe or architecture variant, such as a
@@ -124,7 +126,7 @@ is still the current value. Undo creates a new validated event that points to th
 original edit; it does not delete either action from history. If somebody subsequently
 changed the same value, the undo action is unavailable so it cannot overwrite that
 newer work. Record decisions can be changed by selecting a different decision during
-record review. **Reset current review state** clears all current decisions, census
+record review. **Reset all current progress** clears all current decisions, census
 results, and completed stages for the reviewer in the selected dataset. The immutable
 history remains available. Because scientific corrections change shared ground truth,
 the reset does not bulk-revert them; each remains individually undoable only while its

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -77,6 +79,41 @@ def test_blob_find_lists_the_parent_directory_before_matching_exact_path():
 
     assert blob.find(pathname) == {"pathname": pathname}
     assert blob.prefixes == ["workbench/review-sources/calibration/"]
+
+
+class PagedBlobStore(BlobStore):
+    """Serve two deterministic Blob pages without making network requests."""
+
+    token = "test-token"
+
+    def __init__(self, pathname: str):
+        self.pathname = pathname
+        self.requests: list[dict[str, list[str]]] = []
+
+    def _request(self, url: str) -> bytes:
+        query = parse_qs(urlparse(url).query)
+        self.requests.append(query)
+        if "cursor" not in query:
+            return json.dumps(
+                {
+                    "blobs": [{"pathname": "workbench/review-sources/calibration/first.json"}],
+                    "hasMore": True,
+                    "cursor": "page-2",
+                }
+            ).encode()
+        return json.dumps(
+            {"blobs": [{"pathname": self.pathname}], "hasMore": False}
+        ).encode()
+
+
+def test_blob_list_follows_cursors_before_exact_path_matching():
+    pathname = "workbench/review-sources/calibration/later.json"
+    blob = PagedBlobStore(pathname)
+
+    assert blob.find(pathname) == {"pathname": pathname}
+    assert len(blob.requests) == 2
+    assert blob.requests[0]["prefix"] == ["workbench/review-sources/calibration/"]
+    assert blob.requests[1]["cursor"] == ["page-2"]
 
 
 def test_vercel_source_inventory_does_not_download_pdfs():

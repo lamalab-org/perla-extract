@@ -10,7 +10,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qs, quote, unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlencode, urlparse
 from urllib.request import Request, urlopen
 
 MODULE_PATH = Path(__file__).resolve()
@@ -74,11 +74,26 @@ class BlobStore:
             return response.read()
 
     def list(self, prefix: str) -> list[dict]:
+        """Return every Blob below a prefix, following Vercel's cursors."""
+
         if not self.configured:
             return []
-        return json.loads(
-            self._request(f"{self.endpoint}?prefix={quote(prefix)}&limit=1000")
-        ).get("blobs", [])
+        blobs: list[dict] = []
+        cursor: str | None = None
+        seen_cursors: set[str] = set()
+        while True:
+            query = {"prefix": prefix, "limit": 1000}
+            if cursor:
+                query["cursor"] = cursor
+            page = json.loads(self._request(f"{self.endpoint}?{urlencode(query)}"))
+            blobs.extend(page.get("blobs", []))
+            next_cursor = page.get("cursor") if page.get("hasMore") else None
+            if not next_cursor:
+                return blobs
+            if next_cursor in seen_cursors:
+                raise RuntimeError("Vercel Blob returned a repeated pagination cursor")
+            seen_cursors.add(next_cursor)
+            cursor = next_cursor
 
     def find(self, pathname: str) -> dict | None:
         """Find an exact pathname through its containing Blob directory.
