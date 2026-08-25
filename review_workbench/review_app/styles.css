@@ -60,7 +60,9 @@ label { display:grid; gap:.35rem; font-size:.82rem; color:var(--muted); }
 .pdf-message { margin:24px auto; max-width:430px; padding:12px; border-radius:8px; background:white; color:var(--muted); }
 .pdf-message.error { color:var(--danger); }
 #retry-pdf { margin:0 auto 18px; }
-#pdf-canvas { display:inline-block; position:relative; max-width:100%; }
+#pdf-canvas { display:inline-block; position:relative; max-width:100%; transition:opacity .16s ease; }
+#pdf-stage[aria-busy="true"] #pdf-canvas { opacity:.38; }
+.source-badge { color:var(--muted); font-size:.86rem; font-weight:650; }
 #pdf-page { display:block; max-width:100%; box-shadow:0 3px 18px #0003; background:white; }
 #pdf-highlights { position:absolute; inset:0; pointer-events:none; }
 .pdf-highlight { position:absolute; background:#ffd84d66; border:2px solid #c59100; border-radius:3px; box-shadow:0 0 0 2px #fff8; }

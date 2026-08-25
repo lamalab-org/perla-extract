@@ -82,7 +82,7 @@ const state = {
   page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null,
   queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
   studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
-  pdfObjectUrl: null, censusDraft: null, editingCensus: false, loadingPaperId: null,
+  pdfObjectUrl: null, pdfDisplayed: null, censusDraft: null, editingCensus: false, loadingPaperId: null,
   annotationView: "current", authMode: "local", clerk: null,
 };
 
@@ -440,6 +440,10 @@ async function selectPaper(paperId) {
   state.activeCitation = null;
   state.censusDraft = null;
   state.editingCensus = false;
+  if (state.pdfObjectUrl) URL.revokeObjectURL(state.pdfObjectUrl);
+  state.pdfObjectUrl = null;
+  state.pdfDisplayed = null;
+  $("pdf-page").removeAttribute("src");
   state.source = state.bundle.sources.includes("main") ? "main" : state.bundle.sources[0];
   state.page = 1;
   $("empty-state").hidden = true;
@@ -1139,12 +1143,15 @@ async function renderPdf() {
   const query = `source=${source}&split=${split}&page=${page}&scale=1.5`;
   const image = $("pdf-page");
   const message = $("pdf-message");
+  const sourceStatus = $("pdf-current-source");
+  const displayed = state.pdfDisplayed;
   $("pdf-stage").setAttribute("aria-busy", "true");
   message.hidden = false;
   message.className = "pdf-message";
   message.textContent = `Loading ${sourceLabel}, page ${page}… Large SI files can take a few seconds the first time.`;
+  sourceStatus.textContent = `Loading ${sourceLabel} · page ${page}`;
   $("retry-pdf").hidden = true;
-  $("pdf-canvas").hidden = true;
+  $("pdf-canvas").hidden = !displayed || displayed.paperId !== paperId;
   $("pdf-text").textContent = "";
   for (const control of [$("previous-page"), $("next-page"), $("page-number")]) control.disabled = true;
   $("pdf-source").disabled = false;
@@ -1161,9 +1168,11 @@ async function renderPdf() {
     state.pdfObjectUrl = loadedPage.objectUrl;
     image.src = loadedPage.objectUrl;
     if (loadedPage.pageCount) state.pageCount = loadedPage.pageCount;
+    state.pdfDisplayed = { paperId, source, page, pageCount: state.pageCount };
     $("page-number").value = page;
     $("page-number").max = state.pageCount;
     $("page-count").textContent = `/ ${state.pageCount}`;
+    sourceStatus.textContent = `${source === "main" ? "Main paper" : "Supporting information"} · page ${page} of ${state.pageCount}`;
     $("pdf-canvas").hidden = false;
     message.hidden = true;
     for (const control of [$("previous-page"), $("next-page"), $("page-number")]) control.disabled = false;
@@ -1174,7 +1183,11 @@ async function renderPdf() {
     ).then((value) => ({ value })).catch((error) => ({ error }));
     if (requestId !== state.pdfRequest || paperId !== state.paperId || source !== state.source || page !== state.page) return false;
     if (text.value) {
-      if (text.value.page_count) state.pageCount = text.value.page_count;
+      if (text.value.page_count) {
+        state.pageCount = text.value.page_count;
+        state.pdfDisplayed.pageCount = state.pageCount;
+        sourceStatus.textContent = `${source === "main" ? "Main paper" : "Supporting information"} · page ${page} of ${state.pageCount}`;
+      }
       $("page-number").max = state.pageCount;
       $("page-count").textContent = `/ ${state.pageCount}`;
       $("pdf-text").textContent = text.value.text;
@@ -1187,8 +1200,21 @@ async function renderPdf() {
   } catch (error) {
     if (error.name === "AbortError" || requestId !== state.pdfRequest) return false;
     controller.abort();
+    if (displayed?.paperId === paperId) {
+      state.source = displayed.source;
+      state.page = displayed.page;
+      state.pageCount = displayed.pageCount;
+      $("pdf-source").value = displayed.source;
+      $("page-number").value = displayed.page;
+      $("page-number").max = displayed.pageCount;
+      $("page-count").textContent = `/ ${displayed.pageCount}`;
+      sourceStatus.textContent = `${displayed.source === "main" ? "Main paper" : "Supporting information"} · page ${displayed.page} of ${displayed.pageCount}`;
+      $("pdf-canvas").hidden = false;
+    } else {
+      sourceStatus.textContent = `${source === "main" ? "Main paper" : "Supporting information"} unavailable`;
+    }
     message.className = "pdf-message error";
-    message.textContent = `Could not open the ${sourceLabel}. ${error.message}`;
+    message.textContent = `Could not open the ${sourceLabel}. ${error.message}${displayed?.paperId === paperId ? " The previous page is still shown." : ""}`;
     $("retry-pdf").hidden = false;
     throw error;
   } finally {

@@ -218,6 +218,7 @@ def test_pdf_source_switch_is_visible_cached_and_waits_for_the_new_page():
 
     assert "Supporting information (SI)" in html
     assert 'id="pdf-message"' in html
+    assert 'id="pdf-current-source"' in html
     assert 'setAttribute("aria-busy", "true")' in source
     assert "Large SI files can take a few seconds" in source
     assert "preview.decode()" in source
@@ -225,6 +226,9 @@ def test_pdf_source_switch_is_visible_cached_and_waits_for_the_new_page():
     assert "loadPdfPage" in source
     assert "requestWithRetry" in source
     assert "AbortController" in source
+    assert "pdfDisplayed" in source
+    assert '$("pdf-canvas").hidden = !displayed || displayed.paperId !== paperId' in source
+    assert "The previous page is still shown." in source
     assert 'id="retry-pdf"' in html
     assert "URL.createObjectURL" in source
     assert server.count("private, max-age=3600, immutable") == 2
