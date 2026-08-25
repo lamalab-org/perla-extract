@@ -181,7 +181,6 @@ def test_record_review_prioritizes_the_current_record_over_device_context():
     assert "Review queue" in html
     assert "record-status-filter" in html
     assert "record-kind-filter" in html
-    assert "Current review target" in source
     assert "Related device context (expand if needed)" in source
     assert "relatedContext" in source
     assert "focusCitation" in source
@@ -198,8 +197,7 @@ def test_inventory_defines_counts_without_hiding_records():
     assert "One shared recipe or architecture variant" in source
     assert "One particular measured specimen" in source
     assert "Multiple measurements of the same cell are not additional devices" in source
-    assert 'id="census-status"' in html
-    assert "You can inspect and correct Records now" in html
+    assert "You can inspect and correct Records now" not in html
     assert "Edit saved census" in html
     assert 'tab === "completeness" && !hasAudit()' in source
     assert '["records", "completeness"].includes(tab) && !hasAudit()' not in source

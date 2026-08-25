@@ -510,7 +510,6 @@ function renderStudy() {
   $("download-supplement-pdf").hidden = !state.bundle.sources.includes("supplement");
   $("census-form").hidden = hasAudit() && !state.editingCensus;
   $("inventory-revealed").hidden = !hasAudit();
-  $("census-status").hidden = hasAudit();
   renderInventoryForm();
   renderReviewQueue();
   if (hasAudit()) {
@@ -817,10 +816,6 @@ function renderReviewTarget(entry) {
     content.push(reportedValueGroup(entry, "Specimen-specific properties", entry.item.reported_properties || [], ["reported_properties"]));
   }
   return element("section", { className: "review-target" }, [
-    element("div", { className: "review-target-heading" }, [
-      element("span", { className: "eyebrow", text: "Current review target" }),
-      element("h4", { text: `Review this ${singularCollection(entry.kind).toLowerCase()}` }),
-    ]),
     element("p", { className: "review-instruction", text: RECORD_GUIDANCE[entry.kind].review }),
     ...content,
   ]);

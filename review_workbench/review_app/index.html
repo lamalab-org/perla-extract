@@ -94,12 +94,9 @@
             <button data-tab="completeness">3 · Completeness</button>
             <button data-tab="history">History</button>
           </nav>
-          <p id="census-status" class="callout workflow-note">You can inspect and correct Records now. Save the census before marking the first review step complete.</p>
-
           <div id="inventory-tab" class="tab-panel">
             <div id="census-form">
               <h3>Paper and figure census</h3>
-              <p class="callout">Count the records supported by the main paper and available SI. You may inspect the extracted Records while doing this; use the census to record the corrected paper-level total.</p>
               <details class="record-definitions" open><summary>What counts as a family, device, or measurement?</summary><div id="inventory-definitions"></div></details>
               <div id="inventory-counts" class="count-grid"></div>
               <section class="figure-census">
@@ -169,7 +166,6 @@
 
           <div id="completeness-tab" class="tab-panel" hidden>
             <h3>Final completeness audit</h3>
-            <p>Confirm that all distinctions required for scoring survived the review.</p>
             <div id="quality-gates" class="quality-gates"></div>
             <label>Completion note<textarea id="stage-note" rows="4" placeholder="Record remaining ambiguity or schema limitations…"></textarea></label>
             <button data-stage="completeness" class="complete-stage primary">Complete paper review</button>

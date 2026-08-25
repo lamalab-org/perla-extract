@@ -89,7 +89,6 @@ label { display:grid; gap:.35rem; font-size:.82rem; color:var(--muted); }
 .tabs button:disabled { border-bottom:0; }
 .tab-panel { padding:18px; }
 .callout { background:#f1f5f3; border-left:3px solid var(--brand); padding:.75rem; color:#44514c; }
-.workflow-note { margin:12px 18px 0; font-size:.8rem; }
 .record-definitions { margin:14px 0; border:1px solid var(--line); border-radius:9px; padding:10px; }
 .record-definitions > summary { cursor:pointer; color:var(--brand); font-weight:700; }
 #inventory-definitions { display:grid; gap:8px; padding-top:10px; }
@@ -126,7 +125,6 @@ th,td { padding:.55rem; border-bottom:1px solid var(--line); text-align:left; } 
 .attention-explanations { display:grid; gap:5px; padding:10px; border-left:3px solid #d4a835; background:#fffaf0; }
 .attention-explanations p { margin:0; color:#5f5126; font-size:.75rem; line-height:1.4; }
 .review-target { display:grid; gap:12px; border:2px solid #9ecdbd; border-radius:10px; padding:14px; background:#f7fcfa; }
-.review-target-heading h4 { margin:0; }
 .review-instruction { margin:0; line-height:1.45; }
 .record-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 14px; }
 .reported-value-group { min-width:0; padding-top:9px; border-top:1px solid var(--line); }
