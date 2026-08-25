@@ -70,6 +70,16 @@ def test_ui_covers_every_rich_record_collection():
         assert collection in javascript
 
 
+def test_record_review_layout_responds_to_panel_width_without_overlays():
+    styles = (APP / "styles.css").read_text(encoding="utf-8")
+
+    assert ".review-panel { container:review-panel / inline-size; }" in styles
+    assert "@container review-panel (max-width:600px)" in styles
+    assert ".add-record-menu[open] { grid-column:1 / -1; }" in styles
+    assert "position:absolute" not in styles.split(".add-record-menu .record-add", 1)[1].split("}", 1)[0]
+    assert ".reported-value { display:grid; }" in styles
+
+
 def test_ui_shows_reported_composition_beside_enrichment_proposals():
     html = (APP / "index.html").read_text(encoding="utf-8")
     javascript = (APP / "app.js").read_text(encoding="utf-8")
