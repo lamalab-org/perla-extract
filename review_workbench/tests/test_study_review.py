@@ -287,6 +287,13 @@ def test_review_workbook_groups_fields_by_scientific_record_type(
         "Population Statistics",
         "_meta",
     ]
+    table_sheets = ["Record review", *book.sheetnames[2:-1]]
+    for sheet_name in table_sheets:
+        sheet = book[sheet_name]
+        assert sheet.auto_filter.ref is None
+        assert len(sheet.tables) == 1
+        table = sheet.tables[next(iter(sheet.tables))]
+        assert table.autoFilter.ref == table.ref
     for sheet_name, collection in {
         "Device Families": "device_families",
         "Individual Devices": "individual_devices",

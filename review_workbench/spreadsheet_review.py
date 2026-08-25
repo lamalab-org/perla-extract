@@ -365,9 +365,15 @@ def _contract(
 
 
 def _style_sheet(sheet: Any, widths: tuple[int, ...]) -> None:
+    """Apply shared presentation without defining sheet-level data behavior.
+
+    Review grids are Excel tables, and each table owns its AutoFilter. Adding a
+    second worksheet AutoFilter over the same range makes Excel repair the file
+    by removing the table, even though permissive readers accept the package.
+    """
+
     sheet.sheet_view.showGridLines = False
     sheet.freeze_panes = "A2"
-    sheet.auto_filter.ref = sheet.dimensions
     for index, width in enumerate(widths, 1):
         sheet.column_dimensions[get_column_letter(index)].width = width
     for cell in sheet[1]:
