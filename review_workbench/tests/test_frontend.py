@@ -3,6 +3,20 @@ from pathlib import Path
 APP = Path(__file__).resolve().parents[1] / "review_app"
 
 
+def test_deployed_authentication_has_a_recoverable_sign_in_flow():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    javascript = (APP / "app.js").read_text(encoding="utf-8")
+
+    assert 'id="auth-gate"' in html
+    assert 'id="internal-sign-in"' in html
+    assert 'id="sign-out"' in html
+    assert 'fetch("/api/auth/config")' in javascript
+    assert 'fetch("/api/auth/login"' in javascript
+    assert "Your session expired. Sign in again" in javascript
+    assert 'localStorage.removeItem(REVIEW_TOKEN_KEY)' in javascript
+    assert '"Connection problem"' not in javascript
+
+
 def test_ui_allows_record_review_before_the_census():
     html = (APP / "index.html").read_text(encoding="utf-8")
     javascript = (APP / "app.js").read_text(encoding="utf-8")
@@ -235,7 +249,8 @@ def test_startup_defers_schema_and_shows_real_loading_states():
     assert "Loading review workspace…" in source
     assert "Your saved reviews are unchanged" in source
     assert "paperCacheKey" in source
-    assert source.rstrip().endswith("await startApp();")
+    assert "if (await initializeAuthentication())" in source
+    assert "await startApp();" in source
     assert not source.rstrip().endswith("await loadStudySchema();")
     assert 'if (!state.studySchema)' in source
 

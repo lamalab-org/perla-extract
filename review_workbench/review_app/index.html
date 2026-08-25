@@ -7,6 +7,22 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
+  <section id="auth-gate" class="auth-gate" hidden>
+    <div class="auth-card">
+      <span class="eyebrow">PERLA</span>
+      <h1>Sign in to review ground truth</h1>
+      <p>Use the review account provided by the project team.</p>
+      <form id="internal-sign-in" class="internal-sign-in" hidden>
+        <label>Email<input id="login-email" type="email" autocomplete="username" required /></label>
+        <label>Password<input id="login-password" type="password" autocomplete="current-password" required /></label>
+        <button type="submit" class="primary">Sign in</button>
+      </form>
+      <div id="clerk-sign-in"></div>
+      <p id="login-status" role="alert"></p>
+    </div>
+  </section>
+
+  <div id="workbench" hidden>
   <header>
     <div><span class="eyebrow">PERLA</span><h1>Study ground-truth review</h1></div>
     <div class="header-actions">
@@ -14,6 +30,8 @@
       <button id="open-annotations">My edits &amp; undo</button>
       <button id="open-import">Import extraction</button>
       <span id="reviewer" class="pill">Loading reviewer…</span>
+      <div id="clerk-user-button"></div>
+      <button id="sign-out" type="button" hidden>Sign out</button>
     </div>
   </header>
 
@@ -238,6 +256,7 @@
     </form>
   </dialog>
 
+  </div>
   <script src="/app.js" type="module"></script>
 </body>
 </html>

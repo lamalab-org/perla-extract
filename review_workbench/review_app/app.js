@@ -1,4 +1,5 @@
 const $ = (id) => document.getElementById(id);
+const REVIEW_TOKEN_KEY = "review-token";
 const COLLECTIONS = {
   device_families: "Device families",
   individual_devices: "Individual devices",
@@ -82,13 +83,20 @@ const state = {
   queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
   studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
   pdfObjectUrl: null, censusDraft: null, editingCensus: false, loadingPaperId: null,
-  annotationView: "current",
+  annotationView: "current", authMode: "local", clerk: null,
 };
+
+async function authorizationHeaders(headers = {}) {
+  const token = localStorage.getItem(REVIEW_TOKEN_KEY);
+  if (token) return { ...headers, Authorization: `Bearer ${token}` };
+  if (!state.clerk?.session) return headers;
+  const clerkToken = await state.clerk.session.getToken();
+  return clerkToken ? { ...headers, Authorization: `Bearer ${clerkToken}` } : headers;
+}
 
 async function request(url, options = {}) {
   const { responseType, ...fetchOptions } = options;
-  const token = localStorage.getItem("review-token");
-  const headers = { ...(options.headers || {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  const headers = await authorizationHeaders(options.headers || {});
   if (options.body && !(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
   const response = await fetch(url, { ...fetchOptions, headers });
   if (!response.ok) {
@@ -240,6 +248,59 @@ async function loadSession() {
   const payload = await request("/api/session");
   state.user = payload.user;
   $("reviewer").textContent = payload.user.name;
+}
+
+function loadScript(src, attributes = {}) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    Object.entries(attributes).forEach(([name, value]) => script.setAttribute(name, value));
+    script.addEventListener("load", resolve, { once: true });
+    script.addEventListener("error", () => reject(new Error("The sign-in service could not be loaded.")), { once: true });
+    document.head.append(script);
+  });
+}
+
+function showSignIn(message = "") {
+  $("workbench").hidden = true;
+  $("auth-gate").hidden = false;
+  $("login-status").textContent = message;
+  $("internal-sign-in").hidden = state.authMode !== "internal";
+}
+
+function showWorkbench() {
+  $("auth-gate").hidden = true;
+  $("workbench").hidden = false;
+  $("sign-out").hidden = state.authMode !== "internal";
+}
+
+async function initializeAuthentication() {
+  const response = await fetch("/api/auth/config");
+  if (!response.ok) throw new Error("The sign-in service is temporarily unavailable.");
+  const config = await response.json();
+  state.authMode = config.enabled ? config.mode : "local";
+  if (state.authMode === "internal") {
+    if (!localStorage.getItem(REVIEW_TOKEN_KEY)) {
+      showSignIn();
+      return false;
+    }
+    return true;
+  }
+  if (state.authMode === "clerk") {
+    await loadScript(`${config.frontend_api}/npm/@clerk/ui@1/dist/ui.browser.js`, { crossorigin: "anonymous" });
+    await loadScript(`${config.frontend_api}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`, {
+      crossorigin: "anonymous", "data-clerk-publishable-key": config.publishable_key,
+    });
+    await window.Clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
+    state.clerk = window.Clerk;
+    if (!state.clerk.isSignedIn) {
+      showSignIn();
+      state.clerk.mountSignIn($("clerk-sign-in"));
+      return false;
+    }
+    state.clerk.mountUserButton($("clerk-user-button"));
+  }
+  return true;
 }
 
 async function loadStudySchema() {
@@ -1779,9 +1840,8 @@ function saveBlob(blob, filename) {
 }
 
 async function downloadResponse(url, filename) {
-  const token = localStorage.getItem("review-token");
   const response = await fetch(url, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    headers: await authorizationHeaders(),
   });
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
@@ -1990,11 +2050,17 @@ document.addEventListener("keydown", (event) => {
 });
 
 function showStartupError(error) {
+  if (error.status === 401) {
+    state.user = null;
+    if (state.authMode === "internal") localStorage.removeItem(REVIEW_TOKEN_KEY);
+    showSignIn("Your session expired. Sign in again to continue; your saved reviews are unchanged.");
+    return;
+  }
   $("paper-load-status").hidden = true;
   $("empty-title").textContent = "The review workspace did not load";
   $("empty-message").textContent = `${error.message} Your saved reviews are unchanged.`;
   $("retry-startup").hidden = false;
-  $("reviewer").textContent = state.user?.name || "Connection problem";
+  $("reviewer").textContent = state.user?.name || "Not connected";
 }
 
 async function startApp() {
@@ -2011,4 +2077,43 @@ async function startApp() {
 
 $("retry-startup").addEventListener("click", startApp);
 
-await startApp();
+$("internal-sign-in").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const submit = event.currentTarget.querySelector('button[type="submit"]');
+  submit.disabled = true;
+  $("login-status").textContent = "Signing in…";
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: $("login-email").value, password: $("login-password").value }),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Sign-in failed.");
+    localStorage.setItem(REVIEW_TOKEN_KEY, payload.token);
+    state.user = payload.user;
+    $("login-password").value = "";
+    showWorkbench();
+    await startApp();
+  } catch (error) {
+    showSignIn(error.message);
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+$("sign-out").addEventListener("click", () => {
+  localStorage.removeItem(REVIEW_TOKEN_KEY);
+  state.user = null;
+  state.papers = [];
+  showSignIn("Signed out.");
+});
+
+try {
+  if (await initializeAuthentication()) {
+    showWorkbench();
+    await startApp();
+  }
+} catch (error) {
+  showSignIn(error.message);
+}
