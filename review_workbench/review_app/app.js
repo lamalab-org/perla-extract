@@ -86,6 +86,34 @@ const state = {
   annotationView: "current", authMode: "local", clerk: null,
 };
 
+const LAPTOP_LAYOUT = "(max-width: 1400px)";
+
+function setPaperListOpen(open, remember = true) {
+  document.querySelector("main").classList.toggle("paper-list-hidden", !open);
+  const button = $("toggle-paper-list");
+  button.setAttribute("aria-expanded", String(open));
+  button.textContent = open ? "Hide papers" : "Show papers";
+  if (remember) sessionStorage.setItem("perla-paper-list-open", String(open));
+}
+
+function setWorkspaceView(view, remember = true) {
+  if (!["split", "paper", "review"].includes(view)) return;
+  document.querySelector(".workspace-grid").dataset.view = view;
+  document.querySelectorAll("[data-workspace-view]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.workspaceView === view));
+  });
+  if (remember) sessionStorage.setItem("perla-workspace-view", view);
+}
+
+function initializeWorkspaceLayout() {
+  const savedPaperList = sessionStorage.getItem("perla-paper-list-open");
+  const paperListOpen = savedPaperList == null
+    ? !window.matchMedia(LAPTOP_LAYOUT).matches
+    : savedPaperList === "true";
+  setPaperListOpen(paperListOpen, false);
+  setWorkspaceView(sessionStorage.getItem("perla-workspace-view") || "split", false);
+}
+
 async function authorizationHeaders(headers = {}) {
   const token = localStorage.getItem(REVIEW_TOKEN_KEY);
   if (token) return { ...headers, Authorization: `Bearer ${token}` };
@@ -449,6 +477,7 @@ async function selectPaper(paperId) {
   $("empty-state").hidden = true;
   $("workspace").hidden = false;
   renderStudy();
+  if (window.matchMedia(LAPTOP_LAYOUT).matches) setPaperListOpen(false, false);
   savePaperCache();
   try { await renderPdf(); }
   catch (error) { setStatus(`The records are ready, but the PDF page did not load: ${error.message}`, true); }
@@ -963,6 +992,9 @@ async function focusCitation(citation, selectForCorrection = false, scroll = tru
     if (selectForCorrection) {
       $("citation-block").value = block.block_id;
       $("citation-quote").value = citation.quote || block.text.slice(0, 1600);
+    }
+    if (document.querySelector(".workspace-grid").dataset.view === "review") {
+      setWorkspaceView(window.matchMedia("(max-width: 920px)").matches ? "paper" : "split", false);
     }
     if (!await renderPdf()) return false;
     if (scroll) {
@@ -2027,6 +2059,8 @@ async function importPaper(event) {
 }
 
 $("split").addEventListener("change", async (event) => { state.pdfAbortController?.abort(); state.split = event.target.value; state.papers = []; state.paperId = null; state.bundle = null; state.annotations = null; state.censusDraft = null; state.editingCensus = false; $("workspace").hidden = true; $("empty-title").textContent = "Choose a paper"; $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures."; $("empty-state").hidden = false; try { await loadPapers(); } catch (error) { showStartupError(error); } });
+$("toggle-paper-list").addEventListener("click", () => setPaperListOpen(document.querySelector("main").classList.contains("paper-list-hidden")));
+document.querySelectorAll("[data-workspace-view]").forEach((button) => button.addEventListener("click", () => setWorkspaceView(button.dataset.workspaceView)));
 $("paper-filter").addEventListener("input", renderPapers);
 $("submit-audit").addEventListener("click", submitAudit);
 $("edit-census").addEventListener("click", editSavedCensus);
@@ -2156,6 +2190,8 @@ $("retry-startup").addEventListener("click", startApp);
 
 $("use-email-sign-in").addEventListener("click", showClerkSignIn);
 $("use-project-password").addEventListener("click", showInternalSignIn);
+
+initializeWorkspaceLayout();
 
 $("internal-sign-in").addEventListener("submit", async (event) => {
   event.preventDefault();

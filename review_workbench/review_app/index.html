@@ -28,6 +28,7 @@
   <header>
     <div><span class="eyebrow">PERLA</span><h1>Study ground-truth review</h1></div>
     <div class="header-actions">
+      <button id="toggle-paper-list" type="button" aria-controls="paper-rail" aria-expanded="true">Hide papers</button>
       <label>Dataset <select id="split"><option>calibration</option><option>dev</option><option>test</option></select></label>
       <button id="open-annotations">My edits &amp; undo</button>
       <button id="open-import">Import extraction</button>
@@ -38,7 +39,7 @@
   </header>
 
   <main>
-    <aside class="paper-rail">
+    <aside id="paper-rail" class="paper-rail">
       <div class="rail-heading"><h2>Papers</h2><span id="paper-count"></span></div>
       <input id="paper-filter" type="search" placeholder="Filter papers…" />
       <p id="paper-load-status" class="muted" role="status">Loading papers…</p>
@@ -55,6 +56,11 @@
       <div class="study-heading">
         <div><span id="paper-split" class="eyebrow"></span><h2 id="paper-title"></h2><p id="paper-doi"></p></div>
         <div class="study-actions">
+          <div class="workspace-view-switch" role="group" aria-label="Workspace view">
+            <button type="button" data-workspace-view="split" aria-pressed="true">Both</button>
+            <button type="button" data-workspace-view="paper" aria-pressed="false">Paper</button>
+            <button type="button" data-workspace-view="review" aria-pressed="false">Review</button>
+          </div>
           <span id="revision" class="pill"></span>
           <button id="download-review-workbook" type="button" class="primary">Download Excel</button>
           <button id="open-files" type="button">Files &amp; upload</button>

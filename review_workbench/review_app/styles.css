@@ -26,6 +26,8 @@ h1,h2,h3,h4,p { margin-top:0; } h1 { font-size:1.35rem; margin-bottom:0; } h2 { 
 .header-actions label { display:flex; align-items:center; gap:.4rem; }
 .pill { background:var(--brand-soft); color:var(--brand); padding:.35rem .65rem; border-radius:99px; font-size:.8rem; }
 main { display:grid; grid-template-columns:260px 1fr; height:calc(100vh - 76px); }
+main.paper-list-hidden { grid-template-columns:1fr; }
+main.paper-list-hidden .paper-rail { display:none; }
 .paper-rail { padding:18px; border-right:1px solid var(--line); background:white; overflow:auto; }
 .paper-rail input { width:100%; margin-bottom:12px; }
 input,select,textarea { border:1px solid var(--line); border-radius:7px; padding:.55rem .65rem; background:white; color:var(--ink); }
@@ -42,6 +44,9 @@ label { display:grid; gap:.35rem; font-size:.82rem; color:var(--muted); }
 .study-heading > div:first-child { flex:1 1 280px; min-width:0; }
 .study-heading p { margin:0; color:var(--muted); }
 .study-actions { flex-wrap:wrap; justify-content:flex-end; }
+.workspace-view-switch { display:flex; gap:2px; padding:3px; border-radius:9px; background:var(--wash); }
+.workspace-view-switch button { border:0; padding:.35rem .55rem; background:transparent; color:var(--muted); }
+.workspace-view-switch button[aria-pressed="true"] { background:white; color:var(--brand); box-shadow:0 1px 4px #17201d1f; }
 .file-action-status { flex:1 0 100%; padding-top:8px; font-size:.78rem; }
 .files-dialog-card { width:min(720px,92vw); }
 .file-section { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px 18px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:10px; }
@@ -53,6 +58,8 @@ label { display:grid; gap:.35rem; font-size:.82rem; color:var(--muted); }
 .workbook-upload input { width:100%; max-width:100%; font-size:.78rem; }
 #files-status { min-height:1.25em; margin:0; }
 .workspace-grid { display:grid; grid-template-columns:minmax(420px, 1.05fr) minmax(430px, .95fr); gap:14px; height:calc(100vh - 190px); }
+.workspace-grid[data-view="paper"],.workspace-grid[data-view="review"] { grid-template-columns:minmax(0,1fr); }
+.workspace-grid[data-view="paper"] .review-panel,.workspace-grid[data-view="review"] .pdf-panel { display:none; }
 .pdf-panel,.review-panel { min-width:0; background:white; border:1px solid var(--line); border-radius:12px; overflow:auto; }
 .review-panel { container:review-panel / inline-size; }
 .panel-toolbar { position:sticky; top:0; background:white; padding:10px; border-bottom:1px solid var(--line); z-index:2; }
@@ -234,5 +241,6 @@ button:disabled,select:disabled { cursor:not-allowed; opacity:.55; }
   .value-evidence-actions { display:flex; flex-wrap:wrap; width:100%; }
   .value-evidence-actions button { flex:1 1 180px; width:100%; white-space:normal; }
 }
-@media (max-width:1050px) { main { grid-template-columns:220px 1fr; }.workspace-grid { grid-template-columns:1fr; height:auto; }.pdf-panel { max-height:70vh; } }
-@media (max-width:650px) { header { height:auto; min-height:76px; align-items:flex-start; padding:12px; gap:12px; flex-wrap:wrap; }.header-actions { width:100%; flex-wrap:wrap; }.header-actions > * { flex:1 1 auto; } main { display:block; height:auto; min-height:calc(100vh - 76px); }.paper-rail { max-height:250px; border-right:0; border-bottom:1px solid var(--line); }.paper-list { grid-template-columns:repeat(2,minmax(0,1fr)); } #workspace { padding:10px; overflow:visible; }.study-heading { padding:12px; }.study-actions { width:100%; justify-content:flex-start; }.study-actions button { flex:1 1 auto; }.file-section { grid-template-columns:1fr; }.file-section > button,.file-actions button { width:100%; }.file-actions { display:grid; }.workbook-upload { grid-column:1; grid-template-columns:1fr; }.composition-comparison,.context-grid,.record-facts,.editor-fields,.annotation-change { grid-template-columns:1fr; }.decision-actions,.record-management-actions { flex-wrap:wrap; }.decision-actions button { flex:1 1 100%; }.records-toolbar { position:static; }.reported-value { display:grid; }.annotation-paper-actions button { flex:1 1 100%; }.dialog-actions { flex-wrap:wrap; } }
+@media (max-width:920px) { .workspace-grid:not([data-view="paper"]):not([data-view="review"]) { grid-template-columns:1fr; height:auto; }.workspace-grid:not([data-view="paper"]):not([data-view="review"]) .pdf-panel { max-height:70vh; } }
+@media (max-width:900px) { header { height:auto; min-height:76px; align-items:flex-start; padding:12px; gap:12px; flex-wrap:wrap; }.header-actions { width:100%; flex-wrap:wrap; }.header-actions > * { flex:1 1 auto; } main { height:auto; min-height:calc(100vh - 76px); } }
+@media (max-width:650px) { main { display:block; }.paper-rail { max-height:250px; border-right:0; border-bottom:1px solid var(--line); }.paper-list { grid-template-columns:repeat(2,minmax(0,1fr)); } #workspace { padding:10px; overflow:visible; }.study-heading { padding:12px; }.study-actions { width:100%; justify-content:flex-start; }.study-actions > button { flex:1 1 auto; }.workspace-view-switch { width:100%; }.workspace-view-switch button { flex:1; }.file-section { grid-template-columns:1fr; }.file-section > button,.file-actions button { width:100%; }.file-actions { display:grid; }.workbook-upload { grid-column:1; grid-template-columns:1fr; }.composition-comparison,.context-grid,.record-facts,.editor-fields,.annotation-change { grid-template-columns:1fr; }.decision-actions,.record-management-actions { flex-wrap:wrap; }.decision-actions button { flex:1 1 100%; }.records-toolbar { position:static; }.reported-value { display:grid; }.annotation-paper-actions button { flex:1 1 100%; }.dialog-actions { flex-wrap:wrap; } }

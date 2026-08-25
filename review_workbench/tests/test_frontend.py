@@ -80,6 +80,24 @@ def test_record_review_layout_responds_to_panel_width_without_overlays():
     assert ".reported-value { display:grid; }" in styles
 
 
+def test_laptop_layout_can_reclaim_space_and_focus_each_work_surface():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    javascript = (APP / "app.js").read_text(encoding="utf-8")
+    styles = (APP / "styles.css").read_text(encoding="utf-8")
+
+    assert 'id="toggle-paper-list"' in html
+    assert 'data-workspace-view="split"' in html
+    assert 'data-workspace-view="paper"' in html
+    assert 'data-workspace-view="review"' in html
+    assert "function setPaperListOpen" in javascript
+    assert "function setWorkspaceView" in javascript
+    assert 'const LAPTOP_LAYOUT = "(max-width: 1400px)"' in javascript
+    assert 'setWorkspaceView(window.matchMedia("(max-width: 920px)").matches ? "paper" : "split", false)' in javascript
+    assert "main.paper-list-hidden" in styles
+    assert '.workspace-grid[data-view="paper"]' in styles
+    assert '.workspace-grid[data-view="review"]' in styles
+
+
 def test_ui_shows_reported_composition_beside_enrichment_proposals():
     html = (APP / "index.html").read_text(encoding="utf-8")
     javascript = (APP / "app.js").read_text(encoding="utf-8")
