@@ -6,6 +6,7 @@ body { margin:0; color:var(--ink); background:var(--wash); }
 .auth-card { width:min(420px,100%); padding:28px; border:1px solid var(--line); border-radius:14px; background:var(--paper); box-shadow:0 18px 50px #17201d1a; }
 .auth-card > p { color:var(--muted); line-height:1.5; }
 .internal-sign-in { display:grid; gap:14px; margin-top:20px; }
+.internal-sign-in[hidden], #clerk-sign-in[hidden] { display:none; }
 .internal-sign-in input { width:100%; }
 .internal-sign-in button { justify-self:start; min-width:100px; }
 .auth-switch { margin-top:16px; border:0; padding:0; color:var(--brand); background:transparent; text-decoration:underline; text-underline-offset:3px; }

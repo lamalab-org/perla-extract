@@ -6,6 +6,7 @@ APP = Path(__file__).resolve().parents[1] / "review_app"
 def test_deployed_authentication_has_a_recoverable_sign_in_flow():
     html = (APP / "index.html").read_text(encoding="utf-8")
     javascript = (APP / "app.js").read_text(encoding="utf-8")
+    styles = (APP / "styles.css").read_text(encoding="utf-8")
 
     assert 'id="auth-gate"' in html
     assert 'id="internal-sign-in"' in html
@@ -19,6 +20,8 @@ def test_deployed_authentication_has_a_recoverable_sign_in_flow():
     assert "Your session expired. Sign in again" in javascript
     assert 'localStorage.removeItem(REVIEW_TOKEN_KEY)' in javascript
     assert '"Connection problem"' not in javascript
+    assert ".internal-sign-in[hidden]" in styles
+    assert "#clerk-sign-in[hidden]" in styles
 
 
 def test_ui_allows_record_review_before_the_census():
