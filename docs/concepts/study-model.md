@@ -155,9 +155,15 @@ Bounds, ranges, approximations, and other qualifiers therefore remain visible in
 represented with `null`, `not_reported`, or an empty collection as allowed by the
 specific field; the extractor must not create a placeholder value.
 
-## Cross-window identity links
+## Experimental objects before records
 
-Long documents can cause the same entity to be proposed in more than one extraction
-window. `CrossWindowIdentityLink` records positive identity evidence between those
-candidates. It does not merge them or choose a preferred candidate. This keeps
-disagreements and partial records available for inspection and later curation.
+Before constructing this schema, the extractor records experimental objects and
+atomic source claims in a neutral ledger. An object may be a study target, supporting
+context, or uncertain. Its role may describe a device design, processing arm,
+characterization specimen, population, measurement, or stability experiment. These
+roles are evidence for record construction rather than records themselves.
+
+This intermediate layer matters because one paper may characterize many films while
+reporting only one photovoltaic architecture. Claim-reading windows can collect those
+objects independently, but their ledgers are combined before one global call decides
+which objects justify device families and how observations link to them.

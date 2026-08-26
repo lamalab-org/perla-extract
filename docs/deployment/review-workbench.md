@@ -3,7 +3,7 @@
 
 The review workbench is a separate browser application for turning rich model
 extractions into versioned ground truth. It reviews composition, layers, processing,
-performance, population statistics, stability, and explicit identity links without
+performance, population statistics, stability, and record relationships without
 modifying the immutable model seed.
 
 For the scientific protocol, start with [Build ground truth](../workflows/ground-truth-review.md).
@@ -23,7 +23,7 @@ Open <http://127.0.0.1:8765>. The local server uses a local administrator identi
 `8765`.
 
 The application imports `extraction.json`, `document.json`, the main PDF, an optional
-SI, and optional run configuration. Import `coverage_audit.json` and
+SI, and optional run configuration. Import `claim_coverage_audit.json` and
 `refinement_audit.json` as well when they are available. Import
 `targeted_repair.json` to show the evidence-local recovery worklist and whether its
 patch passed the quality gates. Import `enrichment.json` to

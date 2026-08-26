@@ -1,7 +1,7 @@
-from perla_extract.study_extraction.inventory import (
-    EvidenceInventory,
-    InventoryItem,
-    audit_inventory_coverage,
+from perla_extract.study_extraction.claims import (
+    ClaimLedger,
+    ExperimentalObject,
+    audit_claim_coverage,
 )
 from perla_extract.study_extraction.models import (
     DeviceFamily,
@@ -10,7 +10,11 @@ from perla_extract.study_extraction.models import (
     PaperMetadata,
     StudyExtraction,
 )
-from perla_extract.study_extraction.repair import StudyRepair, run_targeted_repair
+from perla_extract.study_extraction.repair import (
+    RecordRemoval,
+    StudyRepair,
+    run_targeted_repair,
+)
 from perla_extract.study_extraction.validation import validate_study
 
 
@@ -48,12 +52,12 @@ def repair_with_family(item: DeviceFamily) -> StudyRepair:
         performance_observations=[],
         population_statistics=[],
         stability_tests=[],
-        identity_links=[],
+        removals=[],
         unresolved_notes=[],
     )
 
 
-def test_targeted_repair_recovers_an_inventory_miss_from_local_text():
+def test_targeted_repair_recovers_a_claim_miss_from_local_text():
     citation = EvidenceCitation(
         block_id="b1", quote="Device B used a distinct fabrication route"
     )
@@ -64,19 +68,20 @@ def test_targeted_repair_recovers_an_inventory_miss_from_local_text():
         kind="paragraph",
         text="Device B used a distinct fabrication route.",
     )
-    inventory = EvidenceInventory(
-        items=[
-            InventoryItem(
-                item_id="inventory-b",
-                kind="device_family",
+    ledger = ClaimLedger(
+        objects=[
+            ExperimentalObject(
+                object_id="object-b",
+                role="device_design",
+                scope="target",
                 label="Device B",
                 evidence=[citation],
             )
         ],
-        exclusions=[],
+        claims=[],
     )
     study = empty_study()
-    coverage = audit_inventory_coverage(inventory, study)
+    coverage = audit_claim_coverage(ledger, study)
 
     class FakeClient:
         def complete(self, **request):
@@ -88,7 +93,7 @@ def test_targeted_repair_recovers_an_inventory_miss_from_local_text():
         client=FakeClient(),
         study=study,
         blocks=[block],
-        inventory=inventory,
+        ledger=ledger,
         coverage=coverage,
         validation=validate_study(study, [block]),
         model="provider/model",
@@ -98,7 +103,7 @@ def test_targeted_repair_recovers_an_inventory_miss_from_local_text():
 
     assert audit.status == "accepted"
     assert [item.family_id for item in repaired.device_families] == ["family-b"]
-    assert audit.after_quality["uncovered_inventory_items"] == 0
+    assert audit.after_quality["semantic_issues"] == 0
 
 
 def test_targeted_repair_rejects_a_patch_that_breaks_grounding():
@@ -121,7 +126,7 @@ def test_targeted_repair_rejects_a_patch_that_breaks_grounding():
         client=FakeClient(),
         study=study,
         blocks=[block],
-        inventory=None,
+        ledger=None,
         coverage=None,
         validation=validation,
         model="provider/model",
@@ -131,3 +136,58 @@ def test_targeted_repair_rejects_a_patch_that_breaks_grounding():
 
     assert audit.status == "rejected"
     assert repaired == study
+
+
+def test_targeted_repair_can_remove_an_unclaimed_characterization_family():
+    evidence = EvidenceCitation(block_id="b1", quote="film used for spectroscopy")
+    block = EvidenceBlock(
+        block_id="b1",
+        source="supplement",
+        page=1,
+        kind="paragraph",
+        text="A thin film used for spectroscopy was prepared.",
+    )
+    study = empty_study().model_copy(update={"device_families": [family(evidence)]})
+    ledger = ClaimLedger(
+        objects=[
+            ExperimentalObject(
+                object_id="spectroscopy-film",
+                role="characterization_specimen",
+                scope="context",
+                label="thin spectroscopy film",
+                evidence=[evidence],
+            )
+        ],
+        claims=[],
+    )
+    coverage = audit_claim_coverage(ledger, study)
+
+    class FakeClient:
+        def complete(self, **request):
+            return StudyRepair(
+                device_families=[],
+                individual_devices=[],
+                performance_observations=[],
+                population_statistics=[],
+                stability_tests=[],
+                removals=[
+                    RecordRemoval(record_kind="device_family", record_id="family-b")
+                ],
+                unresolved_notes=[],
+            )
+
+    repaired, audit = run_targeted_repair(
+        client=FakeClient(),
+        study=study,
+        blocks=[block],
+        ledger=ledger,
+        coverage=coverage,
+        validation=validate_study(study, [block]),
+        model="provider/model",
+        reasoning_effort=None,
+        max_output_tokens=1000,
+    )
+
+    assert audit.status == "accepted"
+    assert repaired.device_families == []
+    assert audit.after_quality["semantic_issues"] == 0

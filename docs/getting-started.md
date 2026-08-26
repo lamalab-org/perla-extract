@@ -18,8 +18,8 @@ pip install -e '.[dev,docs]'
 
 ## Inspect the planned run
 
-`--dry-run` parses and caches the documents, chooses single or windowed mode, and
-writes a call estimate without contacting a model provider:
+`--dry-run` parses and caches the documents, chooses a single or windowed claim-reading
+mode, and writes a call estimate without contacting a model provider:
 
 ```bash
 perla-extract \
@@ -60,10 +60,10 @@ suffix preserves the previous quality-first routing for the default OpenRouter m
 | `extraction.json` | Complete rich study result, including records that need review |
 | `grounded_values.json` | Conservative subset of reported values that passed local source checks |
 | `validation.json` | Evidence, identifier, and relationship findings |
-| `evidence_inventory.json` | Independent, value-free record inventory used for routing and recall review |
-| `inventory_grounding.json` | Inventory candidates admitted to or rejected from extraction guidance |
-| `evidence_routing.json` | Auditable block-selection decisions; the complete parse remains preserved |
-| `coverage_audit.json` | Covered, possible, and unmatched inventory candidates |
+| `claim_ledger.json` | Experimental objects and atomic source claims collected before record construction |
+| `claim_grounding.json` | Ledger entries admitted to or rejected from assembly guidance |
+| `claim_window_plan.json` | Single-call or section-aware claim-reading plan |
+| `claim_coverage_audit.json` | Covered, possible, unmatched, context, and unsupported-record findings |
 | `targeted_repair.json` | Evidence-local repair worklist, proposed-record counts, quality gates, and decision |
 | `citation_repairs.json` | Audited non-contiguous-quote and unique-pointer repairs |
 | `document.json` | Model-facing scientific evidence blocks with source and page locations |
@@ -75,19 +75,17 @@ suffix preserves the previous quality-first routing for the default OpenRouter m
 | `enrichment.json` | Absorber-scoped composition and processing proposals with deterministic decisions |
 | `draft_extraction.json` | First complete-study result retained before the default quality pass |
 | `refinement_audit.json` | Record IDs added, removed, or changed by the complete-study quality pass |
-| `quality_comparison.json` | Draft-versus-final evidence issue and inventory coverage counts |
+| `quality_comparison.json` | Draft-versus-final validation and semantic claim-coverage counts |
 | `reduced.json` | Optional historical export when `--reduced-export` is passed |
 
-Windowed runs additionally write `window_plan.json`, first-pass results under
-`draft_windows/`, their lossless `draft_candidates.json` union, change indexes under
-`refinement_audits/`, refined per-window results,
-`candidates.json`, and—when cross-window linking is attempted—`identity_links.json`.
-Requests and preserved failure responses are stored under `requests/`.
+When claim collection is windowed, every window still contributes to one combined
+`claim_ledger.json`; final study assembly remains global. Requests and preserved
+failure responses are stored under `requests/`.
 
-`report.json` uses `complete` only when local validation and inventory coverage report
+`report.json` uses `complete` only when local validation and claim coverage report
 no findings.
 `complete_needs_review` means the model call completed but at least one local check
-needs attention. `partial` means a window, identity-linking call, or conversion failed
+needs attention. `partial` means a claim-reading window, optional call, or conversion failed
 while inspectable output was still produced; `failed` means no model call succeeded.
 
 ## Caching and repeatability

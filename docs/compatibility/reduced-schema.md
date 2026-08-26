@@ -53,7 +53,7 @@ processing conditions, protocol identity, and ordered stability checkpoints.
 
 A reduced cell does not retain enough information to reconstruct stable rich entity
 identifiers, multiple measurement protocols for one device, ordered stability
-checkpoints, complete evidence, or cross-window candidate identity. Converting it
+checkpoints, complete evidence, or the pre-assembly source-claim ledger. Converting it
 back could therefore create only a partial rich record; it cannot recover values that
 were never encoded. The authoritative ground truth should remain `StudyExtraction`.
 

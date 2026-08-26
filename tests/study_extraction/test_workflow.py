@@ -1,11 +1,11 @@
 import json
 from pathlib import Path
 
+from perla_extract.study_extraction.claims import ClaimLedger, ExperimentalObject
 from perla_extract.study_extraction.guidance import (
     DEVICE_FAMILY_POLICY,
     SHARED_QUANTITY_POLICY,
 )
-from perla_extract.study_extraction.inventory import InventoryItem
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
     EvidenceBlock,
@@ -19,9 +19,8 @@ from perla_extract.study_extraction.models import (
 from perla_extract.study_extraction.refinement import REFINEMENT_PROMPT
 from perla_extract.study_extraction.repair import REPAIR_PROMPT
 from perla_extract.study_extraction.workflow import (
+    CLAIM_LEDGER_PROMPT,
     EXTRACTION_PROMPT,
-    IDENTITY_LINK_PROMPT,
-    INVENTORY_PROMPT,
     ExtractionConfig,
     _gate_final_candidate_against_draft,
     _run_model_calls,
@@ -38,9 +37,11 @@ class RecordingClient:
 
     def __init__(self) -> None:
         self.prompts: list[str] = []
+        self.kinds: list[str] = []
 
     def complete(self, **request):
         self.prompts.append(request["prompt"])
+        self.kinds.append(request["kind"])
         return StudyExtraction(
             paper=PaperMetadata(title=None, doi=None),
             device_families=[],
@@ -57,14 +58,13 @@ def test_every_semantic_pass_uses_the_same_device_family_boundary():
 
     for prompt in (
         EXTRACTION_PROMPT,
-        INVENTORY_PROMPT,
-        IDENTITY_LINK_PROMPT,
+        CLAIM_LEDGER_PROMPT,
         REFINEMENT_PROMPT,
         REPAIR_PROMPT,
     ):
         assert DEVICE_FAMILY_POLICY in prompt
     assert "processing/composition variant" not in EXTRACTION_PROMPT
-    assert "processing/composition variants" not in INVENTORY_PROMPT
+    assert "processing/composition variants" not in CLAIM_LEDGER_PROMPT
     assert "characterization-only partial structures" in REFINEMENT_PROMPT
 
 
@@ -73,7 +73,9 @@ def test_value_producing_passes_share_the_atomic_shared_quantity_rule():
 
     for prompt in EXTRACTION_PROMPT, REFINEMENT_PROMPT, REPAIR_PROMPT:
         assert SHARED_QUANTITY_POLICY in prompt
-    assert "Equal values for different materials are not duplicates" in EXTRACTION_PROMPT
+    assert (
+        "Equal values for different materials are not duplicates" in EXTRACTION_PROMPT
+    )
 
 
 def test_dry_run_writes_a_complete_request_plan(tmp_path):
@@ -114,7 +116,30 @@ def test_dry_run_writes_a_complete_request_plan(tmp_path):
     )
 
 
-def test_quality_pass_receives_grounded_inventory_and_retains_draft(tmp_path):
+def test_no_claims_dry_run_reports_the_stage_as_disabled(tmp_path):
+    report = run_extraction(
+        ExtractionConfig(
+            pdf=FIXTURE,
+            supplement=None,
+            output_dir=tmp_path / "output",
+            parser="pymupdf",
+            document_cache_dir=tmp_path / "documents",
+            model_cache_dir=tmp_path / "models",
+            use_claim_ledger=False,
+            use_refinement=False,
+            use_enrichment=False,
+            use_targeted_repair=False,
+            dry_run=True,
+        )
+    )
+
+    assert report["claim_mode"] == "disabled"
+    assert report["planned_claim_calls"] == 0
+    plan = json.loads((tmp_path / "output" / "claim_window_plan.json").read_text())
+    assert plan == {"mode": "disabled", "approximate_request_tokens": 0, "windows": []}
+
+
+def test_quality_pass_receives_grounded_claims_and_retains_draft(tmp_path):
     block = EvidenceBlock(
         block_id="result",
         source="main",
@@ -122,11 +147,17 @@ def test_quality_pass_receives_grounded_inventory_and_retains_draft(tmp_path):
         kind="text",
         text="The control device reached 20.1% efficiency.",
     )
-    inventory = InventoryItem(
-        item_id="candidate-1",
-        kind="device_family",
-        label="control device",
-        evidence=[EvidenceCitation(block_id="result", quote="control device")],
+    ledger = ClaimLedger(
+        objects=[
+            ExperimentalObject(
+                object_id="candidate-1",
+                role="device_design",
+                scope="target",
+                label="control device",
+                evidence=[EvidenceCitation(block_id="result", quote="control device")],
+            )
+        ],
+        claims=[],
     )
     client = RecordingClient()
     config = ExtractionConfig(
@@ -136,14 +167,13 @@ def test_quality_pass_receives_grounded_inventory_and_retains_draft(tmp_path):
         parser="pymupdf",
     )
 
-    result, draft_result, errors = _run_model_calls(
-        config, client, [block], "single", None, [inventory]
-    )
+    result, draft_result, errors = _run_model_calls(config, client, [block], ledger)
 
     assert errors == []
     assert result.unresolved_notes == ["pass 2"]
     assert draft_result is not None
     assert draft_result.unresolved_notes == ["pass 1"]
+    assert client.kinds == ["complete_study", "study_refinement"]
     assert "candidate-1" in client.prompts[0]
     assert "DRAFT EXTRACTION" in client.prompts[1]
     draft = StudyExtraction.model_validate_json(
@@ -198,9 +228,7 @@ def test_refinement_is_rejected_when_the_grounded_draft_strictly_dominates():
     draft = candidate([("40 ms", 40)])
     refinement = candidate([("60 ms", 60), ("80 ms", 80)])
 
-    selected, audit = _select_refinement_candidate(
-        draft, refinement, [block], None
-    )
+    selected, audit = _select_refinement_candidate(draft, refinement, [block], None)
 
     assert selected == draft
     assert audit["selected"] == "draft"
@@ -253,9 +281,7 @@ def test_refinement_may_remove_grounded_values_to_correct_entity_precision():
     draft = candidate(["40 ms", "80 ms"])
     refinement = candidate(["40 ms"])
 
-    selected, selection = _select_refinement_candidate(
-        draft, refinement, [block], None
-    )
+    selected, selection = _select_refinement_candidate(draft, refinement, [block], None)
     final, audit = _gate_final_candidate_against_draft(
         draft, selected, [block], None, selection
     )
@@ -308,9 +334,7 @@ def test_final_candidate_cannot_trade_validation_for_more_values():
         )
 
     draft = candidate([("40 ms", 40)])
-    candidate_with_extra_unsupported_value = candidate(
-        [("40 ms", 40), ("80 ms", 80)]
-    )
+    candidate_with_extra_unsupported_value = candidate([("40 ms", 40), ("80 ms", 80)])
     selected, audit = _gate_final_candidate_against_draft(
         draft,
         candidate_with_extra_unsupported_value,

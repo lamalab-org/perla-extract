@@ -1,10 +1,10 @@
 """Run one bounded, evidence-local recovery pass for visible extraction gaps.
 
-The main extraction remains the source of truth.  This module turns independent
-coverage misses and deterministic validation findings into a small worklist, supplies
+The main extraction remains the source of truth. This module turns claim-coverage
+misses and deterministic validation findings into a small worklist, supplies
 only the implicated parser text/table blocks, and accepts a proposed patch only when
-it does not reduce grounded content or coverage.  It never reads rendered pages or
-uses a vision model.
+it does not worsen validation or semantic claim coverage. It never reads rendered
+pages or uses a vision model.
 """
 
 from __future__ import annotations
@@ -15,10 +15,9 @@ from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import Field
 
+from .claims import ClaimLedger, audit_claim_coverage
 from .guidance import DEVICE_FAMILY_POLICY, SHARED_QUANTITY_POLICY
-from .inventory import EvidenceInventory, audit_inventory_coverage
 from .models import (
-    CrossWindowIdentityLink,
     DeviceFamily,
     EvidenceBlock,
     IndividualDevice,
@@ -35,8 +34,10 @@ if TYPE_CHECKING:
     from .client import ModelClient
 
 RepairReason = Literal[
-    "inventory_possible_match",
-    "inventory_unmatched",
+    "claim_possible_match",
+    "claim_unmatched",
+    "unclaimed_record",
+    "shared_quantity_scope",
     "validation_issue",
     "absorber_scope",
 ]
@@ -61,7 +62,10 @@ Rules:
 - Scope each formula, constituent, and absorber property to one absorber or subcell.
 - Copy raw values from the supplied evidence spans.
 - Cite only supplied span IDs. Do not repair unreadable chemistry by guessing.
-- Do not delete records. Explain unresolved gaps in unresolved_notes.
+- Remove a complete top-level record only when the worklist identifies it as
+  unclaimed and the supplied evidence establishes that it is a processing arm,
+  characterization specimen, duplicate, or otherwise outside the target schema.
+- Explain a gap in unresolved_notes when the evidence cannot support a safe repair.
 """
 
 
@@ -89,8 +93,15 @@ class StudyRepair(StrictModel):
     performance_observations: list[PerformanceObservation]
     population_statistics: list[PopulationStatistic]
     stability_tests: list[StabilityTest]
-    identity_links: list[CrossWindowIdentityLink]
+    removals: list["RecordRemoval"]
     unresolved_notes: Annotated[list[ShortText], Field(max_length=100)]
+
+
+class RecordRemoval(StrictModel):
+    """Request deletion of one complete record exposed as semantically unclaimed."""
+
+    record_kind: str
+    record_id: str
 
 
 class RepairAudit(StrictModel):
@@ -111,7 +122,6 @@ _COLLECTIONS = {
     "performance_observation": ("performance_observations", "observation_id"),
     "population_statistic": ("population_statistics", "population_id"),
     "stability_test": ("stability_tests", "test_id"),
-    "identity_link": ("identity_links", "link_id"),
 }
 
 
@@ -165,14 +175,20 @@ def build_repair_worklist(
 
     items: list[RepairWorkItem] = []
     for candidate in (coverage or {}).get("items", []):
-        if not isinstance(candidate, dict) or candidate.get("status") == "covered":
+        if not isinstance(candidate, dict) or candidate.get("status") in {
+            "covered",
+            "context",
+        }:
             continue
         evidence = candidate.get("evidence", [])
         candidate_ids = [
             str(item) for item in candidate.get("candidate_record_ids", [])
         ]
         current_blocks: set[str] = set()
-        collection_details = _COLLECTIONS.get(str(candidate.get("kind", "")))
+        record_kind = str(
+            candidate.get("record_kind") or candidate.get("kind") or "unknown"
+        )
+        collection_details = _COLLECTIONS.get(record_kind)
         if collection_details:
             collection, id_field = collection_details
             current_blocks.update(
@@ -184,11 +200,19 @@ def build_repair_worklist(
         items.append(
             RepairWorkItem(
                 reason=(
-                    "inventory_possible_match"
-                    if candidate.get("status") == "possible_match"
-                    else "inventory_unmatched"
+                    "unclaimed_record"
+                    if candidate.get("status") == "unclaimed"
+                    else (
+                        "shared_quantity_scope"
+                        if candidate.get("missing_shared_targets")
+                        else (
+                            "claim_possible_match"
+                            if candidate.get("status") == "possible_match"
+                            else "claim_unmatched"
+                        )
+                    )
                 ),
-                record_kind=str(candidate.get("kind", "unknown")),
+                record_kind=record_kind,
                 record_ids=candidate_ids,
                 block_ids=sorted(
                     {
@@ -198,7 +222,15 @@ def build_repair_worklist(
                     }
                     | current_blocks
                 ),
-                detail=f"Inventory candidate {candidate.get('item_id')}: {candidate.get('label')}",
+                detail=(
+                    f"Source claim {candidate.get('claim_id') or candidate.get('object_id') or candidate.get('source_id')}: "
+                    f"{candidate.get('label')}"
+                    + (
+                        f"; missing atomic targets={candidate.get('missing_shared_targets')}"
+                        if candidate.get("missing_shared_targets")
+                        else ""
+                    )
+                ),
             )
         )
     for finding in validation.get("issues", []):
@@ -231,7 +263,9 @@ def build_repair_worklist(
     return RepairWorklist(items=list(unique.values()))
 
 
-def _upsert(current: list[object], proposed: list[object], id_field: str) -> list[object]:
+def _upsert(
+    current: list[object], proposed: list[object], id_field: str
+) -> list[object]:
     """Replace matching IDs and append new IDs while preserving untouched records."""
 
     replacements = {str(getattr(item, id_field)): item for item in proposed}
@@ -244,9 +278,15 @@ def apply_repair(study: StudyExtraction, repair: StudyRepair) -> StudyExtraction
     """Apply a typed patch at record boundaries so partial objects cannot leak in."""
 
     changes: dict[str, object] = {}
-    for _, (collection, id_field) in _COLLECTIONS.items():
+    removals = {(item.record_kind, item.record_id) for item in repair.removals}
+    for kind, (collection, id_field) in _COLLECTIONS.items():
+        retained = [
+            item
+            for item in getattr(study, collection)
+            if (kind, str(getattr(item, id_field))) not in removals
+        ]
         changes[collection] = _upsert(
-            list(getattr(study, collection)), list(getattr(repair, collection)), id_field
+            retained, list(getattr(repair, collection)), id_field
         )
     changes["unresolved_notes"] = list(
         dict.fromkeys([*study.unresolved_notes, *repair.unresolved_notes])
@@ -257,20 +297,20 @@ def apply_repair(study: StudyExtraction, repair: StudyRepair) -> StudyExtraction
 def candidate_quality(
     study: StudyExtraction,
     blocks: list[EvidenceBlock],
-    inventory: EvidenceInventory | None,
+    ledger: ClaimLedger | None,
 ) -> dict[str, int]:
     """Summarize grounded signals for comparing two extraction candidates."""
 
     validation = validate_study(study, blocks)
     uncovered = 0
-    if inventory is not None:
-        counts = audit_inventory_coverage(inventory, study)["counts"]
-        uncovered = int(counts["possible_match"]) + int(counts["unmatched"])
+    if ledger is not None:
+        coverage = audit_claim_coverage(ledger, study)
+        uncovered = int(coverage["issue_count"])
     return {
         "validation_issues": len(validation["issues"]),
         "reported_values": int(validation["counts"]["reported_values"]),
         "source_verified_values": int(validation["counts"]["source_verified_values"]),
-        "uncovered_inventory_items": uncovered,
+        "semantic_issues": uncovered,
     }
 
 
@@ -279,9 +319,7 @@ def is_monotonic_quality(before: dict[str, int], after: dict[str, int]) -> bool:
 
     return (
         after["validation_issues"] <= before["validation_issues"]
-        and after["reported_values"] >= before["reported_values"]
-        and after["source_verified_values"] >= before["source_verified_values"]
-        and after["uncovered_inventory_items"] <= before["uncovered_inventory_items"]
+        and after["semantic_issues"] <= before["semantic_issues"]
     )
 
 
@@ -296,6 +334,17 @@ def _proposal_is_scoped(proposed: StudyRepair, worklist: RepairWorklist) -> bool
             return False
         if len(identifiers) != len(set(identifiers)):
             return False
+    removable = {
+        (item.record_kind, record_id)
+        for item in worklist.items
+        if item.reason == "unclaimed_record"
+        for record_id in item.record_ids
+    }
+    if any(
+        (item.record_kind, item.record_id) not in removable
+        for item in proposed.removals
+    ):
+        return False
     return True
 
 
@@ -304,7 +353,7 @@ def run_targeted_repair(
     client: ModelClient,
     study: StudyExtraction,
     blocks: list[EvidenceBlock],
-    inventory: EvidenceInventory | None,
+    ledger: ClaimLedger | None,
     coverage: dict[str, object] | None,
     validation: dict[str, object],
     model: str,
@@ -331,8 +380,9 @@ def run_targeted_repair(
             if block_id in known
         }
     )
-    before = candidate_quality(study, blocks, inventory)
+    before = candidate_quality(study, blocks, ledger)
     empty_counts = {name: 0 for name, _ in _COLLECTIONS.values()}
+    empty_counts["removals"] = 0
     if not worklist.items or not selected_ids:
         return study, RepairAudit(
             status="not_needed",
@@ -350,9 +400,7 @@ def run_targeted_repair(
     selected_blocks = [known[block_id] for block_id in selected_ids]
     evidence = evidence_payload(selected_blocks)
     evidence_spans = build_evidence_spans(selected_blocks)
-    record_ids = {
-        record_id for item in worklist.items for record_id in item.record_ids
-    }
+    record_ids = {record_id for item in worklist.items for record_id in item.record_ids}
     current_records = {
         collection: [
             compact_to_span_citations(record, evidence_spans)
@@ -394,6 +442,7 @@ def run_targeted_repair(
         collection: len(getattr(proposed, collection))
         for collection, _ in _COLLECTIONS.values()
     }
+    counts["removals"] = len(proposed.removals)
     if not any(counts.values()) and not proposed.unresolved_notes:
         return study, RepairAudit(
             status="no_change",
@@ -425,7 +474,7 @@ def run_targeted_repair(
             after_quality=before,
             reason="the patch did not change the extraction",
         )
-    after = candidate_quality(candidate, blocks, inventory)
+    after = candidate_quality(candidate, blocks, ledger)
     accepted = is_monotonic_quality(before, after)
     return (
         candidate if accepted else study,
@@ -436,6 +485,8 @@ def run_targeted_repair(
             proposed_record_counts=counts,
             before_quality=before,
             after_quality=after,
-            reason=None if accepted else "proposed patch failed monotonic quality gates",
+            reason=None
+            if accepted
+            else "proposed patch failed monotonic quality gates",
         ),
     )

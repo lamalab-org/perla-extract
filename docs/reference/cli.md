@@ -28,13 +28,13 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--parser [docling|pymupdf]` | `docling` | Explicit parser backend |
-| `--mode [auto|single|windowed]` | `auto` | Complete-study or long-document execution path |
-| `--single-call-max-input-tokens INTEGER` | `90000` | Estimated request limit used by auto mode |
-| `--window-input-tokens INTEGER` | `60000` | Request budget used to size structural windows |
+| `--claim-mode [auto|single|windowed]` | `auto` | One-call or windowed source-claim collection |
+| `--single-call-max-input-tokens INTEGER` | `90000` | Claim-input estimate at which auto mode uses windows |
+| `--claim-window-input-tokens INTEGER` | `60000` | Request budget used to size claim-reading windows |
 | `--dry-run` | off | Parse, plan, and write an estimate without a model call |
-| `--inventory / --no-inventory` | inventory | Independently inventory records, route evidence, and audit recall |
-| `--inventory-model TEXT` | `openrouter/openai/gpt-5.6-terra:exacto` | Balanced model for the compact inventory |
-| `--inventory-max-output-tokens INTEGER` | `20000` | Completion limit for the value-free inventory |
+| `--claims / --no-claims` | claims | Collect and ground objects and atomic source claims before assembly |
+| `--claim-model TEXT` | extraction model | LiteLLM model used for claim collection |
+| `--claim-max-output-tokens INTEGER` | `30000` | Completion limit for each claim-collection call |
 | `--enrichment / --no-enrichment` | enrichment | Run the audited composition and processing interpretation stage |
 | `--enrichment-model TEXT` | extraction model | Model used for the two compact enrichment calls |
 | `--enrichment-max-output-tokens INTEGER` | `20000` | Completion limit for each enrichment call |
@@ -49,6 +49,10 @@ alternative; parser failures never silently change backends. Complete parser res
 are cached using the source, backend and dependency version, block schema, and parser
 implementation. Only parser-labelled references and document furniture are withheld
 from the model-facing evidence view.
+
+Only claim collection uses windows. The grounded ledgers from all windows are combined
+before a single global study-assembly call, so the final schema is never constructed
+independently per window and merged afterward.
 
 ## Model request
 
@@ -68,7 +72,7 @@ OpenRouter routing without provider-specific client logic. All requests set seed
 reproducibility still depends on the selected provider and model version.
 
 Refinement is enabled in the quality-first default. It adds one detailed model call
-while leaving inventory and enrichment unchanged. The draft uses a shared citation
+while leaving claim collection and enrichment unchanged. The draft uses a shared citation
 catalog in this request, so repeated source quotations do not dominate its input. For
 cost experiments, compare `--no-refinement` and cheaper `--refinement-model` settings
 against frozen ground truth rather than treating lower spend as equivalent quality.

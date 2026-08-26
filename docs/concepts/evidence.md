@@ -104,5 +104,7 @@ completeness. It cannot independently determine whether:
 - the paper itself leaves a relationship ambiguous.
 
 Those questions belong to the [ground-truth workflow](../workflows/ground-truth-review.md).
-`coverage_audit.json` helps by comparing an independent, value-free record inventory
-with the detailed extraction, but unmatched candidates still require adjudication.
+`claim_coverage_audit.json` helps by comparing the grounded source-claim ledger with
+the assembled study. It distinguishes study targets from context specimens, flags
+top-level records unsupported by target objects, and checks explicitly shared
+quantities target by target. Unmatched or uncertain claims still require adjudication.

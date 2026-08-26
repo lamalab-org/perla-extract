@@ -29,27 +29,25 @@ perla-extract \
   --output-dir results/paper
 ```
 
-This profile combines five independent safeguards:
+This profile combines five complementary safeguards:
 
 1. Docling preserves document structure in parser-independent evidence blocks.
-2. A value-free inventory searches for reporting-level candidates and guides recall.
-3. The frontier extraction model creates a complete draft, followed by an
-   evidence-complete refinement pass over the same sources. If the draft has no more
-   grounding issues and no fewer source-verified values, with at least one strict
-   improvement, it remains the review seed; the alternate refinement is retained for
-   audit rather than silently replacing it.
+2. A neutral, source-grounded ledger separates experimental objects and atomic claims
+   from final database records. Long papers use windows only to collect this ledger.
+3. The frontier extraction model globally assembles one complete draft from the
+   combined ledger and cited passages, followed by an evidence-complete reconciliation
+   pass over the same sources. The alternate remains available for audit.
 4. Deterministic validation checks exact evidence, atomic values, identifiers, and
    links.
-5. One bounded repair call revisits only audit-visible gaps using implicated parser
-   text/table blocks, then monotonic gates prevent it from trading away grounded data;
-   separate enrichment calls propose composition and processing interpretations.
+5. One bounded repair call revisits only audit-visible gaps or exact unsupported
+   records using implicated text/table blocks; separate enrichment calls propose
+   composition and processing interpretations.
 
-Refinement and repair are also checked together against the immutable draft before the
-seed is written. The final candidate may not increase validation issues, lose reported
-or source-verified values, or worsen inventory coverage. This second gate matters
-because a repair can be locally non-worsening relative to a refinement while the pair
-is still worse than the original draft. No weighted score is allowed to trade evidence
-correctness for additional records.
+Refinement and repair are checked against the immutable draft before the seed is
+written. A candidate may not increase validation or semantic claim-coverage issues.
+The gate deliberately does not demand at least as many records or values: an
+unsupported extra family is an error, and removing it must be allowed. No weighted
+score trades evidence correctness for a larger output.
 
 No stage sends rendered pages to a vision model. Parser failures in chemical notation
 remain visible for review instead of being silently reconstructed from an image.
@@ -71,7 +69,7 @@ Before import, require:
 - a schema-valid `extraction.json`;
 - `validation.json` with no unresolved evidence issue;
 - `document.json`, `run_configuration.json`, and `report.json`;
-- the independent `coverage_audit.json` and `refinement_audit.json`; and
+- `claim_ledger.json`, `claim_coverage_audit.json`, and `refinement_audit.json`;
 - `targeted_repair.json`, including its worklist and acceptance decision; and
 - the exact main-paper and supplement hashes.
 
@@ -137,10 +135,10 @@ Run controlled ablations with identical sources, parser output, schema, scoring 
 and cache policy. Change one component at a time:
 
 1. refinement model or `--no-refinement`;
-2. inventory model or `--no-inventory`;
+2. claim-collection model or `--no-claims`;
 3. enrichment model or `--no-enrichment`;
 4. primary extraction model; and
-5. parser backend or long-document window budget.
+5. parser backend or claim-reading window budget.
 
 Measure at least:
 
@@ -161,7 +159,7 @@ acceptable on development data, then evaluate it once on the held-out test set.
 
 On one 6-page Science paper with a 35-page supplement, citation-catalog compaction
 reduced the refinement input from 174,116 to 84,778 tokens and the refinement charge
-from about $2.20 to $0.79. A fresh inventory, primary draft, and compact refinement
+from about $2.20 to $0.79. A fresh claim ledger, primary draft, and compact refinement
 would cost approximately $1.57 before optional enrichment for the higher-recall run.
 
 This is a calibration observation, not a universal price estimate or quality result.

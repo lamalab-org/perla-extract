@@ -1,6 +1,6 @@
 """Shared semantic rules for concepts used by several model passes.
 
-Keeping these rules in one place prevents the inventory, extraction, refinement, and
+Keeping these rules in one place prevents claim collection, extraction, refinement, and
 repair calls from assigning subtly different meanings to the same scientific entity.
 """
 

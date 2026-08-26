@@ -1,204 +1,147 @@
 <!-- generated-by: gsd-doc-writer -->
 # Extract a study
 
-The workflow optimizes first for a coherent view of the complete study. A shallow,
-independent inventory identifies present-study records and blocks that are clearly
-irrelevant. The complete parser-selected scientific evidence remains in
-`document.json` (and the unfiltered parse remains cached); routing only reduces the
-evidence sent to the detailed extraction. A single detailed call is preferred after
-routing, and only the remaining long inputs use windows.
+PERLA separates reading the paper from constructing database records. The first
+model pass writes a neutral ledger of source claims and the experimental objects
+they describe. A later pass assembles the final study schema from that ledger and
+the cited source passages. This distinction prevents every treatment, specimen, or
+measurement condition from becoming a separate device family.
 
 ```mermaid
 flowchart TD
-    A["Parse and cache complete paper and SI"] --> B["Write scientific document.json"]
-    B --> C0["Independent record inventory"]
-    C0 --> C1["Exclude only cited, clearly irrelevant blocks"]
-    C1 --> C["Estimate routed evidence + compact schema tokens"]
-    C --> D{"Mode"}
-    D -->|single| E["Complete-study draft with grounded inventory"]
-    D -->|windowed| F["Partition ordered source blocks"]
-    F --> G["Extract every window"]
-    E --> E2["Re-read evidence and refine full draft"]
-    G --> G2["Re-read evidence and refine each window draft"]
-    G2 --> H["Namespace and union all candidates"]
-    H --> I{"More than one successful window?"}
-    I -->|Yes| J["Cross-window identity-linking call"]
-    I -->|No| K["Rich extraction"]
-    J --> K
-    E2 --> K
-    K --> L["Citation repair and local validation"]
-    C0 --> N["Independent coverage audit"]
-    K --> N
-    L --> R{"Audit-visible gaps?"}
-    N --> R
-    R -->|Yes| T["One targeted text/table repair call"]
-    R -->|No| O["Audited composition and processing enrichment"]
-    T --> U["Monotonic quality gates"]
-    U --> O
-    O --> M["Atomic NOMAD archive export"]
+    A["Parse and cache the paper and SI"] --> B["Collect experimental objects and atomic source claims"]
+    B --> C{"Claim evidence fits one request?"}
+    C -->|Yes| D["One claim-collection call"]
+    C -->|No| E["Collect claims from section-aware windows"]
+    D --> F["Ground claims against parser text"]
+    E --> F
+    F --> G["One global study-assembly call"]
+    G --> H["Optional global reconciliation"]
+    H --> I["Validate records and audit claim coverage"]
+    I --> J{"Resolvable gaps or unsupported records?"}
+    J -->|Yes| K["Targeted repair from implicated evidence"]
+    J -->|No| L["Composition and processing enrichment"]
+    K --> L
+    L --> M["Atomic NOMAD archive export"]
 ```
 
-## Select a mode
+## Source claims and experimental objects
 
-`--mode auto` is the default. It selects `single` when the estimated complete request
-after conservative routing is at most `--single-call-max-input-tokens`, otherwise
-`windowed`.
+The claim ledger is deliberately less committed than the output schema. It records
+what the authors say, what real-world object the statement concerns, and whether
+that object is a study target, supporting context, or uncertain. Object roles are
+generic experimental roles such as device design, processing arm, characterization
+specimen, population, performance measurement, and stability experiment.
 
-Use `--mode single` only when the selected provider can accept the complete request.
-Use `--mode windowed` to test long-document behavior independently of the estimate.
-`--dry-run` reports the selected mode and planned number of calls before any model
-request.
+Claims are atomic. For example, a sentence assigning one concentration to three
+named solutes becomes three explicitly shared targets, not a single compound value.
+Every object and claim cites parser-produced evidence spans. Python checks that the
+chosen spans occur in the named source blocks before the ledger can guide assembly.
+Unsupported ledger entries remain visible in `claim_grounding.json` but are not
+presented to the assembler as paper facts.
 
-## Inventory and evidence routing
+Context objects do not imply top-level records. A film made only for XRD, a processing
+variant applied to one architecture, or a population mean may inform a device record
+without creating a new device family. The model may mark uncertain scope rather than
+guessing.
 
-The inventory extracts no detailed values and never sees the final extraction. It
-lists candidate record identities with evidence and may propose exclusions. An
-exclusion is applied only when its quotation occurs in the named source block, and a
-block cited by any inventory candidate is always retained. Unknown or invalid
-decisions are ignored. If inventory generation fails, routing fails open and the
-complete scientific evidence view continues to extraction.
+## Long papers and supplements
 
-The default inventory uses the less expensive Terra tier while detailed extraction
-uses Sol. `--inventory-model` can select any schema-capable LiteLLM model, and
-`--no-inventory` disables both routing and the independent coverage audit for a
-controlled ablation.
+`--claim-mode auto` collects the ledger in one request when it fits
+`--claim-window-input-tokens`; otherwise it uses section-aware windows. Windows are
+only a reading strategy: their grounded claims are combined before any final records
+are built. Study assembly and reconciliation always receive the combined ledger and
+run globally, so records are not independently invented in separate windows and
+merged afterward.
 
-Before candidates are shown to detailed extraction, PERLA independently verifies that
-at least one quoted passage occurs in the claimed block. Only those grounded candidates
-become recall guidance; rejected inventory claims remain visible in
-`inventory_grounding.json`. This prevents a hallucinated inventory item from becoming
-an apparent paper fact while still making a valid inventory useful before extraction.
+Window planning follows parser blocks, pages, and section paths. It does not search
+for domain-specific field names. Oversized blocks stay intact instead of being
+truncated. `--dry-run` reports the claim mode and planned semantic calls without
+calling a model.
 
-After extraction, inventory candidates are compared with the rich records. Exact
-quote overlap is marked covered, shared-block-only evidence is a possible match, and
-the rest is unmatched. `coverage_audit.json` remains a recall-review queue; a targeted
-repair call may propose complete typed records for its unresolved entries, but the
-proposal is not accepted merely because it was generated.
+## Global assembly and reconciliation
 
-## Targeted repair
+The assembler receives the grounded ledger plus the passages cited by its entries and
+a one-span local neighborhood needed to interpret their grammar.
+It constructs the complete `StudyExtraction` in one response, keeping device
+families, individual devices, performance observations, populations, and stability
+tests distinct. It must leave a field unreported when no source claim supports it.
 
-After the main quality pass, PERLA combines non-covered inventory candidates with
-deterministic validation findings into `targeted_repair.json`. When the worklist has
-resolvable evidence, one additional request receives only the implicated parser text
-and table blocks plus the affected current records. It may add or replace complete
-top-level records; it cannot delete records or submit partial field patches.
+By default, a second global pass re-reads the same compact evidence and returns a
+complete corrected study. It may recover missed records or values and remove
+unsupported duplicates. A failed reconciliation cannot destroy the valid first
+draft, which remains in `draft_extraction.json`. Use `--no-refinement` only for a
+measured cost/quality ablation.
 
-The candidate patch is accepted only if it does not increase validation issues,
-decrease extracted or source-verified atomic values, or worsen inventory coverage.
-Otherwise the original extraction remains intact and the rejection is recorded.
-Use `--no-targeted-repair` for an ablation or `--repair-model` to select a different
-schema-capable model.
+## Claim-aware audit and targeted repair
 
-This path is text-only by design. Neither the main workflow nor repair sends rendered
-PDF pages or images to a model. Formula recovery is limited to what the selected parser
-preserves in text or tables; unreadable chemistry remains a review item rather than a
-vision-assisted guess.
+`claim_coverage_audit.json` compares the assembled records with the grounded ledger.
+It reports:
 
-## Evidence-complete refinement
+- target objects or claims with matching records and evidence;
+- possible matches that require review;
+- unmatched target claims;
+- context and uncertain objects, which are not counted as missing records;
+- top-level records that no target object supports; and
+- shared quantities whose named targets did not each receive an atomic value.
 
-Detailed extraction runs as a draft followed by one refinement pass by default. The
-refinement sees the complete evidence assigned to that call, the draft, and the
-source-grounded inventory. It must return the complete corrected extraction: recover
-missed records and atomic values, preserve correct records, and remove unsupported or
-duplicated claims. In windowed mode, each window is refined before the lossless union
-and identity-linking stage.
+A numerical claim is covered only when a linked record contains the claim's raw value
+in an atomic `ReportedValue` cited to the same local evidence. Sharing a citation with
+some other value is only a possible match.
 
-The first result is retained as `draft_extraction.json` for a single-call run or under
-`draft_windows/` for a windowed run. A failed refinement therefore cannot destroy a
-valid draft. Use `--no-refinement` only for a measured cost/quality ablation; use
-`--refinement-model` to evaluate a less expensive quality-pass model without changing
-the primary extractor.
+The audit is a review queue, not an accuracy score. A model can still misunderstand
+scope, so final quality must be measured against reviewed ground truth.
 
-`quality_comparison.json` records draft-versus-final inventory coverage and evidence
-issue counts. It is a diagnostic, not an accuracy score: only reviewed ground truth
-can reveal false positive records or a semantically wrong but verbatim source value.
+When the audit or local validation exposes a resolvable problem, one targeted repair
+call receives only the affected records and implicated passages. It may add or replace
+complete typed records. It may remove a record only when the worklist identifies that
+exact record as unsupported. The candidate is accepted only when validation and
+semantic claim-coverage issues do not increase. The gate intentionally does not
+reward a larger value count: unsupported extra records are defects, not recall.
 
-## Deterministic evidence spans and atomic values
+## Evidence and atomic values
 
-PERLA divides parser blocks into stable sentence, table-row, or bounded text spans
-before a model call. Scientific records return only supplied `span_id` values. Python
-then inserts the span's exact text and parent `block_id` into ordinary nested
-`EvidenceCitation` objects before validation and writing `extraction.json`. The model
-chooses the evidence but never copies quotation text, which reduces completion tokens
-and makes altered or stitched model quotations impossible.
+PERLA divides parser blocks into stable sentence, table-row, or bounded text spans.
+The model returns supplied `span_id` values; Python inserts exact quotations and
+`block_id` values before validation. The model therefore chooses evidence without
+spending output tokens copying it or being able to alter it. The complete catalog is
+written to `evidence_spans.json`.
 
 Each `ReportedValue` represents one semantic quantity. An uncertainty or range may
-remain attached to that quantity, but a table row containing different metrics must
-be emitted as separate values. Shared citations keep that atomic representation from
-repeating the same source row in the model response. `evidence_spans.json` records the
-complete deterministic catalog used by the call.
+remain attached to that quantity, but different metrics in one table row must remain
+separate values. Device-specific process coordinates belong to
+`IndividualDevice.reported_properties`; stage-specific aging conditions belong to
+`StabilityCheckpoint.conditions`.
 
-One explicitly shared quantity can produce several atomic values. For example, when
-the grammar assigns the same concentration to three named solutes, each solute gets a
-separate concentration value with the same raw quantity and evidence span. The model
-must not extend the value across a list when its scope is ambiguous or merely
-chemically plausible.
+This workflow is text-only. It never sends rendered PDF pages or images to a model.
+Formula recovery is limited to what the selected parser preserves in text and tables;
+unreadable chemistry remains a review item rather than a vision-assisted guess.
 
-Layers separate electrical `role`, chemical `constituents`, exact
-`material_form_raw`, and normalized `material_form`. The normalized form is a small
-schema-constrained vocabulary. It may be filled only when the raw wording occurs in
-the layer's cited evidence; otherwise it remains `not_reported`.
+## Artifacts and failure behavior
 
-Device-specific process coordinates are stored in
-`IndividualDevice.reported_properties`; stage-specific aging conditions are stored in
-`StabilityCheckpoint.conditions`. These scopes are part of the model response schema,
-so the extractor does not need property-specific post-processing rules.
+The run directory contains the complete scientific parse in `document.json`, the
+claim ledger and its schema, grounding decisions, the assembled draft, validation
+results, claim-coverage audits, repair artifacts, and the final `extraction.json`.
+Raw requests and failures remain under `requests/`.
 
-## Long supplements
+Parser and ledger failures fail open where safe: the full scientific evidence remains
+available, and an empty ledger falls back to complete source evidence. A failed initial
+study assembly produces a valid empty extraction with an unresolved note. A failed optional
+reconciliation or rejected repair preserves the preceding valid result. Local
+validation never silently drops unsupported scientific records.
 
-Window planning operates on parser-produced source blocks, pages, and section paths;
-it does not search for photovoltaic property names. Every block is primary evidence in
-exactly one window. Adjacent structural groups stay together when they fit, large
-sections split at page or block boundaries, and an oversized block remains intact in a
-window of its own instead of being truncated.
-
-When the complete main paper fits the context allowance, supplement windows receive it
-as read-only context. The extraction prompt allows a candidate only when at least one
-of its evidence references points to that window's primary evidence. This retains
-cross-document context without duplicating the main paper's candidates.
-
-Successful window results are namespaced and combined without record deletion. If
-more than one window succeeds, a separate schema-constrained call proposes only
-cross-window identity links. Local validation attaches a link only when its candidate
-IDs, entity kind, and evidence are valid; rejected proposals remain visible in
-`identity_links.json`.
-
-## Failure behavior
-
-The workflow writes parser output, configuration, and schema before model extraction.
-A first-pass single-call failure produces a valid empty `extraction.json` with an unresolved note.
-If only refinement fails, the valid draft becomes `extraction.json` and the run is
-marked partial rather than discarding scientific output.
-In windowed mode, successful windows remain usable when another window fails. Raw
-request and failure artifacts stay under `requests/`.
-
-Local validation never silently removes unsupported records. Read the rich extraction
-and `validation.json` together, or use `grounded_values.json` when you explicitly want
-only locally source-matched reported values.
-
-Before validation, a non-contiguous model excerpt may be restored to its exact claimed
-block only under the conservative ordered-content rule described in
-[Evidence and provenance](../concepts/evidence.md). An invalid source pointer is
-repaired only when its unchanged quote has exactly one match across the parsed
-evidence. Other failures remain review findings. Every decision is recorded in
-`citation_repairs.json`.
-
-After validation, compact semantic passes interpret site ions and processing roles
-from existing records and only their cited evidence. A composition call omitted target
-gets one retry containing only that absorber and its already-local evidence. These
-calls run by default and write a separate audit without changing `extraction.json`. See
-[Interpret composition and processing](enrichment.md).
-
-The workflow then writes one pinned NOMAD archive per atomic source
-record and a conversion report. See [Export to NOMAD](nomad-export.md). The historical
-reduced schema is an optional compatibility output rather than an intermediate format.
+After validation, compact semantic passes interpret composition and processing roles
+from existing records and their cited evidence. These enrichments write separate
+audits and do not rewrite `extraction.json`. The workflow then exports one pinned
+NOMAD archive per atomic source record. See
+[Interpret composition and processing](enrichment.md) and
+[Export to NOMAD](nomad-export.md).
 
 ## Model choice
 
-The default model is the frontier model encoded in the current CLI. You can pass any
-LiteLLM provider-prefixed model that supports the requested strict JSON schema and
-parameters. Model choice affects recall and semantic linking; schema conformance alone
-is not evidence of extraction quality. Compare models against independently reviewed
-ground truth, especially on device inventory and chemical composition.
+Any LiteLLM model used here must support the requested structured response. Model
+choice affects recall, scope classification, and semantic linking; schema conformance
+alone is not evidence of extraction quality. Compare models against independently
+reviewed ground truth, especially for device identity and chemical composition.
 
-For all runtime settings, see the [CLI reference](../reference/cli.md).
+For runtime settings, see the [CLI reference](../reference/cli.md).

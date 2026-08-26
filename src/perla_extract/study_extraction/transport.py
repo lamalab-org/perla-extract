@@ -36,7 +36,7 @@ def span_citation_schema(
     """Replace every model-facing citation object with a known evidence-span ID.
 
     All response models share the same ``EvidenceCitation`` definition, including the
-    inventory, full extraction, identity-link, and targeted-repair calls. Applying one
+    claim-ledger, full extraction, refinement, and targeted-repair calls. Applying one
     mechanical schema transformation keeps citation behavior consistent everywhere.
     """
 
