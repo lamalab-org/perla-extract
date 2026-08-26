@@ -76,6 +76,8 @@ def test_value_producing_passes_share_the_atomic_shared_quantity_rule():
     assert (
         "Equal values for different materials are not duplicates" in EXTRACTION_PROMPT
     )
+    assert "kind=reported_quantity" in CLAIM_LEDGER_PROMPT
+    assert 'raw_value="1.4 M"' in CLAIM_LEDGER_PROMPT
 
 
 def test_dry_run_writes_a_complete_request_plan(tmp_path):

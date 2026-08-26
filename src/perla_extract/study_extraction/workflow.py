@@ -149,10 +149,16 @@ Rules:
 - Mark an object or claim target only when its facts belong in the present photovoltaic
   study extraction. Mark background, method-only, and characterization-only facts as
   context. Use uncertain when the evidence does not resolve scope.
-- Emit one atomic claim per assertion. Preserve numerical raw_value text when present.
+- Emit one atomic claim per assertion. Use kind=reported_quantity for every numerical
+  or non-numerical value that should become a ReportedValue. Its raw_value must contain
+  only that one exact source value or outcome, not the surrounding procedure.
 - When one explicit source quantity applies grammatically to several named materials
-  or metrics, emit one claim with every name in shared_targets. Do not infer shared
-  scope from chemistry or proximity.
+  or metrics, emit one reported_quantity claim whose raw_value is only the shared
+  quantity and whose shared_targets contains every named target. For example, source
+  text assigning 1.4 M to PbI2, MAI, and DMSO has raw_value="1.4 M" and three targets.
+  If one sentence reports different quantities, emit separate claims; never assign a
+  solvent or material to a quantity that the grammar does not give it. Do not infer
+  shared scope from chemistry or proximity.
 - Connect a claim to every experimental object it concerns. Repeated mentions and
   treatment labels may refer to the same underlying design; leave that reconciliation
   to the later document-level assembly call.

@@ -65,6 +65,8 @@ Rules:
 - Remove a complete top-level record only when the worklist identifies it as
   unclaimed and the supplied evidence establishes that it is a processing arm,
   characterization specimen, duplicate, or otherwise outside the target schema.
+- Never return the same record ID in both removals and a replacement collection. If
+  its identity is uncertain, leave it unchanged and explain the uncertainty.
 - Explain a gap in unresolved_notes when the evidence cannot support a safe repair.
 """
 
@@ -344,6 +346,15 @@ def _proposal_is_scoped(proposed: StudyRepair, worklist: RepairWorklist) -> bool
         (item.record_kind, item.record_id) not in removable
         for item in proposed.removals
     ):
+        return False
+    proposed_keys = {
+        (kind, str(getattr(record, id_field)))
+        for kind, (collection, id_field) in _COLLECTIONS.items()
+        for record in getattr(proposed, collection)
+    }
+    if proposed_keys & {
+        (item.record_kind, item.record_id) for item in proposed.removals
+    }:
         return False
     return True
 

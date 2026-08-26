@@ -12,7 +12,10 @@ from perla_extract.study_extraction.models import (
 )
 from perla_extract.study_extraction.repair import (
     RecordRemoval,
+    RepairWorkItem,
+    RepairWorklist,
     StudyRepair,
+    _proposal_is_scoped,
     run_targeted_repair,
 )
 from perla_extract.study_extraction.validation import validate_study
@@ -191,3 +194,27 @@ def test_targeted_repair_can_remove_an_unclaimed_characterization_family():
     assert audit.status == "accepted"
     assert repaired.device_families == []
     assert audit.after_quality["semantic_issues"] == 0
+
+
+def test_repair_cannot_remove_and_replace_the_same_record():
+    evidence = EvidenceCitation(block_id="b1", quote="Device B")
+    proposed = repair_with_family(family(evidence)).model_copy(
+        update={
+            "removals": [
+                RecordRemoval(record_kind="device_family", record_id="family-b")
+            ]
+        }
+    )
+    worklist = RepairWorklist(
+        items=[
+            RepairWorkItem(
+                reason="unclaimed_record",
+                record_kind="device_family",
+                record_ids=["family-b"],
+                block_ids=["b1"],
+                detail="unsupported family",
+            )
+        ]
+    )
+
+    assert not _proposal_is_scoped(proposed, worklist)

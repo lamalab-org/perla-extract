@@ -33,8 +33,10 @@ that object is a study target, supporting context, or uncertain. Object roles ar
 generic experimental roles such as device design, processing arm, characterization
 specimen, population, performance measurement, and stability experiment.
 
-Claims are atomic. For example, a sentence assigning one concentration to three
-named solutes becomes three explicitly shared targets, not a single compound value.
+Claims are atomic. Their `raw_value` contains one exact value or outcome rather than a
+whole procedure. For example, a sentence assigning one concentration to three named
+solutes becomes `raw_value: "1.4 M"` with three explicitly shared targets. A sentence
+with two different concentrations becomes two claims.
 Every object and claim cites parser-produced evidence spans. Python checks that the
 chosen spans occur in the named source blocks before the ledger can guide assembly.
 Unsupported ledger entries remain visible in `claim_grounding.json` but are not
