@@ -3,6 +3,20 @@ from pathlib import Path
 APP = Path(__file__).resolve().parents[1] / "review_app"
 
 
+def test_refreshed_review_dataset_is_the_clear_default():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    javascript = (APP / "app.js").read_text(encoding="utf-8")
+
+    assert html.count(
+        '<option value="dev">Current review — refreshed extraction</option>'
+    ) == 2
+    assert html.count(
+        '<option value="calibration">Legacy calibration — deprecated</option>'
+    ) == 2
+    assert 'split: "dev"' in javascript
+    assert 'calibration: "Legacy calibration"' in javascript
+
+
 def test_deployed_authentication_has_a_recoverable_sign_in_flow():
     html = (APP / "index.html").read_text(encoding="utf-8")
     javascript = (APP / "app.js").read_text(encoding="utf-8")

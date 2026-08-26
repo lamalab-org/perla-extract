@@ -29,7 +29,7 @@
     <div><span class="eyebrow">PERLA</span><h1>Study ground-truth review</h1></div>
     <div class="header-actions">
       <button id="toggle-paper-list" type="button" aria-controls="paper-rail" aria-expanded="true">Hide papers</button>
-      <label>Dataset <select id="split"><option>calibration</option><option>dev</option><option>test</option></select></label>
+      <label>Dataset <select id="split"><option value="dev">Current review — refreshed extraction</option><option value="calibration">Legacy calibration — deprecated</option><option value="test">Held-out test</option></select></label>
       <button id="open-annotations">My edits &amp; undo</button>
       <button id="open-import">Import extraction</button>
       <span id="reviewer" class="pill">Loading reviewer…</span>
@@ -246,7 +246,7 @@
     <form id="import-form" class="dialog-card">
       <div class="dialog-heading"><div><span class="eyebrow">New review</span><h2>Import extractor artifacts</h2></div><button type="button" id="close-import">×</button></div>
       <label>Paper identifier<input name="paper_id" required placeholder="10.1126--science.adf0194" /></label>
-      <label>Dataset split<select name="split"><option>calibration</option><option>dev</option><option>test</option></select></label>
+      <label>Dataset split<select name="split"><option value="dev">Current review — refreshed extraction</option><option value="calibration">Legacy calibration — deprecated</option><option value="test">Held-out test</option></select></label>
       <label>Main paper PDF<input name="pdf" type="file" accept="application/pdf" required /></label>
       <label>Supplement PDF<input name="supplement" type="file" accept="application/pdf" /></label>
       <label>extraction.json<input name="extraction" type="file" accept="application/json" required /></label>

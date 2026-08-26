@@ -77,8 +77,13 @@ const REPAIR_STATUS_TEXT = {
   not_needed: "The automated audit found no targeted text reread to perform.",
   failed: "The targeted text reread failed; no repair result was applied.",
 };
+const SPLIT_LABELS = {
+  dev: "Current review",
+  calibration: "Legacy calibration",
+  test: "Held-out test",
+};
 const state = {
-  split: "calibration", papers: [], paperId: null, bundle: null, user: null,
+  split: "dev", papers: [], paperId: null, bundle: null, user: null,
   page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null,
   queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
   studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
@@ -491,7 +496,7 @@ function renderStudy() {
   const paper = state.papers.find((candidate) => candidate.id === state.paperId);
   if (paper) Object.assign(paper, state.bundle.summary, { revision: state.bundle.revision });
   renderPapers();
-  $("paper-split").textContent = state.split;
+  $("paper-split").textContent = SPLIT_LABELS[state.split] || state.split;
   $("paper-title").textContent = truth.paper.title || state.paperId;
   $("paper-doi").textContent = truth.paper.doi || "DOI not reported";
   $("revision").textContent = `Revision ${state.bundle.revision}`;
