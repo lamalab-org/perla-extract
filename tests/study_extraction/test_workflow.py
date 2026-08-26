@@ -1,7 +1,10 @@
 import json
 from pathlib import Path
 
-from perla_extract.study_extraction.guidance import DEVICE_FAMILY_POLICY
+from perla_extract.study_extraction.guidance import (
+    DEVICE_FAMILY_POLICY,
+    SHARED_QUANTITY_POLICY,
+)
 from perla_extract.study_extraction.inventory import InventoryItem
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
@@ -63,6 +66,14 @@ def test_every_semantic_pass_uses_the_same_device_family_boundary():
     assert "processing/composition variant" not in EXTRACTION_PROMPT
     assert "processing/composition variants" not in INVENTORY_PROMPT
     assert "characterization-only partial structures" in REFINEMENT_PROMPT
+
+
+def test_value_producing_passes_share_the_atomic_shared_quantity_rule():
+    """Keep equal list-scoped values distinct without inferring missing quantities."""
+
+    for prompt in EXTRACTION_PROMPT, REFINEMENT_PROMPT, REPAIR_PROMPT:
+        assert SHARED_QUANTITY_POLICY in prompt
+    assert "Equal values for different materials are not duplicates" in EXTRACTION_PROMPT
 
 
 def test_dry_run_writes_a_complete_request_plan(tmp_path):

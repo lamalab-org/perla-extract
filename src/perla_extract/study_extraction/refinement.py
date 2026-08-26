@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .artifacts import write_json_atomic
 from .client import ModelCallError, ModelClient
-from .guidance import DEVICE_FAMILY_POLICY
+from .guidance import DEVICE_FAMILY_POLICY, SHARED_QUANTITY_POLICY
 from .models import EvidenceBlock, StudyExtraction
 from .spans import build_evidence_spans
 from .transport import (
@@ -20,6 +20,7 @@ REFINEMENT_PROMPT = f"""Audit the supplied draft against all supplied evidence a
 return a complete corrected StudyExtraction.
 
 {DEVICE_FAMILY_POLICY}
+{SHARED_QUANTITY_POLICY}
 Treat the draft and independent inventory as fallible aids, never as source evidence.
 For every grounded inventory candidate, either represent the source-supported record
 at the correct reporting level or explain the unresolved conflict in unresolved_notes.

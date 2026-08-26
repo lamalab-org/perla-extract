@@ -64,6 +64,9 @@ Rules:
   when its role is unclear.
 - Link concentration_condition_index only to an explicitly reported concentration of
   that solute; otherwise set it to null.
+- Equal concentration values attached to different named solutes are separate atomic
+  conditions. Link each solute to its own condition index rather than treating the
+  repeated number as a duplicate.
 - Emit at most one proposal for each supplied step_id.
 """
 

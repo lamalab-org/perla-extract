@@ -128,6 +128,12 @@ be emitted as separate values. Shared citations keep that atomic representation 
 repeating the same source row in the model response. `evidence_spans.json` records the
 complete deterministic catalog used by the call.
 
+One explicitly shared quantity can produce several atomic values. For example, when
+the grammar assigns the same concentration to three named solutes, each solute gets a
+separate concentration value with the same raw quantity and evidence span. The model
+must not extend the value across a list when its scope is ambiguous or merely
+chemically plausible.
+
 Layers separate electrical `role`, chemical `constituents`, exact
 `material_form_raw`, and normalized `material_form`. The normalized form is a small
 schema-constrained vocabulary. It may be filled only when the raw wording occurs in

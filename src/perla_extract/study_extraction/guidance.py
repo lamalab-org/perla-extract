@@ -26,3 +26,14 @@ DEVICE_FAMILY_POLICY = """Device-family boundary:
 - When the evidence does not establish whether two labels denote different designs,
   keep the uncertainty explicit instead of guessing a split or merge.
 """
+
+SHARED_QUANTITY_POLICY = """Shared-quantity boundary:
+- When the source explicitly gives one quantity to a coordinated list of named
+  materials or metrics, emit one atomic ReportedValue for each named item. Give each
+  value an item-specific name while preserving the same source-reported raw quantity
+  and evidence span. Equal values for different materials are not duplicates.
+- Apply a shared value only when the source grammar establishes that scope. Do not
+  propagate a value from the first item to the rest of a list using assumed
+  stoichiometry, chemical knowledge, or a nearby recipe. If the scope is ambiguous,
+  preserve the ambiguity in unresolved_notes instead of guessing.
+"""

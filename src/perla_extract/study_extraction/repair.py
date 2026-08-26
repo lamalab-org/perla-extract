@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import Field
 
-from .guidance import DEVICE_FAMILY_POLICY
+from .guidance import DEVICE_FAMILY_POLICY, SHARED_QUANTITY_POLICY
 from .inventory import EvidenceInventory, audit_inventory_coverage
 from .models import (
     CrossWindowIdentityLink,
@@ -49,6 +49,7 @@ An empty patch is correct when the evidence is insufficient."""
 REPAIR_PROMPT = f"""Resolve the supplied worklist conservatively.
 
 {DEVICE_FAMILY_POLICY}
+{SHARED_QUANTITY_POLICY}
 Rules:
 - Preserve device families, individual devices, population statistics, performance
   observations, and stability tests as different reporting levels.

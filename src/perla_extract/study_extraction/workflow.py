@@ -25,7 +25,7 @@ from .evidence import (
     repair_noncontiguous_citation_quotes,
     repair_unique_citation_pointers,
 )
-from .guidance import DEVICE_FAMILY_POLICY
+from .guidance import DEVICE_FAMILY_POLICY, SHARED_QUANTITY_POLICY
 from .identity_linking import IdentityLinkProposal, attach_valid_identity_links
 from .inventory import (
     EvidenceInventory,
@@ -76,6 +76,7 @@ observation, population statistic, and stability specimen. Connect records only 
 the evidence supports the connection.
 
 {DEVICE_FAMILY_POLICY}
+{SHARED_QUANTITY_POLICY}
 Rules:
 - Preserve a device as one coherent object. Do not create one device per metric,
   paragraph, layer, scan direction, or stability checkpoint.
