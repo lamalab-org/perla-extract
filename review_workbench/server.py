@@ -55,6 +55,32 @@ REVISION_CONFLICT_RESPONSE = {
 }
 
 
+def _same_pdf_page(left: fitz.Page, right: fitz.Page) -> bool:
+    """Compare duplicated pages conservatively without relying on a publisher layout.
+
+    Text-rich pages must have identical normalized text. Image-only pages use a
+    low-resolution grayscale rendering, which lets concatenated scanned papers be
+    recognized without guessing where their supporting information begins.
+    """
+
+    left_text = re.sub(r"\s+", "", left.get_text()).casefold()
+    right_text = re.sub(r"\s+", "", right.get_text()).casefold()
+    if left_text or right_text:
+        return left_text == right_text
+    matrix = fitz.Matrix(0.5, 0.5)
+    left_image = left.get_pixmap(matrix=matrix, colorspace=fitz.csGRAY, alpha=False)
+    right_image = right.get_pixmap(matrix=matrix, colorspace=fitz.csGRAY, alpha=False)
+    return (
+        left_image.width,
+        left_image.height,
+        hashlib.sha256(left_image.samples).digest(),
+    ) == (
+        right_image.width,
+        right_image.height,
+        hashlib.sha256(right_image.samples).digest(),
+    )
+
+
 class ReviewApplication:
     """Keep HTTP concerns outside the review-state and scientific-validation logic.
 
@@ -356,6 +382,13 @@ class ReviewApplication:
         if payload is None:
             return []
         blocks = payload.get("blocks", []) if isinstance(payload, dict) else payload
+        supplement_offset = self.source_page_offset(paper_id, "supplement", split)
+        blocks = [
+            self._evidence_block_for_view(
+                split, paper_id, block, supplement_offset=supplement_offset
+            )
+            for block in blocks
+        ]
         query = query.strip().lower()
         if query:
             blocks = [
@@ -388,7 +421,34 @@ class ReviewApplication:
         )
         if block is None:
             raise FileNotFoundError(f"evidence block {block_id} is unavailable")
-        return block
+        return self._evidence_block_for_view(split, paper_id, block)
+
+    def _evidence_block_for_view(
+        self,
+        split: str,
+        paper_id: str,
+        block: dict[str, Any],
+        *,
+        supplement_offset: int | None = None,
+    ) -> dict[str, Any]:
+        """Translate raw concatenated-PDF pages into the pages reviewers see."""
+
+        result = dict(block)
+        if result.get("source") != "supplement":
+            return result
+        offset = (
+            supplement_offset
+            if supplement_offset is not None
+            else self.source_page_offset(paper_id, "supplement", split)
+        )
+        page = result.get("page")
+        if not offset or not isinstance(page, int):
+            return result
+        if page <= offset:
+            result.update(source="main", page=page)
+        else:
+            result["page"] = page - offset
+        return result
 
     @staticmethod
     def study_schema() -> dict[str, Any]:
@@ -413,6 +473,56 @@ class ReviewApplication:
         with fitz.open(self.pdf_path(paper_id, source, split)) as document:
             return tuple(page.get_text() for page in document)
 
+    @lru_cache(maxsize=128)
+    def _duplicated_main_prefix(
+        self,
+        paper_id: str,
+        split: str | None,
+        main_modified_ns: int,
+        supplement_modified_ns: int,
+    ) -> int:
+        """Return a full duplicated main-paper prefix, or zero when uncertain.
+
+        Some acquisition pipelines save ``main + SI`` as the supplement. We hide
+        a prefix only when every main-paper page matches in order and additional
+        pages remain, avoiding journal-specific headings and page-count guesses.
+        File timestamps keep the cached decision tied to the exact local copies.
+        """
+
+        del main_modified_ns, supplement_modified_ns
+        with (
+            fitz.open(self.pdf_path(paper_id, "main", split)) as main,
+            fitz.open(self.pdf_path(paper_id, "supplement", split)) as supplement,
+        ):
+            if not main or len(supplement) <= len(main):
+                return 0
+            return (
+                len(main)
+                if all(
+                    _same_pdf_page(main[index], supplement[index])
+                    for index in range(len(main))
+                )
+                else 0
+            )
+
+    def source_page_offset(
+        self, paper_id: str, source: str, split: str | None = None
+    ) -> int:
+        """Locate the first logical page of a source without mutating its PDF."""
+
+        if source != "supplement":
+            return 0
+        main = self.pdf_path(paper_id, "main", split)
+        supplement = self.pdf_path(paper_id, "supplement", split)
+        if not main.exists() or not supplement.exists():
+            return 0
+        return self._duplicated_main_prefix(
+            paper_id,
+            split,
+            main.stat().st_mtime_ns,
+            supplement.stat().st_mtime_ns,
+        )
+
     def render_pdf_page(
         self,
         paper_id: str,
@@ -426,13 +536,15 @@ class ReviewApplication:
             raise FileNotFoundError(path)
         if not 0.75 <= scale <= 3:
             raise ValueError("scale must be between 0.75 and 3")
+        offset = self.source_page_offset(paper_id, source, split)
         with fitz.open(path) as document:
-            if not 1 <= page_number <= len(document):
-                raise ValueError(f"page must be between 1 and {len(document)}")
-            pixmap = document[page_number - 1].get_pixmap(
+            page_count = len(document) - offset
+            if not 1 <= page_number <= page_count:
+                raise ValueError(f"page must be between 1 and {page_count}")
+            pixmap = document[page_number + offset - 1].get_pixmap(
                 matrix=fitz.Matrix(scale, scale), alpha=False
             )
-            return pixmap.tobytes("png"), len(document)
+            return pixmap.tobytes("png"), page_count
 
     def pdf_page_text(
         self,
@@ -444,10 +556,12 @@ class ReviewApplication:
         path = self.pdf_path(paper_id, source, split)
         if not path.exists():
             raise FileNotFoundError(path)
+        offset = self.source_page_offset(paper_id, source, split)
         with fitz.open(path) as document:
-            if not 1 <= page_number <= len(document):
-                raise ValueError(f"page must be between 1 and {len(document)}")
-            page = document[page_number - 1]
+            page_count = len(document) - offset
+            if not 1 <= page_number <= page_count:
+                raise ValueError(f"page must be between 1 and {page_count}")
+            page = document[page_number + offset - 1]
             page_rect = page.rect
             lines = []
             for block in page.get_text("dict").get("blocks", []):
@@ -472,7 +586,7 @@ class ReviewApplication:
                     )
             return {
                 "text": page.get_text(),
-                "page_count": len(document),
+                "page_count": page_count,
                 "lines": lines,
             }
 
@@ -490,8 +604,11 @@ class ReviewApplication:
         if len(query) < 2:
             return []
         results = []
+        offset = self.source_page_offset(paper_id, source, split)
         with fitz.open(path) as document:
-            for page_number, page in enumerate(document, 1):
+            for physical_page in range(offset, len(document)):
+                page_number = physical_page - offset + 1
+                page = document[physical_page]
                 text = re.sub(r"\s+", " ", page.get_text()).strip()
                 for match in list(re.finditer(re.escape(query), text, re.IGNORECASE))[
                     :5
@@ -504,6 +621,27 @@ class ReviewApplication:
                     if len(results) == 50:
                         return results
         return results
+
+    def review_pdf(self, paper_id: str, source: str, split: str | None = None) -> bytes:
+        """Return the logical source document used by the on-screen reviewer."""
+
+        path = self.pdf_path(paper_id, source, split)
+        if not path.exists():
+            raise FileNotFoundError(path)
+        offset = self.source_page_offset(paper_id, source, split)
+        if not offset:
+            return path.read_bytes()
+        with fitz.open(path) as source_document:
+            output = fitz.open()
+            try:
+                output.insert_pdf(
+                    source_document,
+                    from_page=offset,
+                    to_page=len(source_document) - 1,
+                )
+                return output.tobytes(garbage=3, deflate=True)
+            finally:
+                output.close()
 
 
 def make_handler(application: ReviewApplication, authenticator=None):
@@ -729,8 +867,8 @@ def make_handler(application: ReviewApplication, authenticator=None):
                             }
                         )
                     else:
-                        self.send_file(
-                            application.pdf_path(paper_id, source, split),
+                        self.send_bytes(
+                            application.review_pdf(paper_id, source, split),
                             "application/pdf",
                         )
                     return

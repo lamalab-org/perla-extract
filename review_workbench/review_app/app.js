@@ -87,6 +87,7 @@ const state = {
 };
 
 const LAPTOP_LAYOUT = "(max-width: 1400px)";
+const PDF_VIEW_VERSION = 2;
 
 function setPaperListOpen(open, remember = true) {
   document.querySelector("main").classList.toggle("paper-list-hidden", !open);
@@ -1167,7 +1168,7 @@ async function renderPdf() {
   const page = state.page;
   const split = state.split;
   const sourceLabel = source === "supplement" ? "supporting information" : "main paper";
-  const query = `source=${source}&split=${split}&page=${page}&scale=1.5`;
+  const query = `source=${source}&split=${split}&page=${page}&scale=1.5&view=${PDF_VIEW_VERSION}`;
   const image = $("pdf-page");
   const message = $("pdf-message");
   const sourceStatus = $("pdf-current-source");
@@ -1205,7 +1206,7 @@ async function renderPdf() {
     for (const control of [$("previous-page"), $("next-page"), $("page-number")]) control.disabled = false;
 
     const text = await requestWithRetry(
-      `/api/pdf-text/${encodeURIComponent(paperId)}?source=${source}&split=${split}&page=${page}`,
+      `/api/pdf-text/${encodeURIComponent(paperId)}?source=${source}&split=${split}&page=${page}&view=${PDF_VIEW_VERSION}`,
       { signal: controller.signal },
     ).then((value) => ({ value })).catch((error) => ({ error }));
     if (requestId !== state.pdfRequest || paperId !== state.paperId || source !== state.source || page !== state.page) return false;

@@ -253,6 +253,7 @@ def test_pdf_source_switch_is_visible_cached_and_waits_for_the_new_page():
     assert "requestWithRetry" in source
     assert "AbortController" in source
     assert "pdfDisplayed" in source
+    assert "PDF_VIEW_VERSION" in source
     assert '$("pdf-canvas").hidden = !displayed || displayed.paperId !== paperId' in source
     assert "The previous page is still shown." in source
     assert 'id="retry-pdf"' in html

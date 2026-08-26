@@ -25,6 +25,16 @@ def pdf_bytes(text: str) -> bytes:
     return value
 
 
+def pdf_pages(*texts: str) -> bytes:
+    document = fitz.open()
+    for text in texts:
+        page = document.new_page()
+        page.insert_text((72, 72), text)
+    value = document.tobytes()
+    document.close()
+    return value
+
+
 def test_imports_extractor_bundle_and_both_documents(tmp_path, empty_study, document_payload):
     app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
     bundle = app.import_paper(
@@ -78,3 +88,43 @@ def test_evidence_search_returns_source_and_page(tmp_path, empty_study, document
 
     with pytest.raises(FileNotFoundError, match="evidence block missing"):
         app.evidence_block("calibration", "10.0000--example", "missing")
+
+
+def test_concatenated_supplement_is_exposed_as_logical_si(
+    tmp_path, empty_study, document_payload
+):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+    main = pdf_pages("Main page one", "Main page two")
+    combined = pdf_pages(
+        "Main page one",
+        "Main page two",
+        "Supporting information first page",
+        "Supporting information second page with searchable detail",
+    )
+    app.import_paper(
+        "calibration",
+        "10.0000--example",
+        main,
+        json.dumps(empty_study).encode(),
+        supplement_bytes=combined,
+        document_bytes=json.dumps(document_payload).encode(),
+        reviewer_id="ada",
+    )
+
+    page = app.pdf_page_text("10.0000--example", "supplement", 1)
+    assert page["text"].startswith("Supporting information first page")
+    assert page["page_count"] == 2
+    _, rendered_count = app.render_pdf_page("10.0000--example", "supplement", 1)
+    assert rendered_count == 2
+    assert (
+        app.search_pdf("10.0000--example", "supplement", "searchable")[0]["page"] == 2
+    )
+    assert (
+        app.evidence_block("calibration", "10.0000--example", "supplement_p3_table_1")[
+            "page"
+        ]
+        == 1
+    )
+    with fitz.open(stream=app.review_pdf("10.0000--example", "supplement")) as pdf:
+        assert len(pdf) == 2
+        assert pdf[0].get_text().startswith("Supporting information first page")
