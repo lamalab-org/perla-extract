@@ -179,7 +179,9 @@ bundle.
 python review_workbench/prepare.py
 vercel link --cwd review_workbench/.vercel-build --yes \
   --project perla-ground-truth-review
-vercel deploy --cwd review_workbench/.vercel-build --prebuilt
+vercel pull --cwd review_workbench/.vercel-build --yes --environment production
+vercel build --cwd review_workbench/.vercel-build --yes --prod
+vercel deploy --cwd review_workbench/.vercel-build --prebuilt --prod
 ```
 
 The deployed adapter stores new private PDFs under
