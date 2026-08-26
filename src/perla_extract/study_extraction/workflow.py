@@ -873,7 +873,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         if refinement_selection["selected"] == "draft":
             quote_repairs = draft_quote_repairs
             pointer_repairs = draft_pointer_repairs
-            logger.warning("Retaining the draft: %s", refinement_selection["reason"])
+            logger.warning("Retaining the draft: {}", refinement_selection["reason"])
     citation_repairs = {
         "repair_count": quote_repairs["repair_count"] + pointer_repairs["repair_count"],
         "quote_repairs": quote_repairs,
