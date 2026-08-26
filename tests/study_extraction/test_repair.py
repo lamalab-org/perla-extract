@@ -7,6 +7,7 @@ from perla_extract.study_extraction.models import (
     DeviceFamily,
     EvidenceBlock,
     EvidenceCitation,
+    IndividualDevice,
     PaperMetadata,
     StudyExtraction,
 )
@@ -194,6 +195,104 @@ def test_targeted_repair_can_remove_an_unclaimed_characterization_family():
     assert audit.status == "accepted"
     assert repaired.device_families == []
     assert audit.after_quality["semantic_issues"] == 0
+
+
+def test_targeted_repair_discards_additions_not_requested_by_the_worklist():
+    evidence = EvidenceCitation(block_id="b1", quote="film used for spectroscopy")
+    block = EvidenceBlock(
+        block_id="b1",
+        source="supplement",
+        page=1,
+        kind="paragraph",
+        text="A thin film used for spectroscopy was prepared.",
+    )
+    other_block = EvidenceBlock(
+        block_id="b2",
+        source="main",
+        page=2,
+        kind="paragraph",
+        text="The authors also measured another specimen.",
+    )
+    same_id_in_another_collection = IndividualDevice(
+        device_id="family-b",
+        family_id=None,
+        label="Unrelated device with a colliding local ID",
+        variant=None,
+        champion_status="not_reported",
+        selection_basis="not_reported",
+        reported_properties=[],
+        evidence=[EvidenceCitation(block_id="b2", quote="another specimen")],
+    )
+    study = empty_study().model_copy(
+        update={
+            "device_families": [family(evidence)],
+            "individual_devices": [same_id_in_another_collection],
+        }
+    )
+    ledger = ClaimLedger(
+        objects=[
+            ExperimentalObject(
+                object_id="spectroscopy-film",
+                role="characterization_specimen",
+                scope="context",
+                label="thin spectroscopy film",
+                evidence=[evidence],
+            )
+        ],
+        claims=[],
+    )
+    coverage = {
+        "items": [
+            {
+                "status": "unclaimed",
+                "record_kind": "device_family",
+                "candidate_record_ids": ["family-b"],
+                "evidence": [evidence.model_dump(mode="json")],
+                "object_id": "spectroscopy-film",
+                "label": "thin spectroscopy film",
+            }
+        ]
+    }
+
+    class FakeClient:
+        def complete(self, **request):
+            unrelated = family(evidence).model_copy(
+                update={"family_id": "unrequested-family"}
+            )
+            return StudyRepair(
+                device_families=[unrelated],
+                individual_devices=[],
+                performance_observations=[],
+                population_statistics=[],
+                stability_tests=[],
+                removals=[
+                    RecordRemoval(record_kind="device_family", record_id="family-b")
+                ],
+                unresolved_notes=["The cited film is not a photovoltaic device."],
+            )
+
+    repaired, audit = run_targeted_repair(
+        client=FakeClient(),
+        study=study,
+        blocks=[block, other_block],
+        ledger=ledger,
+        coverage=coverage,
+        validation=validate_study(study, [block, other_block]),
+        model="provider/model",
+        reasoning_effort=None,
+        max_output_tokens=1000,
+    )
+
+    assert audit.status == "accepted"
+    assert repaired.device_families == []
+    assert repaired.individual_devices == [same_id_in_another_collection]
+    assert repaired.unresolved_notes == [
+        "The cited film is not a photovoltaic device."
+    ]
+    assert audit.discarded_record_counts["device_families"] == 1
+    assert audit.reason == (
+        "unrequested model additions were discarded before applying the patch"
+    )
 
 
 def test_repair_cannot_remove_and_replace_the_same_record():

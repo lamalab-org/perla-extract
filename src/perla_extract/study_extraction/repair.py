@@ -116,6 +116,7 @@ class RepairAudit(StrictModel):
     worklist: RepairWorklist
     selected_block_ids: list[str]
     proposed_record_counts: dict[str, int]
+    discarded_record_counts: dict[str, int] = Field(default_factory=dict)
     before_quality: dict[str, int]
     after_quality: dict[str, int]
     reason: str | None
@@ -363,6 +364,57 @@ def _proposal_is_scoped(proposed: StudyRepair, worklist: RepairWorklist) -> bool
     return True
 
 
+def _scope_repair_to_worklist(
+    proposed: StudyRepair, worklist: RepairWorklist
+) -> tuple[StudyRepair, dict[str, int]]:
+    """Keep only record changes that the deterministic audit explicitly requested.
+
+    A repair model sometimes resolves the requested problem and then helpfully emits
+    other records from the same evidence. Those additions have not passed through the
+    audit that triggered this call. Filtering them here lets us retain a safe deletion
+    or replacement without broadening a deliberately local repair into a second
+    extraction pass.
+    """
+
+    permitted_removals = {
+        (item.record_kind, record_id)
+        for item in worklist.items
+        if item.reason == "unclaimed_record"
+        for record_id in item.record_ids
+    }
+    permitted_ids: dict[str, set[str]] = {kind: set() for kind in _COLLECTIONS}
+    permits_new: set[str] = set()
+    for item in worklist.items:
+        if item.reason == "unclaimed_record" or item.record_kind not in _COLLECTIONS:
+            continue
+        if item.record_ids:
+            permitted_ids[item.record_kind].update(item.record_ids)
+        else:
+            permits_new.add(item.record_kind)
+
+    changes: dict[str, object] = {}
+    discarded: dict[str, int] = {}
+    for kind, (collection, id_field) in _COLLECTIONS.items():
+        records = list(getattr(proposed, collection))
+        retained = [
+            record
+            for record in records
+            if kind in permits_new
+            or str(getattr(record, id_field)) in permitted_ids[kind]
+        ]
+        changes[collection] = retained
+        discarded[collection] = len(records) - len(retained)
+
+    removals = [
+        removal
+        for removal in proposed.removals
+        if (removal.record_kind, removal.record_id) in permitted_removals
+    ]
+    changes["removals"] = removals
+    discarded["removals"] = len(proposed.removals) - len(removals)
+    return proposed.model_copy(update=changes), discarded
+
+
 def run_targeted_repair(
     *,
     client: ModelClient,
@@ -415,14 +467,22 @@ def run_targeted_repair(
     selected_blocks = [known[block_id] for block_id in selected_ids]
     evidence = evidence_payload(selected_blocks)
     evidence_spans = build_evidence_spans(selected_blocks)
-    record_ids = {record_id for item in worklist.items for record_id in item.record_ids}
+    requested_ids = {
+        kind: {
+            record_id
+            for item in worklist.items
+            if item.record_kind == kind
+            for record_id in item.record_ids
+        }
+        for kind in _COLLECTIONS
+    }
     current_records = {
         collection: [
             compact_to_span_citations(record, evidence_spans)
             for record in getattr(study, collection)
-            if str(getattr(record, id_field)) in record_ids
+            if str(getattr(record, id_field)) in requested_ids[kind]
         ]
-        for collection, id_field in _COLLECTIONS.values()
+        for kind, (collection, id_field) in _COLLECTIONS.items()
     }
     try:
         proposed = client.complete(
@@ -468,12 +528,14 @@ def run_targeted_repair(
             after_quality=before,
             reason="the model returned an empty patch",
         )
+    proposed, discarded_counts = _scope_repair_to_worklist(proposed, worklist)
     if not _proposal_is_scoped(proposed, worklist):
         return study, RepairAudit(
             status="rejected",
             worklist=worklist,
             selected_block_ids=selected_ids,
             proposed_record_counts=counts,
+            discarded_record_counts=discarded_counts,
             before_quality=before,
             after_quality=before,
             reason="the patch contains an unrequested record kind or duplicate ID",
@@ -485,6 +547,7 @@ def run_targeted_repair(
             worklist=worklist,
             selected_block_ids=selected_ids,
             proposed_record_counts=counts,
+            discarded_record_counts=discarded_counts,
             before_quality=before,
             after_quality=before,
             reason="the patch did not change the extraction",
@@ -498,9 +561,14 @@ def run_targeted_repair(
             worklist=worklist,
             selected_block_ids=selected_ids,
             proposed_record_counts=counts,
+            discarded_record_counts=discarded_counts,
             before_quality=before,
             after_quality=after,
-            reason=None
+            reason=(
+                "unrequested model additions were discarded before applying the patch"
+                if accepted and any(discarded_counts.values())
+                else None
+            )
             if accepted
             else "proposed patch failed monotonic quality gates",
         ),
