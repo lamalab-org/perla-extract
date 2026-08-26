@@ -338,15 +338,6 @@ TOP_LEVEL_RECORD_BY_OBJECT_ROLE = {
     ),
     "stability_experiment": ("stability_test", "stability_tests", "test_id"),
 }
-DEFAULT_RECORD_KIND_BY_CLAIM = {
-    "composition": "device_family",
-    "processing": "device_family",
-    "performance": "performance_observation",
-    "population": "population_statistic",
-    "stability": "stability_test",
-    "measurement_condition": "performance_observation",
-    "reported_quantity": "device_family",
-}
 
 
 def _record_evidence(record: object) -> tuple[set[str], set[str]]:
@@ -559,11 +550,19 @@ def audit_claim_coverage(
             if (item := object_by_id.get(object_id)) is not None
             and item.role in TOP_LEVEL_RECORD_BY_OBJECT_ROLE
         }
-        record_kind = (
-            next(iter(role_kinds))
-            if len(role_kinds) == 1
-            else DEFAULT_RECORD_KIND_BY_CLAIM.get(claim.kind)
-        )
+        record_kind = next(iter(role_kinds)) if len(role_kinds) == 1 else None
+        if claim.subject_object_ids and not role_kinds:
+            counts["uncertain"] += 1
+            items.append(
+                {
+                    **claim.model_dump(mode="json"),
+                    "status": "uncertain",
+                    "record_kind": None,
+                    "candidate_record_ids": [],
+                    "missing_shared_targets": [],
+                }
+            )
+            continue
         candidate_kinds = sorted(role_kinds) or (
             [record_kind] if record_kind else list(records)
         )

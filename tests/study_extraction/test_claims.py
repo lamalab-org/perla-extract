@@ -182,6 +182,40 @@ def test_characterization_object_does_not_require_or_justify_a_device_family():
     assert overextracted_audit["counts"]["unclaimed_records"] == 1
 
 
+def test_processing_arm_quantity_is_not_forced_into_a_top_level_record():
+    evidence = citation("result", "The mild reduction lasted 60 s")
+    ledger = ClaimLedger(
+        objects=[
+            ExperimentalObject(
+                object_id="mild-reduction",
+                label="mild reduction",
+                role="processing_arm",
+                scope="target",
+                evidence=[evidence],
+            )
+        ],
+        claims=[
+            SourceClaim(
+                claim_id="duration",
+                kind="reported_quantity",
+                label="mild-reduction duration",
+                subject_object_ids=["mild-reduction"],
+                scope="target",
+                raw_value="60 s",
+                shared_targets=[],
+                evidence=[evidence],
+            )
+        ],
+    )
+
+    audit = audit_claim_coverage(ledger, extraction())
+
+    claim = next(item for item in audit["items"] if item.get("claim_id"))
+    assert claim["status"] == "uncertain"
+    assert claim["record_kind"] is None
+    assert audit["counts"]["unmatched"] == 0
+
+
 def test_shared_quantity_requires_one_atomic_value_per_named_target():
     evidence = citation("recipe", "a 1.4 M PbI2, MAI, and DMSO solution")
     objects = [

@@ -54,6 +54,9 @@ REPAIR_PROMPT = f"""Resolve the supplied worklist conservatively.
 Rules:
 - Preserve device families, individual devices, population statistics, performance
   observations, and stability tests as different reporting levels.
+- A processing arm is not a PopulationStatistic unless the source actually reports a
+  population statistic, distribution, or aggregate result for multiple devices. Do
+  not create a population merely to retain a group-level process distinction.
 - Return a complete replacement record when correcting an existing ID, or a complete
   new record when recovering an omitted entity. Do not return unchanged records.
 - Keep every ReportedValue atomic: one semantic quantity per object.
@@ -180,6 +183,7 @@ def build_repair_worklist(
         if not isinstance(candidate, dict) or candidate.get("status") in {
             "covered",
             "context",
+            "uncertain",
         }:
             continue
         evidence = candidate.get("evidence", [])
