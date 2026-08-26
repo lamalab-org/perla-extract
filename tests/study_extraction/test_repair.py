@@ -16,6 +16,7 @@ from perla_extract.study_extraction.repair import (
     RepairWorkItem,
     RepairWorklist,
     StudyRepair,
+    _monotonic_repair_subset,
     _proposal_is_scoped,
     run_targeted_repair,
 )
@@ -317,3 +318,45 @@ def test_repair_cannot_remove_and_replace_the_same_record():
     )
 
     assert not _proposal_is_scoped(proposed, worklist)
+
+
+def test_repair_salvages_only_independently_quality_improving_records():
+    block = EvidenceBlock(
+        block_id="b1", source="main", page=1, kind="paragraph", text="Device B"
+    )
+    valid = EvidenceCitation(block_id="b1", quote="Device B")
+    invalid = EvidenceCitation(block_id="missing", quote="Device B")
+    study = empty_study().model_copy(
+        update={"device_families": [family(invalid)]}
+    )
+    proposed = StudyRepair(
+        device_families=[
+            family(valid),
+            family(invalid).model_copy(update={"family_id": "unrelated-c"}),
+            family(invalid).model_copy(update={"family_id": "unrelated-d"}),
+        ],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        removals=[],
+        unresolved_notes=[],
+    )
+
+    repaired, quality, counts = _monotonic_repair_subset(
+        study,
+        proposed,
+        [block],
+        None,
+        {
+            "validation_issues": 1,
+            "reported_values": 0,
+            "source_verified_values": 0,
+            "semantic_issues": 0,
+        },
+    )
+
+    assert [item.family_id for item in repaired.device_families] == ["family-b"]
+    assert repaired.device_families[0].evidence == [valid]
+    assert quality["validation_issues"] == 0
+    assert counts["device_families"] == 1

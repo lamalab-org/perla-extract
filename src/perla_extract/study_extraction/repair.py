@@ -117,6 +117,7 @@ class RepairAudit(StrictModel):
     selected_block_ids: list[str]
     proposed_record_counts: dict[str, int]
     discarded_record_counts: dict[str, int] = Field(default_factory=dict)
+    applied_record_counts: dict[str, int] = Field(default_factory=dict)
     before_quality: dict[str, int]
     after_quality: dict[str, int]
     reason: str | None
@@ -415,6 +416,87 @@ def _scope_repair_to_worklist(
     return proposed.model_copy(update=changes), discarded
 
 
+def _repair_counts(repair: StudyRepair) -> dict[str, int]:
+    """Count record-boundary changes in one repair proposal or accepted subset."""
+
+    counts = {
+        collection: len(getattr(repair, collection))
+        for collection, _ in _COLLECTIONS.values()
+    }
+    counts["removals"] = len(repair.removals)
+    return counts
+
+
+def _empty_repair() -> StudyRepair:
+    """Create an empty typed patch for testing one proposed record in isolation."""
+
+    return StudyRepair(
+        device_families=[],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        removals=[],
+        unresolved_notes=[],
+    )
+
+
+def _monotonic_repair_subset(
+    study: StudyExtraction,
+    proposed: StudyRepair,
+    blocks: list[EvidenceBlock],
+    ledger: ClaimLedger | None,
+    before: dict[str, int],
+) -> tuple[StudyExtraction, dict[str, int], dict[str, int]]:
+    """Salvage independent corrections when a larger repair patch regresses quality.
+
+    Validation fixes and safe removals should not be lost because the same model
+    response also contains an unrelated bad edit. Each complete top-level record is
+    tried separately and retained only when it strictly reduces validation or
+    semantic issues without worsening the other signal. This fallback deliberately
+    does not accept mutually dependent additions; those require a coherent patch that
+    passes the normal whole-proposal gate.
+    """
+
+    candidate = study
+    quality = before
+    accepted = _empty_repair()
+    for collection, _ in _COLLECTIONS.values():
+        for record in getattr(proposed, collection):
+            patch = _empty_repair().model_copy(update={collection: [record]})
+            trial = apply_repair(candidate, patch)
+            trial_quality = candidate_quality(trial, blocks, ledger)
+            if is_monotonic_quality(quality, trial_quality) and (
+                trial_quality["validation_issues"] < quality["validation_issues"]
+                or trial_quality["semantic_issues"] < quality["semantic_issues"]
+            ):
+                candidate = trial
+                quality = trial_quality
+                getattr(accepted, collection).append(record)
+    for removal in proposed.removals:
+        patch = _empty_repair().model_copy(update={"removals": [removal]})
+        trial = apply_repair(candidate, patch)
+        trial_quality = candidate_quality(trial, blocks, ledger)
+        if is_monotonic_quality(quality, trial_quality) and (
+            trial_quality["validation_issues"] < quality["validation_issues"]
+            or trial_quality["semantic_issues"] < quality["semantic_issues"]
+        ):
+            candidate = trial
+            quality = trial_quality
+            accepted.removals.append(removal)
+    if candidate != study and proposed.unresolved_notes:
+        candidate = candidate.model_copy(
+            update={
+                "unresolved_notes": list(
+                    dict.fromkeys(
+                        [*candidate.unresolved_notes, *proposed.unresolved_notes]
+                    )
+                )
+            }
+        )
+    return candidate, quality, _repair_counts(accepted)
+
+
 def run_targeted_repair(
     *,
     client: ModelClient,
@@ -513,11 +595,7 @@ def run_targeted_repair(
             after_quality=before,
             reason=str(exc),
         )
-    counts = {
-        collection: len(getattr(proposed, collection))
-        for collection, _ in _COLLECTIONS.values()
-    }
-    counts["removals"] = len(proposed.removals)
+    counts = _repair_counts(proposed)
     if not any(counts.values()) and not proposed.unresolved_notes:
         return study, RepairAudit(
             status="no_change",
@@ -554,6 +632,12 @@ def run_targeted_repair(
         )
     after = candidate_quality(candidate, blocks, ledger)
     accepted = is_monotonic_quality(before, after)
+    applied_counts = _repair_counts(proposed) if accepted else empty_counts
+    if not accepted:
+        candidate, after, applied_counts = _monotonic_repair_subset(
+            study, proposed, blocks, ledger, before
+        )
+        accepted = candidate != study
     return (
         candidate if accepted else study,
         RepairAudit(
@@ -562,10 +646,13 @@ def run_targeted_repair(
             selected_block_ids=selected_ids,
             proposed_record_counts=counts,
             discarded_record_counts=discarded_counts,
+            applied_record_counts=applied_counts,
             before_quality=before,
             after_quality=after,
             reason=(
-                "unrequested model additions were discarded before applying the patch"
+                "applied only independently quality-improving record corrections"
+                if accepted and applied_counts != _repair_counts(proposed)
+                else "unrequested model additions were discarded before applying the patch"
                 if accepted and any(discarded_counts.values())
                 else None
             )
