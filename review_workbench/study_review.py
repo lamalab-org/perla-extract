@@ -217,6 +217,7 @@ class ReviewEvent(BaseModel):
         "record_decision",
         "stage_complete",
         "review_reset",
+        "ground_truth_refresh",
         "seed_imported",
     ]
     action: MutationAction | None = None

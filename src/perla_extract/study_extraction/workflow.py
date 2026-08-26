@@ -1002,7 +1002,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             quote_repairs = draft_quote_repairs
             pointer_repairs = draft_pointer_repairs
             logger.warning(
-                "Retaining the draft because the refinement did not improve grounding"
+                "Retaining the draft: %s", refinement_selection["reason"]
             )
     citation_repairs = {
         "repair_count": quote_repairs["repair_count"]

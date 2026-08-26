@@ -19,10 +19,26 @@ from review_workbench.study_review import (
     MutationRequest,
     RecordDecisionRequest,
     ReviewerResetRequest,
+    ReviewEvent,
     StageRequest,
     StudyReviewStore,
     UndoMutationRequest,
 )
+
+
+def test_ground_truth_refresh_is_a_distinct_audit_event():
+    event = ReviewEvent.model_validate(
+        {
+            "event_id": "refresh-1",
+            "revision": 2,
+            "timestamp": "2026-08-26T12:00:00+00:00",
+            "reviewer_id": "assisted-source-review",
+            "kind": "ground_truth_refresh",
+            "note": "Rebuilt the draft against the paper and SI.",
+        }
+    )
+
+    assert event.kind == "ground_truth_refresh"
 
 
 def study_with_family(empty_study):
