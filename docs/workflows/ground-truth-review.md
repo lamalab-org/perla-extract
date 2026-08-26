@@ -36,8 +36,10 @@ stateDiagram-v2
    number is not the census answer. Count device families, individual devices,
    performance observations, population statistics, and stability tests. The submitted
    source list is workflow coverage, not an extraction outcome.
-   A **device family** is one group-level recipe or architecture variant, such as a
-   control or treatment design that may have several fabricated specimens. An
+   A **device family** is one complete photovoltaic design defined by its functional
+   layer materials, absorber composition, and topology. A different treatment,
+   thickness, or measurement purpose does not create another family when that design
+   is unchanged; characterization-only films and partial stacks are not families. An
    **individual device** is one particular measured specimen, such as a champion,
    representative, or certified cell. Several scans or stability checkpoints on that
    specimen do not create more devices; a mean or distribution is a population

@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import Field
 
+from .guidance import DEVICE_FAMILY_POLICY
 from .inventory import EvidenceInventory, audit_inventory_coverage
 from .models import (
     CrossWindowIdentityLink,
@@ -45,8 +46,9 @@ supplied parser text and table blocks. Never infer from an image, general knowle
 or cited prior literature. Return only complete records that must be added or replaced.
 An empty patch is correct when the evidence is insufficient."""
 
-REPAIR_PROMPT = """Resolve the supplied worklist conservatively.
+REPAIR_PROMPT = f"""Resolve the supplied worklist conservatively.
 
+{DEVICE_FAMILY_POLICY}
 Rules:
 - Preserve device families, individual devices, population statistics, performance
   observations, and stability tests as different reporting levels.

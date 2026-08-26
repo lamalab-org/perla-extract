@@ -10,8 +10,8 @@ const COLLECTIONS = {
 };
 const RECORD_GUIDANCE = {
   device_families: {
-    census: "One shared recipe or architecture variant, such as a control or treatment group. Do not count a champion, scan direction, or mean as another family.",
-    review: "Check the shared stack, composition, architecture, and fabrication recipe. Performance numbers belong in linked observations or population statistics.",
+    census: "One complete photovoltaic design defined by its layer materials, absorber composition, and topology. A treatment condition, thickness, champion, scan, or mean is not another family when that design is unchanged. Characterization-only films and partial stacks are not device families.",
+    review: "Check that this is a complete photovoltaic device design and that its shared stack, composition, and architecture are correct. Specimen-specific processing and performance belong in linked records.",
   },
   individual_devices: {
     census: "One particular measured specimen that the paper distinguishes, such as a champion, representative, or certified cell. Multiple measurements of the same cell are not additional devices.",
@@ -40,8 +40,8 @@ const DECISION_GUIDANCE = {
   needs_correction: "One or more fields need correction",
 };
 const QUALITY_GATES = [
-  "Main-paper device variants checked",
-  "Supporting-information device variants checked",
+  "Main-paper device designs and experimental variants checked",
+  "Supporting-information device designs and experimental variants checked",
   "Champion and representative devices kept distinct",
   "Individual observations and population statistics kept distinct",
   "Scan directions and stabilized measurements kept distinct",

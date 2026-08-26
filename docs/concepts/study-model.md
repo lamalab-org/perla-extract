@@ -77,11 +77,20 @@ erDiagram
 
 ## Device families and composition
 
-A `DeviceFamily` is one group-level recipe or architecture variant that can describe
-several fabricated specimens. Split families when the paper presents a control,
-treatment, composition, stack, or fabrication recipe as a distinct reusable design.
-Do not create another family for a champion label, scan direction, measurement
-protocol, stability checkpoint, or summary statistic.
+A `DeviceFamily` is one complete photovoltaic design that can describe several
+fabricated specimens. Its identity comes from the ordered functional-layer materials,
+absorber composition or compositions, and cell polarity or topology. Split families
+when one of those design-defining features changes. A material intentionally retained
+in the finished device can distinguish a family.
+
+Do not create another family solely because the paper changes a fabrication parameter,
+post-treatment, thickness, area, measurement protocol, scan direction, aging
+condition, or champion label while keeping the underlying design. Those distinctions
+belong to the linked specimen when the source identifies one. If a paper reports only
+a group-level process arm that the schema cannot attach faithfully, preserve that gap
+in `unresolved_notes` rather than manufacturing another family. Films, partial stacks,
+substrates, and other specimens made only for characterization are context rather than
+photovoltaic device families.
 
 An `IndividualDevice` is one particular measured specimen distinguished by the paper,
 for example a champion, representative, or certified cell. Multiple measurements on

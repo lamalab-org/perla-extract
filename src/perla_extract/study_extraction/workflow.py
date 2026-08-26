@@ -25,6 +25,7 @@ from .evidence import (
     repair_noncontiguous_citation_quotes,
     repair_unique_citation_pointers,
 )
+from .guidance import DEVICE_FAMILY_POLICY
 from .identity_linking import IdentityLinkProposal, attach_valid_identity_links
 from .inventory import (
     EvidenceInventory,
@@ -49,7 +50,6 @@ from .repair import (
     REPAIR_SYSTEM_PROMPT,
     RepairAudit,
     candidate_quality,
-    is_monotonic_quality,
     run_targeted_repair,
 )
 from .source import parse_documents
@@ -68,13 +68,14 @@ SYSTEM_PROMPT = """Extract the complete present photovoltaic study as device-cen
 Use only supplied evidence. Preserve source wording and distinctions. Never invent,
 interpolate, digitize graph traces, or import values from cited literature."""
 
-EXTRACTION_PROMPT = """Read all supplied evidence before extracting.
+EXTRACTION_PROMPT = f"""Read all supplied evidence before extracting.
 
-Identify every distinct device family or processing/composition variant made in the
-present study. Then identify every individually measured device, performance
+Identify every distinct photovoltaic device family made in the present study. Then
+identify every individually measured device, performance
 observation, population statistic, and stability specimen. Connect records only when
 the evidence supports the connection.
 
+{DEVICE_FAMILY_POLICY}
 Rules:
 - Preserve a device as one coherent object. Do not create one device per metric,
   paragraph, layer, scan direction, or stability checkpoint.
@@ -140,27 +141,32 @@ candidate only when at least one of its EvidenceCitation entries cites a PRIMARY
 EVIDENCE block. Do not emit candidates supported exclusively by context. Partial
 candidates are allowed: later windows are combined without deleting them."""
 
-IDENTITY_LINK_PROMPT = """Identify only candidates that refer to the same real-world
+IDENTITY_LINK_PROMPT = f"""Identify only candidates that refer to the same real-world
 entity across extraction windows. Return explicit identity links; do not merge, delete,
 rank, or rewrite candidates.
 
+{DEVICE_FAMILY_POLICY}
 Rules:
 - Group only IDs of the declared entity_kind and only IDs present below.
 - Require positive identity evidence, not merely similar materials or metric values.
-- Device variants, different individual devices, different scan directions, population
-  statistics, and separate stability specimens are distinct unless the candidate
-  evidence explicitly establishes identity.
+- Different family-defining architectures, different individual devices, different
+  scan directions, population statistics, and separate stability specimens are
+  distinct unless the candidate evidence explicitly establishes identity. Two
+  mentions of the same family can still describe different processing arms.
 - Each candidate may appear in at most one link of its entity kind.
 - Cite the supplied evidence span IDs that support the identity link.
 - An empty identity_links list is correct when identity is uncertain.
 """
 
-INVENTORY_PROMPT = """Independently inventory the photovoltaic records made or
+INVENTORY_PROMPT = f"""Independently inventory the photovoltaic records made or
 measured in the present study before detailed extraction. Identify photovoltaic device
-families or processing/composition variants, individually measured photovoltaic
+families, individually measured photovoltaic
 devices, their protocol-specific performance observations, population statistics, and
 stability tests. Do not extract their numerical values. Keep distinct reporting levels
-and variants distinct. Non-photovoltaic components, material-only specimens, and
+distinct.
+
+{DEVICE_FAMILY_POLICY}
+Non-photovoltaic components, material-only specimens, and
 integrated systems are context rather than target records unless the evidence
 specifically reports a photovoltaic device or measurement represented by the schema.
 
@@ -689,42 +695,30 @@ def _select_refinement_candidate(
     blocks: list[EvidenceBlock],
     inventory: EvidenceInventory | None,
 ) -> tuple[StudyExtraction, dict[str, object]]:
-    """Reject a refinement when the draft has strictly stronger source grounding.
+    """Prefer a changed refinement unless it introduces deterministic errors.
 
-    Refinement can make legitimate precision/recall trade-offs that deterministic
-    checks cannot adjudicate. A refinement is therefore retained unless it made no
-    change, or the draft has both no more validation issues and no fewer source-
-    verified values, with a strict improvement in at least one. Inventory coverage
-    remains visible in the audit and drives targeted repair; it cannot make an
-    ungrounded full rewrite replace a better-grounded seed.
+    Citation counts measure textual grounding, not entity precision: eight
+    source-quoted treatment arms can still be one device family. The refinement call
+    is responsible for semantic reconciliation, while deterministic validation keeps
+    malformed citations and values from replacing a safer draft. All quality counts
+    remain in the audit for evaluation rather than acting as a recall-only gate.
     """
 
     draft_quality = candidate_quality(draft, blocks, inventory)
     refinement_quality = candidate_quality(refinement, blocks, inventory)
     same_candidate = draft == refinement
-    draft_grounding_no_worse = (
-        draft_quality["validation_issues"]
-        <= refinement_quality["validation_issues"]
-        and draft_quality["source_verified_values"]
-        >= refinement_quality["source_verified_values"]
-    )
-    draft_grounding_strictly_better = (
-        draft_quality["validation_issues"]
-        < refinement_quality["validation_issues"]
-        or draft_quality["source_verified_values"]
-        > refinement_quality["source_verified_values"]
-    )
     selected = (
         "draft"
         if same_candidate
-        or (draft_grounding_no_worse and draft_grounding_strictly_better)
+        or draft_quality["validation_issues"]
+        < refinement_quality["validation_issues"]
         else "refinement"
     )
-    reason = "refinement is not strictly source-grounding-dominated by the draft"
+    reason = "refinement changed the draft without increasing validation issues"
     if same_candidate:
         reason = "refinement produced no candidate change"
     elif selected == "draft":
-        reason = "draft strictly dominates refinement on source grounding"
+        reason = "refinement introduced additional validation issues"
     return (
         draft if selected == "draft" else refinement,
         {
@@ -743,19 +737,22 @@ def _gate_final_candidate_against_draft(
     inventory: EvidenceInventory | None,
     selection: dict[str, object],
 ) -> tuple[StudyExtraction, dict[str, object]]:
-    """Prevent refinement and repair from jointly degrading a safe draft.
+    """Prevent refinement and repair from jointly introducing invalid content.
 
     The targeted repair gate compares a patch with the candidate it received, but a
-    repaired refinement can still be worse than the original draft.  This final gate
-    keeps the richer candidate only when validation, source-verified values, reported
-    values, and inventory coverage are all non-worsening relative to that immutable
-    baseline.  It deliberately makes no weighted trade-off between correctness and
-    recall for a ground-truth pre-annotation.
+    repaired refinement can still be less valid than the original draft. This final
+    gate therefore compares deterministic validation issues with the immutable
+    baseline. It deliberately does not require non-decreasing record, value, or
+    inventory counts: doing so would make precision corrections such as consolidating
+    treatment-arm families impossible.
     """
 
     draft_quality = candidate_quality(draft, blocks, inventory)
     candidate_quality_summary = candidate_quality(candidate, blocks, inventory)
-    accepted = is_monotonic_quality(draft_quality, candidate_quality_summary)
+    accepted = (
+        candidate_quality_summary["validation_issues"]
+        <= draft_quality["validation_issues"]
+    )
     result = dict(selection)
     result["pre_repair_selected"] = selection["selected"]
     result["draft_quality"] = draft_quality
@@ -763,12 +760,12 @@ def _gate_final_candidate_against_draft(
     if accepted:
         result["selected"] = str(selection["selected"])
         result["reason"] = (
-            "final candidate is non-worsening relative to the source-grounded draft"
+            "final candidate does not add validation issues relative to the draft"
         )
         return candidate, result
     result["selected"] = "draft"
     result["reason"] = (
-        "final candidate regressed validation, grounded values, or inventory coverage"
+        "final candidate introduced validation issues relative to the draft"
     )
     return draft, result
 

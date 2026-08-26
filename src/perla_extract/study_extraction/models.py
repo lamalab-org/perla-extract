@@ -199,11 +199,12 @@ class AbsorberComponent(StrictModel):
 
 
 class DeviceFamily(StrictModel):
-    """Collect the composition and fabrication shared by a reported device variant.
+    """Describe one complete photovoltaic design shared by fabricated specimens.
 
-    Performance observations link to individual devices rather than directly to this
-    record, so family-level structure is not confused with a champion or population
-    result.
+    Family identity comes from the functional-layer materials, absorber composition,
+    and device topology—not every treatment arm or fabrication setting. Performance
+    observations link to individual devices rather than directly to this record, so
+    family-level structure is not confused with a champion or population result.
     """
 
     family_id: Identifier

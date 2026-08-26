@@ -194,7 +194,8 @@ def test_inventory_defines_counts_without_hiding_records():
     source = (APP / "app.js").read_text(encoding="utf-8")
 
     assert "What counts as a family, device, or measurement?" in html
-    assert "One shared recipe or architecture variant" in source
+    assert "One complete photovoltaic design" in source
+    assert "Characterization-only films and partial stacks" in source
     assert "One particular measured specimen" in source
     assert "Multiple measurements of the same cell are not additional devices" in source
     assert "You can inspect and correct Records now" not in html

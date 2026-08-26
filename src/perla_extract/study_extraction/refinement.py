@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .artifacts import write_json_atomic
 from .client import ModelCallError, ModelClient
+from .guidance import DEVICE_FAMILY_POLICY
 from .models import EvidenceBlock, StudyExtraction
 from .spans import build_evidence_spans
 from .transport import (
@@ -15,14 +16,20 @@ from .transport import (
     span_citation_schema,
 )
 
-REFINEMENT_PROMPT = """Audit the supplied draft against all supplied evidence and
+REFINEMENT_PROMPT = f"""Audit the supplied draft against all supplied evidence and
 return a complete corrected StudyExtraction.
 
+{DEVICE_FAMILY_POLICY}
 Treat the draft and independent inventory as fallible aids, never as source evidence.
 For every grounded inventory candidate, either represent the source-supported record
 at the correct reporting level or explain the unresolved conflict in unresolved_notes.
 Recover supported records and atomic values the draft missed. Remove or correct
 duplicates, unsupported claims, wrong links, and mixed individual/population records.
+In particular, consolidate draft families that are only processing arms of the same
+device design, and remove characterization-only partial structures from
+device_families. Do not discard their supported facts: move specimen-specific values
+to the appropriate individual device, or state an unresolved group-only distinction
+in unresolved_notes when the present schema cannot represent it faithfully.
 Keep specimen-specific values on IndividualDevice.reported_properties and conditions
 that change during aging on the corresponding StabilityCheckpoint.conditions.
 Preserve correct content. Every retained or added scientific claim must cite supplied

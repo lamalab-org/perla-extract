@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from perla_extract.study_extraction.guidance import DEVICE_FAMILY_POLICY
 from perla_extract.study_extraction.inventory import InventoryItem
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
@@ -12,7 +13,12 @@ from perla_extract.study_extraction.models import (
     StudyExtraction,
     study_schema_sha256,
 )
+from perla_extract.study_extraction.refinement import REFINEMENT_PROMPT
+from perla_extract.study_extraction.repair import REPAIR_PROMPT
 from perla_extract.study_extraction.workflow import (
+    EXTRACTION_PROMPT,
+    IDENTITY_LINK_PROMPT,
+    INVENTORY_PROMPT,
     ExtractionConfig,
     _gate_final_candidate_against_draft,
     _run_model_calls,
@@ -41,6 +47,22 @@ class RecordingClient:
             stability_tests=[],
             unresolved_notes=[f"pass {len(self.prompts)}"],
         )
+
+
+def test_every_semantic_pass_uses_the_same_device_family_boundary():
+    """Keep high-recall passes from silently reintroducing treatment-arm families."""
+
+    for prompt in (
+        EXTRACTION_PROMPT,
+        INVENTORY_PROMPT,
+        IDENTITY_LINK_PROMPT,
+        REFINEMENT_PROMPT,
+        REPAIR_PROMPT,
+    ):
+        assert DEVICE_FAMILY_POLICY in prompt
+    assert "processing/composition variant" not in EXTRACTION_PROMPT
+    assert "processing/composition variants" not in INVENTORY_PROMPT
+    assert "characterization-only partial structures" in REFINEMENT_PROMPT
 
 
 def test_dry_run_writes_a_complete_request_plan(tmp_path):
@@ -174,6 +196,63 @@ def test_refinement_is_rejected_when_the_grounded_draft_strictly_dominates():
     assert audit["draft_quality"]["source_verified_values"] == 1
     assert audit["refinement_quality"]["source_verified_values"] == 0
     assert audit["refinement_quality"]["reported_values"] == 2
+
+
+def test_refinement_may_remove_grounded_values_to_correct_entity_precision():
+    block = EvidenceBlock(
+        block_id="result",
+        source="main",
+        page=1,
+        kind="text",
+        text="The same device was reported at 40 ms and 80 ms.",
+    )
+    citation = EvidenceCitation(block_id="result", quote=block.text)
+
+    def candidate(raw_values: list[str]) -> StudyExtraction:
+        return StudyExtraction(
+            paper=PaperMetadata(title=None, doi=None),
+            device_families=[],
+            individual_devices=[
+                IndividualDevice(
+                    device_id="device-a",
+                    family_id=None,
+                    label="Device A",
+                    variant=None,
+                    champion_status="not_reported",
+                    selection_basis="not_reported",
+                    reported_properties=[
+                        ReportedValue(
+                            name="delay",
+                            raw_value=raw_value,
+                            value_number=float(raw_value.split()[0]),
+                            unit="ms",
+                            evidence=[citation],
+                        )
+                        for raw_value in raw_values
+                    ],
+                    evidence=[citation],
+                )
+            ],
+            performance_observations=[],
+            population_statistics=[],
+            stability_tests=[],
+            unresolved_notes=[],
+        )
+
+    draft = candidate(["40 ms", "80 ms"])
+    refinement = candidate(["40 ms"])
+
+    selected, selection = _select_refinement_candidate(
+        draft, refinement, [block], None
+    )
+    final, audit = _gate_final_candidate_against_draft(
+        draft, selected, [block], None, selection
+    )
+
+    assert final == refinement
+    assert audit["selected"] == "refinement"
+    assert audit["draft_quality"]["source_verified_values"] == 2
+    assert audit["final_candidate_quality"]["source_verified_values"] == 1
 
 
 def test_final_candidate_cannot_trade_validation_for_more_values():
