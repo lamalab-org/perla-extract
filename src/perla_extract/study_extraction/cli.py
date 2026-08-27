@@ -68,6 +68,8 @@ def extract_study(
     single_call_max_input_tokens: int = 90_000,
     claim_window_input_tokens: int = 60_000,
     max_output_tokens: int = 80_000,
+    max_model_calls: int | None = None,
+    max_cost_usd: float | None = None,
     temperature: float | None = None,
     heartbeat_seconds: float = 20,
     timeout_seconds: float = 600,
@@ -110,6 +112,8 @@ def extract_study(
         single_call_max_input_tokens=single_call_max_input_tokens,
         claim_window_input_tokens=claim_window_input_tokens,
         max_output_tokens=max_output_tokens,
+        max_model_calls=max_model_calls,
+        max_cost_usd=max_cost_usd,
         temperature=temperature,
         heartbeat_seconds=heartbeat_seconds,
         timeout_seconds=timeout_seconds,
@@ -200,6 +204,18 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     "--claim-window-input-tokens", type=click.IntRange(min=1), default=60_000
 )
 @click.option("--max-output-tokens", type=click.IntRange(min=1), default=80_000)
+@click.option(
+    "--max-model-calls",
+    type=click.IntRange(min=1),
+    default=None,
+    help="Stop before sending more than this many provider requests, including retries.",
+)
+@click.option(
+    "--max-cost-usd",
+    type=click.FloatRange(min=0, min_open=True),
+    default=None,
+    help="Stop before the next call once provider-reported spend reaches this amount.",
+)
 @click.option("--temperature", type=float, default=None)
 @click.option("--heartbeat-seconds", type=click.FloatRange(min=0), default=20.0)
 @click.option(

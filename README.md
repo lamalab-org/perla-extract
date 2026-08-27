@@ -15,6 +15,7 @@ perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
   --model openrouter/openai/gpt-5.6-sol:exacto \
+  --max-cost-usd 2.00 \
   --output-dir results/paper
 ```
 

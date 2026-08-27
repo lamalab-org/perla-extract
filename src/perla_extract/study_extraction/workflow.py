@@ -221,6 +221,8 @@ class ExtractionConfig:
     single_call_max_input_tokens: int = 90_000
     claim_window_input_tokens: int = 60_000
     max_output_tokens: int = 80_000
+    max_model_calls: int | None = None
+    max_cost_usd: float | None = None
     temperature: float | None = None
     heartbeat_seconds: float = 20
     timeout_seconds: float = 600
@@ -678,6 +680,10 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         <= 0
     ):
         raise ValueError("token limits must be positive")
+    if config.max_model_calls is not None and config.max_model_calls <= 0:
+        raise ValueError("max_model_calls must be positive")
+    if config.max_cost_usd is not None and config.max_cost_usd <= 0:
+        raise ValueError("max_cost_usd must be positive")
 
     config.output_dir.mkdir(parents=True, exist_ok=True)
     for name in (
@@ -759,6 +765,13 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     if config.dry_run:
         extraction_call_count = 1
         claim_call_count = len(claim_plan) if config.use_claim_ledger else 0
+        planned_calls = (
+            extraction_call_count
+            + extraction_call_count * int(config.use_refinement)
+            + claim_call_count
+            + (3 if config.use_enrichment else 0)
+            + int(config.use_targeted_repair)
+        )
         report = {
             "status": "dry_run",
             "claim_mode": claim_mode,
@@ -766,17 +779,21 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             "evidence_blocks": len(blocks),
             "selected_evidence_blocks": len(blocks),
             "approximate_request_tokens": approximate_tokens,
-            "planned_calls": extraction_call_count
-            + extraction_call_count * int(config.use_refinement)
-            + claim_call_count
-            + (3 if config.use_enrichment else 0)
-            + int(config.use_targeted_repair),
+            "planned_calls": planned_calls,
             "planned_refinement_calls": (
                 extraction_call_count if config.use_refinement else 0
             ),
             "planned_claim_calls": claim_call_count,
             "planned_enrichment_calls_max": 3 if config.use_enrichment else 0,
             "planned_targeted_repair_calls_max": int(config.use_targeted_repair),
+            "budget": {
+                "max_model_calls": config.max_model_calls,
+                "max_cost_usd": config.max_cost_usd,
+                "planned_calls_fit": (
+                    config.max_model_calls is None
+                    or planned_calls <= config.max_model_calls
+                ),
+            },
             "source_parsing": source_events,
             "elapsed_seconds": round(time.monotonic() - started, 3),
         }
@@ -789,6 +806,8 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         heartbeat_seconds=config.heartbeat_seconds,
         timeout_seconds=config.timeout_seconds,
         temperature=config.temperature,
+        max_model_calls=config.max_model_calls,
+        max_cost_usd=config.max_cost_usd,
     )
     errors: list[str] = []
     ledger: ClaimLedger | None = None
@@ -1184,6 +1203,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         "errors": errors,
         "calls": client.calls,
         "usage": _summarize_usage(client.calls),
+        "budget": client.budget_status(),
         "source_parsing": source_events,
         "elapsed_seconds": round(time.monotonic() - started, 3),
     }

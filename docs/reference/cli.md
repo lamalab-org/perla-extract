@@ -61,6 +61,8 @@ independently per window and merged afterward.
 | `--model TEXT` | `openrouter/openai/gpt-5.6-sol:exacto` | LiteLLM provider-prefixed model name |
 | `--reasoning-effort [omit|none|minimal|low|medium|high]` | `omit` | Reasoning setting; `omit` removes the parameter for models that do not support it |
 | `--max-output-tokens INTEGER` | `80000` | Maximum completion tokens per call |
+| `--max-model-calls INTEGER` | omitted | Maximum provider requests, including retries and validation repair |
+| `--max-cost-usd FLOAT` | omitted | Stop before the next call after provider-reported spend reaches this limit |
 | `--temperature FLOAT` | omitted | Sampling temperature; omission leaves the provider default |
 | `--timeout-seconds FLOAT` | `600` | Timeout for one live request |
 | `--heartbeat-seconds FLOAT` | `20` | Progress-log interval; `0` disables heartbeats |
@@ -78,7 +80,11 @@ cost experiments, compare `--no-refinement` and cheaper `--refinement-model` set
 against frozen ground truth rather than treating lower spend as equivalent quality.
 
 The command reports prompt tokens, completion tokens, cache hits, and provider-reported
-cost for each call. A cache hit has zero new usage in the aggregate `usage` object;
+cost for each call. Use `--max-model-calls` for a hard request limit and
+`--max-cost-usd` to stop before another request after known spend reaches the limit.
+Because providers report cost only after a response, one response can cross the monetary
+threshold; if cost is omitted, a configured monetary limit fails closed before the next
+request. A cache hit has zero new usage in the aggregate `usage` object;
 the original call metadata remains under `calls[].cached_response_usage` for provenance.
 Requests contain parser-produced text and tables only. No option enables rendered-page
 or vision-model input in this workflow.

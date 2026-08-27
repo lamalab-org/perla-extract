@@ -5,6 +5,7 @@ import litellm
 import pytest
 
 from perla_extract.study_extraction.client import (
+    ModelBudgetExceeded,
     ModelCallError,
     ModelClient,
     _strict_schema,
@@ -270,6 +271,65 @@ def test_pydantic_failure_gets_one_error_aware_repair(tmp_path, monkeypatch):
     assert client.calls[0]["attempt_count"] == 2
     assert client.calls[0]["usage"]["total_tokens"] == 30
     assert client.calls[0]["usage"]["cost"] == 0.02
+
+
+def test_model_call_budget_counts_provider_requests_not_cache_reads(
+    tmp_path, monkeypatch
+):
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        max_model_calls=1,
+    )
+    monkeypatch.setattr(
+        client,
+        "_live",
+        lambda body, failure: (empty_result(), {"cost": 0.01}),
+    )
+    request = {
+        "kind": "test",
+        "model": "test/model",
+        "system": "system",
+        "prompt": "prompt",
+        "response_model": StudyExtraction,
+        "max_output_tokens": 100,
+        "reasoning_effort": None,
+    }
+    client.complete(slug="first", **request)
+    client.complete(slug="cached", **request)
+
+    with pytest.raises(ModelBudgetExceeded, match="model-call budget exhausted"):
+        client.complete(slug="different", **{**request, "prompt": "different"})
+    assert client.budget_status()["provider_requests"] == 1
+
+
+@pytest.mark.parametrize("reported_cost", [0.02, None])
+def test_cost_budget_fails_closed_before_a_second_call(
+    tmp_path, monkeypatch, reported_cost
+):
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        max_cost_usd=0.01,
+    )
+    monkeypatch.setattr(
+        client,
+        "_live",
+        lambda body, failure: (empty_result(), {"cost": reported_cost}),
+    )
+    request = {
+        "kind": "test",
+        "model": "test/model",
+        "system": "system",
+        "response_model": StudyExtraction,
+        "max_output_tokens": 100,
+        "reasoning_effort": None,
+    }
+    client.complete(slug="first", prompt="first", **request)
+
+    with pytest.raises(ModelBudgetExceeded, match="cost budget"):
+        client.complete(slug="second", prompt="second", **request)
+    assert client.budget_status()["provider_requests"] == 1
 
 
 def test_litellm_request_preserves_schema_and_provider_prefix(tmp_path):

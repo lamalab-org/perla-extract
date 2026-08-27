@@ -39,6 +39,13 @@ class ModelCallError(RuntimeError):
         self.retryable = retryable
 
 
+class ModelBudgetExceeded(ModelCallError):
+    """Stop before a provider request would exceed a configured known budget."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, retryable=False)
+
+
 def _strict_schema(
     model: type[BaseModel], schema: dict[str, object] | None = None
 ) -> dict:
@@ -144,13 +151,66 @@ class ModelClient:
         heartbeat_seconds: float = 20,
         timeout_seconds: float = 600,
         temperature: float | None = 0,
+        max_model_calls: int | None = None,
+        max_cost_usd: float | None = None,
     ) -> None:
         self.cache_dir = cache_dir
         self.output_dir = output_dir
         self.heartbeat_seconds = heartbeat_seconds
         self.timeout_seconds = timeout_seconds
         self.temperature = temperature
+        self.max_model_calls = max_model_calls
+        self.max_cost_usd = max_cost_usd
         self.calls: list[dict[str, object]] = []
+        self._provider_requests = 0
+        self._known_cost_usd = 0.0
+        self._cost_tracking_complete = True
+
+    def _reserve_provider_request(self) -> None:
+        """Enforce limits immediately before a paid request leaves the process.
+
+        Provider cost is known only after a response, so ``max_cost_usd`` prevents the
+        *next* request once reported spend reaches the limit. If a provider omits cost,
+        a requested monetary limit fails closed before another request is sent.
+        """
+
+        if (
+            self.max_model_calls is not None
+            and self._provider_requests >= self.max_model_calls
+        ):
+            raise ModelBudgetExceeded(
+                f"model-call budget exhausted ({self.max_model_calls} provider requests)"
+            )
+        if self.max_cost_usd is not None and self._provider_requests:
+            if not self._cost_tracking_complete:
+                raise ModelBudgetExceeded(
+                    "cost budget cannot be enforced because the provider omitted cost"
+                )
+            if self._known_cost_usd >= self.max_cost_usd:
+                raise ModelBudgetExceeded(
+                    f"reported cost budget exhausted (${self.max_cost_usd:.4f})"
+                )
+        self._provider_requests += 1
+
+    def _record_provider_cost(self, usage: dict) -> None:
+        """Track provider-reported spend without substituting an estimated price."""
+
+        cost = usage.get("cost")
+        if cost is None:
+            self._cost_tracking_complete = False
+            return
+        self._known_cost_usd += float(cost)
+
+    def budget_status(self) -> dict[str, object]:
+        """Expose limits and observed provider accounting in the run report."""
+
+        return {
+            "max_model_calls": self.max_model_calls,
+            "max_cost_usd": self.max_cost_usd,
+            "provider_requests": self._provider_requests,
+            "reported_cost_usd": round(self._known_cost_usd, 8),
+            "cost_tracking_complete": self._cost_tracking_complete,
+        }
 
     def _request(
         self,
@@ -340,7 +400,9 @@ class ModelClient:
                 logger.info(
                     "Calling model provider for {} (attempt {}/2)", kind, attempt
                 )
+                self._reserve_provider_request()
                 raw_result, usage = self._live(current_body, failure_path)
+                self._record_provider_cost(usage)
                 attempt_usage.append(usage)
                 decoded_result = decode(raw_result) if decode else raw_result
                 validated = response_model.model_validate(decoded_result)
