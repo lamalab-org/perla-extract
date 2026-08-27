@@ -23,7 +23,7 @@ EntityKind = Literal[
     "population_statistic",
     "stability_test",
 ]
-STUDY_SCHEMA_VERSION = 4
+STUDY_SCHEMA_VERSION = 5
 
 
 class StrictModel(BaseModel):
@@ -422,35 +422,13 @@ class PaperMetadata(StrictModel):
     doi: Annotated[str | None, Field(max_length=300)]
 
 
-class CrossWindowIdentityLink(StrictModel):
-    """Link window candidates that denote the same real-world entity.
-
-    Candidates remain intact and auditable. The link communicates identity without
-    selecting one candidate or heuristically merging possibly conflicting details.
-    """
-
-    link_id: Identifier
-    entity_kind: EntityKind
-    candidate_ids: Annotated[list[Identifier], Field(min_length=2, max_length=100)]
-    rationale: ShortText
-    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=20)]
-
-    @model_validator(mode="after")
-    def validate_candidate_ids(self) -> CrossWindowIdentityLink:
-        """Reject duplicate candidates because one link denotes one identity set."""
-
-        if len(self.candidate_ids) != len(set(self.candidate_ids)):
-            raise ValueError("candidate_ids must be unique")
-        return self
-
-
 class StudyExtraction(StrictModel):
     """Represent all supported study entities without flattening reporting levels.
 
     The model deliberately keeps families, individual devices, protocol-specific
     observations, population statistics, and stability tests in separate collections.
-    Windowed extraction may add identity links, but candidates remain intact so
-    linking cannot silently discard conflicting evidence.
+    Claim collection may use multiple source windows, but final study entities are
+    reconciled globally before this schema is produced.
     """
 
     paper: PaperMetadata
@@ -459,8 +437,25 @@ class StudyExtraction(StrictModel):
     performance_observations: list[PerformanceObservation]
     population_statistics: list[PopulationStatistic]
     stability_tests: list[StabilityTest]
-    identity_links: list[CrossWindowIdentityLink] = Field(default_factory=list)
     unresolved_notes: list[ShortText]
+
+    @model_validator(mode="before")
+    @classmethod
+    def accept_empty_legacy_identity_links(cls, value: object) -> object:
+        """Load older empty-link artifacts without retaining a retired abstraction.
+
+        Claim-first extraction no longer emits partial schema candidates, so there is
+        nothing to link after assembly. A non-empty legacy link is rejected rather than
+        silently discarded because it may encode unresolved scientific identity.
+        """
+
+        if not isinstance(value, dict) or "identity_links" not in value:
+            return value
+        if value["identity_links"] not in (None, []):
+            raise ValueError("non-empty legacy identity_links require manual migration")
+        migrated = dict(value)
+        migrated.pop("identity_links")
+        return migrated
 
 
 def study_schema_sha256() -> str:

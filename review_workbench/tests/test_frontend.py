@@ -79,7 +79,6 @@ def test_ui_covers_every_rich_record_collection():
         "performance_observations",
         "population_statistics",
         "stability_tests",
-        "identity_links",
     ):
         assert collection in javascript
 
@@ -174,7 +173,6 @@ def test_backend_is_the_single_source_for_record_identity_fields():
         "observation_id",
         "population_id",
         "test_id",
-        "link_id",
     ):
         assert field in backend
         assert field not in source

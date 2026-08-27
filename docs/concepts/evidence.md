@@ -74,9 +74,8 @@ After extraction, `validate_study` checks:
    normalization;
 3. reported values occur in their cited evidence;
 4. source-reported material-form wording occurs in its cited evidence;
-5. family and device identifiers are unique;
-6. device, observation, population, and stability links resolve; and
-7. linked candidates exist and are not claimed by more than one identity link.
+5. family and device identifiers are unique; and
+6. device, observation, population, and stability references resolve.
 
 ```mermaid
 flowchart LR

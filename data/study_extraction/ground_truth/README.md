@@ -21,7 +21,7 @@ directory. It never overwrites a different existing item.
 
 An extractor output or imported review seed is not ground truth and must not be added
 here directly, even when every quotation passes deterministic validation. Keep such
-outputs in the review system until the blind inventory, record decisions, completeness
+outputs in the review system until the independent census, record decisions, completeness
 check, and administrator adjudication are complete.
 
 `ground_truth.json` is the sole curated truth. Generate reduced or tabular forms with

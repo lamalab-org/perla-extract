@@ -47,7 +47,7 @@ processing conditions, protocol identity, and ordered stability checkpoints.
 - `cells`: the validated reduced rows;
 - `mappings`: each rich source kind and ID mapped to its reduced row index; and
 - `issues`: explicit conversion limitations such as incompatible units, ambiguous
-  metrics, dangling links, uncollapsed identity links, and stability retained in notes.
+  metrics, dangling references, and stability retained in notes.
 
 ## Why the reverse direction is not deterministic
 

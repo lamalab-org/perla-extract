@@ -50,7 +50,6 @@ RecordCollection = Literal[
     "performance_observations",
     "population_statistics",
     "stability_tests",
-    "identity_links",
 ]
 RecordDecision = Literal["verified", "uncertain", "needs_correction"]
 
@@ -60,7 +59,6 @@ RECORD_IDENTIFIERS: dict[str, str] = {
     "performance_observations": "observation_id",
     "population_statistics": "population_id",
     "stability_tests": "test_id",
-    "identity_links": "link_id",
 }
 RECORD_LABELS: dict[str, str] = {
     "device_families": "Device family",
@@ -68,7 +66,6 @@ RECORD_LABELS: dict[str, str] = {
     "performance_observations": "Performance observation",
     "population_statistics": "Population statistic",
     "stability_tests": "Stability test",
-    "identity_links": "Cross-window identity link",
 }
 
 
@@ -872,7 +869,6 @@ class StudyReviewStore:
             "performance_observations": len(truth["performance_observations"]),
             "population_statistics": len(truth["population_statistics"]),
             "stability_tests": len(truth["stability_tests"]),
-            "identity_links": len(truth.get("identity_links", [])),
             "completed_stages": stages,
             "inventory_audits": audits,
             "record_decisions": decisions,

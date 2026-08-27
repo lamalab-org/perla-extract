@@ -6,7 +6,6 @@ const COLLECTIONS = {
   performance_observations: "Performance observations",
   population_statistics: "Population statistics",
   stability_tests: "Stability tests",
-  identity_links: "Cross-window identity links",
 };
 const RECORD_GUIDANCE = {
   device_families: {
@@ -29,10 +28,6 @@ const RECORD_GUIDANCE = {
     census: "One aging experiment on a stated specimen or device group. Its checkpoints and multiple reported outcomes remain inside that test.",
     review: "Check what specimen was aged, how confidently it links to a device or family, all test-wide conditions, and every checkpoint's time, local conditions, and outcomes.",
   },
-  identity_links: {
-    census: "One explicit claim that records extracted from different text regions refer to the same real-world entity.",
-    review: "Check that the cited evidence supports identity; similarity alone is not enough.",
-  },
 };
 const DECISION_GUIDANCE = {
   verified: "All fields match the source",
@@ -47,7 +42,6 @@ const QUALITY_GATES = [
   "Scan directions and stabilized measurements kept distinct",
   "Composition, layer stack, and processing details checked",
   "Stability specimens, conditions, and checkpoints checked",
-  "Every cross-window identity link explicitly justified",
   "Every retained reported value has source evidence",
   "Remaining uncertainty recorded without inventing a value",
 ];
@@ -223,7 +217,6 @@ function entityDetail(kind, item) {
     const outcomeCount = checkpoints.reduce((count, checkpoint) => count + (checkpoint.outcomes || []).length, 0);
     return `${conditionCount} test-wide condition${conditionCount === 1 ? "" : "s"} · ${checkpoints.length} checkpoint${checkpoints.length === 1 ? "" : "s"} · ${outcomeCount} outcome${outcomeCount === 1 ? "" : "s"}`;
   }
-  if (kind === "identity_links") return `${item.entity_kind}: ${(item.candidate_ids || []).join(" = ")}`;
   return metrics(item) || item.statistic_type || item.measurement_type || item.link_status || "";
 }
 
@@ -595,14 +588,12 @@ function renderInventoryForm() {
   state.censusDraft ||= savedCensusDraft();
   const draft = state.censusDraft;
   const definitions = Object.entries(COLLECTIONS)
-    .filter(([key]) => key !== "identity_links")
     .map(([key, label]) => element("article", {}, [
       element("strong", { text: label }),
       element("p", { text: RECORD_GUIDANCE[key].census }),
     ]));
   $("inventory-definitions").replaceChildren(...definitions);
   const inputs = Object.entries(COLLECTIONS)
-    .filter(([key]) => key !== "identity_links")
     .map(([key, label]) => element("label", {}, [
       element("strong", { text: label }),
       element("span", { text: RECORD_GUIDANCE[key].census }),
@@ -629,7 +620,7 @@ function editSavedCensus() {
 
 function renderInventoryComparison() {
   const audit = state.bundle.summary.inventory_audits[state.user.id];
-  const rows = Object.entries(COLLECTIONS).filter(([key]) => key !== "identity_links").map(([key, label]) => {
+  const rows = Object.entries(COLLECTIONS).map(([key, label]) => {
     const expected = audit.expected_counts[key] ?? 0;
     const extracted = state.bundle.summary[key] ?? 0;
     const difference = expected === extracted ? "match" : `${extracted - expected > 0 ? "+" : ""}${extracted - expected}`;

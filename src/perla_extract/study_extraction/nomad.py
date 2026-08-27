@@ -1003,14 +1003,6 @@ def to_nomad_with_report(
             },
         )
 
-    for link in study.identity_links:
-        _issue(
-            issues,
-            "identity_link_not_collapsed",
-            link.entity_kind,
-            link.link_id,
-            "Identity-linked candidates remain separate archives to avoid discarding conflicting evidence.",
-        )
     return NOMADExport(
         archives=archives,
         mappings=mappings,

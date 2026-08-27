@@ -22,8 +22,7 @@ ambiguity in `unresolved_notes`.
 ```mermaid
 stateDiagram-v2
     [*] --> Census
-    Census --> Identity
-    Identity --> ScientificFields
+    Census --> ScientificFields
     ScientificFields --> Evidence
     Evidence --> Completeness
     Completeness --> Adjudication
@@ -48,18 +47,16 @@ stateDiagram-v2
    Separately census the numbered figures in the main paper as described below.
    After submission, use the imported coverage, refinement, and targeted-repair
    audits as attention queues—not as evidence or automatic corrections.
-2. **Identity.** Separate variants, individual devices, protocols, aggregates, and
-   stability specimens. Accept an identity link only with positive source evidence.
-3. **Scientific fields.** Review stack order, each absorber or subcell's formula and
+2. **Scientific fields.** Review stack order, each absorber or subcell's formula and
    constituents, processing, performance, and stability. Choose **All fields match
    source** only when every displayed field and the record itself are supported. Choose
    **Cannot establish** for genuine source ambiguity or **Correct fields** when a value
    is wrong or missing.
-4. **Evidence.** Additions and replacements require an exact quote from an imported
+3. **Evidence.** Additions and replacements require an exact quote from an imported
    evidence block. Removals require a counterevidence explanation.
-5. **Completeness.** Repeat a paper-wide search for missing records and finish every
+4. **Completeness.** Repeat a paper-wide search for missing records and finish every
    quality gate.
-6. **Adjudication.** An administrator resolves reviewer disagreement before freezing
+5. **Adjudication.** An administrator resolves reviewer disagreement before freezing
    the ground-truth revision.
 
 ### Correct records in the workbench
@@ -89,7 +86,7 @@ form; every field label shows its exact JSON Pointer path in the full study, suc
 `/individual_devices/0/device_id`. **Raw record JSON** exposes the complete selected
 record for reviewers who prefer direct structured editing. Moving back to Fields parses
 the JSON immediately and keeps the raw editor open when it is invalid. Saving either
-view still checks the complete `StudyExtraction`, including links and evidence, so raw
+view still checks the complete `StudyExtraction`, including references and evidence, so raw
 editing does not bypass scientific validation.
 
 Review-priority labels describe provenance or the current reviewer's action; they are

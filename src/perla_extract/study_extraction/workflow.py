@@ -132,8 +132,7 @@ Rules:
 - Use null or not_reported for unknown identity or context. Do not guess.
 - Empty arrays are correct only when all supplied evidence truly contains no record of
   that kind.
-- Return identity_links as an empty array. This global assembly call must reconcile
-  duplicate mentions before assigning final record IDs.
+- Reconcile duplicate mentions before assigning final record IDs.
 """
 
 CLAIM_LEDGER_PROMPT = f"""Read the supplied paper evidence before the final schema is

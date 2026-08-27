@@ -379,19 +379,10 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
 
     Every observation, population statistic, and stability test becomes a separate
     reduced row. Values that cannot be represented faithfully stay in structured
-    ``additional_notes`` and produce an issue; identity links are reported but
-    never used to merge candidates heuristically.
+    ``additional_notes`` and produce an issue.
     """
 
     issues: list[ConversionIssue] = []
-    for link in study.identity_links:
-        _record_conversion_issue(
-            issues,
-            "identity_link_not_collapsed",
-            link.entity_kind,
-            link.link_id,
-            "Identity-linked rich candidates remain separate reduced rows so conversion does not discard or heuristically merge conflicting details.",
-        )
     families: dict[str, DeviceFamily] = {}
     for family in study.device_families:
         if family.family_id in families:

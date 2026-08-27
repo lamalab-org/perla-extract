@@ -69,7 +69,6 @@ def _audit(draft: StudyExtraction, refined: StudyExtraction) -> dict[str, object
         "performance_observations": "observation_id",
         "population_statistics": "population_id",
         "stability_tests": "test_id",
-        "identity_links": "link_id",
     }
     changes: dict[str, object] = {}
     for collection, identifier in identifiers.items():

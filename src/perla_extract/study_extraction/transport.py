@@ -98,7 +98,7 @@ def compact_to_span_citations(
 ) -> dict[str, object]:
     """Replace exact public citations with span IDs for a subsequent model prompt.
 
-    Refinement and identity linking receive records produced from the same span
+    Refinement and global study assembly receive records produced from the same span
     catalog. Failing on a non-matching citation is intentional: silently dropping or
     approximating evidence would make the next model call less auditable.
     """

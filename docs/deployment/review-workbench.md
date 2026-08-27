@@ -46,10 +46,10 @@ For a validated batch, use the same import contract non-interactively:
 
 ```bash
 python review_workbench/import_runs.py \
-  --runs-dir study_extraction/calibration-v4 \
+  --runs-dir study_extraction/review-seeds \
   --pdf-dir review_data/pdfs \
   --review-data review_data/current \
-  --split calibration
+  --split dev
 ```
 
 The command refuses incomplete runs and any run with unresolved evidence-validation

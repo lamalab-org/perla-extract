@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import Counter
 
 from .evidence import assembled_from_quotes, source_contains_text
-from .identifiers import entity_id_lists, window_namespace
+from .identifiers import entity_id_lists
 from .models import EvidenceBlock, StudyExtraction
 
 
@@ -160,30 +160,6 @@ def validate_study(
         if test.device_id and test.device_id not in devices:
             issue(f"$.stability_tests[{index}].device_id", "unknown device_id")
 
-    entity_ids = {kind: set(ids) for kind, ids in identifiers.items()}
-    link_ids: set[str] = set()
-    claimed: set[tuple[str, str]] = set()
-    for index, link in enumerate(extraction.identity_links):
-        path = f"$.identity_links[{index}]"
-        if link.link_id in link_ids:
-            issue(f"{path}.link_id", "duplicate link_id")
-        link_ids.add(link.link_id)
-        namespaces = {
-            window_namespace(candidate_id) for candidate_id in link.candidate_ids
-        }
-        if None in namespaces or len(namespaces) < 2:
-            issue(
-                f"{path}.candidate_ids",
-                "linked candidates must come from different windows",
-            )
-        for candidate_id in link.candidate_ids:
-            candidate = (link.entity_kind, candidate_id)
-            if candidate_id not in entity_ids[link.entity_kind]:
-                issue(f"{path}.candidate_ids", "unknown linked candidate ID")
-            if candidate in claimed:
-                issue(f"{path}.candidate_ids", "candidate used in more than one link")
-            claimed.add(candidate)
-
     return {
         "status": "verified" if not issues else "needs_review",
         "issues": issues,
@@ -193,7 +169,6 @@ def validate_study(
             "performance_observations": len(extraction.performance_observations),
             "population_statistics": len(extraction.population_statistics),
             "stability_tests": len(extraction.stability_tests),
-            "identity_links": len(extraction.identity_links),
             "reported_values": total_reported_values,
             "source_verified_values": source_verified_values,
             "source_assembled_values": source_assembled_values,

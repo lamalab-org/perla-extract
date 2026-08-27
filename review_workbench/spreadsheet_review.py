@@ -372,7 +372,6 @@ def _contract(
         "individual_devices": 2,
         "performance_observations": 3,
         "stability_tests": 4,
-        "identity_links": 5,
     }
     records.sort(
         key=lambda row: (
