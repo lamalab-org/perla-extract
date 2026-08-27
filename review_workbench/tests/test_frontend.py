@@ -100,6 +100,8 @@ def test_laptop_layout_can_reclaim_space_and_focus_each_work_surface():
     styles = (APP / "styles.css").read_text(encoding="utf-8")
 
     assert 'id="toggle-paper-list"' in html
+    assert '>Papers</button>' in html
+    assert 'button.textContent = "Papers"' in javascript
     assert 'data-workspace-view="split"' in html
     assert 'data-workspace-view="paper"' in html
     assert 'data-workspace-view="review"' in html

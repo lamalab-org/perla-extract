@@ -98,7 +98,9 @@ function setPaperListOpen(open, remember = true) {
   document.querySelector("main").classList.toggle("paper-list-hidden", !open);
   const button = $("toggle-paper-list");
   button.setAttribute("aria-expanded", String(open));
-  button.textContent = open ? "Hide papers" : "Show papers";
+  button.setAttribute("aria-label", open ? "Hide paper list" : "Show paper list");
+  button.title = open ? "Hide paper list" : "Show paper list";
+  button.textContent = "Papers";
   if (remember) sessionStorage.setItem("perla-paper-list-open", String(open));
 }
 

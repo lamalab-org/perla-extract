@@ -219,6 +219,7 @@ changing reviewer identities or saved annotations.
 | `REVIEW_INTERNAL_ACCOUNTS` | JSON object keyed by reviewer email with name, role, and PBKDF2 password hash |
 | `REVIEW_INTERNAL_ACCOUNT_ADDITIONS` | Optional JSON object merged into the primary account list |
 | `REVIEW_INTERNAL_ACCOUNT_OVERRIDES` | Optional final account layer for an independently deployable password rotation |
+| `REVIEW_INTERNAL_ACCOUNT_LAYER_*` | Optional named JSON layers, applied alphabetically after the legacy layers, so later password resets can be deployed without replacing write-only secrets |
 | `REVIEW_SESSION_SECRET` | At least 32 characters; signs seven-day sessions |
 
 An account role is `reviewer` unless it is explicitly `admin`.

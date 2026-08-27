@@ -105,6 +105,12 @@ class InternalAuthenticator:
             "REVIEW_INTERNAL_ACCOUNT_OVERRIDES",
         ):
             loaded.update(_account_mapping(os.environ.get(variable, ""), variable))
+        for variable in sorted(
+            name
+            for name in os.environ
+            if name.startswith("REVIEW_INTERNAL_ACCOUNT_LAYER_")
+        ):
+            loaded.update(_account_mapping(os.environ[variable], variable))
         self.accounts = {
             str(email).strip().lower(): account
             for email, account in loaded.items()

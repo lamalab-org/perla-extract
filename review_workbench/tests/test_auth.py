@@ -206,6 +206,34 @@ def test_internal_authenticator_applies_password_overrides_last(monkeypatch):
         auth.login("reviewer@example.org", "old")
 
 
+def test_internal_authenticator_merges_named_account_layers(monkeypatch):
+    monkeypatch.setenv(
+        "REVIEW_INTERNAL_ACCOUNT_LAYER_20260827_REVIEWER",
+        json.dumps(
+            {
+                "reviewer@example.org": {
+                    "name": "Recovered Reviewer",
+                    "role": "reviewer",
+                    "password_hash": hash_password("recovered", iterations=1_000),
+                }
+            }
+        ),
+    )
+    auth = InternalAuthenticator(
+        json.dumps(
+            {
+                "existing@example.org": {
+                    "password_hash": hash_password("existing", iterations=1_000)
+                }
+            }
+        ),
+        "s" * 32,
+    )
+
+    assert auth.login("existing@example.org", "existing")[1]["email"] == "existing@example.org"
+    assert auth.login("reviewer@example.org", "recovered")[1]["name"] == "Recovered Reviewer"
+
+
 def test_internal_or_clerk_authenticator_preserves_password_login_and_routes_tokens(
     monkeypatch,
 ):
