@@ -18,6 +18,7 @@ from .logging import logger
 from .progress import heartbeat
 
 ResponseModel = TypeVar("ResponseModel", bound=BaseModel)
+VALIDATION_REPAIR_VERSION = 1
 RETRYABLE_ERRORS = (
     litellm.RateLimitError,
     litellm.Timeout,
@@ -67,6 +68,62 @@ def _canonical(value: object) -> bytes:
     return json.dumps(
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
     ).encode("utf-8")
+
+
+def _validation_repair_request(
+    body: dict,
+    result: object,
+    errors: list[dict[str, object]],
+) -> dict:
+    """Ask the model to correct its own invalid structured response once.
+
+    Strict provider schemas catch structural mistakes, while Pydantic also enforces
+    scientific relationships that JSON Schema cannot express. Replaying the same
+    request does not explain those failures. This follow-up retains the original
+    evidence, shows the rejected response and only the machine-readable validation
+    errors, and still requires the original response schema.
+    """
+
+    repaired = deepcopy(body)
+    messages = list(repaired["messages"])
+    messages.extend(
+        [
+            {
+                "role": "assistant",
+                "content": json.dumps(result, ensure_ascii=False, separators=(",", ":")),
+            },
+            {
+                "role": "user",
+                "content": (
+                    "The preceding JSON failed local Pydantic validation. Correct only "
+                    "the reported validation problems, preserve supported atomic values "
+                    "and evidence, and return the complete corrected JSON object with no "
+                    "explanation. Validation errors:\n"
+                    + json.dumps(errors, ensure_ascii=False, separators=(",", ":"))
+                ),
+            },
+        ]
+    )
+    repaired["messages"] = messages
+    return repaired
+
+
+def _aggregate_usage(records: list[dict]) -> dict:
+    """Account for every paid response, including a rejected first response."""
+
+    if not records:
+        return {}
+    usage = dict(records[-1])
+    for key in ("prompt_tokens", "completion_tokens", "total_tokens"):
+        usage[key] = sum(int(record.get(key, 0) or 0) for record in records)
+    usage["cost"] = round(
+        sum(float(record.get("cost", 0) or 0) for record in records), 8
+    )
+    usage["latency_seconds"] = round(
+        sum(float(record.get("latency_seconds", 0) or 0) for record in records), 3
+    )
+    usage["provider_responses"] = len(records)
+    return usage
 
 
 class ModelClient:
@@ -223,7 +280,14 @@ class ModelClient:
             max_output_tokens=max_output_tokens,
             reasoning_effort=reasoning_effort,
         )
-        request_hash = hashlib.sha256(_canonical(body)).hexdigest()
+        request_hash = hashlib.sha256(
+            _canonical(
+                {
+                    "request": body,
+                    "validation_repair_version": VALIDATION_REPAIR_VERSION,
+                }
+            )
+        ).hexdigest()
         request_path = self.output_dir / "requests" / f"{slug}.request.json"
         cache_path = self.cache_dir / f"{request_hash}.json"
         failure_path = self.output_dir / "requests" / f"{slug}.failure.json"
@@ -267,56 +331,92 @@ class ModelClient:
                 return validated
 
         last_error: ModelCallError | None = None
+        current_body = body
+        attempt_usage: list[dict] = []
+        validation_repair = False
         for attempt in range(1, 3):
+            raw_result: object = None
             try:
                 logger.info(
                     "Calling model provider for {} (attempt {}/2)", kind, attempt
                 )
-                raw_result, usage = self._live(body, failure_path)
+                raw_result, usage = self._live(current_body, failure_path)
+                attempt_usage.append(usage)
                 decoded_result = decode(raw_result) if decode else raw_result
                 validated = response_model.model_validate(decoded_result)
             except (TypeError, ValueError) as exc:
+                validation_errors = (
+                    exc.errors(include_url=False)
+                    if isinstance(exc, ValidationError)
+                    else [{"type": type(exc).__name__, "message": str(exc)}]
+                )
                 write_json_atomic(
                     failure_path,
                     {
-                        "validation_errors": (
-                            exc.errors(include_url=False)
-                            if isinstance(exc, ValidationError)
-                            else [{"type": type(exc).__name__, "message": str(exc)}]
-                        ),
+                        "validation_errors": validation_errors,
                         "result": raw_result,
                     },
                 )
                 last_error = ModelCallError(
                     f"Model output failed Pydantic validation; see {failure_path}"
                 )
+                if attempt == 1:
+                    current_body = _validation_repair_request(
+                        body, raw_result, validation_errors
+                    )
+                    write_json_atomic(
+                        self.output_dir
+                        / "requests"
+                        / f"{slug}.validation-repair.request.json",
+                        current_body,
+                    )
+                    validation_repair = True
             except ModelCallError as exc:
                 last_error = exc
             else:
+                combined_usage = _aggregate_usage(attempt_usage)
                 write_json_atomic(
                     cache_path,
                     {
                         "request_sha256": request_hash,
                         "result": validated.model_dump(mode="json"),
-                        "usage": usage,
+                        "usage": combined_usage,
                     },
                 )
-                record.update({"cache_hit": False, "usage": usage})
+                record.update(
+                    {
+                        "cache_hit": False,
+                        "usage": combined_usage,
+                        "attempt_count": attempt,
+                        "validation_repair": validation_repair,
+                    }
+                )
                 failure_path.unlink(missing_ok=True)
                 self.calls.append(record)
                 logger.info(
                     "Completed {} in {}s ({} tokens)",
                     kind,
-                    usage.get("latency_seconds", "unknown"),
-                    usage.get("total_tokens", "unknown"),
+                    combined_usage.get("latency_seconds", "unknown"),
+                    combined_usage.get("total_tokens", "unknown"),
                 )
                 return validated
             if attempt == 1 and last_error and last_error.retryable:
-                logger.warning("{}; retrying once", last_error)
-                time.sleep(2)
+                if validation_repair:
+                    logger.warning("{}; requesting one validation-aware repair", last_error)
+                else:
+                    logger.warning("{}; retrying once", last_error)
+                    time.sleep(2)
             else:
                 break
-        record.update({"cache_hit": False, "error": str(last_error)})
+        record.update(
+            {
+                "cache_hit": False,
+                "error": str(last_error),
+                "usage": _aggregate_usage(attempt_usage),
+                "attempt_count": min(2, len(attempt_usage) or 1),
+                "validation_repair": validation_repair,
+            }
+        )
         self.calls.append(record)
         logger.error("Model call {} failed: {}", kind, last_error)
         raise last_error or ModelCallError("Unknown model-call failure")

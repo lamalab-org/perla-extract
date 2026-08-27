@@ -214,6 +214,52 @@ def test_litellm_timeout_becomes_retryable_model_error(tmp_path, monkeypatch):
     assert failure["error_type"] == "Timeout"
 
 
+def test_pydantic_failure_gets_one_error_aware_repair(tmp_path, monkeypatch):
+    """Give semantic validation errors back to the model and account for both calls."""
+
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        heartbeat_seconds=0,
+    )
+    bodies = []
+
+    def respond(body, _failure):
+        bodies.append(body)
+        usage = {
+            "prompt_tokens": 10,
+            "completion_tokens": 5,
+            "total_tokens": 15,
+            "cost": 0.01,
+            "latency_seconds": 1,
+        }
+        return ({"paper": {}}, usage) if len(bodies) == 1 else (empty_result(), usage)
+
+    monkeypatch.setattr(client, "_live", respond)
+
+    result = client.complete(
+        kind="test",
+        slug="repair",
+        model="test/model",
+        system="system",
+        prompt="prompt",
+        response_model=StudyExtraction,
+        max_output_tokens=100,
+        reasoning_effort=None,
+    )
+
+    assert result.model_dump(mode="json") == empty_result()
+    assert len(bodies) == 2
+    assert bodies[0]["messages"] == bodies[1]["messages"][:2]
+    assert "failed local Pydantic validation" in bodies[1]["messages"][-1]["content"]
+    assert '"paper":{}' in bodies[1]["messages"][-2]["content"]
+    assert (tmp_path / "out/requests/repair.validation-repair.request.json").exists()
+    assert client.calls[0]["validation_repair"] is True
+    assert client.calls[0]["attempt_count"] == 2
+    assert client.calls[0]["usage"]["total_tokens"] == 30
+    assert client.calls[0]["usage"]["cost"] == 0.02
+
+
 def test_litellm_request_preserves_schema_and_provider_prefix(tmp_path):
     client = ModelClient(
         cache_dir=tmp_path / "cache",
