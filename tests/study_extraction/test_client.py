@@ -1,3 +1,4 @@
+import hashlib
 import json
 from types import SimpleNamespace
 
@@ -66,6 +67,13 @@ def test_only_validated_model_results_enter_cache(tmp_path, monkeypatch):
 
     assert first == second
     assert second_client.calls[0]["cache_hit"] is True
+    request = json.loads((output / "requests/test.request.json").read_text())
+    assert client.calls[0]["request_sha256"] == hashlib.sha256(
+        json.dumps(
+            request, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        ).encode("utf-8")
+    ).hexdigest()
+    assert client.calls[0]["cache_key_sha256"] != client.calls[0]["request_sha256"]
 
 
 def test_provider_schema_requires_nullable_defaulted_fields():

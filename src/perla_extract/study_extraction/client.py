@@ -340,16 +340,17 @@ class ModelClient:
             max_output_tokens=max_output_tokens,
             reasoning_effort=reasoning_effort,
         )
-        request_hash = hashlib.sha256(
+        request_hash = hashlib.sha256(_canonical(body)).hexdigest()
+        cache_key = hashlib.sha256(
             _canonical(
                 {
-                    "request": body,
+                    "request_sha256": request_hash,
                     "validation_repair_version": VALIDATION_REPAIR_VERSION,
                 }
             )
         ).hexdigest()
         request_path = self.output_dir / "requests" / f"{slug}.request.json"
-        cache_path = self.cache_dir / f"{request_hash}.json"
+        cache_path = self.cache_dir / f"{cache_key}.json"
         failure_path = self.output_dir / "requests" / f"{slug}.failure.json"
         write_json_atomic(request_path, body)
         logger.info(
@@ -362,6 +363,7 @@ class ModelClient:
             "kind": kind,
             "slug": slug,
             "request_sha256": request_hash,
+            "cache_key_sha256": cache_key,
             "model": body["model"],
             "reasoning_effort": reasoning_effort,
             "temperature": self.temperature,
@@ -441,6 +443,7 @@ class ModelClient:
                     cache_path,
                     {
                         "request_sha256": request_hash,
+                        "cache_key_sha256": cache_key,
                         "result": validated.model_dump(mode="json"),
                         "usage": combined_usage,
                     },
