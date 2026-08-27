@@ -572,7 +572,11 @@ def _scientific_evidence_blocks(
 
 
 def _cache_identity(
-    *, source_hash: str, source: str, parser: str, parser_version: str
+    *,
+    source_hash: str,
+    source: str,
+    parser: str,
+    dependency_versions: dict[str, str],
 ) -> dict[str, object]:
     """Describe all reproducibility-relevant inputs to a parsed document.
 
@@ -589,8 +593,20 @@ def _cache_identity(
         "source_sha256": source_hash,
         "source": source,
         "parser": parser,
-        "parser_version": parser_version,
+        "dependency_versions": dependency_versions,
     }
+
+
+def _parser_dependency_versions(parser: str) -> dict[str, str]:
+    """Fingerprint every installed package that contributes parser output.
+
+    The Docling adapter supplements structural conversion with PyMuPDF typography,
+    so either dependency can change the resulting evidence. The lightweight parser
+    depends on PyMuPDF alone.
+    """
+
+    names = ("docling", "PyMuPDF") if parser == "docling" else ("PyMuPDF",)
+    return {name: _package_version(name) for name in names}
 
 
 def parse_pdf(
@@ -615,16 +631,21 @@ def parse_pdf(
             f"Unknown parser {parser!r}; choose from {available_parsers()}"
         )
     source_hash = _sha256(path)
-    version = _package_version("docling" if parser == "docling" else "PyMuPDF")
-    if version == "not-installed":
+    dependency_versions = _parser_dependency_versions(parser)
+    if "not-installed" in dependency_versions.values():
+        missing = ", ".join(
+            name
+            for name, version in dependency_versions.items()
+            if version == "not-installed"
+        )
         raise RuntimeError(
-            f"The selected {parser} parser is not installed; reinstall perla-extract"
+            f"The selected {parser} parser requires {missing}; reinstall perla-extract"
         )
     identity = _cache_identity(
         source_hash=source_hash,
         source=source,
         parser=parser,
-        parser_version=version,
+        dependency_versions=dependency_versions,
     )
     key = hashlib.sha256(
         json.dumps(identity, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -685,7 +706,10 @@ def parse_pdf(
         "source_path": str(path),
         "source_sha256": source_hash,
         "parser": parser,
-        "parser_version": version,
+        "parser_version": dependency_versions[
+            "docling" if parser == "docling" else "PyMuPDF"
+        ],
+        "dependency_versions": dependency_versions,
         "parser_implementation_sha256": identity["parser_implementation_sha256"],
         "evidence_schema_sha256": identity["evidence_schema_sha256"],
         "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
