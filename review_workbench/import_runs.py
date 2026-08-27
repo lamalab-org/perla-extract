@@ -16,10 +16,10 @@ sys.path[:0] = [str(REPO_ROOT), str(REPO_ROOT / "src")]
 from review_workbench.server import ReviewApplication  # noqa: E402
 
 
-def _read(path: Path, *, required: bool = True) -> bytes | None:
+def _read(path: Path | None, *, required: bool = True) -> bytes | None:
     """Read an import artifact while making missing required provenance explicit."""
 
-    if path.is_file():
+    if path is not None and path.is_file():
         return path.read_bytes()
     if required:
         raise click.ClickException(f"required artifact is missing: {path}")

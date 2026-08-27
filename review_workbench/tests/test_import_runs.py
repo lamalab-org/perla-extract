@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from review_workbench.import_runs import _source_path, import_run
+from review_workbench.import_runs import _read, _source_path, import_run
 
 
 class RecordingApplication:
@@ -42,6 +42,10 @@ def test_source_path_supports_relocated_run_sources(tmp_path):
     )
 
     assert result == relocated
+
+
+def test_optional_missing_source_reads_as_absent():
+    assert _read(None, required=False) is None
 
 
 def test_import_run_uses_claim_coverage_and_configured_sources(tmp_path):
