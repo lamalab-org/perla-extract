@@ -9,20 +9,21 @@ performance observations, population summaries, and stability experiments distin
 
 ```bash
 pip install perla-extract
-export OPENROUTER_API_KEY="your-openrouter-key"  # for the default backend
+export OPENAI_API_KEY="your-openai-key"
 
 perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
-  --model openrouter/openai/gpt-5.6-sol:exacto \
+  --model openai/gpt-5.2 \
   --max-cost-usd 2.00 \
   --output-dir results/paper
 ```
 
 Model calls use LiteLLM. The provider-prefixed model name selects the backend and its
-standard credential—for example, `openai/...` with `OPENAI_API_KEY` or
-`anthropic/...` with `ANTHROPIC_API_KEY`. The default uses OpenRouter with an explicit
-quality-first `:exacto` suffix, but the extraction workflow itself is provider-neutral.
+standard credential—for example, `openai/...` with `OPENAI_API_KEY`,
+`openrouter/...` with `OPENROUTER_API_KEY`, or `anthropic/...` with
+`ANTHROPIC_API_KEY`. The default calls OpenAI directly; the extraction workflow itself
+remains provider-neutral.
 
 The extraction directory contains the refined rich result, its retained first draft,
 a source-grounded ledger of experimental objects and atomic claims, a claim-coverage

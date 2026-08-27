@@ -61,7 +61,7 @@ from .transport import (
 )
 from .validation import validate_study
 
-DEFAULT_EXTRACTION_MODEL = "openrouter/openai/gpt-5.6-sol:exacto"
+DEFAULT_EXTRACTION_MODEL = "openai/gpt-5.2"
 DEFAULT_CLAIM_MODEL = DEFAULT_EXTRACTION_MODEL
 
 SYSTEM_PROMPT = """Extract the complete present photovoltaic study as device-centered data.

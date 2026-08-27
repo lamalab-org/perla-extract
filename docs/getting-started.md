@@ -35,12 +35,12 @@ parser events, and selected mode.
 ## Extract
 
 ```bash
-export OPENROUTER_API_KEY="your-openrouter-key"  # for the default backend
+export OPENAI_API_KEY="your-openai-key"
 
 perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
-  --model openrouter/openai/gpt-5.6-sol:exacto \
+  --model openai/gpt-5.2 \
   --max-cost-usd 2.00 \
   --output-dir results/paper
 ```
@@ -49,10 +49,10 @@ Progress and periodic heartbeats go to stderr. The final report is printed as JS
 stdout. `--json-logs` emits machine-readable logs; `--log-level DEBUG` shows parser
 details.
 
-Model transport is provider-neutral through LiteLLM. Choose a different backend with
-its provider-prefixed model name and standard credential, such as `openai/...` with
-`OPENAI_API_KEY` or `anthropic/...` with `ANTHROPIC_API_KEY`. The explicit `:exacto`
-suffix preserves the previous quality-first routing for the default OpenRouter model.
+Model transport is provider-neutral through LiteLLM. The default calls OpenAI directly
+with `OPENAI_API_KEY`. Choose another backend with its provider-prefixed model name and
+standard credential, such as `openrouter/...` with `OPENROUTER_API_KEY` or
+`anthropic/...` with `ANTHROPIC_API_KEY`.
 
 ## Read the result
 

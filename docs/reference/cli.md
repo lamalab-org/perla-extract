@@ -58,7 +58,7 @@ independently per window and merged afterward.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `--model TEXT` | `openrouter/openai/gpt-5.6-sol:exacto` | LiteLLM provider-prefixed model name |
+| `--model TEXT` | `openai/gpt-5.2` | LiteLLM provider-prefixed model name |
 | `--reasoning-effort [omit|none|minimal|low|medium|high]` | `omit` | Reasoning setting; `omit` removes the parameter for models that do not support it |
 | `--max-output-tokens INTEGER` | `80000` | Maximum completion tokens per call |
 | `--max-model-calls INTEGER` | omitted | Maximum provider requests, including retries and validation repair |
@@ -67,10 +67,10 @@ independently per window and merged afterward.
 | `--timeout-seconds FLOAT` | `600` | Timeout for one live request |
 | `--heartbeat-seconds FLOAT` | `20` | Progress-log interval; `0` disables heartbeats |
 
-The model prefix selects a LiteLLM backend. For example, `openrouter/...` uses
-`OPENROUTER_API_KEY`, `openai/...` uses `OPENAI_API_KEY`, and `anthropic/...` uses
-`ANTHROPIC_API_KEY`. The default's explicit `:exacto` suffix preserves quality-first
-OpenRouter routing without provider-specific client logic. All requests set seed `0`;
+The model prefix selects a LiteLLM backend. For example, `openai/...` uses
+`OPENAI_API_KEY`, `openrouter/...` uses `OPENROUTER_API_KEY`, and `anthropic/...` uses
+`ANTHROPIC_API_KEY`. The default calls OpenAI directly without provider-specific client
+logic. All requests set seed `0`;
 reproducibility still depends on the selected provider and model version.
 
 Refinement is enabled in the quality-first default. It adds one detailed model call
