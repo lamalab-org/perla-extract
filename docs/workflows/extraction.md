@@ -126,6 +126,14 @@ claim ledger and its schema, grounding decisions, the assembled draft, validatio
 results, claim-coverage audits, repair artifacts, and the final `extraction.json`.
 Raw requests and failures remain under `requests/`.
 
+Every response must first satisfy the provider's strict JSON Schema and then the richer
+Pydantic model. A retryable transport failure is resubmitted once; output truncation is
+not retried. If JSON passes the provider schema but fails Pydantic relationship checks,
+one validation-repair request receives the rejected JSON and the compact validation
+errors. That exact follow-up is preserved as
+`requests/<call>.validation-repair.request.json`, and usage totals include both paid
+responses. No open-ended correction loop is used.
+
 Parser and ledger failures fail open where safe: the full scientific evidence remains
 available, and an empty ledger falls back to complete source evidence. A failed initial
 study assembly produces a valid empty extraction with an unresolved note. A failed optional
