@@ -43,6 +43,32 @@ def _admissible(run_dir: Path) -> None:
         )
 
 
+def _source_path(
+    configuration: dict[str, object],
+    key: str,
+    *,
+    paper_id: str,
+    pdf_dir: Path,
+) -> Path | None:
+    """Find a source PDF after an extraction run has been moved or shared.
+
+    ``run_configuration.json`` records the original source path. Review batches are
+    often copied to another machine, so the import directory may contain only the
+    original basename or the historical paper-ID filename. Trying those explicit
+    alternatives preserves provenance without requiring one rigid directory layout.
+    """
+
+    configured = configuration.get(key)
+    if configured is None:
+        return None
+    original = Path(str(configured))
+    conventional = (
+        f"{paper_id}.pdf" if key == "pdf" else f"{paper_id}.supplement.pdf"
+    )
+    candidates = (original, pdf_dir / original.name, pdf_dir / conventional)
+    return next((path for path in candidates if path.is_file()), candidates[-1])
+
+
 def import_run(
     app: ReviewApplication,
     *,
@@ -55,8 +81,16 @@ def import_run(
 
     _admissible(run_dir)
     paper_id = run_dir.name
-    main = pdf_dir / f"{paper_id}.pdf"
-    supplement = pdf_dir / f"{paper_id}.supplement.pdf"
+    configuration_path = run_dir / "run_configuration.json"
+    configuration = json.loads(configuration_path.read_text(encoding="utf-8"))
+    main = _source_path(
+        configuration, "pdf", paper_id=paper_id, pdf_dir=pdf_dir
+    )
+    supplement = _source_path(
+        configuration, "supplement", paper_id=paper_id, pdf_dir=pdf_dir
+    )
+    if main is None:
+        raise click.ClickException(f"{paper_id}: run configuration has no main PDF")
     app.import_paper(
         split,
         paper_id,
@@ -64,8 +98,10 @@ def import_run(
         _read(run_dir / "extraction.json"),
         supplement_bytes=_read(supplement, required=False),
         document_bytes=_read(run_dir / "document.json"),
-        configuration_bytes=_read(run_dir / "run_configuration.json"),
-        coverage_bytes=_read(run_dir / "coverage_audit.json", required=False),
+        configuration_bytes=_read(configuration_path),
+        coverage_bytes=_read(
+            run_dir / "claim_coverage_audit.json", required=False
+        ),
         refinement_bytes=_read(run_dir / "refinement_audit.json", required=False),
         repair_bytes=_read(run_dir / "targeted_repair.json", required=False),
         enrichment_bytes=_read(run_dir / "enrichment.json", required=False),
@@ -93,7 +129,7 @@ def import_run(
 @click.option(
     "--split",
     type=click.Choice(["calibration", "dev", "test"]),
-    default="calibration",
+    default="dev",
     show_default=True,
 )
 @click.option("--reviewer-id", default="seed-import", show_default=True)
