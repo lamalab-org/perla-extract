@@ -106,6 +106,7 @@ def test_laptop_layout_can_reclaim_space_and_focus_each_work_surface():
     assert 'data-workspace-view="paper"' in html
     assert 'data-workspace-view="review"' in html
     assert "function setPaperListOpen" in javascript
+    assert "if (!state.paperId) setPaperListOpen(true, false);" in javascript
     assert "function setWorkspaceView" in javascript
     assert 'const LAPTOP_LAYOUT = "(max-width: 1400px)"' in javascript
     assert 'setWorkspaceView(window.matchMedia("(max-width: 920px)").matches ? "paper" : "split", false)' in javascript

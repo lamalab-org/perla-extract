@@ -392,6 +392,7 @@ function savePaperCache() {
 
 async function loadPapers() {
   const status = $("paper-load-status");
+  if (!state.paperId) setPaperListOpen(true, false);
   status.hidden = false;
   status.textContent = "Loading papers…";
   if (!state.papers.length) {
