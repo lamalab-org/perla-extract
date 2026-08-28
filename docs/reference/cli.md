@@ -115,6 +115,9 @@ Install it with `pip install 'perla-extract[papersbot]'`. See
 behavior. RSS discovery and the policy's OpenAlex topics are enabled by default.
 `--no-rss` and `--no-openalex` isolate sources; `--openalex-start-date` and
 `--openalex-end-date` run an explicit `YYYY-MM-DD` backfill window.
+`--openalex-api-key` enables the larger authenticated OpenAlex budget, while
+`--request-retries` controls bounded retries for GET rate limits and transient server
+errors.
 `--zotero-group-id` adds a Zotero group as a discovery source, and
 `--zotero-collection-key` limits it to one collection using Zotero's API key for that
 collection, not its display name. `--zotero-curated` makes that collection a
@@ -124,6 +127,8 @@ written to bot artifacts.
 
 For unattended use, ordinary options use the `PAPERSBOT_` environment prefix:
 `PAPERSBOT_DOWNLOAD_DIR`, `PAPERSBOT_STATE_DIR`, `PAPERSBOT_RSS`,
-`PAPERSBOT_OPENALEX`, `PAPERSBOT_MAX_ATTEMPTS`, and `PAPERSBOT_LOG_FILE` are direct
+`PAPERSBOT_OPENALEX`, `PAPERSBOT_MAX_ATTEMPTS`, `PAPERSBOT_REQUEST_RETRIES`,
+`PAPERSBOT_FAIL_ON_PARTIAL`, and `PAPERSBOT_LOG_FILE` are direct
 examples. Zotero credentials retain the explicit `ZOTERO_` names documented in the
-workflow guide. Command-line values take precedence.
+workflow guide. `OPENALEX_API_KEY` and `ZOTERO_API_KEY` are never written to bot
+artifacts. Command-line values take precedence.

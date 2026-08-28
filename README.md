@@ -71,8 +71,8 @@ Use `--feeds-file` or repeated `--feed` options to replace the journal list and
 `--selection-file` to replace the relevance policy. `--zotero-group-id` also ingests a
 Zotero group, including stored PDF attachments. A configured collection can be a
 journal-club-curated intake queue. Zotero access is read-only and works with a key
-scoped to that group. The same command runs under cron or GitHub Actions, with all
-ordinary settings available through `PAPERSBOT_` environment variables. Each PDF
+scoped to that group. The supported unattended deployment is an internal cron job,
+with ordinary settings available through `PAPERSBOT_` environment variables. Each PDF
 acquisition records its source and access basis; authorized local retrieval mechanisms
 can implement the small `PdfSource` interface without adding publisher cases to the
 bot.

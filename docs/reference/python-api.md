@@ -90,6 +90,8 @@ each supplied block appears exactly once as primary evidence.
 `run_papersbot` combines any enabled discovery sources into one incremental paper
 state. Pass ordered `PdfSource` implementations when the deployment has an authorized
 retrieval mechanism beyond stored Zotero attachments and open-access repositories.
+One source may return multiple `AcquiredPdf` records; each becomes a separately hashed
+`PaperDocument` instead of being collapsed into a single paper-level path.
 
 ::: perla_extract.papersbot.run_papersbot
     options:

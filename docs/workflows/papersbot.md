@@ -18,8 +18,8 @@ flowchart LR
     E -->|"no"| F["Policy; Crossref when needed"]
     F -->|"accepted"| P
     F -->|"rejected"| K["Per-run outcomes and statistics"]
-    P --> ZA{"Stored Zotero PDF?"}
-    ZA -->|"yes"| H["Validated PDF download"]
+    P --> ZA{"Stored Zotero PDFs?"}
+    ZA -->|"yes"| H["Validated document downloads"]
     ZA -->|"no"| O["Open-access PDF lookup"]
     O --> H
     D --> I["Paper state and source provenance"]
@@ -104,6 +104,8 @@ The packaged policy uses OpenAlex topics
 [`T12309`](https://openalex.org/T12309) (solar-cell performance optimization). Topic
 retrieval is intentionally a broad, high-recall discovery step, not the final
 relevance decision: the same local policy is applied to OpenAlex and feed metadata.
+The two broader solar-cell topics recover tandem papers that OpenAlex may not assign
+to the perovskite topic; they do not bypass the perovskite relevance requirement.
 Change the IDs in the policy when the project scope changes.
 
 On its first run, PapersBot queries the configured lookback period. Later runs start
@@ -119,7 +121,10 @@ perla-papersbot downloaded_papers \
 
 Use `--no-openalex` or `--no-rss` to isolate one source for diagnosis. At least one
 source must remain enabled. `OPENALEX_EMAIL` is sent as the API contact address;
-`OA_EMAIL` is accepted as its fallback. Set `UNPAYWALL_EMAIL` to enable Unpaywall.
+`OA_EMAIL` is accepted as its fallback. `OPENALEX_API_KEY` supplies optional bearer
+authentication for a larger free request budget. Requests use the supported 100-item
+page size and bounded GET-only retries for rate limits and transient service errors.
+Set `UNPAYWALL_EMAIL` to enable Unpaywall.
 
 ## Use a Zotero group library
 
@@ -148,8 +153,8 @@ perla-papersbot downloaded_papers \
 ```
 
 Top-level bibliographic items enter the same relevance policy, state, and retry path
-as feed and OpenAlex records. If an accepted item has a stored PDF attachment,
-PapersBot downloads it before trying an open-access resolver. A stored attachment can
+as feed and OpenAlex records. If an accepted item has stored PDF attachments,
+PapersBot downloads all of them before trying an open-access resolver. A stored attachment can
 therefore be ingested even when the parent has no DOI; DOI-free records from other
 sources still cannot be resolved reliably.
 
@@ -178,6 +183,13 @@ one group. Stored attachments are copied only into the configured local download
 directory, where the deployment's access and retention policy applies. Contributors
 remain responsible for adding copies that the group is authorized to use.
 
+Every stored PDF child is retained in `PaperRecord.documents`, including its Zotero
+key, label, original filename, local path, hash, source URL, and access basis. A
+top-level stored PDF also enters the queue. The bot does not infer whether a Zotero
+attachment is the article or supporting information: both are downloaded, and their
+human-facing metadata remains available for a downstream reviewer or extraction
+planner to assign the role.
+
 For unattended runs, the Zotero options keep short, service-specific environment
 names alongside the generic `PAPERSBOT_` command options:
 
@@ -199,11 +211,16 @@ These controls follow Zotero's official
 
 `STATE_DIR/state.json` contains a versioned `papers` mapping keyed by DOI whenever one
 is available. Each record retains all discovery sources, OpenAlex metadata, status,
-attempt count, resolved PDF URL, downloaded path, last error, and update time. It also
+attempt count, retained document records, last error, and update time. Format version
+5 introduced the document list while preserving the first-document scalar fields for
+older consumers. State also
 stores the last fully successful OpenAlex date. Version-one feed identifiers are
 migrated to DOI keys as papers reappear. Terminal entries are not processed again
 unless a member newly adds a previously rejected paper to the curated collection.
-Transient errors and papers without an open PDF are retried up to `--max-attempts`.
+Transient errors and papers without an open PDF are replayed from state up to
+`--max-attempts`, even after an RSS item leaves its feed or an OpenAlex record falls
+outside the overlap window. A downloaded record is also reopened when a local file is
+missing or no longer matches its recorded hash.
 
 Every invocation also checkpoints `STATE_DIR/runs/<run-id>.json` and
 `STATE_DIR/last_run.json`. A run record contains timestamps, a non-secret configuration
@@ -227,11 +244,9 @@ jq -s 'map({run_id, started_at, status, outcome_counts})' \
   .papersbot-state/runs/*.json
 ```
 
-The included GitHub workflow is one example scheduler: it prevents overlapping runs,
-caches state, and publishes state and logs as artifacts. Downloaded PDFs are not
-GitHub artifacts by default because a controlled Zotero or institutional input must
-not silently become a broader document store. An internal cron deployment instead
-keeps the same state and run ledgers on its restricted filesystem.
+The supported unattended deployment is an internal cron job with persistent,
+access-controlled storage. See the deployment guide for exact service-account,
+secret-file, locking, monitoring, backup, and log-rotation instructions.
 
 ## Python API
 
@@ -250,7 +265,8 @@ result = run_papersbot(
 ```
 
 `pdf_sources` accepts ordered implementations of the exported `PdfSource` protocol.
-The defaults are stored Zotero attachments followed by public open-access locations.
+A source can return one `AcquiredPdf` or a list; every item becomes a separately
+hashed `PaperDocument`. The defaults are stored Zotero attachments followed by public open-access locations.
 This is the extension point for an institutionally authorized retrieval mechanism;
 each implementation reports its source and access basis without changing discovery or
 selection.

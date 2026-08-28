@@ -18,6 +18,15 @@ class _Result:
         return {"status": "complete"}
 
 
+class _PartialResult:
+    """Represent a completed run whose ledger contains recoverable errors."""
+
+    @staticmethod
+    def model_dump(*, mode: str) -> dict[str, str]:
+        assert mode == "json"
+        return {"status": "complete_with_errors"}
+
+
 def test_cli_writes_structured_log_file(monkeypatch, tmp_path: Path):
     def run_stub(*args, **kwargs):
         del args, kwargs
@@ -80,3 +89,16 @@ def test_cli_can_be_configured_entirely_from_environment(monkeypatch, tmp_path: 
     assert received["zotero_group_id"] == "6651379"
     assert "not-written-to-output" not in result.output
     assert "openalex-secret" not in result.output
+
+
+def test_scheduled_mode_exits_nonzero_after_writing_a_partial_result(monkeypatch):
+    monkeypatch.setattr(cli, "run_papersbot", lambda *args, **kwargs: _PartialResult())
+
+    result = CliRunner().invoke(
+        cli.main,
+        ["--no-rss", "--no-openalex"],
+        env={"PAPERSBOT_FAIL_ON_PARTIAL": "true"},
+    )
+
+    assert result.exit_code == 2
+    assert json.loads(result.stdout) == {"status": "complete_with_errors"}

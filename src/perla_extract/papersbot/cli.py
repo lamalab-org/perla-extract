@@ -124,6 +124,11 @@ def _environment_flag(name: str) -> bool:
     type=click.Path(path_type=Path, dir_okay=False),
     help="Also write structured JSONL logs to this file.",
 )
+@click.option(
+    "--fail-on-partial/--allow-partial",
+    default=False,
+    help="Exit nonzero when a run completes with recorded source or paper errors.",
+)
 def main(
     download_dir: Path,
     state_dir: Path,
@@ -147,6 +152,7 @@ def main(
     log_level: str,
     json_logs: bool,
     log_file: Path | None,
+    fail_on_partial: bool,
 ) -> None:
     """Discover papers and retrieve open or group-supplied PDFs."""
 
@@ -177,7 +183,10 @@ def main(
         )
     except (OSError, RuntimeError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
-    click.echo(json.dumps(result.model_dump(mode="json"), indent=2))
+    payload = result.model_dump(mode="json")
+    click.echo(json.dumps(payload, indent=2))
+    if fail_on_partial and payload.get("status") != "complete":
+        raise click.exceptions.Exit(2)
 
 
 if __name__ == "__main__":

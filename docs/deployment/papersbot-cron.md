@@ -1,14 +1,30 @@
-# Run PapersBot on an internal machine
+# Run PapersBot as an internal cron job
 
-PapersBot does not depend on a particular scheduler. Its command accepts every
-operational option from the environment, writes resumable state to an ordinary
-directory, and exits nonzero when a run fails. A cron deployment therefore needs no
-GitHub-specific wrapper or cloud PDF archive.
+The supported unattended deployment is a Linux machine with persistent local
+storage. PapersBot writes resumable state, downloaded PDFs, structured logs, and an
+immutable ledger for each run. Keeping those files together is important: a
+`downloaded` record is reopened automatically when its recorded PDF is missing or no
+longer matches its SHA-256 fingerprint.
 
-## Install and allocate storage
+## Create a restricted service account
 
-Install a pinned release in a virtual environment owned by a dedicated service user.
-Keep PDFs, state, and logs outside the source checkout:
+The examples below use a non-login account named `perla-papersbot`. Adjust the
+`nologin` path for the Linux distribution when necessary.
+
+```bash
+sudo useradd --system \
+  --home-dir /srv/perla-papersbot \
+  --shell /usr/sbin/nologin \
+  perla-papersbot
+
+sudo install -d -o perla-papersbot -g perla-papersbot -m 0750 \
+  /srv/perla-papersbot \
+  /srv/perla-papersbot/pdfs \
+  /srv/perla-papersbot/state \
+  /srv/perla-papersbot/log
+```
+
+The resulting persistent layout is:
 
 ```text
 /srv/perla-papersbot/
@@ -21,18 +37,39 @@ Keep PDFs, state, and logs outside the source checkout:
     └── papersbot.jsonl
 ```
 
+Back up `pdfs/` and `state/` together. State contains absolute local paths and hashes;
+restoring only one of the two directories creates an incomplete snapshot.
+
+## Install a reviewed version
+
+Use a dedicated virtual environment and pin the released version that was reviewed.
+Update `PERLA_RELEASE` deliberately during upgrades; do not leave an unconstrained
+`pip install` in an unattended deployment.
+
 ```bash
-python -m venv /opt/perla-papersbot/.venv
-/opt/perla-papersbot/.venv/bin/pip install 'perla-extract[papersbot]'
+PERLA_RELEASE='X.Y.Z'  # Replace with the reviewed release.
+sudo python3 -m venv /opt/perla-papersbot/.venv
+sudo /opt/perla-papersbot/.venv/bin/pip install \
+  "perla-extract[papersbot]==${PERLA_RELEASE}"
 ```
 
-The service account needs write access only to `/srv/perla-papersbot`. Restrict that
-tree according to the access conditions of the PDFs it may contain.
+Before a release containing this workflow exists, install a reviewed repository
+checkout instead and retain its exact commit SHA in the deployment record.
 
-## Configure one source-composable run
+## Store configuration and secrets
 
-Store configuration in `/etc/perla-papersbot.env`, readable only by the service
-account and administrators:
+Create an environment file readable by root and the service account, but not other
+users:
+
+```bash
+sudo install -o root -g perla-papersbot -m 0640 /dev/null \
+  /etc/perla-papersbot.env
+sudoedit /etc/perla-papersbot.env
+```
+
+The current PERLA group and journal-club collection use group `6651379` and collection
+`SGN9PJAG`. Copy the dedicated read-only Zotero key directly into this file; do not
+place it in the repository, command line, crontab, logs, or a support message.
 
 ```bash
 PAPERSBOT_DOWNLOAD_DIR=/srv/perla-papersbot/pdfs
@@ -40,32 +77,36 @@ PAPERSBOT_STATE_DIR=/srv/perla-papersbot/state
 PAPERSBOT_LOG_FILE=/srv/perla-papersbot/log/papersbot.jsonl
 PAPERSBOT_LOG_LEVEL=INFO
 PAPERSBOT_MAX_ATTEMPTS=4
+PAPERSBOT_REQUEST_RETRIES=3
+PAPERSBOT_FAIL_ON_PARTIAL=true
 
-# Enable any combination of discovery sources.
 PAPERSBOT_RSS=true
 PAPERSBOT_OPENALEX=true
 OPENALEX_EMAIL=project-contact@example.org
+OPENALEX_API_KEY=replace-with-a-free-openalex-key
 UNPAYWALL_EMAIL=project-contact@example.org
 
-# Optional curated Zotero intake.
-ZOTERO_GROUP_ID=123456
-ZOTERO_COLLECTION_KEY=ABCD1234
-ZOTERO_API_KEY=replace-with-a-read-only-group-key
+ZOTERO_GROUP_ID=6651379
+ZOTERO_COLLECTION_KEY=SGN9PJAG
+ZOTERO_API_KEY=replace-with-the-read-only-group-key
 ZOTERO_CURATED=true
 ```
 
-`PAPERSBOT_RSS=false` and `PAPERSBOT_OPENALEX=false` make this a Zotero-only job.
-Omitting the Zotero variables makes it an RSS/OpenAlex job. Command-line options
-override environment values, so the same installation can also run explicit
-backfills.
+`OPENALEX_API_KEY` is optional for small tests but recommended for scheduled use.
+OpenAlex grants a larger free request budget to authenticated clients. The key is sent
+as a bearer header and, like the Zotero key, is represented only as an enabled/disabled
+flag in run configuration.
 
-The initial Zotero key should be limited to read access for the intended group. Do not
-place it in the repository, command line, crontab, structured logs, or run state.
+Use `PAPERSBOT_RSS=false` and `PAPERSBOT_OPENALEX=false` for a Zotero-only run. Omit
+the Zotero variables for an RSS/OpenAlex-only run. `PAPERSBOT_FAIL_ON_PARTIAL=true`
+makes recorded discovery or acquisition errors observable to cron as exit code 2,
+after the JSON run ledger has been written. Scientific outcomes such as `no_pdf`
+remain inspectable in the ledger without being treated as infrastructure failures.
 
-## Prevent overlapping cron runs
+## Install the locked wrapper
 
-Use one small wrapper so secrets are loaded before the process starts and `flock`
-prevents two invocations from changing the same state directory:
+The wrapper loads secrets before the process starts, applies a private umask, and uses
+`flock` to prevent concurrent writers from sharing the same state directory.
 
 ```sh
 #!/bin/sh
@@ -77,60 +118,79 @@ set -a
 set +a
 
 exec /usr/bin/flock -n "$PAPERSBOT_STATE_DIR/cron.lock" \
-  /opt/perla-papersbot/.venv/bin/perla-papersbot
+  /opt/perla-papersbot/.venv/bin/perla-papersbot >/dev/null
 ```
 
-For example, run it daily at 04:17:
+Save it as `/usr/local/bin/run-perla-papersbot`:
+
+```bash
+sudo chown root:root /usr/local/bin/run-perla-papersbot
+sudo chmod 0755 /usr/local/bin/run-perla-papersbot
+```
+
+Run it once as the service account before scheduling it:
+
+```bash
+sudo -u perla-papersbot /usr/local/bin/run-perla-papersbot
+sudo -u perla-papersbot jq -e '.status == "complete"' \
+  /srv/perla-papersbot/state/last_run.json
+```
+
+The second command must print `true`. Inspect `discovery_failures`,
+`acquisition_failures`, and `outcomes` in `last_run.json` before accepting the first
+run.
+
+## Schedule and monitor it
+
+Create `/etc/cron.d/perla-papersbot`:
 
 ```cron
-17 4 * * * /usr/local/bin/run-perla-papersbot
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=project-operations@example.org
+
+17 4 * * * perla-papersbot /usr/local/bin/run-perla-papersbot
 ```
 
-Cron can report a nonzero exit through the institution's ordinary monitoring or mail
-path. `state/last_run.json` is the health-check target; `state/runs/*.json` and the
-JSONL log are the durable audit trail. Configure ordinary log rotation for the JSONL
-file, but do not rotate or delete run ledgers under the log policy.
+The minimum health check is both a recent `last_run.json` and
+`status == "complete"`. Every run is also retained under `state/runs/<run-id>.json`,
+so longitudinal statistics do not depend on console output. An interrupted process
+leaves a `running` ledger; a fatal exception leaves `failed`; recoverable source or
+paper failures produce `complete_with_errors` and a nonzero scheduled exit.
 
-## Keep discovery separate from access policy
+Configure log rotation with `copytruncate`, because the process opens the Loguru file
+sink directly:
 
-RSS, OpenAlex, and Zotero only say how the bot learned that a paper exists. PDF
+```text
+/srv/perla-papersbot/log/papersbot.jsonl {
+    su perla-papersbot perla-papersbot
+    daily
+    rotate 14
+    compress
+    missingok
+    notifempty
+    copytruncate
+}
+```
+
+Run ledgers are audit data, not logs. Apply the project's retention policy to them
+separately.
+
+## Understand the acquisition boundary
+
+RSS, OpenAlex, and Zotero describe how the bot learned that a paper exists. PDF
 acquisition is an ordered list of `PdfSource` implementations. The built-in list first
-uses a stored Zotero attachment when available and then checks open-access locations.
-Each successful source records both its name and an explicit access basis in state.
+uses every stored Zotero PDF and then checks public open-access locations when Zotero
+has none. Every retained document records its local path, SHA-256, source URL, source,
+access basis, original label, and filename.
 
-An institutionally authorized retrieval service can implement the same small Python
-interface and be passed to `run_papersbot(pdf_sources=[...])`. It may use institutional
-network access, a library API, or another approved mechanism; the core bot does not
-guess that being on a particular network is sufficient authorization. Source failures
-are retained in `acquisition_failures` even when a later source succeeds.
+PapersBot deliberately does not guess which stored attachment is the article or SI.
+Zotero titles and filenames are preserved so a downstream review or extraction planner
+can assign that role with evidence. Open-access DOI retrieval is explicitly marked as
+the article because that resolver returns the article PDF.
 
-```python
-from pathlib import Path
-
-from perla_extract.papersbot import AcquiredPdf, PaperRecord, run_papersbot
-
-
-class InstitutionalLibrary:
-    name = "institutional-library"
-
-    def acquire(
-        self, record: PaperRecord, destination: Path
-    ) -> AcquiredPdf | None:
-        """Retrieve only through the institution's approved access mechanism."""
-
-        # Deployment-specific resolution and authorization belong here.
-        return None
-
-
-result = run_papersbot(
-    "/srv/perla-papersbot/pdfs",
-    state_dir="/srv/perla-papersbot/state",
-    pdf_sources=[InstitutionalLibrary()],
-)
-```
-
-The adapter writes the candidate bytes to `destination` and provides an auditable
-`access_basis`; PapersBot independently checks the PDF signature and stores a SHA-256
-fingerprint before accepting it. The adapter should enforce the applicable licence,
-rate limits, authentication, and retention policy rather than encoding publisher
-exceptions in PapersBot.
+An institutionally authorized retriever can implement `PdfSource` and pass it to
+`run_papersbot(pdf_sources=[...])`. It may use a library API or another approved local
+mechanism, but it must enforce the applicable licence, authentication, rate limits,
+and retention policy. The core validates every returned PDF and records provenance;
+it does not infer authorization merely from being on a university network.
