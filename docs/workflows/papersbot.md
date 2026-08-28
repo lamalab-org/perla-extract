@@ -26,8 +26,6 @@ flowchart LR
     B --> J["Successful-date checkpoint"]
     P --> K
     H --> K
-    K -. "opt-in metadata and status writeback" .-> Z
-    H -. "opt-in private-group PDF upload" .-> Z
 ```
 
 ## Install and run
@@ -138,8 +136,8 @@ perla-papersbot downloaded_papers \
 
 Pass `--zotero-collection-key ABCD1234` to ingest only one collection. This is the
 Zotero API collection key—typically the final eight-character component of a
-collection URL—not the collection's display name. Member-only libraries and all
-writes require an API key:
+collection URL—not the collection's display name. Member-only libraries require an
+API key:
 
 ```bash
 export ZOTERO_API_KEY="your-zotero-key"
@@ -174,71 +172,11 @@ would make an accidental addition indistinguishable from a deliberate extraction
 request. If an item was previously rejected, moving it into the curated collection
 reopens it despite its terminal state.
 
-Writeback is deliberately opt-in. It mirrors DOI-bearing discoveries—including
-rejected records—so false negatives remain visible, and it replaces only tags owned
-by PERLA. Human tags, notes, annotations, collections, and bibliographic edits are
-never overwritten. Optimistic Zotero item versions protect concurrent journal-club
-edits. Managed tags include:
-
-```text
-perla:status:downloaded
-perla:source:openalex
-perla:pdf:attached
-perla:access:open-access
-perla:curated
-```
-
-Configuring a group, collection, or API key is read-only by itself.
-`--zotero-curated` changes selection but still does not write. `--zotero-save` permits
-bibliographic-item creation and status-tag updates; PDF bytes require the additional
-`--zotero-pdf-policy research-group` opt-in.
-
-Use a separate output collection when curated intake and automated discovery share a
-group. Otherwise bot-created rejected items would enter the human-approved queue on
-the next run:
-
-```bash
-perla-papersbot downloaded_papers \
-  --zotero-group-id 123456 \
-  --zotero-collection-key ABCD1234 \
-  --zotero-output-collection-key WXYZ5678 \
-  --zotero-curated \
-  --zotero-save
-```
-
-If no output collection is configured in curated mode, new bot records remain at the
-group-library top level. PapersBot rejects a configuration that uses the same key for
-curated input and bot output.
-
-### Internal PDF storage
-
-PDF upload is a separate policy because metadata writeback should never imply copying
-files. `research-group` enables Zotero's atomic three-stage file upload only after the
-API reports that the destination group is private and permits file storage:
-
-```bash
-perla-papersbot downloaded_papers \
-  --zotero-group-id 123456 \
-  --zotero-collection-key ABCD1234 \
-  --zotero-output-collection-key WXYZ5678 \
-  --zotero-curated \
-  --zotero-save \
-  --zotero-pdf-policy research-group
-```
-
-Existing stored PDF children are reused and never replaced. New attachment notes
-record the source URL, access basis, acquisition purpose, and SHA-256 fingerprint. The
-API key is sent only to Zotero; redirected downloads and storage-host uploads
-deliberately omit it. An interrupted upload reuses its child attachment on the next
-run.
-
-This policy is intended for a defined internal scientific research and verification
-group. It does not make a PDF publicly redistributable. Contributors remain responsible
-for adding only lawfully accessed copies, as required by the
-[Zotero Terms of Service](https://www.zotero.org/support/terms/terms_of_service). For a
-German research organization, the relevant controlled-access and secure-retention
-conditions are described in [§ 60d UrhG](https://www.gesetze-im-internet.de/urhg/__60d.html).
-Confirm the project policy with the responsible university library or legal office.
+The integration is intentionally read-only. It never creates items, changes tags, or
+uploads files to Zotero; its key can therefore be restricted to read access for this
+one group. Stored attachments are copied only into the configured local download
+directory, where the deployment's access and retention policy applies. Contributors
+remain responsible for adding copies that the group is authorized to use.
 
 For unattended runs, the Zotero options keep short, service-specific environment
 names alongside the generic `PAPERSBOT_` command options:
@@ -247,21 +185,15 @@ names alongside the generic `PAPERSBOT_` command options:
 | --- | --- | --- |
 | `ZOTERO_GROUP_ID` | unset | Numeric group library ID |
 | `ZOTERO_COLLECTION_KEY` | unset | Optional input collection API key |
-| `ZOTERO_OUTPUT_COLLECTION_KEY` | unset | Optional collection API key for bot-created records |
-| `ZOTERO_API_KEY` | unset | Credential for private reads or explicit writes |
+| `ZOTERO_API_KEY` | unset | Credential for member-only library reads |
 | `ZOTERO_CURATED` | `false` | Treat the configured input collection as human-approved |
-| `ZOTERO_SAVE` | `false` | Permit item creation and PERLA-owned status-tag updates |
-| `ZOTERO_PDF_POLICY` | `never` | Set to `research-group` for verified-private-group upload |
 
 Boolean opt-ins accept `1`, `true`, `yes`, or `on` (case-insensitive). The API key is
 never written to `state.json`, run ledgers, or logs. Keep it in the scheduler's secret
 store or a permission-restricted environment file.
 
-These controls follow Zotero's official [Web API basics](https://www.zotero.org/support/dev/web_api/v3/basics)
-and [write-request protocol](https://www.zotero.org/support/dev/web_api/v3/write_requests).
-Zotero documents attachment storage separately in its
-[file-upload protocol](https://www.zotero.org/support/dev/web_api/v3/file_upload),
-which PapersBot follows for authorization, storage transfer, and registration.
+These controls follow Zotero's official
+[Web API basics](https://www.zotero.org/support/dev/web_api/v3/basics).
 
 ## Incremental state
 
@@ -276,7 +208,7 @@ Transient errors and papers without an open PDF are retried up to `--max-attempt
 Every invocation also checkpoints `STATE_DIR/runs/<run-id>.json` and
 `STATE_DIR/last_run.json`. A run record contains timestamps, a non-secret configuration
 fingerprint, source/date configuration, raw and DOI-deduplicated discovery counts,
-OpenAlex pages/results/reported API cost, Zotero item updates and PDF transfers,
+OpenAlex pages/results/reported API cost, Zotero reads and attachment downloads,
 aggregate outcome/skip/retry counts, source failures, and one outcome for every unique
 paper processed or skipped. The per-run file is therefore the source for longitudinal
 statistics; console logs are only the live operational view. An interrupted invocation

@@ -118,12 +118,9 @@ behavior. RSS discovery and the policy's OpenAlex topics are enabled by default.
 `--zotero-group-id` adds a Zotero group as a discovery source, and
 `--zotero-collection-key` limits it to one collection using Zotero's API key for that
 collection, not its display name. `--zotero-curated` makes that collection a
-human-approved extraction queue. `--zotero-save` mirrors DOI-bearing discoveries and
-updates namespaced status tags; it requires `ZOTERO_API_KEY`.
-`--zotero-output-collection-key` keeps bot-created records out of the curated queue.
-`--zotero-pdf-policy research-group` uploads downloaded PDFs only after verifying that
-the destination group is private and has file storage enabled. Merely providing read
-credentials never modifies the library.
+human-approved extraction queue. Zotero access is read-only; `ZOTERO_API_KEY` is
+needed only when the selected group library is not publicly readable. The key is never
+written to bot artifacts.
 
 For unattended use, ordinary options use the `PAPERSBOT_` environment prefix:
 `PAPERSBOT_DOWNLOAD_DIR`, `PAPERSBOT_STATE_DIR`, `PAPERSBOT_RSS`,

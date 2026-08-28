@@ -52,10 +52,6 @@ ZOTERO_GROUP_ID=123456
 ZOTERO_COLLECTION_KEY=ABCD1234
 ZOTERO_API_KEY=replace-with-a-read-only-group-key
 ZOTERO_CURATED=true
-
-# Writes remain separate opt-ins.
-ZOTERO_SAVE=false
-ZOTERO_PDF_POLICY=never
 ```
 
 `PAPERSBOT_RSS=false` and `PAPERSBOT_OPENALEX=false` make this a Zotero-only job.

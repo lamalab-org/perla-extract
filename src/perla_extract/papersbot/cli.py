@@ -94,31 +94,15 @@ def _environment_flag(name: str) -> bool:
     help="Optionally limit Zotero ingestion to one journal-club collection.",
 )
 @click.option(
-    "--zotero-output-collection-key",
-    default=lambda: os.environ.get("ZOTERO_OUTPUT_COLLECTION_KEY"),
-    help="Optional separate collection for records created by the bot.",
-)
-@click.option(
     "--zotero-api-key",
     default=lambda: os.environ.get("ZOTERO_API_KEY"),
     show_default=False,
-    help="API key for member-only group reads or writes. Never stored in artifacts.",
-)
-@click.option(
-    "--zotero-save/--no-zotero-save",
-    default=lambda: _environment_flag("ZOTERO_SAVE"),
-    help="Mirror discovered papers and non-destructive PERLA status tags.",
+    help="API key for member-only group reads. Never stored in bot artifacts.",
 )
 @click.option(
     "--zotero-curated/--no-zotero-curated",
     default=lambda: _environment_flag("ZOTERO_CURATED"),
     help="Treat every item in the configured Zotero collection as human-approved.",
-)
-@click.option(
-    "--zotero-pdf-policy",
-    type=click.Choice(("never", "research-group")),
-    default=lambda: os.environ.get("ZOTERO_PDF_POLICY") or "never",
-    help="Upload PDFs only to a verified private research group.",
 )
 @click.option("--max-attempts", type=click.IntRange(min=1), default=4)
 @click.option("--request-timeout", type=click.FloatRange(min=1), default=30.0)
@@ -147,11 +131,8 @@ def main(
     openalex_end_date: datetime | None,
     zotero_group_id: str | None,
     zotero_collection_key: str | None,
-    zotero_output_collection_key: str | None,
     zotero_api_key: str | None,
-    zotero_save: bool,
     zotero_curated: bool,
-    zotero_pdf_policy: str,
     max_attempts: int,
     request_timeout: float,
     log_level: str,
@@ -178,11 +159,8 @@ def main(
             openalex_end_date=(openalex_end_date.date() if openalex_end_date else None),
             zotero_group_id=zotero_group_id,
             zotero_collection_key=zotero_collection_key,
-            zotero_output_collection_key=zotero_output_collection_key,
             zotero_api_key=zotero_api_key,
-            zotero_save=zotero_save,
             zotero_curated=zotero_curated,
-            zotero_pdf_policy=zotero_pdf_policy,
             max_attempts=max_attempts,
             request_timeout=request_timeout,
         )

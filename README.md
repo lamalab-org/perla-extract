@@ -69,14 +69,13 @@ perla-papersbot downloaded_papers --state-dir .papersbot-state
 
 Use `--feeds-file` or repeated `--feed` options to replace the journal list and
 `--selection-file` to replace the relevance policy. `--zotero-group-id` also ingests a
-Zotero group (including its stored PDF attachments); `--zotero-save` explicitly saves
-and status-tags discoveries back to that group. A configured collection can be a
-journal-club-curated intake queue, and `--zotero-pdf-policy research-group` stores PDFs
-only after verifying a private group. The same command runs under cron or GitHub
-Actions, with all ordinary settings available through `PAPERSBOT_` environment
-variables. Each PDF acquisition records its source and access basis; authorized local
-retrieval mechanisms can implement the small `PdfSource` interface without adding
-publisher cases to the bot.
+Zotero group, including stored PDF attachments. A configured collection can be a
+journal-club-curated intake queue. Zotero access is read-only and works with a key
+scoped to that group. The same command runs under cron or GitHub Actions, with all
+ordinary settings available through `PAPERSBOT_` environment variables. Each PDF
+acquisition records its source and access basis; authorized local retrieval mechanisms
+can implement the small `PdfSource` interface without adding publisher cases to the
+bot.
 
 ## Authors
 

@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta, timezone
 from html import unescape
 from importlib.resources import files
 from pathlib import Path
-from typing import Any, Iterable, Literal, Mapping
+from typing import Any, Iterable, Mapping
 from urllib.parse import quote
 from uuid import uuid4
 
@@ -249,95 +249,15 @@ def _record_outcome(
     )
 
 
-def _mirror_zotero_item(
-    client: ZoteroClient,
-    result: BotResult,
-    record: PaperRecord,
-    *,
-    pdf_policy: Literal["never", "research-group"],
-) -> None:
-    """Mirror one outcome without allowing Zotero failures to alter scientific state."""
-
-    try:
-        key, created = client.save_item(record)
-        record.zotero_item_key = key
-        record.sources = list(dict.fromkeys([*record.sources, client.source]))
-        if result.zotero is not None:
-            if created:
-                result.zotero.items_created += 1
-            else:
-                result.zotero.items_existing += 1
-    except Exception as exc:
-        if result.zotero is not None:
-            result.zotero.errors += 1
-        logger.bind(
-            event="papersbot.zotero_write_failed",
-            doi=record.doi,
-            group_id=client.group_id,
-        ).warning("Could not save {} to Zotero: {}", record.doi, exc)
-        return
-
-    if pdf_policy == "research-group" and record.status == "downloaded":
-        path = Path(record.downloaded_file) if record.downloaded_file else None
-        if path is not None and path.is_file():
-            try:
-                attachment_key, uploaded, digest = client.upload_pdf(
-                    record,
-                    path,
-                    access_basis=record.pdf_access_basis or "research-group",
-                    source_url=record.pdf_url,
-                )
-                record.zotero_attachment_key = attachment_key
-                record.pdf_sha256 = digest
-                record.pdf_access_basis = record.pdf_access_basis or "research-group"
-                if result.zotero is not None:
-                    if uploaded:
-                        result.zotero.pdfs_uploaded += 1
-                    else:
-                        result.zotero.pdfs_existing += 1
-            except Exception as exc:
-                if result.zotero is not None:
-                    result.zotero.errors += 1
-                logger.bind(
-                    event="papersbot.zotero_pdf_upload_failed",
-                    doi=record.doi,
-                    group_id=client.group_id,
-                ).warning("Could not upload PDF for {} to Zotero: {}", record.doi, exc)
-
-    try:
-        if client.sync_status(record) and result.zotero is not None:
-            result.zotero.items_updated += 1
-    except Exception as exc:
-        if result.zotero is not None:
-            result.zotero.errors += 1
-        logger.bind(
-            event="papersbot.zotero_status_failed",
-            doi=record.doi,
-            group_id=client.group_id,
-        ).warning("Could not synchronize Zotero status for {}: {}", record.doi, exc)
-
-
 def _finalize_record(
     state: BotState,
     state_path: Path,
     result: BotResult,
     record: PaperRecord,
     disposition: str,
-    *,
-    zotero_client: ZoteroClient | None,
-    zotero_save: bool,
-    zotero_pdf_policy: Literal["never", "research-group"],
 ) -> None:
-    """Persist one completed decision to both durable state and its optional mirror."""
+    """Persist one completed decision to durable state and its run ledger."""
 
-    if zotero_client is not None and zotero_save:
-        if record.doi or record.zotero_item_key:
-            _mirror_zotero_item(
-                zotero_client,
-                result,
-                record,
-                pdf_policy=zotero_pdf_policy,
-            )
     record.updated_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     state.papers[record.identifier] = record
     save_state(state_path, state)
@@ -478,10 +398,7 @@ def run_papersbot(
     zotero_group_id: str | None = None,
     zotero_api_key: str | None = None,
     zotero_collection_key: str | None = None,
-    zotero_output_collection_key: str | None = None,
-    zotero_save: bool = False,
     zotero_curated: bool = False,
-    zotero_pdf_policy: Literal["never", "research-group"] = "never",
     max_attempts: int = 4,
     request_timeout: float = 30.0,
     session: Any | None = None,
@@ -496,8 +413,8 @@ def run_papersbot(
     approval instead of being second-guessed by the keyword policy. HTTP and feed
     clients remain injectable for deterministic tests. PDF sources are ordered and
     replaceable, so an authorized institutional retriever can be added without
-    changing discovery or selection. Zotero writeback is explicit; merely configuring
-    read access never changes the group library.
+    changing discovery or selection. Zotero access is read-only: configuring the
+    group can never change its library.
     """
 
     if session is None:
@@ -523,38 +440,13 @@ def run_papersbot(
             group_id=zotero_group_id,
             api_key=zotero_api_key,
             collection_key=zotero_collection_key,
-            output_collection_key=(
-                zotero_output_collection_key
-                if zotero_output_collection_key
-                else None
-                if zotero_curated
-                else zotero_collection_key
-            ),
             timeout=request_timeout,
         )
         if zotero_group_id
         else None
     )
-    if zotero_save and zotero_client is None:
-        raise ValueError("--zotero-save requires --zotero-group-id")
-    if zotero_save and not zotero_api_key:
-        raise ValueError("--zotero-save requires ZOTERO_API_KEY")
     if zotero_curated and not zotero_collection_key:
         raise ValueError("--zotero-curated requires --zotero-collection-key")
-    if (
-        zotero_curated
-        and zotero_output_collection_key
-        and zotero_output_collection_key == zotero_collection_key
-    ):
-        raise ValueError(
-            "Curated intake and bot output must use different Zotero collections"
-        )
-    if zotero_pdf_policy not in {"never", "research-group"}:
-        raise ValueError("Zotero PDF policy must be 'never' or 'research-group'")
-    if zotero_pdf_policy != "never" and not zotero_save:
-        raise ValueError("Zotero PDF upload requires --zotero-save")
-    if zotero_pdf_policy == "research-group":
-        zotero_client.require_private_file_writes()
 
     configured_pdf_sources = (
         list(pdf_sources)
@@ -629,12 +521,7 @@ def run_papersbot(
             zotero_enabled=zotero_client is not None,
             zotero_group_id=zotero_client.group_id if zotero_client else None,
             zotero_collection_key=(zotero_client.collection_key if zotero_client else None),
-            zotero_output_collection_key=(
-                zotero_client.output_collection_key if zotero_client else None
-            ),
-            zotero_save_enabled=zotero_save,
             zotero_curated=zotero_curated,
-            zotero_pdf_policy=zotero_pdf_policy,
         ),
         zotero=(
             ZoteroRunStats(
@@ -824,9 +711,6 @@ def run_papersbot(
                     result,
                     record,
                     "skipped_terminal",
-                    zotero_client=zotero_client,
-                    zotero_save=zotero_save,
-                    zotero_pdf_policy=zotero_pdf_policy,
                 )
                 continue
             if previous and previous.attempts >= max_attempts and not newly_curated:
@@ -838,9 +722,6 @@ def run_papersbot(
                     result,
                     record,
                     "skipped_max_attempts",
-                    zotero_client=zotero_client,
-                    zotero_save=zotero_save,
-                    zotero_pdf_policy=zotero_pdf_policy,
                 )
                 continue
             if not record.zotero_curated and policy.excludes(record.title):
@@ -851,9 +732,6 @@ def run_papersbot(
                     result,
                     record,
                     "evaluated",
-                    zotero_client=zotero_client,
-                    zotero_save=zotero_save,
-                    zotero_pdf_policy=zotero_pdf_policy,
                 )
                 continue
 
@@ -866,9 +744,6 @@ def run_papersbot(
                     result,
                     record,
                     "evaluated",
-                    zotero_client=zotero_client,
-                    zotero_save=zotero_save,
-                    zotero_pdf_policy=zotero_pdf_policy,
                 )
                 continue
             result.candidates_processed += 1
@@ -934,9 +809,6 @@ def run_papersbot(
                 result,
                 record,
                 "evaluated",
-                zotero_client=zotero_client,
-                zotero_save=zotero_save,
-                zotero_pdf_policy=zotero_pdf_policy,
             )
 
         if openalex_query_succeeded and result.openalex is not None:

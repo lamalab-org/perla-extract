@@ -170,10 +170,7 @@ class BotRunConfiguration(BaseModel):
     zotero_enabled: bool = False
     zotero_group_id: str | None = None
     zotero_collection_key: str | None = None
-    zotero_output_collection_key: str | None = None
-    zotero_save_enabled: bool = False
     zotero_curated: bool = False
-    zotero_pdf_policy: Literal["never", "research-group"] = "never"
 
 
 class DiscoveryFailure(BaseModel):
@@ -207,18 +204,13 @@ class OpenAlexRunStats(BaseModel):
 
 
 class ZoteroRunStats(BaseModel):
-    """Account for group-library reads, attachment downloads, and opt-in writes."""
+    """Account for group-library reads and stored attachment downloads."""
 
     group_id: str
     collection_key: str | None = None
     pages: int = 0
     items_seen: int = 0
     pdfs_downloaded: int = 0
-    items_created: int = 0
-    items_existing: int = 0
-    items_updated: int = 0
-    pdfs_uploaded: int = 0
-    pdfs_existing: int = 0
     errors: int = 0
 
 

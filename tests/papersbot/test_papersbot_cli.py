@@ -64,7 +64,6 @@ def test_cli_can_be_configured_entirely_from_environment(monkeypatch, tmp_path: 
             "PAPERSBOT_MAX_ATTEMPTS": "7",
             "ZOTERO_GROUP_ID": "6651379",
             "ZOTERO_API_KEY": "not-written-to-output",
-            "ZOTERO_PDF_POLICY": "",
         },
     )
 
@@ -75,5 +74,4 @@ def test_cli_can_be_configured_entirely_from_environment(monkeypatch, tmp_path: 
     assert received["openalex_enabled"] is False
     assert received["max_attempts"] == 7
     assert received["zotero_group_id"] == "6651379"
-    assert received["zotero_pdf_policy"] == "never"
     assert "not-written-to-output" not in result.output
