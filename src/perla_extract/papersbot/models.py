@@ -238,6 +238,7 @@ class BotResult(BaseModel):
     discovery_errors: int = 0
     entries_seen: int = 0
     unique_papers_seen: int = 0
+    state_retries_scheduled: int = 0
     source_counts: dict[str, int] = Field(default_factory=dict)
     candidates_processed: int = 0
     relevant_papers: int = 0

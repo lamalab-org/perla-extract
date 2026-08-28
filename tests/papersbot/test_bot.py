@@ -262,7 +262,9 @@ def test_pdf_source_failure_is_recorded_before_fallback_succeeds(tmp_path: Path)
 
         @staticmethod
         def acquire(record, destination):
-            del record, destination
+            del record
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(b"partial download")
             raise OSError("resolver unavailable")
 
     class FallbackSource:
@@ -304,6 +306,96 @@ def test_pdf_source_failure_is_recorded_before_fallback_succeeds(tmp_path: Path)
     assert result.outcome_counts == {"downloaded": 1}
     assert result.acquisition_failures[0].source == "broken"
     assert result.acquisition_failures[0].error == "resolver unavailable"
+
+
+def test_retryable_state_is_replayed_after_feed_entry_disappears(tmp_path: Path):
+    class EmptyFeedParser:
+        @staticmethod
+        def parse(content):
+            del content
+            return SimpleNamespace(bozo=False, entries=[])
+
+    selection = tmp_path / "selection.json"
+    selection.write_text(
+        json.dumps(
+            {
+                "required_groups": [["perovskite"], ["solar cell"]],
+                "excluded_title_terms": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    state_path = tmp_path / "state/state.json"
+    from perla_extract.papersbot.bot import save_state
+    from perla_extract.papersbot.models import BotState, PaperRecord
+
+    save_state(
+        state_path,
+        BotState(
+            papers={
+                "10.1234/example.1": PaperRecord(
+                    identifier="10.1234/example.1",
+                    sources=["rss:https://example.test/feed"],
+                    doi="10.1234/example.1",
+                    title="A perovskite solar cell",
+                    status="no_pdf",
+                    attempts=1,
+                )
+            }
+        ),
+    )
+
+    result = run_papersbot(
+        download_dir=tmp_path / "papers",
+        state_dir=tmp_path / "state",
+        feeds=["https://example.test/feed"],
+        selection_file=selection,
+        openalex_enabled=False,
+        session=FakeSession(),
+        feedparser_module=EmptyFeedParser(),
+    )
+
+    assert result.state_retries_scheduled == 1
+    assert result.retry_counts == {"no_pdf": 1}
+    assert result.outcome_counts == {"downloaded": 1}
+
+
+def test_missing_terminal_pdf_is_reacquired(tmp_path: Path):
+    class EmptyFeedParser:
+        @staticmethod
+        def parse(content):
+            del content
+            return SimpleNamespace(bozo=False, entries=[])
+
+    selection = tmp_path / "selection.json"
+    selection.write_text(
+        json.dumps(
+            {
+                "required_groups": [["perovskite"], ["solar cell"]],
+                "excluded_title_terms": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    options = {
+        "download_dir": tmp_path / "papers",
+        "state_dir": tmp_path / "state",
+        "feeds": ["https://example.test/feed"],
+        "selection_file": selection,
+        "openalex_enabled": False,
+        "session": FakeSession(),
+        "feedparser_module": FakeFeedParser(),
+    }
+
+    first = run_papersbot(**options)
+    first.downloaded_files[0].unlink()
+    options["feedparser_module"] = EmptyFeedParser()
+    second = run_papersbot(**options)
+
+    assert second.state_retries_scheduled == 1
+    assert second.outcome_counts == {"downloaded": 1}
+    assert second.pdfs_downloaded == 1
+    assert second.downloaded_files[0].is_file()
 
 
 def test_run_report_attributes_retries_to_the_previous_status(tmp_path: Path):

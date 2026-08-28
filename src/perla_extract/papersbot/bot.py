@@ -31,6 +31,7 @@ from .zotero import ZoteroClient
 
 DOI_PATTERN = re.compile(r"10\.\d{4,9}/[-._;()/:A-Z0-9]+", re.IGNORECASE)
 TERMINAL_STATUSES = {"downloaded", "excluded", "irrelevant"}
+RETRYABLE_STATUSES = {"new", "error", "no_pdf", "missing_doi"}
 
 
 def default_feeds_path() -> Path:
@@ -173,6 +174,69 @@ def _merge_previous(state: BotState, record: PaperRecord) -> PaperRecord | None:
     return previous
 
 
+def _pending_state_retries(
+    state: BotState,
+    discovered: Iterable[PaperRecord],
+    *,
+    max_attempts: int,
+) -> list[PaperRecord]:
+    """Replay unfinished transient-source records after discovery stops returning them.
+
+    RSS entries eventually leave their feeds and OpenAlex advances its date checkpoint.
+    Retrying only records seen again would therefore make ``max_attempts`` depend on an
+    external source's retention window. Curated Zotero records are excluded because
+    removing an item from the intake collection should also remove it from the queue.
+    """
+
+    discovered_ids = {record.identifier for record in discovered}
+    discovered_dois = {record.doi for record in discovered if record.doi}
+    pending: list[PaperRecord] = []
+    for record in state.papers.values():
+        already_discovered = record.identifier in discovered_ids or (
+            record.doi is not None and record.doi in discovered_dois
+        )
+        if already_discovered or record.zotero_curated:
+            continue
+        stale_download = (
+            record.status == "downloaded" and not _downloaded_file_is_current(record)
+        )
+        within_retry_budget = (
+            record.status in RETRYABLE_STATUSES and record.attempts < max_attempts
+        )
+        if stale_download or within_retry_budget:
+            pending.append(record.model_copy(deep=True))
+    return pending
+
+
+def _downloaded_file_is_current(record: PaperRecord) -> bool:
+    """Treat a downloaded state as terminal only while its local bytes still match."""
+
+    if not record.downloaded_file:
+        return False
+    path = Path(record.downloaded_file)
+    if not path.is_file():
+        return False
+    try:
+        digest = _validated_pdf_sha256(path)
+    except (OSError, ValueError):
+        return False
+    return record.pdf_sha256 is None or digest == record.pdf_sha256
+
+
+def _clear_stale_download(record: PaperRecord) -> None:
+    """Remove a corrupt managed PDF and clear provenance before reacquisition."""
+
+    if record.downloaded_file:
+        path = Path(record.downloaded_file)
+        if path.is_file():
+            path.unlink()
+    record.status = "new"
+    record.downloaded_file = None
+    record.pdf_sha256 = None
+    record.pdf_source = None
+    record.pdf_access_basis = None
+
+
 def load_state(path: Path) -> BotState:
     """Load and migrate state if present; absence represents a first run."""
 
@@ -275,13 +339,14 @@ def _acquire_pdf(
     for source in sources:
         source_name = source.name.strip()
         acquired = None
+        existed_before = destination.exists()
         try:
             acquired = source.acquire(record, destination)
             if acquired is None:
                 continue
             digest = _validated_pdf_sha256(destination)
         except Exception as exc:
-            if acquired is not None:
+            if acquired is not None or (not existed_before and destination.exists()):
                 destination.unlink(missing_ok=True)
             result.acquisition_failures.append(
                 PdfAcquisitionFailure(
@@ -680,6 +745,12 @@ def run_papersbot(
 
         unique_records = _merge_records(discovered)
         result.unique_papers_seen = len(unique_records)
+        state_retries = _pending_state_retries(
+            state,
+            unique_records,
+            max_attempts=max_attempts,
+        )
+        result.state_retries_scheduled = len(state_retries)
         logger.bind(
             event="papersbot.discovery_finished",
             run_id=run_id,
@@ -691,17 +762,33 @@ def run_papersbot(
             result.unique_papers_seen,
             result.entries_seen,
         )
-        for record in unique_records:
+        for record in [*unique_records, *state_retries]:
             previous = _merge_previous(state, record)
             newly_curated = bool(
                 record.zotero_curated
                 and previous is not None
                 and not previous.zotero_curated
             )
+            stale_download = bool(
+                previous
+                and previous.status == "downloaded"
+                and not _downloaded_file_is_current(record)
+            )
+            if stale_download:
+                logger.bind(
+                    event="papersbot.download_reopened",
+                    identifier=record.identifier,
+                    downloaded_file=record.downloaded_file,
+                ).warning(
+                    "Reopening downloaded paper because its local PDF is missing or changed: {}",
+                    record.identifier,
+                )
+                _clear_stale_download(record)
             if (
                 previous
                 and previous.status in TERMINAL_STATUSES
                 and not newly_curated
+                and not stale_download
             ):
                 record.status = previous.status
                 record.error = previous.error
@@ -713,7 +800,12 @@ def run_papersbot(
                     "skipped_terminal",
                 )
                 continue
-            if previous and previous.attempts >= max_attempts and not newly_curated:
+            if (
+                previous
+                and previous.attempts >= max_attempts
+                and not newly_curated
+                and not stale_download
+            ):
                 record.status = previous.status
                 record.error = previous.error
                 _finalize_record(
