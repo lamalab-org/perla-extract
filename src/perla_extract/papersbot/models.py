@@ -95,6 +95,20 @@ class SelectionPolicy(BaseModel):
         )
 
 
+class PaperDocument(BaseModel):
+    """Describe one locally retained PDF without guessing its scientific role."""
+
+    source_identifier: str | None = None
+    label: str = ""
+    filename: str = ""
+    role: Literal["article", "supporting_information", "unknown"] = "unknown"
+    source_url: str
+    local_file: str
+    sha256: str
+    pdf_source: str
+    access_basis: str
+
+
 class PaperRecord(BaseModel):
     """Store one discovered paper and the latest outcome of processing it.
 
@@ -122,6 +136,7 @@ class PaperRecord(BaseModel):
     pdf_sha256: str | None = None
     pdf_source: str | None = None
     pdf_access_basis: str | None = None
+    documents: list[PaperDocument] = Field(default_factory=list)
     error: str | None = None
     updated_at: str = Field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -147,7 +162,7 @@ class PaperRecord(BaseModel):
 class BotState(BaseModel):
     """Versioned JSON state that makes scheduled runs incremental and inspectable."""
 
-    format_version: int = 4
+    format_version: int = 5
     papers: dict[str, PaperRecord] = Field(default_factory=dict)
     openalex_last_successful_date: date | None = None
 
@@ -228,7 +243,7 @@ class PaperRunOutcome(BaseModel):
 class BotResult(BaseModel):
     """Versioned, retrievable account of one PapersBot invocation."""
 
-    format_version: int = 4
+    format_version: int = 5
     run_id: str
     status: Literal["running", "complete", "complete_with_errors", "failed"] = "running"
     started_at: str

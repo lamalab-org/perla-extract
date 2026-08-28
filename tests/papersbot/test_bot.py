@@ -105,7 +105,7 @@ def test_load_state_migrates_the_feed_only_source_field(tmp_path: Path):
 
     state = load_state(path)
 
-    assert state.format_version == 4
+    assert state.format_version == 5
     assert state.papers["old-id"].sources == ["https://example.test/feed"]
 
 

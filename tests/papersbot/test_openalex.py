@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import date
 from pathlib import Path
@@ -198,6 +199,8 @@ def test_failed_openalex_page_does_not_advance_checkpoint(tmp_path: Path):
 
 def test_legacy_feed_identifier_is_migrated_to_doi(tmp_path: Path):
     state_path = tmp_path / "state/state.json"
+    downloaded_file = tmp_path / "shared.pdf"
+    downloaded_file.write_bytes(b"%PDF-1.7\nlegacy")
     save_state(
         state_path,
         BotState(
@@ -208,6 +211,8 @@ def test_legacy_feed_identifier_is_migrated_to_doi(tmp_path: Path):
                     doi="10.1234/shared",
                     status="downloaded",
                     attempts=1,
+                    downloaded_file=str(downloaded_file),
+                    pdf_sha256=hashlib.sha256(downloaded_file.read_bytes()).hexdigest(),
                 )
             }
         ),

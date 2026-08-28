@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Any, Mapping
@@ -11,6 +12,15 @@ from urllib.parse import quote
 from .models import ZoteroRunStats
 
 DOI_PATTERN = re.compile(r"10\.\d{4,9}/[-._;()/:A-Z0-9]+", re.IGNORECASE)
+
+
+@dataclass(frozen=True)
+class ZoteroPdfAttachment:
+    """Retain the human-facing metadata of one stored PDF child."""
+
+    key: str
+    label: str = ""
+    filename: str = ""
 
 
 def _doi(value: object) -> str | None:
@@ -59,7 +69,7 @@ class ZoteroClient:
         self.api_key = (api_key or "").strip()
         self.collection_key = (collection_key or "").strip() or None
         self.timeout = timeout
-        self._attachments: dict[str, str | None] = {}
+        self._attachments: dict[str, list[ZoteroPdfAttachment]] = {}
 
     @property
     def source(self) -> str:
@@ -130,11 +140,29 @@ class ZoteroClient:
         data = item.get("data")
         if not isinstance(data, Mapping):
             return None
-        if data.get("itemType") in {"attachment", "note", "annotation"}:
+        item_type = data.get("itemType")
+        if item_type in {"note", "annotation"}:
             return None
         item_key = str(item.get("key") or data.get("key") or "").strip()
         if not item_key:
             return None
+        if item_type == "attachment":
+            if (
+                data.get("parentItem")
+                or data.get("contentType") != "application/pdf"
+                or data.get("linkMode") not in {"imported_file", "imported_url"}
+            ):
+                return None
+            return {
+                "id": f"zotero:{self.group_id}:{item_key}",
+                "doi": _doi(data.get("url")),
+                "title": str(data.get("title") or data.get("filename") or ""),
+                "summary": "",
+                "link": str(data.get("url") or ""),
+                "publication_date": None,
+                "zotero_item_key": item_key,
+                "zotero_attachment_key": item_key,
+            }
         doi = _doi(data.get("DOI")) or _doi(data.get("extra")) or _doi(data.get("url"))
         return {
             "id": f"zotero:{self.group_id}:{item_key}",
@@ -146,8 +174,36 @@ class ZoteroClient:
             "zotero_item_key": item_key,
         }
 
-    def attachment_key(self, item_key: str) -> str | None:
-        """Resolve the first stored PDF child, caching negative lookups for the run."""
+    @staticmethod
+    def _pdf_attachment(item: Mapping[str, Any]) -> ZoteroPdfAttachment | None:
+        """Convert a stored PDF item while preserving its original label and name."""
+
+        data = item.get("data")
+        if (
+            not isinstance(data, Mapping)
+            or data.get("itemType") != "attachment"
+            or data.get("contentType") != "application/pdf"
+            or data.get("linkMode") not in {"imported_file", "imported_url"}
+        ):
+            return None
+        key = str(item.get("key") or data.get("key") or "").strip()
+        if not key:
+            return None
+        return ZoteroPdfAttachment(
+            key=key,
+            label=str(data.get("title") or ""),
+            filename=str(data.get("filename") or ""),
+        )
+
+    def direct_pdf_attachment(
+        self, attachment_key: str, *, label: str = ""
+    ) -> list[ZoteroPdfAttachment]:
+        """Describe a top-level PDF already identified during item discovery."""
+
+        return [ZoteroPdfAttachment(key=attachment_key, label=label)]
+
+    def pdf_attachments(self, item_key: str) -> list[ZoteroPdfAttachment]:
+        """Resolve every stored PDF child, caching the complete list for the run."""
 
         if item_key in self._attachments:
             return self._attachments[item_key]
@@ -159,19 +215,13 @@ class ZoteroClient:
             timeout=self.timeout,
         )
         children = self._array(response, endpoint=url)
-        key = next(
-            (
-                str(child.get("key") or child.get("data", {}).get("key"))
-                for child in children
-                if isinstance(child.get("data"), Mapping)
-                and child["data"].get("itemType") == "attachment"
-                and child["data"].get("contentType") == "application/pdf"
-                and child["data"].get("linkMode") in {"imported_file", "imported_url"}
-            ),
-            None,
-        )
-        self._attachments[item_key] = key
-        return key
+        attachments = [
+            attachment
+            for child in children
+            if (attachment := self._pdf_attachment(child)) is not None
+        ]
+        self._attachments[item_key] = attachments
+        return attachments
 
     def download_attachment(self, attachment_key: str, destination: Path) -> None:
         """Download a stored group PDF without leaking the key on redirects."""

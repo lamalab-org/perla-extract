@@ -102,8 +102,114 @@ def test_group_items_and_stored_pdf_enter_the_normal_bot_pipeline(tmp_path: Path
     assert record.pdf_source == "zotero"
     assert record.pdf_access_basis == "member-supplied"
     assert record.pdf_sha256
+    assert len(record.documents) == 1
+    assert record.documents[0].source_identifier == "PDFCHILD"
     assert record.sources == ["zotero:groups/42"]
     assert "read-key" not in (tmp_path / "state/last_run.json").read_text()
+
+
+class MultiplePdfSession(ZoteroReadSession):
+    def get(self, url, **kwargs):
+        if url.endswith("/items/PARENT01/children"):
+            return FakeResponse(
+                [
+                    {
+                        "key": "ARTICLE1",
+                        "data": {
+                            "key": "ARTICLE1",
+                            "itemType": "attachment",
+                            "linkMode": "imported_file",
+                            "contentType": "application/pdf",
+                            "title": "Published article",
+                            "filename": "article.pdf",
+                        },
+                    },
+                    {
+                        "key": "SUPPORT1",
+                        "data": {
+                            "key": "SUPPORT1",
+                            "itemType": "attachment",
+                            "linkMode": "imported_file",
+                            "contentType": "application/pdf",
+                            "title": "Supporting information",
+                            "filename": "supporting-information.pdf",
+                        },
+                    },
+                ]
+            )
+        if url.endswith("/items/ARTICLE1/file"):
+            return FakeResponse(content=b"%PDF-1.7\narticle")
+        if url.endswith("/items/SUPPORT1/file"):
+            return FakeResponse(content=b"%PDF-1.7\nsupporting information")
+        return super().get(url, **kwargs)
+
+
+def test_every_stored_pdf_is_retained_without_guessing_document_roles(tmp_path: Path):
+    result = run_papersbot(
+        tmp_path / "papers",
+        state_dir=tmp_path / "state",
+        rss_enabled=False,
+        openalex_enabled=False,
+        zotero_group_id="42",
+        session=MultiplePdfSession(),
+    )
+
+    record = load_state(tmp_path / "state/state.json").papers["10.1234/zotero.1"]
+    assert result.pdfs_downloaded == 2
+    assert len(result.downloaded_files) == 2
+    assert [document.source_identifier for document in record.documents] == [
+        "ARTICLE1",
+        "SUPPORT1",
+    ]
+    assert [document.filename for document in record.documents] == [
+        "article.pdf",
+        "supporting-information.pdf",
+    ]
+    assert {document.role for document in record.documents} == {"unknown"}
+    assert all(Path(document.local_file).is_file() for document in record.documents)
+
+
+class TopLevelPdfSession(ZoteroReadSession):
+    def get(self, url, **kwargs):
+        if url.endswith("/groups/42/items/top"):
+            return FakeResponse(
+                [
+                    {
+                        "key": "TOPPDF01",
+                        "data": {
+                            "key": "TOPPDF01",
+                            "itemType": "attachment",
+                            "linkMode": "imported_file",
+                            "contentType": "application/pdf",
+                            "title": "A perovskite solar cell",
+                            "filename": "paper.pdf",
+                            "url": "",
+                        },
+                    }
+                ],
+                headers={"Total-Results": "1"},
+            )
+        if url.endswith("/items/TOPPDF01/file"):
+            return FakeResponse(content=b"%PDF-1.7\ntop-level")
+        return super().get(url, **kwargs)
+
+
+def test_top_level_stored_pdf_can_enter_the_curated_queue(tmp_path: Path):
+    result = run_papersbot(
+        tmp_path / "papers",
+        state_dir=tmp_path / "state",
+        rss_enabled=False,
+        openalex_enabled=False,
+        zotero_group_id="42",
+        session=TopLevelPdfSession(),
+    )
+
+    assert result.outcome_counts == {"downloaded": 1}
+    record = load_state(tmp_path / "state/state.json").papers[
+        "zotero:42:TOPPDF01"
+    ]
+    assert record.zotero_attachment_key == "TOPPDF01"
+    assert record.documents[0].source_identifier == "TOPPDF01"
 
 
 class RedirectingAttachmentSession(ZoteroReadSession):

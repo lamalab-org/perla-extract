@@ -14,12 +14,13 @@ from uuid import uuid4
 
 from loguru import logger
 
-from .acquisition import OpenAccessPdfSource, PdfSource, ZoteroPdfSource
+from .acquisition import AcquiredPdf, OpenAccessPdfSource, PdfSource, ZoteroPdfSource
 from .models import (
     BotResult,
     BotRunConfiguration,
     BotState,
     DiscoveryFailure,
+    PaperDocument,
     PaperRecord,
     PaperRunOutcome,
     PdfAcquisitionFailure,
@@ -113,6 +114,11 @@ def _entry_record(
         zotero_item_key=(
             str(entry["zotero_item_key"]) if entry.get("zotero_item_key") else None
         ),
+        zotero_attachment_key=(
+            str(entry["zotero_attachment_key"])
+            if entry.get("zotero_attachment_key")
+            else None
+        ),
         zotero_curated=zotero_curated,
     )
 
@@ -169,6 +175,7 @@ def _merge_previous(state: BotState, record: PaperRecord) -> PaperRecord | None:
     record.pdf_sha256 = previous.pdf_sha256
     record.pdf_source = previous.pdf_source
     record.pdf_access_basis = previous.pdf_access_basis
+    record.documents = [document.model_copy(deep=True) for document in previous.documents]
     if previous_key != record.identifier:
         del state.papers[previous_key]
     return previous
@@ -211,6 +218,17 @@ def _pending_state_retries(
 def _downloaded_file_is_current(record: PaperRecord) -> bool:
     """Treat a downloaded state as terminal only while its local bytes still match."""
 
+    if record.documents:
+        for document in record.documents:
+            path = Path(document.local_file)
+            if not path.is_file():
+                return False
+            try:
+                if _validated_pdf_sha256(path) != document.sha256:
+                    return False
+            except (OSError, ValueError):
+                return False
+        return True
     if not record.downloaded_file:
         return False
     path = Path(record.downloaded_file)
@@ -230,11 +248,16 @@ def _clear_stale_download(record: PaperRecord) -> None:
         path = Path(record.downloaded_file)
         if path.is_file():
             path.unlink()
+    for document in record.documents:
+        path = Path(document.local_file)
+        if path.is_file():
+            path.unlink()
     record.status = "new"
     record.downloaded_file = None
     record.pdf_sha256 = None
     record.pdf_source = None
     record.pdf_access_basis = None
+    record.documents = []
 
 
 def load_state(path: Path) -> BotState:
@@ -243,7 +266,7 @@ def load_state(path: Path) -> BotState:
     if not path.exists():
         return BotState()
     state = BotState.model_validate_json(path.read_text(encoding="utf-8"))
-    state.format_version = 4
+    state.format_version = 5
     return state
 
 
@@ -338,15 +361,41 @@ def _acquire_pdf(
 
     for source in sources:
         source_name = source.name.strip()
-        acquired = None
+        acquired: AcquiredPdf | list[AcquiredPdf] | None = None
         existed_before = destination.exists()
         try:
             acquired = source.acquire(record, destination)
             if acquired is None:
                 continue
-            digest = _validated_pdf_sha256(destination)
+            acquired_pdfs = acquired if isinstance(acquired, list) else [acquired]
+            if not acquired_pdfs:
+                continue
+            documents = []
+            for item in acquired_pdfs:
+                path = item.path or destination
+                documents.append(
+                    PaperDocument(
+                        source_identifier=item.attachment_key,
+                        label=item.label,
+                        filename=item.filename,
+                        role=item.role,
+                        source_url=item.url,
+                        local_file=str(path.resolve()),
+                        sha256=_validated_pdf_sha256(path),
+                        pdf_source=source_name,
+                        access_basis=item.access_basis,
+                    )
+                )
         except Exception as exc:
-            if acquired is not None or (not existed_before and destination.exists()):
+            acquired_pdfs = (
+                acquired
+                if isinstance(acquired, list)
+                else ([acquired] if acquired is not None else [])
+            )
+            for item in acquired_pdfs:
+                if item.downloaded_now:
+                    (item.path or destination).unlink(missing_ok=True)
+            if not existed_before and destination.exists():
                 destination.unlink(missing_ok=True)
             result.acquisition_failures.append(
                 PdfAcquisitionFailure(
@@ -370,20 +419,23 @@ def _acquire_pdf(
                 exc,
             )
             continue
-        if acquired.downloaded_now:
-            result.pdfs_downloaded += 1
+        downloaded_now = sum(item.downloaded_now for item in acquired_pdfs)
+        if downloaded_now:
+            result.pdfs_downloaded += downloaded_now
             if source_name == "zotero" and result.zotero is not None:
-                result.zotero.pdfs_downloaded += 1
-        record.pdf_url = acquired.url
+                result.zotero.pdfs_downloaded += downloaded_now
+        first = acquired_pdfs[0]
+        record.pdf_url = first.url
         record.pdf_source = source_name
-        record.pdf_access_basis = acquired.access_basis
-        record.pdf_sha256 = digest
+        record.pdf_access_basis = first.access_basis
+        record.pdf_sha256 = documents[0].sha256
         record.zotero_attachment_key = (
-            acquired.attachment_key or record.zotero_attachment_key
+            first.attachment_key or record.zotero_attachment_key
         )
-        record.downloaded_file = str(destination.resolve())
+        record.downloaded_file = documents[0].local_file
+        record.documents = documents
         record.status = "downloaded"
-        result.downloaded_files.append(destination.resolve())
+        result.downloaded_files.extend(Path(document.local_file) for document in documents)
         return True
     return False
 

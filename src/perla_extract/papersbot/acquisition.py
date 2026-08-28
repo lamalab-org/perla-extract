@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 from urllib.parse import quote
 
 from loguru import logger
@@ -20,7 +20,11 @@ class AcquiredPdf:
     url: str
     access_basis: str
     downloaded_now: bool
+    path: Path | None = None
     attachment_key: str | None = None
+    label: str = ""
+    filename: str = ""
+    role: Literal["article", "supporting_information", "unknown"] = "unknown"
 
 
 class PdfSource(Protocol):
@@ -35,8 +39,10 @@ class PdfSource(Protocol):
 
     name: str
 
-    def acquire(self, record: PaperRecord, destination: Path) -> AcquiredPdf | None:
-        """Download or reuse one validated PDF, or return ``None`` if unavailable."""
+    def acquire(
+        self, record: PaperRecord, destination: Path
+    ) -> AcquiredPdf | list[AcquiredPdf] | None:
+        """Download one or more PDFs, or return ``None`` when none are available."""
 
 
 def _request_json(
@@ -83,26 +89,53 @@ class ZoteroPdfSource:
     def __init__(self, client: ZoteroClient) -> None:
         self.client = client
 
-    def acquire(self, record: PaperRecord, destination: Path) -> AcquiredPdf | None:
-        """Use the record's stored attachment without assuming that it has a DOI."""
+    def acquire(self, record: PaperRecord, destination: Path) -> list[AcquiredPdf] | None:
+        """Use every stored PDF attachment without assuming that one is the SI."""
 
         if not record.zotero_item_key:
             return None
-        attachment_key = self.client.attachment_key(record.zotero_item_key)
-        if not attachment_key:
+        if record.zotero_attachment_key == record.zotero_item_key:
+            attachments = self.client.direct_pdf_attachment(
+                record.zotero_attachment_key,
+                label=record.title,
+            )
+        else:
+            attachments = self.client.pdf_attachments(record.zotero_item_key)
+        if not attachments:
             return None
-        downloaded_now = not destination.exists()
-        if downloaded_now:
-            self.client.download_attachment(attachment_key, destination)
-        return AcquiredPdf(
-            url=(
-                f"https://api.zotero.org/groups/{self.client.group_id}"
-                f"/items/{attachment_key}/file"
-            ),
-            access_basis="member-supplied",
-            downloaded_now=downloaded_now,
-            attachment_key=attachment_key,
-        )
+        acquired: list[AcquiredPdf] = []
+        try:
+            for index, attachment in enumerate(attachments):
+                path = (
+                    destination
+                    if index == 0
+                    else destination.with_name(
+                        f"{destination.stem}--zotero-{attachment.key.lower()}.pdf"
+                    )
+                )
+                downloaded_now = not path.exists()
+                if downloaded_now:
+                    self.client.download_attachment(attachment.key, path)
+                acquired.append(
+                    AcquiredPdf(
+                        url=(
+                            f"https://api.zotero.org/groups/{self.client.group_id}"
+                            f"/items/{attachment.key}/file"
+                        ),
+                        access_basis="member-supplied",
+                        downloaded_now=downloaded_now,
+                        path=path,
+                        attachment_key=attachment.key,
+                        label=attachment.label,
+                        filename=attachment.filename,
+                    )
+                )
+        except Exception:
+            for item in acquired:
+                if item.downloaded_now and item.path is not None:
+                    item.path.unlink(missing_ok=True)
+            raise
+        return acquired
 
 
 class OpenAccessPdfSource:
@@ -136,6 +169,8 @@ class OpenAccessPdfSource:
             url=url,
             access_basis="open-access",
             downloaded_now=downloaded_now,
+            path=destination,
+            role="article",
         )
 
     def _resolve(self, doi: str) -> str | None:
