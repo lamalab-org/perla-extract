@@ -46,6 +46,12 @@ The command prints a JSON run summary to stdout and progress logs to stderr. It
 verifies that each downloaded response starts with a PDF signature rather than
 silently saving an HTML error page.
 
+Every ordinary option also accepts a `PAPERSBOT_` environment variable, such as
+`PAPERSBOT_DOWNLOAD_DIR`, `PAPERSBOT_STATE_DIR`, `PAPERSBOT_RSS`,
+`PAPERSBOT_OPENALEX`, and `PAPERSBOT_LOG_FILE`. This keeps cron configuration out of
+long command lines. See [Internal PapersBot cron job](../deployment/papersbot-cron.md)
+for a complete deployment.
+
 For automation, preserve structured logs in addition to the live console:
 
 ```bash
@@ -62,9 +68,9 @@ data files, not coded branches. Replace the feed list with either a comment-frie
 text file or repeated URLs:
 
 ```bash
-perla-papersbot papers --feeds-file my-feeds.txt
+perla-papersbot downloaded_papers --feeds-file my-feeds.txt
 
-perla-papersbot papers \
+perla-papersbot downloaded_papers \
   --feed https://example.org/feed.xml \
   --feed https://example.net/atom.xml
 ```
@@ -108,7 +114,7 @@ DOI deduplication makes repeated results cheap. The checkpoint advances only aft
 every cursor page has been read. Explicit dates support reproducible backfills:
 
 ```bash
-perla-papersbot papers \
+perla-papersbot downloaded_papers \
   --openalex-start-date 2025-01-01 \
   --openalex-end-date 2025-12-31
 ```
@@ -119,11 +125,12 @@ source must remain enabled. `OPENALEX_EMAIL` is sent as the API contact address;
 
 ## Use a Zotero group library
 
-A public group needs only its numeric group ID. This command uses Zotero as the sole
-discovery source:
+A group with a publicly readable library needs only its numeric group ID. A public
+group whose library is restricted to members still requires a member's API key. This
+command uses Zotero as the sole discovery source:
 
 ```bash
-perla-papersbot papers \
+perla-papersbot downloaded_papers \
   --no-rss \
   --no-openalex \
   --zotero-group-id 123456
@@ -131,13 +138,13 @@ perla-papersbot papers \
 
 Pass `--zotero-collection-key ABCD1234` to ingest only one collection. This is the
 Zotero API collection key—typically the final eight-character component of a
-collection URL—not the collection's display name. Private groups and all writes also
-require an API key:
+collection URL—not the collection's display name. Member-only libraries and all
+writes require an API key:
 
 ```bash
 export ZOTERO_API_KEY="your-zotero-key"
 
-perla-papersbot papers \
+perla-papersbot downloaded_papers \
   --zotero-group-id 123456 \
   --zotero-collection-key ABCD1234
 ```
@@ -156,7 +163,7 @@ as approval for extraction, even when the paper would fail the automated title a
 keyword policy:
 
 ```bash
-perla-papersbot papers \
+perla-papersbot downloaded_papers \
   --zotero-group-id 123456 \
   --zotero-collection-key ABCD1234 \
   --zotero-curated
@@ -191,7 +198,7 @@ group. Otherwise bot-created rejected items would enter the human-approved queue
 the next run:
 
 ```bash
-perla-papersbot papers \
+perla-papersbot downloaded_papers \
   --zotero-group-id 123456 \
   --zotero-collection-key ABCD1234 \
   --zotero-output-collection-key WXYZ5678 \
@@ -210,7 +217,7 @@ files. `research-group` enables Zotero's atomic three-stage file upload only aft
 API reports that the destination group is private and permits file storage:
 
 ```bash
-perla-papersbot papers \
+perla-papersbot downloaded_papers \
   --zotero-group-id 123456 \
   --zotero-collection-key ABCD1234 \
   --zotero-output-collection-key WXYZ5678 \
@@ -233,7 +240,8 @@ German research organization, the relevant controlled-access and secure-retentio
 conditions are described in [§ 60d UrhG](https://www.gesetze-im-internet.de/urhg/__60d.html).
 Confirm the project policy with the responsible university library or legal office.
 
-For unattended runs, the Zotero options have direct environment equivalents:
+For unattended runs, the Zotero options keep short, service-specific environment
+names alongside the generic `PAPERSBOT_` command options:
 
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
@@ -246,8 +254,8 @@ For unattended runs, the Zotero options have direct environment equivalents:
 | `ZOTERO_PDF_POLICY` | `never` | Set to `research-group` for verified-private-group upload |
 
 Boolean opt-ins accept `1`, `true`, `yes`, or `on` (case-insensitive). The API key is
-never written to `state.json`, run ledgers, or logs. In GitHub Actions, configure all
-non-secret settings as repository variables and the key as a repository secret.
+never written to `state.json`, run ledgers, or logs. Keep it in the scheduler's secret
+store or a permission-restricted environment file.
 
 These controls follow Zotero's official [Web API basics](https://www.zotero.org/support/dev/web_api/v3/basics)
 and [write-request protocol](https://www.zotero.org/support/dev/web_api/v3/write_requests).
@@ -287,15 +295,11 @@ jq -s 'map({run_id, started_at, status, outcome_counts})' \
   .papersbot-state/runs/*.json
 ```
 
-The scheduled GitHub workflow prevents overlapping runs, caches this directory between
-runs, and publishes the complete state directory, JSON run summary, and structured
-JSONL logs as an artifact. The preservation step runs even after a failed discovery
-command so partial state remains inspectable. Downloaded PDFs are deliberately not
-GitHub artifacts by default: a private Zotero input must not silently become a second,
-potentially broader document store. Set the repository variable
-`PAPERSBOT_ARCHIVE_PDFS=true` only when the repository's access and retention policy
-is appropriate for every downloaded copy. Set `OA_EMAIL` as a repository variable to
-identify OpenAlex requests and enable Unpaywall.
+The included GitHub workflow is one example scheduler: it prevents overlapping runs,
+caches state, and publishes state and logs as artifacts. Downloaded PDFs are not
+GitHub artifacts by default because a controlled Zotero or institutional input must
+not silently become a broader document store. An internal cron deployment instead
+keeps the same state and run ledgers on its restricted filesystem.
 
 ## Python API
 
@@ -309,6 +313,12 @@ result = run_papersbot(
     state_dir=".papersbot-state",
     feeds_file="my-feeds.txt",
     zotero_group_id="123456",
-    zotero_api_key=None,  # Public-group reads need no key.
+    zotero_api_key=None,  # Only publicly readable libraries need no key.
 )
 ```
+
+`pdf_sources` accepts ordered implementations of the exported `PdfSource` protocol.
+The defaults are stored Zotero attachments followed by public open-access locations.
+This is the extension point for an institutionally authorized retrieval mechanism;
+each implementation reports its source and access basis without changing discovery or
+selection.

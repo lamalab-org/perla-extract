@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+from perla_extract.papersbot.acquisition import AcquiredPdf
 from perla_extract.papersbot.bot import extract_doi, load_state, run_papersbot
 from perla_extract.papersbot.models import SelectionPolicy
 
@@ -193,6 +194,116 @@ def test_sparse_feed_entry_uses_metadata_before_irrelevant_decision(tmp_path: Pa
         load_state(tmp_path / "state/state.json").papers["10.1234/example.2"].status
         == "downloaded"
     )
+
+
+def test_custom_pdf_source_is_independent_of_doi_and_records_access_basis(
+    tmp_path: Path,
+):
+    class DoiFreeFeedParser:
+        @staticmethod
+        def parse(url):
+            del url
+            return SimpleNamespace(
+                bozo=False,
+                entries=[
+                    {
+                        "id": "licensed-paper",
+                        "title": "A perovskite solar cell",
+                    }
+                ],
+            )
+
+    class InstitutionalSource:
+        name = "institutional-library"
+
+        @staticmethod
+        def acquire(record, destination):
+            assert record.identifier == "licensed-paper"
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(b"%PDF-1.7\nlicensed copy")
+            return AcquiredPdf(
+                url="https://library.example.test/licensed-paper.pdf",
+                access_basis="institutional-license",
+                downloaded_now=True,
+            )
+
+    selection = tmp_path / "selection.json"
+    selection.write_text(
+        json.dumps(
+            {
+                "required_groups": [["perovskite"], ["solar cell"]],
+                "excluded_title_terms": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_papersbot(
+        download_dir=tmp_path / "papers",
+        state_dir=tmp_path / "state",
+        feeds=["https://example.test/feed"],
+        selection_file=selection,
+        session=FakeSession(),
+        feedparser_module=DoiFreeFeedParser(),
+        pdf_sources=[InstitutionalSource()],
+    )
+
+    record = load_state(tmp_path / "state/state.json").papers["licensed-paper"]
+    assert result.status == "complete"
+    assert result.configuration.pdf_sources == ["institutional-library"]
+    assert record.status == "downloaded"
+    assert record.pdf_source == "institutional-library"
+    assert record.pdf_access_basis == "institutional-license"
+
+
+def test_pdf_source_failure_is_recorded_before_fallback_succeeds(tmp_path: Path):
+    class BrokenSource:
+        name = "broken"
+
+        @staticmethod
+        def acquire(record, destination):
+            del record, destination
+            raise OSError("resolver unavailable")
+
+    class FallbackSource:
+        name = "fallback"
+
+        @staticmethod
+        def acquire(record, destination):
+            del record
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(b"%PDF-1.7\nfallback")
+            return AcquiredPdf(
+                url="https://repository.example.test/fallback.pdf",
+                access_basis="repository",
+                downloaded_now=True,
+            )
+
+    selection = tmp_path / "selection.json"
+    selection.write_text(
+        json.dumps(
+            {
+                "required_groups": [["perovskite"], ["solar cell"]],
+                "excluded_title_terms": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_papersbot(
+        download_dir=tmp_path / "papers",
+        state_dir=tmp_path / "state",
+        feeds=["https://example.test/feed"],
+        selection_file=selection,
+        session=FakeSession(),
+        feedparser_module=FakeFeedParser(),
+        pdf_sources=[BrokenSource(), FallbackSource()],
+    )
+
+    assert result.status == "complete_with_errors"
+    assert result.outcome_counts == {"downloaded": 1}
+    assert result.acquisition_failures[0].source == "broken"
+    assert result.acquisition_failures[0].error == "resolver unavailable"
 
 
 def test_run_report_attributes_retries_to_the_previous_status(tmp_path: Path):

@@ -20,11 +20,14 @@ def _environment_flag(name: str) -> bool:
     return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
-@click.command(context_settings={"show_default": True})
+@click.command(
+    context_settings={"show_default": True, "auto_envvar_prefix": "PAPERSBOT"}
+)
 @click.argument(
     "download_dir",
     type=click.Path(path_type=Path, file_okay=False),
     default="downloaded_papers",
+    envvar="PAPERSBOT_DOWNLOAD_DIR",
 )
 @click.option(
     "--state-dir",
@@ -60,12 +63,14 @@ def _environment_flag(name: str) -> bool:
 @click.option(
     "--rss/--no-rss",
     default=True,
+    envvar="PAPERSBOT_RSS",
     help="Use journal feeds for low-latency discovery.",
 )
 @click.option(
     "--openalex/--no-openalex",
     "openalex_enabled",
     default=True,
+    envvar="PAPERSBOT_OPENALEX",
     help="Use configured OpenAlex topics for completeness and backfill.",
 )
 @click.option(
@@ -97,7 +102,7 @@ def _environment_flag(name: str) -> bool:
     "--zotero-api-key",
     default=lambda: os.environ.get("ZOTERO_API_KEY"),
     show_default=False,
-    help="API key for private-group reads or writes. Never stored in bot artifacts.",
+    help="API key for member-only group reads or writes. Never stored in artifacts.",
 )
 @click.option(
     "--zotero-save/--no-zotero-save",
@@ -112,7 +117,7 @@ def _environment_flag(name: str) -> bool:
 @click.option(
     "--zotero-pdf-policy",
     type=click.Choice(("never", "research-group")),
-    default=lambda: os.environ.get("ZOTERO_PDF_POLICY", "never"),
+    default=lambda: os.environ.get("ZOTERO_PDF_POLICY") or "never",
     help="Upload PDFs only to a verified private research group.",
 )
 @click.option("--max-attempts", type=click.IntRange(min=1), default=4)

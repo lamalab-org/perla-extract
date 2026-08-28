@@ -84,3 +84,17 @@ each supplied block appears exactly once as primary evidence.
 ::: perla_extract.study_extraction.partitioning.plan_evidence_windows
     options:
       show_root_heading: true
+
+## Discover and acquire papers
+
+`run_papersbot` combines any enabled discovery sources into one incremental paper
+state. Pass ordered `PdfSource` implementations when the deployment has an authorized
+retrieval mechanism beyond stored Zotero attachments and open-access repositories.
+
+::: perla_extract.papersbot.run_papersbot
+    options:
+      show_root_heading: true
+
+::: perla_extract.papersbot.PdfSource
+    options:
+      show_root_heading: true

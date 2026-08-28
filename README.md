@@ -72,9 +72,11 @@ Use `--feeds-file` or repeated `--feed` options to replace the journal list and
 Zotero group (including its stored PDF attachments); `--zotero-save` explicitly saves
 and status-tags discoveries back to that group. A configured collection can be a
 journal-club-curated intake queue, and `--zotero-pdf-policy research-group` stores PDFs
-only after verifying a private group. The daily GitHub workflow caches state and
-publishes inspectable logs; PDF artifacts require the explicit
-`PAPERSBOT_ARCHIVE_PDFS=true` repository variable.
+only after verifying a private group. The same command runs under cron or GitHub
+Actions, with all ordinary settings available through `PAPERSBOT_` environment
+variables. Each PDF acquisition records its source and access basis; authorized local
+retrieval mechanisms can implement the small `PdfSource` interface without adding
+publisher cases to the bot.
 
 ## Authors
 

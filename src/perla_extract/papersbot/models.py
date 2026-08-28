@@ -120,6 +120,7 @@ class PaperRecord(BaseModel):
     pdf_url: str | None = None
     downloaded_file: str | None = None
     pdf_sha256: str | None = None
+    pdf_source: str | None = None
     pdf_access_basis: str | None = None
     error: str | None = None
     updated_at: str = Field(
@@ -160,6 +161,7 @@ class BotRunConfiguration(BaseModel):
     max_attempts: int
     request_timeout: float
     unpaywall_enabled: bool
+    pdf_sources: list[str] = Field(default_factory=list)
     rss_enabled: bool
     openalex_enabled: bool
     openalex_topic_ids: list[str] = Field(default_factory=list)
@@ -179,6 +181,15 @@ class DiscoveryFailure(BaseModel):
 
     source_kind: Literal["rss", "openalex", "zotero"]
     source: str
+    error: str
+
+
+class PdfAcquisitionFailure(BaseModel):
+    """Preserve one failed retrieval attempt even when a later source succeeds."""
+
+    source: str
+    identifier: str
+    doi: str | None = None
     error: str
 
 
@@ -244,6 +255,7 @@ class BotResult(BaseModel):
     outcome_counts: dict[str, int] = Field(default_factory=dict)
     skip_counts: dict[str, int] = Field(default_factory=dict)
     discovery_failures: list[DiscoveryFailure] = Field(default_factory=list)
+    acquisition_failures: list[PdfAcquisitionFailure] = Field(default_factory=list)
     openalex: OpenAlexRunStats | None = None
     zotero: ZoteroRunStats | None = None
     outcomes: list[PaperRunOutcome] = Field(default_factory=list)

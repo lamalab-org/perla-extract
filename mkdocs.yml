@@ -32,6 +32,7 @@ nav:
       - Python API: reference/python-api.md
   - Deployment:
       - Review workbench: deployment/review-workbench.md
+      - Internal PapersBot cron job: deployment/papersbot-cron.md
 
 plugins:
   - search

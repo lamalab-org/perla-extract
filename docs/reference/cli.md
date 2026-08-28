@@ -124,3 +124,9 @@ updates namespaced status tags; it requires `ZOTERO_API_KEY`.
 `--zotero-pdf-policy research-group` uploads downloaded PDFs only after verifying that
 the destination group is private and has file storage enabled. Merely providing read
 credentials never modifies the library.
+
+For unattended use, ordinary options use the `PAPERSBOT_` environment prefix:
+`PAPERSBOT_DOWNLOAD_DIR`, `PAPERSBOT_STATE_DIR`, `PAPERSBOT_RSS`,
+`PAPERSBOT_OPENALEX`, `PAPERSBOT_MAX_ATTEMPTS`, and `PAPERSBOT_LOG_FILE` are direct
+examples. Zotero credentials retain the explicit `ZOTERO_` names documented in the
+workflow guide. Command-line values take precedence.

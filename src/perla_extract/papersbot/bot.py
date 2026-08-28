@@ -14,6 +14,7 @@ from uuid import uuid4
 
 from loguru import logger
 
+from .acquisition import OpenAccessPdfSource, PdfSource, ZoteroPdfSource
 from .models import (
     BotResult,
     BotRunConfiguration,
@@ -21,6 +22,7 @@ from .models import (
     DiscoveryFailure,
     PaperRecord,
     PaperRunOutcome,
+    PdfAcquisitionFailure,
     SelectionPolicy,
     ZoteroRunStats,
 )
@@ -28,7 +30,7 @@ from .openalex import fetch_topic_works
 from .zotero import ZoteroClient
 
 DOI_PATTERN = re.compile(r"10\.\d{4,9}/[-._;()/:A-Z0-9]+", re.IGNORECASE)
-TERMINAL_STATUSES = {"downloaded", "excluded", "irrelevant", "missing_doi"}
+TERMINAL_STATUSES = {"downloaded", "excluded", "irrelevant"}
 
 
 def default_feeds_path() -> Path:
@@ -164,6 +166,7 @@ def _merge_previous(state: BotState, record: PaperRecord) -> PaperRecord | None:
     )
     record.zotero_curated = record.zotero_curated or previous.zotero_curated
     record.pdf_sha256 = previous.pdf_sha256
+    record.pdf_source = previous.pdf_source
     record.pdf_access_basis = previous.pdf_access_basis
     if previous_key != record.identifier:
         del state.papers[previous_key]
@@ -341,44 +344,76 @@ def _finalize_record(
     _record_outcome(result, record, disposition)
 
 
-def _download_zotero_pdf(
-    client: ZoteroClient,
+def _acquire_pdf(
+    sources: Iterable[PdfSource],
     result: BotResult,
     record: PaperRecord,
     destination: Path,
 ) -> bool:
-    """Use a stored group attachment when available and allow OA fallback on failure."""
+    """Try configured sources in order and preserve every failed attempt."""
 
-    if not record.zotero_item_key:
-        return False
-    try:
-        attachment_key = client.attachment_key(record.zotero_item_key)
-        if not attachment_key:
-            return False
-        if not destination.exists():
-            client.download_attachment(attachment_key, destination)
+    for source in sources:
+        source_name = source.name.strip()
+        acquired = None
+        try:
+            acquired = source.acquire(record, destination)
+            if acquired is None:
+                continue
+            digest = _validated_pdf_sha256(destination)
+        except Exception as exc:
+            if acquired is not None:
+                destination.unlink(missing_ok=True)
+            result.acquisition_failures.append(
+                PdfAcquisitionFailure(
+                    source=source_name,
+                    identifier=record.identifier,
+                    doi=record.doi,
+                    error=str(exc),
+                )
+            )
+            if source_name == "zotero" and result.zotero is not None:
+                result.zotero.errors += 1
+            logger.bind(
+                event="papersbot.pdf_source_failed",
+                pdf_source=source_name,
+                identifier=record.identifier,
+                doi=record.doi,
+            ).warning(
+                "PDF source {} failed for {}: {}",
+                source_name,
+                record.doi or record.identifier,
+                exc,
+            )
+            continue
+        if acquired.downloaded_now:
             result.pdfs_downloaded += 1
-            if result.zotero is not None:
+            if source_name == "zotero" and result.zotero is not None:
                 result.zotero.pdfs_downloaded += 1
-        record.zotero_attachment_key = attachment_key
-        record.pdf_url = (
-            f"https://api.zotero.org/groups/{client.group_id}"
-            f"/items/{attachment_key}/file"
+        record.pdf_url = acquired.url
+        record.pdf_source = source_name
+        record.pdf_access_basis = acquired.access_basis
+        record.pdf_sha256 = digest
+        record.zotero_attachment_key = (
+            acquired.attachment_key or record.zotero_attachment_key
         )
+        record.downloaded_file = str(destination.resolve())
+        record.status = "downloaded"
+        result.downloaded_files.append(destination.resolve())
         return True
-    except Exception as exc:
-        if result.zotero is not None:
-            result.zotero.errors += 1
-        logger.bind(
-            event="papersbot.zotero_attachment_failed",
-            doi=record.doi,
-            zotero_item_key=record.zotero_item_key,
-        ).warning(
-            "Could not retrieve Zotero PDF for {}: {}",
-            record.doi or record.zotero_item_key,
-            exc,
-        )
-        return False
+    return False
+
+
+def _validated_pdf_sha256(path: Path) -> str:
+    """Validate a source's file and fingerprint the exact bytes kept in state."""
+
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        if handle.read(5) != b"%PDF-":
+            raise ValueError(f"PDF source did not produce a valid PDF: {path}")
+        handle.seek(0)
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _request_json(
@@ -404,63 +439,6 @@ def _crossref_text(session: Any, doi: str, timeout: float) -> str:
     title = " ".join(str(item) for item in work.get("title", []))
     abstract = str(work.get("abstract", ""))
     return _plain_text(f"{title} {abstract}")
-
-
-def _open_pdf_url(
-    session: Any, doi: str, timeout: float, unpaywall_email: str | None
-) -> str | None:
-    """Resolve an open PDF using public APIs without scraping publisher pages."""
-
-    if unpaywall_email:
-        try:
-            payload = _request_json(
-                session,
-                f"https://api.unpaywall.org/v2/{quote(doi, safe='')}",
-                timeout,
-                params={"email": unpaywall_email},
-            )
-            location = payload.get("best_oa_location") or {}
-            if isinstance(location, dict) and location.get("url_for_pdf"):
-                return str(location["url_for_pdf"])
-        except Exception as exc:
-            logger.debug("Unpaywall lookup failed for {}: {}", doi, exc)
-
-    try:
-        payload = _request_json(
-            session,
-            f"https://api.openalex.org/works/https://doi.org/{quote(doi, safe='')}",
-            timeout,
-        )
-        locations = [payload.get("best_oa_location"), payload.get("primary_location")]
-        for location in locations:
-            if not isinstance(location, dict):
-                continue
-            url = location.get("pdf_url")
-            if url:
-                return str(url)
-    except Exception as exc:
-        logger.debug("OpenAlex lookup failed for {}: {}", doi, exc)
-    return None
-
-
-def _download_pdf(session: Any, url: str, destination: Path, timeout: float) -> None:
-    """Stream a candidate PDF and reject HTML error pages saved with a PDF name."""
-
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    temporary = destination.with_suffix(destination.suffix + ".part")
-    try:
-        with session.get(url, stream=True, timeout=timeout) as response:
-            response.raise_for_status()
-            with temporary.open("wb") as handle:
-                for chunk in response.iter_content(chunk_size=64 * 1024):
-                    if chunk:
-                        handle.write(chunk)
-        with temporary.open("rb") as handle:
-            if handle.read(5) != b"%PDF-":
-                raise ValueError(f"Downloaded content is not a PDF: {url}")
-        temporary.replace(destination)
-    finally:
-        temporary.unlink(missing_ok=True)
 
 
 def _safe_pdf_name(doi: str) -> str:
@@ -491,6 +469,7 @@ def run_papersbot(
     feeds_file: str | Path | None = None,
     selection_file: str | Path | None = None,
     unpaywall_email: str | None = None,
+    pdf_sources: Iterable[PdfSource] | None = None,
     openalex_email: str | None = None,
     rss_enabled: bool = True,
     openalex_enabled: bool = True,
@@ -515,8 +494,10 @@ def run_papersbot(
     source becomes the same DOI-keyed record before processing. A curated Zotero
     collection changes only the relevance decision: human selection is accepted as
     approval instead of being second-guessed by the keyword policy. HTTP and feed
-    clients remain injectable for deterministic tests. Zotero writeback is explicit;
-    merely configuring read access never changes the group library.
+    clients remain injectable for deterministic tests. PDF sources are ordered and
+    replaceable, so an authorized institutional retriever can be added without
+    changing discovery or selection. Zotero writeback is explicit; merely configuring
+    read access never changes the group library.
     """
 
     if session is None:
@@ -575,6 +556,24 @@ def run_papersbot(
     if zotero_pdf_policy == "research-group":
         zotero_client.require_private_file_writes()
 
+    configured_pdf_sources = (
+        list(pdf_sources)
+        if pdf_sources is not None
+        else [
+            *([ZoteroPdfSource(zotero_client)] if zotero_client else []),
+            OpenAccessPdfSource(
+                session,
+                timeout=request_timeout,
+                unpaywall_email=unpaywall_email,
+            ),
+        ]
+    )
+    pdf_source_names = [source.name.strip() for source in configured_pdf_sources]
+    if any(not name for name in pdf_source_names):
+        raise ValueError("Every PDF source must have a non-empty name")
+    if len(pdf_source_names) != len(set(pdf_source_names)):
+        raise ValueError("PDF source names must be unique within one run")
+
     output_path = Path(download_dir)
     state_directory = Path(state_dir)
     state_path = state_directory / "state.json"
@@ -621,6 +620,7 @@ def run_papersbot(
             max_attempts=max_attempts,
             request_timeout=request_timeout,
             unpaywall_enabled=bool(unpaywall_email),
+            pdf_sources=pdf_source_names,
             rss_enabled=rss_enabled,
             openalex_enabled=openalex_policy is not None,
             openalex_topic_ids=(openalex_policy.topic_ids if openalex_policy else []),
@@ -652,12 +652,14 @@ def run_papersbot(
         feed_count=len(feed_urls),
         openalex_enabled=openalex_policy is not None,
         zotero_enabled=zotero_client is not None,
+        pdf_sources=pdf_source_names,
     ).info(
-        "PapersBot run {} started with {} feed(s); OpenAlex={}; Zotero={}",
+        "PapersBot run {} started with {} feed(s); OpenAlex={}; Zotero={}; PDFs={}",
         run_id,
         len(feed_urls),
         "enabled" if openalex_policy else "disabled",
         "enabled" if zotero_client else "disabled",
+        ",".join(pdf_source_names) or "disabled",
     )
     openalex_query_succeeded = False
     try:
@@ -869,20 +871,6 @@ def run_papersbot(
                     zotero_pdf_policy=zotero_pdf_policy,
                 )
                 continue
-            if not record.doi and not record.zotero_item_key:
-                record.status = "missing_doi"
-                _finalize_record(
-                    state,
-                    state_path,
-                    result,
-                    record,
-                    "evaluated",
-                    zotero_client=zotero_client,
-                    zotero_save=zotero_save,
-                    zotero_pdf_policy=zotero_pdf_policy,
-                )
-                continue
-
             result.candidates_processed += 1
             if record.attempts:
                 result.retries_attempted += 1
@@ -916,36 +904,20 @@ def run_papersbot(
                     record.status = "irrelevant"
                 else:
                     result.relevant_papers += 1
-                    file_identity = record.doi or f"zotero-{record.zotero_item_key}"
-                    destination = output_path / _safe_pdf_name(file_identity)
-                    if zotero_client and _download_zotero_pdf(
-                        zotero_client, result, record, destination
-                    ):
-                        record.downloaded_file = str(destination.resolve())
-                        record.pdf_access_basis = "member-supplied"
-                        record.status = "downloaded"
-                        result.downloaded_files.append(destination.resolve())
-                    elif not record.doi:
-                        record.status = "missing_doi"
-                    else:
-                        record.pdf_url = record.pdf_url or _open_pdf_url(
-                            session, record.doi, request_timeout, unpaywall_email
+                    file_identity = (
+                        record.doi
+                        or (
+                            f"zotero-{record.zotero_item_key}"
+                            if record.zotero_item_key
+                            else f"record-{record.identifier}"
                         )
-                        if not record.pdf_url:
-                            record.status = "no_pdf"
-                        else:
-                            if not destination.exists():
-                                _download_pdf(
-                                    session,
-                                    record.pdf_url,
-                                    destination,
-                                    request_timeout,
-                                )
-                                result.pdfs_downloaded += 1
-                            record.downloaded_file = str(destination.resolve())
-                            record.pdf_access_basis = "open-access"
-                            record.status = "downloaded"
-                            result.downloaded_files.append(destination.resolve())
+                    )
+                    destination = output_path / _safe_pdf_name(file_identity)
+                    acquired = _acquire_pdf(
+                        configured_pdf_sources, result, record, destination
+                    )
+                    if not acquired:
+                        record.status = "no_pdf" if record.doi else "missing_doi"
                 record.error = None
             except Exception as exc:
                 record.status = "error"
@@ -980,6 +952,7 @@ def run_papersbot(
             "complete_with_errors"
             if result.discovery_errors
             or result.outcome_counts.get("error", 0)
+            or result.acquisition_failures
             or (result.zotero is not None and result.zotero.errors)
             else "complete"
         )
