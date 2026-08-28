@@ -5,7 +5,12 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from perla_extract.papersbot.acquisition import AcquiredPdf
-from perla_extract.papersbot.bot import extract_doi, load_state, run_papersbot
+from perla_extract.papersbot.bot import (
+    _default_http_session,
+    extract_doi,
+    load_state,
+    run_papersbot,
+)
 from perla_extract.papersbot.models import SelectionPolicy
 
 
@@ -84,6 +89,16 @@ def test_selection_policy_is_grouped_and_title_exclusions_are_local():
 def test_extract_doi_uses_standard_pattern_across_feed_fields():
     assert extract_doi({"link": "https://doi.org/10.1000/ABC.123"}) == "10.1000/abc.123"
     assert extract_doi({"summary": "No identifier"}) is None
+
+
+def test_default_http_session_retries_only_safe_transient_failures():
+    session = _default_http_session(2)
+    retries = session.get_adapter("https://").max_retries
+
+    assert retries.total == 2
+    assert retries.allowed_methods == frozenset({"GET"})
+    assert 429 in retries.status_forcelist
+    assert retries.respect_retry_after_header is True
 
 
 def test_load_state_migrates_the_feed_only_source_field(tmp_path: Path):

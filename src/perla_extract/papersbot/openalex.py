@@ -76,7 +76,8 @@ def fetch_topic_works(
     end_date: date,
     timeout: float,
     email: str | None = None,
-    per_page: int = 200,
+    api_key: str | None = None,
+    per_page: int = 100,
 ) -> tuple[list[dict[str, Any]], OpenAlexRunStats]:
     """Fetch every cursor page for a topic/date query and report its coverage.
 
@@ -104,12 +105,18 @@ def fetch_topic_works(
         params: dict[str, object] = {
             "filter": filters,
             "select": SELECTED_FIELDS,
-            "per-page": per_page,
+            "per_page": per_page,
             "cursor": cursor,
         }
         if email:
             params["mailto"] = email
-        response = session.get(OPENALEX_WORKS_URL, params=params, timeout=timeout)
+        headers = {"Authorization": f"Bearer {api_key}"} if api_key else None
+        response = session.get(
+            OPENALEX_WORKS_URL,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+        )
         response.raise_for_status()
         payload = response.json()
         if not isinstance(payload, Mapping):

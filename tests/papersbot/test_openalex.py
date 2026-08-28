@@ -78,6 +78,9 @@ def test_fetch_topic_works_follows_cursor_pages_and_records_api_cost():
 
         def get(self, url, **kwargs):
             assert url == "https://api.openalex.org/works"
+            assert kwargs["params"]["per_page"] == 100
+            assert "per-page" not in kwargs["params"]
+            assert kwargs["headers"] == {"Authorization": "Bearer openalex-key"}
             cursor = kwargs["params"]["cursor"]
             self.cursors.append(cursor)
             if cursor == "*":
@@ -102,6 +105,7 @@ def test_fetch_topic_works_follows_cursor_pages_and_records_api_cost():
         end_date=date(2026, 8, 18),
         timeout=10,
         email="contact@example.org",
+        api_key="openalex-key",
     )
 
     assert session.cursors == ["*", "c2"]

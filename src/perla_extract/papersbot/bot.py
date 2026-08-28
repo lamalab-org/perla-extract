@@ -498,6 +498,35 @@ def _feed_entries(
     return entries
 
 
+def _default_http_session(request_retries: int) -> Any:
+    """Build one GET-only retry policy for transient service and rate-limit errors."""
+
+    try:
+        import requests
+        from requests.adapters import HTTPAdapter
+        from urllib3.util.retry import Retry
+    except ImportError as exc:
+        raise RuntimeError(
+            "PapersBot dependencies are missing; install perla-extract[papersbot]"
+        ) from exc
+    session = requests.Session()
+    retry = Retry(
+        total=request_retries,
+        connect=request_retries,
+        read=request_retries,
+        status=request_retries,
+        allowed_methods=frozenset({"GET"}),
+        status_forcelist=(429, 500, 502, 503, 504),
+        backoff_factor=0.5,
+        respect_retry_after_header=True,
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
+
+
 def run_papersbot(
     download_dir: str | Path = "downloaded_papers",
     *,
@@ -508,6 +537,7 @@ def run_papersbot(
     unpaywall_email: str | None = None,
     pdf_sources: Iterable[PdfSource] | None = None,
     openalex_email: str | None = None,
+    openalex_api_key: str | None = None,
     rss_enabled: bool = True,
     openalex_enabled: bool = True,
     openalex_start_date: date | None = None,
@@ -518,6 +548,7 @@ def run_papersbot(
     zotero_curated: bool = False,
     max_attempts: int = 4,
     request_timeout: float = 30.0,
+    request_retries: int = 3,
     session: Any | None = None,
     feedparser_module: Any | None = None,
 ) -> BotResult:
@@ -534,14 +565,10 @@ def run_papersbot(
     group can never change its library.
     """
 
+    if request_retries < 0:
+        raise ValueError("request_retries must be zero or greater")
     if session is None:
-        try:
-            import requests
-        except ImportError as exc:
-            raise RuntimeError(
-                "PapersBot dependencies are missing; install perla-extract[papersbot]"
-            ) from exc
-        session = requests.Session()
+        session = _default_http_session(request_retries)
     if rss_enabled and feedparser_module is None:
         try:
             import feedparser as installed_feedparser
@@ -574,6 +601,7 @@ def run_papersbot(
                 session,
                 timeout=request_timeout,
                 unpaywall_email=unpaywall_email,
+                openalex_api_key=openalex_api_key,
             ),
         ]
     )
@@ -628,10 +656,12 @@ def run_papersbot(
             selection_sha256=hashlib.sha256(policy_path.read_bytes()).hexdigest(),
             max_attempts=max_attempts,
             request_timeout=request_timeout,
+            request_retries=request_retries,
             unpaywall_enabled=bool(unpaywall_email),
             pdf_sources=pdf_source_names,
             rss_enabled=rss_enabled,
             openalex_enabled=openalex_policy is not None,
+            openalex_authenticated=bool(openalex_api_key),
             openalex_topic_ids=(openalex_policy.topic_ids if openalex_policy else []),
             openalex_start_date=start_date if openalex_policy else None,
             openalex_end_date=end_date if openalex_policy else None,
@@ -719,6 +749,7 @@ def run_papersbot(
                     end_date=end_date,
                     timeout=request_timeout,
                     email=openalex_email,
+                    api_key=openalex_api_key,
                 )
                 source = f"openalex:topics/{'|'.join(openalex_policy.topic_ids)}"
                 for entry in entries:

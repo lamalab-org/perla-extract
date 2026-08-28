@@ -149,10 +149,12 @@ class OpenAccessPdfSource:
         *,
         timeout: float,
         unpaywall_email: str | None = None,
+        openalex_api_key: str | None = None,
     ) -> None:
         self.session = session
         self.timeout = timeout
         self.unpaywall_email = unpaywall_email
+        self.openalex_api_key = (openalex_api_key or "").strip() or None
 
     def acquire(self, record: PaperRecord, destination: Path) -> AcquiredPdf | None:
         """Resolve a DOI through Unpaywall or OpenAlex and validate the response."""
@@ -196,6 +198,11 @@ class OpenAccessPdfSource:
                 f"https://api.openalex.org/works/https://doi.org/"
                 f"{quote(doi, safe='')}",
                 self.timeout,
+                headers=(
+                    {"Authorization": f"Bearer {self.openalex_api_key}"}
+                    if self.openalex_api_key
+                    else None
+                ),
             )
             locations = [
                 payload.get("best_oa_location"),

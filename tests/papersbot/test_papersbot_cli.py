@@ -62,6 +62,8 @@ def test_cli_can_be_configured_entirely_from_environment(monkeypatch, tmp_path: 
             "PAPERSBOT_RSS": "false",
             "PAPERSBOT_OPENALEX": "false",
             "PAPERSBOT_MAX_ATTEMPTS": "7",
+            "PAPERSBOT_REQUEST_RETRIES": "5",
+            "OPENALEX_API_KEY": "openalex-secret",
             "ZOTERO_GROUP_ID": "6651379",
             "ZOTERO_API_KEY": "not-written-to-output",
         },
@@ -73,5 +75,8 @@ def test_cli_can_be_configured_entirely_from_environment(monkeypatch, tmp_path: 
     assert received["rss_enabled"] is False
     assert received["openalex_enabled"] is False
     assert received["max_attempts"] == 7
+    assert received["request_retries"] == 5
+    assert received["openalex_api_key"] == "openalex-secret"
     assert received["zotero_group_id"] == "6651379"
     assert "not-written-to-output" not in result.output
+    assert "openalex-secret" not in result.output

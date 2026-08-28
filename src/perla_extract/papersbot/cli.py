@@ -61,6 +61,12 @@ def _environment_flag(name: str) -> bool:
     help="Contact email sent with OpenAlex requests.",
 )
 @click.option(
+    "--openalex-api-key",
+    default=lambda: os.environ.get("OPENALEX_API_KEY"),
+    show_default=False,
+    help="Optional free API key for a larger OpenAlex budget.",
+)
+@click.option(
     "--rss/--no-rss",
     default=True,
     envvar="PAPERSBOT_RSS",
@@ -106,6 +112,7 @@ def _environment_flag(name: str) -> bool:
 )
 @click.option("--max-attempts", type=click.IntRange(min=1), default=4)
 @click.option("--request-timeout", type=click.FloatRange(min=1), default=30.0)
+@click.option("--request-retries", type=click.IntRange(min=0), default=3)
 @click.option(
     "--log-level",
     type=click.Choice(("DEBUG", "INFO", "WARNING", "ERROR"), case_sensitive=False),
@@ -125,6 +132,7 @@ def main(
     selection_file: Path | None,
     unpaywall_email: str | None,
     openalex_email: str | None,
+    openalex_api_key: str | None,
     rss: bool,
     openalex_enabled: bool,
     openalex_start_date: datetime | None,
@@ -135,6 +143,7 @@ def main(
     zotero_curated: bool,
     max_attempts: int,
     request_timeout: float,
+    request_retries: int,
     log_level: str,
     json_logs: bool,
     log_file: Path | None,
@@ -151,6 +160,7 @@ def main(
             selection_file=selection_file,
             unpaywall_email=unpaywall_email,
             openalex_email=openalex_email,
+            openalex_api_key=openalex_api_key,
             rss_enabled=rss,
             openalex_enabled=openalex_enabled,
             openalex_start_date=(
@@ -163,6 +173,7 @@ def main(
             zotero_curated=zotero_curated,
             max_attempts=max_attempts,
             request_timeout=request_timeout,
+            request_retries=request_retries,
         )
     except (OSError, RuntimeError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc

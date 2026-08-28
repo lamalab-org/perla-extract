@@ -175,10 +175,12 @@ class BotRunConfiguration(BaseModel):
     selection_sha256: str
     max_attempts: int
     request_timeout: float
+    request_retries: int
     unpaywall_enabled: bool
     pdf_sources: list[str] = Field(default_factory=list)
     rss_enabled: bool
     openalex_enabled: bool
+    openalex_authenticated: bool = False
     openalex_topic_ids: list[str] = Field(default_factory=list)
     openalex_start_date: date | None = None
     openalex_end_date: date | None = None
