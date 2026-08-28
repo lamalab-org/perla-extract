@@ -6,6 +6,45 @@ immutable ledger for each run. Keeping those files together is important: a
 `downloaded` record is reopened automatically when its recorded PDF is missing or no
 longer matches its SHA-256 fingerprint.
 
+## Quick setup
+
+The repository includes an idempotent installer for a conventional Linux host. Use a
+reviewed release once it is published:
+
+```bash
+sudo ./scripts/setup-papersbot-cron.sh --release X.Y.Z \
+  --mailto project-operations@example.org
+```
+
+To test an unreleased but reviewed checkout, install its exact committed contents:
+
+```bash
+sudo ./scripts/setup-papersbot-cron.sh --checkout "$PWD" \
+  --mailto project-operations@example.org
+```
+
+The checkout must have no tracked or untracked changes. The installed release or commit SHA is
+written to `/opt/perla-papersbot/installed-from.txt` for later inspection.
+
+The first invocation creates the service account, virtual environment, persistent
+directories, wrapper, protected configuration template, and log-rotation policy. It
+does **not** enable cron while placeholder values remain. Edit the template without
+putting secrets in shell history, then run the same setup command again:
+
+```bash
+sudoedit /etc/perla-papersbot.env
+sudo ./scripts/setup-papersbot-cron.sh --release X.Y.Z \
+  --mailto project-operations@example.org
+```
+
+The second invocation preserves the environment file, validates that its placeholders
+were replaced, updates the installed package, and creates `/etc/cron.d/perla-papersbot`.
+Use `--schedule '17 4 * * *'` to change the default daily schedule. Run the script with
+`--help` for all options.
+
+The remaining sections explain each installed component and are also useful when the
+host does not follow this conventional filesystem layout.
+
 ## Create a restricted service account
 
 The examples below use a non-login account named `perla-papersbot`. Adjust the
