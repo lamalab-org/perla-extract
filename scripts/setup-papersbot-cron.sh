@@ -136,7 +136,9 @@ set +a
 
 healthcheck() {
     [ -n "${PAPERSBOT_HEALTHCHECK_URL:-}" ] || return 0
-    curl -fsS --max-time 10 --retry 3 -o /dev/null "$1" || true
+    printf 'url = "%s"\n' "$1" \
+      | curl -q -fsS --max-time 10 --retry 3 --retry-max-time 30 \
+          -o /dev/null --config - || true
 }
 
 HEALTHCHECK_URL=${PAPERSBOT_HEALTHCHECK_URL:-}
@@ -223,8 +225,7 @@ config_die() {
 }
 
 for REQUIRED_SETTING in \
-    PAPERSBOT_DOWNLOAD_DIR PAPERSBOT_STATE_DIR PAPERSBOT_LOG_FILE \
-    UNPAYWALL_EMAIL; do
+    PAPERSBOT_DOWNLOAD_DIR PAPERSBOT_STATE_DIR PAPERSBOT_LOG_FILE; do
     has_value "$REQUIRED_SETTING" \
         || config_die "$ENV_FILE has no value for $REQUIRED_SETTING"
 done
@@ -239,11 +240,18 @@ if grep -Eqi '^ZOTERO_CURATED=(true|1|yes|on)$' "$ENV_FILE"; then
             || config_die "$ENV_FILE has no value for enabled Zotero setting $REQUIRED_SETTING"
     done
 fi
-grep -Eqi \
-    '^(PAPERSBOT_RSS|PAPERSBOT_OPENALEX|ZOTERO_CURATED)=(true|1|yes|on)$' "$ENV_FILE" \
-    || config_die "$ENV_FILE must enable at least one discovery source"
+if has_value ZOTERO_GROUP_ID; then
+    grep -Eq '^ZOTERO_GROUP_ID=[0-9]+$' "$ENV_FILE" \
+        || config_die "$ENV_FILE has a non-numeric ZOTERO_GROUP_ID"
+fi
+if ! grep -Eqi \
+    '^(PAPERSBOT_RSS|PAPERSBOT_OPENALEX)=(true|1|yes|on)$' "$ENV_FILE" \
+    && ! has_value ZOTERO_GROUP_ID; then
+    config_die "$ENV_FILE must enable RSS, OpenAlex, or a Zotero group"
+fi
 if has_value PAPERSBOT_HEALTHCHECK_URL; then
-    grep -Eq '^PAPERSBOT_HEALTHCHECK_URL=https?://[^[:space:]]+$' "$ENV_FILE" \
+    grep -Eq \
+        '^PAPERSBOT_HEALTHCHECK_URL=https?://[A-Za-z0-9._~:/?=%+-]+$' "$ENV_FILE" \
         || config_die "$ENV_FILE has an invalid PAPERSBOT_HEALTHCHECK_URL"
     command -v curl >/dev/null 2>&1 \
         || config_die 'curl is required when heartbeat monitoring is enabled'

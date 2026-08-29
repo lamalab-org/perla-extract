@@ -103,8 +103,8 @@ Run `perla-extract --help` to see the complete installed command interface.
 
 ## PapersBot
 
-The optional literature-discovery command has a separate dependency boundary and
-does not change the extraction command:
+The literature-discovery command is separate from the extraction command. Its feed
+and HTTP dependencies are installed through the `papersbot` dependency group:
 
 ```text
 perla-papersbot [OPTIONS] [DOWNLOAD_DIR]

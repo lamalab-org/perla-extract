@@ -1,8 +1,8 @@
 # Run PapersBot as an internal cron job
 
 The supported unattended deployment is a Linux machine with persistent local
-storage. PapersBot writes resumable state, downloaded PDFs, structured logs, and an
-immutable ledger for each run. Keeping those files together is important: a
+storage. PapersBot writes resumable state, downloaded PDFs, structured logs, and a
+durable ledger for each run. Keeping those files together is important: a
 `downloaded` record is reopened automatically when its recorded PDF is missing or no
 longer matches its SHA-256 fingerprint.
 
@@ -135,6 +135,10 @@ OpenAlex grants a larger free request budget to authenticated clients. The key i
 as a bearer header and, like the Zotero key, is represented only as an enabled/disabled
 flag in run configuration.
 
+`UNPAYWALL_EMAIL` is optional. Set it to a monitored project contact address to add
+Unpaywall to PDF resolution; when it is empty, the bot still checks OpenAlex's public
+PDF locations.
+
 `PAPERSBOT_HEALTHCHECK_URL` is optional. Give it the private ping URL from a hosted
 or internal Healthchecks-compatible service to receive alerts for failures and missed
 runs. Treat this URL as a secret: anyone who knows it can alter the apparent status of
@@ -147,6 +151,10 @@ deployment, set:
 ```bash
 PAPERSBOT_HEALTHCHECK_URL=https://hc-ping.com/private-check-uuid
 ```
+
+Use the plain check URL without shell metacharacters or extra query parameters. The
+installer validates this because the protected configuration file is sourced by a
+POSIX shell.
 
 Use `PAPERSBOT_RSS=false` and `PAPERSBOT_OPENALEX=false` for a Zotero-only run. Omit
 the Zotero variables for an RSS/OpenAlex-only run. `PAPERSBOT_FAIL_ON_PARTIAL=true`
@@ -172,7 +180,9 @@ set +a
 
 healthcheck() {
     [ -n "${PAPERSBOT_HEALTHCHECK_URL:-}" ] || return 0
-    curl -fsS --max-time 10 --retry 3 -o /dev/null "$1" || true
+    printf 'url = "%s"\n' "$1" \
+      | curl -q -fsS --max-time 10 --retry 3 --retry-max-time 30 \
+          -o /dev/null --config - || true
 }
 
 HEALTHCHECK_URL=${PAPERSBOT_HEALTHCHECK_URL:-}
@@ -233,6 +243,11 @@ leaves a `running` ledger; a fatal exception leaves `failed`; recoverable source
 paper failures produce `complete_with_errors` and a nonzero scheduled exit. The
 wrapper records stderr from the most recent failed command in
 `state/last_cron.stderr`; it empties that file after a successful run.
+
+The private heartbeat URL is supplied to curl through standard input rather than a
+command-line argument, so it is not exposed in the local process list. Monitoring is
+best-effort: the request budget is bounded, user curl configuration is ignored, and a
+temporary monitor outage never changes the PapersBot exit status.
 
 With a heartbeat URL configured, the monitoring service should expect the same cron
 schedule plus a reasonable grace period. It can notify by email, chat, or another

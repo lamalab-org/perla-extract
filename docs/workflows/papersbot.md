@@ -30,8 +30,8 @@ flowchart LR
 
 ## Install and run
 
-Feed parsing and HTTP clients are optional dependencies so they do not enlarge a
-deployment that only performs extraction.
+Feed parsing and the supported HTTP client live in the `papersbot` dependency group,
+so an extraction-only installation does not need to opt into the literature command.
 
 ```bash
 pip install 'perla-extract[papersbot]'
@@ -111,7 +111,8 @@ Change the IDs in the policy when the project scope changes.
 On its first run, PapersBot queries the configured lookback period. Later runs start
 at the last successful end date minus the overlap, which catches delayed indexing.
 DOI deduplication makes repeated results cheap. The checkpoint advances only after
-every cursor page has been read. Explicit dates support reproducible backfills:
+every cursor page has been read, and it never moves backward when an older explicit
+backfill is run. Explicit dates support reproducible backfills:
 
 ```bash
 perla-papersbot downloaded_papers \
@@ -222,10 +223,33 @@ Transient errors and papers without an open PDF are replayed from state up to
 outside the overlap window. A downloaded record is also reopened when a local file is
 missing or no longer matches its recorded hash.
 
+An item that remains in a curated Zotero collection stays actionable beyond the
+ordinary attempt limit. This lets a journal-club member add the bibliographic record
+first and attach the PDF later. Removing the item from the collection removes it from
+that active queue; the retained state remains available for audit.
+
+The status vocabulary separates scientific availability from operational failure:
+
+| Status | Meaning | Retried automatically |
+| --- | --- | --- |
+| `downloaded` | Every retained PDF passed signature validation and was hashed | Only if a local file disappears or its hash changes |
+| `irrelevant` | Metadata did not satisfy the selection policy | No |
+| `excluded` | The title matched a configured publication-type exclusion | No |
+| `no_pdf` | The paper was relevant, but no configured source supplied a PDF | Yes, up to `max_attempts` |
+| `missing_doi` | No DOI or configured DOI-free source was available | Yes, up to `max_attempts` |
+| `error` | Processing raised an operational or malformed-response error | Yes, up to `max_attempts` |
+
+Older state formats are migrated on read. A state file with a newer format version is
+rejected instead of being loaded partially and rewritten with fields silently lost.
+`PAPERSBOT_FORMAT_VERSION` in `papersbot/models.py` is the single code-level version
+constant. Bump it only when persisted semantics require a migration; update
+`load_state`, a legacy-state fixture, and this section in the same change.
+
 Every invocation also checkpoints `STATE_DIR/runs/<run-id>.json` and
 `STATE_DIR/last_run.json`. A run record contains timestamps, a non-secret configuration
 fingerprint, source/date configuration, raw and DOI-deduplicated discovery counts,
-OpenAlex pages/results/reported API cost, Zotero reads and attachment downloads,
+OpenAlex pages/results/reported API cost, Zotero item and attachment pages,
+attachment downloads,
 aggregate outcome/skip/retry counts, source failures, and one outcome for every unique
 paper processed or skipped. The per-run file is therefore the source for longitudinal
 statistics; console logs are only the live operational view. An interrupted invocation
@@ -233,6 +257,14 @@ remains marked `running` or `failed` rather than masquerading as a successful em
 run. Retry counts retain the preceding status (`error` or `no_pdf`), while skip counts
 retain both the reason and existing paper status, such as `terminal:downloaded` or
 `max_attempts:no_pdf`.
+
+Resolver outages are recorded as acquisition failures and produce
+`complete_with_errors`; a successful resolver response with no PDF location produces
+`no_pdf`. This keeps service failure distinct from a legitimate absence of open access.
+
+Use one writer per state directory. JSON replacement is atomic, so an interrupted
+write cannot leave half a document, but two complete bot runs must not race over the
+same logical state. The supported cron wrapper enforces this with `flock`.
 
 The files are ordinary JSON, so no application-specific reader is required:
 

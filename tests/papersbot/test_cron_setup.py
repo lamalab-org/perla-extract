@@ -20,9 +20,13 @@ def test_cron_setup_and_generated_wrapper_are_valid_shell():
     subprocess.run([shell, "-n", str(SCRIPT)], check=True)
 
     text = SCRIPT.read_text()
-    marker = 'cat >"$TMP_DIR/run-perla-papersbot" <<\'EOF\'\n'
+    marker = "cat >\"$TMP_DIR/run-perla-papersbot\" <<'EOF'\n"
     wrapper = text.split(marker, 1)[1].split("\nEOF\n", 1)[0]
     subprocess.run([shell, "-n"], input=wrapper, text=True, check=True)
+    assert "--config -" in wrapper
+    assert "curl -q" in wrapper
+    assert "--retry-max-time 30" in wrapper
+    assert "&& ! has_value ZOTERO_GROUP_ID" in text
 
     help_result = subprocess.run(
         [shell, str(SCRIPT), "--help"],
