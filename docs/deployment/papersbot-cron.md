@@ -12,19 +12,18 @@ The repository includes an idempotent installer for a conventional Linux host. U
 reviewed release once it is published:
 
 ```bash
-sudo ./scripts/setup-papersbot-cron.sh --release X.Y.Z \
-  --mailto project-operations@example.org
+sudo ./scripts/setup-papersbot-cron.sh --release X.Y.Z
 ```
 
 To test an unreleased but reviewed checkout, install its exact committed contents:
 
 ```bash
-sudo ./scripts/setup-papersbot-cron.sh --checkout "$PWD" \
-  --mailto project-operations@example.org
+sudo ./scripts/setup-papersbot-cron.sh --checkout "$PWD"
 ```
 
-The checkout must have no tracked or untracked changes. The installed release or commit SHA is
-written to `/opt/perla-papersbot/installed-from.txt` for later inspection.
+The checkout must have no tracked or untracked changes. The installed release or
+commit SHA is written to `/opt/perla-papersbot/installed-from.txt` for later
+inspection.
 
 The first invocation creates the service account, virtual environment, persistent
 directories, wrapper, protected configuration template, and log-rotation policy. It
@@ -33,8 +32,7 @@ putting secrets in shell history, then run the same setup command again:
 
 ```bash
 sudoedit /etc/perla-papersbot.env
-sudo ./scripts/setup-papersbot-cron.sh --release X.Y.Z \
-  --mailto project-operations@example.org
+sudo ./scripts/setup-papersbot-cron.sh --release X.Y.Z
 ```
 
 The second invocation preserves the environment file, validates that its placeholders
@@ -118,6 +116,7 @@ PAPERSBOT_LOG_LEVEL=INFO
 PAPERSBOT_MAX_ATTEMPTS=4
 PAPERSBOT_REQUEST_RETRIES=3
 PAPERSBOT_FAIL_ON_PARTIAL=true
+PAPERSBOT_HEALTHCHECK_URL=
 
 PAPERSBOT_RSS=true
 PAPERSBOT_OPENALEX=true
@@ -136,6 +135,19 @@ OpenAlex grants a larger free request budget to authenticated clients. The key i
 as a bearer header and, like the Zotero key, is represented only as an enabled/disabled
 flag in run configuration.
 
+`PAPERSBOT_HEALTHCHECK_URL` is optional. Give it the private ping URL from a hosted
+or internal Healthchecks-compatible service to receive alerts for failures and missed
+runs. Treat this URL as a secret: anyone who knows it can alter the apparent status of
+the check. The wrapper sends only start, success, and numeric exit-status requests. It
+does not send paper metadata, logs, or extracted content.
+
+For example, after creating a check at Healthchecks.io or a compatible internal
+deployment, set:
+
+```bash
+PAPERSBOT_HEALTHCHECK_URL=https://hc-ping.com/private-check-uuid
+```
+
 Use `PAPERSBOT_RSS=false` and `PAPERSBOT_OPENALEX=false` for a Zotero-only run. Omit
 the Zotero variables for an RSS/OpenAlex-only run. `PAPERSBOT_FAIL_ON_PARTIAL=true`
 makes recorded discovery or acquisition errors observable to cron as exit code 2,
@@ -144,8 +156,10 @@ remain inspectable in the ledger without being treated as infrastructure failure
 
 ## Install the locked wrapper
 
-The wrapper loads secrets before the process starts, applies a private umask, and uses
-`flock` to prevent concurrent writers from sharing the same state directory.
+The wrapper loads secrets before the process starts, applies a private umask, uses
+`flock` to prevent concurrent writers, and optionally reports start, success, and
+failure to a heartbeat monitor. Monitoring requests have short timeouts, and a failed
+monitoring request does not change the literature run's result.
 
 ```sh
 #!/bin/sh
@@ -156,8 +170,29 @@ set -a
 . /etc/perla-papersbot.env
 set +a
 
-exec /usr/bin/flock -n "$PAPERSBOT_STATE_DIR/cron.lock" \
-  /opt/perla-papersbot/.venv/bin/perla-papersbot >/dev/null
+healthcheck() {
+    [ -n "${PAPERSBOT_HEALTHCHECK_URL:-}" ] || return 0
+    curl -fsS --max-time 10 --retry 3 -o /dev/null "$1" || true
+}
+
+HEALTHCHECK_URL=${PAPERSBOT_HEALTHCHECK_URL:-}
+HEALTHCHECK_URL=${HEALTHCHECK_URL%/}
+healthcheck "$HEALTHCHECK_URL/start"
+
+set +e
+/usr/bin/flock -n "$PAPERSBOT_STATE_DIR/cron.lock" \
+  /opt/perla-papersbot/.venv/bin/perla-papersbot \
+  >/dev/null 2>"$PAPERSBOT_STATE_DIR/last_cron.stderr"
+STATUS=$?
+set -e
+
+if [ "$STATUS" -eq 0 ]; then
+    : >"$PAPERSBOT_STATE_DIR/last_cron.stderr"
+    healthcheck "$HEALTHCHECK_URL"
+else
+    healthcheck "$HEALTHCHECK_URL/$STATUS"
+fi
+exit "$STATUS"
 ```
 
 Save it as `/usr/local/bin/run-perla-papersbot`:
@@ -186,7 +221,7 @@ Create `/etc/cron.d/perla-papersbot`:
 ```cron
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-MAILTO=project-operations@example.org
+MAILTO=""
 
 17 4 * * * perla-papersbot /usr/local/bin/run-perla-papersbot
 ```
@@ -195,7 +230,15 @@ The minimum health check is both a recent `last_run.json` and
 `status == "complete"`. Every run is also retained under `state/runs/<run-id>.json`,
 so longitudinal statistics do not depend on console output. An interrupted process
 leaves a `running` ledger; a fatal exception leaves `failed`; recoverable source or
-paper failures produce `complete_with_errors` and a nonzero scheduled exit.
+paper failures produce `complete_with_errors` and a nonzero scheduled exit. The
+wrapper records stderr from the most recent failed command in
+`state/last_cron.stderr`; it empties that file after a successful run.
+
+With a heartbeat URL configured, the monitoring service should expect the same cron
+schedule plus a reasonable grace period. It can notify by email, chat, or another
+integration when it receives a failure status or when the success ping never arrives.
+The latter also detects a stopped cron daemon, an offline host, or a broken wrapper.
+Cron mail is explicitly disabled so routine progress logs do not generate messages.
 
 Configure log rotation with `copytruncate`, because the process opens the Loguru file
 sink directly:

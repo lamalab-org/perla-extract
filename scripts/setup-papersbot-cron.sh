@@ -9,7 +9,6 @@ WRAPPER=/usr/local/bin/run-perla-papersbot
 CRON_FILE=/etc/cron.d/perla-papersbot
 LOGROTATE_FILE=/etc/logrotate.d/perla-papersbot
 SCHEDULE='17 4 * * *'
-MAILTO=root
 PYTHON=python3
 RELEASE=
 CHECKOUT=
@@ -26,7 +25,6 @@ Options:
   --release VERSION  Install a reviewed release from the package index.
   --checkout PATH    Install the exact contents of a reviewed Git checkout.
   --schedule EXPR    Five-field numeric cron expression (default: 17 4 * * *).
-  --mailto ADDRESS   Cron error recipient (default: root; use '' to disable).
   --python PATH      Python used to create the virtual environment.
   -h, --help         Show this help.
 
@@ -58,11 +56,6 @@ while [ "$#" -gt 0 ]; do
             SCHEDULE=$2
             shift 2
             ;;
-        --mailto)
-            [ "$#" -ge 2 ] || die '--mailto requires an address or empty string'
-            MAILTO=$2
-            shift 2
-            ;;
         --python)
             [ "$#" -ge 2 ] || die '--python requires a path'
             PYTHON=$2
@@ -83,8 +76,6 @@ done
 [ -z "$RELEASE" ] || [ -z "$CHECKOUT" ] || die 'choose only one installation source'
 printf '%s\n' "$SCHEDULE" | grep -Eq '^([0-9*/,-]+[[:space:]]+){4}[0-9*/,-]+$' \
     || die 'schedule must be a five-field numeric cron expression'
-[ -z "$MAILTO" ] || printf '%s\n' "$MAILTO" | grep -Eq '^[A-Za-z0-9._+@-]+$' \
-    || die 'mailto contains unsupported characters'
 command -v "$PYTHON" >/dev/null 2>&1 || die "Python not found: $PYTHON"
 command -v flock >/dev/null 2>&1 || die 'flock is required (normally provided by util-linux)'
 
@@ -143,8 +134,29 @@ set -a
 . /etc/perla-papersbot.env
 set +a
 
-exec /usr/bin/flock -n "$PAPERSBOT_STATE_DIR/cron.lock" \
-  /opt/perla-papersbot/.venv/bin/perla-papersbot >/dev/null
+healthcheck() {
+    [ -n "${PAPERSBOT_HEALTHCHECK_URL:-}" ] || return 0
+    curl -fsS --max-time 10 --retry 3 -o /dev/null "$1" || true
+}
+
+HEALTHCHECK_URL=${PAPERSBOT_HEALTHCHECK_URL:-}
+HEALTHCHECK_URL=${HEALTHCHECK_URL%/}
+healthcheck "$HEALTHCHECK_URL/start"
+
+set +e
+/usr/bin/flock -n "$PAPERSBOT_STATE_DIR/cron.lock" \
+  /opt/perla-papersbot/.venv/bin/perla-papersbot \
+  >/dev/null 2>"$PAPERSBOT_STATE_DIR/last_cron.stderr"
+STATUS=$?
+set -e
+
+if [ "$STATUS" -eq 0 ]; then
+    : >"$PAPERSBOT_STATE_DIR/last_cron.stderr"
+    healthcheck "$HEALTHCHECK_URL"
+else
+    healthcheck "$HEALTHCHECK_URL/$STATUS"
+fi
+exit "$STATUS"
 EOF
 install -o root -g root -m 0755 "$TMP_DIR/run-perla-papersbot" "$WRAPPER"
 
@@ -171,6 +183,7 @@ PAPERSBOT_LOG_LEVEL=INFO
 PAPERSBOT_MAX_ATTEMPTS=4
 PAPERSBOT_REQUEST_RETRIES=3
 PAPERSBOT_FAIL_ON_PARTIAL=true
+PAPERSBOT_HEALTHCHECK_URL=
 
 PAPERSBOT_RSS=true
 PAPERSBOT_OPENALEX=true
@@ -229,11 +242,17 @@ fi
 grep -Eqi \
     '^(PAPERSBOT_RSS|PAPERSBOT_OPENALEX|ZOTERO_CURATED)=(true|1|yes|on)$' "$ENV_FILE" \
     || config_die "$ENV_FILE must enable at least one discovery source"
+if has_value PAPERSBOT_HEALTHCHECK_URL; then
+    grep -Eq '^PAPERSBOT_HEALTHCHECK_URL=https?://[^[:space:]]+$' "$ENV_FILE" \
+        || config_die "$ENV_FILE has an invalid PAPERSBOT_HEALTHCHECK_URL"
+    command -v curl >/dev/null 2>&1 \
+        || config_die 'curl is required when heartbeat monitoring is enabled'
+fi
 
 cat >"$TMP_DIR/perla-papersbot.cron" <<EOF
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-MAILTO=$MAILTO
+MAILTO=""
 
 $SCHEDULE $SERVICE_USER $WRAPPER
 EOF
