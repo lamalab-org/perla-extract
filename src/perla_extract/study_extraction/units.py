@@ -69,3 +69,30 @@ def convert_reported_value(value: ReportedValue, target_unit: str) -> float | No
         return float(quantity.to(target_unit).magnitude)
     except (PintError, TypeError, ValueError):
         return None
+
+
+def is_concentration_unit(unit: str | None) -> bool:
+    """Recognize explicit amount, mass, or fraction concentrations dimensionally."""
+
+    from pint.errors import PintError
+
+    if unit is None:
+        return False
+    compact = _unit_key(unit)
+    if unit.strip() == "%" or compact in {
+        "percent",
+        "percentage",
+        "wt",
+        "wtpercent",
+        "vol",
+        "volpercent",
+    }:
+        return True
+    try:
+        quantity = _unit_registry().Quantity(1, _pint_unit(unit))
+        return any(
+            quantity.is_compatible_with(target)
+            for target in ("mole / liter", "gram / liter")
+        )
+    except (PintError, TypeError, ValueError):
+        return False

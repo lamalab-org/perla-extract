@@ -13,8 +13,8 @@ as the same measurement.
 flowchart LR
     A["Paper + Supporting Information"] --> B["Parser-independent evidence blocks"]
     B --> C{"Claim evidence fits one model context?"}
-    C -->|Yes| D["Collect source claims once"]
-    C -->|No| E["Collect claims in structural windows"]
+    C -->|Yes| D["Independent complete-evidence claim readings"]
+    C -->|No| E["Independent claim readings in structural windows"]
     D --> F["Ground and combine claim ledger"]
     E --> F
     F --> G["One global study assembly"]
@@ -38,8 +38,8 @@ result; they do not erase model output.
 - **Keep scientific reporting levels separate.** Individual measurements,
   population statistics, and stability experiments are different record types.
 - **Separate reading from record construction.** Long inputs may use structural
-  windows to collect neutral source claims, but one global call constructs the final
-  records from their combined ledger and cited passages.
+  windows and repeated source readings to collect neutral claims, but one global call
+  constructs the final records from their grounded union and cited passages.
 - **Re-read before review.** A second pass audits the complete draft against the same
   evidence. The first draft and a record-level change index remain inspectable.
 - **Treat scope as data.** Study targets, processing arms, characterization specimens,
@@ -58,6 +58,7 @@ result; they do not erase model output.
 - [Understand the study model](concepts/study-model.md)
 - [Understand evidence validation](concepts/evidence.md)
 - [Review and curate ground truth](workflows/ground-truth-review.md)
+- [Score rich extractions deterministically](workflows/evaluation.md)
 - [Create quality-first review seeds, then reduce cost](workflows/quality-first-ground-truth.md)
 - [Interpret composition and processing](workflows/enrichment.md)
 - [Export directly to NOMAD](workflows/nomad-export.md)

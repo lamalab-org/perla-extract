@@ -19,6 +19,20 @@ jobs:
       - name: Build documentation
         run: python -m mkdocs build --strict
 
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install package and development tools
+        run: python -m pip install ".[dev]"
+      - name: Lint
+        run: python -m ruff check src tests review_workbench
+      - name: Type-check extraction contracts
+        run: python -m mypy src/perla_extract/study_extraction
+
   test:
     strategy:
       matrix:
@@ -32,8 +46,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install package and development tools
         run: python -m pip install ".[dev]"
-      - name: Lint
-        run: python -m ruff check src tests
       - name: Test
         run: python -m pytest -q
 
@@ -53,7 +65,6 @@ jobs:
         run: python -m pytest -q tests/study_extraction/test_docling_integration.py
 
   nomad:
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

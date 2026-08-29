@@ -14,11 +14,19 @@ _EXPORTS = {
     "EnrichmentAudit": ("enrichment", "EnrichmentAudit"),
     "EvidenceWindow": ("partitioning", "EvidenceWindow"),
     "EvidenceWindowPlan": ("partitioning", "EvidenceWindowPlan"),
+    "EvaluationConfig": ("evaluation", "EvaluationConfig"),
+    "BenchmarkProvenance": ("evaluation", "BenchmarkProvenance"),
+    "EvaluationReport": ("evaluation", "EvaluationReport"),
+    "PredictionValidation": ("evaluation", "PredictionValidation"),
+    "RunEfficiency": ("evaluation", "RunEfficiency"),
+    "DatasetEvaluationReport": ("evaluation", "DatasetEvaluationReport"),
     "ClaimLedger": ("claims", "ClaimLedger"),
     "NOMADExport": ("nomad", "NOMADExport"),
     "ReducedExport": ("compatibility", "ReducedExport"),
     "StudyExtraction": ("models", "StudyExtraction"),
     "audit_claim_coverage": ("claims", "audit_claim_coverage"),
+    "evaluate_study": ("evaluation", "evaluate_study"),
+    "aggregate_evaluations": ("evaluation", "aggregate_evaluations"),
     "plan_evidence_windows": ("partitioning", "plan_evidence_windows"),
     "run_enrichment": ("enrichment", "run_enrichment"),
     "to_nomad_with_report": ("nomad", "to_nomad_with_report"),
@@ -35,7 +43,9 @@ def __getattr__(name: str) -> Any:
     try:
         module_name, attribute_name = _EXPORTS[name]
     except KeyError as error:
-        raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from error
+        raise AttributeError(
+            f"module {__name__!r} has no attribute {name!r}"
+        ) from error
     value = getattr(import_module(f".{module_name}", __name__), attribute_name)
     globals()[name] = value
     return value

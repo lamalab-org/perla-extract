@@ -110,8 +110,8 @@ compatibility breaks and automatically computed SHA-256 fingerprints for the gen
 Pydantic schema, all model prompts, and the exact deterministic evidence-span catalog.
 A schema, prompt, or citable-evidence change therefore changes provenance and cache
 identity without relying on a date string or a manual patch bump.
-Version 4 separates layer constituents and source-backed physical form and changes the
-model transport from generated quotations to deterministic evidence-span IDs. Older
-JSON remains readable because the new layer fields default to empty or
-`not_reported`; it is not exactly comparable to a version-4 extraction until those
-new fields have been reviewed or the seed has been regenerated.
+Version 6 adds finite-number, champion, and stability-link invariants and strengthens
+nested relationship validation. Earlier rich JSON may remain structurally readable,
+but it is not benchmark-equivalent until it passes the current schema, relationship,
+and evidence gates. Regenerate model seeds rather than silently relabelling an older
+artifact as version 6.

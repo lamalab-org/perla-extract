@@ -35,6 +35,8 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | `--claims / --no-claims` | claims | Collect and ground objects and atomic source claims before assembly |
 | `--claim-model TEXT` | extraction model | LiteLLM model used for claim collection |
 | `--claim-max-output-tokens INTEGER` | `30000` | Completion limit for each claim-collection call |
+| `--claim-recall-passes INTEGER` | `2` | Independent complete readings of every claim document/window |
+| `--assembly-max-input-tokens INTEGER` | `180000` | Visible safety bound for the global assembly request estimate |
 | `--enrichment / --no-enrichment` | enrichment | Run the audited composition and processing interpretation stage |
 | `--enrichment-model TEXT` | extraction model | Model used for the two compact enrichment calls |
 | `--enrichment-max-output-tokens INTEGER` | `20000` | Completion limit for each enrichment call |
@@ -88,6 +90,20 @@ request. A cache hit has zero new usage in the aggregate `usage` object;
 the original call metadata remains under `calls[].cached_response_usage` for provenance.
 Requests contain parser-produced text and tables only. No option enables rendered-page
 or vision-model input in this workflow.
+
+## Evaluation
+
+```text
+perla-evaluate --truth PATH --prediction PATH [OPTIONS]
+```
+
+`--truth` accepts either a frozen benchmark directory or a rich truth JSON;
+`--prediction` accepts an extraction run directory or `extraction.json`. Frozen
+directories receive schema- and content-hash verification. The record-matching
+threshold and numeric tolerances are explicit options and are written into the output
+report. See [Evaluate an extraction](../workflows/evaluation.md).
+Use repeated `--report` options with `perla-evaluate-dataset` to aggregate compatible
+per-paper reports with micro counts, macro rates, and paper-bootstrap intervals.
 
 ## Cache and logging
 

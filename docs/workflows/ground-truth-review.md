@@ -219,6 +219,10 @@ Pydantic schema is valid, and deterministic evidence validation reports no issue
 Repeated export of identical content is a no-op; a differing existing item is never
 overwritten implicitly.
 
+The manifest also records the generated study-schema hash and any final
+`uncertain` record decisions. Those keys are an evaluation abstention mask: the
+evaluator does not silently treat reviewer uncertainty as exact truth.
+
 The administrator can also use **Download PR bundle** in the workbench after
 adjudication. Unzip its four files into the same version/split/paper directory. Before
 opening the data PR, review the diff and run:
@@ -284,4 +288,5 @@ level. Correct fields on matched devices must not hide a device the extractor mi
 
 Freeze source hashes, schema and truth revisions, parser, model, prompt, and scoring
 configuration with every published result. See [workbench deployment](../deployment/review-workbench.md)
-for local and hosted operation.
+for local and hosted operation and [Evaluate an extraction](evaluation.md) for the
+executable scoring contract.
