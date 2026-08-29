@@ -12,6 +12,7 @@ from html import unescape
 from importlib.resources import files
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from threading import Lock
 from typing import Any, Iterable, Mapping
 from urllib.parse import quote
 from uuid import uuid4
@@ -39,6 +40,11 @@ from .zotero import ZoteroClient
 DOI_PATTERN = re.compile(r"10\.\d{4,9}/[-._;()/:A-Z0-9]+", re.IGNORECASE)
 TERMINAL_STATUSES = {"downloaded", "excluded", "irrelevant"}
 RETRYABLE_STATUSES = {"new", "error", "no_pdf", "missing_doi"}
+
+# Windows cannot reliably replace the same destination from concurrent threads.
+# PapersBot remains a single-process service; this lock only makes checkpoints from
+# helpers in that process obey the same last-completed-write semantics on every OS.
+_MODEL_REPLACE_LOCK = Lock()
 
 
 @dataclass
@@ -356,7 +362,8 @@ def _write_model(path: Path, model: BotState | BotResult) -> None:
             handle.write(model.model_dump_json(indent=2))
             handle.flush()
             os.fsync(handle.fileno())
-        temporary_path.replace(path)
+        with _MODEL_REPLACE_LOCK:
+            temporary_path.replace(path)
     finally:
         if temporary_path is not None:
             temporary_path.unlink(missing_ok=True)
