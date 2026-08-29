@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import Any, Mapping
-from urllib.parse import quote
+from tempfile import NamedTemporaryFile
+from typing import Any, Iterator, Mapping
+from urllib.parse import quote, urljoin
+
+from loguru import logger
 
 from .models import ZoteroRunStats
 
@@ -70,6 +74,7 @@ class ZoteroClient:
         self.collection_key = (collection_key or "").strip() or None
         self.timeout = timeout
         self._attachments: dict[str, list[ZoteroPdfAttachment]] = {}
+        self._stats: ZoteroRunStats | None = None
 
     @property
     def source(self) -> str:
@@ -91,7 +96,9 @@ class ZoteroClient:
 
         prefix = f"{self.api_root}/groups/{self.group_id}"
         if self.collection_key:
-            return f"{prefix}/collections/{quote(self.collection_key)}/items/top"
+            return (
+                f"{prefix}/collections/{quote(self.collection_key, safe='')}/items/top"
+            )
         return f"{prefix}/items/top"
 
     @staticmethod
@@ -104,18 +111,18 @@ class ZoteroClient:
             raise ValueError(f"Zotero returned a non-list response from {endpoint}")
         return [item for item in payload if isinstance(item, Mapping)]
 
-    def fetch_items(self) -> tuple[list[dict[str, Any]], ZoteroRunStats]:
-        """Read every top-level item and normalize it for DOI-first bot merging."""
+    def _pages(self, url: str) -> Iterator[list[Mapping[str, Any]]]:
+        """Traverse a Zotero list endpoint even when it contains over 100 items."""
 
-        url = self._items_url()
         start = 0
         limit = 100
-        entries: list[dict[str, Any]] = []
-        stats = ZoteroRunStats(
-            group_id=self.group_id,
-            collection_key=self.collection_key,
-        )
+        seen_pages: set[tuple[str, ...]] = set()
         while True:
+            logger.bind(
+                event="papersbot.zotero_page_started",
+                endpoint=url,
+                start=start,
+            ).info("Requesting Zotero items at offset {}", start)
             response = self.session.get(
                 url,
                 params={"format": "json", "limit": limit, "start": start},
@@ -123,15 +130,45 @@ class ZoteroClient:
                 timeout=self.timeout,
             )
             page = self._array(response, endpoint=url)
+            if page:
+                signature = tuple(
+                    str(item.get("key") or item.get("data", {}).get("key") or "")
+                    if isinstance(item.get("data"), Mapping)
+                    else str(item.get("key") or "")
+                    for item in page
+                )
+                if signature in seen_pages:
+                    raise RuntimeError(f"Zotero repeated a pagination page from {url}")
+                seen_pages.add(signature)
+            yield page
+
+            total_header = response.headers.get("Total-Results")
+            try:
+                total = int(total_header) if total_header is not None else None
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Zotero returned an invalid Total-Results header from {url}"
+                ) from exc
+            start += len(page)
+            if not page or len(page) < limit or (total is not None and start >= total):
+                break
+
+    def fetch_items(self) -> tuple[list[dict[str, Any]], ZoteroRunStats]:
+        """Read every top-level item and normalize it for DOI-first bot merging."""
+
+        url = self._items_url()
+        entries: list[dict[str, Any]] = []
+        stats = ZoteroRunStats(
+            group_id=self.group_id,
+            collection_key=self.collection_key,
+        )
+        self._stats = stats
+        for page in self._pages(url):
             stats.pages += 1
             stats.items_seen += len(page)
             entries.extend(
                 entry for item in page if (entry := self._entry(item)) is not None
             )
-            total = int(response.headers.get("Total-Results", len(page)))
-            start += len(page)
-            if not page or len(page) < limit or start >= total:
-                break
         return entries, stats
 
     def _entry(self, item: Mapping[str, Any]) -> dict[str, Any] | None:
@@ -162,6 +199,7 @@ class ZoteroClient:
                 "publication_date": None,
                 "zotero_item_key": item_key,
                 "zotero_attachment_key": item_key,
+                "zotero_attachment_filename": str(data.get("filename") or ""),
             }
         doi = _doi(data.get("DOI")) or _doi(data.get("extra")) or _doi(data.get("url"))
         return {
@@ -196,39 +234,53 @@ class ZoteroClient:
         )
 
     def direct_pdf_attachment(
-        self, attachment_key: str, *, label: str = ""
+        self,
+        attachment_key: str,
+        *,
+        label: str = "",
+        filename: str = "",
     ) -> list[ZoteroPdfAttachment]:
         """Describe a top-level PDF already identified during item discovery."""
 
-        return [ZoteroPdfAttachment(key=attachment_key, label=label)]
+        return [
+            ZoteroPdfAttachment(
+                key=attachment_key,
+                label=label,
+                filename=filename,
+            )
+        ]
 
     def pdf_attachments(self, item_key: str) -> list[ZoteroPdfAttachment]:
         """Resolve every stored PDF child, caching the complete list for the run."""
 
         if item_key in self._attachments:
             return self._attachments[item_key]
-        url = f"{self.api_root}/groups/{self.group_id}/items/{quote(item_key)}/children"
-        response = self.session.get(
-            url,
-            params={"format": "json", "limit": 100},
-            headers=self._headers(),
-            timeout=self.timeout,
+        url = (
+            f"{self.api_root}/groups/{self.group_id}/items/"
+            f"{quote(item_key, safe='')}/children"
         )
-        children = self._array(response, endpoint=url)
-        attachments = [
-            attachment
-            for child in children
-            if (attachment := self._pdf_attachment(child)) is not None
-        ]
+        attachments: list[ZoteroPdfAttachment] = []
+        for children in self._pages(url):
+            if self._stats is not None:
+                self._stats.attachment_pages += 1
+                self._stats.attachments_seen += len(children)
+            attachments.extend(
+                attachment
+                for child in children
+                if (attachment := self._pdf_attachment(child)) is not None
+            )
         self._attachments[item_key] = attachments
         return attachments
 
     def download_attachment(self, attachment_key: str, destination: Path) -> None:
         """Download a stored group PDF without leaking the key on redirects."""
 
-        url = f"{self.api_root}/groups/{self.group_id}/items/{quote(attachment_key)}/file"
+        url = (
+            f"{self.api_root}/groups/{self.group_id}/items/"
+            f"{quote(attachment_key, safe='')}/file"
+        )
         destination.parent.mkdir(parents=True, exist_ok=True)
-        temporary = destination.with_suffix(destination.suffix + ".part")
+        temporary: Path | None = None
         try:
             response = self.session.get(
                 url,
@@ -243,19 +295,29 @@ class ZoteroClient:
                 if close is not None:
                     close()
                 response = self.session.get(
-                    location,
+                    urljoin(url, location),
                     stream=True,
                     timeout=self.timeout,
                 )
             with response:
                 response.raise_for_status()
-                with temporary.open("wb") as handle:
+                with NamedTemporaryFile(
+                    mode="wb",
+                    dir=destination.parent,
+                    prefix=f".{destination.name}.",
+                    suffix=".part",
+                    delete=False,
+                ) as handle:
+                    temporary = Path(handle.name)
                     for chunk in response.iter_content(chunk_size=64 * 1024):
                         if chunk:
                             handle.write(chunk)
+                    handle.flush()
+                    os.fsync(handle.fileno())
             with temporary.open("rb") as handle:
                 if handle.read(5) != b"%PDF-":
                     raise ValueError("Zotero attachment is not a PDF")
             temporary.replace(destination)
         finally:
-            temporary.unlink(missing_ok=True)
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)

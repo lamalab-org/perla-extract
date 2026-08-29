@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import os
 import re
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from html import unescape
 from importlib.resources import files
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Any, Iterable, Mapping
 from urllib.parse import quote
 from uuid import uuid4
@@ -16,10 +20,12 @@ from loguru import logger
 
 from .acquisition import AcquiredPdf, OpenAccessPdfSource, PdfSource, ZoteroPdfSource
 from .models import (
+    PAPERSBOT_FORMAT_VERSION,
     BotResult,
     BotRunConfiguration,
     BotState,
     DiscoveryFailure,
+    PaperDisposition,
     PaperDocument,
     PaperRecord,
     PaperRunOutcome,
@@ -33,6 +39,27 @@ from .zotero import ZoteroClient
 DOI_PATTERN = re.compile(r"10\.\d{4,9}/[-._;()/:A-Z0-9]+", re.IGNORECASE)
 TERMINAL_STATUSES = {"downloaded", "excluded", "irrelevant"}
 RETRYABLE_STATUSES = {"new", "error", "no_pdf", "missing_doi"}
+
+
+@dataclass
+class _RunWorkspace:
+    """Hold the mutable resources shared by the paper-processing stages.
+
+    Discovery configuration remains explicit in ``run_papersbot``. This smaller
+    object groups only state that every record decision needs, keeping the helpers
+    readable without turning the pipeline into a stateful public class.
+    """
+
+    output_path: Path
+    state_directory: Path
+    state_path: Path
+    state: BotState
+    result: BotResult
+    policy: SelectionPolicy
+    session: Any
+    request_timeout: float
+    max_attempts: int
+    pdf_sources: list[PdfSource]
 
 
 def default_feeds_path() -> Path:
@@ -53,7 +80,7 @@ def load_feeds(path: Path) -> list[str]:
     return [
         line
         for raw_line in path.read_text(encoding="utf-8").splitlines()
-        if (line := raw_line.partition("#")[0].strip())
+        if (line := raw_line.strip()) and not line.startswith("#")
     ]
 
 
@@ -95,9 +122,9 @@ def _entry_record(
 ) -> PaperRecord:
     """Normalize metadata from a discovery source into one paper representation."""
 
-    title = _plain_text(str(entry.get("title", "")))
-    summary = _plain_text(str(entry.get("summary", entry.get("description", ""))))
-    link = str(entry.get("link", ""))
+    title = _plain_text(str(entry.get("title") or ""))
+    summary = _plain_text(str(entry.get("summary") or entry.get("description") or ""))
+    link = str(entry.get("link") or "")
     doi = extract_doi(entry)
     identifier = str(doi or entry.get("id") or entry.get("guid") or link or title)
     return PaperRecord(
@@ -117,6 +144,11 @@ def _entry_record(
         zotero_attachment_key=(
             str(entry["zotero_attachment_key"])
             if entry.get("zotero_attachment_key")
+            else None
+        ),
+        zotero_attachment_filename=(
+            str(entry["zotero_attachment_filename"])
+            if entry.get("zotero_attachment_filename")
             else None
         ),
         zotero_curated=zotero_curated,
@@ -145,6 +177,9 @@ def _merge_records(records: Iterable[PaperRecord]) -> list[PaperRecord]:
         current.zotero_attachment_key = (
             current.zotero_attachment_key or record.zotero_attachment_key
         )
+        current.zotero_attachment_filename = (
+            current.zotero_attachment_filename or record.zotero_attachment_filename
+        )
         current.zotero_curated = current.zotero_curated or record.zotero_curated
         current.publication_date = current.publication_date or record.publication_date
     return list(merged.values())
@@ -171,11 +206,16 @@ def _merge_previous(state: BotState, record: PaperRecord) -> PaperRecord | None:
     record.zotero_attachment_key = (
         record.zotero_attachment_key or previous.zotero_attachment_key
     )
+    record.zotero_attachment_filename = (
+        record.zotero_attachment_filename or previous.zotero_attachment_filename
+    )
     record.zotero_curated = record.zotero_curated or previous.zotero_curated
     record.pdf_sha256 = previous.pdf_sha256
     record.pdf_source = previous.pdf_source
     record.pdf_access_basis = previous.pdf_access_basis
-    record.documents = [document.model_copy(deep=True) for document in previous.documents]
+    record.documents = [
+        document.model_copy(deep=True) for document in previous.documents
+    ]
     if previous_key != record.identifier:
         del state.papers[previous_key]
     return previous
@@ -241,17 +281,34 @@ def _downloaded_file_is_current(record: PaperRecord) -> bool:
     return record.pdf_sha256 is None or digest == record.pdf_sha256
 
 
-def _clear_stale_download(record: PaperRecord) -> None:
-    """Remove a corrupt managed PDF and clear provenance before reacquisition."""
+def _remove_managed_file(path: Path, output_path: Path) -> None:
+    """Delete a bot-owned path without trusting paths read back from JSON state."""
+
+    try:
+        path.parent.resolve().relative_to(output_path.resolve())
+    except (OSError, ValueError):
+        logger.bind(
+            event="papersbot.unmanaged_stale_file",
+            path=str(path),
+            output_path=str(output_path),
+        ).warning(
+            "Did not delete stale PDF outside the managed download directory: {}", path
+        )
+        return
+    path.unlink(missing_ok=True)
+
+
+def _clear_stale_download(record: PaperRecord, output_path: Path) -> None:
+    """Remove corrupt managed PDFs and clear provenance before reacquisition."""
 
     if record.downloaded_file:
         path = Path(record.downloaded_file)
-        if path.is_file():
-            path.unlink()
+        if path.is_file() or path.is_symlink():
+            _remove_managed_file(path, output_path)
     for document in record.documents:
         path = Path(document.local_file)
-        if path.is_file():
-            path.unlink()
+        if path.is_file() or path.is_symlink():
+            _remove_managed_file(path, output_path)
     record.status = "new"
     record.downloaded_file = None
     record.pdf_sha256 = None
@@ -261,22 +318,48 @@ def _clear_stale_download(record: PaperRecord) -> None:
 
 
 def load_state(path: Path) -> BotState:
-    """Load and migrate state if present; absence represents a first run."""
+    """Load older state safely and refuse a format this code cannot understand."""
 
     if not path.exists():
         return BotState()
-    state = BotState.model_validate_json(path.read_text(encoding="utf-8"))
-    state.format_version = 5
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"PapersBot state must be a JSON object: {path}")
+    version = payload.get("format_version", 1)
+    if not isinstance(version, int) or isinstance(version, bool) or version < 1:
+        raise ValueError(f"Invalid PapersBot state format_version: {version!r}")
+    if version > PAPERSBOT_FORMAT_VERSION:
+        raise ValueError(
+            f"PapersBot state format {version} is newer than supported format "
+            f"{PAPERSBOT_FORMAT_VERSION}; upgrade perla-extract before running"
+        )
+    state = BotState.model_validate(payload)
+    state.format_version = PAPERSBOT_FORMAT_VERSION
     return state
 
 
 def _write_model(path: Path, model: BotState | BotResult) -> None:
-    """Replace a bot artifact only after its complete JSON has reached disk."""
+    """Atomically replace JSON after flushing a writer-specific temporary file."""
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(model.model_dump_json(indent=2), encoding="utf-8")
-    temporary.replace(path)
+    temporary_path: Path | None = None
+    try:
+        with NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temporary_path = Path(handle.name)
+            handle.write(model.model_dump_json(indent=2))
+            handle.flush()
+            os.fsync(handle.fileno())
+        temporary_path.replace(path)
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
 
 
 def save_state(path: Path, state: BotState) -> None:
@@ -286,7 +369,7 @@ def save_state(path: Path, state: BotState) -> None:
 
 
 def _save_run(state_dir: Path, result: BotResult) -> None:
-    """Checkpoint both an immutable run name and a convenient latest-run view."""
+    """Checkpoint a durable per-run ledger and a convenient latest-run view."""
 
     _write_model(state_dir / "runs" / f"{result.run_id}.json", result)
     _write_model(state_dir / "last_run.json", result)
@@ -301,7 +384,7 @@ def _increment(counts: dict[str, int], key: str) -> None:
 def _record_outcome(
     result: BotResult,
     record: PaperRecord,
-    disposition: str,
+    disposition: PaperDisposition,
 ) -> None:
     """Add one auditable entry outcome and update its corresponding aggregate."""
 
@@ -322,6 +405,7 @@ def _record_outcome(
     )
     logger.bind(
         event="papersbot.paper_outcome",
+        run_id=result.run_id,
         identifier=record.identifier,
         doi=record.doi,
         status=record.status,
@@ -337,18 +421,17 @@ def _record_outcome(
 
 
 def _finalize_record(
-    state: BotState,
-    state_path: Path,
-    result: BotResult,
+    workspace: _RunWorkspace,
     record: PaperRecord,
-    disposition: str,
+    disposition: PaperDisposition,
 ) -> None:
-    """Persist one completed decision to durable state and its run ledger."""
+    """Checkpoint one decision in both resumable state and the current run ledger."""
 
     record.updated_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    state.papers[record.identifier] = record
-    save_state(state_path, state)
-    _record_outcome(result, record, disposition)
+    workspace.state.papers[record.identifier] = record
+    save_state(workspace.state_path, workspace.state)
+    _record_outcome(workspace.result, record, disposition)
+    _save_run(workspace.state_directory, workspace.result)
 
 
 def _acquire_pdf(
@@ -371,8 +454,19 @@ def _acquire_pdf(
             if not acquired_pdfs:
                 continue
             documents = []
+            document_paths: set[Path] = set()
             for item in acquired_pdfs:
                 path = item.path or destination
+                resolved_path = path.resolve()
+                if resolved_path in document_paths:
+                    raise ValueError(
+                        f"PDF source {source_name} returned the same file more than once"
+                    )
+                if not item.access_basis.strip():
+                    raise ValueError(
+                        f"PDF source {source_name} returned an empty access basis"
+                    )
+                document_paths.add(resolved_path)
                 documents.append(
                     PaperDocument(
                         source_identifier=item.attachment_key,
@@ -380,7 +474,7 @@ def _acquire_pdf(
                         filename=item.filename,
                         role=item.role,
                         source_url=item.url,
-                        local_file=str(path.resolve()),
+                        local_file=str(resolved_path),
                         sha256=_validated_pdf_sha256(path),
                         pdf_source=source_name,
                         access_basis=item.access_basis,
@@ -409,6 +503,7 @@ def _acquire_pdf(
                 result.zotero.errors += 1
             logger.bind(
                 event="papersbot.pdf_source_failed",
+                run_id=result.run_id,
                 pdf_source=source_name,
                 identifier=record.identifier,
                 doi=record.doi,
@@ -435,7 +530,9 @@ def _acquire_pdf(
         record.downloaded_file = documents[0].local_file
         record.documents = documents
         record.status = "downloaded"
-        result.downloaded_files.extend(Path(document.local_file) for document in documents)
+        result.downloaded_files.extend(
+            Path(document.local_file) for document in documents
+        )
         return True
     return False
 
@@ -479,9 +576,11 @@ def _crossref_text(session: Any, doi: str, timeout: float) -> str:
 
 
 def _safe_pdf_name(doi: str) -> str:
-    """Map a DOI deterministically to a portable filename."""
+    """Create a bounded portable name without collapsing distinct identifiers."""
 
-    return re.sub(r"[^A-Za-z0-9._-]+", "--", doi).strip(".-") + ".pdf"
+    readable = re.sub(r"[^A-Za-z0-9._-]+", "--", doi).strip(".-") or "paper"
+    digest = hashlib.sha256(doi.encode("utf-8")).hexdigest()[:12]
+    return f"{readable[:160].rstrip('.-')}--{digest}.pdf"
 
 
 def _feed_entries(
@@ -527,6 +626,316 @@ def _default_http_session(request_retries: int) -> Any:
     return session
 
 
+def _discover_rss(
+    workspace: _RunWorkspace,
+    feed_urls: list[str],
+    feedparser_module: Any,
+) -> list[PaperRecord]:
+    """Read configured feeds while preserving each independent source failure."""
+
+    discovered: list[PaperRecord] = []
+    for feed_number, feed_url in enumerate(feed_urls, start=1):
+        logger.bind(
+            event="papersbot.feed_started",
+            run_id=workspace.result.run_id,
+            feed_url=feed_url,
+            feed_number=feed_number,
+        ).info("Checking feed {}/{}: {}", feed_number, len(feed_urls), feed_url)
+        workspace.result.feeds_checked += 1
+        try:
+            entries = _feed_entries(
+                workspace.session,
+                feedparser_module,
+                feed_url,
+                workspace.request_timeout,
+            )
+        except Exception as exc:
+            workspace.result.discovery_errors += 1
+            workspace.result.discovery_failures.append(
+                DiscoveryFailure(source_kind="rss", source=feed_url, error=str(exc))
+            )
+            logger.bind(
+                event="papersbot.feed_failed",
+                run_id=workspace.result.run_id,
+                feed_url=feed_url,
+            ).warning("Could not read feed {}: {}", feed_url, exc)
+            _save_run(workspace.state_directory, workspace.result)
+            continue
+
+        for entry in entries:
+            workspace.result.entries_seen += 1
+            _increment(workspace.result.source_counts, "rss")
+            discovered.append(_entry_record(entry, f"rss:{feed_url}"))
+        _save_run(workspace.state_directory, workspace.result)
+    return discovered
+
+
+def _discover_openalex(
+    workspace: _RunWorkspace,
+    *,
+    topic_ids: list[str],
+    start_date: date,
+    end_date: date,
+    email: str | None,
+    api_key: str | None,
+) -> tuple[list[PaperRecord], bool]:
+    """Read a complete OpenAlex cursor traversal or retain one source failure."""
+
+    logger.bind(
+        event="papersbot.openalex_started",
+        run_id=workspace.result.run_id,
+        start_date=start_date.isoformat(),
+        end_date=end_date.isoformat(),
+        topic_ids=topic_ids,
+    ).info("Querying OpenAlex topics from {} through {}", start_date, end_date)
+    try:
+        entries, workspace.result.openalex = fetch_topic_works(
+            workspace.session,
+            topic_ids=topic_ids,
+            start_date=start_date,
+            end_date=end_date,
+            timeout=workspace.request_timeout,
+            email=email,
+            api_key=api_key,
+        )
+    except Exception as exc:
+        workspace.result.discovery_errors += 1
+        workspace.result.discovery_failures.append(
+            DiscoveryFailure(
+                source_kind="openalex",
+                source="|".join(topic_ids),
+                error=str(exc),
+            )
+        )
+        logger.bind(
+            event="papersbot.openalex_failed", run_id=workspace.result.run_id
+        ).warning("OpenAlex topic query failed: {}", exc)
+        _save_run(workspace.state_directory, workspace.result)
+        return [], False
+
+    source = f"openalex:topics/{'|'.join(topic_ids)}"
+    records = [_entry_record(entry, source) for entry in entries]
+    workspace.result.entries_seen += len(records)
+    workspace.result.source_counts["openalex"] = workspace.result.source_counts.get(
+        "openalex", 0
+    ) + len(records)
+    logger.bind(
+        event="papersbot.openalex_finished",
+        run_id=workspace.result.run_id,
+        pages=workspace.result.openalex.pages,
+        works_seen=workspace.result.openalex.works_seen,
+        reported_cost_usd=workspace.result.openalex.reported_cost_usd,
+    ).info(
+        "OpenAlex returned {} work(s) across {} page(s)",
+        workspace.result.openalex.works_seen,
+        workspace.result.openalex.pages,
+    )
+    _save_run(workspace.state_directory, workspace.result)
+    return records, True
+
+
+def _discover_zotero(
+    workspace: _RunWorkspace,
+    client: ZoteroClient,
+    *,
+    curated: bool,
+) -> list[PaperRecord]:
+    """Read a Zotero queue without allowing a source failure to erase other work."""
+
+    logger.bind(
+        event="papersbot.zotero_started",
+        run_id=workspace.result.run_id,
+        group_id=client.group_id,
+        collection_key=client.collection_key,
+    ).info("Reading Zotero group {}", client.group_id)
+    try:
+        entries, zotero_stats = client.fetch_items()
+        workspace.result.zotero = zotero_stats
+    except Exception as exc:
+        workspace.result.discovery_errors += 1
+        if workspace.result.zotero is not None:
+            workspace.result.zotero.errors += 1
+        workspace.result.discovery_failures.append(
+            DiscoveryFailure(
+                source_kind="zotero",
+                source=client.source,
+                error=str(exc),
+            )
+        )
+        logger.bind(
+            event="papersbot.zotero_failed", run_id=workspace.result.run_id
+        ).warning("Zotero group discovery failed: {}", exc)
+        _save_run(workspace.state_directory, workspace.result)
+        return []
+
+    records = [
+        _entry_record(entry, client.source, zotero_curated=curated) for entry in entries
+    ]
+    workspace.result.entries_seen += len(records)
+    workspace.result.source_counts["zotero"] = workspace.result.source_counts.get(
+        "zotero", 0
+    ) + len(records)
+    logger.bind(
+        event="papersbot.zotero_finished",
+        run_id=workspace.result.run_id,
+        items_seen=zotero_stats.items_seen,
+        pages=zotero_stats.pages,
+    ).info(
+        "Zotero returned {} bibliographic item(s) across {} page(s)",
+        len(records),
+        zotero_stats.pages,
+    )
+    _save_run(workspace.state_directory, workspace.result)
+    return records
+
+
+def _process_record(workspace: _RunWorkspace, record: PaperRecord) -> None:
+    """Apply one paper decision without conflating prior and current outcomes."""
+
+    previous = _merge_previous(workspace.state, record)
+    newly_curated = bool(
+        record.zotero_curated and previous is not None and not previous.zotero_curated
+    )
+    stale_download = bool(
+        previous
+        and previous.status == "downloaded"
+        and not _downloaded_file_is_current(record)
+    )
+    if stale_download:
+        logger.bind(
+            event="papersbot.download_reopened",
+            identifier=record.identifier,
+            downloaded_file=record.downloaded_file,
+        ).warning(
+            "Reopening downloaded paper because its local PDF is missing or changed: {}",
+            record.identifier,
+        )
+        _clear_stale_download(record, workspace.output_path)
+
+    if (
+        previous
+        and previous.status in TERMINAL_STATUSES
+        and not newly_curated
+        and not stale_download
+    ):
+        record.status = previous.status
+        record.error = previous.error
+        _finalize_record(workspace, record, "skipped_terminal")
+        return
+    if (
+        previous
+        and previous.attempts >= workspace.max_attempts
+        and not record.zotero_curated
+        and not newly_curated
+        and not stale_download
+    ):
+        record.status = previous.status
+        record.error = previous.error
+        _finalize_record(workspace, record, "skipped_max_attempts")
+        return
+    if not record.zotero_curated and workspace.policy.excludes(record.title):
+        record.status = "excluded"
+        _finalize_record(workspace, record, "evaluated")
+        return
+
+    discovered_text = f"{record.title} {record.summary}"
+    if not record.zotero_curated and not workspace.policy.is_candidate(discovered_text):
+        record.status = "irrelevant"
+        _finalize_record(workspace, record, "evaluated")
+        return
+
+    workspace.result.candidates_processed += 1
+    if record.attempts:
+        workspace.result.retries_attempted += 1
+        _increment(
+            workspace.result.retry_counts,
+            previous.status if previous is not None else "unknown",
+        )
+    record.attempts += 1
+    logger.bind(
+        event="papersbot.candidate_started",
+        run_id=workspace.result.run_id,
+        doi=record.doi,
+        attempt=record.attempts,
+        sources=record.sources,
+    ).info(
+        "Processing candidate {} (attempt {})",
+        record.doi or record.zotero_item_key,
+        record.attempts,
+    )
+    try:
+        combined_text = discovered_text
+        if (
+            not record.zotero_curated
+            and not workspace.policy.accepts(combined_text)
+            and record.doi
+        ):
+            combined_text += " " + _crossref_text(
+                workspace.session,
+                record.doi,
+                workspace.request_timeout,
+            )
+        if not record.zotero_curated and not workspace.policy.accepts(combined_text):
+            record.status = "irrelevant"
+        else:
+            workspace.result.relevant_papers += 1
+            file_identity = record.doi or (
+                f"zotero-{record.zotero_item_key}"
+                if record.zotero_item_key
+                else f"record-{record.identifier}"
+            )
+            destination = workspace.output_path / _safe_pdf_name(file_identity)
+            acquired = _acquire_pdf(
+                workspace.pdf_sources,
+                workspace.result,
+                record,
+                destination,
+            )
+            if not acquired:
+                record.status = "no_pdf" if record.doi else "missing_doi"
+        record.error = None
+    except Exception as exc:
+        record.status = "error"
+        record.error = str(exc)
+        logger.bind(
+            event="papersbot.candidate_failed",
+            run_id=workspace.result.run_id,
+            doi=record.doi,
+            attempt=record.attempts,
+        ).warning("Candidate {} failed: {}", record.doi, exc)
+    _finalize_record(workspace, record, "evaluated")
+
+
+def _process_discovered_records(
+    workspace: _RunWorkspace,
+    discovered: list[PaperRecord],
+) -> None:
+    """Deduplicate current discovery, append durable retries, and decide each paper."""
+
+    unique_records = _merge_records(discovered)
+    workspace.result.unique_papers_seen = len(unique_records)
+    state_retries = _pending_state_retries(
+        workspace.state,
+        unique_records,
+        max_attempts=workspace.max_attempts,
+    )
+    workspace.result.state_retries_scheduled = len(state_retries)
+    logger.bind(
+        event="papersbot.discovery_finished",
+        run_id=workspace.result.run_id,
+        entries_seen=workspace.result.entries_seen,
+        unique_papers_seen=workspace.result.unique_papers_seen,
+        source_counts=workspace.result.source_counts,
+    ).info(
+        "Discovery produced {} unique paper(s) from {} source record(s)",
+        workspace.result.unique_papers_seen,
+        workspace.result.entries_seen,
+    )
+    _save_run(workspace.state_directory, workspace.result)
+    for record in [*unique_records, *state_retries]:
+        _process_record(workspace, record)
+
+
 def run_papersbot(
     download_dir: str | Path = "downloaded_papers",
     *,
@@ -565,6 +974,10 @@ def run_papersbot(
     group can never change its library.
     """
 
+    if max_attempts < 1:
+        raise ValueError("max_attempts must be at least one")
+    if request_timeout <= 0:
+        raise ValueError("request_timeout must be greater than zero")
     if request_retries < 0:
         raise ValueError("request_retries must be zero or greater")
     if session is None:
@@ -592,19 +1005,21 @@ def run_papersbot(
     if zotero_curated and not zotero_collection_key:
         raise ValueError("--zotero-curated requires --zotero-collection-key")
 
-    configured_pdf_sources = (
-        list(pdf_sources)
-        if pdf_sources is not None
-        else [
-            *([ZoteroPdfSource(zotero_client)] if zotero_client else []),
+    configured_pdf_sources: list[PdfSource]
+    if pdf_sources is not None:
+        configured_pdf_sources = list(pdf_sources)
+    else:
+        configured_pdf_sources = []
+        if zotero_client is not None:
+            configured_pdf_sources.append(ZoteroPdfSource(zotero_client))
+        configured_pdf_sources.append(
             OpenAccessPdfSource(
                 session,
                 timeout=request_timeout,
                 unpaywall_email=unpaywall_email,
                 openalex_api_key=openalex_api_key,
-            ),
-        ]
-    )
+            )
+        )
     pdf_source_names = [source.name.strip() for source in configured_pdf_sources]
     if any(not name for name in pdf_source_names):
         raise ValueError("Every PDF source must have a non-empty name")
@@ -667,7 +1082,9 @@ def run_papersbot(
             openalex_end_date=end_date if openalex_policy else None,
             zotero_enabled=zotero_client is not None,
             zotero_group_id=zotero_client.group_id if zotero_client else None,
-            zotero_collection_key=(zotero_client.collection_key if zotero_client else None),
+            zotero_collection_key=(
+                zotero_client.collection_key if zotero_client else None
+            ),
             zotero_curated=zotero_curated,
         ),
         zotero=(
@@ -678,6 +1095,18 @@ def run_papersbot(
             if zotero_client
             else None
         ),
+    )
+    workspace = _RunWorkspace(
+        output_path=output_path,
+        state_directory=state_directory,
+        state_path=state_path,
+        state=state,
+        result=result,
+        policy=policy,
+        session=session,
+        request_timeout=request_timeout,
+        max_attempts=max_attempts,
+        pdf_sources=configured_pdf_sources,
     )
     _save_run(state_directory, result)
     logger.bind(
@@ -697,299 +1126,35 @@ def run_papersbot(
     )
     openalex_query_succeeded = False
     try:
-        discovered: list[PaperRecord] = []
-        for feed_number, feed_url in enumerate(feed_urls, start=1):
-            logger.bind(
-                event="papersbot.feed_started",
-                run_id=run_id,
-                feed_url=feed_url,
-                feed_number=feed_number,
-            ).info("Checking feed {}/{}: {}", feed_number, len(feed_urls), feed_url)
-            result.feeds_checked += 1
-            try:
-                entries = _feed_entries(
-                    session, feedparser_module, feed_url, request_timeout
-                )
-            except Exception as exc:
-                result.discovery_errors += 1
-                result.discovery_failures.append(
-                    DiscoveryFailure(source_kind="rss", source=feed_url, error=str(exc))
-                )
-                logger.bind(
-                    event="papersbot.feed_failed",
-                    run_id=run_id,
-                    feed_url=feed_url,
-                ).warning("Could not read feed {}: {}", feed_url, exc)
-                _save_run(state_directory, result)
-                continue
-
-            for entry in entries:
-                result.entries_seen += 1
-                _increment(result.source_counts, "rss")
-                discovered.append(_entry_record(entry, f"rss:{feed_url}"))
-            _save_run(state_directory, result)
-
+        discovered = _discover_rss(workspace, feed_urls, feedparser_module)
         if openalex_policy and start_date is not None:
-            logger.bind(
-                event="papersbot.openalex_started",
-                run_id=run_id,
-                start_date=start_date.isoformat(),
-                end_date=end_date.isoformat(),
+            openalex_records, openalex_query_succeeded = _discover_openalex(
+                workspace,
                 topic_ids=openalex_policy.topic_ids,
-            ).info(
-                "Querying OpenAlex topics from {} through {}",
-                start_date,
-                end_date,
+                start_date=start_date,
+                end_date=end_date,
+                email=openalex_email,
+                api_key=openalex_api_key,
             )
-            try:
-                entries, result.openalex = fetch_topic_works(
-                    session,
-                    topic_ids=openalex_policy.topic_ids,
-                    start_date=start_date,
-                    end_date=end_date,
-                    timeout=request_timeout,
-                    email=openalex_email,
-                    api_key=openalex_api_key,
-                )
-                source = f"openalex:topics/{'|'.join(openalex_policy.topic_ids)}"
-                for entry in entries:
-                    result.entries_seen += 1
-                    _increment(result.source_counts, "openalex")
-                    discovered.append(_entry_record(entry, source))
-                openalex_query_succeeded = True
-                logger.bind(
-                    event="papersbot.openalex_finished",
-                    run_id=run_id,
-                    pages=result.openalex.pages,
-                    works_seen=result.openalex.works_seen,
-                    reported_cost_usd=result.openalex.reported_cost_usd,
-                ).info(
-                    "OpenAlex returned {} work(s) across {} page(s)",
-                    result.openalex.works_seen,
-                    result.openalex.pages,
-                )
-            except Exception as exc:
-                result.discovery_errors += 1
-                result.discovery_failures.append(
-                    DiscoveryFailure(
-                        source_kind="openalex",
-                        source="|".join(openalex_policy.topic_ids),
-                        error=str(exc),
-                    )
-                )
-                logger.bind(event="papersbot.openalex_failed", run_id=run_id).warning(
-                    "OpenAlex topic query failed: {}", exc
-                )
+            discovered.extend(openalex_records)
 
         if zotero_client is not None:
-            logger.bind(
-                event="papersbot.zotero_started",
-                run_id=run_id,
-                group_id=zotero_client.group_id,
-                collection_key=zotero_client.collection_key,
-            ).info("Reading Zotero group {}", zotero_client.group_id)
-            try:
-                entries, zotero_stats = zotero_client.fetch_items()
-                result.zotero = zotero_stats
-                for entry in entries:
-                    result.entries_seen += 1
-                    _increment(result.source_counts, "zotero")
-                    discovered.append(
-                        _entry_record(
-                            entry,
-                            zotero_client.source,
-                            zotero_curated=zotero_curated,
-                        )
-                    )
-                logger.bind(
-                    event="papersbot.zotero_finished",
-                    run_id=run_id,
-                    items_seen=zotero_stats.items_seen,
-                    pages=zotero_stats.pages,
-                ).info(
-                    "Zotero returned {} bibliographic item(s) across {} page(s)",
-                    len(entries),
-                    zotero_stats.pages,
+            discovered.extend(
+                _discover_zotero(
+                    workspace,
+                    zotero_client,
+                    curated=zotero_curated,
                 )
-            except Exception as exc:
-                result.discovery_errors += 1
-                if result.zotero is not None:
-                    result.zotero.errors += 1
-                result.discovery_failures.append(
-                    DiscoveryFailure(
-                        source_kind="zotero",
-                        source=zotero_client.source,
-                        error=str(exc),
-                    )
-                )
-                logger.bind(event="papersbot.zotero_failed", run_id=run_id).warning(
-                    "Zotero group discovery failed: {}", exc
-                )
-
-        unique_records = _merge_records(discovered)
-        result.unique_papers_seen = len(unique_records)
-        state_retries = _pending_state_retries(
-            state,
-            unique_records,
-            max_attempts=max_attempts,
-        )
-        result.state_retries_scheduled = len(state_retries)
-        logger.bind(
-            event="papersbot.discovery_finished",
-            run_id=run_id,
-            entries_seen=result.entries_seen,
-            unique_papers_seen=result.unique_papers_seen,
-            source_counts=result.source_counts,
-        ).info(
-            "Discovery produced {} unique paper(s) from {} source record(s)",
-            result.unique_papers_seen,
-            result.entries_seen,
-        )
-        for record in [*unique_records, *state_retries]:
-            previous = _merge_previous(state, record)
-            newly_curated = bool(
-                record.zotero_curated
-                and previous is not None
-                and not previous.zotero_curated
-            )
-            stale_download = bool(
-                previous
-                and previous.status == "downloaded"
-                and not _downloaded_file_is_current(record)
-            )
-            if stale_download:
-                logger.bind(
-                    event="papersbot.download_reopened",
-                    identifier=record.identifier,
-                    downloaded_file=record.downloaded_file,
-                ).warning(
-                    "Reopening downloaded paper because its local PDF is missing or changed: {}",
-                    record.identifier,
-                )
-                _clear_stale_download(record)
-            if (
-                previous
-                and previous.status in TERMINAL_STATUSES
-                and not newly_curated
-                and not stale_download
-            ):
-                record.status = previous.status
-                record.error = previous.error
-                _finalize_record(
-                    state,
-                    state_path,
-                    result,
-                    record,
-                    "skipped_terminal",
-                )
-                continue
-            if (
-                previous
-                and previous.attempts >= max_attempts
-                and not newly_curated
-                and not stale_download
-            ):
-                record.status = previous.status
-                record.error = previous.error
-                _finalize_record(
-                    state,
-                    state_path,
-                    result,
-                    record,
-                    "skipped_max_attempts",
-                )
-                continue
-            if not record.zotero_curated and policy.excludes(record.title):
-                record.status = "excluded"
-                _finalize_record(
-                    state,
-                    state_path,
-                    result,
-                    record,
-                    "evaluated",
-                )
-                continue
-
-            discovered_text = f"{record.title} {record.summary}"
-            if not record.zotero_curated and not policy.is_candidate(discovered_text):
-                record.status = "irrelevant"
-                _finalize_record(
-                    state,
-                    state_path,
-                    result,
-                    record,
-                    "evaluated",
-                )
-                continue
-            result.candidates_processed += 1
-            if record.attempts:
-                result.retries_attempted += 1
-                _increment(
-                    result.retry_counts,
-                    previous.status if previous is not None else "unknown",
-                )
-            record.attempts += 1
-            logger.bind(
-                event="papersbot.candidate_started",
-                run_id=run_id,
-                doi=record.doi,
-                attempt=record.attempts,
-                sources=record.sources,
-            ).info(
-                "Processing candidate {} (attempt {})",
-                record.doi or record.zotero_item_key,
-                record.attempts,
-            )
-            try:
-                combined_text = discovered_text
-                if (
-                    not record.zotero_curated
-                    and not policy.accepts(combined_text)
-                    and record.doi
-                ):
-                    combined_text += " " + _crossref_text(
-                        session, record.doi, request_timeout
-                    )
-                if not record.zotero_curated and not policy.accepts(combined_text):
-                    record.status = "irrelevant"
-                else:
-                    result.relevant_papers += 1
-                    file_identity = (
-                        record.doi
-                        or (
-                            f"zotero-{record.zotero_item_key}"
-                            if record.zotero_item_key
-                            else f"record-{record.identifier}"
-                        )
-                    )
-                    destination = output_path / _safe_pdf_name(file_identity)
-                    acquired = _acquire_pdf(
-                        configured_pdf_sources, result, record, destination
-                    )
-                    if not acquired:
-                        record.status = "no_pdf" if record.doi else "missing_doi"
-                record.error = None
-            except Exception as exc:
-                record.status = "error"
-                record.error = str(exc)
-                logger.bind(
-                    event="papersbot.candidate_failed",
-                    run_id=run_id,
-                    doi=record.doi,
-                    attempt=record.attempts,
-                ).warning("Candidate {} failed: {}", record.doi, exc)
-            _finalize_record(
-                state,
-                state_path,
-                result,
-                record,
-                "evaluated",
             )
 
+        _process_discovered_records(workspace, discovered)
         if openalex_query_succeeded and result.openalex is not None:
-            state.openalex_last_successful_date = end_date
-            result.openalex.checkpoint_advanced = True
-            save_state(state_path, state)
+            previous_checkpoint = state.openalex_last_successful_date
+            if previous_checkpoint is None or end_date > previous_checkpoint:
+                state.openalex_last_successful_date = end_date
+                result.openalex.checkpoint_advanced = True
+                save_state(state_path, state)
+                _save_run(state_directory, result)
     except Exception as exc:
         result.status = "failed"
         result.error = str(exc)

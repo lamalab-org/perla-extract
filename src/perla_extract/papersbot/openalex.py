@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import date
 from typing import Any, Mapping
 
+from loguru import logger
+
 from .models import OpenAlexRunStats
 
 OPENALEX_WORKS_URL = "https://api.openalex.org/works"
@@ -86,6 +88,11 @@ def fetch_topic_works(
     one when a later page fails.
     """
 
+    if not topic_ids:
+        raise ValueError("OpenAlex topic_ids must not be empty")
+    if not 1 <= per_page <= 100:
+        raise ValueError("OpenAlex per_page must be between 1 and 100")
+
     filters = ",".join(
         (
             f"topics.id:{'|'.join(topic_ids)}",
@@ -95,6 +102,7 @@ def fetch_topic_works(
         )
     )
     cursor: str | None = "*"
+    seen_cursors: set[str] = set()
     entries: list[dict[str, Any]] = []
     stats = OpenAlexRunStats(
         start_date=start_date,
@@ -102,6 +110,9 @@ def fetch_topic_works(
         topic_ids=topic_ids,
     )
     while cursor:
+        if cursor in seen_cursors:
+            raise RuntimeError("OpenAlex repeated a pagination cursor")
+        seen_cursors.add(cursor)
         params: dict[str, object] = {
             "filter": filters,
             "select": SELECTED_FIELDS,
@@ -111,6 +122,10 @@ def fetch_topic_works(
         if email:
             params["mailto"] = email
         headers = {"Authorization": f"Bearer {api_key}"} if api_key else None
+        logger.bind(
+            event="papersbot.openalex_page_started",
+            page=stats.pages + 1,
+        ).info("Requesting OpenAlex page {}", stats.pages + 1)
         response = session.get(
             OPENALEX_WORKS_URL,
             params=params,

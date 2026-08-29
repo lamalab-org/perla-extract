@@ -6,6 +6,8 @@ from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from perla_extract.papersbot.bot import load_state, run_papersbot, save_state
 from perla_extract.papersbot.models import BotState, PaperRecord
 from perla_extract.papersbot.openalex import fetch_topic_works, reconstruct_abstract
@@ -119,6 +121,23 @@ def test_fetch_topic_works_follows_cursor_pages_and_records_api_cost():
     assert stats.reported_cost_usd == 0.003
 
 
+def test_fetch_topic_works_stops_a_repeated_cursor():
+    class Session:
+        @staticmethod
+        def get(url, **kwargs):
+            del url, kwargs
+            return Response({"results": [], "meta": {"count": 1, "next_cursor": "*"}})
+
+    with pytest.raises(RuntimeError, match="repeated a pagination cursor"):
+        fetch_topic_works(
+            Session(),
+            topic_ids=["T10247"],
+            start_date=date(2026, 8, 1),
+            end_date=date(2026, 8, 18),
+            timeout=10,
+        )
+
+
 def test_rss_and_openalex_share_doi_identity_and_processing(tmp_path: Path):
     class Session:
         def get(self, url, **kwargs):
@@ -199,6 +218,34 @@ def test_failed_openalex_page_does_not_advance_checkpoint(tmp_path: Path):
     assert result.status == "complete_with_errors"
     assert result.discovery_failures[0].source_kind == "openalex"
     assert load_state(state_path).openalex_last_successful_date == date(2026, 8, 10)
+
+
+def test_historical_backfill_does_not_move_checkpoint_backward(tmp_path: Path):
+    state_path = tmp_path / "state/state.json"
+    save_state(
+        state_path,
+        BotState(openalex_last_successful_date=date(2026, 8, 20)),
+    )
+
+    class Session:
+        @staticmethod
+        def get(url, **kwargs):
+            del url, kwargs
+            return Response({"results": [], "meta": {"count": 0, "next_cursor": None}})
+
+    result = run_papersbot(
+        tmp_path / "papers",
+        state_dir=tmp_path / "state",
+        rss_enabled=False,
+        selection_file=_policy(tmp_path / "selection.json"),
+        session=Session(),
+        openalex_start_date=date(2026, 8, 1),
+        openalex_end_date=date(2026, 8, 18),
+    )
+
+    assert load_state(state_path).openalex_last_successful_date == date(2026, 8, 20)
+    assert result.openalex is not None
+    assert result.openalex.checkpoint_advanced is False
 
 
 def test_legacy_feed_identifier_is_migrated_to_doi(tmp_path: Path):

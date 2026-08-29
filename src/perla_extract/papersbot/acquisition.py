@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Any, Literal, Protocol
 from urllib.parse import quote
 
@@ -58,27 +60,48 @@ def _request_json(
     return payload
 
 
-def _download_pdf(session: Any, url: str, destination: Path, timeout: float) -> bool:
-    """Stream a candidate PDF atomically and reject HTML saved with a PDF name."""
+def _can_reuse_pdf(path: Path) -> bool:
+    """Accept only a regular local PDF as a cache hit for an acquisition source."""
 
-    if destination.exists():
+    if path.is_symlink():
+        raise ValueError(f"Refusing to reuse a symbolic-link PDF: {path}")
+    if not path.exists():
+        return False
+    with path.open("rb") as handle:
+        return handle.read(5) == b"%PDF-"
+
+
+def _download_pdf(session: Any, url: str, destination: Path, timeout: float) -> bool:
+    """Reuse a valid local PDF or atomically replace an incomplete prior file."""
+
+    if _can_reuse_pdf(destination):
         return False
     destination.parent.mkdir(parents=True, exist_ok=True)
-    temporary = destination.with_suffix(destination.suffix + ".part")
+    temporary: Path | None = None
     try:
-        with session.get(url, stream=True, timeout=timeout) as response:
-            response.raise_for_status()
-            with temporary.open("wb") as handle:
+        with NamedTemporaryFile(
+            mode="wb",
+            dir=destination.parent,
+            prefix=f".{destination.name}.",
+            suffix=".part",
+            delete=False,
+        ) as handle:
+            temporary = Path(handle.name)
+            with session.get(url, stream=True, timeout=timeout) as response:
+                response.raise_for_status()
                 for chunk in response.iter_content(chunk_size=64 * 1024):
                     if chunk:
                         handle.write(chunk)
+            handle.flush()
+            os.fsync(handle.fileno())
         with temporary.open("rb") as handle:
             if handle.read(5) != b"%PDF-":
                 raise ValueError(f"Downloaded content is not a PDF: {url}")
         temporary.replace(destination)
         return True
     finally:
-        temporary.unlink(missing_ok=True)
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 class ZoteroPdfSource:
@@ -89,7 +112,9 @@ class ZoteroPdfSource:
     def __init__(self, client: ZoteroClient) -> None:
         self.client = client
 
-    def acquire(self, record: PaperRecord, destination: Path) -> list[AcquiredPdf] | None:
+    def acquire(
+        self, record: PaperRecord, destination: Path
+    ) -> list[AcquiredPdf] | None:
         """Use every stored PDF attachment without assuming that one is the SI."""
 
         if not record.zotero_item_key:
@@ -98,6 +123,7 @@ class ZoteroPdfSource:
             attachments = self.client.direct_pdf_attachment(
                 record.zotero_attachment_key,
                 label=record.title,
+                filename=record.zotero_attachment_filename or "",
             )
         else:
             attachments = self.client.pdf_attachments(record.zotero_item_key)
@@ -113,7 +139,7 @@ class ZoteroPdfSource:
                         f"{destination.stem}--zotero-{attachment.key.lower()}.pdf"
                     )
                 )
-                downloaded_now = not path.exists()
+                downloaded_now = not _can_reuse_pdf(path)
                 if downloaded_now:
                     self.client.download_attachment(attachment.key, path)
                 acquired.append(
@@ -176,8 +202,10 @@ class OpenAccessPdfSource:
         )
 
     def _resolve(self, doi: str) -> str | None:
-        """Return the strongest public PDF location reported for one DOI."""
+        """Return a public PDF URL and distinguish absence from resolver outage."""
 
+        completed_lookups = 0
+        failures: list[str] = []
         if self.unpaywall_email:
             try:
                 payload = _request_json(
@@ -186,10 +214,12 @@ class OpenAccessPdfSource:
                     self.timeout,
                     params={"email": self.unpaywall_email},
                 )
+                completed_lookups += 1
                 location = payload.get("best_oa_location") or {}
                 if isinstance(location, dict) and location.get("url_for_pdf"):
                     return str(location["url_for_pdf"])
             except Exception as exc:
+                failures.append(f"Unpaywall {type(exc).__name__}")
                 logger.debug("Unpaywall lookup failed for {}: {}", doi, exc)
 
         try:
@@ -204,6 +234,7 @@ class OpenAccessPdfSource:
                     else None
                 ),
             )
+            completed_lookups += 1
             locations = [
                 payload.get("best_oa_location"),
                 payload.get("primary_location"),
@@ -212,5 +243,11 @@ class OpenAccessPdfSource:
                 if isinstance(location, dict) and location.get("pdf_url"):
                     return str(location["pdf_url"])
         except Exception as exc:
+            failures.append(f"OpenAlex {type(exc).__name__}")
             logger.debug("OpenAlex lookup failed for {}: {}", doi, exc)
+        if completed_lookups == 0 and failures:
+            raise RuntimeError(
+                "No open-access metadata resolver completed successfully: "
+                + ", ".join(failures)
+            )
         return None

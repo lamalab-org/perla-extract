@@ -5,8 +5,14 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from perla_extract.papersbot.bot import load_state, run_papersbot
+from perla_extract.papersbot.bot import (
+    _safe_pdf_name,
+    load_state,
+    run_papersbot,
+    save_state,
+)
 from perla_extract.papersbot.cli import main
+from perla_extract.papersbot.models import BotState, PaperRecord
 from perla_extract.papersbot.zotero import ZoteroClient
 
 
@@ -108,6 +114,25 @@ def test_group_items_and_stored_pdf_enter_the_normal_bot_pipeline(tmp_path: Path
     assert "read-key" not in (tmp_path / "state/last_run.json").read_text()
 
 
+def test_zotero_replaces_an_incomplete_managed_attachment(tmp_path: Path):
+    destination = tmp_path / "papers" / _safe_pdf_name("10.1234/zotero.1")
+    destination.parent.mkdir()
+    destination.write_bytes(b"incomplete")
+
+    result = run_papersbot(
+        tmp_path / "papers",
+        state_dir=tmp_path / "state",
+        rss_enabled=False,
+        openalex_enabled=False,
+        zotero_group_id="42",
+        session=ZoteroReadSession(),
+    )
+
+    assert result.outcome_counts == {"downloaded": 1}
+    assert result.pdfs_downloaded == 1
+    assert destination.read_bytes().startswith(b"%PDF-")
+
+
 class MultiplePdfSession(ZoteroReadSession):
     def get(self, url, **kwargs):
         if url.endswith("/items/PARENT01/children"):
@@ -156,6 +181,9 @@ def test_every_stored_pdf_is_retained_without_guessing_document_roles(tmp_path: 
 
     record = load_state(tmp_path / "state/state.json").papers["10.1234/zotero.1"]
     assert result.pdfs_downloaded == 2
+    assert result.zotero is not None
+    assert result.zotero.attachment_pages == 1
+    assert result.zotero.attachments_seen == 2
     assert len(result.downloaded_files) == 2
     assert [document.source_identifier for document in record.documents] == [
         "ARTICLE1",
@@ -167,6 +195,33 @@ def test_every_stored_pdf_is_retained_without_guessing_document_roles(tmp_path: 
     ]
     assert {document.role for document in record.documents} == {"unknown"}
     assert all(Path(document.local_file).is_file() for document in record.documents)
+
+
+def test_attachment_listing_follows_every_zotero_page():
+    class PaginatedSession:
+        def get(self, url, **kwargs):
+            assert url.endswith("/items/PARENT01/children")
+            start = kwargs["params"]["start"]
+            count = 100 if start == 0 else 1
+            children = [
+                {
+                    "key": f"PDF{start + index:05d}",
+                    "data": {
+                        "itemType": "attachment",
+                        "linkMode": "imported_file",
+                        "contentType": "application/pdf",
+                    },
+                }
+                for index in range(count)
+            ]
+            return FakeResponse(children, headers={"Total-Results": "101"})
+
+    client = ZoteroClient(PaginatedSession(), group_id="42")
+
+    attachments = client.pdf_attachments("PARENT01")
+
+    assert len(attachments) == 101
+    assert attachments[-1].key == "PDF00100"
 
 
 class TopLevelPdfSession(ZoteroReadSession):
@@ -205,11 +260,10 @@ def test_top_level_stored_pdf_can_enter_the_curated_queue(tmp_path: Path):
     )
 
     assert result.outcome_counts == {"downloaded": 1}
-    record = load_state(tmp_path / "state/state.json").papers[
-        "zotero:42:TOPPDF01"
-    ]
+    record = load_state(tmp_path / "state/state.json").papers["zotero:42:TOPPDF01"]
     assert record.zotero_attachment_key == "TOPPDF01"
     assert record.documents[0].source_identifier == "TOPPDF01"
+    assert record.documents[0].filename == "paper.pdf"
 
 
 class RedirectingAttachmentSession(ZoteroReadSession):
@@ -259,7 +313,7 @@ def test_stored_group_pdf_does_not_require_a_doi(tmp_path: Path):
 
     assert result.status == "complete"
     assert result.outcome_counts == {"downloaded": 1}
-    assert result.downloaded_files[0].name == "zotero-PARENT01.pdf"
+    assert result.downloaded_files[0].name == _safe_pdf_name("zotero-PARENT01")
 
 
 class CuratedCollectionSession(ZoteroReadSession):
@@ -287,6 +341,41 @@ def test_curated_collection_bypasses_automatic_relevance_filters(tmp_path: Path)
     assert result.outcome_counts == {"downloaded": 1}
     record = load_state(tmp_path / "state/state.json").papers["10.1234/zotero.1"]
     assert record.zotero_curated is True
+
+
+def test_curated_item_can_receive_a_pdf_after_the_normal_attempt_limit(tmp_path: Path):
+    save_state(
+        tmp_path / "state/state.json",
+        BotState(
+            papers={
+                "10.1234/zotero.1": PaperRecord(
+                    identifier="10.1234/zotero.1",
+                    sources=["zotero:groups/42/collections/COLL"],
+                    title="A stable perovskite solar cell",
+                    doi="10.1234/zotero.1",
+                    zotero_item_key="PARENT01",
+                    zotero_curated=True,
+                    status="no_pdf",
+                    attempts=4,
+                )
+            }
+        ),
+    )
+
+    result = run_papersbot(
+        tmp_path / "papers",
+        state_dir=tmp_path / "state",
+        rss_enabled=False,
+        openalex_enabled=False,
+        zotero_group_id="42",
+        zotero_collection_key="COLL",
+        zotero_curated=True,
+        max_attempts=4,
+        session=CuratedCollectionSession(),
+    )
+
+    assert result.outcome_counts == {"downloaded": 1}
+    assert result.retries_attempted == 1
 
 
 def test_curated_mode_requires_a_specific_collection(tmp_path: Path):

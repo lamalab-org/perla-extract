@@ -1,13 +1,18 @@
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from types import SimpleNamespace
+
+import pytest
 
 from perla_extract.papersbot.acquisition import AcquiredPdf
 from perla_extract.papersbot.bot import (
     _default_http_session,
+    _safe_pdf_name,
     extract_doi,
+    load_feeds,
     load_state,
     run_papersbot,
 )
@@ -86,9 +91,38 @@ def test_selection_policy_is_grouped_and_title_exclusions_are_local():
     assert not policy.is_candidate("An unrelated catalyst")
 
 
+def test_selection_policy_normalizes_terms_and_rejects_blank_groups():
+    policy = SelectionPolicy(
+        required_groups=[[" perovskite ", ""], ["solar cell", "solar cell"]],
+        excluded_title_terms=[" review ", ""],
+    )
+
+    assert policy.required_groups == [["perovskite"], ["solar cell"]]
+    assert policy.excluded_title_terms == ["review"]
+    with pytest.raises(ValueError, match="non-empty groups"):
+        SelectionPolicy(required_groups=[[" "]])
+    with pytest.raises(ValueError, match="Extra inputs are not permitted"):
+        SelectionPolicy(required_groups=[["perovskite"]], excluded_titles=["review"])
+
+
+def test_feed_reader_preserves_url_fragments_and_skips_comment_lines(tmp_path: Path):
+    feeds = tmp_path / "feeds.txt"
+    feeds.write_text("# comment\nhttps://example.test/feed#section\n\n")
+
+    assert load_feeds(feeds) == ["https://example.test/feed#section"]
+
+
 def test_extract_doi_uses_standard_pattern_across_feed_fields():
     assert extract_doi({"link": "https://doi.org/10.1000/ABC.123"}) == "10.1000/abc.123"
     assert extract_doi({"summary": "No identifier"}) is None
+
+
+def test_pdf_names_are_bounded_and_do_not_collapse_distinct_identifiers():
+    first = _safe_pdf_name("10.1234/a:b")
+    second = _safe_pdf_name("10.1234/a/b")
+
+    assert first != second
+    assert len(_safe_pdf_name("x" * 1_000)) < 200
 
 
 def test_default_http_session_retries_only_safe_transient_failures():
@@ -122,6 +156,40 @@ def test_load_state_migrates_the_feed_only_source_field(tmp_path: Path):
 
     assert state.format_version == 5
     assert state.papers["old-id"].sources == ["https://example.test/feed"]
+
+
+def test_load_state_refuses_a_newer_format_instead_of_dropping_fields(tmp_path: Path):
+    path = tmp_path / "state.json"
+    path.write_text('{"format_version": 999, "papers": {}, "future": true}')
+
+    with pytest.raises(ValueError, match="newer than supported"):
+        load_state(path)
+
+
+def test_state_writers_use_independent_atomic_temporary_files(tmp_path: Path):
+    from perla_extract.papersbot.bot import save_state
+    from perla_extract.papersbot.models import BotState, PaperRecord
+
+    path = tmp_path / "state/state.json"
+
+    def write(index: int) -> None:
+        save_state(
+            path,
+            BotState(
+                papers={
+                    str(index): PaperRecord(
+                        identifier=str(index), title=f"Paper {index}"
+                    )
+                }
+            ),
+        )
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        list(executor.map(write, range(20)))
+
+    state = load_state(path)
+    assert len(state.papers) == 1
+    assert not list(path.parent.glob(".state.json.*.tmp"))
 
 
 def test_run_is_incremental_and_writes_readable_state(tmp_path: Path):
@@ -164,6 +232,34 @@ def test_run_is_incremental_and_writes_readable_state(tmp_path: Path):
     assert last_run["run_id"] == second.run_id
     assert last_run["finished_at"] is not None
     assert last_run["configuration"]["selection_sha256"]
+
+
+def test_invalid_orphan_at_the_managed_destination_is_replaced(tmp_path: Path):
+    selection = tmp_path / "selection.json"
+    selection.write_text(
+        json.dumps(
+            {
+                "required_groups": [["perovskite"], ["solar cell"]],
+                "excluded_title_terms": [],
+            }
+        )
+    )
+    destination = tmp_path / "papers" / _safe_pdf_name("10.1234/example.1")
+    destination.parent.mkdir()
+    destination.write_bytes(b"interrupted response")
+
+    result = run_papersbot(
+        download_dir=tmp_path / "papers",
+        state_dir=tmp_path / "state",
+        feeds=["https://example.test/feed"],
+        selection_file=selection,
+        openalex_enabled=False,
+        session=FakeSession(),
+        feedparser_module=FakeFeedParser(),
+    )
+
+    assert result.outcome_counts == {"downloaded": 1}
+    assert destination.read_bytes().startswith(b"%PDF-")
 
 
 def test_sparse_feed_entry_uses_metadata_before_irrelevant_decision(tmp_path: Path):
@@ -323,6 +419,79 @@ def test_pdf_source_failure_is_recorded_before_fallback_succeeds(tmp_path: Path)
     assert result.acquisition_failures[0].error == "resolver unavailable"
 
 
+def test_custom_pdf_source_must_report_why_the_file_is_accessible(tmp_path: Path):
+    class UnattributedSource:
+        name = "unattributed"
+
+        @staticmethod
+        def acquire(record, destination):
+            del record
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(b"%PDF-1.7\ncontent")
+            return AcquiredPdf(
+                url="https://example.test/paper.pdf",
+                access_basis="",
+                downloaded_now=True,
+            )
+
+    selection = tmp_path / "selection.json"
+    selection.write_text(
+        json.dumps(
+            {
+                "required_groups": [["perovskite"], ["solar cell"]],
+                "excluded_title_terms": [],
+            }
+        )
+    )
+
+    result = run_papersbot(
+        download_dir=tmp_path / "papers",
+        state_dir=tmp_path / "state",
+        feeds=["https://example.test/feed"],
+        selection_file=selection,
+        openalex_enabled=False,
+        session=FakeSession(),
+        feedparser_module=FakeFeedParser(),
+        pdf_sources=[UnattributedSource()],
+    )
+
+    assert result.status == "complete_with_errors"
+    assert "empty access basis" in result.acquisition_failures[0].error
+
+
+def test_open_access_outage_is_not_misreported_as_pdf_absence(tmp_path: Path):
+    class ResolverOutageSession(FakeSession):
+        def get(self, url, **kwargs):
+            if "api.openalex.org/works/" in url:
+                raise OSError("resolver unavailable")
+            return super().get(url, **kwargs)
+
+    selection = tmp_path / "selection.json"
+    selection.write_text(
+        json.dumps(
+            {
+                "required_groups": [["perovskite"], ["solar cell"]],
+                "excluded_title_terms": [],
+            }
+        )
+    )
+
+    result = run_papersbot(
+        download_dir=tmp_path / "papers",
+        state_dir=tmp_path / "state",
+        feeds=["https://example.test/feed"],
+        selection_file=selection,
+        openalex_enabled=False,
+        session=ResolverOutageSession(),
+        feedparser_module=FakeFeedParser(),
+    )
+
+    assert result.status == "complete_with_errors"
+    assert result.outcome_counts == {"no_pdf": 1}
+    assert result.acquisition_failures[0].source == "open-access"
+    assert "OpenAlex OSError" in result.acquisition_failures[0].error
+
+
 def test_retryable_state_is_replayed_after_feed_entry_disappears(tmp_path: Path):
     class EmptyFeedParser:
         @staticmethod
@@ -411,6 +580,61 @@ def test_missing_terminal_pdf_is_reacquired(tmp_path: Path):
     assert second.outcome_counts == {"downloaded": 1}
     assert second.pdfs_downloaded == 1
     assert second.downloaded_files[0].is_file()
+
+
+def test_stale_state_never_deletes_a_file_outside_the_download_directory(
+    tmp_path: Path,
+):
+    class EmptyFeedParser:
+        @staticmethod
+        def parse(content):
+            del content
+            return SimpleNamespace(bozo=False, entries=[])
+
+    selection = tmp_path / "selection.json"
+    selection.write_text(
+        json.dumps(
+            {
+                "required_groups": [["perovskite"], ["solar cell"]],
+                "excluded_title_terms": [],
+            }
+        )
+    )
+    outside = tmp_path / "not-managed.pdf"
+    outside.write_bytes(b"%PDF-1.7\nexternal")
+    from perla_extract.papersbot.bot import save_state
+    from perla_extract.papersbot.models import BotState, PaperRecord
+
+    save_state(
+        tmp_path / "state/state.json",
+        BotState(
+            papers={
+                "10.1234/example.1": PaperRecord(
+                    identifier="10.1234/example.1",
+                    sources=["rss:https://example.test/feed"],
+                    doi="10.1234/example.1",
+                    title="A perovskite solar cell",
+                    status="downloaded",
+                    attempts=1,
+                    downloaded_file=str(outside),
+                    pdf_sha256="incorrect",
+                )
+            }
+        ),
+    )
+
+    result = run_papersbot(
+        download_dir=tmp_path / "papers",
+        state_dir=tmp_path / "state",
+        feeds=["https://example.test/feed"],
+        selection_file=selection,
+        openalex_enabled=False,
+        session=FakeSession(),
+        feedparser_module=EmptyFeedParser(),
+    )
+
+    assert outside.read_bytes() == b"%PDF-1.7\nexternal"
+    assert result.outcome_counts == {"downloaded": 1}
 
 
 def test_run_report_attributes_retries_to_the_previous_status(tmp_path: Path):

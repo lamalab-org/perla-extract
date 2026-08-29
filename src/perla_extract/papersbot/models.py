@@ -5,9 +5,31 @@ from __future__ import annotations
 import re
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TypeAlias
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+PAPERSBOT_FORMAT_VERSION = 5
+PaperStatus: TypeAlias = Literal[
+    "new",
+    "downloaded",
+    "excluded",
+    "irrelevant",
+    "error",
+    "no_pdf",
+    "missing_doi",
+]
+PaperDisposition: TypeAlias = Literal[
+    "evaluated",
+    "skipped_terminal",
+    "skipped_max_attempts",
+]
+
+
+def _unique_nonempty(values: list[str]) -> list[str]:
+    """Normalize user-authored policy lists before they become matching rules."""
+
+    return list(dict.fromkeys(value.strip() for value in values if value.strip()))
 
 
 class OpenAlexPolicy(BaseModel):
@@ -18,6 +40,8 @@ class OpenAlexPolicy(BaseModel):
     delayed indexing harmless; DOI deduplication keeps that overlap inexpensive.
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     topic_ids: list[str]
     initial_lookback_days: int = Field(default=30, ge=1)
     overlap_days: int = Field(default=7, ge=0)
@@ -27,9 +51,7 @@ class OpenAlexPolicy(BaseModel):
     def require_topics(cls, topics: list[str]) -> list[str]:
         """Reject an enabled discovery block that cannot produce a query."""
 
-        cleaned = list(
-            dict.fromkeys(topic.strip() for topic in topics if topic.strip())
-        )
+        cleaned = _unique_nonempty(topics)
         if not cleaned:
             raise ValueError("topic_ids must contain at least one OpenAlex topic")
         return cleaned
@@ -42,6 +64,8 @@ class SelectionPolicy(BaseModel):
     exclusions remove publication types that should not enter device extraction.
     Projects can replace the packaged policy from the command line.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     required_groups: list[list[str]]
     excluded_title_terms: list[str] = Field(default_factory=list)
@@ -57,11 +81,19 @@ class SelectionPolicy(BaseModel):
     @field_validator("required_groups")
     @classmethod
     def require_nonempty_groups(cls, groups: list[list[str]]) -> list[list[str]]:
-        """Reject policies that would silently accept every paper."""
+        """Reject empty match rules that could silently accept every paper."""
 
-        if not groups or any(not group for group in groups):
+        cleaned = [_unique_nonempty(group) for group in groups]
+        if not cleaned or any(not group for group in cleaned):
             raise ValueError("required_groups must contain only non-empty groups")
-        return groups
+        return cleaned
+
+    @field_validator("excluded_title_terms")
+    @classmethod
+    def normalize_exclusions(cls, terms: list[str]) -> list[str]:
+        """Discard blank exclusions because an empty pattern matches every title."""
+
+        return _unique_nonempty(terms)
 
     def excludes(self, title: str) -> bool:
         """Apply publication-type exclusions only to the title.
@@ -127,9 +159,10 @@ class PaperRecord(BaseModel):
     topic_ids: list[str] = Field(default_factory=list)
     zotero_item_key: str | None = None
     zotero_attachment_key: str | None = None
+    zotero_attachment_filename: str | None = None
     zotero_curated: bool = False
     publication_date: date | None = None
-    status: str = "new"
+    status: PaperStatus = "new"
     attempts: int = 0
     pdf_url: str | None = None
     downloaded_file: str | None = None
@@ -162,7 +195,7 @@ class PaperRecord(BaseModel):
 class BotState(BaseModel):
     """Versioned JSON state that makes scheduled runs incremental and inspectable."""
 
-    format_version: int = 5
+    format_version: int = PAPERSBOT_FORMAT_VERSION
     papers: dict[str, PaperRecord] = Field(default_factory=dict)
     openalex_last_successful_date: date | None = None
 
@@ -227,6 +260,8 @@ class ZoteroRunStats(BaseModel):
     collection_key: str | None = None
     pages: int = 0
     items_seen: int = 0
+    attachment_pages: int = 0
+    attachments_seen: int = 0
     pdfs_downloaded: int = 0
     errors: int = 0
 
@@ -236,8 +271,8 @@ class PaperRunOutcome(BaseModel):
 
     identifier: str
     doi: str | None = None
-    status: str
-    disposition: Literal["evaluated", "skipped_terminal", "skipped_max_attempts"]
+    status: PaperStatus
+    disposition: PaperDisposition
     attempt: int
     error: str | None = None
 
@@ -245,7 +280,7 @@ class PaperRunOutcome(BaseModel):
 class BotResult(BaseModel):
     """Versioned, retrievable account of one PapersBot invocation."""
 
-    format_version: int = 5
+    format_version: int = PAPERSBOT_FORMAT_VERSION
     run_id: str
     status: Literal["running", "complete", "complete_with_errors", "failed"] = "running"
     started_at: str
