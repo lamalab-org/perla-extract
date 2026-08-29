@@ -287,6 +287,20 @@ def test_processing_rejects_non_concentration_units_and_reused_conditions():
     assert any("concentration-compatible" in issue for issue in result.issues)
 
 
+def test_processing_validator_rejects_negative_condition_pointer():
+    """Validation must not let Python reinterpret a bypassed -1 index as the last item."""
+
+    proposal = processing_proposal()
+    proposal.material_assignments[0].concentration_condition_index = -1
+
+    result = validate_processing_proposals(
+        study_fixture(), ProcessingProposalResponse(proposals=[proposal])
+    )[0]
+
+    assert result.status == "needs_review"
+    assert any("-1 is out of range" in issue for issue in result.issues)
+
+
 def test_enrichment_retries_only_omitted_compositions_and_reports_them():
     class FakeClient:
         def __init__(self):

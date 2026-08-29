@@ -593,7 +593,7 @@ def validate_processing_proposals(
                         )
                     if assignment.role != "solute":
                         issues.append("only a solute may reference a concentration")
-                    elif concentration >= len(step.conditions):
+                    elif not 0 <= concentration < len(step.conditions):
                         issues.append(
                             f"concentration_condition_index {concentration} is out of range"
                         )
