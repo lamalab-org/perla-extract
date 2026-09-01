@@ -1,15 +1,21 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import pytest
 
 from review_workbench.api.index import (
+    BlobComparisonStorage,
     BlobReviewStateStorage,
     BlobStore,
     VercelReviewApplication,
+)
+from review_workbench.expert_comparison import (
+    NativeUtilityReview,
+    build_comparison_source,
 )
 from review_workbench.review_storage import (
     ReviewPaperSource,
@@ -205,6 +211,53 @@ def test_blob_paper_heads_do_not_download_full_studies():
         ("paper-b", 1),
     ]
     assert blob.downloads == 0
+
+
+def test_blob_comparison_storage_keeps_sources_reviews_and_utility_separate():
+    blob = MemoryBlobStore()
+    storage = BlobComparisonStorage(blob)  # type: ignore[arg-type]
+    source = build_comparison_source(
+        comparison_id="comparison-1",
+        paper_id="paper-1",
+        title="Paper",
+        split="dev",
+        historical={"cells": []},
+        extracted={
+            "paper": {"title": "Paper", "doi": "10.0000/example"},
+            "device_families": [],
+            "individual_devices": [],
+            "performance_observations": [],
+            "population_statistics": [],
+            "stability_tests": [],
+            "unresolved_notes": [],
+        },
+        reviewer_ids=["ada"],
+        randomization_seed="secret",
+    )
+    storage.create(source)
+    assignment = source.assignments[0]
+    utility = NativeUtilityReview(
+        comparison_id=source.comparison_id,
+        reviewer_id=assignment.reviewer_id,
+        blind_label=assignment.blind_label,
+        candidate_sha256=source.candidates[assignment.blind_label].native_sha256,
+        submitted_at=datetime(2026, 9, 1, tzinfo=timezone.utc),
+        ratings={
+            "chemical_detail": 4,
+            "relationships": 4,
+            "verification_ease": 3,
+            "nomad_usefulness": 5,
+        },
+        suitable_as_curation_start="yes",
+    )
+    storage.save_utility(utility)
+
+    assert storage.list_ids() == ["comparison-1"]
+    assert storage.load_source("comparison-1").source_hashes == {}
+    assert storage.load_utility("comparison-1", "ada") == utility
+    assert any(
+        path.startswith("workbench/comparison-utility/") for path in blob.objects
+    )
 
 
 def test_blob_current_revision_does_not_download_immutable_source_again():

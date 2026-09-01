@@ -3,6 +3,25 @@ from pathlib import Path
 APP = Path(__file__).resolve().parents[1] / "review_app"
 
 
+def test_blinded_comparison_is_a_separate_review_workflow():
+    main = (APP / "index.html").read_text(encoding="utf-8")
+    html = (APP / "comparison.html").read_text(encoding="utf-8")
+    javascript = (APP / "comparison.js").read_text(encoding="utf-8")
+
+    assert 'href="/comparison.html"' in main
+    assert "one randomly assigned output" in html
+    assert "Values and units are separate claims" in html
+    assert "Extra records" in html and "Missing records" in html and "Wrong links" in html
+    assert "Chemical detail" in html and "Usefulness for NOMAD" in html
+    assert "/api/comparison-reviews/" in javascript
+    assert "/api/native-comparisons/" in javascript
+    assert "/api/native-utility-reviews/" in javascript
+    assert "Your accuracy review is locked" in html
+    assert "Submit and lock this review" in javascript
+    assert "historical_database" not in javascript
+    assert "new_extractor" not in javascript
+
+
 def test_refreshed_review_dataset_is_the_clear_default():
     html = (APP / "index.html").read_text(encoding="utf-8")
     javascript = (APP / "app.js").read_text(encoding="utf-8")

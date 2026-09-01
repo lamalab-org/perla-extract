@@ -15,6 +15,7 @@ body { margin:0; color:var(--ink); background:var(--wash); }
 #login-status { min-height:1.25em; margin:14px 0 0; color:var(--danger); }
 button, input, select, textarea { font:inherit; }
 button { border:1px solid var(--line); background:white; border-radius:8px; padding:.55rem .8rem; cursor:pointer; color:var(--ink); }
+.button-link { display:inline-block; color:var(--ink); text-decoration:none; border:1px solid var(--line); border-radius:8px; padding:.55rem .8rem; background:white; }
 button:hover { border-color:var(--brand); }
 button.primary { background:var(--brand); color:white; border-color:var(--brand); }
 button.danger { color:var(--danger); border-color:#e5b8b5; }

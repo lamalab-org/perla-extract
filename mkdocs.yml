@@ -25,6 +25,7 @@ nav:
       - Discover papers: workflows/papersbot.md
       - Build ground truth: workflows/ground-truth-review.md
       - Evaluate an extraction: workflows/evaluation.md
+      - Compare extraction workflows: workflows/expert-comparison.md
       - Quality-first seeds and cost ablations: workflows/quality-first-ground-truth.md
   - Compatibility:
       - Reduced PERLA schema: compatibility/reduced-schema.md

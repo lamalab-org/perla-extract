@@ -7,6 +7,9 @@ performance, population statistics, stability, and record relationships without
 modifying the immutable model seed.
 
 For the scientific protocol, start with [Build ground truth](../workflows/ground-truth-review.md).
+The separate [blinded extractor comparison](../workflows/expert-comparison.md) uses
+the same authentication and PDFs but writes an independent immutable experiment log;
+comparison answers never alter ground truth.
 
 ## Run locally
 

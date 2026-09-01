@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PERLA blinded extractor study</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/comparison.css" />
+</head>
+<body>
+  <header>
+    <div><span class="eyebrow">PERLA</span><h1>Blinded extractor study</h1></div>
+    <div class="header-actions">
+      <a class="button-link" href="/">Ground-truth review</a>
+      <button id="open-import" type="button" hidden>Create comparison</button>
+      <button id="download-analysis" type="button" hidden>Download analysis</button>
+      <span id="reviewer" class="pill">Connecting…</span>
+    </div>
+  </header>
+
+  <main class="comparison-shell">
+    <aside class="comparison-list-panel">
+      <h2>Assigned papers</h2>
+      <p class="muted">You see one randomly assigned output for each paper. Its origin stays hidden until the batch is complete.</p>
+      <div id="comparison-list" class="paper-list"></div>
+    </aside>
+    <section id="comparison-empty" class="empty-state">
+      <h2>Choose an assigned paper</h2>
+      <p>Judge claims only against the paper and supporting information.</p>
+    </section>
+    <section id="comparison-workspace" hidden>
+      <div class="comparison-heading">
+        <div><span class="eyebrow">Independent blinded review</span><h2 id="comparison-title"></h2><p id="comparison-meta"></p></div>
+        <div><span id="candidate-label" class="candidate-pill"></span><span id="save-state" role="status"></span></div>
+      </div>
+      <div class="comparison-grid">
+        <section class="pdf-panel">
+          <div class="panel-toolbar">
+            <select id="pdf-source"><option value="main">Main paper</option><option value="supplement">Supporting information</option></select>
+            <button id="previous-page" type="button">←</button>
+            <label>Page <input id="page-number" type="number" min="1" value="1" /></label>
+            <span id="page-count"></span>
+            <button id="next-page" type="button">→</button>
+          </div>
+          <div id="pdf-stage"><p id="pdf-status" class="pdf-message">Loading source…</p><img id="pdf-page" alt="Rendered source page" /></div>
+        </section>
+        <section class="comparison-review">
+          <div class="review-intro">
+            <h3>Atomic claims</h3>
+            <p>For each value, choose whether the paper supports the value and its meaning. Values and units are separate claims.</p>
+            <p id="progress"></p>
+          </div>
+          <div id="records"></div>
+          <section class="omission-review">
+            <h3>Missing or structural information</h3>
+            <div class="count-grid">
+              <label>Extra records<input id="extra-records" type="number" min="0" value="0" /></label>
+              <label>Missing records<input id="missing-records" type="number" min="0" value="0" /></label>
+              <label>Wrong links<input id="wrong-links" type="number" min="0" value="0" /></label>
+            </div>
+            <div id="missing-facts"></div>
+            <button id="add-missing" type="button">Add missing fact from this page</button>
+            <label>Confidence in this accuracy review<select id="confidence"><option value="">Choose…</option></select></label>
+            <label>Accuracy-review notes<textarea id="notes" rows="3" placeholder="Ambiguity, systematic errors, or important source context…"></textarea></label>
+          </section>
+          <section id="utility-review" class="utility-review" hidden>
+            <h3>Native-output usefulness</h3>
+            <p>Your accuracy review is locked. Now inspect this workflow's native output and rate it on its own. Its origin remains hidden; 1 is poor and 5 is excellent.</p>
+            <details><summary>Inspect complete native JSON</summary><pre id="native-output"></pre></details>
+            <div class="rating-grid">
+              <label>Chemical detail<select id="chemical-detail"><option value="">Choose…</option></select></label>
+              <label>Relationships between records<select id="relationships"><option value="">Choose…</option></select></label>
+              <label>Ease of verification<select id="verification-ease"><option value="">Choose…</option></select></label>
+              <label>Usefulness for NOMAD<select id="nomad-usefulness"><option value="">Choose…</option></select></label>
+            </div>
+            <label>Would this be a suitable starting point for expert database curation?<select id="curation-suitability"><option value="">Choose…</option><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select></label>
+            <label>Utility notes<textarea id="utility-notes" rows="3" placeholder="What makes this output useful or difficult to use?…"></textarea></label>
+            <button id="submit-utility" type="button" class="primary">Submit native-output review</button>
+          </section>
+          <div class="comparison-actions">
+            <button id="save-draft" type="button">Save draft</button>
+            <button id="submit-review" type="button" class="primary">Submit final review</button>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="import-dialog">
+    <form id="import-form" class="dialog-card">
+      <div class="dialog-heading"><div><span class="eyebrow">Administrator</span><h2>Create blinded comparison</h2></div><button id="close-import" type="button">×</button></div>
+      <p class="callout">Both JSON files are validated and frozen. Reviewers receive balanced A/B assignments; the model identity is never returned by reviewer APIs.</p>
+      <label>Comparison ID<input name="comparison_id" required /></label>
+      <label>Existing paper ID<input name="paper_id" required /></label>
+      <label>Paper title<input name="title" required /></label>
+      <label>Dataset split<select name="split"><option value="dev">Current review</option><option value="calibration">Legacy calibration</option><option value="test">Held-out test</option></select></label>
+      <label>Historical PERLA JSON<input name="historical" type="file" accept="application/json" required /></label>
+      <label>New extraction.json<input name="extracted" type="file" accept="application/json" required /></label>
+      <label>Reviewer IDs <span>(comma-separated exact IDs)</span><input name="reviewer_ids" required /></label>
+      <label>Randomization seed <span>(stored only as a hash)</span><input name="randomization_seed" type="password" required /></label>
+      <div class="dialog-actions"><span></span><button id="cancel-import" type="button">Cancel</button><button class="primary">Create</button></div>
+      <p id="import-status" role="status"></p>
+    </form>
+  </dialog>
+  <script src="/comparison.js" type="module"></script>
+</body>
+</html>
