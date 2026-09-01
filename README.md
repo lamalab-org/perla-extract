@@ -41,6 +41,7 @@ The [documentation site](docs/index.md) explains:
 - [the study and evidence model](docs/concepts/study-model.md);
 - [single-call and long-supplement extraction](docs/workflows/extraction.md);
 - [human ground-truth review](docs/workflows/ground-truth-review.md);
+- [deterministic rich-schema evaluation](docs/workflows/evaluation.md);
 - [audited composition and processing interpretation](docs/workflows/enrichment.md);
 - [direct NOMAD export](docs/workflows/nomad-export.md);
 - [paper discovery and Zotero journal-club intake](docs/workflows/papersbot.md); and

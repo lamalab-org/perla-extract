@@ -15,10 +15,9 @@ from .vocabulary import NormalizedAtmosphere
 NOMAD_SCHEMA_PACKAGE = "perovskite-solar-cell-database"
 NOMAD_SCHEMA_VERSION = "1.2.14"
 NOMAD_SCHEMA_COMMIT = "afd75e69ebb07c8f7f82d203231b70f488e40997"
-NOMAD_M_DEF = (
-    "perovskite_solar_cell_database.llm_extraction_schema."
-    "LLMExtractedPerovskiteSolarCell"
-)
+NOMAD_M_DEF: Literal[
+    "perovskite_solar_cell_database.llm_extraction_schema.LLMExtractedPerovskiteSolarCell"
+] = "perovskite_solar_cell_database.llm_extraction_schema.LLMExtractedPerovskiteSolarCell"
 
 SourceKind = Literal[
     "absorber",
@@ -180,7 +179,9 @@ class NOMADExtractionMetadata(_StrictModel):
 class NOMADCell(_StrictModel):
     """Validate exactly the outbound archive data populated by PERLA Extract."""
 
-    m_def: Literal[NOMAD_M_DEF] = NOMAD_M_DEF
+    m_def: Literal[
+        "perovskite_solar_cell_database.llm_extraction_schema.LLMExtractedPerovskiteSolarCell"
+    ] = NOMAD_M_DEF
     DOI_number: str | None = None
     publication_title: str | None = None
     perovskite_composition: NOMADComposition | None = None

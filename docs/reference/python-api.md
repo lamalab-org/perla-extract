@@ -57,9 +57,20 @@ default workflow writes it as `enrichment.json` before running downstream adapte
 ## Export to NOMAD
 
 `to_nomad_with_report` returns separately uploadable archives, source mappings,
-composition-normalization readiness, and explicit conversion issues.
+composition-normalization readiness, and explicit conversion issues. Supply the
+original `EvidenceBlock` list through `evidence_blocks` when applying enrichment; the
+adapter otherwise refuses to trust accepted semantic proposals.
 
 ::: perla_extract.study_extraction.nomad.to_nomad_with_report
+    options:
+      show_root_heading: true
+
+## Evaluate rich extractions
+
+`evaluate_study` matches records without run-local IDs and reports inventory,
+relationships, scalar fields, and atomic values separately.
+
+::: perla_extract.study_extraction.evaluation.evaluate_study
     options:
       show_root_heading: true
 

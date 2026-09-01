@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import Field, model_validator
 
@@ -452,7 +452,7 @@ def _contains_raw_value(needle: str, haystack: str) -> bool:
 
 def audit_claim_coverage(
     ledger: ClaimLedger, extraction: StudyExtraction
-) -> dict[str, object]:
+) -> dict[str, Any]:
     """Audit claim recall, shared-value scope, and unsupported record proliferation.
 
     Exact citation overlap is evidence of representation. Block-only overlap remains
@@ -545,12 +545,12 @@ def audit_claim_coverage(
             )
             continue
         role_kinds = {
-            TOP_LEVEL_RECORD_BY_OBJECT_ROLE[item.role][0]
+            TOP_LEVEL_RECORD_BY_OBJECT_ROLE[subject.role][0]
             for object_id in claim.subject_object_ids
-            if (item := object_by_id.get(object_id)) is not None
-            and item.role in TOP_LEVEL_RECORD_BY_OBJECT_ROLE
+            if (subject := object_by_id.get(object_id)) is not None
+            and subject.role in TOP_LEVEL_RECORD_BY_OBJECT_ROLE
         }
-        record_kind = next(iter(role_kinds)) if len(role_kinds) == 1 else None
+        claim_record_kind = next(iter(role_kinds)) if len(role_kinds) == 1 else None
         if claim.subject_object_ids and not role_kinds:
             counts["uncertain"] += 1
             items.append(
@@ -564,7 +564,7 @@ def audit_claim_coverage(
             )
             continue
         candidate_kinds = sorted(role_kinds) or (
-            [record_kind] if record_kind else list(records)
+            [claim_record_kind] if claim_record_kind else list(records)
         )
         subject_record_keys = {
             key
@@ -577,8 +577,8 @@ def audit_claim_coverage(
             for record_id, record, block_ids, quotes in records.get(kind, [])
             if not subject_record_keys or (kind, record_id) in subject_record_keys
         ]
-        exact: list[str] = []
-        possible: list[str] = []
+        exact_claims: list[str] = []
+        possible_claims: list[str] = []
         source_blocks = {item.block_id for item in claim.evidence}
         for _, record_id, record, block_ids, quotes in candidate_entries:
             match = _matches_evidence(claim.evidence, block_ids, quotes)
@@ -595,9 +595,9 @@ def audit_claim_coverage(
                 )
             )
             if match == "covered" and value_supported:
-                exact.append(record_id)
+                exact_claims.append(record_id)
             elif match is not None:
-                possible.append(record_id)
+                possible_claims.append(record_id)
         missing_targets: list[str] = []
         if claim.shared_targets and claim.raw_value:
             eligible_keys = {
@@ -617,18 +617,18 @@ def audit_claim_coverage(
             counts["missing_shared_targets"] += len(missing_targets)
         status = (
             "covered"
-            if exact and not missing_targets
+            if exact_claims and not missing_targets
             else "possible_match"
-            if (exact or possible)
+            if (exact_claims or possible_claims)
             else "unmatched"
         )
-        candidates = exact or possible
+        candidates = exact_claims or possible_claims
         counts[status] += 1
         items.append(
             {
                 **claim.model_dump(mode="json"),
                 "status": status,
-                "record_kind": record_kind,
+                "record_kind": claim_record_kind,
                 "candidate_record_ids": candidates,
                 "missing_shared_targets": missing_targets,
             }

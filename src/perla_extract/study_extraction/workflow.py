@@ -7,6 +7,7 @@ import json
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -173,6 +174,17 @@ at the correct reporting level or explain why it remains unresolved. Context cla
 must not create output records. Preserve explicit shared_targets as separate atomic
 values in the final schema."""
 
+CLAIM_RECALL_PROMPTS = (
+    """INDEPENDENT OBJECT-FIRST READING: Start from the primary evidence again. First
+enumerate every distinct experimental object, specimen, comparison group, and reporting
+scope; then attach every supported atomic claim. Do not assume another reading captured
+anything.""",
+    """INDEPENDENT CLAIM-FIRST READING: Start from the primary evidence again. Scan each
+sentence, table row, and caption for atomic values, conditions, relations, and explicit
+scope; then attach them to supported objects. Do not assume another reading captured
+anything.""",
+)
+
 
 def prompt_sha256() -> str:
     """Fingerprint every prompt template that can change scientific model output."""
@@ -183,6 +195,7 @@ def prompt_sha256() -> str:
             EXTRACTION_PROMPT,
             CLAIM_LEDGER_PROMPT,
             CLAIM_LEDGER_GUIDANCE,
+            *CLAIM_RECALL_PROMPTS,
             ENRICHMENT_SYSTEM_PROMPT,
             COMPOSITION_ENRICHMENT_PROMPT,
             PROCESSING_ENRICHMENT_PROMPT,
@@ -208,6 +221,7 @@ class ExtractionConfig:
     use_claim_ledger: bool = True
     claim_model: str | None = DEFAULT_CLAIM_MODEL
     claim_max_output_tokens: int = 30_000
+    claim_recall_passes: int = 2
     use_enrichment: bool = True
     enrichment_model: str | None = None
     enrichment_max_output_tokens: int = 20_000
@@ -220,6 +234,7 @@ class ExtractionConfig:
     claim_mode: str = "auto"
     single_call_max_input_tokens: int = 90_000
     claim_window_input_tokens: int = 60_000
+    assembly_max_input_tokens: int = 180_000
     max_output_tokens: int = 80_000
     max_model_calls: int | None = None
     max_cost_usd: float | None = None
@@ -298,9 +313,16 @@ def _direct_prompt(blocks: list[EvidenceBlock], ledger: ClaimLedger) -> str:
 
 
 def _claim_ledger_prompt(
-    primary: list[EvidenceBlock], context: list[EvidenceBlock] | None = None
+    primary: list[EvidenceBlock],
+    context: list[EvidenceBlock] | None = None,
+    recall_pass: int = 1,
 ) -> str:
-    """Request neutral claims, requiring windowed claims to cite primary evidence."""
+    """Request a neutral ledger in one complete, independently prompted reading.
+
+    Repeated passes receive the same bounded source evidence, never another model's
+    output. Their union therefore improves omission tolerance without allowing an
+    earlier assertion to become evidence or enlarging later window inputs.
+    """
 
     context = context or []
     return (
@@ -312,6 +334,7 @@ def _claim_ledger_prompt(
             if context
             else ""
         )
+        + ("\n\n" + CLAIM_RECALL_PROMPTS[recall_pass - 2] if recall_pass > 1 else "")
         + "\n\nCONTEXT EVIDENCE:\n"
         + json.dumps(evidence_payload(context), ensure_ascii=False)
         + "\n\nPRIMARY EVIDENCE:\n"
@@ -338,7 +361,7 @@ def _plan_claim_collection(
     int,
     list[tuple[str, list[EvidenceBlock], list[EvidenceBlock]]],
 ]:
-    """Choose one claim call or complete section-aware coverage windows."""
+    """Choose document-wide or section-aware inputs for each independent read."""
 
     schema = span_citation_schema(ClaimLedger, build_evidence_spans(blocks))
     direct_prompt = _claim_ledger_prompt(blocks)
@@ -381,10 +404,10 @@ def _collect_claim_ledger(
 ) -> tuple[ClaimLedger, list[str], int]:
     """Read every source block into a neutral ledger before schema assembly.
 
-    A normal paper uses one document-level call. Long inputs are partitioned only at
-    this claim-collection boundary; the resulting ledger is then reconciled globally.
-    This avoids constructing and merging partial device schemas from disconnected
-    windows.
+    A normal paper uses one document-level input; each configured recall pass reads it
+    independently. Long inputs are partitioned only at this claim-collection boundary,
+    and all resulting ledgers are reconciled globally. This avoids constructing and
+    merging partial device schemas from disconnected windows.
     """
 
     _, _, plan = _plan_claim_collection(config, blocks)
@@ -392,33 +415,45 @@ def _collect_claim_ledger(
     parts: list[tuple[str, ClaimLedger]] = []
     errors: list[str] = []
     for index, (slug, primary, context) in enumerate(plan, start=1):
-        logger.info("Collecting source claims {}/{} ({})", index, len(plan), slug)
         visible = [*context, *primary]
         spans = build_evidence_spans(visible)
-        try:
-            ledger = client.complete(
-                kind="source_claim_ledger",
-                slug=slug,
-                model=config.claim_model or config.model,
-                system=SYSTEM_PROMPT,
-                prompt=_claim_ledger_prompt(primary, context),
-                response_model=ClaimLedger,
-                max_output_tokens=config.claim_max_output_tokens,
-                reasoning_effort=config.reasoning_effort,
-                request_schema=span_citation_schema(ClaimLedger, spans),
-                decode=lambda payload, visible_spans=spans: expand_span_citations(
-                    payload, visible_spans
-                ),
+        for pass_index in range(1, config.claim_recall_passes + 1):
+            pass_slug = f"{slug}-pass-{pass_index}"
+            logger.info(
+                "Collecting source claims window {}/{} pass {}/{} ({})",
+                index,
+                len(plan),
+                pass_index,
+                config.claim_recall_passes,
+                slug,
             )
-        except ModelCallError as exc:
-            errors.append(f"{slug}: {exc}")
-            continue
-        parts.append((slug, ledger))
+            try:
+
+                def decode_claim_payload(
+                    payload: object, visible_spans=spans
+                ) -> object:
+                    return expand_span_citations(payload, visible_spans)
+
+                ledger = client.complete(
+                    kind="source_claim_ledger",
+                    slug=pass_slug,
+                    model=config.claim_model or config.model,
+                    system=SYSTEM_PROMPT,
+                    prompt=_claim_ledger_prompt(primary, context, pass_index),
+                    response_model=ClaimLedger,
+                    max_output_tokens=config.claim_max_output_tokens,
+                    reasoning_effort=config.reasoning_effort,
+                    request_schema=span_citation_schema(ClaimLedger, spans),
+                    decode=decode_claim_payload,
+                )
+            except ModelCallError as exc:
+                errors.append(f"{pass_slug}: {exc}")
+                continue
+            parts.append((pass_slug, ledger))
+    planned_calls = len(plan) * config.claim_recall_passes
     if not parts:
-        return _empty_ledger(), errors, len(plan)
-    if len(plan) == 1:
-        return parts[0][1], errors, len(plan)
-    return combine_ledgers(parts), errors, len(plan)
+        return _empty_ledger(), errors, planned_calls
+    return combine_ledgers(parts), errors, planned_calls
 
 
 def _empty_extraction(note: str) -> StudyExtraction:
@@ -438,7 +473,9 @@ def _empty_extraction(note: str) -> StudyExtraction:
 def _summarize_usage(calls: list[dict[str, object]]) -> dict[str, float | int]:
     """Aggregate charges from live calls; cache hits cost no tokens or money."""
 
-    usage_records = [call.get("usage", {}) for call in calls]
+    usage_records: list[dict[str, Any]] = [
+        usage for call in calls if isinstance((usage := call.get("usage", {})), dict)
+    ]
     return {
         "live_calls": sum(not bool(call.get("cache_hit")) for call in calls),
         "cache_hits": sum(bool(call.get("cache_hit")) for call in calls),
@@ -672,6 +709,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         min(
             config.single_call_max_input_tokens,
             config.claim_window_input_tokens,
+            config.assembly_max_input_tokens,
             config.max_output_tokens,
             config.claim_max_output_tokens,
             config.enrichment_max_output_tokens,
@@ -682,6 +720,8 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         raise ValueError("token limits must be positive")
     if config.max_model_calls is not None and config.max_model_calls <= 0:
         raise ValueError("max_model_calls must be positive")
+    if not 1 <= config.claim_recall_passes <= 3:
+        raise ValueError("claim_recall_passes must be between 1 and 3")
     if config.max_cost_usd is not None and config.max_cost_usd <= 0:
         raise ValueError("max_cost_usd must be positive")
 
@@ -748,6 +788,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
 
     claim_window_artifact = {
         "mode": claim_mode,
+        "recall_passes": config.claim_recall_passes if config.use_claim_ledger else 0,
         "approximate_request_tokens": claim_tokens,
         "windows": [
             {
@@ -764,7 +805,11 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
 
     if config.dry_run:
         extraction_call_count = 1
-        claim_call_count = len(claim_plan) if config.use_claim_ledger else 0
+        claim_call_count = (
+            len(claim_plan) * config.claim_recall_passes
+            if config.use_claim_ledger
+            else 0
+        )
         planned_calls = (
             extraction_call_count
             + extraction_call_count * int(config.use_refinement)
@@ -859,20 +904,32 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     for directory in ("draft_windows", "refinement_audits"):
         for stale in (config.output_dir / directory).glob("*.json"):
             stale.unlink()
-    extraction, initial_extraction, extraction_errors = _run_model_calls(
-        config,
-        client,
-        selected_blocks,
-        grounded_claims or _empty_ledger(),
-    )
+    assembly_blocked = approximate_tokens > config.assembly_max_input_tokens
+    if assembly_blocked:
+        message = (
+            f"assembly request estimate {approximate_tokens} exceeds configured limit "
+            f"{config.assembly_max_input_tokens}; increase --assembly-max-input-tokens "
+            "only after confirming the selected model's context window"
+        )
+        logger.error(message)
+        extraction = _empty_extraction(message)
+        initial_extraction = None
+        extraction_errors = [message]
+    else:
+        extraction, initial_extraction, extraction_errors = _run_model_calls(
+            config,
+            client,
+            selected_blocks,
+            grounded_claims or _empty_ledger(),
+        )
     errors.extend(extraction_errors)
 
     extraction, quote_repairs = repair_noncontiguous_citation_quotes(extraction, blocks)
     extraction, pointer_repairs = repair_unique_citation_pointers(extraction, blocks)
     refinement_selection: dict[str, object] | None = None
     comparable_draft: StudyExtraction | None = None
-    draft_quote_repairs: dict[str, object] | None = None
-    draft_pointer_repairs: dict[str, object] | None = None
+    draft_quote_repairs: dict[str, Any] | None = None
+    draft_pointer_repairs: dict[str, Any] | None = None
     if initial_extraction is not None:
         comparable_draft, draft_quote_repairs = repair_noncontiguous_citation_quotes(
             initial_extraction, blocks
@@ -906,7 +963,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         else None
     )
     repair_audit: RepairAudit | None = None
-    if config.use_targeted_repair:
+    if config.use_targeted_repair and not assembly_blocked:
         write_json_atomic(
             config.output_dir / "pre_repair_validation.json",
             pre_repair_validation_public,
@@ -1034,7 +1091,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         "processing_proposals.json",
     ):
         (config.output_dir / name).unlink(missing_ok=True)
-    if config.use_enrichment:
+    if config.use_enrichment and not assembly_blocked:
         logger.info("Interpreting composition and processing from local evidence")
         enrichment = run_enrichment(
             client=client,
@@ -1079,7 +1136,10 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     nomad_error: str | None = None
     try:
         nomad = to_nomad_with_report(
-            extraction, model=config.model, enrichment=enrichment
+            extraction,
+            model=config.model,
+            enrichment=enrichment,
+            evidence_blocks=blocks,
         )
     except (ValidationError, ValueError) as exc:
         nomad_error = str(exc)

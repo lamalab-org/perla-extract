@@ -23,13 +23,13 @@ EntityKind = Literal[
     "population_statistic",
     "stability_test",
 ]
-STUDY_SCHEMA_VERSION = 5
+STUDY_SCHEMA_VERSION = 6
 
 
 class StrictModel(BaseModel):
     """Reject unexpected fields so model-output and schema drift stay visible."""
 
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
 
 
 class EvidenceBlock(StrictModel):
@@ -253,9 +253,7 @@ class DeviceFamily(StrictModel):
         citations: list[dict[str, object]] = []
         for claim in [formula, *properties, *constituents]:
             claim_data = (
-                claim.model_dump(mode="json")
-                if isinstance(claim, BaseModel)
-                else claim
+                claim.model_dump(mode="json") if isinstance(claim, BaseModel) else claim
             )
             if isinstance(claim_data, dict):
                 citations.extend(
@@ -265,9 +263,7 @@ class DeviceFamily(StrictModel):
                 )
         if not citations:
             citations.extend(
-                item.model_dump(mode="json")
-                if isinstance(item, BaseModel)
-                else item
+                item.model_dump(mode="json") if isinstance(item, BaseModel) else item
                 for item in data.get("evidence", [])
                 if isinstance(item, (dict, BaseModel))
             )
@@ -278,9 +274,7 @@ class DeviceFamily(StrictModel):
             }.values()
         )[:15]
         absorber_layers = [
-            layer.model_dump(mode="json")
-            if isinstance(layer, BaseModel)
-            else layer
+            layer.model_dump(mode="json") if isinstance(layer, BaseModel) else layer
             for layer in data.get("layers", [])
             if (
                 layer.role == "absorber"
@@ -322,6 +316,18 @@ class IndividualDevice(StrictModel):
         list[ReportedValue], Field(default_factory=list, max_length=60)
     ]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
+
+    @model_validator(mode="after")
+    def keep_champion_fields_consistent(self) -> IndividualDevice:
+        """Prevent two fields from making incompatible claims about one specimen."""
+
+        marked_champion = self.champion_status == "yes"
+        selected_as_champion = self.selection_basis == "champion"
+        if marked_champion != selected_as_champion:
+            raise ValueError(
+                "champion_status=yes and selection_basis=champion must occur together"
+            )
+        return self
 
 
 class PerformanceObservation(StrictModel):
@@ -413,6 +419,25 @@ class StabilityTest(StrictModel):
         list[StabilityCheckpoint], Field(min_length=1, max_length=80)
     ]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
+
+    @model_validator(mode="after")
+    def keep_link_status_consistent(self) -> StabilityTest:
+        """Require identifiers that match the relationship asserted by link_status."""
+
+        if self.link_status == "explicit_device_link" and self.device_id is None:
+            raise ValueError("explicit_device_link requires device_id")
+        if self.link_status == "explicit_family_link":
+            if self.family_id is None:
+                raise ValueError("explicit_family_link requires family_id")
+            if self.device_id is not None:
+                raise ValueError("explicit_family_link cannot also identify a device")
+        if self.link_status in {"stability_specimen_only", "not_reported"} and (
+            self.family_id is not None or self.device_id is not None
+        ):
+            raise ValueError(
+                f"{self.link_status} cannot assert a family or device relationship"
+            )
+        return self
 
 
 class PaperMetadata(StrictModel):

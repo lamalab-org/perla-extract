@@ -125,6 +125,28 @@ def test_composition_is_accepted_only_when_sites_reconstruct_reported_formula():
     assert "exactly reconstruct" in mismatch.issues[0]
 
 
+def test_formula_reconstruction_rejects_character_splits_as_fake_ions():
+    """String equality alone must not accept F + A as a decomposition of FA."""
+
+    proposal = CompositionProposal(
+        family_id="f1",
+        absorber_id="a1",
+        ions=[
+            ProposedIon(site="A", abbreviation="F", coefficient="1"),
+            ProposedIon(site="A", abbreviation="A", coefficient="1"),
+            ProposedIon(site="B", abbreviation="Pb", coefficient="1"),
+            ProposedIon(site="X", abbreviation="I", coefficient="3"),
+        ],
+    )
+
+    result = validate_composition_proposals(
+        study_fixture(), CompositionProposalResponse(proposals=[proposal])
+    )[0]
+
+    assert result.status == "needs_review"
+    assert "intact acronyms" in result.issues[0]
+
+
 def test_parenthesized_x_site_multiplicity_preserves_fractional_occupancy():
     study = study_fixture()
     study.device_families[0].absorbers[0].formula = value(
@@ -248,6 +270,35 @@ def test_processing_accepts_only_resolvable_atomic_source_pointers():
     assert accepted.status == "accepted"
     assert invalid.status == "needs_review"
     assert "out of range" in invalid.issues[0]
+
+
+def test_processing_rejects_non_concentration_units_and_reused_conditions():
+    proposal = processing_proposal()
+    proposal.material_assignments[0].concentration_condition_index = 0
+
+    result = validate_processing_proposals(
+        study_fixture(), ProcessingProposalResponse(proposals=[proposal])
+    )[0]
+
+    assert result.status == "needs_review"
+    assert any(
+        "both a process field and concentration" in issue for issue in result.issues
+    )
+    assert any("concentration-compatible" in issue for issue in result.issues)
+
+
+def test_processing_validator_rejects_negative_condition_pointer():
+    """Validation must not let Python reinterpret a bypassed -1 index as the last item."""
+
+    proposal = processing_proposal()
+    proposal.material_assignments[0].concentration_condition_index = -1
+
+    result = validate_processing_proposals(
+        study_fixture(), ProcessingProposalResponse(proposals=[proposal])
+    )[0]
+
+    assert result.status == "needs_review"
+    assert any("-1 is out of range" in issue for issue in result.issues)
 
 
 def test_enrichment_retries_only_omitted_compositions_and_reports_them():

@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Iterable
+from typing import Literal, cast
 
 from .enrichment import (
     CompositionProposalResponse,
@@ -24,6 +25,7 @@ from .enrichment import (
 from .models import (
     AbsorberComponent,
     DeviceFamily,
+    EvidenceBlock,
     IndividualDevice,
     MaterialConstituent,
     ProcessingStep,
@@ -173,7 +175,10 @@ def _project_composition(
         notes.append("The reported band gap lacks an explicit eV-compatible value.")
     dimensionality = _unique_value(absorber.properties, _DIMENSIONALITY_NAMES)
     if dimensionality and dimensionality.raw_value in _DIMENSIONALITIES:
-        composition.dimensionality = dimensionality.raw_value
+        composition.dimensionality = cast(
+            Literal["0D", "1D", "2D", "2D/3D", "3D", "Other"],
+            dimensionality.raw_value,
+        )
     elif dimensionality is not None:
         notes.append(
             "The reported dimensionality does not match the pinned NOMAD vocabulary."
@@ -350,15 +355,16 @@ def _project_step(
 ) -> NOMADProcessingStep:
     """Project source fields plus accepted index-based semantic interpretations."""
 
+    additional_parameters: dict[str, object] = {
+        "source_step_id": step.step_id,
+        "materials": step.materials,
+        "conditions": [_payload(value) for value in step.conditions],
+        "evidence_blocks": [citation.block_id for citation in step.evidence],
+    }
     projected: dict[str, object] = {
         "step_name": step.operation,
         "method": step.operation,
-        "additional_parameters": {
-            "source_step_id": step.step_id,
-            "materials": step.materials,
-            "conditions": [_payload(value) for value in step.conditions],
-            "evidence_blocks": [citation.block_id for citation in step.evidence],
-        },
+        "additional_parameters": additional_parameters,
     }
     for name, (field, unit) in _CONDITION_FIELDS.items():
         value = _unique_value(step.conditions, {name})
@@ -414,8 +420,8 @@ def _project_step(
             )
         if antisolvents:
             projected["antisolvent"] = "; ".join(antisolvents)
-        projected["additional_parameters"]["accepted_enrichment"] = (
-            enrichment.proposal.model_dump(mode="json")
+        additional_parameters["accepted_enrichment"] = enrichment.proposal.model_dump(
+            mode="json"
         )
     return NOMADProcessingStep.model_validate(projected)
 
@@ -465,7 +471,7 @@ def _project_family(
     }
     if composition and composition.nomad_composition:
         fields["perovskite_composition"] = composition.nomad_composition
-    context = {
+    context: dict[str, object] = {
         "family_id": family.family_id,
         "family_label": family.label,
         "variant": family.variant,
@@ -478,7 +484,9 @@ def _project_family(
             for step in family.processing_steps
             if not step.target_layer_ids
         ],
-        "absorbers": [absorber.model_dump(mode="json") for absorber in family.absorbers],
+        "absorbers": [
+            absorber.model_dump(mode="json") for absorber in family.absorbers
+        ],
         "layer_details": [
             {
                 "layer_id": layer.layer_id,
@@ -572,8 +580,12 @@ def _stability_summary(
         fields["PCE_at_end"] = last_value
     for checkpoint in test.checkpoints:
         if checkpoint.time and convert_reported_value(checkpoint.time, "hour") == 1000:
-            value = absolute_pce[checkpoint.checkpoint_id]
-            converted = convert_reported_value(value, "percent") if value else None
+            checkpoint_pce = absolute_pce[checkpoint.checkpoint_id]
+            converted = (
+                convert_reported_value(checkpoint_pce, "percent")
+                if checkpoint_pce
+                else None
+            )
             if converted is not None:
                 fields["PCE_after_1000_hours"] = converted
     _issue(
@@ -595,7 +607,9 @@ def _archive_name(index: int, kind: SourceKind, source_id: str) -> str:
 
 
 def _accepted_enrichment(
-    study: StudyExtraction, audit: EnrichmentAudit | None
+    study: StudyExtraction,
+    audit: EnrichmentAudit | None,
+    evidence_blocks: list[EvidenceBlock] | None,
 ) -> tuple[
     dict[str, CompositionProposalResult],
     dict[str, ProcessingProposalResult],
@@ -614,10 +628,14 @@ def _accepted_enrichment(
         if result.status == "accepted"
     ]
     composition_results = validate_composition_proposals(
-        study, CompositionProposalResponse(proposals=proposed_compositions)
+        study,
+        CompositionProposalResponse(proposals=proposed_compositions),
+        evidence_blocks if evidence_blocks is not None else [],
     )
     processing_results = validate_processing_proposals(
-        study, ProcessingProposalResponse(proposals=proposed_processing)
+        study,
+        ProcessingProposalResponse(proposals=proposed_processing),
+        evidence_blocks if evidence_blocks is not None else [],
     )
     compositions = {
         target_id: result
@@ -637,6 +655,7 @@ def to_nomad_with_report(
     study: StudyExtraction,
     model: str | None = None,
     enrichment: EnrichmentAudit | None = None,
+    evidence_blocks: list[EvidenceBlock] | None = None,
 ) -> NOMADExport:
     """Export every atomic record as a separate pinned NOMAD archive.
 
@@ -680,7 +699,7 @@ def to_nomad_with_report(
                 "family_id",
             )
     composition_enrichment, processing_enrichment, revalidated_results = (
-        _accepted_enrichment(study, enrichment)
+        _accepted_enrichment(study, enrichment, evidence_blocks)
     )
     projections = [
         _project_composition(
@@ -806,8 +825,8 @@ def to_nomad_with_report(
         )
 
     for observation in study.performance_observations:
-        device = devices.get(observation.device_id)
-        if device is None:
+        observation_device = devices.get(observation.device_id)
+        if observation_device is None:
             _issue(
                 issues,
                 "dangling_reference",
@@ -816,11 +835,17 @@ def to_nomad_with_report(
                 f"Unknown device_id {observation.device_id!r}; the observation is still exported.",
                 "device_id",
             )
-        family = families.get(device.family_id) if device and device.family_id else None
+        observation_family = (
+            families.get(observation_device.family_id)
+            if observation_device and observation_device.family_id
+            else None
+        )
         fields, family_note = _base_cell(
             study,
-            family,
-            compositions.get(family.family_id) if family else None,
+            observation_family,
+            compositions.get(observation_family.family_id)
+            if observation_family
+            else None,
             processing_enrichment,
             model,
         )
@@ -841,23 +866,27 @@ def to_nomad_with_report(
                 "device_id": observation.device_id,
                 "measurement_type": observation.measurement_type,
                 "scan_direction": observation.scan_direction,
-                "champion_status": device.champion_status if device else None,
+                "champion_status": (
+                    observation_device.champion_status if observation_device else None
+                ),
                 "device_reported_properties": [
-                    _payload(value) for value in device.reported_properties
+                    _payload(value) for value in observation_device.reported_properties
                 ]
-                if device
+                if observation_device
                 else [],
                 "family": family_note,
                 "unprojected_metrics": remainder,
             },
         )
         represented_devices.add(observation.device_id)
-        if family:
-            represented_families.add(family.family_id)
+        if observation_family:
+            represented_families.add(observation_family.family_id)
 
     for population in study.population_statistics:
-        family = families.get(population.family_id) if population.family_id else None
-        if population.family_id and family is None:
+        population_family = (
+            families.get(population.family_id) if population.family_id else None
+        )
+        if population.family_id and population_family is None:
             _issue(
                 issues,
                 "dangling_reference",
@@ -868,8 +897,10 @@ def to_nomad_with_report(
             )
         fields, family_note = _base_cell(
             study,
-            family,
-            compositions.get(family.family_id) if family else None,
+            population_family,
+            compositions.get(population_family.family_id)
+            if population_family
+            else None,
             processing_enrichment,
             model,
         )
@@ -891,14 +922,20 @@ def to_nomad_with_report(
                 "unprojected_metrics": remainder,
             },
         )
-        if family:
-            represented_families.add(family.family_id)
+        if population_family:
+            represented_families.add(population_family.family_id)
 
     for stability in study.stability_tests:
-        device = devices.get(stability.device_id) if stability.device_id else None
-        family_id = stability.family_id or (device.family_id if device else None)
-        family = families.get(family_id) if family_id else None
-        if stability.device_id and device is None:
+        stability_device = (
+            devices.get(stability.device_id) if stability.device_id else None
+        )
+        stability_family_id = stability.family_id or (
+            stability_device.family_id if stability_device else None
+        )
+        stability_family = (
+            families.get(stability_family_id) if stability_family_id else None
+        )
+        if stability.device_id and stability_device is None:
             _issue(
                 issues,
                 "dangling_reference",
@@ -907,19 +944,19 @@ def to_nomad_with_report(
                 f"Unknown device_id {stability.device_id!r}; the test is still exported.",
                 "device_id",
             )
-        if family_id and family is None:
+        if stability_family_id and stability_family is None:
             _issue(
                 issues,
                 "dangling_reference",
                 "stability_test",
                 stability.test_id,
-                f"Unknown family_id {family_id!r}; the test is still exported.",
+                f"Unknown family_id {stability_family_id!r}; the test is still exported.",
                 "family_id",
             )
         fields, family_note = _base_cell(
             study,
-            family,
-            compositions.get(family.family_id) if family else None,
+            stability_family,
+            compositions.get(stability_family.family_id) if stability_family else None,
             processing_enrichment,
             model,
         )
@@ -934,9 +971,9 @@ def to_nomad_with_report(
                 "device_id": stability.device_id,
                 "link_status": stability.link_status,
                 "device_reported_properties": [
-                    _payload(value) for value in device.reported_properties
+                    _payload(value) for value in stability_device.reported_properties
                 ]
-                if device
+                if stability_device
                 else [],
                 "family": family_note,
                 "conditions": [_payload(value) for value in stability.conditions],
@@ -946,19 +983,19 @@ def to_nomad_with_report(
                 ],
             },
         )
-        if device:
-            represented_devices.add(device.device_id)
-        if family:
-            represented_families.add(family.family_id)
+        if stability_device:
+            represented_devices.add(stability_device.device_id)
+        if stability_family:
+            represented_families.add(stability_family.family_id)
 
     for device in study.individual_devices:
         if device.device_id in represented_devices:
             continue
-        family = families.get(device.family_id) if device.family_id else None
+        device_family = families.get(device.family_id) if device.family_id else None
         fields, family_note = _base_cell(
             study,
-            family,
-            compositions.get(family.family_id) if family else None,
+            device_family,
+            compositions.get(device_family.family_id) if device_family else None,
             processing_enrichment,
             model,
         )
@@ -979,8 +1016,8 @@ def to_nomad_with_report(
                 "family": family_note,
             },
         )
-        if family:
-            represented_families.add(family.family_id)
+        if device_family:
+            represented_families.add(device_family.family_id)
 
     for family in study.device_families:
         if family.family_id in represented_families:

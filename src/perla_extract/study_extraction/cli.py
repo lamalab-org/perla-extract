@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -55,6 +56,7 @@ def extract_study(
     use_claim_ledger: bool = True,
     claim_model: str | None = DEFAULT_CLAIM_MODEL,
     claim_max_output_tokens: int = 30_000,
+    claim_recall_passes: int = 2,
     use_enrichment: bool = True,
     enrichment_model: str | None = None,
     enrichment_max_output_tokens: int = 20_000,
@@ -67,6 +69,7 @@ def extract_study(
     claim_mode: str = "auto",
     single_call_max_input_tokens: int = 90_000,
     claim_window_input_tokens: int = 60_000,
+    assembly_max_input_tokens: int = 180_000,
     max_output_tokens: int = 80_000,
     max_model_calls: int | None = None,
     max_cost_usd: float | None = None,
@@ -99,6 +102,7 @@ def extract_study(
         use_claim_ledger=use_claim_ledger,
         claim_model=claim_model,
         claim_max_output_tokens=claim_max_output_tokens,
+        claim_recall_passes=claim_recall_passes,
         use_enrichment=use_enrichment,
         enrichment_model=enrichment_model,
         enrichment_max_output_tokens=enrichment_max_output_tokens,
@@ -111,6 +115,7 @@ def extract_study(
         claim_mode=claim_mode,
         single_call_max_input_tokens=single_call_max_input_tokens,
         claim_window_input_tokens=claim_window_input_tokens,
+        assembly_max_input_tokens=assembly_max_input_tokens,
         max_output_tokens=max_output_tokens,
         max_model_calls=max_model_calls,
         max_cost_usd=max_cost_usd,
@@ -153,8 +158,12 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     default=DEFAULT_CLAIM_MODEL,
     help="LiteLLM model for source-claim collection.",
 )
+@click.option("--claim-max-output-tokens", type=click.IntRange(min=1), default=30_000)
 @click.option(
-    "--claim-max-output-tokens", type=click.IntRange(min=1), default=30_000
+    "--claim-recall-passes",
+    type=click.IntRange(min=1, max=3),
+    default=2,
+    help="Read each claim window again for omissions before global assembly.",
 )
 @click.option(
     "--enrichment/--no-enrichment",
@@ -200,8 +209,12 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 @click.option(
     "--single-call-max-input-tokens", type=click.IntRange(min=1), default=90_000
 )
+@click.option("--claim-window-input-tokens", type=click.IntRange(min=1), default=60_000)
 @click.option(
-    "--claim-window-input-tokens", type=click.IntRange(min=1), default=60_000
+    "--assembly-max-input-tokens",
+    type=click.IntRange(min=1),
+    default=180_000,
+    help="Fail visibly instead of sending an unexpectedly oversized assembly call.",
 )
 @click.option("--max-output-tokens", type=click.IntRange(min=1), default=80_000)
 @click.option(
@@ -239,7 +252,7 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     default="INFO",
 )
 @click.option("--json-logs", is_flag=True, help="Write structured JSON logs to stderr.")
-def main(log_level: str, json_logs: bool, **options: object) -> None:
+def main(log_level: str, json_logs: bool, **options: Any) -> None:
     """Extract devices, performance, processing, and stability from one study."""
 
     configure_logging(level=log_level, json_output=json_logs)

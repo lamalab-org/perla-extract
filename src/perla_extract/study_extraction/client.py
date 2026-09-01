@@ -8,7 +8,7 @@ import time
 from collections.abc import Callable
 from copy import deepcopy
 from pathlib import Path
-from typing import TypeVar
+from typing import Any, TypeVar
 
 import litellm
 from pydantic import BaseModel, ValidationError
@@ -34,9 +34,16 @@ MODEL_ERRORS = tuple(litellm.exceptions.LITELLM_EXCEPTION_TYPES) + (
 class ModelCallError(RuntimeError):
     """Report a failed call after preserving its inspectable response."""
 
-    def __init__(self, message: str, *, retryable: bool = True) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        retryable: bool = True,
+        usage: dict | None = None,
+    ) -> None:
         super().__init__(message)
         self.retryable = retryable
+        self.usage = usage
 
 
 class ModelBudgetExceeded(ModelCallError):
@@ -80,7 +87,7 @@ def _canonical(value: object) -> bytes:
 def _validation_repair_request(
     body: dict,
     result: object,
-    errors: list[dict[str, object]],
+    errors: list[dict[str, Any]],
 ) -> dict:
     """Ask the model to correct its own invalid structured response once.
 
@@ -97,7 +104,9 @@ def _validation_repair_request(
         [
             {
                 "role": "assistant",
-                "content": json.dumps(result, ensure_ascii=False, separators=(",", ":")),
+                "content": json.dumps(
+                    result, ensure_ascii=False, separators=(",", ":")
+                ),
             },
             {
                 "role": "user",
@@ -281,7 +290,21 @@ class ModelClient:
         )
         message = choice.get("message")
         content = message.get("content") if isinstance(message, dict) else None
+        usage_payload = payload.get("usage")
+        usage = dict(usage_payload) if isinstance(usage_payload, dict) else {}
+        hidden = getattr(response, "_hidden_params", {})
+        usage.update(
+            {
+                "response_model": payload.get("model"),
+                "provider": hidden.get("custom_llm_provider"),
+                "cost": hidden.get("response_cost"),
+                "finish_reason": choice.get("finish_reason"),
+                "latency_seconds": round(time.monotonic() - started, 3),
+            }
+        )
         try:
+            if not isinstance(content, (str, bytes, bytearray)):
+                raise TypeError("response content is not JSON text")
             result = json.loads(content)
         except (TypeError, json.JSONDecodeError) as exc:
             write_json_atomic(
@@ -295,19 +318,8 @@ class ModelClient:
             raise ModelCallError(
                 f"Model returned invalid JSON; see {failure_path}",
                 retryable=choice.get("finish_reason") != "length",
+                usage=usage,
             ) from exc
-        usage_payload = payload.get("usage")
-        usage = dict(usage_payload) if isinstance(usage_payload, dict) else {}
-        hidden = getattr(response, "_hidden_params", {})
-        usage.update(
-            {
-                "response_model": payload.get("model"),
-                "provider": hidden.get("custom_llm_provider"),
-                "cost": hidden.get("response_cost"),
-                "finish_reason": choice.get("finish_reason"),
-                "latency_seconds": round(time.monotonic() - started, 3),
-            }
-        )
         return result, usage
 
     def complete(
@@ -395,21 +407,25 @@ class ModelClient:
         last_error: ModelCallError | None = None
         current_body = body
         attempt_usage: list[dict] = []
+        provider_attempts = 0
         validation_repair = False
         for attempt in range(1, 3):
             raw_result: object = None
+            provider_request_sent = False
             try:
                 logger.info(
                     "Calling model provider for {} (attempt {}/2)", kind, attempt
                 )
                 self._reserve_provider_request()
+                provider_request_sent = True
+                provider_attempts += 1
                 raw_result, usage = self._live(current_body, failure_path)
                 self._record_provider_cost(usage)
                 attempt_usage.append(usage)
                 decoded_result = decode(raw_result) if decode else raw_result
                 validated = response_model.model_validate(decoded_result)
             except (TypeError, ValueError) as exc:
-                validation_errors = (
+                validation_errors: list[dict[str, Any]] = (
                     exc.errors(include_url=False)
                     if isinstance(exc, ValidationError)
                     else [{"type": type(exc).__name__, "message": str(exc)}]
@@ -437,6 +453,10 @@ class ModelClient:
                     validation_repair = True
             except ModelCallError as exc:
                 last_error = exc
+                if provider_request_sent:
+                    failed_usage = exc.usage if exc.usage is not None else {}
+                    self._record_provider_cost(failed_usage)
+                    attempt_usage.append(failed_usage)
             else:
                 combined_usage = _aggregate_usage(attempt_usage)
                 write_json_atomic(
@@ -467,7 +487,9 @@ class ModelClient:
                 return validated
             if attempt == 1 and last_error and last_error.retryable:
                 if validation_repair:
-                    logger.warning("{}; requesting one validation-aware repair", last_error)
+                    logger.warning(
+                        "{}; requesting one validation-aware repair", last_error
+                    )
                 else:
                     logger.warning("{}; retrying once", last_error)
                     time.sleep(2)
@@ -478,7 +500,7 @@ class ModelClient:
                 "cache_hit": False,
                 "error": str(last_error),
                 "usage": _aggregate_usage(attempt_usage),
-                "attempt_count": min(2, len(attempt_usage) or 1),
+                "attempt_count": provider_attempts,
                 "validation_repair": validation_repair,
             }
         )

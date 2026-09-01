@@ -136,9 +136,10 @@ and cache policy. Change one component at a time:
 
 1. refinement model or `--no-refinement`;
 2. claim-collection model or `--no-claims`;
-3. enrichment model or `--no-enrichment`;
-4. primary extraction model; and
-5. parser backend or claim-reading window budget.
+3. `--claim-recall-passes 1` versus the quality-first default of two;
+4. enrichment model or `--no-enrichment`;
+5. primary extraction model; and
+6. parser backend or claim-reading window budget.
 
 Measure at least:
 
@@ -154,6 +155,9 @@ Do not optimize a single aggregate score. In particular, lower cost is not accep
 when it systematically removes devices, chemical detail, or uncommon stability
 conditions. Select the cheapest configuration whose per-category quality bounds remain
 acceptable on development data, then evaluate it once on the held-out test set.
+Use `perla-evaluate` for immutable paper reports and `perla-evaluate-dataset` for
+compatible micro/macro aggregation; do not implement separate matching logic in an
+experiment notebook.
 
 ## Measured calibration example
 

@@ -22,6 +22,7 @@ from perla_extract.study_extraction.workflow import (
     CLAIM_LEDGER_PROMPT,
     EXTRACTION_PROMPT,
     ExtractionConfig,
+    _claim_ledger_prompt,
     _gate_final_candidate_against_draft,
     _run_model_calls,
     _select_refinement_candidate,
@@ -78,6 +79,22 @@ def test_value_producing_passes_share_the_atomic_shared_quantity_rule():
     )
     assert "kind=reported_quantity" in CLAIM_LEDGER_PROMPT
     assert 'raw_value="1.4 M"' in CLAIM_LEDGER_PROMPT
+
+
+def test_recall_pass_repeats_source_without_treating_prior_model_as_evidence():
+    """A second reading changes instructions but carries no previous model ledger."""
+
+    block = EvidenceBlock(
+        block_id="b", source="main", page=1, kind="text", text="Device reached 20%."
+    )
+    prompt = _claim_ledger_prompt([block], recall_pass=2)
+
+    assert "INDEPENDENT OBJECT-FIRST READING" in prompt
+    assert "Device reached 20%." in prompt
+    assert "fallible ledger came from an earlier" not in prompt
+    assert "INDEPENDENT CLAIM-FIRST READING" in _claim_ledger_prompt(
+        [block], recall_pass=3
+    )
 
 
 def test_dry_run_writes_a_complete_request_plan(tmp_path):
@@ -138,7 +155,34 @@ def test_no_claims_dry_run_reports_the_stage_as_disabled(tmp_path):
     assert report["claim_mode"] == "disabled"
     assert report["planned_claim_calls"] == 0
     plan = json.loads((tmp_path / "output" / "claim_window_plan.json").read_text())
-    assert plan == {"mode": "disabled", "approximate_request_tokens": 0, "windows": []}
+    assert plan == {
+        "mode": "disabled",
+        "recall_passes": 0,
+        "approximate_request_tokens": 0,
+        "windows": [],
+    }
+
+
+def test_oversized_assembly_fails_before_any_provider_request(tmp_path):
+    """A context overflow must be explicit and must not fall through to repair calls."""
+
+    report = run_extraction(
+        ExtractionConfig(
+            pdf=FIXTURE,
+            supplement=None,
+            output_dir=tmp_path / "output",
+            parser="pymupdf",
+            document_cache_dir=tmp_path / "documents",
+            model_cache_dir=tmp_path / "models",
+            use_claim_ledger=False,
+            assembly_max_input_tokens=1,
+        )
+    )
+
+    assert report["status"] == "failed"
+    assert report["budget"]["provider_requests"] == 0
+    extraction = json.loads((tmp_path / "output/extraction.json").read_text())
+    assert "assembly request estimate" in extraction["unresolved_notes"][0]
 
 
 def test_quality_pass_receives_grounded_claims_and_retains_draft(tmp_path):
