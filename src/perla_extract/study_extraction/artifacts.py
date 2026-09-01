@@ -23,11 +23,13 @@ def _replace_after_contention(source: Path, target: Path) -> None:
 
 
 def write_json_atomic(path: Path, value: object) -> None:
-    """Replace a JSON artifact only after its complete contents reach disk.
+    """Replace a JSON artifact only after its complete contents are written and closed.
 
     A writer-specific temporary file avoids collisions when two extraction jobs
     share a cache directory. Closing it before replacement also keeps this usable
-    on platforms that do not permit replacing an open file.
+    on platforms that do not permit replacing an open file. This prevents partial
+    readers; it does not claim power-loss durability because no filesystem sync is
+    requested for these reproducible artifacts.
     """
 
     path.parent.mkdir(parents=True, exist_ok=True)

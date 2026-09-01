@@ -388,7 +388,7 @@ def _docling_bbox(item: object) -> list[float] | None:
     bbox = getattr(provenance[0], "bbox", None)
     values = [getattr(bbox, name, None) for name in ("l", "t", "r", "b")]
     return (
-        [float(value) for value in values]
+        [float(value) for value in values if value is not None]
         if all(value is not None for value in values)
         else None
     )

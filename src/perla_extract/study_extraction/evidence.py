@@ -6,6 +6,7 @@ import re
 import unicodedata
 from copy import deepcopy
 from difflib import SequenceMatcher
+from typing import Any
 
 from .models import EvidenceBlock, StudyExtraction
 
@@ -76,7 +77,7 @@ def assembled_from_quotes(raw_value: object, references: list[dict]) -> bool:
 
 def repair_noncontiguous_citation_quotes(
     extraction: StudyExtraction, blocks: list[EvidenceBlock]
-) -> tuple[StudyExtraction, dict[str, object]]:
+) -> tuple[StudyExtraction, dict[str, Any]]:
     """Replace a stitched excerpt only when it is an ordered subset of one block.
 
     Structured-output models sometimes copy several real passages from one block but
@@ -101,9 +102,7 @@ def repair_noncontiguous_citation_quotes(
             position += 1
         return True
 
-    def replacement(
-        reference: dict, path: str, *, allow_split: bool
-    ) -> list[dict]:
+    def replacement(reference: dict, path: str, *, allow_split: bool) -> list[dict]:
         block = block_by_id.get(str(reference["block_id"]))
         quote = str(reference["quote"])
         if block is None or source_contains_text(block.text, quote):
@@ -137,9 +136,7 @@ def repair_noncontiguous_citation_quotes(
         ):
             return [reference]
         source_quotes = [
-            raw_source[
-                offsets[match.b] : offsets[match.b + match.size - 1] + 1
-            ].strip()
+            raw_source[offsets[match.b] : offsets[match.b + match.size - 1] + 1].strip()
             for match in matches
         ]
         if any(
@@ -197,7 +194,7 @@ def repair_noncontiguous_citation_quotes(
 
 def repair_unique_citation_pointers(
     extraction: StudyExtraction, blocks: list[EvidenceBlock]
-) -> tuple[StudyExtraction, dict[str, object]]:
+) -> tuple[StudyExtraction, dict[str, Any]]:
     """Relink a citation only when its unchanged quote has one source match.
 
     A repair corrects transport metadata, not scientific content. Zero or multiple

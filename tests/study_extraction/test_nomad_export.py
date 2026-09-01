@@ -15,6 +15,7 @@ from perla_extract.study_extraction.enrichment import (
 from perla_extract.study_extraction.models import (
     AbsorberComponent,
     DeviceFamily,
+    EvidenceBlock,
     EvidenceCitation,
     IndividualDevice,
     Layer,
@@ -37,6 +38,15 @@ from perla_extract.study_extraction.nomad_contract import (
 from perla_extract.study_extraction.workflow import _write_nomad_artifacts
 
 EVIDENCE = [EvidenceCitation(block_id="table-1", quote="reported value")]
+SOURCE_BLOCKS = [
+    EvidenceBlock(
+        block_id="table-1",
+        source="main",
+        page=1,
+        kind="table",
+        text=("reported value FAPbI3 373.15 K 10 min 1 M FAI DMF chlorobenzene"),
+    )
+]
 
 
 def value(name: str, raw: str, number: float | None, unit: str | None) -> ReportedValue:
@@ -341,8 +351,7 @@ def test_nomad_export_preserves_tandem_absorbers_without_selecting_one():
         archive.data.perovskite_composition is None for archive in exported.archives
     )
     assert any(
-        issue.code == "multiple_absorbers_not_projectable"
-        for issue in exported.issues
+        issue.code == "multiple_absorbers_not_projectable" for issue in exported.issues
     )
     context = json.loads(exported.archives[0].data.additional_notes)["family"]
     assert [item["absorber_id"] for item in context["absorbers"]] == ["a1", "a2"]
@@ -414,7 +423,9 @@ def test_nomad_export_consumes_only_accepted_enrichment():
         ],
     )
 
-    exported = to_nomad_with_report(study, enrichment=enrichment)
+    exported = to_nomad_with_report(
+        study, enrichment=enrichment, evidence_blocks=SOURCE_BLOCKS
+    )
     absorber = exported.archives[0].data.layers[1]
     process = absorber.deposition[0]
 

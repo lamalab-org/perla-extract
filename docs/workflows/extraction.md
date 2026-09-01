@@ -11,8 +11,8 @@ measurement condition from becoming a separate device family.
 flowchart TD
     A["Parse and cache the paper and SI"] --> B["Collect experimental objects and atomic source claims"]
     B --> C{"Claim evidence fits one request?"}
-    C -->|Yes| D["One claim-collection call"]
-    C -->|No| E["Collect claims from section-aware windows"]
+    C -->|Yes| D["Independent claim readings of the complete evidence"]
+    C -->|No| E["Independent claim readings of section-aware windows"]
     D --> F["Ground claims against parser text"]
     E --> F
     F --> G["One global study-assembly call"]
@@ -49,8 +49,8 @@ guessing.
 
 ## Long papers and supplements
 
-`--claim-mode auto` collects the ledger in one request when it fits
-`--claim-window-input-tokens`; otherwise it uses section-aware windows. Windows are
+`--claim-mode auto` uses complete-document claim calls when the request fits
+`--single-call-max-input-tokens`; otherwise it uses section-aware windows. Windows are
 only a reading strategy: their grounded claims are combined before any final records
 are built. Study assembly and reconciliation always receive the combined ledger and
 run globally, so records are not independently invented in separate windows and
@@ -60,6 +60,13 @@ Window planning follows parser blocks, pages, and section paths. It does not sea
 for domain-specific field names. Oversized blocks stay intact instead of being
 truncated. `--dry-run` reports the claim mode and planned semantic calls without
 calling a model.
+
+By default, `--claim-recall-passes 2` reads every complete document or window twice
+with independently worded instructions. The second pass receives the same bounded
+parser evidence—not the first model response—and the grounded union guides assembly.
+This costs another claim call per window, but prevents one omitted ledger entry from
+being an unrecoverable single point of failure. Use one pass only as an evaluated cost
+ablation.
 
 ## Global assembly and reconciliation
 
@@ -74,6 +81,11 @@ complete corrected study. It may recover missed records or values and remove
 unsupported duplicates. A failed reconciliation cannot destroy the valid first
 draft, which remains in `draft_extraction.json`. Use `--no-refinement` only for a
 measured cost/quality ablation.
+
+The estimate for this global request is checked against
+`--assembly-max-input-tokens`. Exceeding it produces an explicit failed run and an
+inspectable empty result instead of relying on provider-side truncation. Raising the
+limit is a conscious model-context decision recorded in `run_configuration.json`.
 
 ## Claim-aware audit and targeted repair
 
@@ -134,6 +146,10 @@ errors. That exact follow-up is preserved as
 `requests/<call>.validation-repair.request.json`, and usage totals include both paid
 responses. No open-ended correction loop is used.
 
+Provider usage is captured before JSON decoding. A charged malformed response is
+therefore included in token and cost totals, and a monetary budget fails closed before
+another request when the provider did not return usable cost information.
+
 Parser and ledger failures fail open where safe: the full scientific evidence remains
 available, and an empty ledger falls back to complete source evidence. A failed initial
 study assembly produces a valid empty extraction with an unresolved note. A failed optional
@@ -143,7 +159,8 @@ validation never silently drops unsupported scientific records.
 After validation, compact semantic passes interpret composition and processing roles
 from existing records and their cited evidence. These enrichments write separate
 audits and do not rewrite `extraction.json`. The workflow then exports one pinned
-NOMAD archive per atomic source record. See
+NOMAD archive per atomic source record. The adapter revalidates accepted enrichment
+against the original parser blocks before applying it. See
 [Interpret composition and processing](enrichment.md) and
 [Export to NOMAD](nomad-export.md).
 

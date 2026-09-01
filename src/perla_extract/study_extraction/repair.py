@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from pydantic import Field
 
@@ -175,8 +175,8 @@ def _record_for_path(study: StudyExtraction, path: str) -> tuple[str, object] | 
 
 def build_repair_worklist(
     study: StudyExtraction,
-    coverage: dict[str, object] | None,
-    validation: dict[str, object],
+    coverage: dict[str, Any] | None,
+    validation: dict[str, Any],
 ) -> RepairWorklist:
     """Turn independent gaps into deduplicated work items with local block IDs."""
 
@@ -503,8 +503,8 @@ def run_targeted_repair(
     study: StudyExtraction,
     blocks: list[EvidenceBlock],
     ledger: ClaimLedger | None,
-    coverage: dict[str, object] | None,
-    validation: dict[str, object],
+    coverage: dict[str, Any] | None,
+    validation: dict[str, Any],
     model: str,
     reasoning_effort: str | None,
     max_output_tokens: int,

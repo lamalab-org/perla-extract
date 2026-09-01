@@ -16,5 +16,10 @@
     "viewpoint",
     "news",
     "editorial"
-  ]
+  ],
+  "openalex": {
+    "topic_ids": ["T10247", "T10624", "T12309"],
+    "initial_lookback_days": 30,
+    "overlap_days": 7
+  }
 }

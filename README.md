@@ -41,8 +41,10 @@ The [documentation site](docs/index.md) explains:
 - [the study and evidence model](docs/concepts/study-model.md);
 - [single-call and long-supplement extraction](docs/workflows/extraction.md);
 - [human ground-truth review](docs/workflows/ground-truth-review.md);
+- [deterministic rich-schema evaluation](docs/workflows/evaluation.md);
 - [audited composition and processing interpretation](docs/workflows/enrichment.md);
-- [direct NOMAD export](docs/workflows/nomad-export.md); and
+- [direct NOMAD export](docs/workflows/nomad-export.md);
+- [paper discovery and Zotero journal-club intake](docs/workflows/papersbot.md); and
 - [the optional reduced-schema compatibility boundary](docs/compatibility/reduced-schema.md).
 
 Build it locally with:
@@ -56,9 +58,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development and test commands.
 
 ## Discover new papers
 
-PapersBot checks the packaged journal feeds, applies a replaceable JSON selection
-policy, resolves open-access PDF links, and records incremental state as readable
-JSON. It is deliberately separate from scientific data extraction:
+PapersBot combines packaged journal feeds, OpenAlex topic searches, and an optional
+Zotero group; applies one replaceable JSON selection policy; retrieves available PDFs;
+and records incremental state as readable JSON. It is deliberately separate from
+scientific data extraction:
 
 ```bash
 pip install 'perla-extract[papersbot]'
@@ -66,8 +69,14 @@ perla-papersbot downloaded_papers --state-dir .papersbot-state
 ```
 
 Use `--feeds-file` or repeated `--feed` options to replace the journal list and
-`--selection-file` to replace the relevance policy. The daily GitHub workflow caches
-the state and publishes newly downloaded PDFs as a run artifact.
+`--selection-file` to replace the relevance policy. `--zotero-group-id` also ingests a
+Zotero group, including stored PDF attachments. A configured collection can be a
+journal-club-curated intake queue. Zotero access is read-only and works with a key
+scoped to that group. The supported unattended deployment is an internal cron job,
+with ordinary settings available through `PAPERSBOT_` environment variables. Each PDF
+acquisition records its source and access basis; authorized local retrieval mechanisms
+can implement the small `PdfSource` interface without adding publisher cases to the
+bot.
 
 ## Authors
 

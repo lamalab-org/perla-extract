@@ -66,10 +66,7 @@ def test_only_validated_model_results_enter_cache(tmp_path, monkeypatch):
 
     assert first == second
     assert second_client.calls[0]["cache_hit"] is True
-    assert (
-        client.calls[0]["request_sha256"]
-        == second_client.calls[0]["request_sha256"]
-    )
+    assert client.calls[0]["request_sha256"] == second_client.calls[0]["request_sha256"]
     assert client.calls[0]["cache_key_sha256"] != client.calls[0]["request_sha256"]
 
 
@@ -441,3 +438,43 @@ def test_unusable_litellm_response_becomes_inspectable_error(
 
     failure = json.loads(failure_path.read_text(encoding="utf-8"))
     assert failure["content"] is None
+
+
+def test_invalid_json_response_retains_usage_for_budget_accounting(
+    tmp_path, monkeypatch
+):
+    """A charged malformed response must count before any application retry."""
+
+    payload = {
+        "model": "provider-model",
+        "choices": [{"finish_reason": "stop", "message": {"content": "{"}}],
+        "usage": {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 12},
+    }
+    response = SimpleNamespace(
+        model_dump=lambda: payload,
+        _hidden_params={"custom_llm_provider": "test", "response_cost": 0.02},
+    )
+    monkeypatch.setattr(litellm, "completion", lambda **_kwargs: response)
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        heartbeat_seconds=0,
+        max_cost_usd=0.01,
+    )
+
+    with pytest.raises(ModelBudgetExceeded, match="cost budget"):
+        client.complete(
+            kind="test",
+            slug="invalid",
+            model="test/model",
+            system="system",
+            prompt="prompt",
+            response_model=StudyExtraction,
+            max_output_tokens=100,
+            reasoning_effort=None,
+        )
+
+    assert client.budget_status()["reported_cost_usd"] == 0.02
+    assert client.budget_status()["provider_requests"] == 1
+    assert client.calls[0]["usage"]["total_tokens"] == 12
+    assert client.calls[0]["attempt_count"] == 1

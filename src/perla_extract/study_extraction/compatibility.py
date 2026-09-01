@@ -430,8 +430,8 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
         )
 
     for observation in study.performance_observations:
-        device = devices.get(observation.device_id)
-        if device is None:
+        observation_device = devices.get(observation.device_id)
+        if observation_device is None:
             _record_conversion_issue(
                 issues,
                 "dangling_reference",
@@ -439,8 +439,12 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                 observation.observation_id,
                 f"Unknown device_id {observation.device_id!r}; metrics are still exported.",
             )
-        family = families.get(device.family_id) if device and device.family_id else None
-        family_fields, family_note = _project_family(family)
+        observation_family = (
+            families.get(observation_device.family_id)
+            if observation_device and observation_device.family_id
+            else None
+        )
+        family_fields, family_note = _project_family(observation_family)
         metric_fields, remainder = _project_performance_metrics(
             observation.metrics,
             "performance_observation",
@@ -455,14 +459,23 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
             "measurement_type": observation.measurement_type,
             "scan_direction": observation.scan_direction,
             "aggregation": _reduced_performance_aggregation(
-                device, observation.measurement_type
+                observation_device, observation.measurement_type
             ),
-            "champion_status": (device.champion_status if device else "not_reported"),
-            "selection_basis": (device.selection_basis if device else "not_reported"),
+            "champion_status": (
+                observation_device.champion_status
+                if observation_device
+                else "not_reported"
+            ),
+            "selection_basis": (
+                observation_device.selection_basis
+                if observation_device
+                else "not_reported"
+            ),
             "device_reported_properties": [
-                _reported_value_payload(value) for value in device.reported_properties
+                _reported_value_payload(value)
+                for value in observation_device.reported_properties
             ]
-            if device
+            if observation_device
             else [],
             "unprojected_metrics": remainder,
         }
@@ -474,21 +487,21 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                     **family_fields,
                     **metric_fields,
                     "performance_aggregation": _reduced_performance_aggregation(
-                        device, observation.measurement_type
+                        observation_device, observation.measurement_type
                     ),
                 },
                 note,
             ),
         )
         represented_devices.add(observation.device_id)
-        if family:
-            represented_families.add(family.family_id)
+        if observation_family:
+            represented_families.add(observation_family.family_id)
 
     for device in study.individual_devices:
         if device.device_id in represented_devices:
             continue
-        family = families.get(device.family_id) if device.family_id else None
-        family_fields, family_note = _project_family(family)
+        device_family = families.get(device.family_id) if device.family_id else None
+        family_fields, family_note = _project_family(device_family)
         add_reduced_cell(
             "individual_device",
             device.device_id,
@@ -517,8 +530,8 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                 },
             ),
         )
-        if family:
-            represented_families.add(family.family_id)
+        if device_family:
+            represented_families.add(device_family.family_id)
 
     population_aggregation = {
         "mean": "mean",
@@ -526,8 +539,10 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
         "distribution": "distribution",
     }
     for population in study.population_statistics:
-        family = families.get(population.family_id) if population.family_id else None
-        if population.family_id and family is None:
+        population_family = (
+            families.get(population.family_id) if population.family_id else None
+        )
+        if population.family_id and population_family is None:
             _record_conversion_issue(
                 issues,
                 "dangling_reference",
@@ -535,7 +550,7 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                 population.population_id,
                 f"Unknown family_id {population.family_id!r}; metrics are still exported.",
             )
-        family_fields, family_note = _project_family(family)
+        family_fields, family_note = _project_family(population_family)
         metric_fields, remainder = _project_performance_metrics(
             population.metrics, "population_statistic", population.population_id, issues
         )
@@ -566,12 +581,12 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                 },
             ),
         )
-        if family:
-            represented_families.add(family.family_id)
+        if population_family:
+            represented_families.add(population_family.family_id)
 
     for test in study.stability_tests:
-        device = devices.get(test.device_id) if test.device_id else None
-        if test.device_id and device is None:
+        stability_device = devices.get(test.device_id) if test.device_id else None
+        if test.device_id and stability_device is None:
             _record_conversion_issue(
                 issues,
                 "dangling_reference",
@@ -579,17 +594,21 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                 test.test_id,
                 f"Unknown device_id {test.device_id!r}; the test is still exported.",
             )
-        family_id = test.family_id or (device.family_id if device else None)
-        family = families.get(family_id) if family_id else None
-        if family_id and family is None:
+        stability_family_id = test.family_id or (
+            stability_device.family_id if stability_device else None
+        )
+        stability_family = (
+            families.get(stability_family_id) if stability_family_id else None
+        )
+        if stability_family_id and stability_family is None:
             _record_conversion_issue(
                 issues,
                 "dangling_reference",
                 "stability_test",
                 test.test_id,
-                f"Unknown family_id {family_id!r}; the test is still exported.",
+                f"Unknown family_id {stability_family_id!r}; the test is still exported.",
             )
-        family_fields, family_note = _project_family(family)
+        family_fields, family_note = _project_family(stability_family)
         raw_stability = {
             "test_id": test.test_id,
             "conditions": [
@@ -623,14 +642,14 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                     "record_kind": "stability_test",
                     "test_id": test.test_id,
                     "device_id": test.device_id,
-                    "family_id": family_id,
+                    "family_id": stability_family_id,
                     "specimen_label": test.specimen_label,
                     "link_status": test.link_status,
                     "device_reported_properties": [
                         _reported_value_payload(value)
-                        for value in device.reported_properties
+                        for value in stability_device.reported_properties
                     ]
-                    if device
+                    if stability_device
                     else [],
                     "family": family_note,
                     "rich_stability": raw_stability,
@@ -644,8 +663,8 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
             test.test_id,
             "Ordered checkpoints are preserved in additional_notes because the reduced Stability model cannot represent them losslessly.",
         )
-        if family:
-            represented_families.add(family.family_id)
+        if stability_family:
+            represented_families.add(stability_family.family_id)
 
     for family in study.device_families:
         if family.family_id in represented_families:

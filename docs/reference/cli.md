@@ -35,6 +35,8 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | `--claims / --no-claims` | claims | Collect and ground objects and atomic source claims before assembly |
 | `--claim-model TEXT` | extraction model | LiteLLM model used for claim collection |
 | `--claim-max-output-tokens INTEGER` | `30000` | Completion limit for each claim-collection call |
+| `--claim-recall-passes INTEGER` | `2` | Independent complete readings of every claim document/window |
+| `--assembly-max-input-tokens INTEGER` | `180000` | Visible safety bound for the global assembly request estimate |
 | `--enrichment / --no-enrichment` | enrichment | Run the audited composition and processing interpretation stage |
 | `--enrichment-model TEXT` | extraction model | Model used for the two compact enrichment calls |
 | `--enrichment-max-output-tokens INTEGER` | `20000` | Completion limit for each enrichment call |
@@ -89,6 +91,20 @@ the original call metadata remains under `calls[].cached_response_usage` for pro
 Requests contain parser-produced text and tables only. No option enables rendered-page
 or vision-model input in this workflow.
 
+## Evaluation
+
+```text
+perla-evaluate --truth PATH --prediction PATH [OPTIONS]
+```
+
+`--truth` accepts either a frozen benchmark directory or a rich truth JSON;
+`--prediction` accepts an extraction run directory or `extraction.json`. Frozen
+directories receive schema- and content-hash verification. The record-matching
+threshold and numeric tolerances are explicit options and are written into the output
+report. See [Evaluate an extraction](../workflows/evaluation.md).
+Use repeated `--report` options with `perla-evaluate-dataset` to aggregate compatible
+per-paper reports with micro counts, macro rates, and paper-bootstrap intervals.
+
 ## Cache and logging
 
 | Option | Default | Meaning |
@@ -103,8 +119,8 @@ Run `perla-extract --help` to see the complete installed command interface.
 
 ## PapersBot
 
-The optional literature-discovery command has a separate dependency boundary and
-does not change the extraction command:
+The literature-discovery command is separate from the extraction command. Its feed
+and HTTP dependencies are installed through the `papersbot` dependency group:
 
 ```text
 perla-papersbot [OPTIONS] [DOWNLOAD_DIR]
@@ -112,4 +128,23 @@ perla-papersbot [OPTIONS] [DOWNLOAD_DIR]
 
 Install it with `pip install 'perla-extract[papersbot]'`. See
 [Discover papers](../workflows/papersbot.md) for state, selection, and scheduled-run
-behavior.
+behavior. RSS discovery and the policy's OpenAlex topics are enabled by default.
+`--no-rss` and `--no-openalex` isolate sources; `--openalex-start-date` and
+`--openalex-end-date` run an explicit `YYYY-MM-DD` backfill window.
+`--openalex-api-key` enables the larger authenticated OpenAlex budget, while
+`--request-retries` controls bounded retries for GET rate limits and transient server
+errors.
+`--zotero-group-id` adds a Zotero group as a discovery source, and
+`--zotero-collection-key` limits it to one collection using Zotero's API key for that
+collection, not its display name. `--zotero-curated` makes that collection a
+human-approved extraction queue. Zotero access is read-only; `ZOTERO_API_KEY` is
+needed only when the selected group library is not publicly readable. The key is never
+written to bot artifacts.
+
+For unattended use, ordinary options use the `PAPERSBOT_` environment prefix:
+`PAPERSBOT_DOWNLOAD_DIR`, `PAPERSBOT_STATE_DIR`, `PAPERSBOT_RSS`,
+`PAPERSBOT_OPENALEX`, `PAPERSBOT_MAX_ATTEMPTS`, `PAPERSBOT_REQUEST_RETRIES`,
+`PAPERSBOT_FAIL_ON_PARTIAL`, and `PAPERSBOT_LOG_FILE` are direct
+examples. Zotero credentials retain the explicit `ZOTERO_` names documented in the
+workflow guide. `OPENALEX_API_KEY` and `ZOTERO_API_KEY` are never written to bot
+artifacts. Command-line values take precedence.

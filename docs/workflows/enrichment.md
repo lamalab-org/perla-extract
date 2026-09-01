@@ -31,6 +31,8 @@ its existing constituents, and its cited blocks. It proposes A-, B-, and X-site 
 for that absorber only. A proposal
 is accepted automatically only when all three sites are present and the proposed
 terms exactly reconstruct the reported formula after removing typographic formatting.
+Each term must also remain an intact element symbol or source acronym; character-level
+splits such as treating `FA` as `F` plus an invented `A` token are not accepted.
 The deterministic comparison also recognizes a final parenthesized site group whose
 trailing multiplier is presentation of site multiplicity, while preserving every
 copied fractional occupancy. Other grouped formulas that cannot be reconstructed
@@ -44,6 +46,9 @@ duration, or atmosphere, and a material index to solute, solvent, antisolvent, o
 other. It cannot emit a new measured value. Numeric mappings are accepted only when
 the referenced source value has an explicit compatible number and unit. Dangling,
 duplicate, or incompatible pointers remain reviewable or are rejected.
+Concentration pointers require a dimensionally compatible amount, mass, or explicit
+fraction concentration and cannot reuse a condition already mapped as temperature,
+duration, or atmosphere.
 Referenced conditions and material names must occur in the step's cited evidence.
 
 ## Artifacts and cost

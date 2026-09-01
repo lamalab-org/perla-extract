@@ -74,8 +74,13 @@ After extraction, `validate_study` checks:
    normalization;
 3. reported values occur in their cited evidence;
 4. source-reported material-form wording occurs in its cited evidence;
-5. family and device identifiers are unique; and
-6. device, observation, population, and stability references resolve.
+5. top-level and nested identifiers are unique;
+6. processing targets and absorber layers resolve within their family;
+7. device, observation, population, and stability references resolve; and
+8. linked stability devices and families agree.
+
+Pydantic additionally rejects non-finite normalized numbers, contradictory champion
+fields, and a stability `link_status` whose required identifiers are absent.
 
 ```mermaid
 flowchart LR

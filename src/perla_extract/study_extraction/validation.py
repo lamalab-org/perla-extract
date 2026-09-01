@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from typing import Any
 
 from .evidence import assembled_from_quotes, source_contains_text
 from .identifiers import entity_id_lists
@@ -11,7 +12,7 @@ from .models import EvidenceBlock, StudyExtraction
 
 def validate_study(
     extraction: StudyExtraction, blocks: list[EvidenceBlock]
-) -> dict[str, object]:
+) -> dict[str, Any]:
     """Annotate textual grounding and relationship failures without deleting output.
 
     These deterministic checks prove that quotes and raw reported values occur in supplied
@@ -32,7 +33,8 @@ def validate_study(
     def evidence_supported(items: list[dict], path: str) -> bool:
         supported = bool(items)
         for index, reference in enumerate(items):
-            block = block_by_id.get(reference.get("block_id"))
+            block_id = reference.get("block_id")
+            block = block_by_id.get(block_id) if isinstance(block_id, str) else None
             reference_path = f"{path}.evidence[{index}]"
             if block is None:
                 issue(reference_path, "unknown block_id")
@@ -113,16 +115,27 @@ def validate_study(
     ]
     if len(absorber_ids) != len(set(absorber_ids)):
         issue("$.device_families", "duplicate absorber_id")
+    step_ids = [
+        step.step_id
+        for family in extraction.device_families
+        for step in family.processing_steps
+    ]
+    if len(step_ids) != len(set(step_ids)):
+        issue("$.device_families", "duplicate step_id")
     for family_index, family in enumerate(extraction.device_families):
+        layer_ids = [layer.layer_id for layer in family.layers]
+        if len(layer_ids) != len(set(layer_ids)):
+            issue(
+                f"$.device_families[{family_index}].layers",
+                "duplicate layer_id within family",
+            )
         layer_roles = {layer.layer_id: layer.role for layer in family.layers}
         absorber_layers = {
             layer_id for layer_id, role in layer_roles.items() if role == "absorber"
         }
         scoped_layers: set[str] = set()
         for absorber_index, absorber in enumerate(family.absorbers):
-            path = (
-                f"$.device_families[{family_index}].absorbers[{absorber_index}]"
-            )
+            path = f"$.device_families[{family_index}].absorbers[{absorber_index}]"
             if absorber.layer_id is None:
                 if len(absorber_layers) > 1:
                     issue(
@@ -142,6 +155,14 @@ def validate_study(
                 f"$.device_families[{family_index}].absorbers",
                 "one or more absorber layers lack a scoped composition record",
             )
+        for step_index, step in enumerate(family.processing_steps):
+            for target_index, target_id in enumerate(step.target_layer_ids):
+                if target_id not in layer_roles:
+                    issue(
+                        f"$.device_families[{family_index}].processing_steps"
+                        f"[{step_index}].target_layer_ids[{target_index}]",
+                        "unknown layer_id in this family",
+                    )
     for index, device in enumerate(extraction.individual_devices):
         if device.family_id and device.family_id not in families:
             issue(f"$.individual_devices[{index}].family_id", "unknown family_id")
@@ -155,10 +176,27 @@ def validate_study(
         if population.family_id and population.family_id not in families:
             issue(f"$.population_statistics[{index}].family_id", "unknown family_id")
     for index, test in enumerate(extraction.stability_tests):
+        checkpoint_ids = [checkpoint.checkpoint_id for checkpoint in test.checkpoints]
+        if len(checkpoint_ids) != len(set(checkpoint_ids)):
+            issue(
+                f"$.stability_tests[{index}].checkpoints",
+                "duplicate checkpoint_id within stability test",
+            )
         if test.family_id and test.family_id not in families:
             issue(f"$.stability_tests[{index}].family_id", "unknown family_id")
         if test.device_id and test.device_id not in devices:
             issue(f"$.stability_tests[{index}].device_id", "unknown device_id")
+        if test.device_id and test.device_id in devices and test.family_id:
+            device = next(
+                item
+                for item in extraction.individual_devices
+                if item.device_id == test.device_id
+            )
+            if device.family_id is not None and device.family_id != test.family_id:
+                issue(
+                    f"$.stability_tests[{index}].family_id",
+                    "family_id does not match the linked device",
+                )
 
     return {
         "status": "verified" if not issues else "needs_review",
