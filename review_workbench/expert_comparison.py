@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import random
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal, Protocol
@@ -25,6 +26,17 @@ from review_workbench.review_storage import StaleRevisionError
 
 Verdict = Literal["correct", "incorrect", "unsupported", "cannot_determine"]
 Origin = Literal["historical_database", "new_extractor"]
+PreferenceChoice = Literal["A", "B", "tie", "both_inadequate", "cannot_judge"]
+PreferenceDimension = Literal[
+    "factual_correctness",
+    "coverage_completeness",
+    "chemical_detail",
+    "record_relationships",
+    "evidence_traceability",
+    "nomad_readiness",
+    "curation_effort",
+    "overall_preference",
+]
 IDENTIFIER_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
 NON_CLAIM_FIELDS = {
     "additional_notes",
@@ -123,11 +135,95 @@ class Assignment(BaseModel):
     blind_label: Literal["A", "B"]
 
 
+class PairwiseRubric(BaseModel):
+    """Freeze one comparison criterion and its decision standard with the study."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+    key: PreferenceDimension
+    label: str
+    question: str
+    minimum_acceptable: str
+    preference_rule: str
+
+
+def _pairwise_rubrics() -> list[PairwiseRubric]:
+    """Return fresh rubric objects so one experiment cannot mutate another."""
+
+    definitions = [
+        (
+            "factual_correctness",
+            "Factual correctness",
+            "Which output has fewer or less consequential incorrect and unsupported scientific claims?",
+            "No material claim contradicts the source, and unsupported claims are uncommon and minor.",
+            "Prefer one candidate when its errors are clearly fewer or scientifically less consequential; do not decide by record count alone.",
+        ),
+        (
+            "coverage_completeness",
+            "Coverage and completeness",
+            "Which captures more schema-relevant information without rewarding repetition or verbosity?",
+            "The principal device design and the reported performance, processing, and stability information in scope are represented.",
+            "Prefer one candidate when it captures important missing facts or records without adding unsupported duplicates.",
+        ),
+        (
+            "chemical_detail",
+            "Chemical detail",
+            "Which better preserves material identities, formulas, constituents, layer roles, quantities, and processing chemistry?",
+            "The chemistry is specific enough to distinguish the reported absorber and functional layers without invented normalization.",
+            "Prefer one candidate when its additional chemical detail is source-supported, structured, and scientifically discriminating.",
+        ),
+        (
+            "record_relationships",
+            "Record relationships",
+            "Which more coherently links families, devices, measurements, population statistics, and stability tests?",
+            "Champion values, individual measurements, aggregates, and stability specimens are not silently treated as one device.",
+            "Prefer one candidate when its links preserve the experimental units of analysis and require fewer structural corrections.",
+        ),
+        (
+            "evidence_traceability",
+            "Evidence traceability",
+            "Which makes its important claims easier to locate and verify in the main paper or supporting information?",
+            "A reviewer can trace material scientific claims to sufficiently specific source context without reconstructing the extraction.",
+            "Prefer one candidate when verification is consistently faster and less ambiguous, not merely because it contains shorter text.",
+        ),
+        (
+            "nomad_readiness",
+            "NOMAD readiness",
+            "Which maps more cleanly into a scientifically useful downstream NOMAD record?",
+            "Values, units, materials, record types, and relationships are structured well enough for deterministic downstream conversion.",
+            "Prefer one candidate when less semantic reconstruction or loss-prone normalization is needed for NOMAD export.",
+        ),
+        (
+            "curation_effort",
+            "Required curation effort",
+            "Which would require less expert work before it could be accepted into a curated database?",
+            "The output needs bounded checking and correction rather than wholesale re-extraction or structural rebuilding.",
+            "Prefer the candidate requiring less total expert effort, considering both error correction and recovery of missing information.",
+        ),
+        (
+            "overall_preference",
+            "Overall preference",
+            "Which is the better starting point for expert curation after considering all trade-offs?",
+            "The output is scientifically credible, sufficiently complete, understandable, and practically editable.",
+            "Prefer one candidate only when its combined advantages are meaningful for real curation; otherwise use tie or both inadequate.",
+        ),
+    ]
+    return [
+        PairwiseRubric(
+            key=key,
+            label=label,
+            question=question,
+            minimum_acceptable=minimum,
+            preference_rule=rule,
+        )
+        for key, label, question, minimum, rule in definitions
+    ]
+
+
 class ComparisonSource(BaseModel):
     """Freeze inputs, assignment, and provenance before expert review begins."""
 
     model_config = ConfigDict(extra="forbid", strict=True)
-    format_version: Literal[1] = 1
+    format_version: Literal[1, 2] = 2
     comparison_id: str = Field(pattern=IDENTIFIER_PATTERN)
     paper_id: str = Field(pattern=IDENTIFIER_PATTERN)
     split: Literal["calibration", "dev", "test"] = "dev"
@@ -138,6 +234,7 @@ class ComparisonSource(BaseModel):
     created_at: datetime
     candidates: dict[Literal["A", "B"], Candidate]
     assignments: list[Assignment]
+    pairwise_rubrics: list[PairwiseRubric] = Field(default_factory=_pairwise_rubrics)
 
     @model_validator(mode="after")
     def validate_design(self) -> ComparisonSource:
@@ -159,6 +256,12 @@ class ComparisonSource(BaseModel):
         ]
         if abs(counts[0] - counts[1]) > 1:
             raise ValueError("candidate assignments must be balanced")
+        expected_rubrics = {item.key for item in _pairwise_rubrics()}
+        actual_rubrics = [item.key for item in self.pairwise_rubrics]
+        if len(actual_rubrics) != len(set(actual_rubrics)) or set(
+            actual_rubrics
+        ) != expected_rubrics:
+            raise ValueError("pairwise rubrics must contain every criterion once")
         return self
 
 
@@ -241,6 +344,48 @@ class NativeUtilityReview(BaseModel):
     notes: str = Field(default="", max_length=5000)
 
 
+class PreferenceRatings(BaseModel):
+    """Require a decision on each pre-registered pairwise comparison rubric."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+    factual_correctness: PreferenceChoice
+    coverage_completeness: PreferenceChoice
+    chemical_detail: PreferenceChoice
+    record_relationships: PreferenceChoice
+    evidence_traceability: PreferenceChoice
+    nomad_readiness: PreferenceChoice
+    curation_effort: PreferenceChoice
+    overall_preference: PreferenceChoice
+
+
+class PairwisePreferenceReview(BaseModel):
+    """Store one immutable, dimension-specific preference after independent scoring."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+    comparison_id: str = Field(pattern=IDENTIFIER_PATTERN)
+    reviewer_id: str = Field(pattern=IDENTIFIER_PATTERN)
+    candidate_hashes: dict[Literal["A", "B"], str]
+    submitted_at: datetime
+    active_seconds: int = Field(default=0, ge=0)
+    preferences: PreferenceRatings
+    confidence: int = Field(ge=1, le=5)
+    rationale: str = Field(default="", max_length=5000)
+
+    @model_validator(mode="after")
+    def validate_candidate_hashes(self) -> PairwisePreferenceReview:
+        """Bind the preference to exactly the two native outputs shown to the expert."""
+
+        if set(self.candidate_hashes) != {"A", "B"}:
+            raise ValueError("pairwise preferences require candidate hashes for A and B")
+        if any(
+            not isinstance(value, str)
+            or not re.fullmatch(r"[a-f0-9]{64}", value)
+            for value in self.candidate_hashes.values()
+        ):
+            raise ValueError("pairwise candidate hashes must be SHA-256 values")
+        return self
+
+
 class ComparisonStorage(Protocol):
     """Persist immutable experiment sources and reviewer-scoped revision logs."""
 
@@ -260,6 +405,12 @@ class ComparisonStorage(Protocol):
 
     def save_utility(self, review: NativeUtilityReview) -> None: ...
 
+    def load_preference(
+        self, comparison_id: str, reviewer_id: str
+    ) -> PairwisePreferenceReview | None: ...
+
+    def save_preference(self, review: PairwisePreferenceReview) -> None: ...
+
 
 class LocalComparisonStorage:
     """Use immutable JSON files so drafts and submissions remain recoverable."""
@@ -275,6 +426,9 @@ class LocalComparisonStorage:
 
     def _utility(self, comparison_id: str, reviewer_id: str) -> Path:
         return self.root / "utility" / comparison_id / f"{reviewer_id}.json"
+
+    def _preference(self, comparison_id: str, reviewer_id: str) -> Path:
+        return self.root / "preferences" / comparison_id / f"{reviewer_id}.json"
 
     def create(self, source: ComparisonSource) -> None:
         try:
@@ -342,6 +496,27 @@ class LocalComparisonStorage:
             )
         except FileExistsError as error:
             raise ValueError("native utility review is already submitted") from error
+
+    def load_preference(
+        self, comparison_id: str, reviewer_id: str
+    ) -> PairwisePreferenceReview | None:
+        path = self._preference(comparison_id, reviewer_id)
+        return (
+            PairwisePreferenceReview.model_validate_json(
+                path.read_text(encoding="utf-8")
+            )
+            if path.exists()
+            else None
+        )
+
+    def save_preference(self, review: PairwisePreferenceReview) -> None:
+        try:
+            write_json_exclusive(
+                self._preference(review.comparison_id, review.reviewer_id),
+                review.model_dump(mode="json"),
+            )
+        except FileExistsError as error:
+            raise ValueError("pairwise preference is already submitted") from error
 
 
 def _label(path: str) -> str:
@@ -512,10 +687,7 @@ class ComparisonService:
         for comparison_id in self.storage.list_ids():
             source = self.storage.load_source(comparison_id)
             completed = sum(
-                bool(
-                    (review := self.storage.load_review(comparison_id, item.reviewer_id))
-                    and review.final
-                )
+                bool(self.storage.load_preference(comparison_id, item.reviewer_id))
                 for item in source.assignments
             )
             batch_ready = completed == len(source.assignments)
@@ -536,7 +708,7 @@ class ComparisonService:
                         "status": (
                             "batch_ready"
                             if batch_ready
-                            else f"{completed}_of_{len(source.assignments)}_accuracy_submitted"
+                            else f"{completed}_of_{len(source.assignments)}_reviews_complete"
                         ),
                     }
                 )
@@ -566,10 +738,12 @@ class ComparisonService:
             return "not_started"
         if not review.final:
             return "accuracy_in_progress"
+        if not self.storage.load_utility(comparison_id, reviewer_id):
+            return "native_utility_pending"
         return (
             "complete"
-            if self.storage.load_utility(comparison_id, reviewer_id)
-            else "native_utility_pending"
+            if self.storage.load_preference(comparison_id, reviewer_id)
+            else "pairwise_preference_pending"
         )
 
     def open(self, comparison_id: str, reviewer_id: str) -> dict[str, Any]:
@@ -705,8 +879,60 @@ class ComparisonService:
         self.storage.save_utility(review)
         return review.model_dump(mode="json")
 
+    def open_pairwise(self, comparison_id: str, reviewer_id: str) -> dict[str, Any]:
+        """Show anonymous A and B only after the independent assessments are locked."""
+
+        source = self.storage.load_source(comparison_id)
+        self._assignment(source, reviewer_id)
+        accuracy = self.storage.load_review(comparison_id, reviewer_id)
+        utility = self.storage.load_utility(comparison_id, reviewer_id)
+        if accuracy is None or not accuracy.final or utility is None:
+            raise ValueError(
+                "submit the independent accuracy and native-output reviews first"
+            )
+        preference = self.storage.load_preference(comparison_id, reviewer_id)
+        return {
+            "comparison_id": comparison_id,
+            "rubrics": [
+                rubric.model_dump(mode="json") for rubric in source.pairwise_rubrics
+            ],
+            "candidates": {
+                label: {
+                    "native_payload": candidate.native_payload,
+                    "candidate_sha256": candidate.native_sha256,
+                }
+                for label, candidate in source.candidates.items()
+            },
+            "review": preference.model_dump(mode="json") if preference else None,
+        }
+
+    def save_pairwise(
+        self, comparison_id: str, reviewer_id: str, payload: object
+    ) -> dict[str, Any]:
+        """Commit the complete rubric-level A/B preference as one immutable response."""
+
+        if not isinstance(payload, dict):
+            raise ValueError("pairwise preference must be a JSON object")
+        view = self.open_pairwise(comparison_id, reviewer_id)
+        if view["review"] is not None:
+            raise ValueError("pairwise preference is already submitted")
+        review = PairwisePreferenceReview.model_validate(
+            {
+                **payload,
+                "comparison_id": comparison_id,
+                "reviewer_id": reviewer_id,
+                "candidate_hashes": {
+                    label: candidate["candidate_sha256"]
+                    for label, candidate in view["candidates"].items()
+                },
+                "submitted_at": _now(),
+            }
+        )
+        self.storage.save_preference(review)
+        return review.model_dump(mode="json")
+
     def reveal(self, comparison_id: str, *, force: bool = False) -> dict[str, Any]:
-        """Reveal origins only after every assigned review is immutable."""
+        """Reveal origins only after every assigned review stage is immutable."""
 
         source = self.storage.load_source(comparison_id)
         incomplete = [
@@ -715,10 +941,14 @@ class ComparisonService:
             if not (
                 (review := self.storage.load_review(comparison_id, item.reviewer_id))
                 and review.final
+                and self.storage.load_utility(comparison_id, item.reviewer_id)
+                and self.storage.load_preference(comparison_id, item.reviewer_id)
             )
         ]
         if incomplete and not force:
-            raise ValueError("cannot reveal before every assigned review is submitted")
+            raise ValueError(
+                "cannot reveal before every assigned review stage is submitted"
+            )
         return {
             "comparison_id": comparison_id,
             "mapping": {
@@ -746,6 +976,10 @@ class ComparisonService:
         ]
         utility_reviews = [
             self.storage.load_utility(comparison_id, assignment.reviewer_id)
+            for assignment in source.assignments
+        ]
+        preference_reviews = [
+            self.storage.load_preference(comparison_id, assignment.reviewer_id)
             for assignment in source.assignments
         ]
         by_origin: dict[str, dict[str, Any]] = {}
@@ -809,12 +1043,33 @@ class ComparisonService:
             by_origin[origin]["native_rating_means"] = {
                 name: sum(values) / len(values) for name, values in dimensions.items()
             }
+        preference_counts: dict[str, dict[str, int]] = {}
+        for preference in preference_reviews:
+            assert preference is not None  # reveal already proved completeness
+            for dimension, choice in preference.preferences.model_dump().items():
+                resolved_choice: str = (
+                    source.candidates[choice].origin if choice in {"A", "B"} else choice
+                )
+                counts = preference_counts.setdefault(
+                    dimension,
+                    {
+                        "historical_database": 0,
+                        "new_extractor": 0,
+                        "tie": 0,
+                        "both_inadequate": 0,
+                        "cannot_judge": 0,
+                    },
+                )
+                counts[resolved_choice] += 1
         return {
             "format_version": 1,
             "comparison_id": comparison_id,
             "paper_id": source.paper_id,
             "common_schema": source.common_schema,
             "source_hashes": source.source_hashes,
+            "pairwise_rubrics": [
+                rubric.model_dump(mode="json") for rubric in source.pairwise_rubrics
+            ],
             "candidate_mapping": reveal["mapping"],
             "candidate_hashes": reveal["candidate_hashes"],
             "projection_issues": {
@@ -825,5 +1080,11 @@ class ComparisonService:
             "native_utility_reviews": [
                 review.model_dump(mode="json") for review in utility_reviews if review
             ],
+            "pairwise_preference_reviews": [
+                review.model_dump(mode="json")
+                for review in preference_reviews
+                if review
+            ],
             "summary_by_origin": by_origin,
+            "pairwise_preference_counts": preference_counts,
         }

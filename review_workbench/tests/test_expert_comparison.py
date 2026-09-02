@@ -50,6 +50,24 @@ def source(reviewers: list[str] | None = None):
     )
 
 
+def preference_payload() -> dict:
+    return {
+        "active_seconds": 42,
+        "preferences": {
+            "factual_correctness": "A",
+            "coverage_completeness": "B",
+            "chemical_detail": "B",
+            "record_relationships": "B",
+            "evidence_traceability": "tie",
+            "nomad_readiness": "B",
+            "curation_effort": "B",
+            "overall_preference": "B",
+        },
+        "confidence": 4,
+        "rationale": "Candidate B needs less restructuring.",
+    }
+
+
 def test_comparison_balances_reviewers_and_keeps_origins_private(tmp_path):
     storage = LocalComparisonStorage(tmp_path)
     frozen = source(["ada", "grace", "linus", "margaret"])
@@ -62,6 +80,11 @@ def test_comparison_balances_reviewers_and_keeps_origins_private(tmp_path):
         "B",
         "B",
     ]
+    assert frozen.format_version == 2
+    assert len(frozen.pairwise_rubrics) == 8
+    assert {rubric.key for rubric in frozen.pairwise_rubrics} == set(
+        preference_payload()["preferences"]
+    )
     view = service.open("example-001", "ada")
 
     assert "origin" not in str(view)
@@ -159,6 +182,18 @@ def test_final_submission_requires_every_claim_and_prevents_changes(tmp_path):
         },
     )
     assert utility["suitable_as_curation_start"] == "yes"
+    assert service.list_for(reviewer)[0]["status"] == "pairwise_preference_pending"
+
+    pairwise = service.open_pairwise("example-001", reviewer)
+    assert "origin" not in str(pairwise)
+    assert set(pairwise["candidates"]) == {"A", "B"}
+    assert pairwise["rubrics"] == [
+        rubric.model_dump(mode="json") for rubric in frozen.pairwise_rubrics
+    ]
+    preference = service.save_pairwise(
+        "example-001", reviewer, preference_payload()
+    )
+    assert preference["preferences"]["overall_preference"] == "B"
     assert service.list_for(reviewer)[0]["status"] == "complete"
 
 
@@ -170,7 +205,7 @@ def test_origin_reveal_is_blocked_until_all_reviews_are_final(tmp_path):
     try:
         service.reveal("example-001")
     except ValueError as error:
-        assert "every assigned review" in str(error)
+        assert "every assigned review stage" in str(error)
     else:
         raise AssertionError("candidate identity was revealed before review")
 

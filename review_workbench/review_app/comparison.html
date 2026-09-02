@@ -77,6 +77,27 @@
             <label>Utility notes<textarea id="utility-notes" rows="3" placeholder="What makes this output useful or difficult to use?…"></textarea></label>
             <button id="submit-utility" type="button" class="primary">Submit native-output review</button>
           </section>
+          <section id="preference-review" class="preference-review" hidden>
+            <h3>Blinded A/B preference</h3>
+            <p>Your independent assessment is locked. Compare both anonymous native outputs against the source and choose separately for each rubric. A tie, both inadequate, and cannot judge are valid results.</p>
+            <details class="preference-choice-rubric" open>
+              <summary>How to apply the preference choices</summary>
+              <dl>
+                <div><dt>Candidate A or B</dt><dd>Choose only when that candidate has a meaningful advantage on this criterion.</dd></div>
+                <div><dt>Tie</dt><dd>Both are adequate and any difference is too small or mixed to prefer one reliably.</dd></div>
+                <div><dt>Both inadequate</dt><dd>Neither candidate reaches the criterion's minimum acceptable bar.</dd></div>
+                <div><dt>Cannot judge</dt><dd>The paper, outputs, or your expertise do not support a reliable comparison.</dd></div>
+              </dl>
+            </details>
+            <div class="candidate-comparison">
+              <details><summary>Inspect candidate A</summary><pre id="pairwise-a"></pre></details>
+              <details><summary>Inspect candidate B</summary><pre id="pairwise-b"></pre></details>
+            </div>
+            <div id="preference-rubrics" class="preference-rubrics"></div>
+            <label>Confidence in these comparisons<select id="preference-confidence"><option value="">Choose…</option></select></label>
+            <label>Preference rationale<textarea id="preference-rationale" rows="3" placeholder="Explain the most important trade-offs or why no reliable preference was possible…"></textarea></label>
+            <button id="submit-preference" type="button" class="primary">Submit A/B preferences</button>
+          </section>
           <div class="comparison-actions">
             <button id="save-draft" type="button">Save draft</button>
             <button id="submit-review" type="button" class="primary">Submit final review</button>

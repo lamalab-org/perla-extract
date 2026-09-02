@@ -27,6 +27,7 @@ from review_workbench.expert_comparison import (  # noqa: E402
     ComparisonReview,
     ComparisonSource,
     NativeUtilityReview,
+    PairwisePreferenceReview,
 )
 from review_workbench.review_storage import (  # noqa: E402
     ReviewPaperSource,
@@ -270,6 +271,7 @@ class BlobComparisonStorage:
     source_prefix = "workbench/comparison-sources/"
     review_prefix = "workbench/comparison-reviews/"
     utility_prefix = "workbench/comparison-utility/"
+    preference_prefix = "workbench/comparison-preferences/"
 
     def __init__(self, blob: BlobStore):
         self.blob = blob
@@ -366,6 +368,28 @@ class BlobComparisonStorage:
             )
         except FileExistsError as error:
             raise ValueError("native utility review is already submitted") from error
+
+    def _preference_path(self, comparison_id: str, reviewer_id: str) -> str:
+        return f"{self.preference_prefix}{comparison_id}/{reviewer_id}.json"
+
+    def load_preference(
+        self, comparison_id: str, reviewer_id: str
+    ) -> PairwisePreferenceReview | None:
+        item = self.blob.find(self._preference_path(comparison_id, reviewer_id))
+        return (
+            PairwisePreferenceReview.model_validate_json(self.blob.download(item))
+            if item
+            else None
+        )
+
+    def save_preference(self, review: PairwisePreferenceReview) -> None:
+        try:
+            self._put_exclusive(
+                self._preference_path(review.comparison_id, review.reviewer_id),
+                review.model_dump(mode="json"),
+            )
+        except FileExistsError as error:
+            raise ValueError("pairwise preference is already submitted") from error
 
 
 class VercelReviewApplication(ReviewApplication):

@@ -3,9 +3,9 @@ const TOKEN_KEY = "review-token";
 const state = {
   clerk: null, user: null, assignments: [], current: null, source: "main", page: 1,
   pageCount: 1, pdfUrl: null, activeSeconds: 0, lastTick: Date.now(), judgments: new Map(),
-  missingFacts: [], native: null, nativeSeconds: 0,
+  missingFacts: [], native: null, nativeSeconds: 0, preference: null,
+  preferenceSeconds: 0,
 };
-
 async function headers(extra = {}) {
   const local = localStorage.getItem(TOKEN_KEY);
   if (local) return { ...extra, Authorization: `Bearer ${local}` };
@@ -61,6 +61,8 @@ function updateTimer() {
     state.activeSeconds += Math.min(5, Math.round((now - state.lastTick) / 1000));
   } else if (state.native && !state.native.review && document.visibilityState === "visible") {
     state.nativeSeconds += Math.min(5, Math.round((now - state.lastTick) / 1000));
+  } else if (state.preference && !state.preference.review && document.visibilityState === "visible") {
+    state.preferenceSeconds += Math.min(5, Math.round((now - state.lastTick) / 1000));
   }
   state.lastTick = now;
 }
@@ -77,6 +79,7 @@ function optionValues(select) {
 }
 [
   "chemical-detail", "relationships", "verification-ease", "nomad-usefulness", "confidence",
+  "preference-confidence",
 ].forEach((id) => optionValues($(id)));
 
 function renderList() {
@@ -271,6 +274,67 @@ async function loadNative() {
     $("utility-notes").value = review?.notes || "";
     document.querySelectorAll("#utility-review select,#utility-review textarea,#submit-utility").forEach((input) => { input.disabled = Boolean(review); });
     $("submit-utility").textContent = review ? "Native-output review submitted" : "Submit native-output review";
+    if (review) await loadPreference();
+    else $("preference-review").hidden = true;
+  } catch (error) { $("save-state").textContent = error.message; }
+}
+
+function renderPreferenceRubrics(review) {
+  const container = $("preference-rubrics");
+  container.replaceChildren();
+  state.preference.rubrics.forEach((rubricDefinition) => {
+    const {
+      key, label, question, minimum_acceptable: minimumBar, preference_rule: preferenceRule,
+    } = rubricDefinition;
+    const row = document.createElement("label");
+    row.className = "preference-rubric";
+    const copy = document.createElement("span");
+    const title = document.createElement("strong");
+    title.textContent = label;
+    const help = document.createElement("small");
+    help.textContent = question;
+    const rubric = document.createElement("details");
+    rubric.className = "criterion-rubric";
+    const rubricSummary = document.createElement("summary");
+    rubricSummary.textContent = "Criterion rubric";
+    const minimum = document.createElement("p");
+    minimum.textContent = `Minimum acceptable: ${minimumBar}`;
+    const rule = document.createElement("p");
+    rule.textContent = `Preference rule: ${preferenceRule}`;
+    rubric.append(rubricSummary, minimum, rule);
+    copy.append(title, help, rubric);
+    const select = document.createElement("select");
+    select.id = `preference-${key}`;
+    [
+      ["", "Choose…"], ["A", "Candidate A"], ["B", "Candidate B"],
+      ["tie", "Tie"], ["both_inadequate", "Both inadequate"],
+      ["cannot_judge", "Cannot judge"],
+    ].forEach(([value, text]) => {
+      const option = document.createElement("option");
+      option.value = value; option.textContent = text; select.append(option);
+    });
+    select.value = review?.preferences[key] || "";
+    select.disabled = Boolean(review);
+    row.append(copy, select);
+    container.append(row);
+  });
+}
+
+async function loadPreference() {
+  try {
+    state.preference = await request(`/api/pairwise-comparisons/${encodeURIComponent(state.current.comparison_id)}`);
+    $("preference-review").hidden = false;
+    $("pairwise-a").textContent = JSON.stringify(state.preference.candidates.A.native_payload, null, 2);
+    $("pairwise-b").textContent = JSON.stringify(state.preference.candidates.B.native_payload, null, 2);
+    const review = state.preference.review;
+    state.preferenceSeconds = review?.active_seconds || 0;
+    renderPreferenceRubrics(review);
+    $("preference-confidence").value = review?.confidence || "";
+    $("preference-rationale").value = review?.rationale || "";
+    $("preference-confidence").disabled = Boolean(review);
+    $("preference-rationale").disabled = Boolean(review);
+    $("submit-preference").disabled = Boolean(review);
+    $("submit-preference").textContent = review ? "A/B preferences submitted" : "Submit A/B preferences";
   } catch (error) { $("save-state").textContent = error.message; }
 }
 
@@ -300,6 +364,8 @@ async function openComparison(id) {
   try {
     state.current = await request(`/api/comparisons/${encodeURIComponent(id)}`);
     state.source = "main"; state.page = 1; state.lastTick = Date.now();
+    state.native = null; state.preference = null;
+    $("preference-review").hidden = true;
     $("comparison-empty").hidden = true;
     $("comparison-workspace").hidden = false;
     $("comparison-workspace").scrollTop = 0;
@@ -362,6 +428,33 @@ async function submitUtility() {
   } catch (error) { $("save-state").textContent = error.message; }
 }
 
+async function submitPreference() {
+  updateTimer();
+  const preferences = Object.fromEntries(
+    state.preference.rubrics.map(({ key }) => [key, $(`preference-${key}`).value]),
+  );
+  $("save-state").textContent = "Submitting A/B preferences…";
+  try {
+    await request(`/api/pairwise-preference-reviews/${encodeURIComponent(state.current.comparison_id)}`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        active_seconds: state.preferenceSeconds,
+        preferences,
+        confidence: Number($("preference-confidence").value) || null,
+        rationale: $("preference-rationale").value.trim(),
+      }),
+    });
+    await loadPreference();
+    state.assignments = (await request("/api/comparisons")).comparisons;
+    renderList();
+    $("download-analysis").hidden = !(
+      state.user.role === "admin"
+      && state.assignments.find((item) => item.comparison_id === state.current.comparison_id)?.batch_ready
+    );
+    $("save-state").textContent = "Comparison complete";
+  } catch (error) { $("save-state").textContent = error.message; }
+}
+
 async function save(submit) {
   $("save-state").textContent = submit ? "Submitting…" : "Saving…";
   try {
@@ -385,6 +478,9 @@ $("submit-review").onclick = () => {
   if (confirm("Submit and lock this review? It cannot be edited or revealed early.")) save(true);
 };
 $("submit-utility").onclick = submitUtility;
+$("submit-preference").onclick = () => {
+  if (confirm("Submit and lock these A/B preferences? They cannot be edited later.")) submitPreference();
+};
 $("download-analysis").onclick = () => downloadAnalysis(state.current.comparison_id);
 $("open-import").onclick = () => $("import-dialog").showModal();
 $("close-import").onclick = $("cancel-import").onclick = () => $("import-dialog").close();

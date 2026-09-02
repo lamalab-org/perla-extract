@@ -34,6 +34,7 @@ from review_workbench.expert_comparison import (  # noqa: E402
     LocalComparisonStorage,
     build_comparison_source,
 )
+from review_workbench.feedback_export import build_feedback_archive  # noqa: E402
 from review_workbench.ground_truth_export import (  # noqa: E402
     build_ground_truth_export,
     ground_truth_zip,
@@ -157,6 +158,11 @@ class ReviewApplication:
                 candidate.common_sha256 for candidate in source.candidates.values()
             ),
         }
+
+    def reviewer_feedback_archive(self) -> bytes:
+        """Package all user feedback for an authenticated administrator."""
+
+        return build_feedback_archive(self.store, self.comparisons)
 
     def pdf_path(
         self, paper_id: str, source: str = "main", split: str | None = None
@@ -842,6 +848,12 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         application.comparisons.open_native(parts[2], user["id"])
                     )
                     return
+                if parts[:2] == ["api", "pairwise-comparisons"] and len(parts) == 3:
+                    user = self.current_user()
+                    self.send_json(
+                        application.comparisons.open_pairwise(parts[2], user["id"])
+                    )
+                    return
                 if parts[:2] == ["api", "comparison-reveal"] and len(parts) == 3:
                     self.current_user(require_admin=True)
                     self.send_json(application.comparisons.reveal(parts[2]))
@@ -853,6 +865,18 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 if parts[:2] == ["api", "reviewer-progress"] and len(parts) == 3:
                     user = self.current_user()
                     self.send_json(application.reviewer_progress(parts[2], user["id"]))
+                    return
+                if parsed.path == "/api/reviewer-feedback-export":
+                    self.current_user(require_admin=True)
+                    self.send_bytes(
+                        application.reviewer_feedback_archive(),
+                        "application/zip",
+                        {
+                            "Content-Disposition": (
+                                'attachment; filename="perla-reviewer-feedback.zip"'
+                            )
+                        },
+                    )
                     return
                 if parts[:2] == ["api", "paper"] and len(parts) == 4:
                     self.send_json(application.get_paper(parts[2], parts[3]))
@@ -1048,6 +1072,17 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 if len(parts) == 3 and parts[:2] == ["api", "native-utility-reviews"]:
                     self.send_json(
                         application.comparisons.save_native(
+                            parts[2], user["id"], self.read_json()
+                        ),
+                        HTTPStatus.CREATED,
+                    )
+                    return
+                if len(parts) == 3 and parts[:2] == [
+                    "api",
+                    "pairwise-preference-reviews",
+                ]:
+                    self.send_json(
+                        application.comparisons.save_pairwise(
                             parts[2], user["id"], self.read_json()
                         ),
                         HTTPStatus.CREATED,

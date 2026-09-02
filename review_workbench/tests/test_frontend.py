@@ -7,6 +7,7 @@ def test_blinded_comparison_is_a_separate_review_workflow():
     main = (APP / "index.html").read_text(encoding="utf-8")
     html = (APP / "comparison.html").read_text(encoding="utf-8")
     javascript = (APP / "comparison.js").read_text(encoding="utf-8")
+    backend = (APP.parent / "expert_comparison.py").read_text(encoding="utf-8")
 
     assert 'href="/comparison.html"' in main
     assert "one randomly assigned output" in html
@@ -16,7 +17,20 @@ def test_blinded_comparison_is_a_separate_review_workflow():
     assert "/api/comparison-reviews/" in javascript
     assert "/api/native-comparisons/" in javascript
     assert "/api/native-utility-reviews/" in javascript
+    assert "/api/pairwise-comparisons/" in javascript
+    assert "/api/pairwise-preference-reviews/" in javascript
     assert "Your accuracy review is locked" in html
+    assert "Blinded A/B preference" in html
+    assert "Both inadequate" in javascript
+    assert "Cannot judge" in javascript
+    assert "Factual correctness" in backend
+    assert "Coverage and completeness" in backend
+    assert "NOMAD readiness" in backend
+    assert "Minimum acceptable:" in javascript
+    assert "Preference rule:" in javascript
+    assert "state.preference.rubrics" in javascript
+    assert "How to apply the preference choices" in html
+    assert "Neither candidate reaches" in html
     assert "Submit and lock this review" in javascript
     assert "historical_database" not in javascript
     assert "new_extractor" not in javascript
@@ -420,6 +434,18 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     assert 'application.reviewer_progress(parts[2], user["id"])' in server
     assert 'application.undo_mutation(' in server
     assert 'application.reset_reviewer_state(' in server
+
+
+def test_admin_can_download_all_reviewer_feedback():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    server = (APP.parent / "server.py").read_text(encoding="utf-8")
+
+    assert 'id="download-all-feedback"' in html
+    assert 'payload.user.role !== "admin"' in source
+    assert "/api/reviewer-feedback-export" in source
+    assert "application.reviewer_feedback_archive()" in server
+    assert "self.current_user(require_admin=True)" in server
 
 
 def test_file_actions_are_direct_responsive_and_show_progress():

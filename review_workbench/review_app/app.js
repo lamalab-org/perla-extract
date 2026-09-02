@@ -277,6 +277,7 @@ async function loadSession() {
   const payload = await request("/api/session");
   state.user = payload.user;
   $("reviewer").textContent = payload.user.name;
+  $("download-all-feedback").hidden = payload.user.role !== "admin";
 }
 
 function loadScript(src, attributes = {}) {
@@ -1933,6 +1934,13 @@ async function downloadReviewerProgress() {
   saveBlob(blob, `perla-${state.user.id}-${state.split}-annotations.json`);
 }
 
+async function downloadAllFeedback() {
+  await downloadResponse(
+    "/api/reviewer-feedback-export",
+    "perla-reviewer-feedback.zip",
+  );
+}
+
 function saveBlob(blob, filename) {
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
@@ -2127,6 +2135,12 @@ $("download-supplement-pdf").addEventListener("click", (event) => runDownload(
   () => downloadPaper("supplement"),
 ));
 $("open-annotations").addEventListener("click", openReviewerProgress);
+$("download-all-feedback").addEventListener("click", (event) => runDownload(
+  event.currentTarget,
+  "Preparing all reviewer feedback…",
+  "Downloaded all reviewer feedback.",
+  downloadAllFeedback,
+));
 $("show-current-annotations").addEventListener("click", () => setAnnotationView("current"));
 $("show-annotation-history").addEventListener("click", () => setAnnotationView("history"));
 $("reset-annotations").addEventListener("click", resetReviewerProgress);
@@ -2203,6 +2217,7 @@ $("internal-sign-in").addEventListener("submit", async (event) => {
     if (!response.ok) throw new Error(payload.error || "Sign-in failed.");
     localStorage.setItem(REVIEW_TOKEN_KEY, payload.token);
     state.user = payload.user;
+    $("download-all-feedback").hidden = payload.user.role !== "admin";
     $("login-password").value = "";
     showWorkbench();
     await startApp();

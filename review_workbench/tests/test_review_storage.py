@@ -15,6 +15,7 @@ from review_workbench.api.index import (
 )
 from review_workbench.expert_comparison import (
     NativeUtilityReview,
+    PairwisePreferenceReview,
     build_comparison_source,
 )
 from review_workbench.review_storage import (
@@ -251,12 +252,37 @@ def test_blob_comparison_storage_keeps_sources_reviews_and_utility_separate():
         suitable_as_curation_start="yes",
     )
     storage.save_utility(utility)
+    preference = PairwisePreferenceReview(
+        comparison_id=source.comparison_id,
+        reviewer_id=assignment.reviewer_id,
+        candidate_hashes={
+            label: candidate.native_sha256
+            for label, candidate in source.candidates.items()
+        },
+        submitted_at=datetime(2026, 9, 1, tzinfo=timezone.utc),
+        preferences={
+            "factual_correctness": "tie",
+            "coverage_completeness": "B",
+            "chemical_detail": "B",
+            "record_relationships": "B",
+            "evidence_traceability": "A",
+            "nomad_readiness": "B",
+            "curation_effort": "B",
+            "overall_preference": "B",
+        },
+        confidence=4,
+    )
+    storage.save_preference(preference)
 
     assert storage.list_ids() == ["comparison-1"]
     assert storage.load_source("comparison-1").source_hashes == {}
     assert storage.load_utility("comparison-1", "ada") == utility
+    assert storage.load_preference("comparison-1", "ada") == preference
     assert any(
         path.startswith("workbench/comparison-utility/") for path in blob.objects
+    )
+    assert any(
+        path.startswith("workbench/comparison-preferences/") for path in blob.objects
     )
 
 

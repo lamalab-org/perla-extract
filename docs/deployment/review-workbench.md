@@ -155,9 +155,29 @@ events, so prior activity remains inspectable instead of being deleted. Correcti
 workbook imports that are still untouched offer
 **Undo this saved edit**. Undo writes a linked, validated revision instead of deleting history; the
 action is unavailable once later work changes the same value. **Download my
-annotations** saves the same reviewer-scoped ledger
-as readable JSON, including exact before/after values and revision timestamps. It is a
-personal progress export and is deliberately separate from adjudicated ground truth.
+annotations** saves the same reviewer-scoped ledger as readable JSON, including exact
+before/after values and revision timestamps. It is a personal progress export and is
+deliberately separate from adjudicated ground truth.
+
+Administrators also see **Download feedback** in the header. It produces one ZIP for
+the complete deployment rather than requiring a paper-by-paper download:
+
+- `feedback.json` is the lossless snapshot, with immutable event history and the
+  current decisions, census answers, and completion stages derived from it;
+- `review_events.csv` is one row per saved ground-truth review action and explicitly
+  marks edits that were later undone;
+- `comparison_reviews.csv` contains blinded extractor-study responses, native-output
+  utility ratings, and dimension-specific A/B preferences. Candidate origins remain
+  blank until every assigned review stage in that comparison is final;
+- the comparison batches inside `feedback.json` include the exact frozen rubric
+  questions, minimum acceptable bars, and preference rules shown to reviewers;
+- `README.txt` explains the files and how resets, drafts, and superseded answers are
+  represented.
+
+The export contains stable reviewer IDs and scientific review content, but no PDFs,
+passwords, session tokens, or deployment configuration. Treat it as research data: it
+may contain reviewer-written notes and should be stored with the same access controls
+as the ground-truth dataset.
 
 After the final administrator adjudication, **Download PR bundle** produces a
 deterministic ZIP containing the rich ground truth, immutable seed, complete review

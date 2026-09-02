@@ -19,7 +19,9 @@ flowchart LR
     P --> B
     B --> A[Balanced single-candidate assignments]
     A --> R[Independent expert review against PDF and SI]
-    R --> F[Lock all responses]
+    R --> I[Lock independent accuracy and utility responses]
+    I --> Q[Blinded A/B preference by rubric]
+    Q --> F[Lock all responses]
     F --> U[Reveal origins and export analysis]
 ```
 
@@ -90,14 +92,42 @@ usefulness, and whether the result is suitable as a starting point for expert da
 curation. This second immutable response measures native utility without letting the
 richer representation influence the primary accuracy judgments.
 
+After that independent rating is locked, the app shows anonymous candidates A and B
+together. The expert records a separate preference for each pre-registered rubric:
+
+- factual correctness;
+- coverage and completeness;
+- chemical detail;
+- relationships between records;
+- evidence traceability;
+- NOMAD readiness;
+- expert curation effort; and
+- overall preference.
+
+Every rubric accepts **Candidate A**, **Candidate B**, **Tie**, **Both inadequate**, or
+**Cannot judge**. The interface also records confidence, rationale, and active time.
+This paired stage answers which trade-offs experts actually prefer without replacing
+the independent accuracy measurements or forcing one global winner.
+
+The interface places a reproducible decision rubric beside every criterion. Each one
+states its minimum acceptable bar and the specific evidence that warrants preferring
+one candidate. Across all criteria, select A or B only for a meaningful advantage;
+select **Tie** when both are adequate but no reliable advantage remains; select **Both
+inadequate** when neither reaches the stated minimum; and select **Cannot judge** when
+the source, outputs, or reviewer expertise cannot support the comparison. These rules
+are stored with each comparison when it is created. The page renders those stored
+definitions, and both analysis exports preserve them, so an active study cannot
+silently inherit later wording changes.
+
 ## Outcomes and reveal
 
 Candidate identity stays sealed until every assigned response for that paper is
 final. The administrator endpoint
 `GET /api/comparison-export/<comparison_id>` then returns candidate and source hashes,
-the A/B mapping, every accuracy and native-utility response, projection issues, active
-time, structural-error counts, rating means, curation-suitability counts, and supported
-atomic precision:
+the A/B mapping, every accuracy, native-utility, and pairwise-preference response,
+projection issues, active time, structural-error counts, rating means,
+curation-suitability counts, rubric-level preference counts, and supported atomic
+precision:
 
 \[
 \text{precision} = \frac{\text{correct}}

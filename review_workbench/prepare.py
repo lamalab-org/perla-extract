@@ -54,6 +54,7 @@ def prepare(output: Path) -> Path:
         "review_workbench/auth.py",
         "review_workbench/ground_truth_export.py",
         "review_workbench/expert_comparison.py",
+        "review_workbench/feedback_export.py",
         "review_workbench/review_storage.py",
         "review_workbench/server.py",
         "review_workbench/spreadsheet_review.py",
