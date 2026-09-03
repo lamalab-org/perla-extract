@@ -8,7 +8,7 @@ import sys
 import tempfile
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import parse_qs, unquote, urlencode, urlparse
 from urllib.request import Request, urlopen
@@ -551,7 +551,7 @@ class VercelReviewApplication(ReviewApplication):
             overwrite=False,
         )
         self.blob.put(
-            str(Path(pathname).with_suffix(".received.json")),
+            str(PurePosixPath(pathname).with_suffix(".received.json")),
             json.dumps(receipt, ensure_ascii=False, separators=(",", ":")).encode(),
             "application/json",
             overwrite=False,
@@ -562,7 +562,7 @@ class VercelReviewApplication(ReviewApplication):
     ) -> None:
         """Persist an immutable accepted or rejected validation outcome."""
 
-        pathname = Path(
+        pathname = PurePosixPath(
             f"{self.review_workbook_prefix}{relative.as_posix()}"
         ).with_suffix(".outcome.json")
         self.blob.put(
@@ -582,8 +582,12 @@ class VercelReviewApplication(ReviewApplication):
             if not pathname.lower().endswith(".xlsx"):
                 continue
             relative = Path(pathname.removeprefix(self.review_workbook_prefix))
-            receipt_item = by_path.get(str(Path(pathname).with_suffix(".received.json")))
-            outcome_item = by_path.get(str(Path(pathname).with_suffix(".outcome.json")))
+            receipt_item = by_path.get(
+                str(PurePosixPath(pathname).with_suffix(".received.json"))
+            )
+            outcome_item = by_path.get(
+                str(PurePosixPath(pathname).with_suffix(".outcome.json"))
+            )
             artifacts.append(
                 self._uploaded_workbook_artifact(
                     relative,
