@@ -426,7 +426,7 @@ class ModelClient:
                 validated = response_model.model_validate(decoded_result)
             except (TypeError, ValueError) as exc:
                 validation_errors: list[dict[str, Any]] = (
-                    exc.errors(include_url=False)
+                    exc.errors(include_url=False, include_context=False)
                     if isinstance(exc, ValidationError)
                     else [{"type": type(exc).__name__, "message": str(exc)}]
                 )
