@@ -115,6 +115,7 @@ class WorkbookComment:
 
     sheet: str
     cell: str
+    kind: str
     text: str
     author: str
     record_collection: str | None
@@ -791,19 +792,36 @@ def _workbook_comments(book: Workbook) -> tuple[WorkbookComment, ...]:
                 else ""
             )
             for cell in row:
-                if cell.comment is None or not cell.comment.text.strip():
-                    continue
-                comments.append(
-                    WorkbookComment(
-                        sheet=sheet.title,
-                        cell=cell.coordinate,
-                        text=cell.comment.text.strip()[:8000],
-                        author=(cell.comment.author or "")[:200],
-                        record_collection=record_collection or None,
-                        record_id=record_id or None,
-                        schema_path=schema_path or None,
+                if (
+                    row[0].row > 1
+                    and cell.column == headers.get("Reviewer note")
+                    and _cell_text(cell.value)
+                ):
+                    comments.append(
+                        WorkbookComment(
+                            sheet=sheet.title,
+                            cell=cell.coordinate,
+                            kind="reviewer_note",
+                            text=_cell_text(cell.value)[:8000],
+                            author="",
+                            record_collection=record_collection or None,
+                            record_id=record_id or None,
+                            schema_path=schema_path or None,
+                        )
                     )
-                )
+                if cell.comment is not None and cell.comment.text.strip():
+                    comments.append(
+                        WorkbookComment(
+                            sheet=sheet.title,
+                            cell=cell.coordinate,
+                            kind="cell_comment",
+                            text=cell.comment.text.strip()[:8000],
+                            author=(cell.comment.author or "")[:200],
+                            record_collection=record_collection or None,
+                            record_id=record_id or None,
+                            schema_path=schema_path or None,
+                        )
+                    )
     return tuple(comments)
 
 

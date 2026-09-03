@@ -241,6 +241,7 @@ def test_excel_cell_comments_are_feedback_even_without_value_edits(
     seed(store, study_with_family(empty_study), document_payload)
     data = store.review_workbook("calibration", "10.0000--example", "ada")
     book = load_workbook(BytesIO(data))
+    book["Record review"]["B2"] = "The family grouping needs discussion."
     book["Record review"]["E2"].comment = Comment(
         "This should be one family, not several.", "Jesper"
     )
@@ -261,7 +262,18 @@ def test_excel_cell_comments_are_feedback_even_without_value_edits(
     assert details["cell_comments"] == [
         {
             "sheet": "Record review",
+            "cell": "B2",
+            "kind": "reviewer_note",
+            "text": "The family grouping needs discussion.",
+            "author": "",
+            "record_collection": "device_families",
+            "record_id": "family-control",
+            "schema_path": None,
+        },
+        {
+            "sheet": "Record review",
             "cell": "E2",
+            "kind": "cell_comment",
             "text": "This should be one family, not several.",
             "author": "Jesper",
             "record_collection": "device_families",
@@ -284,7 +296,7 @@ def test_excel_cell_comments_are_feedback_even_without_value_edits(
         "comments_only_from_older_workbook"
     )
     assert recovered_details["workbook_base_revision"] == 1
-    assert recovered_details["cell_comments"][0]["author"] == "Jesper"
+    assert recovered_details["cell_comments"][1]["author"] == "Jesper"
 
 
 def test_review_workbook_groups_fields_by_scientific_record_type(

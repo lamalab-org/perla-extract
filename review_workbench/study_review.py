@@ -1066,6 +1066,7 @@ class StudyReviewStore:
                         {
                             "sheet": item.sheet,
                             "cell": item.cell,
+                            "kind": item.kind,
                             "text": item.text,
                             "author": item.author,
                             "record_collection": item.record_collection,
@@ -1168,6 +1169,7 @@ class StudyReviewStore:
                     {
                         "sheet": item.sheet,
                         "cell": item.cell,
+                        "kind": item.kind,
                         "text": item.text,
                         "author": item.author,
                         "record_collection": item.record_collection,
