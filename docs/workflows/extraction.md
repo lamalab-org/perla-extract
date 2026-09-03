@@ -127,6 +127,19 @@ separate values. Device-specific process coordinates belong to
 `IndividualDevice.reported_properties`; stage-specific aging conditions belong to
 `StabilityCheckpoint.conditions`.
 
+All semantic passes use the same record-boundary rules. A device area is a device
+property, not a population; a group comparison is not an aggregate unless the paper
+reports a statistic over multiple devices; and an aged film prepared only for
+characterization is not a photovoltaic stability test. Processing solvents do not
+become layers, surface modifiers do not silently become part of a bulk formula, and a
+concentration or treatment label alone does not create another device family.
+
+The extractor also separates reporting from inference. It retains atomic qualitative
+claims such as `over 80%`, but does not replace them with a more precise estimate.
+Likely scan directions, circuit conditions, and shared specimen identities remain
+unknown unless the supplied text or table states them. Such cases are review items,
+not ordinary extracted facts.
+
 This workflow is text-only. It never sends rendered PDF pages or images to a model.
 Formula recovery is limited to what the selected parser preserves in text and tables;
 unreadable chemistry remains a review item rather than a vision-assisted guess.

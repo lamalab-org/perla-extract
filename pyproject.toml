@@ -58,6 +58,7 @@ docs = [
 
 [project.scripts]
 perla-extract = "perla_extract.study_extraction.cli:main"
+perla-extract-cohort = "perla_extract.study_extraction.cohort:main"
 perla-evaluate = "perla_extract.study_extraction.evaluation_cli:main"
 perla-evaluate-dataset = "perla_extract.study_extraction.evaluation_dataset_cli:main"
 perla-papersbot = "perla_extract.papersbot.cli:main"

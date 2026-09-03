@@ -16,7 +16,13 @@ from typing import TYPE_CHECKING, Annotated, Any, Literal
 from pydantic import Field
 
 from .claims import ClaimLedger, audit_claim_coverage
-from .guidance import DEVICE_FAMILY_POLICY, SHARED_QUANTITY_POLICY
+from .guidance import (
+    COMPOSITION_BOUNDARY_POLICY,
+    DEVICE_FAMILY_POLICY,
+    EVIDENCE_INTERPRETATION_POLICY,
+    RECORD_BOUNDARY_POLICY,
+    SHARED_QUANTITY_POLICY,
+)
 from .models import (
     DeviceFamily,
     EvidenceBlock,
@@ -50,6 +56,9 @@ An empty patch is correct when the evidence is insufficient."""
 REPAIR_PROMPT = f"""Resolve the supplied worklist conservatively.
 
 {DEVICE_FAMILY_POLICY}
+{RECORD_BOUNDARY_POLICY}
+{COMPOSITION_BOUNDARY_POLICY}
+{EVIDENCE_INTERPRETATION_POLICY}
 {SHARED_QUANTITY_POLICY}
 Rules:
 - Preserve device families, individual devices, population statistics, performance

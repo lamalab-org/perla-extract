@@ -59,6 +59,21 @@ The command refuses incomplete runs and any run with unresolved evidence-validat
 issues. Existing review items are still protected by the immutable-seed storage
 contract, so rerunning it cannot silently replace a seed.
 
+To seed the deployed Vercel dataset from the same validated runs, first inspect the
+exact missing set and then repeat without `--dry-run`:
+
+```bash
+python -m review_workbench.import_vercel_runs \
+  --runs-dir results/review-v1 \
+  --pdf-dir /path/to/main-papers \
+  --env-file review_workbench/.vercel-build/.vercel/.env.production.local \
+  --split dev \
+  --dry-run
+```
+
+This command imports only absent paper IDs. It cannot replace an immutable seed or any
+human revision already stored for an existing paper.
+
 ## Review records efficiently
 
 The Records tab is available before or after the census and presents a device-centered

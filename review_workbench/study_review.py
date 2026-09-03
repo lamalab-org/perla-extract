@@ -25,9 +25,11 @@ from perla_extract.study_extraction.artifacts import write_json_atomic
 from perla_extract.study_extraction.evidence import source_contains_text
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
+    EvidenceBlock,
     StudyExtraction,
     study_schema_sha256,
 )
+from perla_extract.study_extraction.validation import validate_study
 from review_workbench.review_storage import (
     LocalReviewStateStorage,
     ReviewPaperSource,
@@ -393,9 +395,7 @@ def _record_catalog(truth: dict[str, Any]) -> dict[str, str]:
     return catalog
 
 
-def _record(
-    truth: dict[str, Any], collection: str, record_id: str
-) -> dict[str, Any]:
+def _record(truth: dict[str, Any], collection: str, record_id: str) -> dict[str, Any]:
     """Resolve a stable top-level record identity without relying on list position."""
 
     identifier = RECORD_IDENTIFIERS[collection]
@@ -451,7 +451,11 @@ def _contains_record_reference(
         for field, child in value.items():
             if at_root and field == root_identifier:
                 continue
-            if field == reference_field and child is not None and str(child) == target_id:
+            if (
+                field == reference_field
+                and child is not None
+                and str(child) == target_id
+            ):
                 return True
             if field == "candidate_ids" and isinstance(child, list):
                 if any(str(candidate) == target_id for candidate in child):
@@ -478,9 +482,7 @@ def _contains_record_reference(
     return False
 
 
-def _record_references(
-    truth: dict[str, Any], collection: str, index: int
-) -> list[str]:
+def _record_references(truth: dict[str, Any], collection: str, index: int) -> list[str]:
     """List records that must be corrected before a referenced record is removed."""
 
     target = truth[collection][index]
@@ -519,11 +521,7 @@ def _removed_record_location(path: str) -> tuple[str, int] | None:
     """Recognize deletion of a complete top-level record collection item."""
 
     parts = _decode_pointer(path)
-    if (
-        len(parts) == 2
-        and parts[0] in RECORD_IDENTIFIERS
-        and parts[1].isdigit()
-    ):
+    if len(parts) == 2 and parts[0] in RECORD_IDENTIFIERS and parts[1].isdigit():
         return parts[0], int(parts[1])
     return None
 
@@ -696,9 +694,7 @@ class StudyReviewStore:
             )
             papers = []
             for paper_id, revision in zip(paper_ids, revisions, strict=True):
-                paper = self._reviewer_paper_progress(
-                    paper_id, revision, reviewer_id
-                )
+                paper = self._reviewer_paper_progress(paper_id, revision, reviewer_id)
                 if paper is not None:
                     papers.append(paper)
         result = ReviewerProgress(
@@ -733,10 +729,14 @@ class StudyReviewStore:
         }
         undoable_event_ids: list[str] = []
         for event in events:
-            if event.kind not in {
-                "mutation",
-                "spreadsheet_review",
-            } or event.event_id in undone_event_ids:
+            if (
+                event.kind
+                not in {
+                    "mutation",
+                    "spreadsheet_review",
+                }
+                or event.event_id in undone_event_ids
+            ):
                 continue
             try:
                 if event.kind == "mutation":
@@ -762,9 +762,7 @@ class StudyReviewStore:
             completed_stages=completed_stages,
             current_inventory_audit=current_inventory_audit,
             current_record_decisions=current_record_decisions,
-            current_event_ids=self._current_reviewer_event_ids(
-                revision, reviewer_id
-            ),
+            current_event_ids=self._current_reviewer_event_ids(revision, reviewer_id),
             resettable_review_count=(
                 len(completed_stages)
                 + len(current_record_decisions)
@@ -783,9 +781,7 @@ class StudyReviewStore:
 
         catalog = _record_catalog(revision.ground_truth)
         current: dict[str, str] = {}
-        parsed_events = [
-            ReviewEvent.model_validate(event) for event in revision.events
-        ]
+        parsed_events = [ReviewEvent.model_validate(event) for event in revision.events]
         undone_event_ids = {
             str(event.details.get("undoes_event_id"))
             for event in parsed_events
@@ -811,7 +807,9 @@ class StudyReviewStore:
                 stage = str(event.details.get("stage", ""))
                 current[f"stage:{stage}"] = event.event_id
         current_ids = set(current.values())
-        return [event.event_id for event in parsed_events if event.event_id in current_ids]
+        return [
+            event.event_id for event in parsed_events if event.event_id in current_ids
+        ]
 
     @staticmethod
     def summary(truth: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any]:
@@ -839,7 +837,10 @@ class StudyReviewStore:
                 )
             elif event["kind"] == "inventory_audit":
                 details = copy.deepcopy(event["details"])
-                if "review_scope_sources" not in details and "searched_sources" in details:
+                if (
+                    "review_scope_sources" not in details
+                    and "searched_sources" in details
+                ):
                     details["review_scope_sources"] = details.pop("searched_sources")
                 audits[event["reviewer_id"]] = details
             elif event["kind"] == "record_decision":
@@ -853,8 +854,8 @@ class StudyReviewStore:
                 for details in event["details"].get("decisions", []):
                     record_key = str(details["record_key"])
                     if catalog.get(record_key) == details.get("record_digest"):
-                        decisions.setdefault(event["reviewer_id"], {})[record_key] = str(
-                            details["decision"]
+                        decisions.setdefault(event["reviewer_id"], {})[record_key] = (
+                            str(details["decision"])
                         )
             elif event["kind"] == "review_reset":
                 reviewer_id = event["reviewer_id"]
@@ -980,6 +981,42 @@ class StudyReviewStore:
                     f"quote is not present in evidence block {citation.block_id}"
                 )
 
+    def _reject_new_grounding_issues(
+        self,
+        split: str,
+        paper_id: str,
+        before: dict[str, Any],
+        after: dict[str, Any],
+    ) -> None:
+        """Prevent a spreadsheet correction from contradicting its source evidence.
+
+        Imported seeds can contain pre-existing validation findings. Comparing issue
+        sets therefore blocks only newly introduced failures instead of making an
+        unrelated historical issue prevent all review work.
+        """
+
+        document = self.load_document(split, paper_id)
+        raw_blocks = document.get("blocks") if isinstance(document, dict) else document
+        if not isinstance(raw_blocks, list):
+            return
+        blocks = [EvidenceBlock.model_validate(block) for block in raw_blocks]
+
+        def issues(value: dict[str, Any]) -> set[tuple[str, str]]:
+            result = validate_study(StudyExtraction.model_validate(value), blocks)
+            return {
+                (str(item.get("path")), str(item.get("reason")))
+                for item in result.get("issues", [])
+                if isinstance(item, dict)
+            }
+
+        introduced = sorted(issues(after) - issues(before))
+        if introduced:
+            detail = "; ".join(f"{path}: {reason}" for path, reason in introduced[:5])
+            raise ValueError(
+                "review workbook correction introduces a source-grounding problem: "
+                + detail
+            )
+
     def review_workbook(
         self,
         split: str,
@@ -1044,8 +1081,8 @@ class StudyReviewStore:
                 for phrase in ("older paper revision", "older layout")
             ):
                 raise
-            base_revision, comments, workbook_sha256 = (
-                read_review_workbook_comments(data, paper_id=paper_id, split=split)
+            base_revision, comments, workbook_sha256 = read_review_workbook_comments(
+                data, paper_id=paper_id, split=split
             )
             if not comments:
                 raise error
@@ -1077,9 +1114,7 @@ class StudyReviewStore:
                     ],
                 },
             ).model_dump(mode="json")
-            return self._commit(
-                split, paper_id, current, current.ground_truth, event
-            )
+            return self._commit(split, paper_id, current, current.ground_truth, event)
         # Read again through the normal transition guard immediately before commit.
         current = self._validate_revision(split, paper_id, review.base_revision)
         proposed = copy.deepcopy(current.ground_truth)
@@ -1102,10 +1137,14 @@ class StudyReviewStore:
                 continue
             changed_keys.add((change.collection, change.record_id))
             evidence.extend(citations)
-            changed_paths.append(
-                {"path": change.path, "note": change.note}
-            )
+            changed_paths.append({"path": change.path, "note": change.note})
         validated = StudyExtraction.model_validate(proposed).model_dump(mode="json")
+        self._reject_new_grounding_issues(
+            split,
+            paper_id,
+            current.ground_truth,
+            validated,
+        )
         replacements = [
             {
                 "collection": collection,
@@ -1118,9 +1157,9 @@ class StudyReviewStore:
             for collection, record_id in sorted(changed_keys)
         ]
 
-        existing_decisions = self.summary(
-            current.ground_truth, current.events
-        )["record_decisions"].get(reviewer_id, {})
+        existing_decisions = self.summary(current.ground_truth, current.events)[
+            "record_decisions"
+        ].get(reviewer_id, {})
         decision_details = []
         for decision in review.decisions:
             record_key = f"{decision.collection}:{decision.record_id}"
@@ -1144,10 +1183,7 @@ class StudyReviewStore:
                 "review workbook contains no new decisions, corrections, or comments"
             )
         unique_evidence = list(
-            {
-                (item.block_id, item.quote): item
-                for item in evidence
-            }.values()
+            {(item.block_id, item.quote): item for item in evidence}.values()
         )
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
@@ -1212,6 +1248,12 @@ class StudyReviewStore:
         if request.action == "replace" and before == request.value:
             raise ValueError("replacement does not change the record")
         validated = StudyExtraction.model_validate(proposed).model_dump(mode="json")
+        self._reject_new_grounding_issues(
+            split,
+            paper_id,
+            current_revision.ground_truth,
+            validated,
+        )
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
             revision=current_revision.revision + 1,
@@ -1407,9 +1449,7 @@ class StudyReviewStore:
         current_revision = self._validate_revision(
             split, paper_id, request.base_revision
         )
-        summary = self.summary(
-            current_revision.ground_truth, current_revision.events
-        )
+        summary = self.summary(current_revision.ground_truth, current_revision.events)
         decisions = summary["record_decisions"].get(reviewer_id, {})
         inventory = summary["inventory_audits"].get(reviewer_id)
         stages = [
@@ -1462,9 +1502,7 @@ class StudyReviewStore:
             request.stage == "inventory"
             and reviewer_id not in current_summary["inventory_audits"]
         ):
-            raise ValueError(
-                "save the paper census before completing inventory"
-            )
+            raise ValueError("save the paper census before completing inventory")
         prerequisite = {
             "fields": "inventory",
             "completeness": "fields",
@@ -1474,9 +1512,7 @@ class StudyReviewStore:
             raise ValueError(f"complete the {prerequisite} stage first")
         if request.stage == "fields":
             truth = current_revision.ground_truth
-            decisions = current_summary["record_decisions"].get(
-                reviewer_id, {}
-            )
+            decisions = current_summary["record_decisions"].get(reviewer_id, {})
             unresolved = [
                 record_key
                 for record_key in _record_catalog(truth)

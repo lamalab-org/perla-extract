@@ -2,12 +2,70 @@
 
 from __future__ import annotations
 
+import json
 from collections import Counter
+from collections.abc import Callable
 from typing import Any
 
 from .evidence import assembled_from_quotes, source_contains_text
 from .identifiers import entity_id_lists
 from .models import EvidenceBlock, StudyExtraction
+
+_DUPLICATE_IGNORED_FIELDS = {
+    "device_families": {"family_id", "evidence"},
+    "performance_observations": {"observation_id", "evidence"},
+    "population_statistics": {"population_id", "evidence"},
+    "stability_tests": {"test_id", "checkpoint_id", "evidence"},
+}
+
+
+def _scientific_fingerprint(record: object, ignored_fields: set[str]) -> str:
+    """Compare record meaning while ignoring run-local IDs and evidence pointers.
+
+    This deliberately detects only exact semantic duplicates. Similarity-based merging
+    remains a model or human decision because repeated specimens and closely related
+    protocols can legitimately share most fields. Descriptive labels remain part of
+    the fingerprint because they can be the only source-preserved distinction between
+    otherwise identical groups or specimens.
+    """
+
+    def strip(value: object) -> object:
+        if isinstance(value, dict):
+            return {
+                key: strip(item)
+                for key, item in value.items()
+                if key not in ignored_fields
+            }
+        if isinstance(value, list):
+            return [strip(item) for item in value]
+        return value
+
+    payload = (
+        record.model_dump(mode="json") if hasattr(record, "model_dump") else record
+    )
+    return json.dumps(strip(payload), sort_keys=True, separators=(",", ":"))
+
+
+def _report_exact_duplicates(
+    records: list[object],
+    path: str,
+    ignored_fields: set[str],
+    issue: Callable[[str, str], None],
+) -> None:
+    """Flag repeated scientific records without deleting or combining them."""
+
+    indexes: dict[str, list[int]] = {}
+    for index, record in enumerate(records):
+        indexes.setdefault(_scientific_fingerprint(record, ignored_fields), []).append(
+            index
+        )
+    for duplicate_indexes in indexes.values():
+        if len(duplicate_indexes) > 1:
+            issue(
+                path,
+                "exact duplicate record content at indexes "
+                + ", ".join(str(index) for index in duplicate_indexes),
+            )
 
 
 def validate_study(
@@ -108,6 +166,18 @@ def validate_study(
         if len(ids) != len(set(ids)):
             path, field = collections[kind]
             issue(path, f"duplicate {field}")
+    for collection in (
+        "device_families",
+        "performance_observations",
+        "population_statistics",
+        "stability_tests",
+    ):
+        _report_exact_duplicates(
+            list(getattr(extraction, collection)),
+            f"$.{collection}",
+            _DUPLICATE_IGNORED_FIELDS[collection],
+            issue,
+        )
     absorber_ids = [
         absorber.absorber_id
         for family in extraction.device_families

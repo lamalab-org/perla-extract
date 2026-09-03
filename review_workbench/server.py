@@ -15,7 +15,7 @@ from functools import lru_cache
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
 from urllib.parse import parse_qs, unquote, urlparse
 
 import click
@@ -137,6 +137,8 @@ class ReviewApplication:
             raise ValueError(f"missing comparison fields: {', '.join(missing)}")
         paper_id = str(payload["paper_id"])
         split = str(payload.get("split", "dev"))
+        if split not in {"calibration", "dev", "test"}:
+            raise ValueError("split must be calibration, dev, or test")
         source_hashes = {
             name: hashlib.sha256(self.review_pdf(paper_id, name, split)).hexdigest()
             for name in self.available_sources(paper_id, split)
@@ -149,7 +151,7 @@ class ReviewApplication:
             comparison_id=str(payload["comparison_id"]),
             paper_id=paper_id,
             title=str(payload["title"]),
-            split=split,
+            split=cast(Literal["calibration", "dev", "test"], split),
             historical=payload["historical"],
             extracted=payload["extracted"],
             reviewer_ids=[str(item) for item in payload["reviewer_ids"]],
@@ -939,10 +941,13 @@ def make_handler(application: ReviewApplication, authenticator=None):
             )
             result: dict[str, bytes | str] = {}
             for part in message.iter_parts():
-                name = part.get_param("name", header="content-disposition")
-                if name:
-                    value = part.get_payload(decode=True) or b""
-                    result[name] = value if part.get_filename() else value.decode()
+                raw_name = part.get_param("name", header="content-disposition")
+                if isinstance(raw_name, str) and raw_name:
+                    payload = part.get_payload(decode=True)
+                    value = payload if isinstance(payload, bytes) else b""
+                    result[raw_name] = (
+                        value if part.get_filename() else value.decode()
+                    )
             return result
 
         def current_user(self, require_admin: bool = False) -> dict[str, str]:

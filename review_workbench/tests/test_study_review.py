@@ -279,7 +279,7 @@ def test_excel_cell_comments_are_feedback_even_without_value_edits(
             "record_collection": "device_families",
             "record_id": "family-control",
             "schema_path": None,
-        }
+        },
     ]
 
     recovered = store.import_review_workbook(
@@ -297,6 +297,62 @@ def test_excel_cell_comments_are_feedback_even_without_value_edits(
     )
     assert recovered_details["workbook_base_revision"] == 1
     assert recovered_details["cell_comments"][1]["author"] == "Jesper"
+
+
+def test_review_workbook_rejects_a_value_that_contradicts_its_evidence(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    study = study_with_family(empty_study)
+    study["individual_devices"] = [
+        {
+            "device_id": "device-1",
+            "family_id": "family-control",
+            "label": "Champion device",
+            "variant": None,
+            "champion_status": "yes",
+            "selection_basis": "champion",
+            "reported_properties": [
+                {
+                    "name": "PCE",
+                    "raw_value": "24.1%",
+                    "value_number": 24.1,
+                    "unit": "%",
+                    "evidence": [
+                        {
+                            "block_id": "main_p1_text_1",
+                            "quote": "The champion device reached a PCE of 24.1%.",
+                        }
+                    ],
+                }
+            ],
+            "evidence": [{"block_id": "main_p1_text_1", "quote": "champion device"}],
+        }
+    ]
+    seed(store, study, document_payload)
+    data = store.review_workbook("calibration", "10.0000--example", "ada")
+    book = load_workbook(BytesIO(data))
+    sheet = book["Individual Devices"]
+    headers = {cell.value: cell.column for cell in sheet[1]}
+    raw_value_row = next(
+        row
+        for row in range(2, sheet.max_row + 1)
+        if sheet.cell(row, headers["Field"]).value == "raw_value"
+    )
+    sheet.cell(raw_value_row, headers["Corrected value"]).value = "25.0%"
+    sheet.cell(raw_value_row, headers["Reviewer note"]).value = "Corrected PCE."
+    output = BytesIO()
+    book.save(output)
+
+    with pytest.raises(ValueError, match="source-grounding problem"):
+        store.import_review_workbook(
+            "calibration",
+            "10.0000--example",
+            output.getvalue(),
+            "ada",
+        )
+
+    assert store.revision("calibration", "10.0000--example") == 1
 
 
 def test_review_workbook_groups_fields_by_scientific_record_type(
@@ -409,9 +465,7 @@ def test_review_workbook_groups_fields_by_scientific_record_type(
     }
     assert rows["observation-1"]["Linked at"] == "Individual device"
     assert rows["observation-1"]["Family"] == "Control [family-control]"
-    assert rows["observation-1"]["Individual device"] == (
-        "Champion device [device-1]"
-    )
+    assert rows["observation-1"]["Individual device"] == ("Champion device [device-1]")
     assert rows["population-1"]["Linked at"] == (
         "Device family (no individual device link)"
     )
@@ -500,9 +554,7 @@ def test_review_workbook_rejects_stale_or_structurally_changed_files(
         "ada",
     )
     with pytest.raises(ValueError, match="older paper revision"):
-        store.import_review_workbook(
-            "calibration", "10.0000--example", original, "ada"
-        )
+        store.import_review_workbook("calibration", "10.0000--example", original, "ada")
 
 
 def test_undo_finds_an_appended_value_but_never_overwrites_later_work(
@@ -719,7 +771,9 @@ def test_bundle_marks_readable_older_schema_as_not_exactly_comparable(
     source = store.storage.load_source("calibration", "10.0000--example")
     source.manifest["schema_version"] = 1
     source.manifest["schema_sha256"] = "historical"
-    source_path = store.root / "state" / "sources" / "calibration" / "10.0000--example.json"
+    source_path = (
+        store.root / "state" / "sources" / "calibration" / "10.0000--example.json"
+    )
     payload = json.loads(source_path.read_text())
     payload["manifest"] = source.manifest
     source_path.write_text(json.dumps(payload))
@@ -840,9 +894,7 @@ def test_referenced_records_must_be_reassigned_or_removed_before_their_target(
     seed(store, study, document_payload)
     bundle = store.load_bundle("calibration", "10.0000--example")
     assert bundle["summary"]["record_references"] == {
-        "individual_devices:device-1": [
-            "performance_observations:observation-1"
-        ]
+        "individual_devices:device-1": ["performance_observations:observation-1"]
     }
 
     remove_device = MutationRequest(
@@ -868,15 +920,15 @@ def test_referenced_records_must_be_reassigned_or_removed_before_their_target(
     removed = store.mutate(
         "calibration",
         "10.0000--example",
-        remove_device.model_copy(update={"base_revision": without_observation["revision"]}),
+        remove_device.model_copy(
+            update={"base_revision": without_observation["revision"]}
+        ),
         "ada",
     )
     assert removed["ground_truth"]["individual_devices"] == []
 
 
-def test_census_precedes_inventory_completion(
-    tmp_path, empty_study, document_payload
-):
+def test_census_precedes_inventory_completion(tmp_path, empty_study, document_payload):
     store = StudyReviewStore(tmp_path)
     seed(store, empty_study, document_payload)
     with pytest.raises(ValueError, match="paper census"):

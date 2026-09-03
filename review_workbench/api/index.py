@@ -638,7 +638,7 @@ blob_store = BlobStore()
 review_application = VercelReviewApplication(
     blob_store, Path("/tmp/perla-study-review")
 )
-authenticator = None
+authenticator: Any = None
 has_internal_accounts = bool(os.environ.get("REVIEW_INTERNAL_ACCOUNTS"))
 clerk_publishable_key = os.environ.get("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "")
 has_clerk = clerk_key_allowed(
@@ -661,7 +661,7 @@ elif has_clerk:
 BaseHandler = make_handler(review_application, authenticator)
 
 
-class handler(BaseHandler):
+class handler(BaseHandler):  # type: ignore[misc, valid-type]
     """Hydrate source PDFs before delegating requests to the shared HTTP handler.
 
     Only routes that read PDFs trigger the lazy download; all review behavior remains

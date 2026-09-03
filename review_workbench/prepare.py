@@ -44,12 +44,12 @@ def prepare(output: Path) -> Path:
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
-    for relative, contents in saved_vercel_files.items():
-        target = vercel_dir / relative
+    for saved_relative, contents in saved_vercel_files.items():
+        target = vercel_dir / saved_relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(contents)
 
-    for relative in (
+    for relative_file in (
         "review_workbench/__init__.py",
         "review_workbench/auth.py",
         "review_workbench/ground_truth_export.py",
@@ -72,7 +72,7 @@ def prepare(output: Path) -> Path:
         "src/perla_extract/study_extraction/validation.py",
         "src/perla_extract/study_extraction/vocabulary.py",
     ):
-        copy_file(relative, output)
+        copy_file(relative_file, output)
 
     copy_file("review_workbench/api/index.py", output, "api/index.py")
     shutil.copytree(

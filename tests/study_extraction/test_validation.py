@@ -569,6 +569,59 @@ def test_validation_reports_duplicate_ids_for_every_entity_collection():
     } <= reasons.keys()
 
 
+def test_validation_flags_exact_duplicate_records_with_different_ids():
+    """Repeated content should remain visible without similarity-based guessing."""
+
+    evidence = [EvidenceCitation(block_id="a", quote="reported 20%")]
+    value = ReportedValue(
+        name="PCE", raw_value="20%", value_number=20, unit="%", evidence=evidence
+    )
+    device = IndividualDevice(
+        device_id="d",
+        family_id=None,
+        label="device",
+        variant=None,
+        champion_status="not_reported",
+        selection_basis="not_reported",
+        evidence=evidence,
+    )
+    first = PerformanceObservation(
+        observation_id="o-1",
+        device_id="d",
+        measurement_type="jv_scan",
+        scan_direction="reverse",
+        metrics=[value],
+        evidence=evidence,
+    )
+    second = first.model_copy(update={"observation_id": "o-2"})
+    extraction = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[],
+        individual_devices=[device],
+        performance_observations=[first, second],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+
+    result = validate_study(
+        extraction,
+        [
+            EvidenceBlock(
+                block_id="a",
+                source="main",
+                page=1,
+                kind="text",
+                text="reported 20%",
+            )
+        ],
+    )
+
+    assert result["counts"]["issues_by_reason"] == {
+        "exact duplicate record content at indexes 0, 1": 1
+    }
+
+
 def test_validation_checks_nested_ids_processing_targets_and_stability_family():
     """Relationship checks must cover nested records, not only top-level IDs."""
 

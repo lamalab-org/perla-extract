@@ -258,7 +258,8 @@ class ClerkAuthenticator:
             return authorization.removeprefix("Bearer ").strip()
         cookie = SimpleCookie()
         cookie.load(headers.get("Cookie", ""))
-        return cookie.get("__session").value if cookie.get("__session") else ""
+        session = cookie.get("__session")
+        return session.value if session is not None else ""
 
     @lru_cache(maxsize=64)
     def _user(self, user_id: str) -> dict:
@@ -277,8 +278,11 @@ class ClerkAuthenticator:
         token = self._token(headers)
         if not token:
             raise AuthenticationError("Sign in is required")
+        jwks = self.jwks
+        if jwks is None:
+            raise AuthenticationError("Authentication is not configured", 503)
         try:
-            signing_key = self.jwks.get_signing_key_from_jwt(token)
+            signing_key = jwks.get_signing_key_from_jwt(token)
             claims = jwt.decode(
                 token,
                 signing_key.key,

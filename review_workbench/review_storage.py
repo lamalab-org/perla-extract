@@ -73,6 +73,8 @@ class ReviewStateStorage(Protocol):
 
     def list_paper_ids(self, split: str) -> list[str]: ...
 
+    def list_paper_heads(self, split: str) -> list[tuple[str, int]]: ...
+
 
 class LocalReviewStateStorage:
     """Implement atomic revisions with immutable files in the review directory."""
@@ -112,6 +114,14 @@ class LocalReviewStateStorage:
         if not paths:
             return source.initial_revision
         return self._read(paths[-1], ReviewRevision)
+
+    def list_paper_heads(self, split: str) -> list[tuple[str, int]]:
+        """Return lightweight revision pointers for paper-list views."""
+
+        return [
+            (paper_id, self.load_revision(split, paper_id).revision)
+            for paper_id in self.list_paper_ids(split)
+        ]
 
     def compare_and_swap(
         self,

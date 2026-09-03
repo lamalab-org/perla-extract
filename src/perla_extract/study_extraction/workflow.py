@@ -34,7 +34,13 @@ from .evidence import (
     repair_noncontiguous_citation_quotes,
     repair_unique_citation_pointers,
 )
-from .guidance import DEVICE_FAMILY_POLICY, SHARED_QUANTITY_POLICY
+from .guidance import (
+    COMPOSITION_BOUNDARY_POLICY,
+    DEVICE_FAMILY_POLICY,
+    EVIDENCE_INTERPRETATION_POLICY,
+    RECORD_BOUNDARY_POLICY,
+    SHARED_QUANTITY_POLICY,
+)
 from .logging import logger
 from .models import (
     STUDY_SCHEMA_VERSION,
@@ -77,6 +83,9 @@ observation, population statistic, and stability specimen. Connect records only 
 the evidence supports the connection.
 
 {DEVICE_FAMILY_POLICY}
+{RECORD_BOUNDARY_POLICY}
+{COMPOSITION_BOUNDARY_POLICY}
+{EVIDENCE_INTERPRETATION_POLICY}
 {SHARED_QUANTITY_POLICY}
 Rules:
 - Preserve a device as one coherent object. Do not create one device per metric,
@@ -141,6 +150,9 @@ assembled. Return a neutral ledger of experimental objects and source claims, no
 draft StudyExtraction.
 
 {DEVICE_FAMILY_POLICY}
+{RECORD_BOUNDARY_POLICY}
+{COMPOSITION_BOUNDARY_POLICY}
+{EVIDENCE_INTERPRETATION_POLICY}
 Rules:
 - Describe what each source-mentioned object is used for: a reusable device design,
   individual device, processing arm, characterization specimen, population,

@@ -64,6 +64,29 @@ runs may name the same scientific entity differently.
 
 ## 2. Admit a seed to review
 
+For a versioned cohort, run every paper through one frozen configuration rather than
+assembling an undocumented shell loop:
+
+```bash
+perla-extract-cohort \
+  --manifest data/study_extraction/cohorts/review-v1.json \
+  --pdf-dir /path/to/main-papers \
+  --supplement-dir /path/to/supporting-information \
+  --output-dir results/review-v1 \
+  --env-file /path/to/provider.env
+```
+
+The command resumes only seeds whose model, parser, schema hash, prompt hash, and
+claim-recall setting still match. It writes `cohort_run.json` after every paper so an
+interrupted batch remains auditable. The tracked `review-v1` cohort is development
+data because its papers have already informed extractor design. A final test cohort
+must be sampled later from genuinely unseen Zotero submissions and frozen before its
+outputs are inspected.
+
+Independent workers may share the batch without duplicating papers by supplying the
+same `--shard-count` and a different zero-based `--shard-index`. Each worker writes a
+separate audit file; document and model caches remain content-addressed.
+
 Before import, require:
 
 - a schema-valid `extraction.json`;

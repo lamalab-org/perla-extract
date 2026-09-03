@@ -136,6 +136,16 @@ class WorkbookReview:
 
 
 @dataclass(frozen=True)
+class WorkbookMetadata:
+    """Identify the immutable seed revision to which a workbook was bound."""
+
+    paper_id: str
+    split: str
+    base_revision: int
+    schema_sha256: str
+
+
+@dataclass(frozen=True)
 class _FieldRow:
     values: tuple[Any, ...]
     current_value: Any
@@ -323,8 +333,7 @@ def _record_context(
     family_identifier = identifiers["device_families"]
     device_identifier = identifiers["individual_devices"]
     families = {
-        str(item[family_identifier]): item
-        for item in truth.get("device_families", [])
+        str(item[family_identifier]): item for item in truth.get("device_families", [])
     }
     devices = {
         str(item[device_identifier]): item
@@ -357,10 +366,9 @@ def _contract(
     labels: dict[str, str],
     device_id: str | None,
 ) -> tuple[list[tuple[Any, ...]], list[_FieldRow]]:
-    records, fields = [], []
-    for collection, index, record in _records_in_scope(
-        truth, identifiers, device_id
-    ):
+    records: list[tuple[Any, ...]] = []
+    fields: list[_FieldRow] = []
+    for collection, index, record in _records_in_scope(truth, identifiers, device_id):
         record_id = str(record[identifiers[collection]])
         context = _record_context(truth, record, record_id, identifiers)
         records.append(
@@ -502,9 +510,7 @@ def _add_field_sheet(
             FIELD_EVIDENCE_BLOCK_COLUMN,
             FIELD_EVIDENCE_QUOTE_COLUMN,
         ):
-            sheet.cell(row_index, column + 1).fill = PatternFill(
-                "solid", fgColor=fill
-            )
+            sheet.cell(row_index, column + 1).fill = PatternFill("solid", fgColor=fill)
         if not field_row.editable:
             sheet.row_dimensions[row_index].hidden = True
     current_column = get_column_letter(FIELD_CURRENT_COLUMN + 1)
@@ -562,23 +568,57 @@ def create_review_workbook(
     instructions.row_dimensions[1].height = 28
     guidance = (
         ("Paper", truth.get("paper", {}).get("title") or paper_id),
-        ("Scope", f"Device {device_id} plus linked context" if device_id else "All paper records"),
-        ("Start here", "Use Record review as the checklist. Choose one outcome for each complete record; you do not need to review every row on the detail tabs."),
-        ("If correct", "Choose All fields match source. No detail-sheet edits are needed."),
-        ("If uncertain", "Choose Cannot establish from source and explain the uncertainty in Reviewer note."),
-        ("If wrong", "Choose Correct fields, then open that record type's tab and edit only the wrong scalar rows."),
-        ("Corrections", "Yellow cells accept input. Keep each value atomic and provide a short note plus the exact supporting evidence quote and block."),
-        ("Relationships", "Linked at, Family, and Individual device are explicit schema links. Family-only statistics are not silently assigned to one of the family's devices."),
-        ("Structure", "Do not add, delete, or rename rows or sheets. Add, remove, or relink complete records in the browser."),
-        ("Finish", "Upload this file to the same paper. The app validates all changes together and rejects stale or structurally altered workbooks."),
+        (
+            "Scope",
+            f"Device {device_id} plus linked context"
+            if device_id
+            else "All paper records",
+        ),
+        (
+            "Start here",
+            "Use Record review as the checklist. Choose one outcome for each complete record; you do not need to review every row on the detail tabs.",
+        ),
+        (
+            "If correct",
+            "Choose All fields match source. No detail-sheet edits are needed.",
+        ),
+        (
+            "If uncertain",
+            "Choose Cannot establish from source and explain the uncertainty in Reviewer note.",
+        ),
+        (
+            "If wrong",
+            "Choose Correct fields, then open that record type's tab and edit only the wrong scalar rows.",
+        ),
+        (
+            "Corrections",
+            "Yellow cells accept input. Keep each value atomic and provide a short note plus the exact supporting evidence quote and block.",
+        ),
+        (
+            "Relationships",
+            "Linked at, Family, and Individual device are explicit schema links. Family-only statistics are not silently assigned to one of the family's devices.",
+        ),
+        (
+            "Structure",
+            "Do not add, delete, or rename rows or sheets. Add, remove, or relink complete records in the browser.",
+        ),
+        (
+            "Finish",
+            "Upload this file to the same paper. The app validates all changes together and rejects stale or structurally altered workbooks.",
+        ),
     )
     for row in guidance:
         instructions.append(row)
     instructions.append(("", ""))
     instructions.append(
-        ("Workbook map", "Open a tab below only when you need its records or scalar values.")
+        (
+            "Workbook map",
+            "Open a tab below only when you need its records or scalar values.",
+        )
     )
-    instructions.append(("Record review", f"Main checklist · {len(record_rows)} complete records"))
+    instructions.append(
+        ("Record review", f"Main checklist · {len(record_rows)} complete records")
+    )
     for collection, rows in _field_rows_by_collection(field_rows, identifiers).items():
         instructions.append(
             (
@@ -629,9 +669,7 @@ def create_review_workbook(
     )
     records.add_data_validation(outcome_validation)
     outcome_column = get_column_letter(RECORD_OUTCOME_COLUMN + 1)
-    outcome_validation.add(
-        f"{outcome_column}2:{outcome_column}{len(record_rows) + 1}"
-    )
+    outcome_validation.add(f"{outcome_column}2:{outcome_column}{len(record_rows) + 1}")
     for row in records.iter_rows(
         min_row=2,
         min_col=RECORD_OUTCOME_COLUMN + 1,
@@ -748,8 +786,13 @@ def _load_review_workbook(data: bytes) -> Workbook:
         raise ValueError("review workbook must be a non-empty XLSX smaller than 15 MiB")
     try:
         with ZipFile(BytesIO(data)) as archive:
-            if sum(item.file_size for item in archive.infolist()) > MAX_UNCOMPRESSED_BYTES:
-                raise ValueError("review workbook expands beyond the 100 MiB safety limit")
+            if (
+                sum(item.file_size for item in archive.infolist())
+                > MAX_UNCOMPRESSED_BYTES
+            ):
+                raise ValueError(
+                    "review workbook expands beyond the 100 MiB safety limit"
+                )
     except BadZipFile as error:
         raise ValueError("review workbook is not a readable XLSX file") from error
     try:
@@ -775,9 +818,7 @@ def _workbook_comments(book: Workbook) -> tuple[WorkbookComment, ...]:
         }
         for row in sheet.iter_rows():
             record_collection = (
-                _cell_text(
-                    sheet.cell(row[0].row, headers["_record_collection"]).value
-                )
+                _cell_text(sheet.cell(row[0].row, headers["_record_collection"]).value)
                 if "_record_collection" in headers and row[0].row > 1
                 else ""
             )
@@ -842,7 +883,128 @@ def read_review_workbook_comments(
         if metadata.get(key) != expected:
             raise ValueError(f"review workbook metadata does not match {key}")
     comments = _workbook_comments(book)
-    return int(metadata.get("base_revision", 0)), comments, hashlib.sha256(data).hexdigest()
+    return (
+        int(metadata.get("base_revision", 0)),
+        comments,
+        hashlib.sha256(data).hexdigest(),
+    )
+
+
+def _workbook_metadata(book: Workbook) -> WorkbookMetadata:
+    """Validate typed identity fields from an already safety-checked workbook."""
+
+    if "_meta" not in book.sheetnames:
+        raise ValueError("review workbook metadata sheet is missing")
+    metadata = _metadata(book["_meta"])
+    if metadata.get("format") != FORMAT_NAME:
+        raise ValueError("review workbook metadata does not match format")
+    paper_id = metadata.get("paper_id")
+    split = metadata.get("split")
+    schema_sha256 = metadata.get("schema_sha256")
+    if not isinstance(paper_id, str) or not paper_id:
+        raise ValueError("review workbook paper_id metadata is incomplete")
+    if not isinstance(split, str) or not split:
+        raise ValueError("review workbook split metadata is incomplete")
+    if not isinstance(schema_sha256, str) or not schema_sha256:
+        raise ValueError("review workbook identity metadata is incomplete")
+    return WorkbookMetadata(
+        paper_id=paper_id,
+        split=split,
+        base_revision=int(metadata.get("base_revision", 0)),
+        schema_sha256=schema_sha256,
+    )
+
+
+def read_review_workbook_metadata(data: bytes) -> WorkbookMetadata:
+    """Read identity metadata through the same safety checks as a full import."""
+
+    return _workbook_metadata(_load_review_workbook(data))
+
+
+def read_review_workbook_feedback(
+    data: bytes, *, paper_id: str, split: str
+) -> WorkbookReview:
+    """Recover decisions and proposals from an older workbook without applying them.
+
+    Stable hidden identifiers are retained as reviewer-supplied context, but this
+    function intentionally does not compare them with current truth. Its output is
+    suitable for an adjudication queue, never for direct mutation.
+    """
+
+    book = _load_review_workbook(data)
+    metadata = _workbook_metadata(book)
+    if metadata.paper_id != paper_id or metadata.split != split:
+        raise ValueError("review workbook identity does not match the requested paper")
+    if "Record review" not in book.sheetnames:
+        raise ValueError("review workbook has no Record review sheet")
+    decisions: list[WorkbookDecision] = []
+    for row_number, row in enumerate(
+        _rows(book["Record review"], RECORD_HEADERS), start=2
+    ):
+        outcome = _cell_text(row[RECORD_OUTCOME_COLUMN]) or NO_OUTCOME
+        if outcome not in {NO_OUTCOME, *OUTCOME_TO_DECISION}:
+            raise ValueError(f"Record review row {row_number} has an unknown outcome")
+        collection = _cell_text(row[RECORD_COLLECTION_COLUMN])
+        record_id = _cell_text(row[RECORD_ID_COLUMN])
+        if outcome != NO_OUTCOME and collection and record_id:
+            decisions.append(
+                WorkbookDecision(
+                    collection=collection,
+                    record_id=record_id,
+                    decision=OUTCOME_TO_DECISION[outcome],
+                    note=_cell_text(row[RECORD_NOTE_COLUMN]),
+                )
+            )
+
+    changes: list[WorkbookChange] = []
+    for sheet in book.worksheets:
+        if sheet.title in {*FIXED_SHEETS, "_meta"}:
+            continue
+        headers = tuple(_cell_text(cell.value) for cell in sheet[1])
+        if headers != FIELD_HEADERS:
+            continue
+        for row_number, row in enumerate(_rows(sheet, FIELD_HEADERS), start=2):
+            reviewed_type = _cell_text(row[FIELD_TYPE_COLUMN])
+            if row[FIELD_REVIEWED_COLUMN] == row[FIELD_CURRENT_COLUMN]:
+                continue
+            try:
+                reviewed = _decode_value(row[FIELD_REVIEWED_COLUMN], reviewed_type)
+            except (TypeError, ValueError) as error:
+                raise ValueError(
+                    f"{sheet.title} row {row_number} has an invalid value: {error}"
+                ) from error
+            collection = _cell_text(row[FIELD_COLLECTION_COLUMN])
+            record_id = _cell_text(row[FIELD_ID_COLUMN])
+            path = _cell_text(row[FIELD_PATH_COLUMN])
+            if not collection or not record_id or not path:
+                raise ValueError(
+                    f"{sheet.title} row {row_number} lacks correction identity"
+                )
+            block_id = _cell_text(row[FIELD_EVIDENCE_BLOCK_COLUMN])
+            quote = _cell_text(row[FIELD_EVIDENCE_QUOTE_COLUMN])
+            changes.append(
+                WorkbookChange(
+                    collection=collection,
+                    record_id=record_id,
+                    path=path,
+                    value=reviewed,
+                    note=_cell_text(row[FIELD_NOTE_COLUMN]),
+                    evidence=(
+                        ({"block_id": block_id, "quote": quote},)
+                        if block_id and quote
+                        else ()
+                    ),
+                )
+            )
+    return WorkbookReview(
+        base_revision=metadata.base_revision,
+        scope_device_id=_cell_text(_metadata(book["_meta"]).get("scope_device_id"))
+        or None,
+        changes=tuple(changes),
+        decisions=tuple(decisions),
+        comments=_workbook_comments(book),
+        sha256=hashlib.sha256(data).hexdigest(),
+    )
 
 
 def read_review_workbook(
@@ -884,9 +1046,7 @@ def read_review_workbook(
                 )
             raise ValueError(f"review workbook metadata does not match {key}")
     device_id = _cell_text(metadata.get("scope_device_id")) or None
-    expected_records, expected_fields = _contract(
-        truth, identifiers, labels, device_id
-    )
+    expected_records, expected_fields = _contract(truth, identifiers, labels, device_id)
     grouped_fields = _field_rows_by_collection(expected_fields, identifiers)
     expected_sheets = (
         *FIXED_SHEETS,
@@ -904,7 +1064,9 @@ def read_review_workbook(
             _rows(book[sheet_name], FIELD_HEADERS), start=2
         )
     ]
-    if len(record_rows) != len(expected_records) or len(field_rows) != len(expected_fields):
+    if len(record_rows) != len(expected_records) or len(field_rows) != len(
+        expected_fields
+    ):
         raise ValueError("review workbook rows were added, removed, or left incomplete")
 
     expected_record_map = {
@@ -956,9 +1118,7 @@ def read_review_workbook(
     expected_field_map = {
         str(row.values[FIELD_PATH_COLUMN]): row for row in expected_fields
     }
-    actual_field_keys = [
-        _cell_text(row[FIELD_PATH_COLUMN]) for _, _, row in field_rows
-    ]
+    actual_field_keys = [_cell_text(row[FIELD_PATH_COLUMN]) for _, _, row in field_rows]
     if len(set(actual_field_keys)) != len(actual_field_keys) or set(
         actual_field_keys
     ) != set(expected_field_map):

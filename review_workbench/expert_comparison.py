@@ -1039,15 +1039,15 @@ class ComparisonService:
             values = rating_values.setdefault(origin, {})
             for name, value in utility.ratings.model_dump().items():
                 values.setdefault(name, []).append(value)
-        for origin, dimensions in rating_values.items():
-            by_origin[origin]["native_rating_means"] = {
+        for origin_key, dimensions in rating_values.items():
+            by_origin[origin_key]["native_rating_means"] = {
                 name: sum(values) / len(values) for name, values in dimensions.items()
             }
         preference_counts: dict[str, dict[str, int]] = {}
         for preference in preference_reviews:
             assert preference is not None  # reveal already proved completeness
             for dimension, choice in preference.preferences.model_dump().items():
-                resolved_choice: str = (
+                resolved_choice: Origin | PreferenceChoice = (
                     source.candidates[choice].origin if choice in {"A", "B"} else choice
                 )
                 counts = preference_counts.setdefault(

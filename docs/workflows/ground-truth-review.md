@@ -155,7 +155,9 @@ relationship context, and membership may not change.
 Upload the reviewed `.xlsx` from the same menu. The workbench accepts it only if its
 paper, schema, source truth, revision, sheets, rows, paths, and identifiers still match
 the generated contract. Corrections require exact evidence, and the complete rich
-study must pass Pydantic validation. The entire import becomes one reviewer-attributed
+study must pass Pydantic validation. A correction is also rejected when it introduces
+a new grounding failure—for example, when a replacement `raw_value` does not occur in
+its cited passage. The entire import becomes one reviewer-attributed
 revision with its workbook hash, before/after records, field notes, and decisions; a
 conflict saves nothing. It is visible and undoable in **My edits & undo**. Adding,
 copying, reassigning, or removing records remains a browser task because those changes
@@ -166,6 +168,34 @@ readable by the Pydantic model. It deliberately does not contain the event ledge
 wrapper metadata. Editing that local JSON does not change the workbench; use the Excel
 return path or apply corrections in the record editor so they become attributable
 revision events.
+
+## Recover a batch of offline reviews
+
+When experts return workbooks from an older seed, preserve their feedback before
+regenerating anything. From the repository root, compile them against the matching run
+directories:
+
+```bash
+PYTHONPATH=.:src python -m review_workbench.compile_review_batch \
+  --workbook "paper-a - Reviewer.review.xlsx" \
+  --workbook "paper-b - Reviewer.review.xlsx" \
+  --run-root results/extraction-batch-a \
+  --run-root results/extraction-batch-b \
+  --output-dir review_data/revised-ground-truth/reviewer-date
+```
+
+The compiler archives each workbook byte-for-byte and writes a provisional rich truth,
+the complete reviewer feedback, and a manifest with source hashes and validation
+findings. It never applies a stale scalar correction automatically. Only a record with
+an affirmative decision and the unqualified note `ok` enters the provisional verified
+subset. Caveats, uncertainty, missing decisions, changed record IDs, and all correction
+proposals remain in `adjudication.json`.
+
+This output is an adjudication worklist, not a benchmark. Resolve its queued records in
+the workbench, complete the census and completeness pass, and use the ordinary frozen
+export only after administrator adjudication. This conservative intermediate step lets
+the team use clear expert agreement immediately without silently turning prose or a
+stale spreadsheet into ground truth.
 
 ## Stored artifacts
 
