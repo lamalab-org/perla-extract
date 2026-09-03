@@ -37,6 +37,16 @@ def test_manifest_rejects_duplicate_papers(tmp_path):
         _load_manifest(path)
 
 
+def test_manifest_rejects_included_and_excluded_overlap(tmp_path):
+    payload = manifest().model_dump(mode="json")
+    payload["exclusions"] = [{"paper_id": "paper", "reason": "not primary"}]
+    path = tmp_path / "cohort.json"
+    path.write_text(json.dumps(payload))
+
+    with pytest.raises(ValueError, match="also appear as exclusions"):
+        _load_manifest(path)
+
+
 def test_supplement_resolution_is_explicit(tmp_path):
     supplement = tmp_path / "paper-SI.pdf"
     supplement.write_bytes(b"%PDF")

@@ -25,6 +25,15 @@ class CohortPaper(BaseModel):
     double_review: bool = False
 
 
+class CohortExclusion(BaseModel):
+    """Retain why a considered paper is outside the scientific cohort."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    paper_id: str = Field(min_length=1, max_length=240)
+    reason: str = Field(min_length=1, max_length=500)
+
+
 class CohortManifest(BaseModel):
     """Freeze the scientific cohort and model settings before annotation begins."""
 
@@ -43,6 +52,7 @@ class CohortManifest(BaseModel):
     max_model_calls_per_paper: int | None = Field(default=14, ge=1)
     max_cost_usd_per_paper: float | None = Field(default=None, gt=0)
     papers: list[CohortPaper] = Field(min_length=1)
+    exclusions: list[CohortExclusion] = Field(default_factory=list)
 
 
 def _load_manifest(path: Path) -> CohortManifest:
@@ -52,6 +62,12 @@ def _load_manifest(path: Path) -> CohortManifest:
     identifiers = [paper.paper_id for paper in manifest.papers]
     if len(identifiers) != len(set(identifiers)):
         raise ValueError("cohort manifest contains duplicate paper IDs")
+    excluded = [paper.paper_id for paper in manifest.exclusions]
+    if len(excluded) != len(set(excluded)):
+        raise ValueError("cohort manifest contains duplicate exclusions")
+    overlap = sorted(set(identifiers) & set(excluded))
+    if overlap:
+        raise ValueError(f"cohort papers also appear as exclusions: {', '.join(overlap)}")
     return manifest
 
 

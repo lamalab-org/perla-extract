@@ -17,7 +17,6 @@
     {"paper_id": "10.1002--adma.202305822"},
     {"paper_id": "10.1002--solr.201900370"},
     {"paper_id": "10.1002--solr.202100879"},
-    {"paper_id": "10.1002--solr.202300438"},
     {"paper_id": "10.1002--solr.202300817"},
     {"paper_id": "10.1016--j.jallcom.2023.170970"},
     {"paper_id": "10.1016--j.jmst.2021.03.045"},
@@ -28,17 +27,29 @@
     {"paper_id": "10.1021--acs.chemmater.8b01521", "double_review": true},
     {"paper_id": "10.1021--acsaem.4c02660"},
     {"paper_id": "10.1021--acsaem.9b01928"},
-    {"paper_id": "10.1021--acsaelm.4c02297"},
     {"paper_id": "10.1038--nmat4014", "double_review": true},
     {"paper_id": "10.1038--s41467-020-20272-3"},
     {"paper_id": "10.1038--s41467-021-27740-4"},
     {"paper_id": "10.1038--s41467-023-36141-8", "double_review": true},
-    {"paper_id": "10.1038--s41560-022-01061-2"},
     {"paper_id": "10.1038--s41560-022-01102-w"},
     {"paper_id": "10.1038--s41563-025-02163-4"},
     {"paper_id": "10.1039--c5dt02388b"},
     {"paper_id": "10.1039--c5ta00568j"},
     {"paper_id": "10.1039--c7nr04692h"},
     {"paper_id": "10.1126--science.adf0194"}
+  ],
+  "exclusions": [
+    {
+      "paper_id": "10.1002--solr.202300438",
+      "reason": "Review article; the abstract explicitly describes the paper as a review."
+    },
+    {
+      "paper_id": "10.1021--acsaelm.4c02297",
+      "reason": "Spotlight article discussing prior advances rather than a primary device study."
+    },
+    {
+      "paper_id": "10.1038--s41560-022-01061-2",
+      "reason": "News & Views article rather than a primary research report."
+    }
   ]
 }

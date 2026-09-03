@@ -64,6 +64,7 @@ exact missing set and then repeat without `--dry-run`:
 
 ```bash
 python -m review_workbench.import_vercel_runs \
+  --manifest data/study_extraction/cohorts/review-v1.json \
   --runs-dir results/review-v1 \
   --pdf-dir /path/to/main-papers \
   --env-file review_workbench/.vercel-build/.vercel/.env.production.local \
@@ -71,7 +72,8 @@ python -m review_workbench.import_vercel_runs \
   --dry-run
 ```
 
-This command imports only absent paper IDs. It cannot replace an immutable seed or any
+This command imports only included manifest papers with absent IDs. Exclusions and
+unrelated run directories are ignored, and it cannot replace an immutable seed or any
 human revision already stored for an existing paper.
 
 ## Review records efficiently

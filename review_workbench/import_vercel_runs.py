@@ -9,6 +9,7 @@ from pathlib import Path
 import click
 from loguru import logger
 
+from perla_extract.study_extraction.cohort import CohortManifest
 from review_workbench.import_runs import _admissible, import_run
 
 
@@ -24,6 +25,12 @@ def _load_env(path: Path) -> None:
 
 
 @click.command(context_settings={"show_default": True})
+@click.option(
+    "--manifest",
+    "manifest_path",
+    type=click.Path(path_type=Path, exists=True, dir_okay=False),
+    required=True,
+)
 @click.option(
     "--runs-dir",
     type=click.Path(path_type=Path, exists=True, file_okay=False),
@@ -47,6 +54,7 @@ def _load_env(path: Path) -> None:
 @click.option("--reviewer-id", default="seed-import")
 @click.option("--dry-run", is_flag=True)
 def main(
+    manifest_path: Path,
     runs_dir: Path,
     pdf_dir: Path,
     env_file: Path,
@@ -59,8 +67,15 @@ def main(
     _load_env(env_file)
     from review_workbench.api.index import review_application
 
+    manifest = CohortManifest.model_validate_json(
+        manifest_path.read_text(encoding="utf-8")
+    )
+    if manifest.split != split:
+        raise click.ClickException(
+            f"manifest split is {manifest.split!r}, not requested split {split!r}"
+        )
     existing = set(review_application.store.storage.list_paper_ids(split))
-    run_dirs = sorted(path for path in runs_dir.iterdir() if path.is_dir())
+    run_dirs = [runs_dir / paper.paper_id for paper in manifest.papers]
     missing = [path for path in run_dirs if path.name not in existing]
     logger.info(
         "Found {} run candidate(s); {} already exist and {} are missing",
