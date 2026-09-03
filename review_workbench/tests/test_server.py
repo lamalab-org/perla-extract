@@ -18,23 +18,48 @@ def test_revision_conflict_message_is_actionable_without_internal_details():
 
 def test_uploaded_review_workbook_is_retained_byte_for_byte(tmp_path):
     app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
-    relative = app._uploaded_workbook_relative_path(
+    relative = app._workbook_submission_relative_path(
         "dev",
         "10.0000--example",
-        2,
-        "event-1",
+        "2026-09-03T10:00:00+00:00",
+        "submission-1",
         "reviewer-1",
         "reviewed workbook.xlsx",
     )
     body = b"exact xlsx bytes"
+    receipt = {"submission_id": "submission-1", "status": "received"}
 
-    assert app._archive_uploaded_workbook(relative, body) is True
+    app._archive_workbook_submission(relative, body, receipt)
+    app._record_workbook_outcome(relative, {"status": "rejected"})
     artifacts = app.uploaded_review_workbooks()
 
     assert len(artifacts) == 1
     assert artifacts[0]["data"] == body
-    assert artifacts[0]["original_filename"] == "reviewed_workbook.xlsx"
+    assert artifacts[0]["receipt"] == receipt
+    assert artifacts[0]["outcome"] == {"status": "rejected"}
     assert artifacts[0]["archive_path"].startswith("uploaded_workbooks/dev/")
+
+
+def test_rejected_workbook_remains_archived(tmp_path, monkeypatch):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+
+    def reject(*args, **kwargs):
+        raise ValueError("invalid workbook")
+
+    monkeypatch.setattr(app.store, "import_review_workbook", reject)
+    with pytest.raises(ValueError, match="invalid workbook"):
+        app.import_review_workbook(
+            "dev",
+            "10.0000--example",
+            b"not really xlsx",
+            "reviewer-1",
+            filename="attempt.xlsx",
+        )
+
+    artifact = app.uploaded_review_workbooks()[0]
+    assert artifact["data"] == b"not really xlsx"
+    assert artifact["outcome"]["status"] == "rejected"
+    assert artifact["outcome"]["message"] == "invalid workbook"
 
 
 def pdf_bytes(text: str) -> bytes:

@@ -98,11 +98,15 @@ def test_vercel_application_retains_and_lists_uploaded_workbooks():
         "00000002--event-1--reviewer-1--review.xlsx"
     )
 
-    assert app._archive_uploaded_workbook(relative, b"xlsx") is True
+    app._archive_workbook_submission(
+        relative, b"xlsx", {"submission_id": "submission-1"}
+    )
+    app._record_workbook_outcome(relative, {"status": "accepted"})
     artifacts = app.uploaded_review_workbooks()
 
     assert artifacts[0]["data"] == b"xlsx"
-    assert artifacts[0]["event_id"] == "event-1"
+    assert artifacts[0]["receipt"]["submission_id"] == "submission-1"
+    assert artifacts[0]["outcome"]["status"] == "accepted"
 
 
 class PagedBlobStore(BlobStore):

@@ -8,6 +8,8 @@ import json
 import mimetypes
 import re
 import sys
+import uuid
+from datetime import datetime, timezone
 from email.parser import BytesParser
 from functools import lru_cache
 from http import HTTPStatus
@@ -25,7 +27,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from perla_extract.study_extraction.artifacts import write_json_atomic  # noqa: E402
+from perla_extract.study_extraction.artifacts import (  # noqa: E402
+    write_bytes_exclusive,
+    write_json_atomic,
+    write_json_exclusive,
+)
 from perla_extract.study_extraction.enrichment import EnrichmentAudit  # noqa: E402
 from perla_extract.study_extraction.models import StudyExtraction  # noqa: E402
 from review_workbench.expert_comparison import (  # noqa: E402
@@ -168,15 +174,15 @@ class ReviewApplication:
         )
 
     @staticmethod
-    def _uploaded_workbook_relative_path(
+    def _workbook_submission_relative_path(
         split: str,
         paper_id: str,
-        revision: int,
-        event_id: str,
+        received_at: str,
+        submission_id: str,
         reviewer_id: str,
         filename: str,
     ) -> Path:
-        """Give an immutable upload a readable name without trusting user input."""
+        """Give every received upload a unique readable name without trusting input."""
 
         safe_reviewer = re.sub(r"[^A-Za-z0-9._-]+", "_", reviewer_id)[:80]
         safe_filename = re.sub(
@@ -184,35 +190,45 @@ class ReviewApplication:
         )[:160]
         if not safe_filename.lower().endswith(".xlsx"):
             safe_filename += ".xlsx"
-        name = f"{revision:08d}--{event_id}--{safe_reviewer}--{safe_filename}"
+        timestamp = re.sub(r"[^0-9TZ]", "", received_at)
+        name = f"{timestamp}--{submission_id}--{safe_reviewer}--{safe_filename}"
         return Path(split) / paper_id / name
 
-    def _archive_uploaded_workbook(self, relative: Path, data: bytes) -> bool:
-        """Retain the exact uploaded XLSX independently of derived review state."""
+    def _archive_workbook_submission(
+        self, relative: Path, data: bytes, receipt: dict[str, Any]
+    ) -> None:
+        """Persist exact bytes and their immutable receipt before validation starts."""
 
         path = self.uploaded_workbook_dir / relative
-        path.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            with path.open("xb") as stream:
-                stream.write(data)
-        except FileExistsError:
-            return path.read_bytes() == data
-        return True
+        write_bytes_exclusive(path, data)
+        write_json_exclusive(path.with_suffix(".received.json"), receipt)
+
+    def _record_workbook_outcome(
+        self, relative: Path, outcome: dict[str, Any]
+    ) -> None:
+        """Append validation outcome without mutating the original upload receipt."""
+
+        write_json_exclusive(
+            (self.uploaded_workbook_dir / relative).with_suffix(".outcome.json"),
+            outcome,
+        )
 
     @staticmethod
-    def _uploaded_workbook_artifact(relative: Path, data: bytes) -> dict[str, Any]:
-        """Describe one retained workbook for the administrator feedback archive."""
+    def _uploaded_workbook_artifact(
+        relative: Path,
+        data: bytes,
+        receipt: dict[str, Any] | None = None,
+        outcome: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Describe retained bytes and both immutable audit records for export."""
 
-        revision, event_id, reviewer_id, filename = relative.name.split("--", 3)
         return {
             "split": relative.parts[0],
             "paper_id": relative.parts[1],
-            "revision": int(revision),
-            "event_id": event_id,
-            "reviewer_id": reviewer_id,
-            "original_filename": filename,
             "sha256": hashlib.sha256(data).hexdigest(),
             "archive_path": (Path("uploaded_workbooks") / relative).as_posix(),
+            "receipt": receipt,
+            "outcome": outcome,
             "data": data,
         }
 
@@ -221,12 +237,24 @@ class ReviewApplication:
 
         if not self.uploaded_workbook_dir.exists():
             return []
-        return [
-            self._uploaded_workbook_artifact(
-                path.relative_to(self.uploaded_workbook_dir), path.read_bytes()
+        artifacts = []
+        for path in sorted(self.uploaded_workbook_dir.rglob("*.xlsx")):
+            relative = path.relative_to(self.uploaded_workbook_dir)
+            received_path = path.with_suffix(".received.json")
+            outcome_path = path.with_suffix(".outcome.json")
+            artifacts.append(
+                self._uploaded_workbook_artifact(
+                    relative,
+                    path.read_bytes(),
+                    json.loads(received_path.read_text())
+                    if received_path.exists()
+                    else None,
+                    json.loads(outcome_path.read_text())
+                    if outcome_path.exists()
+                    else None,
+                )
             )
-            for path in sorted(self.uploaded_workbook_dir.rglob("*.xlsx"))
-        ]
+        return artifacts
 
     def pdf_path(
         self, paper_id: str, source: str = "main", split: str | None = None
@@ -489,34 +517,87 @@ class ReviewApplication:
         *,
         filename: str,
     ) -> dict[str, Any]:
-        """Validate one returned workbook and attach its event to the reviewer."""
+        """Archive every bounded upload before attempting its review transition."""
 
-        bundle = self.store.import_review_workbook(
-            split,
-            paper_id,
-            data,
-            reviewer_id,
-            filename=filename,
-        )
-        event = bundle["events"][-1]
-        relative = self._uploaded_workbook_relative_path(
-            split,
-            paper_id,
-            int(bundle["revision"]),
-            str(event["event_id"]),
-            reviewer_id,
-            str(event["details"]["filename"]),
-        )
-        try:
-            bundle["workbook_archived"] = self._archive_uploaded_workbook(
-                relative, data
+        self.store.validate_identity(split, paper_id)
+        if not data or len(data) > 15 * 1024 * 1024:
+            raise ValueError(
+                "review workbook must be a non-empty file smaller than 15 MiB"
             )
+        received_at = datetime.now(timezone.utc).isoformat()
+        submission_id = str(uuid.uuid4())
+        safe_filename = Path(filename).name[:240] or "review.xlsx"
+        relative = self._workbook_submission_relative_path(
+            split,
+            paper_id,
+            received_at,
+            submission_id,
+            reviewer_id,
+            safe_filename,
+        )
+        receipt = {
+            "submission_id": submission_id,
+            "received_at": received_at,
+            "split": split,
+            "paper_id": paper_id,
+            "reviewer_id": reviewer_id,
+            "original_filename": safe_filename,
+            "sha256": hashlib.sha256(data).hexdigest(),
+            "size_bytes": len(data),
+        }
+        try:
+            self._archive_workbook_submission(relative, data, receipt)
+        except Exception as error:
+            raise RuntimeError(
+                "The workbook could not be archived, so no review changes were "
+                "processed. Please keep your local copy and try again."
+            ) from error
+        try:
+            bundle = self.store.import_review_workbook(
+                split,
+                paper_id,
+                data,
+                reviewer_id,
+                filename=safe_filename,
+            )
+        except Exception as error:
+            try:
+                self._record_workbook_outcome(
+                    relative,
+                    {
+                        "status": "rejected",
+                        "recorded_at": datetime.now(timezone.utc).isoformat(),
+                        "error_type": type(error).__name__,
+                        "message": str(error)[:2000],
+                    },
+                )
+            except Exception:
+                logger.exception(
+                    "Workbook bytes and receipt were archived, but the rejected "
+                    "validation outcome could not be recorded"
+                )
+            raise
+        event = bundle["events"][-1]
+        outcome = {
+            "status": "accepted",
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "revision": int(bundle["revision"]),
+            "event_id": str(event["event_id"]),
+            "workbook_import_mode": event.get("details", {}).get(
+                "workbook_import_mode"
+            ),
+        }
+        try:
+            self._record_workbook_outcome(relative, outcome)
+            bundle["workbook_outcome_recorded"] = True
         except Exception:
             logger.exception(
-                "Review changes were saved, but the original workbook upload could "
-                "not be archived"
+                "Workbook and review were saved, but the accepted outcome sidecar "
+                "could not be recorded"
             )
-            bundle["workbook_archived"] = False
+            bundle["workbook_outcome_recorded"] = False
+        bundle["workbook_archived"] = True
+        bundle["workbook_submission_id"] = submission_id
         return self._with_sources(bundle)
 
     def evidence_blocks(

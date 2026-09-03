@@ -52,11 +52,12 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
                 {
                     "split": "dev",
                     "paper_id": "10.0000--example",
-                    "revision": 2,
-                    "event_id": "event-1",
-                    "reviewer_id": "reviewer-1",
-                    "original_filename": "review.xlsx",
                     "sha256": "a" * 64,
+                    "receipt": {
+                        "submission_id": "submission-1",
+                        "reviewer_id": "reviewer-1",
+                    },
+                    "outcome": {"status": "rejected"},
                     "archive_path": (
                         "uploaded_workbooks/dev/10.0000--example/"
                         "00000002--event-1--reviewer-1--review.xlsx"
@@ -103,7 +104,13 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
         "reviewers": 1,
         "uploaded_review_workbooks": 1,
     }
-    assert snapshot["uploaded_review_workbooks"][0]["event_id"] == "event-1"
+    assert snapshot["uploaded_review_workbooks"][0]["receipt"] == {
+        "submission_id": "submission-1",
+        "reviewer_id": "reviewer-1",
+    }
+    assert snapshot["uploaded_review_workbooks"][0]["outcome"]["status"] == (
+        "rejected"
+    )
     assert "data" not in snapshot["uploaded_review_workbooks"][0]
     assert snapshot["ground_truth_reviews"][0]["events"][0]["kind"] == "mutation"
     assert rows[0]["reviewer_id"] == "reviewer-1"

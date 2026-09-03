@@ -538,28 +538,63 @@ class VercelReviewApplication(ReviewApplication):
             or (None, paper_id, source) in self.remote_pdfs
         ]
 
-    def _archive_uploaded_workbook(self, relative: Path, data: bytes) -> bool:
-        """Persist an accepted XLSX in private Blob storage under an immutable key."""
+    def _archive_workbook_submission(
+        self, relative: Path, data: bytes, receipt: dict[str, Any]
+    ) -> None:
+        """Persist exact bytes and receipt before any workbook validation."""
 
+        pathname = f"{self.review_workbook_prefix}{relative.as_posix()}"
         self.blob.put(
-            f"{self.review_workbook_prefix}{relative.as_posix()}",
+            pathname,
             data,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             overwrite=False,
         )
-        return True
+        self.blob.put(
+            str(Path(pathname).with_suffix(".received.json")),
+            json.dumps(receipt, ensure_ascii=False, separators=(",", ":")).encode(),
+            "application/json",
+            overwrite=False,
+        )
+
+    def _record_workbook_outcome(
+        self, relative: Path, outcome: dict[str, Any]
+    ) -> None:
+        """Persist an immutable accepted or rejected validation outcome."""
+
+        pathname = Path(
+            f"{self.review_workbook_prefix}{relative.as_posix()}"
+        ).with_suffix(".outcome.json")
+        self.blob.put(
+            str(pathname),
+            json.dumps(outcome, ensure_ascii=False, separators=(",", ":")).encode(),
+            "application/json",
+            overwrite=False,
+        )
 
     def uploaded_review_workbooks(self) -> list[dict[str, Any]]:
         """Download retained workbook uploads only when an administrator exports."""
 
+        items = self.blob.list(self.review_workbook_prefix)
+        by_path = {str(item.get("pathname", "")): item for item in items}
         artifacts = []
-        for item in self.blob.list(self.review_workbook_prefix):
-            pathname = str(item.get("pathname", ""))
+        for pathname, item in by_path.items():
             if not pathname.lower().endswith(".xlsx"):
                 continue
             relative = Path(pathname.removeprefix(self.review_workbook_prefix))
+            receipt_item = by_path.get(str(Path(pathname).with_suffix(".received.json")))
+            outcome_item = by_path.get(str(Path(pathname).with_suffix(".outcome.json")))
             artifacts.append(
-                self._uploaded_workbook_artifact(relative, self.blob.download(item))
+                self._uploaded_workbook_artifact(
+                    relative,
+                    self.blob.download(item),
+                    json.loads(self.blob.download(receipt_item))
+                    if receipt_item
+                    else None,
+                    json.loads(self.blob.download(outcome_item))
+                    if outcome_item
+                    else None,
+                )
             )
         return artifacts
 

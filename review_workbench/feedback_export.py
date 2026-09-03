@@ -298,10 +298,12 @@ rule. This supports reproducible analysis if a later study revises the wording.
 Reviewer identifiers are stable application IDs, not passwords or session tokens.
 The archive contains no PDFs and no authentication configuration.
 
-uploaded_workbooks/ contains the exact XLSX bytes retained from successful workbook
-imports. feedback.json records their paper, reviewer, revision, original filename,
-and SHA-256 digest. Workbooks uploaded before this archival feature was deployed are
-not recoverable as files; their accepted edits remain in review_events.csv and JSON.
+uploaded_workbooks/ contains the exact bytes of every authenticated workbook
+submission within the upload size limit, including rejected, stale, comment-only,
+and no-op attempts. feedback.json records each immutable receipt and its separate
+accepted or rejected validation outcome. A missing outcome means processing stopped
+after receipt; the original bytes are still retained. Workbooks submitted before
+this archival feature was deployed are not recoverable as files.
 """
     event_fields = list(event_rows[0]) if event_rows else [
         "split", "paper_id", "current_paper_revision", "event_revision",

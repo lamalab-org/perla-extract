@@ -174,12 +174,13 @@ the complete deployment rather than requiring a paper-by-paper download:
 - `README.txt` explains the files and how resets, drafts, and superseded answers are
   represented.
 
-Successful Excel imports made after workbook archival was introduced are retained
-byte-for-byte under `uploaded_workbooks/` in the administrator ZIP. Their filenames,
-paper, reviewer, revision, event ID, and SHA-256 digests are indexed in
-`feedback.json`. Earlier uploads cannot be reconstructed as identical files because
-the previous deployment retained only their validated changes and digest; those
-changes remain inspectable in the event history.
+Every authenticated Excel submission within the documented 15 MiB limit is retained
+byte-for-byte under `uploaded_workbooks/` before validation begins. This includes
+accepted, rejected, stale, comment-only, and no-op files. `feedback.json` contains an
+immutable receipt with its filename, paper, reviewer, timestamp, size, and SHA-256,
+plus a separate accepted or rejected validation outcome. If archival fails, the app
+does not process the review. Earlier uploads cannot be reconstructed as identical
+files because the previous deployment did not retain their bytes.
 
 Excel cell comments and standalone text in a **Reviewer note** cell are review
 feedback too. A comment-only workbook is accepted, archived, and represented in the
