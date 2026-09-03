@@ -38,6 +38,7 @@ from review_workbench.review_storage import (
 from review_workbench.spreadsheet_review import (
     create_review_workbook,
     read_review_workbook,
+    read_review_workbook_comments,
 )
 
 PAPER_ID = re.compile(r"^[A-Za-z0-9.-]+--[A-Za-z0-9._-]+$")
@@ -1025,16 +1026,59 @@ class StudyReviewStore:
 
         self.validate_identity(split, paper_id)
         current = self.storage.load_revision(split, paper_id)
-        review = read_review_workbook(
-            data,
-            truth=current.ground_truth,
-            identifiers=RECORD_IDENTIFIERS,
-            labels=RECORD_LABELS,
-            paper_id=paper_id,
-            split=split,
-            revision=current.revision,
-            schema_sha256=study_schema_sha256(),
-        )
+        safe_filename = Path(filename).name[:240] or "review.xlsx"
+        try:
+            review = read_review_workbook(
+                data,
+                truth=current.ground_truth,
+                identifiers=RECORD_IDENTIFIERS,
+                labels=RECORD_LABELS,
+                paper_id=paper_id,
+                split=split,
+                revision=current.revision,
+                schema_sha256=study_schema_sha256(),
+            )
+        except ValueError as error:
+            if not any(
+                phrase in str(error)
+                for phrase in ("older paper revision", "older layout")
+            ):
+                raise
+            base_revision, comments, workbook_sha256 = (
+                read_review_workbook_comments(data, paper_id=paper_id, split=split)
+            )
+            if not comments:
+                raise error
+            current = self.storage.load_revision(split, paper_id)
+            event = ReviewEvent(
+                event_id=str(uuid.uuid4()),
+                revision=current.revision + 1,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                reviewer_id=reviewer_id,
+                kind="spreadsheet_review",
+                note=f"Imported comments from older workbook {safe_filename}.",
+                details={
+                    "workbook_sha256": workbook_sha256,
+                    "filename": safe_filename,
+                    "workbook_import_mode": "comments_only_from_older_workbook",
+                    "workbook_base_revision": base_revision,
+                    "cell_comments": [
+                        {
+                            "sheet": item.sheet,
+                            "cell": item.cell,
+                            "text": item.text,
+                            "author": item.author,
+                            "record_collection": item.record_collection,
+                            "record_id": item.record_id,
+                            "schema_path": item.schema_path,
+                        }
+                        for item in comments
+                    ],
+                },
+            ).model_dump(mode="json")
+            return self._commit(
+                split, paper_id, current, current.ground_truth, event
+            )
         # Read again through the normal transition guard immediately before commit.
         current = self._validate_revision(split, paper_id, review.base_revision)
         proposed = copy.deepcopy(current.ground_truth)
@@ -1094,15 +1138,16 @@ class StudyReviewStore:
                     "note": decision.note,
                 }
             )
-        if not replacements and not decision_details:
-            raise ValueError("review workbook contains no new decisions or corrections")
+        if not replacements and not decision_details and not review.comments:
+            raise ValueError(
+                "review workbook contains no new decisions, corrections, or comments"
+            )
         unique_evidence = list(
             {
                 (item.block_id, item.quote): item
                 for item in evidence
             }.values()
         )
-        safe_filename = Path(filename).name[:240] or "review.xlsx"
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
             revision=current.revision + 1,
@@ -1115,9 +1160,22 @@ class StudyReviewStore:
                 "workbook_sha256": review.sha256,
                 "filename": safe_filename,
                 "scope": {"device": review.scope_device_id},
+                "workbook_import_mode": "validated_current_workbook",
                 "record_replacements": replacements,
                 "changed_fields": changed_paths,
                 "decisions": decision_details,
+                "cell_comments": [
+                    {
+                        "sheet": item.sheet,
+                        "cell": item.cell,
+                        "text": item.text,
+                        "author": item.author,
+                        "record_collection": item.record_collection,
+                        "record_id": item.record_id,
+                        "schema_path": item.schema_path,
+                    }
+                    for item in review.comments
+                ],
             },
         ).model_dump(mode="json")
         return self._commit(split, paper_id, current, validated, event)

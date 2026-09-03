@@ -1997,10 +1997,13 @@ async function uploadReviewWorkbook(file) {
     );
     renderStudy();
     await loadReviewerProgress();
+    const importMode = state.bundle.events.at(-1)?.details?.workbook_import_mode;
     setStatus(
       state.bundle.workbook_archived === false
         ? "Review changes were saved, but the original Excel file could not be archived. Please keep your local copy and contact the administrator."
-        : "Reviewed workbook saved as one validated revision and archived. The import is visible in My edits & undo.",
+        : importMode === "comments_only_from_older_workbook"
+          ? "Excel comments and the original workbook were saved. Because the workbook was based on an older paper revision, its value edits were not applied."
+          : "Reviewed workbook saved as one validated revision and archived. The import is visible in My edits & undo.",
       state.bundle.workbook_archived === false,
     );
   } catch (error) {

@@ -110,6 +110,19 @@ class WorkbookDecision:
 
 
 @dataclass(frozen=True)
+class WorkbookComment:
+    """Preserve an Excel cell comment with enough row context to interpret it."""
+
+    sheet: str
+    cell: str
+    text: str
+    author: str
+    record_collection: str | None
+    record_id: str | None
+    schema_path: str | None
+
+
+@dataclass(frozen=True)
 class WorkbookReview:
     """Validated edits and metadata ready for one atomic review transition."""
 
@@ -117,6 +130,7 @@ class WorkbookReview:
     scope_device_id: str | None
     changes: tuple[WorkbookChange, ...]
     decisions: tuple[WorkbookDecision, ...]
+    comments: tuple[WorkbookComment, ...]
     sha256: str
 
 
@@ -726,18 +740,8 @@ def _rows(sheet: Any, headers: tuple[str, ...]) -> list[tuple[Any, ...]]:
     ]
 
 
-def read_review_workbook(
-    data: bytes,
-    *,
-    truth: dict[str, Any],
-    identifiers: dict[str, str],
-    labels: dict[str, str],
-    paper_id: str,
-    split: str,
-    revision: int,
-    schema_sha256: str,
-) -> WorkbookReview:
-    """Validate an uploaded workbook and return only its intentional edits."""
+def _load_review_workbook(data: bytes) -> Workbook:
+    """Apply upload limits once before any semantic workbook inspection."""
 
     if not data or len(data) > MAX_WORKBOOK_BYTES:
         raise ValueError("review workbook must be a non-empty XLSX smaller than 15 MiB")
@@ -753,6 +757,90 @@ def read_review_workbook(
         )
     except Exception as error:  # malformed OOXML can fail in several XML readers
         raise ValueError("review workbook is not a readable XLSX file") from error
+    return book
+
+
+def _workbook_comments(book: Workbook) -> tuple[WorkbookComment, ...]:
+    """Extract comments generically while attaching record or field identity when present."""
+
+    comments = []
+    for sheet in book.worksheets:
+        if sheet.title == "_meta":
+            continue
+        headers = {
+            _cell_text(cell.value): cell.column
+            for cell in sheet[1]
+            if _cell_text(cell.value)
+        }
+        for row in sheet.iter_rows():
+            record_collection = (
+                _cell_text(
+                    sheet.cell(row[0].row, headers["_record_collection"]).value
+                )
+                if "_record_collection" in headers and row[0].row > 1
+                else ""
+            )
+            record_id = (
+                _cell_text(sheet.cell(row[0].row, headers["_record_id"]).value)
+                if "_record_id" in headers and row[0].row > 1
+                else ""
+            )
+            schema_path = (
+                _cell_text(sheet.cell(row[0].row, headers["Schema path"]).value)
+                if "Schema path" in headers and row[0].row > 1
+                else ""
+            )
+            for cell in row:
+                if cell.comment is None or not cell.comment.text.strip():
+                    continue
+                comments.append(
+                    WorkbookComment(
+                        sheet=sheet.title,
+                        cell=cell.coordinate,
+                        text=cell.comment.text.strip()[:8000],
+                        author=(cell.comment.author or "")[:200],
+                        record_collection=record_collection or None,
+                        record_id=record_id or None,
+                        schema_path=schema_path or None,
+                    )
+                )
+    return tuple(comments)
+
+
+def read_review_workbook_comments(
+    data: bytes, *, paper_id: str, split: str
+) -> tuple[int, tuple[WorkbookComment, ...], str]:
+    """Recover comments from a stale PERLA workbook without applying stale values."""
+
+    book = _load_review_workbook(data)
+    if "_meta" not in book.sheetnames:
+        raise ValueError("review workbook metadata sheet is missing")
+    metadata = _metadata(book["_meta"])
+    for key, expected in {
+        "format": FORMAT_NAME,
+        "paper_id": paper_id,
+        "split": split,
+    }.items():
+        if metadata.get(key) != expected:
+            raise ValueError(f"review workbook metadata does not match {key}")
+    comments = _workbook_comments(book)
+    return int(metadata.get("base_revision", 0)), comments, hashlib.sha256(data).hexdigest()
+
+
+def read_review_workbook(
+    data: bytes,
+    *,
+    truth: dict[str, Any],
+    identifiers: dict[str, str],
+    labels: dict[str, str],
+    paper_id: str,
+    split: str,
+    revision: int,
+    schema_sha256: str,
+) -> WorkbookReview:
+    """Validate an uploaded workbook and return its intentional review content."""
+
+    book = _load_review_workbook(data)
     if "_meta" not in book.sheetnames:
         raise ValueError("review workbook metadata sheet is missing")
     metadata = _metadata(book["_meta"])
@@ -918,12 +1006,16 @@ def read_review_workbook(
                 evidence=({"block_id": block_id, "quote": quote},),
             )
         )
-    if not changes and not decisions:
-        raise ValueError("review workbook contains no decisions or corrections")
+    comments = _workbook_comments(book)
+    if not changes and not decisions and not comments:
+        raise ValueError(
+            "review workbook contains no decisions, corrections, or cell comments"
+        )
     return WorkbookReview(
         base_revision=revision,
         scope_device_id=device_id,
         changes=tuple(changes),
         decisions=tuple(decisions),
+        comments=comments,
         sha256=hashlib.sha256(data).hexdigest(),
     )

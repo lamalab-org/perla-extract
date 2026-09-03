@@ -181,6 +181,12 @@ paper, reviewer, revision, event ID, and SHA-256 digests are indexed in
 the previous deployment retained only their validated changes and digest; those
 changes remain inspectable in the event history.
 
+Excel cell comments are review feedback too. A comment-only workbook is accepted,
+archived, and represented in the event history with its sheet, cell, author, text,
+and record or schema-path context when available. If a reviewer still has a commented
+workbook based on an older paper revision, uploading it recovers and archives the
+comments but deliberately does not apply stale value edits.
+
 The export contains stable reviewer IDs and scientific review content, but no PDFs,
 passwords, session tokens, or deployment configuration. Treat it as research data: it
 may contain reviewer-written notes and should be stored with the same access controls

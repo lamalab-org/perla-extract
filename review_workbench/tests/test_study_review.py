@@ -7,6 +7,7 @@ from io import BytesIO
 
 import pytest
 from openpyxl import load_workbook
+from openpyxl.comments import Comment
 from openpyxl.utils import get_column_letter
 
 from perla_extract.study_extraction.models import (
@@ -144,7 +145,6 @@ def test_reviewer_can_undo_an_untouched_saved_correction(
         UndoMutationRequest(event_id=correction_id, base_revision=2),
         "ada",
     )
-
     assert undone["ground_truth"]["unresolved_notes"] == ["Initial model note"]
     assert undone["events"][-1]["details"] == {"undoes_event_id": correction_id}
     assert undone["events"][-1]["before"] == "Checked against the paper"
@@ -232,6 +232,59 @@ def test_review_workbook_import_is_atomic_attributable_and_undoable(
     assert undone["summary"]["record_decisions"].get("ada", {}) == {}
     progress = store.reviewer_progress("calibration", "ada")["papers"][0]
     assert progress["current_event_ids"] == []
+
+
+def test_excel_cell_comments_are_feedback_even_without_value_edits(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    seed(store, study_with_family(empty_study), document_payload)
+    data = store.review_workbook("calibration", "10.0000--example", "ada")
+    book = load_workbook(BytesIO(data))
+    book["Record review"]["E2"].comment = Comment(
+        "This should be one family, not several.", "Jesper"
+    )
+    output = BytesIO()
+    book.save(output)
+
+    imported = store.import_review_workbook(
+        "calibration",
+        "10.0000--example",
+        output.getvalue(),
+        "ada",
+        filename="comments.xlsx",
+    )
+    details = imported["events"][-1]["details"]
+
+    assert imported["revision"] == 2
+    assert details["workbook_import_mode"] == "validated_current_workbook"
+    assert details["cell_comments"] == [
+        {
+            "sheet": "Record review",
+            "cell": "E2",
+            "text": "This should be one family, not several.",
+            "author": "Jesper",
+            "record_collection": "device_families",
+            "record_id": "family-control",
+            "schema_path": None,
+        }
+    ]
+
+    recovered = store.import_review_workbook(
+        "calibration",
+        "10.0000--example",
+        output.getvalue(),
+        "ada",
+        filename="older-comments.xlsx",
+    )
+    recovered_details = recovered["events"][-1]["details"]
+
+    assert recovered["revision"] == 3
+    assert recovered_details["workbook_import_mode"] == (
+        "comments_only_from_older_workbook"
+    )
+    assert recovered_details["workbook_base_revision"] == 1
+    assert recovered_details["cell_comments"][0]["author"] == "Jesper"
 
 
 def test_review_workbook_groups_fields_by_scientific_record_type(
