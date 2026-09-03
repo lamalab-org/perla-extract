@@ -174,6 +174,13 @@ the complete deployment rather than requiring a paper-by-paper download:
 - `README.txt` explains the files and how resets, drafts, and superseded answers are
   represented.
 
+Successful Excel imports made after workbook archival was introduced are retained
+byte-for-byte under `uploaded_workbooks/` in the administrator ZIP. Their filenames,
+paper, reviewer, revision, event ID, and SHA-256 digests are indexed in
+`feedback.json`. Earlier uploads cannot be reconstructed as identical files because
+the previous deployment retained only their validated changes and digest; those
+changes remain inspectable in the event history.
+
 The export contains stable reviewer IDs and scientific review content, but no PDFs,
 passwords, session tokens, or deployment configuration. Treat it as research data: it
 may contain reviewer-written notes and should be stored with the same access controls

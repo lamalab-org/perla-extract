@@ -241,11 +241,18 @@ def _comparison_rows(batches: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def build_feedback_archive(
-    store: StudyReviewStore, comparisons: ComparisonService
+    store: StudyReviewStore,
+    comparisons: ComparisonService,
+    uploaded_workbooks: list[dict[str, Any]] | None = None,
 ) -> bytes:
     """Create one self-describing download of all reviewer-authored responses."""
 
     papers = _ground_truth_feedback(store)
+    workbook_artifacts = uploaded_workbooks or []
+    workbook_metadata = [
+        {key: value for key, value in artifact.items() if key != "data"}
+        for artifact in workbook_artifacts
+    ]
     comparison_batches = _comparison_feedback(comparisons)
     event_rows = _event_rows(papers)
     comparison_rows = _comparison_rows(comparison_batches)
@@ -254,6 +261,7 @@ def build_feedback_archive(
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "ground_truth_reviews": papers,
         "extractor_comparisons": comparison_batches,
+        "uploaded_review_workbooks": workbook_metadata,
         "counts": {
             "papers_with_feedback": sum(bool(item["events"]) for item in papers),
             "review_events": len(event_rows),
@@ -265,6 +273,7 @@ def build_feedback_archive(
             ),
             "comparison_batches": len(comparison_batches),
             "comparison_responses": len(comparison_rows),
+            "uploaded_review_workbooks": len(workbook_artifacts),
         },
     }
     readme = """PERLA reviewer feedback export
@@ -288,6 +297,11 @@ rule. This supports reproducible analysis if a later study revises the wording.
 
 Reviewer identifiers are stable application IDs, not passwords or session tokens.
 The archive contains no PDFs and no authentication configuration.
+
+uploaded_workbooks/ contains the exact XLSX bytes retained from successful workbook
+imports. feedback.json records their paper, reviewer, revision, original filename,
+and SHA-256 digest. Workbooks uploaded before this archival feature was deployed are
+not recoverable as files; their accepted edits remain in review_events.csv and JSON.
 """
     event_fields = list(event_rows[0]) if event_rows else [
         "split", "paper_id", "current_paper_revision", "event_revision",
@@ -317,4 +331,6 @@ The archive contains no PDFs and no authentication configuration.
             "comparison_reviews.csv",
             _csv_bytes(comparison_rows, comparison_fields),
         )
+        for artifact in workbook_artifacts:
+            _zip_member(archive, artifact["archive_path"], artifact["data"])
     return stream.getvalue()

@@ -106,6 +106,7 @@ class ReviewApplication:
         self.pdf_dir.mkdir(parents=True, exist_ok=True)
         self.store = StudyReviewStore(ground_truth_dir, review_storage)
         self.ground_truth_dir = self.store.root
+        self.uploaded_workbook_dir = self.ground_truth_dir / "uploaded_workbooks"
         self.comparisons = ComparisonService(
             comparison_storage or LocalComparisonStorage(self.ground_truth_dir)
         )
@@ -162,7 +163,70 @@ class ReviewApplication:
     def reviewer_feedback_archive(self) -> bytes:
         """Package all user feedback for an authenticated administrator."""
 
-        return build_feedback_archive(self.store, self.comparisons)
+        return build_feedback_archive(
+            self.store, self.comparisons, self.uploaded_review_workbooks()
+        )
+
+    @staticmethod
+    def _uploaded_workbook_relative_path(
+        split: str,
+        paper_id: str,
+        revision: int,
+        event_id: str,
+        reviewer_id: str,
+        filename: str,
+    ) -> Path:
+        """Give an immutable upload a readable name without trusting user input."""
+
+        safe_reviewer = re.sub(r"[^A-Za-z0-9._-]+", "_", reviewer_id)[:80]
+        safe_filename = re.sub(
+            r"[^A-Za-z0-9._-]+", "_", Path(filename).name
+        )[:160]
+        if not safe_filename.lower().endswith(".xlsx"):
+            safe_filename += ".xlsx"
+        name = f"{revision:08d}--{event_id}--{safe_reviewer}--{safe_filename}"
+        return Path(split) / paper_id / name
+
+    def _archive_uploaded_workbook(self, relative: Path, data: bytes) -> bool:
+        """Retain the exact uploaded XLSX independently of derived review state."""
+
+        path = self.uploaded_workbook_dir / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with path.open("xb") as stream:
+                stream.write(data)
+        except FileExistsError:
+            return path.read_bytes() == data
+        return True
+
+    @staticmethod
+    def _uploaded_workbook_artifact(relative: Path, data: bytes) -> dict[str, Any]:
+        """Describe one retained workbook for the administrator feedback archive."""
+
+        revision, event_id, reviewer_id, filename = relative.name.split("--", 3)
+        return {
+            "split": relative.parts[0],
+            "paper_id": relative.parts[1],
+            "revision": int(revision),
+            "event_id": event_id,
+            "reviewer_id": reviewer_id,
+            "original_filename": filename,
+            "sha256": hashlib.sha256(data).hexdigest(),
+            "archive_path": (Path("uploaded_workbooks") / relative).as_posix(),
+            "data": data,
+        }
+
+    def uploaded_review_workbooks(self) -> list[dict[str, Any]]:
+        """Return exact retained workbook uploads for an administrator export."""
+
+        if not self.uploaded_workbook_dir.exists():
+            return []
+        return [
+            self._uploaded_workbook_artifact(
+                path.relative_to(self.uploaded_workbook_dir), path.read_bytes()
+            )
+            for path in sorted(self.uploaded_workbook_dir.rglob("*.xlsx"))
+        ]
 
     def pdf_path(
         self, paper_id: str, source: str = "main", split: str | None = None
@@ -427,15 +491,33 @@ class ReviewApplication:
     ) -> dict[str, Any]:
         """Validate one returned workbook and attach its event to the reviewer."""
 
-        return self._with_sources(
-            self.store.import_review_workbook(
-                split,
-                paper_id,
-                data,
-                reviewer_id,
-                filename=filename,
-            )
+        bundle = self.store.import_review_workbook(
+            split,
+            paper_id,
+            data,
+            reviewer_id,
+            filename=filename,
         )
+        event = bundle["events"][-1]
+        relative = self._uploaded_workbook_relative_path(
+            split,
+            paper_id,
+            int(bundle["revision"]),
+            str(event["event_id"]),
+            reviewer_id,
+            str(event["details"]["filename"]),
+        )
+        try:
+            bundle["workbook_archived"] = self._archive_uploaded_workbook(
+                relative, data
+            )
+        except Exception:
+            logger.exception(
+                "Review changes were saved, but the original workbook upload could "
+                "not be archived"
+            )
+            bundle["workbook_archived"] = False
+        return self._with_sources(bundle)
 
     def evidence_blocks(
         self, split: str, paper_id: str, query: str = ""

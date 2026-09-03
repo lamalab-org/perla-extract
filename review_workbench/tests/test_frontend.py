@@ -494,4 +494,6 @@ def test_reviewers_can_round_trip_a_device_or_paper_excel_review():
     assert "/api/review-workbook/" in source
     assert "application.review_workbook(" in server
     assert "application.import_review_workbook(" in server
+    assert "one validated revision and archived" in source
+    assert "original Excel file could not be archived" in source
     assert "one validated revision" in source

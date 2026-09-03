@@ -16,6 +16,27 @@ def test_revision_conflict_message_is_actionable_without_internal_details():
     assert "stale" not in REVISION_CONFLICT_RESPONSE["error"]
 
 
+def test_uploaded_review_workbook_is_retained_byte_for_byte(tmp_path):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+    relative = app._uploaded_workbook_relative_path(
+        "dev",
+        "10.0000--example",
+        2,
+        "event-1",
+        "reviewer-1",
+        "reviewed workbook.xlsx",
+    )
+    body = b"exact xlsx bytes"
+
+    assert app._archive_uploaded_workbook(relative, body) is True
+    artifacts = app.uploaded_review_workbooks()
+
+    assert len(artifacts) == 1
+    assert artifacts[0]["data"] == body
+    assert artifacts[0]["original_filename"] == "reviewed_workbook.xlsx"
+    assert artifacts[0]["archive_path"].startswith("uploaded_workbooks/dev/")
+
+
 def pdf_bytes(text: str) -> bytes:
     document = fitz.open()
     page = document.new_page()

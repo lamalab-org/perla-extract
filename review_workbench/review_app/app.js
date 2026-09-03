@@ -1997,7 +1997,12 @@ async function uploadReviewWorkbook(file) {
     );
     renderStudy();
     await loadReviewerProgress();
-    setStatus("Reviewed workbook saved as one validated revision. The import is visible in My edits & undo.");
+    setStatus(
+      state.bundle.workbook_archived === false
+        ? "Review changes were saved, but the original Excel file could not be archived. Please keep your local copy and contact the administrator."
+        : "Reviewed workbook saved as one validated revision and archived. The import is visible in My edits & undo.",
+      state.bundle.workbook_archived === false,
+    );
   } catch (error) {
     setStatus(error.message, true);
   } finally {

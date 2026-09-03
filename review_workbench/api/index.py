@@ -403,6 +403,7 @@ class VercelReviewApplication(ReviewApplication):
     users_pathname = "workbench/review-users.json"
     pdf_prefix = "papers/"
     review_pdf_prefix = "workbench/review-pdfs/"
+    review_workbook_prefix = "workbench/review-workbooks/"
 
     def __init__(self, blob: BlobStore, workspace: Path):
         self.blob = blob
@@ -536,6 +537,31 @@ class VercelReviewApplication(ReviewApplication):
             if (split, paper_id, source) in self.remote_pdfs
             or (None, paper_id, source) in self.remote_pdfs
         ]
+
+    def _archive_uploaded_workbook(self, relative: Path, data: bytes) -> bool:
+        """Persist an accepted XLSX in private Blob storage under an immutable key."""
+
+        self.blob.put(
+            f"{self.review_workbook_prefix}{relative.as_posix()}",
+            data,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            overwrite=False,
+        )
+        return True
+
+    def uploaded_review_workbooks(self) -> list[dict[str, Any]]:
+        """Download retained workbook uploads only when an administrator exports."""
+
+        artifacts = []
+        for item in self.blob.list(self.review_workbook_prefix):
+            pathname = str(item.get("pathname", ""))
+            if not pathname.lower().endswith(".xlsx"):
+                continue
+            relative = Path(pathname.removeprefix(self.review_workbook_prefix))
+            artifacts.append(
+                self._uploaded_workbook_artifact(relative, self.blob.download(item))
+            )
+        return artifacts
 
     def _write_users(self, users: list[dict[str, str]]) -> None:
         """Persist remotely only when the shared application changed the directory."""

@@ -43,14 +43,44 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
     comparisons = ComparisonService(LocalComparisonStorage(tmp_path / "comparisons"))
 
     archive_path = tmp_path / "feedback.zip"
-    archive_path.write_bytes(build_feedback_archive(store, comparisons))
+    workbook = b"exact reviewer workbook bytes"
+    archive_path.write_bytes(
+        build_feedback_archive(
+            store,
+            comparisons,
+            [
+                {
+                    "split": "dev",
+                    "paper_id": "10.0000--example",
+                    "revision": 2,
+                    "event_id": "event-1",
+                    "reviewer_id": "reviewer-1",
+                    "original_filename": "review.xlsx",
+                    "sha256": "a" * 64,
+                    "archive_path": (
+                        "uploaded_workbooks/dev/10.0000--example/"
+                        "00000002--event-1--reviewer-1--review.xlsx"
+                    ),
+                    "data": workbook,
+                }
+            ],
+        )
+    )
     with ZipFile(archive_path) as archive:
         assert set(archive.namelist()) == {
             "README.txt",
             "feedback.json",
             "review_events.csv",
             "comparison_reviews.csv",
+            (
+                "uploaded_workbooks/dev/10.0000--example/"
+                "00000002--event-1--reviewer-1--review.xlsx"
+            ),
         }
+        assert archive.read(
+            "uploaded_workbooks/dev/10.0000--example/"
+            "00000002--event-1--reviewer-1--review.xlsx"
+        ) == workbook
         snapshot = json.loads(archive.read("feedback.json"))
         rows = list(
             csv.DictReader(
@@ -71,7 +101,10 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
         "papers_with_feedback": 1,
         "review_events": 1,
         "reviewers": 1,
+        "uploaded_review_workbooks": 1,
     }
+    assert snapshot["uploaded_review_workbooks"][0]["event_id"] == "event-1"
+    assert "data" not in snapshot["uploaded_review_workbooks"][0]
     assert snapshot["ground_truth_reviews"][0]["events"][0]["kind"] == "mutation"
     assert rows[0]["reviewer_id"] == "reviewer-1"
     assert rows[0]["before_json"] == '"Initial model note"'

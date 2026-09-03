@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
@@ -86,6 +87,22 @@ def test_blob_find_lists_the_parent_directory_before_matching_exact_path():
 
     assert blob.find(pathname) == {"pathname": pathname}
     assert blob.prefixes == ["workbench/review-sources/calibration/"]
+
+
+def test_vercel_application_retains_and_lists_uploaded_workbooks():
+    blob = MemoryBlobStore()
+    app = object.__new__(VercelReviewApplication)
+    app.blob = blob
+    relative = Path(
+        "dev/10.0000--example/"
+        "00000002--event-1--reviewer-1--review.xlsx"
+    )
+
+    assert app._archive_uploaded_workbook(relative, b"xlsx") is True
+    artifacts = app.uploaded_review_workbooks()
+
+    assert artifacts[0]["data"] == b"xlsx"
+    assert artifacts[0]["event_id"] == "event-1"
 
 
 class PagedBlobStore(BlobStore):
