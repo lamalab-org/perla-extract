@@ -12,6 +12,7 @@ from openpyxl.utils import get_column_letter
 
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
+    StudyExtraction,
     study_schema_sha256,
 )
 from review_workbench.study_review import (
@@ -42,6 +43,53 @@ def test_ground_truth_refresh_is_a_distinct_audit_event():
     )
 
     assert event.kind == "ground_truth_refresh"
+
+
+def test_ground_truth_refresh_preserves_seed_and_appends_audited_revision(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    seed(store, empty_study, document_payload)
+    replacement = study_with_family(empty_study)
+
+    refreshed = store.refresh_ground_truth(
+        "calibration",
+        "10.0000--example",
+        replacement,
+        base_revision=1,
+        reviewer_id="admin@example.org",
+        reason="Replace the draft with the revised extraction.",
+        provenance={"run": "review-v1"},
+    )
+
+    assert refreshed["revision"] == 2
+    assert refreshed["ground_truth"] == StudyExtraction.model_validate(
+        replacement
+    ).model_dump(mode="json")
+    assert refreshed["seed_extraction"] == empty_study
+    assert refreshed["events"][-1]["kind"] == "ground_truth_refresh"
+    assert refreshed["events"][-1]["details"]["provenance"] == {
+        "run": "review-v1"
+    }
+
+
+def test_ground_truth_refresh_rejects_evidence_from_another_document(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    seed(store, empty_study, document_payload)
+    replacement = study_with_family(empty_study)
+    replacement["device_families"][0]["evidence"][0]["block_id"] = "missing"
+
+    with pytest.raises(ValueError, match="evidence-validation issues"):
+        store.refresh_ground_truth(
+            "calibration",
+            "10.0000--example",
+            replacement,
+            base_revision=1,
+            reviewer_id="admin@example.org",
+            reason="Replace the draft with the revised extraction.",
+        )
 
 
 def study_with_family(empty_study):

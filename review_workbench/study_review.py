@@ -1066,6 +1066,70 @@ class StudyReviewStore:
         self._materialize(split, paper_id, source, revision)
         return self.load_bundle(split, paper_id)
 
+    def refresh_ground_truth(
+        self,
+        split: str,
+        paper_id: str,
+        extraction: object,
+        *,
+        base_revision: int,
+        reviewer_id: str,
+        reason: str,
+        provenance: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Make a newer validated extraction the active review draft.
+
+        Refreshes are administrative replacements, not ordinary reviewer edits. The
+        immutable seed and every earlier revision remain available, while changed
+        record digests reopen any decisions that no longer describe the active draft.
+        Requiring the replacement to validate against the paper's stored evidence
+        prevents a run made from a different parser document from breaking citations.
+        """
+
+        if not reviewer_id.strip():
+            raise ValueError("reviewer_id is required")
+        if not reason.strip():
+            raise ValueError("ground-truth refresh requires a reason")
+        current = self._validate_revision(split, paper_id, base_revision)
+        if isinstance(extraction, dict) and isinstance(
+            extraction.get("extraction"), dict
+        ):
+            extraction = extraction["extraction"]
+        truth = StudyExtraction.model_validate(extraction).model_dump(mode="json")
+        if truth == current.ground_truth:
+            raise ValueError("replacement is identical to the active ground truth")
+
+        document = self.load_document(split, paper_id)
+        raw_blocks = document.get("blocks") if isinstance(document, dict) else document
+        if isinstance(raw_blocks, list):
+            blocks = [EvidenceBlock.model_validate(block) for block in raw_blocks]
+            validation = validate_study(StudyExtraction.model_validate(truth), blocks)
+            if validation.get("issues"):
+                raise ValueError(
+                    "replacement has unresolved evidence-validation issues"
+                )
+
+        event = ReviewEvent(
+            event_id=str(uuid.uuid4()),
+            revision=current.revision + 1,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            reviewer_id=reviewer_id,
+            kind="ground_truth_refresh",
+            note=reason.strip(),
+            details={
+                "previous_sha256": _digest(current.ground_truth),
+                "replacement_sha256": _digest(truth),
+                "previous_record_counts": {
+                    key: len(current.ground_truth[key]) for key in RECORD_IDENTIFIERS
+                },
+                "replacement_record_counts": {
+                    key: len(truth[key]) for key in RECORD_IDENTIFIERS
+                },
+                "provenance": copy.deepcopy(provenance or {}),
+            },
+        ).model_dump(mode="json")
+        return self._commit(split, paper_id, current, truth, event)
+
     def _validate_revision(
         self, split: str, paper_id: str, base_revision: int
     ) -> ReviewRevision:
