@@ -19,6 +19,8 @@ from review_workbench.study_review import (
     MainTextFigureCensus,
     MutationRequest,
     RecordDecisionRequest,
+    RecordMergeRequest,
+    RecordReclassificationRequest,
     ReviewerResetRequest,
     ReviewEvent,
     StageRequest,
@@ -359,7 +361,10 @@ def test_review_workbook_groups_fields_by_scientific_record_type(
     tmp_path, empty_study, document_payload
 ):
     study = study_with_family(empty_study)
-    citation = {"block_id": "main_p1_text_1", "quote": "champion device"}
+    citation = {
+        "block_id": "main_p1_text_1",
+        "quote": "The champion device reached a PCE of 24.1%.",
+    }
     study["individual_devices"] = [
         {
             "device_id": "device-1",
@@ -926,6 +931,129 @@ def test_referenced_records_must_be_reassigned_or_removed_before_their_target(
         "ada",
     )
     assert removed["ground_truth"]["individual_devices"] == []
+
+
+def test_duplicate_merge_retargets_links_and_is_undoable(
+    tmp_path, empty_study, document_payload
+):
+    study = study_with_family(empty_study)
+    duplicate = copy.deepcopy(study["device_families"][0])
+    duplicate["family_id"] = "family-duplicate"
+    duplicate["label"] = "Control repeated in supplement"
+    study["device_families"].append(duplicate)
+    study["individual_devices"] = [
+        {
+            "device_id": "device-1",
+            "family_id": "family-duplicate",
+            "label": "Champion device",
+            "variant": None,
+            "champion_status": "yes",
+            "selection_basis": "champion",
+            "reported_properties": [],
+            "evidence": duplicate["evidence"],
+        }
+    ]
+    store = StudyReviewStore(tmp_path)
+    seed(store, study, document_payload)
+
+    merged = store.merge_records(
+        "calibration",
+        "10.0000--example",
+        RecordMergeRequest(
+            collection="device_families",
+            source_record_id="family-duplicate",
+            target_record_id="family-control",
+            base_revision=1,
+            note="Both labels identify the same complete stack.",
+        ),
+        "ada",
+    )
+
+    assert [item["family_id"] for item in merged["ground_truth"]["device_families"]] == [
+        "family-control"
+    ]
+    assert merged["ground_truth"]["individual_devices"][0]["family_id"] == "family-control"
+    event_id = merged["events"][-1]["event_id"]
+    assert event_id in store.reviewer_progress("calibration", "ada")["papers"][0][
+        "undoable_event_ids"
+    ]
+
+    undone = store.undo_mutation(
+        "calibration",
+        "10.0000--example",
+        UndoMutationRequest(event_id=event_id, base_revision=2),
+        "ada",
+    )
+    assert len(undone["ground_truth"]["device_families"]) == 2
+    assert undone["ground_truth"]["individual_devices"][0]["family_id"] == "family-duplicate"
+
+
+def test_record_reclassification_replaces_wrong_type_atomically(
+    tmp_path, empty_study, document_payload
+):
+    study = study_with_family(empty_study)
+    citation = {
+        "block_id": "main_p1_text_1",
+        "quote": "The champion device reached a PCE of 24.1%.",
+    }
+    metric = {
+        "name": "PCE",
+        "raw_value": "24.1%",
+        "value_number": 24.1,
+        "unit": "%",
+        "evidence": [citation],
+    }
+    study["individual_devices"] = [
+        {
+            "device_id": "device-1",
+            "family_id": "family-control",
+            "label": "Champion device",
+            "variant": None,
+            "champion_status": "yes",
+            "selection_basis": "champion",
+            "reported_properties": [],
+            "evidence": [citation],
+        }
+    ]
+    study["population_statistics"] = [
+        {
+            "population_id": "population-1",
+            "family_id": "family-control",
+            "label": "Best device result",
+            "statistic_type": "maximum",
+            "sample_size": None,
+            "metrics": [metric],
+            "evidence": [citation],
+        }
+    ]
+    corrected = {
+        "observation_id": "observation-1",
+        "device_id": "device-1",
+        "measurement_type": "jv_scan",
+        "scan_direction": "not_reported",
+        "metrics": [metric],
+        "evidence": [citation],
+    }
+    store = StudyReviewStore(tmp_path)
+    seed(store, study, document_payload)
+
+    reclassified = store.reclassify_record(
+        "calibration",
+        "10.0000--example",
+        RecordReclassificationRequest(
+            source_collection="population_statistics",
+            source_record_id="population-1",
+            target_collection="performance_observations",
+            value=corrected,
+            evidence=[citation],
+            base_revision=1,
+            note="The source reports one best device, not an aggregate.",
+        ),
+        "ada",
+    )
+
+    assert reclassified["ground_truth"]["population_statistics"] == []
+    assert reclassified["ground_truth"]["performance_observations"] == [corrected]
 
 
 def test_census_precedes_inventory_completion(tmp_path, empty_study, document_payload):

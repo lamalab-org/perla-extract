@@ -197,6 +197,27 @@ export only after administrator adjudication. This conservative intermediate ste
 the team use clear expert agreement immediately without silently turning prose or a
 stale spreadsheet into ground truth.
 
+## Turn reviewer findings into final records
+
+Use the browser for scientific structure and the workbook for repeated scalar edits.
+The **Records** tab exposes the common corrections directly:
+
+| Reviewer finding | Action |
+| --- | --- |
+| A value, unit, material, condition, or link is wrong | **Correct fields** |
+| The same scientific object was extracted twice | **Merge duplicate** and choose the record to keep; explicit links move with it |
+| A result is in the wrong collection, such as a best-device value stored as a population statistic | **Change record type**, complete the corrected record, and save both removal and addition together |
+| A complete record is missing | **Add missing record**, or **Duplicate and edit** when a nearby variant provides a useful starting shape |
+| A record is unsupported | **Remove extra record**; if it has dependents, relink or remove those first |
+| Many scalar values need correction | Download the Excel workbook, edit yellow cells, and upload it |
+
+Merge and record-type changes are atomic: the server validates the complete resulting
+`StudyExtraction` before saving anything. They appear in **My edits & undo**, retain the
+reviewer's explanation and evidence where applicable, and can be reversed while the
+affected records remain unchanged. A correction changes the shared candidate truth;
+**All fields match source** and **Cannot establish from source** are review decisions
+only and do not rewrite scientific data.
+
 ## Stored artifacts
 
 For each paper, the workbench keeps authoritative immutable state:

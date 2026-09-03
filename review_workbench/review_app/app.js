@@ -1050,6 +1050,9 @@ function renderReviewQueue() {
   const attention = attentionReasons(entry);
   const flags = attention.map((reason) => element("span", { className: "attention-flag", text: reason.label, attributes: { title: reason.explanation } }));
   const context = relatedContext(entry);
+  const mergeCandidates = state.bundle.ground_truth[entry.kind]
+    .map((item, index) => ({ item, index }))
+    .filter(({ index }) => index !== entry.index);
   const actions = element("div", { className: "queue-actions" }, [
     element("div", { className: "decision-actions" }, [
       element("button", { className: decision === "verified" ? "active" : "", text: "All fields match source  V", attributes: { title: DECISION_GUIDANCE.verified }, events: { click: () => decideEntry(entry, "verified") } }),
@@ -1057,8 +1060,10 @@ function renderReviewQueue() {
       element("button", { className: decision === "needs_correction" ? "active" : "", text: "Correct fields  C", attributes: { title: DECISION_GUIDANCE.needs_correction }, events: { click: () => beginCorrection(entry) } }),
     ]),
     element("div", { className: "record-management-actions" }, [
-      element("span", { className: "muted", text: "Record structure" }),
-      element("button", { text: "Copy as missing record", events: { click: () => copyMissingRecord(entry) } }),
+      element("span", { className: "muted", text: "Fix record structure" }),
+      ...(mergeCandidates.length ? [element("button", { text: "Merge duplicate", events: { click: () => beginMerge(entry, mergeCandidates) } })] : []),
+      element("button", { text: "Change record type", events: { click: () => beginReclassification(entry) } }),
+      element("button", { text: "Duplicate and edit", events: { click: () => copyMissingRecord(entry) } }),
       element("button", { className: "remove-extra", text: "Remove extra record", events: { click: () => beginRemoval(entry) } }),
     ]),
     ...(context.device ? [element("button", {
@@ -1452,6 +1457,79 @@ function copyMissingRecord(entry) {
   openRecord(entry.kind, null, entry.item, "copy");
 }
 
+function beginMerge(entry, candidates) {
+  state.structuralEntry = entry;
+  $("merge-target").replaceChildren(...candidates.map(({ item, index }) => element("option", {
+    text: `${entityTitle(entry.kind, item, index)} · ${entityId(entry.kind, item, index)}`,
+    properties: { value: entityId(entry.kind, item, index) },
+  })));
+  $("merge-note").value = "";
+  $("merge-status").textContent = "";
+  $("merge-dialog").showModal();
+}
+
+async function confirmMerge() {
+  const entry = state.structuralEntry;
+  const note = $("merge-note").value.trim();
+  if (!entry || !note) {
+    $("merge-status").textContent = "Explain why both records describe the same scientific object.";
+    return;
+  }
+  const button = $("confirm-merge");
+  button.disabled = true;
+  try {
+    state.bundle = await request(`/api/record-merges/${state.split}/${encodeURIComponent(state.paperId)}`, {
+      method: "POST",
+      body: JSON.stringify({
+        collection: entry.kind,
+        source_record_id: entityId(entry.kind, entry.item, entry.index),
+        target_record_id: $("merge-target").value,
+        note,
+        base_revision: state.bundle.revision,
+      }),
+    });
+    $("merge-dialog").close();
+    state.queueKey = null;
+    renderStudy();
+    setStatus("Merged the duplicate and moved its explicit links to the retained record.");
+  } catch (error) {
+    $("merge-status").textContent = error.message;
+  } finally { button.disabled = false; }
+}
+
+function beginReclassification(entry) {
+  const references = recordReferences(entry);
+  if (references.length) {
+    setStatus(`Relink the ${references.length} dependent record${references.length === 1 ? "" : "s"} before changing this record type.`, true);
+    beginRemoval(entry);
+    return;
+  }
+  state.structuralEntry = entry;
+  $("reclassify-target").replaceChildren(...Object.entries(COLLECTIONS)
+    .filter(([kind]) => kind !== entry.kind)
+    .map(([value, text]) => element("option", { text: singularCollection(value), properties: { value } })));
+  $("reclassify-dialog").showModal();
+}
+
+function continueReclassification() {
+  const entry = state.structuralEntry;
+  if (!entry) return;
+  const targetKind = $("reclassify-target").value;
+  const draft = newRecordDraft(targetKind);
+  draft.evidence = structuredClone(entry.item.evidence || []);
+  $("reclassify-dialog").close();
+  openRecord(targetKind, null, draft, "reclassify");
+  state.edit.source = {
+    kind: entry.kind,
+    recordId: entityId(entry.kind, entry.item, entry.index),
+  };
+  $("record-title").textContent = `Change ${singularCollection(entry.kind).toLowerCase()} to ${singularCollection(targetKind).toLowerCase()}`;
+  $("record-dialog-help").textContent = "Complete the corrected record. Saving removes the old record and adds this one in a single validated revision.";
+  $("save-record").textContent = "Save new record type";
+  $("mutation-note-label").textContent = "Reason for changing record type";
+  $("mutation-note-help").textContent = "Required: explain why the original record type was wrong.";
+}
+
 async function addMissingRecord() {
   document.querySelector(".add-record-menu").open = false;
   const button = $("add-record");
@@ -1496,11 +1574,17 @@ async function saveRecord() {
     if (!blockId || !quote) throw new Error("Choose an evidence block and provide an exact quote.");
     const citation = { block_id: blockId, quote };
     attachMissingEvidence(value, citation);
-    const payload = { action: index == null ? "add" : "replace", path: `/${pointerPart(kind)}/${index == null ? "-" : index}`, value, evidence: [citation], note: $("mutation-note").value, base_revision: state.bundle.revision };
-    state.bundle = await request(`/api/mutations/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify(payload) });
+    const note = $("mutation-note").value.trim();
+    const reclassifying = state.edit.intent === "reclassify";
+    if (reclassifying && !note) throw new Error("Explain why the original record type was wrong.");
+    const payload = reclassifying
+      ? { source_collection: state.edit.source.kind, source_record_id: state.edit.source.recordId, target_collection: kind, value, evidence: [citation], note, base_revision: state.bundle.revision }
+      : { action: index == null ? "add" : "replace", path: `/${pointerPart(kind)}/${index == null ? "-" : index}`, value, evidence: [citation], note, base_revision: state.bundle.revision };
+    const endpoint = reclassifying ? "record-reclassifications" : "mutations";
+    state.bundle = await request(`/api/${endpoint}/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify(payload) });
     $("record-dialog").close();
     renderStudy();
-    setStatus(index == null ? `Added the missing ${singularCollection(kind).toLowerCase()} and revalidated the study.` : "Correction saved and the complete study schema revalidated.");
+    setStatus(reclassifying ? "Changed the record type and revalidated the complete study." : index == null ? `Added the missing ${singularCollection(kind).toLowerCase()} and revalidated the study.` : "Correction saved and the complete study schema revalidated.");
   } catch (error) { $("dialog-status").textContent = error.message; }
 }
 
@@ -1607,6 +1691,12 @@ function annotationSubject(event) {
   if (event.kind === "mutation") return event.details?.undoes_event_id
     ? "Reversed an earlier saved correction"
     : `${event.action} ${event.path}`;
+  if (event.kind === "structural_mutation") {
+    if (event.details?.undoes_event_id) return "Reversed an earlier structural correction";
+    if (event.details?.operation === "merge_records") return `Merged ${event.details.source_record_id} into ${event.details.target_record_id}`;
+    if (event.details?.operation === "reclassify_record") return `Changed ${event.details.source_record_id} from ${humanLabel(event.details.source_collection)} to ${humanLabel(event.details.target_collection)}`;
+    return "Structural record correction";
+  }
   if (event.kind === "spreadsheet_review") {
     if (event.details?.undoes_event_id) return "Reversed an earlier reviewed workbook";
     const corrections = event.details?.changed_fields?.length || 0;
@@ -1659,13 +1749,13 @@ function annotationActionHelp(paper, event, canUndo, current) {
   if (event.kind === "stage_complete") return "Review milestones remain in the audit history and are not field edits.";
   if (event.kind === "review_reset") return "The reset cleared reviewer-specific progress without changing the shared scientific data.";
   if (paper.undone_event_ids?.includes(event.event_id)) return "This correction has already been undone.";
-  if (["mutation", "spreadsheet_review"].includes(event.kind)) return "This older correction cannot be safely undone because the affected record changed afterward.";
+  if (["mutation", "structural_mutation", "spreadsheet_review"].includes(event.kind)) return "This older correction cannot be safely undone because the affected record changed afterward.";
   return "This saved action is part of the audit history and has no reversible data change.";
 }
 
 function annotationEvent(paper, event) {
   const current = annotationIsCurrent(paper, event);
-  const stateLabel = ["mutation", "spreadsheet_review"].includes(event.kind)
+  const stateLabel = ["mutation", "structural_mutation", "spreadsheet_review"].includes(event.kind)
     ? annotationMutationState(paper, event)
     : event.kind === "record_decision"
       ? current === true ? "current decision" : "no longer current"
@@ -2100,6 +2190,8 @@ $("close-record").addEventListener("click", () => $("record-dialog").close());
 $("cancel-record").addEventListener("click", () => $("record-dialog").close());
 $("save-record").addEventListener("click", saveRecord);
 $("remove-record").addEventListener("click", removeRecord);
+$("confirm-merge").addEventListener("click", confirmMerge);
+$("continue-reclassify").addEventListener("click", continueReclassification);
 $("reload-paper").addEventListener("click", reloadLatestPaper);
 $("reload-paper-dialog").addEventListener("click", reloadLatestPaper);
 $("search-evidence").addEventListener("click", searchEvidence);

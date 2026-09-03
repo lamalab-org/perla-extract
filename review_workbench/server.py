@@ -53,6 +53,8 @@ from review_workbench.study_review import (  # noqa: E402
     InventoryAuditRequest,
     MutationRequest,
     RecordDecisionRequest,
+    RecordMergeRequest,
+    RecordReclassificationRequest,
     ReviewerResetRequest,
     StageRequest,
     StudyReviewStore,
@@ -425,6 +427,34 @@ class ReviewApplication:
         return self._with_sources(
             self.store.mutate(
                 split, paper_id, MutationRequest.model_validate(payload), reviewer_id
+            )
+        )
+
+    def merge_records(
+        self, split: str, paper_id: str, payload: object, reviewer_id: str
+    ) -> dict[str, Any]:
+        """Apply a validated duplicate merge through the shared review store."""
+
+        return self._with_sources(
+            self.store.merge_records(
+                split,
+                paper_id,
+                RecordMergeRequest.model_validate(payload),
+                reviewer_id,
+            )
+        )
+
+    def reclassify_record(
+        self, split: str, paper_id: str, payload: object, reviewer_id: str
+    ) -> dict[str, Any]:
+        """Apply a validated record-type correction through the shared store."""
+
+        return self._with_sources(
+            self.store.reclassify_record(
+                split,
+                paper_id,
+                RecordReclassificationRequest.model_validate(payload),
+                reviewer_id,
             )
         )
 
@@ -1259,6 +1289,25 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 if len(parts) == 4 and parts[:2] == ["api", "mutations"]:
                     self.send_json(
                         application.mutate(
+                            parts[2], parts[3], self.read_json(), user["id"]
+                        ),
+                        HTTPStatus.CREATED,
+                    )
+                    return
+                if len(parts) == 4 and parts[:2] == ["api", "record-merges"]:
+                    self.send_json(
+                        application.merge_records(
+                            parts[2], parts[3], self.read_json(), user["id"]
+                        ),
+                        HTTPStatus.CREATED,
+                    )
+                    return
+                if len(parts) == 4 and parts[:2] == [
+                    "api",
+                    "record-reclassifications",
+                ]:
+                    self.send_json(
+                        application.reclassify_record(
                             parts[2], parts[3], self.read_json(), user["id"]
                         ),
                         HTTPStatus.CREATED,

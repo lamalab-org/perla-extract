@@ -152,7 +152,7 @@
               <summary>How to review records and fix missing or extra records</summary>
               <div>
                 <p><strong>Needs attention</strong> shows records you marked for correction, records changed during the model's second evidence read, and A/B/X assignments that need a manual check. These are priorities, not correctness claims.</p>
-                <p><strong>Wrong number of records?</strong> Add or copy a missing record. Use <strong>Remove extra record</strong> for an unsupported one; linked measurements must be reassigned or removed first.</p>
+                <p><strong>Wrong number or type?</strong> Add a missing record, merge repeated descriptions of the same object, change a wrongly classified record, or remove an unsupported one. A merge moves explicit links automatically.</p>
                 <p><strong>Choose one outcome for the complete record.</strong> Use <strong>All fields match source</strong>, <strong>Cannot establish</strong>, or <strong>Correct fields</strong>.</p>
               </div>
             </details>
@@ -240,6 +240,26 @@
       <label><span id="mutation-note-label">Reason for correction</span> <span id="mutation-note-help">Explain what the extraction got wrong.</span><input id="mutation-note" placeholder="What did the extraction get wrong?" /></label>
       <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove extra record</button><span></span><button id="reload-paper-dialog" type="button" hidden>Discard this edit and load latest</button><button id="cancel-record" type="button">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
       <p id="dialog-status" role="status"></p>
+    </form>
+  </dialog>
+
+  <dialog id="merge-dialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-heading"><div><span class="eyebrow">Duplicate record</span><h2>Merge into the correct record</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <p class="callout">All measurements and other explicit links will move to the record you keep. The duplicate will then be removed as one validated, undoable correction.</p>
+      <label>Keep this record<select id="merge-target"></select></label>
+      <label>Why are these the same scientific object?<input id="merge-note" placeholder="For example: repeated mention of the same device and protocol" /></label>
+      <div class="dialog-actions"><span></span><button value="cancel">Cancel</button><button id="confirm-merge" type="button" class="primary">Merge duplicate</button></div>
+      <p id="merge-status" role="status"></p>
+    </form>
+  </dialog>
+
+  <dialog id="reclassify-dialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-heading"><div><span class="eyebrow">Wrong record type</span><h2>Move information to the right record type</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <p class="callout">Choose the correct type, then complete its fields from the paper. Saving adds the corrected record and removes the wrongly typed one together.</p>
+      <label>Correct record type<select id="reclassify-target"></select></label>
+      <div class="dialog-actions"><span></span><button value="cancel">Cancel</button><button id="continue-reclassify" type="button" class="primary">Continue to fields</button></div>
     </form>
   </dialog>
 

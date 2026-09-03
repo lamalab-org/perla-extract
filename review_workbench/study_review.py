@@ -104,6 +104,48 @@ class MutationRequest(BaseModel):
         return self
 
 
+class RecordMergeRequest(BaseModel):
+    """Merge one duplicate record into another without breaking its links."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    collection: RecordCollection
+    source_record_id: str = Field(min_length=1, max_length=200)
+    target_record_id: str = Field(min_length=1, max_length=200)
+    base_revision: int = Field(ge=0)
+    note: str = Field(min_length=1, max_length=2000)
+
+    @model_validator(mode="after")
+    def require_distinct_records(self) -> "RecordMergeRequest":
+        """A merge needs two different records from the same collection."""
+
+        if self.source_record_id == self.target_record_id:
+            raise ValueError("source and target records must differ")
+        return self
+
+
+class RecordReclassificationRequest(BaseModel):
+    """Replace a wrongly typed record with a valid record of another type."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    source_collection: RecordCollection
+    source_record_id: str = Field(min_length=1, max_length=200)
+    target_collection: RecordCollection
+    value: dict[str, Any]
+    evidence: list[Citation] = Field(min_length=1, max_length=20)
+    base_revision: int = Field(ge=0)
+    note: str = Field(min_length=1, max_length=2000)
+
+    @model_validator(mode="after")
+    def require_new_type(self) -> "RecordReclassificationRequest":
+        """Ordinary field correction remains the clearer same-type operation."""
+
+        if self.source_collection == self.target_collection:
+            raise ValueError("target collection must differ from source collection")
+        return self
+
+
 class UndoMutationRequest(BaseModel):
     """Identify one saved correction to reverse against the latest paper state."""
 
@@ -212,6 +254,7 @@ class ReviewEvent(BaseModel):
     reviewer_id: str
     kind: Literal[
         "mutation",
+        "structural_mutation",
         "spreadsheet_review",
         "inventory_audit",
         "record_decision",
@@ -505,6 +548,91 @@ def _record_references(truth: dict[str, Any], collection: str, index: int) -> li
     return references
 
 
+def _replace_record_reference(
+    value: object,
+    reference_field: str,
+    source_id: str,
+    target_id: str,
+    *,
+    root_identifier: str | None = None,
+    at_root: bool = True,
+) -> None:
+    """Retarget explicit schema identifiers while preserving record identities.
+
+    This is the write-side counterpart of ``_contains_record_reference``. Restricting
+    replacement to identifier fields and candidate lists prevents an ID-like string in
+    a label, note, chemical name, or evidence quote from being rewritten by a merge.
+    """
+
+    if isinstance(value, dict):
+        for field, child in value.items():
+            if at_root and field == root_identifier:
+                continue
+            if field == reference_field and str(child) == source_id:
+                value[field] = target_id
+            elif field == "candidate_ids" and isinstance(child, list):
+                value[field] = [
+                    target_id if str(candidate) == source_id else candidate
+                    for candidate in child
+                ]
+            else:
+                _replace_record_reference(
+                    child,
+                    reference_field,
+                    source_id,
+                    target_id,
+                    root_identifier=root_identifier,
+                    at_root=False,
+                )
+    elif isinstance(value, list):
+        for child in value:
+            _replace_record_reference(
+                child,
+                reference_field,
+                source_id,
+                target_id,
+                root_identifier=root_identifier,
+                at_root=False,
+            )
+
+
+def _changed_collections(
+    before: dict[str, Any], after: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Store only changed top-level record collections for exact structural undo."""
+
+    return [
+        {
+            "collection": collection,
+            "before": copy.deepcopy(before[collection]),
+            "after": copy.deepcopy(after[collection]),
+        }
+        for collection in RECORD_IDENTIFIERS
+        if before[collection] != after[collection]
+    ]
+
+
+def _reverse_structural_mutation(
+    truth: dict[str, Any], event: ReviewEvent
+) -> dict[str, Any]:
+    """Undo a merge or reclassification only while all affected records are unchanged."""
+
+    if event.kind != "structural_mutation":
+        raise ValueError("only a structural mutation can be reversed here")
+    result = copy.deepcopy(truth)
+    replacements = event.details.get("collection_replacements", [])
+    if not replacements:
+        raise ValueError("structural mutation has no reversible collection snapshot")
+    for replacement in replacements:
+        collection = str(replacement["collection"])
+        if result.get(collection) != replacement["after"]:
+            raise ValueError(
+                f"{collection} has changed since the structural correction"
+            )
+        result[collection] = copy.deepcopy(replacement["before"])
+    return StudyExtraction.model_validate(result).model_dump(mode="json")
+
+
 def _record_reference_catalog(truth: dict[str, Any]) -> dict[str, list[str]]:
     """Expose deletion dependencies from the same check enforced on mutation."""
 
@@ -733,6 +861,7 @@ class StudyReviewStore:
                 event.kind
                 not in {
                     "mutation",
+                    "structural_mutation",
                     "spreadsheet_review",
                 }
                 or event.event_id in undone_event_ids
@@ -741,6 +870,8 @@ class StudyReviewStore:
             try:
                 if event.kind == "mutation":
                     self._prepare_mutation_undo(revision.ground_truth, event)
+                elif event.kind == "structural_mutation":
+                    _reverse_structural_mutation(revision.ground_truth, event)
                 else:
                     _reverse_spreadsheet_review(revision.ground_truth, event)
             except (IndexError, KeyError, TypeError, ValueError):
@@ -1269,6 +1400,127 @@ class StudyReviewStore:
         ).model_dump(mode="json")
         return self._commit(split, paper_id, current_revision, validated, event)
 
+    def merge_records(
+        self,
+        split: str,
+        paper_id: str,
+        request: RecordMergeRequest,
+        reviewer_id: str,
+    ) -> dict[str, Any]:
+        """Merge a duplicate into its canonical record and retarget explicit links.
+
+        Reference updates and deletion happen in one validated transition, avoiding
+        the broken-link intermediate state that made this common correction tedious.
+        """
+
+        current = self._validate_revision(split, paper_id, request.base_revision)
+        before = current.ground_truth
+        proposed = copy.deepcopy(before)
+        identifier = RECORD_IDENTIFIERS[request.collection]
+        records = proposed[request.collection]
+        source_index = next(
+            (
+                index
+                for index, record in enumerate(records)
+                if str(record[identifier]) == request.source_record_id
+            ),
+            None,
+        )
+        if source_index is None:
+            raise ValueError(
+                f"unknown {request.collection} record {request.source_record_id}"
+            )
+        if not any(
+            str(record[identifier]) == request.target_record_id for record in records
+        ):
+            raise ValueError(
+                f"unknown {request.collection} record {request.target_record_id}"
+            )
+        for collection, root_identifier in RECORD_IDENTIFIERS.items():
+            for record in proposed[collection]:
+                _replace_record_reference(
+                    record,
+                    identifier,
+                    request.source_record_id,
+                    request.target_record_id,
+                    root_identifier=root_identifier,
+                )
+        del records[source_index]
+        validated = StudyExtraction.model_validate(proposed).model_dump(mode="json")
+        self._reject_new_grounding_issues(split, paper_id, before, validated)
+        event = ReviewEvent(
+            event_id=str(uuid.uuid4()),
+            revision=current.revision + 1,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            reviewer_id=reviewer_id,
+            kind="structural_mutation",
+            note=request.note,
+            details={
+                "operation": "merge_records",
+                "collection": request.collection,
+                "source_record_id": request.source_record_id,
+                "target_record_id": request.target_record_id,
+                "collection_replacements": _changed_collections(before, validated),
+            },
+        ).model_dump(mode="json")
+        return self._commit(split, paper_id, current, validated, event)
+
+    def reclassify_record(
+        self,
+        split: str,
+        paper_id: str,
+        request: RecordReclassificationRequest,
+        reviewer_id: str,
+    ) -> dict[str, Any]:
+        """Atomically replace a record that belongs to the wrong collection."""
+
+        current = self._validate_revision(split, paper_id, request.base_revision)
+        self._validate_citations(split, paper_id, request.evidence)
+        before = current.ground_truth
+        proposed = copy.deepcopy(before)
+        identifier = RECORD_IDENTIFIERS[request.source_collection]
+        records = proposed[request.source_collection]
+        source_index = next(
+            (
+                index
+                for index, record in enumerate(records)
+                if str(record[identifier]) == request.source_record_id
+            ),
+            None,
+        )
+        if source_index is None:
+            raise ValueError(
+                f"unknown {request.source_collection} record "
+                f"{request.source_record_id}"
+            )
+        references = _record_references(before, request.source_collection, source_index)
+        if references:
+            raise ValueError(
+                "relink these dependent records before changing the record type: "
+                + ", ".join(references)
+            )
+        del records[source_index]
+        proposed[request.target_collection].append(copy.deepcopy(request.value))
+        validated = StudyExtraction.model_validate(proposed).model_dump(mode="json")
+        self._reject_new_grounding_issues(split, paper_id, before, validated)
+        event = ReviewEvent(
+            event_id=str(uuid.uuid4()),
+            revision=current.revision + 1,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            reviewer_id=reviewer_id,
+            kind="structural_mutation",
+            evidence=request.evidence,
+            note=request.note,
+            details={
+                "operation": "reclassify_record",
+                "source_collection": request.source_collection,
+                "source_record_id": request.source_record_id,
+                "target_collection": request.target_collection,
+                "collection_replacements": _changed_collections(before, validated),
+            },
+        ).model_dump(mode="json")
+        return self._commit(split, paper_id, current, validated, event)
+
     def undo_mutation(
         self,
         split: str,
@@ -1330,6 +1582,34 @@ class StudyReviewStore:
                     "record_replacements": inverse_replacements,
                     "changed_fields": target.details.get("changed_fields", []),
                     "decisions": [],
+                },
+            ).model_dump(mode="json")
+        elif target.kind == "structural_mutation":
+            validated = _reverse_structural_mutation(
+                current_revision.ground_truth, target
+            )
+            inverse_replacements = [
+                {
+                    **replacement,
+                    "before": copy.deepcopy(replacement["after"]),
+                    "after": copy.deepcopy(replacement["before"]),
+                }
+                for replacement in target.details.get(
+                    "collection_replacements", []
+                )
+            ]
+            event = ReviewEvent(
+                event_id=str(uuid.uuid4()),
+                revision=current_revision.revision + 1,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                reviewer_id=reviewer_id,
+                kind="structural_mutation",
+                evidence=target.evidence,
+                note="Undid a previously saved structural correction.",
+                details={
+                    "undoes_event_id": target.event_id,
+                    "operation": f"undo_{target.details.get('operation', 'structural')}",
+                    "collection_replacements": inverse_replacements,
                 },
             ).model_dump(mode="json")
         else:

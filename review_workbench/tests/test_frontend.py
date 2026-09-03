@@ -315,9 +315,13 @@ def test_record_count_corrections_are_explicit_and_reference_guarded():
     source = (APP / "app.js").read_text(encoding="utf-8")
     backend = (APP.parent / "study_review.py").read_text(encoding="utf-8")
 
-    assert "Copy as missing record" in source
+    assert "Duplicate and edit" in source
+    assert "Merge duplicate" in source
+    assert "Change record type" in source
+    assert "/api/record-merges/" in source
+    assert '"record-reclassifications"' in source
     assert "Remove extra record" in html
-    assert "linked measurements must be reassigned or removed first" in html
+    assert "A merge moves explicit links automatically" in html
     assert "/api/study-schema" in source
     assert "draftFromSchema" in source
     assert "recordReferences" in source
