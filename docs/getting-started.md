@@ -54,6 +54,14 @@ with `OPENAI_API_KEY`. Choose another backend with its provider-prefixed model n
 standard credential, such as `openrouter/...` with `OPENROUTER_API_KEY` or
 `anthropic/...` with `ANTHROPIC_API_KEY`.
 
+OpenRouter can also route an eligible model through a provider key stored in its BYOK
+settings. The local process still receives only `OPENROUTER_API_KEY`; do not place the
+upstream OpenAI key in a project environment file as well. Pin the BYOK credential if
+shared OpenRouter capacity must never be used, then verify `is_byok` in OpenRouter's
+generation record with a small run before starting a costly cohort. BYOK configuration
+and fallback behavior are documented by
+[OpenRouter](https://openrouter.ai/docs/guides/overview/auth/byok).
+
 ## Read the result
 
 | Artifact | Purpose |
