@@ -87,6 +87,11 @@ Independent workers may share the batch without duplicating papers by supplying 
 same `--shard-count` and a different zero-based `--shard-index`. Each worker writes a
 separate audit file; document and model caches remain content-addressed.
 
+Before admission, `perla-extract-revalidate --runs-dir results/review-v1` reapplies
+the current local evidence policy to cached model outputs. This is intentionally not a
+new extraction: model responses and scientific records do not change, and refreshed
+validation artifacts remain derived from the immutable extraction and evidence files.
+
 Before import, require:
 
 - a schema-valid `extraction.json`;
