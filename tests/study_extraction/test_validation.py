@@ -149,6 +149,60 @@ def test_reported_value_can_be_an_exact_join_of_multiple_verified_quotes():
     )
 
 
+def test_reported_value_can_reuse_a_unit_printed_once_for_a_list():
+    """A coordinated list need not repeat its source-printed unit after every value."""
+
+    evidence = [
+        EvidenceCitation(block_id="a", quote="rates of 0.2 and 0.1 Å s-1")
+    ]
+    family = DeviceFamily(
+        family_id="f",
+        label="device",
+        variant=None,
+        architecture=None,
+        polarity="not_reported",
+        full_stack_raw=None,
+        layers=[],
+        absorber_formula=None,
+        absorber_properties=[
+            ReportedValue(
+                name="first rate",
+                raw_value="0.2 Å s-1",
+                value_number=0.2,
+                unit="Å s-1",
+                evidence=evidence,
+            )
+        ],
+        absorber_constituents=[],
+        processing_steps=[],
+        evidence=evidence,
+    )
+    extraction = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[family],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+    blocks = [
+        EvidenceBlock(
+            block_id="a",
+            source="main",
+            page=1,
+            kind="text",
+            text="The layers were deposited at rates of 0.2 and 0.1 Å s-1.",
+        )
+    ]
+
+    result = validate_study(extraction, blocks)
+
+    assert result["status"] == "verified"
+    assert result["counts"]["source_verified_values"] == 1
+    assert result["counts"]["source_assembled_values"] == 1
+
+
 def test_reported_value_with_one_invalid_citation_is_not_in_grounded_subset():
     """Require every citation to validate before calling a value source-verified."""
 

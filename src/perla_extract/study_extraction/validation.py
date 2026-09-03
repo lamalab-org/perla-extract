@@ -7,7 +7,11 @@ from collections import Counter
 from collections.abc import Callable
 from typing import Any
 
-from .evidence import assembled_from_quotes, source_contains_text
+from .evidence import (
+    assembled_from_quotes,
+    assembled_with_shared_unit,
+    source_contains_text,
+)
 from .identifiers import entity_id_lists
 from .models import EvidenceBlock, StudyExtraction
 
@@ -116,12 +120,17 @@ def validate_study(
                 raw_assembled = evidence_ok and assembled_from_quotes(
                     value["raw_value"], value["evidence"]
                 )
-                raw_ok = raw_direct or raw_assembled
+                raw_shared_unit = evidence_ok and assembled_with_shared_unit(
+                    value["raw_value"], value.get("unit"), value["evidence"]
+                )
+                raw_ok = raw_direct or raw_assembled or raw_shared_unit
                 if not raw_ok:
                     issue(path, "raw_value not found in cited evidence")
                 if evidence_ok and raw_ok:
                     source_verified_values += 1
-                    source_assembled_values += int(raw_assembled and not raw_direct)
+                    source_assembled_values += int(
+                        (raw_assembled or raw_shared_unit) and not raw_direct
+                    )
                     verified_values.append({"path": path, **value})
             elif "material_form_raw" in value and isinstance(
                 value.get("evidence"), list

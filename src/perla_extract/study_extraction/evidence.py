@@ -75,6 +75,33 @@ def assembled_from_quotes(raw_value: object, references: list[dict]) -> bool:
     )
 
 
+def assembled_with_shared_unit(
+    raw_value: object, unit: object, references: list[dict]
+) -> bool:
+    """Recognize a source value whose unit is printed once for a coordinated list.
+
+    Tables and prose commonly write ``0.2 and 0.1 Å s-1``. Representing either scalar
+    as ``raw_value='0.2 Å s-1'`` is source-preserving, although that exact concatenated
+    string is absent. This check is vocabulary-free: the declared unit must be the
+    exact normalized suffix of the raw value, and one citation must independently
+    contain both the remaining value text and that unit. It verifies textual support,
+    not whether the source grammar assigns the unit to the value.
+    """
+
+    raw = normalized_source_text(raw_value)
+    normalized_unit = normalized_source_text(unit)
+    if not normalized_unit or not raw.endswith(normalized_unit):
+        return False
+    value_text = raw[: -len(normalized_unit)]
+    if not value_text:
+        return False
+    return any(
+        source_contains_text(reference.get("quote"), value_text)
+        and source_contains_text(reference.get("quote"), unit)
+        for reference in references
+    )
+
+
 def repair_noncontiguous_citation_quotes(
     extraction: StudyExtraction, blocks: list[EvidenceBlock]
 ) -> tuple[StudyExtraction, dict[str, Any]]:

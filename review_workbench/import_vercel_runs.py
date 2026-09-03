@@ -10,6 +10,7 @@ import click
 from loguru import logger
 
 from perla_extract.study_extraction.cohort import CohortManifest
+from perla_extract.study_extraction.revalidate import revalidate_run
 from review_workbench.import_runs import _admissible, import_run
 
 
@@ -87,6 +88,7 @@ def main(
     failures: list[str] = []
     for run_dir in missing:
         try:
+            revalidate_run(run_dir)
             _admissible(run_dir)
             if not dry_run:
                 import_run(
