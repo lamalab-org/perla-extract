@@ -1185,8 +1185,16 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     "comparison.html",
                     "comparison.js",
                     "comparison.css",
+                    "figure-census-proposals.json",
                 }:
                     self.send_error(HTTPStatus.NOT_FOUND)
+                    return
+                if asset == "figure-census-proposals.json":
+                    self.send_bytes(
+                        (application.static_dir / asset).read_bytes(),
+                        "application/json",
+                        {"Cache-Control": "public, max-age=300"},
+                    )
                     return
                 self.send_file(application.static_dir / asset)
             except FileNotFoundError as error:
