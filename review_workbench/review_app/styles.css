@@ -115,6 +115,10 @@ label { display:grid; gap:.35rem; font-size:.82rem; color:var(--muted); }
 .figure-panel-fields .figure-relevance { display:flex; align-items:center; gap:8px; }
 .figure-panel-fields .figure-relevance input { width:auto; }
 .figure-panel-fields .figure-relevance span { margin:0; color:var(--ink); }
+.figure-visual-evidence { padding:9px 11px; border-left:3px solid #d8b64c; border-radius:6px; background:#fff9e8; font-size:.76rem; line-height:1.4; }
+.figure-visual-evidence ul { display:grid; gap:7px; margin:7px 0 0; padding-left:18px; }
+.figure-visual-evidence li span { display:block; color:var(--muted); }
+.figure-visual-evidence p { margin:7px 0 0; color:var(--muted); }
 .figure-loss-counts { max-width:460px; }
 .danger-link { justify-self:start; color:var(--danger); border-color:#e5b8b5; }
 .saved-figure-panels p { margin:.35rem 0 0; line-height:1.4; }

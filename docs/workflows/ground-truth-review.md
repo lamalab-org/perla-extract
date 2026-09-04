@@ -353,6 +353,63 @@ who has no saved census, labels them as caption-derived, and persists them only 
 the reviewer checks and saves the form. Because captions often omit axes and inset
 contents, the generator must return uncertainty rather than infer what is visible.
 
+For the actual figure-loss study, captions are insufficient: panel boundaries, axis
+labels, inset tables, and printed annotations live in the image. First localize and
+render crops without making any model request:
+
+```bash
+python review_workbench/figure_vision_batch.py \
+  --runs-dir results/review-v1 \
+  --output-dir results/figure-census \
+  --proposal-output results/figure-census/render-report.json \
+  --render-only
+```
+
+Each crop is tied to its PDF hash, page, rectangle, caption block, Docling version,
+rendering settings, and image hash. Captions that cannot be localized unambiguously
+are listed as failures for manual inspection; the code does not guess a rectangle.
+Rerunning with the same inputs uses those verified crops.
+
+An optional image-capable model can propose panels and visibly printed values. This is
+a separate, explicit command because it transmits figure crops to the configured model
+provider:
+
+```bash
+python review_workbench/figure_vision_batch.py \
+  --runs-dir results/review-v1 \
+  --output-dir results/figure-census \
+  --proposal-output review_workbench/review_app/figure-census-proposals.json \
+  --model openai/gpt-5.6 \
+  --max-model-calls 40 \
+  --max-cost-usd 20
+```
+
+The batch checkpoints after every paper, shares one global call and cost budget, and
+records per-paper failures without discarding completed work. The model may transcribe
+only values visibly printed as annotations or inset-table cells. Axis ticks, sampled
+curve points, and visually estimated coordinates are prohibited. A deterministic
+text comparison marks whether each proposed value also occurs in extracted text, but
+never declares an unmatched value “figure-only.” The reviewer sees the candidate and
+makes that judgment while viewing the paper. Request logs retain image hashes and byte
+counts rather than duplicating base64-encoded paper images.
+
+After review, extract `figure_panels.csv` from the administrator feedback download and
+score the frozen proposal:
+
+```bash
+python review_workbench/figure_census_evaluation.py \
+  --proposal review_workbench/review_app/figure-census-proposals.json \
+  --gold-csv feedback/figure_panels.csv \
+  --reviewer-id REVIEWER_ID \
+  --output results/figure-census/evaluation.json
+```
+
+The evaluator reports panel precision/recall/F1 first. Class, numeric-presentation,
+recoverability, relevance, and axis-label agreement are calculated only for panels
+whose paper, figure number, and panel label match exactly. If the CSV contains several
+reviewers, selecting one or supplying a separately adjudicated CSV is mandatory; the
+tool does not silently pool conflicting annotations.
+
 After adjudication, calculate:
 
 - record loss as `figure_only_records / (final_records + figure_only_records)`; and

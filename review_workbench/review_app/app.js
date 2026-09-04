@@ -633,6 +633,33 @@ function figurePanelSelect(label, field, value, options) {
   return element("label", {}, [element("span", { text: label }), select]);
 }
 
+function proposedFigurePanel(panel) {
+  const proposals = state.figureCensusProposals[state.paperId]?.panels || [];
+  return proposals.find((candidate) =>
+    String(candidate.figure_number).toLowerCase() === String(panel.figure_number).toLowerCase()
+    && String(candidate.panel_label || "").toLowerCase() === String(panel.panel_label || "").toLowerCase());
+}
+
+function renderVisualCandidateEvidence(panel) {
+  const proposal = proposedFigurePanel(panel);
+  const candidates = proposal?.visual_candidates || [];
+  const notes = proposal?.visual_notes || [];
+  if (!candidates.length && !notes.length) return null;
+  const rows = candidates.map((candidate) => element("li", {}, [
+    element("strong", { text: `${candidate.name}: ${candidate.raw_value}` }),
+    element("span", {
+      text: candidate.text_comparison === "exact_text_match"
+        ? "Also found verbatim in extracted text; do not count it as figure-only."
+        : "Not found verbatim in extracted text; compare the figure with the paper before counting it.",
+    }),
+  ]));
+  return element("aside", { className: "figure-visual-evidence" }, [
+    element("strong", { text: "Values visibly printed in this panel" }),
+    ...(rows.length ? [element("ul", {}, rows)] : []),
+    ...notes.map((note) => element("p", { text: note })),
+  ]);
+}
+
 function readFigurePanels() {
   return [...document.querySelectorAll("[data-figure-panel]")].map((card) => {
     const value = (name) => card.querySelector(`[data-figure-field="${name}"]`);
@@ -672,8 +699,9 @@ function renderFigureCensusSummary() {
   const totals = panels.length ? figureCensusTotals(panels) : state.censusDraft.main_text_figure_census;
   const legacy = !panels.length && !state.censusDraft.main_text_figure_census.panels?.length
     && (totals.figures_reviewed || totals.schema_relevant_figures || totals.figure_only_records || totals.figure_only_atomic_values);
-  const proposalPrefix = !hasAudit() && state.figureCensusProposals[state.paperId]
-    ? "Caption-derived draft—check every entry against the rendered figure. "
+  const proposal = state.figureCensusProposals[state.paperId];
+  const proposalPrefix = !hasAudit() && proposal
+    ? `${proposal.proposal_method === "caption_and_figure" ? "Figure-and-caption" : "Caption"}-derived draft—check every entry against the rendered figure. `
     : "";
   $("figure-census-summary").textContent = proposalPrefix + (legacy
     ? `Earlier aggregate census: ${totals.figures_reviewed || 0} figures · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only records · ${totals.figure_only_atomic_values || 0} figure-only values. Add subfigures to replace it.`
@@ -687,6 +715,7 @@ function renderFigurePanels() {
       properties: { type: "checkbox", checked: panel.schema_relevant },
       dataset: { figureField: "schema_relevant" },
     });
+    const visualEvidence = renderVisualCandidateEvidence(panel);
     const card = element("details", { className: "figure-panel-card", properties: { open: true }, dataset: { figurePanel: String(index), captionBlockId: panel.caption_block_id || "" } }, [
       element("summary", { text: `${panel.figure_number ? `Figure ${panel.figure_number}` : "New subfigure"}${panel.panel_label ? panel.panel_label : ""} · ${FIGURE_CLASSES[panel.figure_class]}` }),
       element("div", { className: "figure-panel-fields" }, [
@@ -704,6 +733,7 @@ function renderFigurePanels() {
           figurePanelSelect("Extraction effort", "extraction_feasibility", panel.extraction_feasibility, FIGURE_EXTRACTION_FEASIBILITY),
         ]),
         element("label", { className: "figure-relevance" }, [relevant, element("span", { text: "Contains information represented by the extraction schema" })]),
+        ...(visualEvidence ? [visualEvidence] : []),
         element("div", { className: "figure-panel-grid compact figure-loss-counts" }, [
           figurePanelField("Figure-only records", "figure_only_records", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_records } })),
           figurePanelField("Figure-only atomic values", "figure_only_atomic_values", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_atomic_values } })),

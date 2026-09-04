@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from functools import partial
 from pathlib import Path
 from typing import Any, Literal, TypedDict
 
@@ -250,8 +251,9 @@ def classify_captions(
             response_model=FigureProposalBatch,
             max_output_tokens=30000,
             reasoning_effort=reasoning_effort,
+            validate=partial(_validate_batch, batch=batch),
+            validation_contract=f"figure-caption-{PROMPT_VERSION}",
         )
-        _validate_batch(result, batch)
         caption_pages = {
             str(item["caption_block_id"]): item.get("page")
             for paper in batch
