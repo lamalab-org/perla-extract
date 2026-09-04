@@ -289,6 +289,7 @@ def build_feedback_archive(
     store: StudyReviewStore,
     comparisons: ComparisonService,
     uploaded_workbooks: list[dict[str, Any]] | None = None,
+    figure_census_proposals: dict[str, Any] | None = None,
 ) -> bytes:
     """Create one self-describing download of all reviewer-authored responses."""
 
@@ -308,6 +309,7 @@ def build_feedback_archive(
         "ground_truth_reviews": papers,
         "extractor_comparisons": comparison_batches,
         "uploaded_review_workbooks": workbook_metadata,
+        "figure_census_proposals": figure_census_proposals,
         "figure_census_summary": _figure_census_summary(figure_panel_rows),
         "counts": {
             "papers_with_feedback": sum(bool(item["events"]) for item in papers),
@@ -335,6 +337,10 @@ census. It records the scientific class, description, printed axis labels, numer
 presentation, extraction effort, schema relevance, and figure-only record/value
 counts. Superseded census events remain losslessly available in feedback.json but do
 not appear in this analysis-ready table.
+
+figure_census_proposals.json contains the exact model-generated starting point shown to
+reviewers. Comparing it with figure_panels.csv recovers model-to-human corrections;
+the proposals never overwrite reviewer-authored events.
 
 comparison_reviews.csv is one row per started extractor-comparison response. It keeps
 the independent accuracy review, native-utility ratings, and rubric-level A/B
@@ -449,6 +455,12 @@ this archival feature was deployed are not recoverable as files.
             "figure_panels.csv",
             _csv_bytes(figure_panel_rows, figure_panel_fields),
         )
+        if figure_census_proposals is not None:
+            _zip_member(
+                archive,
+                "figure_census_proposals.json",
+                _json_bytes(figure_census_proposals),
+            )
         _zip_member(
             archive,
             "comparison_reviews.csv",

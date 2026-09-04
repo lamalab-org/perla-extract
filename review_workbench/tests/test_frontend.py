@@ -12,7 +12,9 @@ def test_blinded_comparison_is_a_separate_review_workflow():
     assert 'href="/comparison.html"' in main
     assert "one randomly assigned output" in html
     assert "Values and units are separate claims" in html
-    assert "Extra records" in html and "Missing records" in html and "Wrong links" in html
+    assert (
+        "Extra records" in html and "Missing records" in html and "Wrong links" in html
+    )
     assert "Chemical detail" in html and "Usefulness for NOMAD" in html
     assert "/api/comparison-reviews/" in javascript
     assert "/api/native-comparisons/" in javascript
@@ -40,12 +42,16 @@ def test_refreshed_review_dataset_is_the_clear_default():
     html = (APP / "index.html").read_text(encoding="utf-8")
     javascript = (APP / "app.js").read_text(encoding="utf-8")
 
-    assert html.count(
-        '<option value="dev">Current review — refreshed extraction</option>'
-    ) == 2
-    assert html.count(
-        '<option value="calibration">Legacy calibration — deprecated</option>'
-    ) == 2
+    assert (
+        html.count('<option value="dev">Current review — refreshed extraction</option>')
+        == 2
+    )
+    assert (
+        html.count(
+            '<option value="calibration">Legacy calibration — deprecated</option>'
+        )
+        == 2
+    )
     assert 'split: "dev"' in javascript
     assert 'calibration: "Legacy calibration"' in javascript
 
@@ -67,7 +73,7 @@ def test_deployed_authentication_has_a_recoverable_sign_in_flow():
     assert 'elevation: "flush"' in javascript
     assert 'colorPrimary: "#176b52"' in javascript
     assert "Your session expired. Sign in again" in javascript
-    assert 'localStorage.removeItem(REVIEW_TOKEN_KEY)' in javascript
+    assert "localStorage.removeItem(REVIEW_TOKEN_KEY)" in javascript
     assert '"Connection problem"' not in javascript
     assert ".internal-sign-in[hidden]" in styles
     assert "#clerk-sign-in[hidden]" in styles
@@ -108,7 +114,7 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
         "device_structure",
         "other",
     ):
-        assert f'{figure_class}:' in javascript
+        assert f"{figure_class}:" in javascript
     assert "inset_table" in javascript
     assert "requires_digitization" in javascript
     assert "figureCensusTotals" in javascript
@@ -117,6 +123,8 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
     assert "Caption" in javascript
     assert "Values visibly printed in this panel" in javascript
     assert "do not count it as figure-only" in javascript
+    assert "Show figure in paper" in javascript
+    assert "no automatic image match" in javascript
     assert "main_text_figure_census" in javascript
     assert "review_scope_sources: state.bundle.sources" in javascript
     assert "Earlier aggregate census" in javascript
@@ -140,7 +148,10 @@ def test_record_review_layout_responds_to_panel_width_without_overlays():
     assert ".review-panel { container:review-panel / inline-size; }" in styles
     assert "@container review-panel (max-width:600px)" in styles
     assert ".add-record-menu[open] { grid-column:1 / -1; }" in styles
-    assert "position:absolute" not in styles.split(".add-record-menu .record-add", 1)[1].split("}", 1)[0]
+    assert (
+        "position:absolute"
+        not in styles.split(".add-record-menu .record-add", 1)[1].split("}", 1)[0]
+    )
     assert ".reported-value { display:grid; }" in styles
 
 
@@ -150,7 +161,7 @@ def test_laptop_layout_can_reclaim_space_and_focus_each_work_surface():
     styles = (APP / "styles.css").read_text(encoding="utf-8")
 
     assert 'id="toggle-paper-list"' in html
-    assert '>Papers</button>' in html
+    assert ">Papers</button>" in html
     assert 'button.textContent = "Papers"' in javascript
     assert 'data-workspace-view="split"' in html
     assert 'data-workspace-view="paper"' in html
@@ -159,7 +170,10 @@ def test_laptop_layout_can_reclaim_space_and_focus_each_work_surface():
     assert "if (!state.paperId) setPaperListOpen(true, false);" in javascript
     assert "function setWorkspaceView" in javascript
     assert 'const LAPTOP_LAYOUT = "(max-width: 1400px)"' in javascript
-    assert 'setWorkspaceView(window.matchMedia("(max-width: 920px)").matches ? "paper" : "split", false)' in javascript
+    assert (
+        'setWorkspaceView(window.matchMedia("(max-width: 920px)").matches ? "paper" : "split", false)'
+        in javascript
+    )
     assert "main.paper-list-hidden" in styles
     assert '.workspace-grid[data-view="paper"]' in styles
     assert '.workspace-grid[data-view="review"]' in styles
@@ -280,7 +294,9 @@ def test_stability_review_shows_every_atomic_value_before_related_context():
     assert 'reportedValueGroup(entry, "Outcomes"' in source
     assert "Show value in paper" in source
     assert "recordJsonPath" in source
-    assert source.index("renderReviewTarget(entry)") < source.index("renderDeviceContext(entry)", source.index("renderReviewTarget(entry)"))
+    assert source.index("renderReviewTarget(entry)") < source.index(
+        "renderDeviceContext(entry)", source.index("renderReviewTarget(entry)")
+    )
     assert "All fields match source" in html
     assert "All fields match source  V" in source
     assert "Cannot establish from source  U" in source
@@ -321,7 +337,9 @@ def test_pdf_source_switch_is_visible_cached_and_waits_for_the_new_page():
     assert "AbortController" in source
     assert "pdfDisplayed" in source
     assert "PDF_VIEW_VERSION" in source
-    assert '$("pdf-canvas").hidden = !displayed || displayed.paperId !== paperId' in source
+    assert (
+        '$("pdf-canvas").hidden = !displayed || displayed.paperId !== paperId' in source
+    )
     assert "The previous page is still shown." in source
     assert 'id="retry-pdf"' in html
     assert "URL.createObjectURL" in source
@@ -349,7 +367,10 @@ def test_record_count_corrections_are_explicit_and_reference_guarded():
     assert "other records refer to it" in backend
     assert 'dependency.hidden = intent !== "remove"' in source
     assert '$("remove-record").hidden = intent !== "remove"' in source
-    assert '$("cancel-record").addEventListener("click", () => $("record-dialog").close())' in source
+    assert (
+        '$("cancel-record").addEventListener("click", () => $("record-dialog").close())'
+        in source
+    )
     assert "linkedRecordSummary" in source
     assert "pointing to something that no longer exists" in source
 
@@ -366,25 +387,46 @@ def test_startup_defers_schema_and_shows_real_loading_states():
     assert "if (await initializeAuthentication())" in source
     assert "await startApp();" in source
     assert not source.rstrip().endswith("await loadStudySchema();")
-    assert 'if (!state.studySchema)' in source
+    assert "if (!state.studySchema)" in source
 
 
 def test_failed_navigation_keeps_an_open_paper_and_progress_requires_a_session():
     source = (APP / "app.js").read_text(encoding="utf-8")
 
-    selection = source[source.index("async function selectPaper"):source.index("function renderStudy")]
-    progress = source[source.index("async function openReviewerProgress"):source.index("async function downloadReviewerProgress")]
-    assert 'if (state.bundle) setStatus(`Could not open ${paperId}' in selection
-    assert 'else {\n      $("empty-title").textContent = "Could not open this paper";' in selection
+    selection = source[
+        source.index("async function selectPaper") : source.index(
+            "function renderStudy"
+        )
+    ]
+    progress = source[
+        source.index("async function openReviewerProgress") : source.index(
+            "async function downloadReviewerProgress"
+        )
+    ]
+    assert "if (state.bundle) setStatus(`Could not open ${paperId}" in selection
+    assert (
+        'else {\n      $("empty-title").textContent = "Could not open this paper";'
+        in selection
+    )
     assert "if (!state.user)" in progress
-    assert 'setStatus("Sign in before opening saved review progress.", true);' in progress
-    assert progress.index("if (!state.user)") < progress.index('$("annotations-dialog").showModal()')
+    assert (
+        'setStatus("Sign in before opening saved review progress.", true);' in progress
+    )
+    assert progress.index("if (!state.user)") < progress.index(
+        '$("annotations-dialog").showModal()'
+    )
 
 
 def test_correction_and_removal_dialogs_open_without_saving_a_decision_first():
     source = (APP / "app.js").read_text(encoding="utf-8")
-    correction = source[source.index("function beginCorrection"):source.index("function beginRemoval")]
-    removal = source[source.index("function beginRemoval"):source.index("function copyMissingRecord")]
+    correction = source[
+        source.index("function beginCorrection") : source.index("function beginRemoval")
+    ]
+    removal = source[
+        source.index("function beginRemoval") : source.index(
+            "function copyMissingRecord"
+        )
+    ]
 
     assert "openRecord" in correction
     assert "submitDecision" not in correction
@@ -454,8 +496,8 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     assert "does not alter scientific corrections or the audit history" in source
     assert "change this decision" in source
     assert 'application.reviewer_progress(parts[2], user["id"])' in server
-    assert 'application.undo_mutation(' in server
-    assert 'application.reset_reviewer_state(' in server
+    assert "application.undo_mutation(" in server
+    assert "application.reset_reviewer_state(" in server
 
 
 def test_admin_can_download_all_reviewer_feedback():

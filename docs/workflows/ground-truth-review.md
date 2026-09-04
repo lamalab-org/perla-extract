@@ -370,6 +370,13 @@ rendering settings, and image hash. Captions that cannot be localized unambiguou
 are listed as failures for manual inspection; the code does not guess a rectangle.
 Rerunning with the same inputs uses those verified crops.
 
+The review app pre-fills model-proposed panel rows but keeps every field editable.
+Reviewers can jump directly from a row to its main-paper page, add a missed panel,
+remove an extra panel, correct its class, axes, presentation, or relevance, and enter
+the verified figure-only record and atomic-value counts. Captions without an automatic
+image match are called out explicitly and must be added manually. Saving creates a
+reviewer event; it never mutates the static model proposal.
+
 An optional image-capable model can propose panels and visibly printed values. This is
 a separate, explicit command because it transmits figure crops to the configured model
 provider:
@@ -409,6 +416,11 @@ recoverability, relevance, and axis-label agreement are calculated only for pane
 whose paper, figure number, and panel label match exactly. If the CSV contains several
 reviewers, selecting one or supplying a separately adjudicated CSV is mandatory; the
 tool does not silently pool conflicting annotations.
+
+The administrator feedback ZIP includes both `figure_census_proposals.json` (the exact
+starting point shown in the app) and `figure_panels.csv` (current human annotations),
+while the lossless event history preserves superseded edits and resets. This makes
+model-to-human corrections directly retrievable for the next pipeline evaluation.
 
 After adjudication, calculate:
 

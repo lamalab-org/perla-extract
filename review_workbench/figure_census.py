@@ -123,6 +123,12 @@ def caption_blocks(document_path: Path) -> list[CaptionInput]:
         text = block.get("text")
         if block.get("source") != "main" or not isinstance(text, str):
             continue
+        metadata = block.get("metadata")
+        if isinstance(metadata, dict) and metadata.get("docling_label") not in {
+            None,
+            "caption",
+        }:
+            continue
         match = CAPTION_PATTERN.match(text)
         if not match:
             continue

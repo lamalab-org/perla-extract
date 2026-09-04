@@ -6,6 +6,7 @@ import pymupdf
 
 from review_workbench.figure_images import (
     FigureRegion,
+    geometry_match_score,
     pdf_rect_from_docling_bbox,
     render_figure_regions,
 )
@@ -44,3 +45,20 @@ def test_rendered_crop_has_stable_provenance(tmp_path):
     assert (first.width_pixels, first.height_pixels) == (200, 200)
     assert first.image_sha256 == second.image_sha256
     assert first.caption_block_id == "main-p1-caption"
+
+
+def test_geometry_match_requires_caption_below_and_horizontal_overlap():
+    picture = [70.0, 70.0, 525.0, 460.0]
+
+    assert (
+        geometry_match_score(picture, [72.0, 462.0, 527.0, 490.0], page_height=842)
+        is not None
+    )
+    assert (
+        geometry_match_score(picture, [72.0, 300.0, 527.0, 330.0], page_height=842)
+        is None
+    )
+    assert (
+        geometry_match_score(picture, [540.0, 462.0, 590.0, 490.0], page_height=842)
+        is None
+    )

@@ -19,7 +19,7 @@ from perla_extract.study_extraction.source import _docling_runtime
 FIGURE_PREFIX = re.compile(
     r"^\s*(?:fig(?:ure)?\.?)\s*(?P<number>[0-9]+)\b", re.IGNORECASE
 )
-FIGURE_IMAGE_FORMAT_VERSION = 2
+FIGURE_IMAGE_FORMAT_VERSION = 4
 
 
 class FigureRegion(BaseModel):
@@ -32,7 +32,7 @@ class FigureRegion(BaseModel):
     bbox: list[float] = Field(min_length=4, max_length=4)
     caption: str = Field(min_length=1)
     caption_block_id: str | None = None
-    localization_method: Literal["docling_picture"]
+    localization_method: Literal["docling_picture", "docling_geometry"]
 
     @model_validator(mode="after")
     def require_positive_rectangle(self) -> "FigureRegion":
@@ -111,6 +111,12 @@ def _caption_index(document_path: Path | None) -> dict[tuple[int, str], dict[str
         text = block.get("text")
         if block.get("source") != "main" or not isinstance(text, str):
             continue
+        metadata = block.get("metadata")
+        if isinstance(metadata, dict) and metadata.get("docling_label") not in {
+            None,
+            "caption",
+        }:
+            continue
         match = FIGURE_PREFIX.match(text)
         if match:
             result[(int(block["page"]), match.group("number"))] = block
@@ -132,25 +138,69 @@ def _resolved_caption(picture: object, document: object) -> str:
     return " ".join(fragments)
 
 
+def _caption_rect(block: dict[str, Any], *, page_height: float) -> list[float] | None:
+    """Read a Docling caption rectangle from the parser-neutral document artifact."""
+
+    metadata = block.get("metadata")
+    bbox = block.get("bbox")
+    if not isinstance(metadata, dict) or metadata.get("docling_label") != "caption":
+        return None
+    if not isinstance(bbox, list) or len(bbox) != 4:
+        return None
+    if not all(isinstance(value, (int, float)) for value in bbox):
+        return None
+    left, top, right, bottom = (float(value) for value in bbox)
+    x0, x1 = sorted((left, right))
+    y0, y1 = sorted((page_height - top, page_height - bottom))
+    return [x0, y0, x1, y1]
+
+
+def geometry_match_score(
+    picture: list[float], caption: list[float], *, page_height: float
+) -> float | None:
+    """Score a picture immediately above a caption, rejecting weak layout matches.
+
+    The rule uses only page geometry. It is intentionally unaware of publishers,
+    figure classes, and scientific keywords, so it can recover missing Docling links
+    without introducing paper-specific extraction behavior.
+    """
+
+    horizontal_overlap = max(
+        0.0, min(picture[2], caption[2]) - max(picture[0], caption[0])
+    )
+    smaller_width = min(picture[2] - picture[0], caption[2] - caption[0])
+    if smaller_width <= 0 or horizontal_overlap / smaller_width < 0.25:
+        return None
+    vertical_gap = caption[1] - picture[3]
+    if vertical_gap < -3 or vertical_gap > max(72.0, page_height * 0.12):
+        return None
+    picture_center = (picture[0] + picture[2]) / 2
+    caption_center = (caption[0] + caption[2]) / 2
+    return max(vertical_gap, 0.0) + abs(picture_center - caption_center) * 0.05
+
+
 def discover_figure_regions(
     pdf_path: Path, document_path: Path | None = None
 ) -> tuple[list[FigureRegion], list[dict[str, object]]]:
     """Associate Docling picture boxes with numbered main-paper captions.
 
-    Only explicit Docling picture-to-caption links establish a region. The extraction
-    document supplies stable caption block identifiers, but page proximity never creates
-    a link: missing relations are reported for review instead of guessed.
+    Explicit Docling picture-to-caption links are preferred. When that relation is
+    absent, a one-to-one page-layout match is accepted only for a picture immediately
+    above and horizontally overlapping a numbered caption. Ambiguous candidates remain
+    reported for review.
     """
 
     converter, ContentLayer, _ = _docling_runtime()
     converted = converter.convert(str(pdf_path)).document
     captions = _caption_index(document_path)
     raw_regions: list[FigureRegion] = []
+    pictures: list[tuple[int, int, list[float]]] = []
+    used_picture_ids: set[int] = set()
     with pymupdf.open(pdf_path) as pdf:
         items = converted.iterate_items(
             included_content_layers={ContentLayer.BODY, ContentLayer.FURNITURE}
         )
-        for item, _level in items:
+        for picture_id, (item, _level) in enumerate(items):
             if "picture" not in type(item).__name__.casefold():
                 continue
             provenance = getattr(item, "prov", None) or []
@@ -161,16 +211,18 @@ def discover_figure_regions(
                 continue
             caption = _resolved_caption(item, converted)
             match = FIGURE_PREFIX.match(caption)
-            if not match:
-                continue
-            number = match.group("number")
-            caption_block = captions.get((page, number))
             bbox = pdf_rect_from_docling_bbox(
                 getattr(provenance[0], "bbox", None),
                 page_height=float(pdf[page - 1].rect.height),
             )
-            if not bbox or not number:
+            if not bbox:
                 continue
+            pictures.append((picture_id, page, bbox))
+            if not match:
+                continue
+            number = match.group("number")
+            caption_block = captions.get((page, number))
+            used_picture_ids.add(picture_id)
             raw_regions.append(
                 FigureRegion(
                     figure_number=number,
@@ -181,6 +233,46 @@ def discover_figure_regions(
                         str(caption_block["block_id"]) if caption_block else None
                     ),
                     localization_method="docling_picture",
+                )
+            )
+
+        linked_keys = {(region.page, region.figure_number) for region in raw_regions}
+        for (page, number), caption_block in captions.items():
+            if (page, number) in linked_keys or page < 1 or page > len(pdf):
+                continue
+            caption_bbox = _caption_rect(
+                caption_block, page_height=float(pdf[page - 1].rect.height)
+            )
+            if caption_bbox is None:
+                continue
+            candidates = []
+            for picture_id, picture_page, picture_bbox in pictures:
+                if picture_page != page or picture_id in used_picture_ids:
+                    continue
+                score = geometry_match_score(
+                    picture_bbox,
+                    caption_bbox,
+                    page_height=float(pdf[page - 1].rect.height),
+                )
+                if score is not None:
+                    candidates.append((score, picture_id, picture_bbox))
+            candidates.sort(key=lambda item: item[0])
+            if not candidates:
+                continue
+            if len(candidates) > 1 and candidates[1][0] - candidates[0][0] < max(
+                6.0, candidates[0][0] * 0.25
+            ):
+                continue
+            _score, picture_id, picture_bbox = candidates[0]
+            used_picture_ids.add(picture_id)
+            raw_regions.append(
+                FigureRegion(
+                    figure_number=number,
+                    page=page,
+                    bbox=picture_bbox,
+                    caption=str(caption_block["text"]),
+                    caption_block_id=str(caption_block["block_id"]),
+                    localization_method="docling_geometry",
                 )
             )
 
@@ -330,6 +422,7 @@ __all__ = [
     "RenderedFigure",
     "build_figure_image_manifest",
     "discover_figure_regions",
+    "geometry_match_score",
     "pdf_rect_from_docling_bbox",
     "render_figure_regions",
 ]

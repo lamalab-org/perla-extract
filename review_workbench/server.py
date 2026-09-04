@@ -173,8 +173,17 @@ class ReviewApplication:
     def reviewer_feedback_archive(self) -> bytes:
         """Package all user feedback for an authenticated administrator."""
 
+        proposal_path = self.static_dir / "figure-census-proposals.json"
+        proposals = (
+            json.loads(proposal_path.read_text(encoding="utf-8"))
+            if proposal_path.exists()
+            else None
+        )
         return build_feedback_archive(
-            self.store, self.comparisons, self.uploaded_review_workbooks()
+            self.store,
+            self.comparisons,
+            self.uploaded_review_workbooks(),
+            proposals,
         )
 
     @staticmethod
@@ -189,9 +198,7 @@ class ReviewApplication:
         """Give every received upload a unique readable name without trusting input."""
 
         safe_reviewer = re.sub(r"[^A-Za-z0-9._-]+", "_", reviewer_id)[:80]
-        safe_filename = re.sub(
-            r"[^A-Za-z0-9._-]+", "_", Path(filename).name
-        )[:160]
+        safe_filename = re.sub(r"[^A-Za-z0-9._-]+", "_", Path(filename).name)[:160]
         if not safe_filename.lower().endswith(".xlsx"):
             safe_filename += ".xlsx"
         timestamp = re.sub(r"[^0-9TZ]", "", received_at)
@@ -207,9 +214,7 @@ class ReviewApplication:
         write_bytes_exclusive(path, data)
         write_json_exclusive(path.with_suffix(".received.json"), receipt)
 
-    def _record_workbook_outcome(
-        self, relative: Path, outcome: dict[str, Any]
-    ) -> None:
+    def _record_workbook_outcome(self, relative: Path, outcome: dict[str, Any]) -> None:
         """Append validation outcome without mutating the original upload receipt."""
 
         write_json_exclusive(
@@ -299,9 +304,7 @@ class ReviewApplication:
         """Attach available source documents to every bundle returned to the UI."""
 
         paper_id = str(bundle["paper_id"])
-        bundle["sources"] = self.available_sources(
-            paper_id, str(bundle["split"])
-        )
+        bundle["sources"] = self.available_sources(paper_id, str(bundle["split"]))
         return bundle
 
     def users(self) -> list[dict[str, str]]:
@@ -382,9 +385,7 @@ class ReviewApplication:
         refinement = self._decode_json(
             refinement_bytes, "refinement_audit.json", required=False
         )
-        repair = self._decode_json(
-            repair_bytes, "targeted_repair.json", required=False
-        )
+        repair = self._decode_json(repair_bytes, "targeted_repair.json", required=False)
         enrichment_payload = self._decode_json(
             enrichment_bytes, "enrichment.json", required=False
         )
@@ -665,16 +666,13 @@ class ReviewApplication:
 
         payload = self.store.load_document(split, paper_id)
         blocks = (
-            payload.get("blocks", [])
-            if isinstance(payload, dict)
-            else payload or []
+            payload.get("blocks", []) if isinstance(payload, dict) else payload or []
         )
         block = next(
             (
                 candidate
                 for candidate in blocks
-                if isinstance(candidate, dict)
-                and candidate.get("block_id") == block_id
+                if isinstance(candidate, dict) and candidate.get("block_id") == block_id
             ),
             None,
         )
@@ -975,9 +973,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 if isinstance(raw_name, str) and raw_name:
                     payload = part.get_payload(decode=True)
                     value = payload if isinstance(payload, bytes) else b""
-                    result[raw_name] = (
-                        value if part.get_filename() else value.decode()
-                    )
+                    result[raw_name] = value if part.get_filename() else value.decode()
             return result
 
         def current_user(self, require_admin: bool = False) -> dict[str, str]:

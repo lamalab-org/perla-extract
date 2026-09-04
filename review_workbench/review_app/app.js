@@ -700,10 +700,14 @@ function renderFigureCensusSummary() {
   const legacy = !panels.length && !state.censusDraft.main_text_figure_census.panels?.length
     && (totals.figures_reviewed || totals.schema_relevant_figures || totals.figure_only_records || totals.figure_only_atomic_values);
   const proposal = state.figureCensusProposals[state.paperId];
+  const unresolvedCaptions = proposal?.captions_without_region?.length || 0;
   const proposalPrefix = !hasAudit() && proposal
     ? `${proposal.proposal_method === "caption_and_figure" ? "Figure-and-caption" : "Caption"}-derived draft—check every entry against the rendered figure. `
     : "";
-  $("figure-census-summary").textContent = proposalPrefix + (legacy
+  const localizationWarning = unresolvedCaptions
+    ? `${unresolvedCaptions} numbered figure caption${unresolvedCaptions === 1 ? " has" : "s have"} no automatic image match; add ${unresolvedCaptions === 1 ? "it" : "them"} manually. `
+    : "";
+  $("figure-census-summary").textContent = proposalPrefix + localizationWarning + (legacy
     ? `Earlier aggregate census: ${totals.figures_reviewed || 0} figures · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only records · ${totals.figure_only_atomic_values || 0} figure-only values. Add subfigures to replace it.`
     : `${panels.length} subfigure${panels.length === 1 ? "" : "s"} · ${totals.figures_reviewed || 0} main figure${totals.figures_reviewed === 1 ? "" : "s"} · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only record${totals.figure_only_records === 1 ? "" : "s"} · ${totals.figure_only_atomic_values || 0} figure-only value${totals.figure_only_atomic_values === 1 ? "" : "s"}`);
 }
@@ -738,6 +742,10 @@ function renderFigurePanels() {
           figurePanelField("Figure-only records", "figure_only_records", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_records } })),
           figurePanelField("Figure-only atomic values", "figure_only_atomic_values", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_atomic_values } })),
         ]),
+        ...(panel.page ? [element("button", { properties: { type: "button" }, text: "Show figure in paper", events: { click: () => {
+          setWorkspaceView("split");
+          navigatePdf("main", panel.page);
+        } } })] : []),
         element("button", { className: "danger-link", properties: { type: "button" }, text: "Remove subfigure", events: { click: () => {
           updateCensusDraft();
           state.censusDraft.main_text_figure_census.panels.splice(index, 1);
@@ -1168,9 +1176,12 @@ function clearCitation() {
 
 async function navigatePdf(source, page) {
   clearCitation();
+  const sourceChanged = source !== state.source;
   state.source = source;
   const requestedPage = Number(page);
-  state.page = Number.isFinite(requestedPage) ? Math.max(1, Math.min(state.pageCount, requestedPage)) : 1;
+  state.page = Number.isFinite(requestedPage)
+    ? Math.max(1, sourceChanged ? requestedPage : Math.min(state.pageCount, requestedPage))
+    : 1;
   $("pdf-source").value = state.source;
   try {
     if (await renderPdf()) setStatus(`Showing ${state.source === "main" ? "the main paper" : "the supplement"}, page ${state.page}.`);

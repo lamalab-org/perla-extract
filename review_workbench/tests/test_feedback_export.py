@@ -69,6 +69,7 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
                     "data": workbook,
                 }
             ],
+            {"format_version": 1, "papers": {}},
         )
     )
     with ZipFile(archive_path) as archive:
@@ -77,6 +78,7 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
             "feedback.json",
             "review_events.csv",
             "figure_panels.csv",
+            "figure_census_proposals.json",
             "comparison_reviews.csv",
             (
                 "uploaded_workbooks/dev/10.0000--example/"
@@ -91,6 +93,7 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
             == workbook
         )
         snapshot = json.loads(archive.read("feedback.json"))
+        proposals = json.loads(archive.read("figure_census_proposals.json"))
         rows = list(
             csv.DictReader(
                 StringIO(archive.read("review_events.csv").decode("utf-8-sig"))
@@ -107,6 +110,8 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
             )
         )
 
+    assert proposals == {"format_version": 1, "papers": {}}
+    assert snapshot["figure_census_proposals"] == proposals
     assert snapshot["counts"] == {
         "comparison_batches": 0,
         "comparison_responses": 0,

@@ -123,7 +123,11 @@ def main(
                     max_cost_usd=max_cost_usd,
                     client=client,
                 )
-                artifact["papers"][paper_id] = result["review_proposal"]
+                proposal = result["review_proposal"]
+                proposal["captions_without_region"] = manifest.captions_without_region
+                proposal["pdf_sha256"] = manifest.pdf_sha256
+                proposal["document_sha256"] = manifest.document_sha256
+                artifact["papers"][paper_id] = proposal
         except Exception as exc:  # keep completed papers recoverable in a long batch
             logger.error("Figure census failed for {}: {}", paper_id, exc)
             artifact["failures"][paper_id] = str(exc)

@@ -49,6 +49,31 @@ def test_caption_blocks_selects_only_numbered_main_text_captions(tmp_path):
     ]
 
 
+def test_caption_blocks_excludes_docling_body_sentences(tmp_path):
+    document = {
+        "blocks": [
+            {
+                "block_id": "body",
+                "source": "main",
+                "page": 2,
+                "text": "Figure 7 shows the trend discussed below.",
+                "metadata": {"docling_label": "text"},
+            },
+            {
+                "block_id": "caption",
+                "source": "main",
+                "page": 2,
+                "text": "Figure 7. Device stability.",
+                "metadata": {"docling_label": "caption"},
+            },
+        ]
+    }
+    path = tmp_path / "document.json"
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+    assert [item["caption_block_id"] for item in caption_blocks(path)] == ["caption"]
+
+
 def test_classifier_batch_validation_rejects_missing_caption():
     panel = CaptionPanelProposal(
         caption_block_id="main-1",
