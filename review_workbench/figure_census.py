@@ -206,6 +206,8 @@ def classify_captions(
     batch_size: int,
     cache_dir: Path,
     reasoning_effort: str | None,
+    max_model_calls: int,
+    max_cost_usd: float,
 ) -> dict[str, Any]:
     """Classify caption batches and write a static, review-only proposal artifact."""
 
@@ -220,7 +222,13 @@ def classify_captions(
         )
 
     run_dir = output.parent / ".figure-census-requests"
-    client = ModelClient(cache_dir=cache_dir, output_dir=run_dir, temperature=0)
+    client = ModelClient(
+        cache_dir=cache_dir,
+        output_dir=run_dir,
+        temperature=0,
+        max_model_calls=max_model_calls,
+        max_cost_usd=max_cost_usd,
+    )
     proposals: dict[str, object] = {}
     for start in range(0, len(papers), batch_size):
         batch = papers[start : start + batch_size]
@@ -311,6 +319,10 @@ def classify_captions(
     "--cache-dir", type=click.Path(path_type=Path), default=".perla-cache/models"
 )
 @click.option("--reasoning-effort", default=None)
+@click.option("--max-model-calls", type=click.IntRange(min=1), default=12)
+@click.option(
+    "--max-cost-usd", type=click.FloatRange(min=0, min_open=True), default=2.0
+)
 def main(
     documents_dir: Path,
     output: Path,
@@ -318,6 +330,8 @@ def main(
     batch_size: int,
     cache_dir: Path,
     reasoning_effort: str | None,
+    max_model_calls: int,
+    max_cost_usd: float,
 ) -> None:
     """Populate caption-grounded figure-panel proposals for the review app."""
 
@@ -328,6 +342,8 @@ def main(
         batch_size=batch_size,
         cache_dir=cache_dir,
         reasoning_effort=reasoning_effort,
+        max_model_calls=max_model_calls,
+        max_cost_usd=max_cost_usd,
     )
     click.echo(f"Wrote proposals for {len(artifact['papers'])} papers to {output}")
 

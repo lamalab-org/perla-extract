@@ -342,7 +342,8 @@ Caption-grounded drafts can be generated without sending figures to a vision mod
 python review_workbench/figure_census.py \
   --documents-dir results/review-v1 \
   --output review_workbench/review_app/figure-census-proposals.json \
-  --model openrouter/openai/gpt-5.6-sol:exacto
+  --model openrouter/openai/gpt-5.6-sol:exacto \
+  --max-cost-usd 2
 ```
 
 The command sends only main-text caption blocks, uses schema-constrained output, caches
