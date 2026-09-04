@@ -120,13 +120,16 @@ def validate_study(
                 raw_assembled = evidence_ok and assembled_from_quotes(
                     value["raw_value"], value["evidence"]
                 )
-                unit_context = [
-                    {"quote": block.text}
+                unit_sources = [
+                    block.text
                     for reference in value["evidence"]
                     if (block := block_by_id.get(reference.get("block_id"))) is not None
                 ]
                 raw_shared_unit = evidence_ok and assembled_with_shared_unit(
-                    value["raw_value"], value.get("unit"), unit_context
+                    value["raw_value"],
+                    value.get("unit"),
+                    value["evidence"],
+                    unit_sources,
                 )
                 raw_ok = raw_direct or raw_assembled or raw_shared_unit
                 if not raw_ok:

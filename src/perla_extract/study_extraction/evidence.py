@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections.abc import Sequence
 from copy import deepcopy
 from difflib import SequenceMatcher
 from typing import Any
@@ -106,16 +107,20 @@ def assembled_from_quotes(raw_value: object, references: list[dict]) -> bool:
 
 
 def assembled_with_shared_unit(
-    raw_value: object, unit: object, references: list[dict]
+    raw_value: object,
+    unit: object,
+    references: list[dict],
+    unit_sources: Sequence[object] | None = None,
 ) -> bool:
     """Recognize a source value whose unit is printed once for a coordinated list.
 
     Tables and prose commonly write ``0.2 and 0.1 Å s-1``. Representing either scalar
     as ``raw_value='0.2 Å s-1'`` is source-preserving, although that exact concatenated
     string is absent. This check is vocabulary-free: the declared unit must be the
-    exact normalized suffix of the raw value, and one citation must independently
-    contain both the remaining value text and that unit. It verifies textual support,
-    not whether the source grammar assigns the unit to the value.
+    exact normalized suffix of the raw value. The remaining value text must occur in
+    its exact citation, while the unit may occur in a corresponding wider source such
+    as the same table block. It verifies textual support, not whether the source
+    grammar assigns the unit to the value.
     """
 
     raw = normalized_source_text(raw_value)
@@ -130,10 +135,12 @@ def assembled_with_shared_unit(
     value_query = value_text
     if literal_raw.casefold().endswith(literal_unit.casefold()):
         value_query = literal_raw[: -len(literal_unit)].strip()
+    contexts = unit_sources or [reference.get("quote") for reference in references]
     return any(
         source_contains_text(reference.get("quote"), value_query)
-        and source_contains_text(reference.get("quote"), unit)
-        for reference in references
+        and index < len(contexts)
+        and source_contains_text(contexts[index], unit)
+        for index, reference in enumerate(references)
     )
 
 
