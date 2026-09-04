@@ -179,6 +179,7 @@ class FigurePanelCensus(BaseModel):
     figure_number: str = Field(min_length=1, max_length=40)
     panel_label: str = Field(default="", max_length=20)
     page: int | None = Field(default=None, ge=1)
+    caption_block_id: str | None = Field(default=None, min_length=1, max_length=300)
     figure_class: FigureClass
     description: str = Field(min_length=1, max_length=2000)
     x_axis_label: str | None = Field(default=None, max_length=300)
@@ -211,6 +212,9 @@ class FigurePanelCensus(BaseModel):
         self.description = self.description.strip()
         self.x_axis_label = self.x_axis_label.strip() if self.x_axis_label else None
         self.y_axis_label = self.y_axis_label.strip() if self.y_axis_label else None
+        self.caption_block_id = (
+            self.caption_block_id.strip() if self.caption_block_id else None
+        )
         if not self.figure_number:
             raise ValueError("figure number must not be blank")
         if not self.description:

@@ -112,6 +112,8 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
     assert "inset_table" in javascript
     assert "requires_digitization" in javascript
     assert "figureCensusTotals" in javascript
+    assert 'fetch("/figure-census-proposals.json"' in javascript
+    assert "Caption-derived draft—check every entry" in javascript
     assert "main_text_figure_census" in javascript
     assert "review_scope_sources: state.bundle.sources" in javascript
     assert "Earlier aggregate census" in javascript

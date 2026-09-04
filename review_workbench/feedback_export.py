@@ -427,6 +427,7 @@ this archival feature was deployed are not recoverable as files.
             "figure_number",
             "panel_label",
             "page",
+            "caption_block_id",
             "figure_class",
             "description",
             "x_axis_label",

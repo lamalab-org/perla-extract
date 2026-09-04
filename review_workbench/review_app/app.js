@@ -106,7 +106,7 @@ const state = {
   queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
   studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
   pdfObjectUrl: null, pdfDisplayed: null, censusDraft: null, editingCensus: false, loadingPaperId: null,
-  annotationView: "current", authMode: "local", clerk: null,
+  annotationView: "current", authMode: "local", clerk: null, figureCensusProposals: {},
 };
 
 const LAPTOP_LAYOUT = "(max-width: 1400px)";
@@ -408,6 +408,17 @@ function savePaperCache() {
   catch (error) { console.warn("Could not cache the paper list", error); }
 }
 
+async function loadFigureCensusProposals() {
+  try {
+    const response = await fetch("/figure-census-proposals.json", { cache: "no-cache" });
+    if (!response.ok) return;
+    const payload = await response.json();
+    state.figureCensusProposals = payload.papers || {};
+  } catch {
+    state.figureCensusProposals = {};
+  }
+}
+
 async function loadPapers() {
   const status = $("paper-load-status");
   if (!state.paperId) setPaperListOpen(true, false);
@@ -583,20 +594,28 @@ function renderQualityArtifacts() {
 
 function savedCensusDraft() {
   const audit = state.bundle?.summary.inventory_audits?.[state.user.id];
+  const proposal = state.figureCensusProposals[state.paperId];
   return audit ? {
     expected_counts: structuredClone(audit.expected_counts || {}),
     main_text_figure_census: structuredClone(audit.main_text_figure_census || {}),
     missing_or_ambiguous: audit.missing_or_ambiguous || "",
   } : {
     expected_counts: {},
-    main_text_figure_census: {},
+    main_text_figure_census: proposal ? {
+      figures_reviewed: 0,
+      schema_relevant_figures: 0,
+      figure_only_records: 0,
+      figure_only_atomic_values: 0,
+      panels: structuredClone(proposal.panels || []),
+      notes: "",
+    } : {},
     missing_or_ambiguous: "",
   };
 }
 
 function emptyFigurePanel() {
   return {
-    figure_number: "", panel_label: "", page: state.source === "main" ? state.page : null, figure_class: "other",
+    figure_number: "", panel_label: "", page: state.source === "main" ? state.page : null, caption_block_id: null, figure_class: "other",
     description: "", x_axis_label: null, y_axis_label: null,
     data_presentation: "uncertain", extraction_feasibility: "uncertain",
     schema_relevant: false, figure_only_records: 0, figure_only_atomic_values: 0,
@@ -622,6 +641,7 @@ function readFigurePanels() {
       figure_number: value("figure_number").value.trim(),
       panel_label: value("panel_label").value.trim(),
       page: value("page").value ? Number(value("page").value) : null,
+      caption_block_id: card.dataset.captionBlockId || null,
       figure_class: value("figure_class").value,
       description: value("description").value.trim(),
       x_axis_label: optionalText("x_axis_label"),
@@ -652,9 +672,12 @@ function renderFigureCensusSummary() {
   const totals = panels.length ? figureCensusTotals(panels) : state.censusDraft.main_text_figure_census;
   const legacy = !panels.length && !state.censusDraft.main_text_figure_census.panels?.length
     && (totals.figures_reviewed || totals.schema_relevant_figures || totals.figure_only_records || totals.figure_only_atomic_values);
-  $("figure-census-summary").textContent = legacy
+  const proposalPrefix = !hasAudit() && state.figureCensusProposals[state.paperId]
+    ? "Caption-derived draft—check every entry against the rendered figure. "
+    : "";
+  $("figure-census-summary").textContent = proposalPrefix + (legacy
     ? `Earlier aggregate census: ${totals.figures_reviewed || 0} figures · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only records · ${totals.figure_only_atomic_values || 0} figure-only values. Add subfigures to replace it.`
-    : `${panels.length} subfigure${panels.length === 1 ? "" : "s"} · ${totals.figures_reviewed || 0} main figure${totals.figures_reviewed === 1 ? "" : "s"} · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only record${totals.figure_only_records === 1 ? "" : "s"} · ${totals.figure_only_atomic_values || 0} figure-only value${totals.figure_only_atomic_values === 1 ? "" : "s"}`;
+    : `${panels.length} subfigure${panels.length === 1 ? "" : "s"} · ${totals.figures_reviewed || 0} main figure${totals.figures_reviewed === 1 ? "" : "s"} · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only record${totals.figure_only_records === 1 ? "" : "s"} · ${totals.figure_only_atomic_values || 0} figure-only value${totals.figure_only_atomic_values === 1 ? "" : "s"}`);
 }
 
 function renderFigurePanels() {
@@ -664,7 +687,7 @@ function renderFigurePanels() {
       properties: { type: "checkbox", checked: panel.schema_relevant },
       dataset: { figureField: "schema_relevant" },
     });
-    const card = element("details", { className: "figure-panel-card", properties: { open: true }, dataset: { figurePanel: String(index) } }, [
+    const card = element("details", { className: "figure-panel-card", properties: { open: true }, dataset: { figurePanel: String(index), captionBlockId: panel.caption_block_id || "" } }, [
       element("summary", { text: `${panel.figure_number ? `Figure ${panel.figure_number}` : "New subfigure"}${panel.panel_label ? panel.panel_label : ""} · ${FIGURE_CLASSES[panel.figure_class]}` }),
       element("div", { className: "figure-panel-fields" }, [
         element("div", { className: "figure-panel-grid compact" }, [
@@ -2456,6 +2479,7 @@ async function startApp() {
   $("empty-message").textContent = "Signing you in and fetching the paper list.";
   try {
     if (!state.user) await loadSession();
+    await loadFigureCensusProposals();
     await loadPapers();
     $("empty-title").textContent = "Choose a paper";
     $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures.";

@@ -336,6 +336,22 @@ in review history but are not the current annotation workflow. The administrator
 feedback download includes `figure_panels.csv` and a JSON summary grouped by class,
 numeric presentation, and extraction effort.
 
+Caption-grounded drafts can be generated without sending figures to a vision model:
+
+```bash
+python review_workbench/figure_census.py \
+  --documents-dir results/review-v1 \
+  --output review_workbench/review_app/figure-census-proposals.json \
+  --model openrouter/openai/gpt-5.6-sol:exacto
+```
+
+The command sends only main-text caption blocks, uses schema-constrained output, caches
+validated responses, and rejects missing or invented caption identifiers. These rows
+are suggestions rather than review events. The app pre-fills them only for a reviewer
+who has no saved census, labels them as caption-derived, and persists them only after
+the reviewer checks and saves the form. Because captions often omit axes and inset
+contents, the generator must return uncertainty rather than infer what is visible.
+
 After adjudication, calculate:
 
 - record loss as `figure_only_records / (final_records + figure_only_records)`; and
