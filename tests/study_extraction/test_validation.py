@@ -21,7 +21,10 @@ from perla_extract.study_extraction.models import (
     StabilityTest,
     StudyExtraction,
 )
-from perla_extract.study_extraction.validation import validate_study
+from perla_extract.study_extraction.validation import (
+    validate_study,
+    validate_study_details,
+)
 
 
 def test_schema_rejects_inconsistent_champion_semantics():
@@ -1003,3 +1006,17 @@ def test_material_form_raw_is_checked_against_layer_evidence():
     assert result["counts"]["issues_by_reason"] == {
         "material_form_raw not found in cited evidence": 1
     }
+    assert result["issues"] == [
+        {
+            "path": "$.device_families[0].layers[0].material_form_raw",
+            "reason": "material_form_raw not found in cited evidence",
+        }
+    ]
+    details = validate_study_details(extraction, [source])
+    assert details.issues[0].location == (
+        "device_families",
+        0,
+        "layers",
+        0,
+        "material_form_raw",
+    )

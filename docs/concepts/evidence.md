@@ -87,6 +87,10 @@ After extraction, `validate_study` checks:
 Pydantic additionally rejects non-finite normalized numbers, contradictory champion
 fields, and a stability `link_status` whose required identifiers are absent.
 
+Validation findings carry structured field/index locations internally. JSON paths are
+rendered only in public artifacts, so repair and finalization logic does not depend on
+parsing display strings.
+
 ```mermaid
 flowchart LR
     A["Model candidate"] --> B["Pydantic structure"]

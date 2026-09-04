@@ -2,48 +2,28 @@
 
 from __future__ import annotations
 
-import re
 from collections import Counter
 from copy import deepcopy
 from typing import Any
 
 from .models import EvidenceBlock, StudyExtraction
-from .validation import validate_study
+from .validation import Location, validate_study_details
 
 _REMOVABLE_REASONS = {
     "raw_value not found in cited evidence",
     "material_form_raw not found in cited evidence",
 }
-_PATH_PART = re.compile(r"\.([A-Za-z_][A-Za-z0-9_]*)|\[(\d+)\]")
 
 
-def _path_parts(path: str) -> list[str | int]:
-    """Parse validator-owned JSON paths used to locate one unsupported claim."""
-
-    if path == "$":
-        return []
-    parts: list[str | int] = []
-    position = 1
-    for match in _PATH_PART.finditer(path, position):
-        if match.start() != position:
-            raise ValueError(f"unsupported validation path: {path}")
-        parts.append(match.group(1) or int(match.group(2)))
-        position = match.end()
-    if position != len(path):
-        raise ValueError(f"unsupported validation path: {path}")
-    return parts
-
-
-def _remove_claim(data: dict[str, Any], path: str) -> object:
+def _remove_claim(data: dict[str, Any], location: Location) -> object:
     """Remove one optional atomic claim while preserving its value for the audit."""
 
-    parts = _path_parts(path)
-    if not parts:
+    if not location:
         raise ValueError("the extraction root is not an optional claim")
     parent: Any = data
-    for part in parts[:-1]:
+    for part in location[:-1]:
         parent = parent[part]
-    key = parts[-1]
+    key = location[-1]
     removed = deepcopy(parent[key])
 
     if key == "material_form_raw" and isinstance(parent, dict):
@@ -80,21 +60,21 @@ def remove_unsupported_optional_claims(
     current = extraction
     removals: list[dict[str, object]] = []
     while True:
-        before = validate_study(current, blocks)
-        before_counts = Counter(issue["reason"] for issue in before["issues"])
+        before = validate_study_details(current, blocks)
+        before_counts = Counter(issue.reason for issue in before.issues)
         accepted = False
-        for issue in before["issues"]:
-            if issue["reason"] not in _REMOVABLE_REASONS:
+        for issue in before.issues:
+            if issue.reason not in _REMOVABLE_REASONS:
                 continue
             candidate_data = deepcopy(current.model_dump(mode="json"))
             try:
-                removed = _remove_claim(candidate_data, issue["path"])
+                removed = _remove_claim(candidate_data, issue.location)
                 candidate = StudyExtraction.model_validate(candidate_data)
             except (KeyError, IndexError, TypeError, ValueError):
                 continue
-            after = validate_study(candidate, blocks)
-            after_counts = Counter(item["reason"] for item in after["issues"])
-            if len(after["issues"]) >= len(before["issues"]):
+            after = validate_study_details(candidate, blocks)
+            after_counts = Counter(item.reason for item in after.issues)
+            if len(after.issues) >= len(before.issues):
                 continue
             if any(
                 after_counts[reason] > count for reason, count in before_counts.items()
@@ -104,8 +84,8 @@ def remove_unsupported_optional_claims(
                 continue
             removals.append(
                 {
-                    "path": issue["path"],
-                    "reason": issue["reason"],
+                    "path": issue.path,
+                    "reason": issue.reason,
                     "removed": removed,
                 }
             )
@@ -113,10 +93,10 @@ def remove_unsupported_optional_claims(
             accepted = True
             break
         if not accepted:
-            final = validate_study(current, blocks)
+            final = validate_study_details(current, blocks)
             return current, {
                 "removal_count": len(removals),
                 "removals": removals,
-                "remaining_issue_count": len(final["issues"]),
-                "remaining_issues": final["issues"],
+                "remaining_issue_count": len(final.issues),
+                "remaining_issues": [issue.as_dict() for issue in final.issues],
             }
