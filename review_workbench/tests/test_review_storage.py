@@ -216,6 +216,34 @@ def test_blob_revision_paths_are_compare_and_swap_commits():
     assert len(blob.objects) == 2
 
 
+def test_blob_evidence_versions_are_immutable_and_seed_version_remains_available():
+    blob = MemoryBlobStore()
+    storage = BlobReviewStateStorage(blob)  # type: ignore[arg-type]
+    storage.create(
+        "dev",
+        "10.0000--example",
+        ReviewPaperSource(
+            seed_extraction={"note": "seed"},
+            manifest={},
+            document={"blocks": [{"block_id": "original"}]},
+            initial_revision=revision(1, "seed"),
+        ),
+    )
+
+    storage.create_evidence(
+        "dev", "10.0000--example", 2, {"blocks": [{"block_id": "reparsed"}]}
+    )
+
+    assert storage.load_evidence("dev", "10.0000--example", 1) == {
+        "blocks": [{"block_id": "original"}]
+    }
+    assert storage.load_evidence("dev", "10.0000--example", 2) == {
+        "blocks": [{"block_id": "reparsed"}]
+    }
+    with pytest.raises(FileExistsError):
+        storage.create_evidence("dev", "10.0000--example", 2, {"blocks": []})
+
+
 def test_blob_paper_heads_do_not_download_full_studies():
     blob = MemoryBlobStore()
     storage = BlobReviewStateStorage(blob)  # type: ignore[arg-type]

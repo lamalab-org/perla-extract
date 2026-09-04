@@ -704,10 +704,13 @@ class StudyReviewStore:
         return self.storage.load_revision(split, paper_id).ground_truth
 
     def load_document(self, split: str, paper_id: str) -> Any:
-        """Return the immutable evidence document captured with the model seed."""
+        """Return the evidence document bound to the active ground-truth revision."""
 
         self.validate_identity(split, paper_id)
-        return self.storage.load_source(split, paper_id).document
+        revision = self.storage.load_revision(split, paper_id)
+        return self.storage.load_evidence(
+            split, paper_id, revision.evidence_version
+        )
 
     def _materialize(
         self,
@@ -725,8 +728,15 @@ class StudyReviewStore:
         write_json_atomic(self.seed_path(split, paper_id), source.seed_extraction)
         write_json_atomic(self.truth_path(split, paper_id), revision.ground_truth)
         write_json_atomic(self.events_path(split, paper_id), revision.events)
-        if source.document is not None:
-            write_json_atomic(self.document_path(split, paper_id), source.document)
+        document = (
+            source.document
+            if revision.evidence_version == 1
+            else self.storage.load_evidence(
+                split, paper_id, revision.evidence_version
+            )
+        )
+        if document is not None:
+            write_json_atomic(self.document_path(split, paper_id), document)
         write_json_atomic(self.manifest_path(split, paper_id), source.manifest)
 
     def _commit(
@@ -736,11 +746,14 @@ class StudyReviewStore:
         current: ReviewRevision,
         truth: dict[str, Any],
         event: dict[str, Any],
+        *,
+        evidence_version: int | None = None,
     ) -> dict[str, Any]:
         """Atomically commit truth and audit event as the next paper revision."""
 
         revision = ReviewRevision(
             revision=current.revision + 1,
+            evidence_version=evidence_version or current.evidence_version,
             ground_truth=truth,
             events=[*current.events, event],
         )
@@ -1076,6 +1089,7 @@ class StudyReviewStore:
         reviewer_id: str,
         reason: str,
         provenance: dict[str, Any] | None = None,
+        document: object | None = None,
     ) -> dict[str, Any]:
         """Make a newer validated extraction the active review draft.
 
@@ -1096,11 +1110,16 @@ class StudyReviewStore:
         ):
             extraction = extraction["extraction"]
         truth = StudyExtraction.model_validate(extraction).model_dump(mode="json")
-        if truth == current.ground_truth:
+        current_document = self.load_document(split, paper_id)
+        replacement_document = document if document is not None else current_document
+        if truth == current.ground_truth and replacement_document == current_document:
             raise ValueError("replacement is identical to the active ground truth")
 
-        document = self.load_document(split, paper_id)
-        raw_blocks = document.get("blocks") if isinstance(document, dict) else document
+        raw_blocks = (
+            replacement_document.get("blocks")
+            if isinstance(replacement_document, dict)
+            else replacement_document
+        )
         if isinstance(raw_blocks, list):
             blocks = [EvidenceBlock.model_validate(block) for block in raw_blocks]
             validation = validate_study(StudyExtraction.model_validate(truth), blocks)
@@ -1108,6 +1127,13 @@ class StudyReviewStore:
                 raise ValueError(
                     "replacement has unresolved evidence-validation issues"
                 )
+
+        evidence_version = current.evidence_version
+        if replacement_document != current_document:
+            evidence_version = current.revision + 1
+            self.storage.create_evidence(
+                split, paper_id, evidence_version, replacement_document
+            )
 
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
@@ -1125,10 +1151,20 @@ class StudyReviewStore:
                 "replacement_record_counts": {
                     key: len(truth[key]) for key in RECORD_IDENTIFIERS
                 },
+                "previous_evidence_version": current.evidence_version,
+                "replacement_evidence_version": evidence_version,
+                "replacement_evidence_sha256": _digest(replacement_document),
                 "provenance": copy.deepcopy(provenance or {}),
             },
         ).model_dump(mode="json")
-        return self._commit(split, paper_id, current, truth, event)
+        return self._commit(
+            split,
+            paper_id,
+            current,
+            truth,
+            event,
+            evidence_version=evidence_version,
+        )
 
     def _validate_revision(
         self, split: str, paper_id: str, base_revision: int

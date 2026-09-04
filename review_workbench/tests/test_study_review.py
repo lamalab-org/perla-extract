@@ -92,6 +92,37 @@ def test_ground_truth_refresh_rejects_evidence_from_another_document(
         )
 
 
+def test_ground_truth_refresh_versions_a_matching_reparsed_document(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    seed(store, empty_study, document_payload)
+    replacement = study_with_family(empty_study)
+    replacement["device_families"][0]["evidence"][0]["block_id"] = "reparsed-p1"
+    reparsed = copy.deepcopy(document_payload)
+    reparsed["blocks"][0]["block_id"] = "reparsed-p1"
+
+    refreshed = store.refresh_ground_truth(
+        "calibration",
+        "10.0000--example",
+        replacement,
+        document=reparsed,
+        base_revision=1,
+        reviewer_id="admin@example.org",
+        reason="Promote a new extraction and its parser document together.",
+    )
+
+    assert refreshed["revision"] == 2
+    assert store.storage.load_revision(
+        "calibration", "10.0000--example"
+    ).evidence_version == 2
+    assert store.load_document("calibration", "10.0000--example") == reparsed
+    assert store.storage.load_source(
+        "calibration", "10.0000--example"
+    ).document == document_payload
+    assert refreshed["events"][-1]["details"]["replacement_evidence_version"] == 2
+
+
 def study_with_family(empty_study):
     study = copy.deepcopy(empty_study)
     study["device_families"] = [

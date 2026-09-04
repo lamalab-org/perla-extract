@@ -261,10 +261,11 @@ The command writes an atomic, immutable directory under
 | `ground_truth.json` | Final rich `StudyExtraction` records and evidence citations |
 | `seed_extraction.json` | Original model result, kept separate for error analysis |
 | `review_events.json` | Complete corrections, decisions, stage gates, and adjudication history |
-| `manifest.json` | Schema and source provenance, frozen revision, validation counts, reviewers, and content hashes |
+| `manifest.json` | Schema and source provenance, frozen revision, evidence-document version and hash, validation counts, reviewers, and content hashes |
 
-The exporter requires `document.json` internally so it can resolve citations, but does
-not commit the parser document or copyrighted PDFs. It refuses export unless the latest
+The exporter uses the exact evidence-document version bound to the frozen revision so
+regenerated citations are never checked against an older parse. It does not commit the
+parser document or copyrighted PDFs. It refuses export unless the latest
 event is adjudication, every current record has an adjudicator decision, the complete
 Pydantic schema is valid, and deterministic evidence validation reports no issue.
 Repeated export of identical content is a no-op; a differing existing item is never

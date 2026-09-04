@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -20,6 +21,7 @@ class ReviewRevision(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     revision: int = Field(ge=1)
+    evidence_version: int = Field(default=1, ge=1)
     ground_truth: dict[str, Any]
     events: list[dict[str, Any]]
 
@@ -63,6 +65,12 @@ class ReviewStateStorage(Protocol):
 
     def load_revision(self, split: str, paper_id: str) -> ReviewRevision: ...
 
+    def create_evidence(
+        self, split: str, paper_id: str, version: int, document: Any
+    ) -> None: ...
+
+    def load_evidence(self, split: str, paper_id: str, version: int) -> Any: ...
+
     def compare_and_swap(
         self,
         split: str,
@@ -91,6 +99,9 @@ class LocalReviewStateStorage:
     def _revision_path(self, split: str, paper_id: str, revision: int) -> Path:
         return self._revision_dir(split, paper_id) / f"{revision:08d}.json"
 
+    def _evidence_path(self, split: str, paper_id: str, version: int) -> Path:
+        return self.root / "evidence" / split / paper_id / f"{version:08d}.json"
+
     @staticmethod
     def _read(path: Path, model: type[BaseModel]) -> Any:
         if not path.exists():
@@ -114,6 +125,23 @@ class LocalReviewStateStorage:
         if not paths:
             return source.initial_revision
         return self._read(paths[-1], ReviewRevision)
+
+    def create_evidence(
+        self, split: str, paper_id: str, version: int, document: Any
+    ) -> None:
+        """Store a parsed document once before a revision starts referring to it."""
+
+        write_json_exclusive(self._evidence_path(split, paper_id, version), document)
+
+    def load_evidence(self, split: str, paper_id: str, version: int) -> Any:
+        """Resolve version one from the seed and later versions from immutable files."""
+
+        if version == 1:
+            return self.load_source(split, paper_id).document
+        path = self._evidence_path(split, paper_id, version)
+        if not path.exists():
+            raise FileNotFoundError(path)
+        return json.loads(path.read_text(encoding="utf-8"))
 
     def list_paper_heads(self, split: str) -> list[tuple[str, int]]:
         """Return lightweight revision pointers for paper-list views."""

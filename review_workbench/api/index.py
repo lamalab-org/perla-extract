@@ -151,6 +151,7 @@ class BlobReviewStateStorage:
 
     source_prefix = "workbench/review-sources/"
     revision_prefix = "workbench/review-revisions/"
+    evidence_prefix = "workbench/review-evidence/"
 
     def __init__(self, blob: BlobStore):
         self.blob = blob
@@ -163,6 +164,9 @@ class BlobReviewStateStorage:
 
     def _revision_path(self, split: str, paper_id: str, revision: int) -> str:
         return f"{self._revision_prefix(split, paper_id)}{revision:08d}.json"
+
+    def _evidence_path(self, split: str, paper_id: str, version: int) -> str:
+        return f"{self.evidence_prefix}{split}/{paper_id}/{version:08d}.json"
 
     @staticmethod
     def _body(value: Any) -> bytes:
@@ -206,6 +210,24 @@ class BlobReviewStateStorage:
             latest = max(revisions, key=lambda item: str(item.get("pathname", "")))
             return ReviewRevision.model_validate_json(self.blob.download(latest))
         return self.load_source(split, paper_id).initial_revision
+
+    def create_evidence(
+        self, split: str, paper_id: str, version: int, document: Any
+    ) -> None:
+        """Store a parsed document immutably before a revision can reference it."""
+
+        self._put_exclusive(self._evidence_path(split, paper_id, version), document)
+
+    def load_evidence(self, split: str, paper_id: str, version: int) -> Any:
+        """Load the seed document or an immutable document added by a refresh."""
+
+        if version == 1:
+            return self.load_source(split, paper_id).document
+        pathname = self._evidence_path(split, paper_id, version)
+        item = self.blob.find(pathname)
+        if item is None:
+            raise FileNotFoundError(pathname)
+        return json.loads(self.blob.download(item))
 
     def compare_and_swap(
         self,

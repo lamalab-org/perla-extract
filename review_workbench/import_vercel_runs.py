@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-"""Import missing validated run directories into the deployed review dataset."""
+"""Import or explicitly refresh validated runs in the deployed review dataset."""
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 from pathlib import Path
+from typing import Any
 
 import click
 from loguru import logger
 
 from perla_extract.study_extraction.cohort import CohortManifest
+from perla_extract.study_extraction.models import StudyExtraction
 from perla_extract.study_extraction.revalidate import revalidate_run
 from review_workbench.import_runs import _admissible, import_run
 
@@ -23,6 +27,60 @@ def _load_env(path: Path) -> None:
             continue
         key, value = line.split("=", 1)
         os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+def _sha256(path: Path) -> str:
+    """Record the exact local artifact promoted by an administrative refresh."""
+
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _refresh_run(
+    application: Any,
+    run_dir: Path,
+    split: str,
+    reviewer_id: str,
+    *,
+    apply: bool = True,
+) -> bool:
+    """Promote a run and its matching parser document as one audited revision."""
+
+    extraction_path = run_dir / "extraction.json"
+    document_path = run_dir / "document.json"
+    extraction_payload = json.loads(extraction_path.read_text(encoding="utf-8"))
+    if isinstance(extraction_payload, dict) and isinstance(
+        extraction_payload.get("extraction"), dict
+    ):
+        extraction_payload = extraction_payload["extraction"]
+    extraction = StudyExtraction.model_validate(extraction_payload)
+    document = json.loads(document_path.read_text(encoding="utf-8"))
+    current = application.store.storage.load_revision(split, run_dir.name)
+    if (
+        extraction.model_dump(mode="json") == current.ground_truth
+        and document == application.store.load_document(split, run_dir.name)
+    ):
+        return False
+    if not apply:
+        return True
+    application.store.refresh_ground_truth(
+        split,
+        run_dir.name,
+        extraction,
+        document=document,
+        base_revision=current.revision,
+        reviewer_id=reviewer_id,
+        reason="Promote a newer validated extraction and its evidence document.",
+        provenance={
+            "batch": run_dir.parent.name,
+            "extraction_sha256": _sha256(extraction_path),
+            "document_sha256": _sha256(document_path),
+            "validation_sha256": _sha256(run_dir / "validation.json"),
+            "run_configuration_sha256": _sha256(
+                run_dir / "run_configuration.json"
+            ),
+        },
+    )
+    return True
 
 
 @click.command(context_settings={"show_default": True})
@@ -53,6 +111,11 @@ def _load_env(path: Path) -> None:
     default="dev",
 )
 @click.option("--reviewer-id", default="seed-import")
+@click.option(
+    "--refresh-existing",
+    is_flag=True,
+    help="Append validated replacements for included papers that already exist.",
+)
 @click.option("--dry-run", is_flag=True)
 def main(
     manifest_path: Path,
@@ -61,9 +124,10 @@ def main(
     env_file: Path,
     split: str,
     reviewer_id: str,
+    refresh_existing: bool,
     dry_run: bool,
 ) -> None:
-    """Add only absent papers and leave every existing seed and revision untouched."""
+    """Add absent papers and optionally append audited replacement revisions."""
 
     _load_env(env_file)
     from review_workbench.api.index import review_application
@@ -85,6 +149,8 @@ def main(
         len(missing),
     )
     imported = 0
+    refreshed = 0
+    unchanged = 0
     failures: list[str] = []
     for run_dir in missing:
         try:
@@ -102,10 +168,29 @@ def main(
         except (OSError, ValueError, click.ClickException) as exc:
             failures.append(f"{run_dir.name}: {exc}")
             logger.error("Cannot import {}: {}", run_dir.name, exc)
+    if refresh_existing:
+        for run_dir in (path for path in run_dirs if path.name in existing):
+            try:
+                revalidate_run(run_dir)
+                _admissible(run_dir)
+                if _refresh_run(
+                    review_application,
+                    run_dir,
+                    split,
+                    reviewer_id,
+                    apply=not dry_run,
+                ):
+                    refreshed += 1
+                else:
+                    unchanged += 1
+            except (OSError, ValueError, click.ClickException) as exc:
+                failures.append(f"{run_dir.name}: {exc}")
+                logger.error("Cannot refresh {}: {}", run_dir.name, exc)
     action = "Would import" if dry_run else "Imported"
+    refresh_action = "would refresh" if dry_run else "refreshed"
     click.echo(
-        f"{action} {imported} missing paper(s); preserved {len(existing)} existing "
-        f"paper(s); {len(failures)} failed admission."
+        f"{action} {imported} missing paper(s); {refresh_action} {refreshed} existing "
+        f"paper(s); {unchanged} already current; {len(failures)} failed admission."
     )
     if failures:
         raise click.ClickException("; ".join(failures))

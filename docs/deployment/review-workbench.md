@@ -76,6 +76,24 @@ This command imports only included manifest papers with absent IDs. Exclusions a
 unrelated run directories are ignored, and it cannot replace an immutable seed or any
 human revision already stored for an existing paper.
 
+After approving a regenerated batch, add `--refresh-existing`. The command still
+refuses incomplete or evidence-invalid runs. For each included existing paper, it
+stores the run's `document.json` as a new immutable evidence version and appends a
+ground-truth revision bound to it; identical papers are no-ops. Run with `--dry-run`
+first to see how many papers would change:
+
+```bash
+python -m review_workbench.import_vercel_runs \
+  --manifest data/study_extraction/cohorts/review-v1.json \
+  --runs-dir results/review-v1 \
+  --pdf-dir /path/to/main-papers \
+  --env-file review_workbench/.vercel-build/.vercel/.env.production.local \
+  --split dev \
+  --reviewer-id administrator@example.org \
+  --refresh-existing \
+  --dry-run
+```
+
 ## Review records efficiently
 
 The Records tab is available before or after the census and presents a device-centered
@@ -146,19 +164,20 @@ hash with the running extractor. Older seeds that remain structurally readable a
 not silently presented as current outputs: the interface warns that newly introduced
 fields still need regeneration or explicit human review.
 
-Before introducing a regenerated dataset, copy the previous production state to a
-versioned private Blob path and verify its digest. Keep the old `papers/` prefix
-read-only; when a regenerated item with the same paper ID uses different PDF bytes,
-also preserve the old PDF below the versioned legacy path. Import the new records into
-a separate split such as `calibration`; do not overwrite the legacy state object or
-reuse an existing rich review item. This keeps historical drafts recoverable while
-preventing reviewers from comparing flat and rich records as equivalent annotations.
+An administrator may replace an active pre-annotation with a regenerated extraction.
+The refresh validates the extraction against the regenerated `document.json`, stores
+that parsed document as a new immutable evidence version, and appends a revision that
+points to it. It never rewrites the seed, an earlier evidence document, or an earlier
+review revision. Changed record digests reopen stale reviewer decisions automatically.
+Use a separate split only when the papers, schema boundary, or review protocol differ;
+a routine extractor improvement belongs in the existing split as an audited refresh.
 
 Review state is committed under `state/`. One immutable source bundle contains the
-seed, evidence document, manifest, and initial revision. Each saved human change writes
-one new revision snapshot containing both the validated truth and complete event
-history. The familiar `seeds/`, `events/`, `documents/`, `manifests/`, and split
-directories are refreshed as derived, inspectable exports.
+seed, initial evidence document, manifest, and initial revision. A regenerated parser
+document is stored once as another immutable evidence version. Each review revision
+records which version supports its citations; later human edits inherit that binding.
+The familiar `seeds/`, `events/`, `documents/`, `manifests/`, and split directories are
+refreshed as derived, inspectable exports of the active revision.
 
 Every authenticated reviewer can open **My edits & undo** from the header. **Current
 work** is the default view: it groups active decisions, census state, completed stages,
