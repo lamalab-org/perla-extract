@@ -110,6 +110,13 @@ def test_ocr_dash_tolerance_never_discards_a_unary_minus():
     assert not source_contains_text("the bias was 0.5 V", "-0.5 V")
 
 
+def test_ocr_font_mapping_can_corrupt_an_explicit_uncertainty_separator():
+    """Accept one non-ASCII font-map glyph only where the query explicitly has ±."""
+
+    assert source_contains_text("area 0.2090 士 0.0004 cm^2", "0.2090 ± 0.0004 cm^2")
+    assert not source_contains_text("area 0.2090 x 0.0004 cm^2", "0.2090 ± 0.0004 cm^2")
+
+
 def test_reported_value_can_be_an_exact_join_of_multiple_verified_quotes():
     """A tandem value may join two exact source values without inventing content."""
 
@@ -212,6 +219,105 @@ def test_reported_value_can_reuse_a_unit_printed_once_for_a_list():
     assert result["status"] == "verified"
     assert result["counts"]["source_verified_values"] == 1
     assert result["counts"]["source_assembled_values"] == 1
+
+
+def test_reported_value_can_reuse_a_unit_from_its_table_header():
+    """A row value remains grounded when its column prints the unit in the header."""
+
+    citation = EvidenceCitation(block_id="table", quote="Fresh | 1.13 | 22.7")
+    family = DeviceFamily(
+        family_id="f",
+        label="device",
+        variant=None,
+        architecture=None,
+        polarity="not_reported",
+        full_stack_raw=None,
+        layers=[],
+        absorber_formula=None,
+        absorber_properties=[
+            ReportedValue(
+                name="open-circuit voltage",
+                raw_value="1.13 V",
+                value_number=1.13,
+                unit="V",
+                evidence=[citation],
+            )
+        ],
+        absorber_constituents=[],
+        processing_steps=[],
+        evidence=[citation],
+    )
+    extraction = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[family],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+    blocks = [
+        EvidenceBlock(
+            block_id="table",
+            source="main",
+            page=1,
+            kind="table",
+            text="Sample | V OC (V) | PCE (%)\nFresh | 1.13 | 22.7",
+        )
+    ]
+
+    result = validate_study(extraction, blocks)
+
+    assert result["status"] == "verified"
+    assert result["counts"]["source_assembled_values"] == 1
+
+
+def test_table_unit_reuse_retains_an_uncertainty_for_ocr_matching():
+    """Do not normalize away ± before checking a corrupted embedded-font glyph."""
+
+    citation = EvidenceCitation(block_id="table", quote="Fresh | 1.13 士 0.01")
+    family = DeviceFamily(
+        family_id="f",
+        label="device",
+        variant=None,
+        architecture=None,
+        polarity="not_reported",
+        full_stack_raw=None,
+        layers=[],
+        absorber_formula=None,
+        absorber_properties=[
+            ReportedValue(
+                name="open-circuit voltage",
+                raw_value="1.13 ± 0.01 V",
+                value_number=1.13,
+                unit="V",
+                evidence=[citation],
+            )
+        ],
+        absorber_constituents=[],
+        processing_steps=[],
+        evidence=[citation],
+    )
+    extraction = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[family],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+    blocks = [
+        EvidenceBlock(
+            block_id="table",
+            source="main",
+            page=1,
+            kind="table",
+            text="Sample | V OC (V)\nFresh | 1.13 士 0.01",
+        )
+    ]
+
+    assert validate_study(extraction, blocks)["status"] == "verified"
 
 
 def test_reported_value_with_one_invalid_citation_is_not_in_grounded_subset():

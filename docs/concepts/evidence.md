@@ -37,6 +37,9 @@ Every scientific record carries one or more `EvidenceCitation` values. A citatio
 supplied block and contains an exact supporting passage. Every `ReportedValue.raw_value`
 must also occur in at least one cited block. A value assembled from multiple exact
 quotes is accepted only when their normalized contents join to the complete raw value.
+When a table prints a unit once in its header, an atomic row value may reuse that unit
+only from the same cited parser block. This establishes source presence; assigning the
+value to the correct column remains a semantic review question.
 Extraction validation and human corrections use the same conservative matcher, so
 Unicode normalization and harmless OCR spacing are accepted consistently at both
 boundaries without allowing text to join across surrounding word characters.
@@ -72,7 +75,8 @@ After extraction, `validate_study` checks:
 1. cited block identifiers exist;
 2. evidence quotes occur in those blocks after conservative Unicode and whitespace
    normalization, including an internal dash omitted by PDF text extraction while
-   preserving unary signs;
+   preserving unary signs, and one corrupt non-ASCII font glyph at an explicitly
+   reported `±` separator;
 3. reported values occur in their cited evidence;
 4. source-reported material-form wording occurs in its cited evidence;
 5. top-level and nested identifiers are unique;

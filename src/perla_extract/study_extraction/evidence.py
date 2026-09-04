@@ -48,6 +48,17 @@ def source_contains_text(source: object, query: object) -> bool:
     if not needle:
         return False
     matches = list(re.finditer(re.escape(needle), haystack))
+    if not matches and "±" in raw_query:
+        # Broken embedded font maps occasionally decode the ± separator as an
+        # unrelated non-ASCII glyph. The query must explicitly contain ±, and the
+        # source may contribute at most one such glyph at that exact position.
+        uncertainty_parts = [
+            re.escape(normalized_source_text(part)) for part in raw_query.split("±")
+        ]
+        if all(uncertainty_parts):
+            matches = list(
+                re.finditer(r"(?:[^\x00-\x7f])?".join(uncertainty_parts), haystack)
+            )
     if not matches and re.search(r"[a-z]", needle):
         # PDF text layers sometimes omit a dash that is visually present, including
         # in ranges (``200–300 nm``) and compact labels (``I–V``). Only dashes with
@@ -114,8 +125,13 @@ def assembled_with_shared_unit(
     value_text = raw[: -len(normalized_unit)]
     if not value_text:
         return False
+    literal_raw = unicodedata.normalize("NFKC", str(raw_value)).strip()
+    literal_unit = unicodedata.normalize("NFKC", str(unit)).strip()
+    value_query = value_text
+    if literal_raw.casefold().endswith(literal_unit.casefold()):
+        value_query = literal_raw[: -len(literal_unit)].strip()
     return any(
-        source_contains_text(reference.get("quote"), value_text)
+        source_contains_text(reference.get("quote"), value_query)
         and source_contains_text(reference.get("quote"), unit)
         for reference in references
     )
