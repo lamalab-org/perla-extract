@@ -66,7 +66,7 @@ and fallback behavior are documented by
 
 | Artifact | Purpose |
 | --- | --- |
-| `extraction.json` | Complete rich study result, including records that need review |
+| `extraction.json` | Final rich study result after audited source-grounding safeguards |
 | `grounded_values.json` | Conservative subset of reported values that passed local source checks |
 | `validation.json` | Evidence, identifier, and relationship findings |
 | `claim_ledger.json` | Experimental objects and atomic source claims collected before record construction |
@@ -75,6 +75,8 @@ and fallback behavior are documented by
 | `claim_coverage_audit.json` | Covered, possible, unmatched, context, and unsupported-record findings |
 | `targeted_repair.json` | Evidence-local repair worklist, proposed-record counts, quality gates, and decision |
 | `citation_repairs.json` | Audited non-contiguous-quote and unique-pointer repairs |
+| `conservative_finalization.json` | Exact unsupported optional claims removed after repair, with paths and reasons |
+| `pre_conservative_extraction.json` | Complete pre-finalization candidate, written only when a claim was removed |
 | `document.json` | Model-facing scientific evidence blocks with source and page locations |
 | `report.json` | Status, counts, usage, cost, cache information, and failures |
 | `run_configuration.json` | Non-secret configuration and source fingerprints |

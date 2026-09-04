@@ -47,7 +47,26 @@ def source_contains_text(source: object, query: object) -> bool:
     haystack, offsets, boundary_source = _normalized_with_offsets(source)
     if not needle:
         return False
-    for match in re.finditer(re.escape(needle), haystack):
+    matches = list(re.finditer(re.escape(needle), haystack))
+    if not matches and re.search(r"[a-z]", needle):
+        # PDF text layers sometimes omit a dash that is visually present, including
+        # in ranges (``200–300 nm``) and compact labels (``I–V``). Only dashes with
+        # an alphanumeric character on both sides are optional here. A leading minus
+        # remains mandatory, so ``-0.5 V`` can never be grounded by ``0.5 V``.
+        parts: list[str] = []
+        for index, character in enumerate(needle):
+            if (
+                character == "-"
+                and index > 0
+                and index + 1 < len(needle)
+                and needle[index - 1].isalnum()
+                and needle[index + 1].isalnum()
+            ):
+                parts.append(r"\-?")
+            else:
+                parts.append(re.escape(character))
+        matches = list(re.finditer("".join(parts), haystack))
+    for match in matches:
         source_start = offsets[match.start()]
         source_end = offsets[match.end() - 1]
         before = boundary_source[source_start - 1] if source_start else ""

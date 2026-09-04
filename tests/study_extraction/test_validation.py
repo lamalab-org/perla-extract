@@ -97,6 +97,19 @@ def test_ocr_spacing_does_not_destroy_real_source_boundaries():
     assert not source_contains_text("xCs0.3FA0.6DMA0.1Pb (I 0.7 Br0.3)3", formula)
 
 
+def test_ocr_missing_internal_dash_is_treated_as_a_transport_artifact():
+    """A lost range or label dash must not invalidate otherwise verbatim evidence."""
+
+    assert source_contains_text("a 200 300-nm-thick film", "200–300-nm")
+    assert source_contains_text("distortion in the I V curves", "I–V curves")
+
+
+def test_ocr_dash_tolerance_never_discards_a_unary_minus():
+    """Sign changes alter scientific meaning and therefore remain strict."""
+
+    assert not source_contains_text("the bias was 0.5 V", "-0.5 V")
+
+
 def test_reported_value_can_be_an_exact_join_of_multiple_verified_quotes():
     """A tandem value may join two exact source values without inventing content."""
 
@@ -152,9 +165,7 @@ def test_reported_value_can_be_an_exact_join_of_multiple_verified_quotes():
 def test_reported_value_can_reuse_a_unit_printed_once_for_a_list():
     """A coordinated list need not repeat its source-printed unit after every value."""
 
-    evidence = [
-        EvidenceCitation(block_id="a", quote="rates of 0.2 and 0.1 Å s-1")
-    ]
+    evidence = [EvidenceCitation(block_id="a", quote="rates of 0.2 and 0.1 Å s-1")]
     family = DeviceFamily(
         family_id="f",
         label="device",

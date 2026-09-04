@@ -28,7 +28,9 @@ remains provider-neutral.
 The extraction directory contains the refined rich result, its retained first draft,
 a source-grounded ledger of experimental objects and atomic claims, a claim-coverage
 audit, a bounded repair pass for audit-visible gaps, local evidence checks, and audited
-composition/processing enrichment. Accepted interpretations feed atomic archives for
+conservative finalization of unsupported optional claims, and audited
+composition/processing enrichment. Every finalization preserves the complete candidate
+and exact removed content. Accepted interpretations feed atomic archives for
 the pinned NOMAD schema without rewriting reported facts in `extraction.json`. Use
 `--dry-run` to parse the documents and estimate call size without calling a model.
 Every model request contains parser-produced text and tables only; the workflow does
