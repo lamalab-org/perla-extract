@@ -16,6 +16,7 @@ from perla_extract.study_extraction.models import (
     study_schema_sha256,
 )
 from review_workbench.study_review import (
+    FigurePanelCensus,
     InventoryAuditRequest,
     MainTextFigureCensus,
     MutationRequest,
@@ -68,9 +69,7 @@ def test_ground_truth_refresh_preserves_seed_and_appends_audited_revision(
     ).model_dump(mode="json")
     assert refreshed["seed_extraction"] == empty_study
     assert refreshed["events"][-1]["kind"] == "ground_truth_refresh"
-    assert refreshed["events"][-1]["details"]["provenance"] == {
-        "run": "review-v1"
-    }
+    assert refreshed["events"][-1]["details"]["provenance"] == {"run": "review-v1"}
 
 
 def test_ground_truth_refresh_rejects_evidence_from_another_document(
@@ -113,13 +112,15 @@ def test_ground_truth_refresh_versions_a_matching_reparsed_document(
     )
 
     assert refreshed["revision"] == 2
-    assert store.storage.load_revision(
-        "calibration", "10.0000--example"
-    ).evidence_version == 2
+    assert (
+        store.storage.load_revision("calibration", "10.0000--example").evidence_version
+        == 2
+    )
     assert store.load_document("calibration", "10.0000--example") == reparsed
-    assert store.storage.load_source(
-        "calibration", "10.0000--example"
-    ).document == document_payload
+    assert (
+        store.storage.load_source("calibration", "10.0000--example").document
+        == document_payload
+    )
     assert refreshed["events"][-1]["details"]["replacement_evidence_version"] == 2
 
 
@@ -812,6 +813,7 @@ def test_reviewer_progress_contains_only_that_reviewers_persisted_work(
         "schema_relevant_figures": 2,
         "figure_only_records": 1,
         "figure_only_atomic_values": 3,
+        "panels": [],
         "notes": "Figure 3 contains stability values absent from the caption.",
     }
     assert paper["current_event_ids"] == [audited["events"][-1]["event_id"]]
@@ -828,6 +830,81 @@ def test_main_text_figure_census_rejects_incoherent_counts():
             figures_reviewed=3,
             schema_relevant_figures=0,
             figure_only_atomic_values=1,
+        )
+
+
+def test_main_text_figure_census_derives_totals_from_subfigures():
+    census = MainTextFigureCensus(
+        figures_reviewed=99,
+        schema_relevant_figures=99,
+        figure_only_records=99,
+        figure_only_atomic_values=99,
+        panels=[
+            FigurePanelCensus(
+                figure_number=" 2 ",
+                panel_label=" a ",
+                page=4,
+                figure_class="jv",
+                description=" Reverse and forward current-density scans. ",
+                x_axis_label="Voltage (V)",
+                y_axis_label="Current density (mA cm−2)",
+                data_presentation="explicit_numeric_labels",
+                extraction_feasibility="straightforward",
+                schema_relevant=True,
+                figure_only_atomic_values=2,
+            ),
+            FigurePanelCensus(
+                figure_number="2",
+                panel_label="b",
+                page=4,
+                figure_class="eqe",
+                description="EQE spectrum and integrated current.",
+                x_axis_label="Wavelength (nm)",
+                y_axis_label="EQE (%)",
+                data_presentation="mixed",
+                extraction_feasibility="partly_straightforward",
+                schema_relevant=True,
+                figure_only_records=1,
+                figure_only_atomic_values=1,
+            ),
+            FigurePanelCensus(
+                figure_number="3",
+                figure_class="characterization",
+                description="Surface morphology image.",
+                data_presentation="no_numeric_data",
+                extraction_feasibility="not_applicable",
+                schema_relevant=False,
+            ),
+        ],
+    )
+
+    assert census.figures_reviewed == 2
+    assert census.schema_relevant_figures == 1
+    assert census.figure_only_records == 1
+    assert census.figure_only_atomic_values == 3
+    assert census.panels[0].figure_number == "2"
+    assert census.panels[0].panel_label == "a"
+
+
+def test_main_text_figure_census_rejects_duplicate_or_out_of_scope_panels():
+    common = {
+        "figure_number": "2",
+        "figure_class": "jv",
+        "description": "Current-density scan.",
+        "data_presentation": "plotted_values_only",
+        "extraction_feasibility": "requires_digitization",
+        "schema_relevant": True,
+    }
+    with pytest.raises(
+        ValueError, match="figure number and panel label must be unique"
+    ):
+        MainTextFigureCensus(
+            panels=[FigurePanelCensus(**common), FigurePanelCensus(**common)]
+        )
+
+    with pytest.raises(ValueError, match="require a schema-relevant panel"):
+        FigurePanelCensus(
+            **{**common, "schema_relevant": False, "figure_only_atomic_values": 1}
         )
 
 
@@ -1048,14 +1125,19 @@ def test_duplicate_merge_retargets_links_and_is_undoable(
         "ada",
     )
 
-    assert [item["family_id"] for item in merged["ground_truth"]["device_families"]] == [
-        "family-control"
-    ]
-    assert merged["ground_truth"]["individual_devices"][0]["family_id"] == "family-control"
+    assert [
+        item["family_id"] for item in merged["ground_truth"]["device_families"]
+    ] == ["family-control"]
+    assert (
+        merged["ground_truth"]["individual_devices"][0]["family_id"] == "family-control"
+    )
     event_id = merged["events"][-1]["event_id"]
-    assert event_id in store.reviewer_progress("calibration", "ada")["papers"][0][
-        "undoable_event_ids"
-    ]
+    assert (
+        event_id
+        in store.reviewer_progress("calibration", "ada")["papers"][0][
+            "undoable_event_ids"
+        ]
+    )
 
     undone = store.undo_mutation(
         "calibration",
@@ -1064,7 +1146,10 @@ def test_duplicate_merge_retargets_links_and_is_undoable(
         "ada",
     )
     assert len(undone["ground_truth"]["device_families"]) == 2
-    assert undone["ground_truth"]["individual_devices"][0]["family_id"] == "family-duplicate"
+    assert (
+        undone["ground_truth"]["individual_devices"][0]["family_id"]
+        == "family-duplicate"
+    )
 
 
 def test_record_reclassification_replaces_wrong_type_atomically(

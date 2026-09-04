@@ -39,11 +39,15 @@ so reviewers can focus their attention without treating any model artifact as tr
 The app stores immutable seeds, compiled truth, event history, evidence blocks, and
 manifests under the ground-truth directory.
 
-The figure census is deliberately limited to numbered figures in the main paper. It
-records how many figures contain schema-relevant content and how many schema records or
-atomic values are available only from those figures. The app records all imported
-sources as the record-search scope; reviewers do not toggle main/SI checkboxes,
-because those flags are not measurements of figure-extraction loss.
+The figure census is deliberately limited to numbered figures in the main paper.
+Reviewers add one row per subfigure with its scientific class, description, axis
+labels, numeric presentation, and extraction effort. They separately mark whether the
+panel is schema-relevant and count schema records or atomic values available only from
+that panel. Paper-level totals are derived from the rows. The app records all imported
+sources as the record-search scope; reviewers do not toggle main/SI checkboxes because
+those flags are not measurements of figure-extraction loss. Administrator feedback
+exports include the analysis-ready `figure_panels.csv` alongside the lossless event
+history.
 
 For a validated batch, use the same import contract non-interactively:
 

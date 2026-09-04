@@ -94,14 +94,27 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
 
     assert "searched-main" not in html
     assert "searched-supplement" not in html
-    assert "Main-text figure gap" in html
-    assert "Figure-only atomic values" in html
-    assert "not explicitly reported in the caption, running text, or a table" in html
-    assert "not each panel" in html
-    assert "do not infer or digitize uncertain values" in html
+    assert "Main-text subfigures" in html
+    assert 'id="add-figure-panel"' in html
+    assert 'id="figure-panels"' in html
+    assert "absent from running text, captions, and tables" in html
+    assert "Do not count curve samples or uncertain visual estimates" in html
+    for figure_class in (
+        "jv",
+        "eqe",
+        "population_statistics",
+        "stability",
+        "characterization",
+        "device_structure",
+        "other",
+    ):
+        assert f'{figure_class}:' in javascript
+    assert "inset_table" in javascript
+    assert "requires_digitization" in javascript
+    assert "figureCensusTotals" in javascript
     assert "main_text_figure_census" in javascript
     assert "review_scope_sources: state.bundle.sources" in javascript
-    assert "This legacy inventory did not record a main-text figure census" in javascript
+    assert "Earlier aggregate census" in javascript
 
 
 def test_ui_covers_every_rich_record_collection():

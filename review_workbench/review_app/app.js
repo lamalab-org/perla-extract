@@ -7,6 +7,30 @@ const COLLECTIONS = {
   population_statistics: "Population statistics",
   stability_tests: "Stability tests",
 };
+const FIGURE_CLASSES = {
+  jv: "J–V",
+  eqe: "EQE / integrated EQE",
+  population_statistics: "Population statistics",
+  stability: "Stability",
+  characterization: "Characterization",
+  device_structure: "Device structure",
+  other: "Other",
+};
+const FIGURE_DATA_PRESENTATIONS = {
+  no_numeric_data: "No numeric data",
+  explicit_numeric_labels: "Explicit printed numbers",
+  inset_table: "Inset table",
+  plotted_values_only: "Plotted values only",
+  mixed: "Mixed",
+  uncertain: "Uncertain",
+};
+const FIGURE_EXTRACTION_FEASIBILITY = {
+  straightforward: "Straightforward from printed values",
+  partly_straightforward: "Some values are straightforward",
+  requires_digitization: "Requires plot digitization",
+  not_applicable: "No numeric extraction applicable",
+  uncertain: "Uncertain",
+};
 const RECORD_GUIDANCE = {
   device_families: {
     census: "One complete photovoltaic design defined by its layer materials, absorber composition, and topology. A treatment condition, thickness, champion, scan, or mean is not another family when that design is unchanged. Characterization-only films and partial stacks are not device families.",
@@ -570,15 +594,133 @@ function savedCensusDraft() {
   };
 }
 
+function emptyFigurePanel() {
+  return {
+    figure_number: "", panel_label: "", page: state.source === "main" ? state.page : null, figure_class: "other",
+    description: "", x_axis_label: null, y_axis_label: null,
+    data_presentation: "uncertain", extraction_feasibility: "uncertain",
+    schema_relevant: false, figure_only_records: 0, figure_only_atomic_values: 0,
+  };
+}
+
+function figurePanelField(label, field, control) {
+  control.dataset.figureField = field;
+  return element("label", {}, [element("span", { text: label }), control]);
+}
+
+function figurePanelSelect(label, field, value, options) {
+  const select = element("select", { properties: { value }, dataset: { figureField: field } },
+    Object.entries(options).map(([key, text]) => element("option", { properties: { value: key, selected: key === value }, text })));
+  return element("label", {}, [element("span", { text: label }), select]);
+}
+
+function readFigurePanels() {
+  return [...document.querySelectorAll("[data-figure-panel]")].map((card) => {
+    const value = (name) => card.querySelector(`[data-figure-field="${name}"]`);
+    const optionalText = (name) => value(name).value.trim() || null;
+    return {
+      figure_number: value("figure_number").value.trim(),
+      panel_label: value("panel_label").value.trim(),
+      page: value("page").value ? Number(value("page").value) : null,
+      figure_class: value("figure_class").value,
+      description: value("description").value.trim(),
+      x_axis_label: optionalText("x_axis_label"),
+      y_axis_label: optionalText("y_axis_label"),
+      data_presentation: value("data_presentation").value,
+      extraction_feasibility: value("extraction_feasibility").value,
+      schema_relevant: value("schema_relevant").checked,
+      figure_only_records: Number(value("figure_only_records").value),
+      figure_only_atomic_values: Number(value("figure_only_atomic_values").value),
+    };
+  });
+}
+
+function figureCensusTotals(panels) {
+  const figureNumbers = new Set(panels.map((panel) => panel.figure_number.trim().toLowerCase()).filter(Boolean));
+  const relevantFigures = new Set(panels.filter((panel) => panel.schema_relevant)
+    .map((panel) => panel.figure_number.trim().toLowerCase()).filter(Boolean));
+  return {
+    figures_reviewed: figureNumbers.size,
+    schema_relevant_figures: relevantFigures.size,
+    figure_only_records: panels.reduce((total, panel) => total + panel.figure_only_records, 0),
+    figure_only_atomic_values: panels.reduce((total, panel) => total + panel.figure_only_atomic_values, 0),
+  };
+}
+
+function renderFigureCensusSummary() {
+  const panels = document.querySelector("[data-figure-panel]") ? readFigurePanels() : [];
+  const totals = panels.length ? figureCensusTotals(panels) : state.censusDraft.main_text_figure_census;
+  const legacy = !panels.length && !state.censusDraft.main_text_figure_census.panels?.length
+    && (totals.figures_reviewed || totals.schema_relevant_figures || totals.figure_only_records || totals.figure_only_atomic_values);
+  $("figure-census-summary").textContent = legacy
+    ? `Earlier aggregate census: ${totals.figures_reviewed || 0} figures · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only records · ${totals.figure_only_atomic_values || 0} figure-only values. Add subfigures to replace it.`
+    : `${panels.length} subfigure${panels.length === 1 ? "" : "s"} · ${totals.figures_reviewed || 0} main figure${totals.figures_reviewed === 1 ? "" : "s"} · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only record${totals.figure_only_records === 1 ? "" : "s"} · ${totals.figure_only_atomic_values || 0} figure-only value${totals.figure_only_atomic_values === 1 ? "" : "s"}`;
+}
+
+function renderFigurePanels() {
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  const cards = panels.map((panel, index) => {
+    const relevant = element("input", {
+      properties: { type: "checkbox", checked: panel.schema_relevant },
+      dataset: { figureField: "schema_relevant" },
+    });
+    const card = element("details", { className: "figure-panel-card", properties: { open: true }, dataset: { figurePanel: String(index) } }, [
+      element("summary", { text: `${panel.figure_number ? `Figure ${panel.figure_number}` : "New subfigure"}${panel.panel_label ? panel.panel_label : ""} · ${FIGURE_CLASSES[panel.figure_class]}` }),
+      element("div", { className: "figure-panel-fields" }, [
+        element("div", { className: "figure-panel-grid compact" }, [
+          figurePanelField("Main figure number", "figure_number", element("input", { properties: { value: panel.figure_number, required: true, placeholder: "2" } })),
+          figurePanelField("Panel label", "panel_label", element("input", { properties: { value: panel.panel_label, placeholder: "a (optional)" } })),
+          figurePanelField("PDF page", "page", element("input", { properties: { type: "number", min: "1", value: panel.page ?? "", placeholder: "optional" } })),
+          figurePanelSelect("Figure class", "figure_class", panel.figure_class, FIGURE_CLASSES),
+        ]),
+        figurePanelField("What the panel shows", "description", element("textarea", { properties: { value: panel.description, required: true, rows: 2, placeholder: "Brief scientific description" } })),
+        element("div", { className: "figure-panel-grid" }, [
+          figurePanelField("X-axis label", "x_axis_label", element("input", { properties: { value: panel.x_axis_label || "", placeholder: "As printed; optional" } })),
+          figurePanelField("Y-axis label", "y_axis_label", element("input", { properties: { value: panel.y_axis_label || "", placeholder: "As printed; optional" } })),
+          figurePanelSelect("Numeric presentation", "data_presentation", panel.data_presentation, FIGURE_DATA_PRESENTATIONS),
+          figurePanelSelect("Extraction effort", "extraction_feasibility", panel.extraction_feasibility, FIGURE_EXTRACTION_FEASIBILITY),
+        ]),
+        element("label", { className: "figure-relevance" }, [relevant, element("span", { text: "Contains information represented by the extraction schema" })]),
+        element("div", { className: "figure-panel-grid compact figure-loss-counts" }, [
+          figurePanelField("Figure-only records", "figure_only_records", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_records } })),
+          figurePanelField("Figure-only atomic values", "figure_only_atomic_values", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_atomic_values } })),
+        ]),
+        element("button", { className: "danger-link", properties: { type: "button" }, text: "Remove subfigure", events: { click: () => {
+          updateCensusDraft();
+          state.censusDraft.main_text_figure_census.panels.splice(index, 1);
+          renderFigurePanels();
+        } } }),
+      ]),
+    ]);
+    card.querySelectorAll("input, textarea, select").forEach((input) => input.addEventListener("input", () => {
+      if (input.dataset.figureField === "schema_relevant" && !input.checked) {
+        card.querySelector('[data-figure-field="figure_only_records"]').value = 0;
+        card.querySelector('[data-figure-field="figure_only_atomic_values"]').value = 0;
+      }
+      updateCensusDraft();
+      renderFigureCensusSummary();
+    }));
+    return card;
+  });
+  $("figure-panels").replaceChildren(...cards);
+  renderFigureCensusSummary();
+}
+
 function updateCensusDraft() {
   if (!document.querySelector("[data-count]")) return;
+  const panels = readFigurePanels();
+  const previousFigures = state.censusDraft?.main_text_figure_census || {};
+  const totals = panels.length ? figureCensusTotals(panels) : {
+    figures_reviewed: previousFigures.figures_reviewed || 0,
+    schema_relevant_figures: previousFigures.schema_relevant_figures || 0,
+    figure_only_records: previousFigures.figure_only_records || 0,
+    figure_only_atomic_values: previousFigures.figure_only_atomic_values || 0,
+  };
   state.censusDraft = {
     expected_counts: Object.fromEntries([...document.querySelectorAll("[data-count]")].map((input) => [input.dataset.count, Number(input.value)])),
     main_text_figure_census: {
-      figures_reviewed: Number($("figures-reviewed").value),
-      schema_relevant_figures: Number($("schema-relevant-figures").value),
-      figure_only_records: Number($("figure-only-records").value),
-      figure_only_atomic_values: Number($("figure-only-values").value),
+      ...totals,
+      panels,
       notes: $("figure-census-notes").value,
     },
     missing_or_ambiguous: $("inventory-notes").value,
@@ -602,13 +744,11 @@ function renderInventoryForm() {
     ]));
   $("inventory-counts").replaceChildren(...inputs);
   const figures = draft.main_text_figure_census;
-  $("figures-reviewed").value = figures.figures_reviewed ?? 0;
-  $("schema-relevant-figures").value = figures.schema_relevant_figures ?? 0;
-  $("figure-only-records").value = figures.figure_only_records ?? 0;
-  $("figure-only-values").value = figures.figure_only_atomic_values ?? 0;
+  figures.panels ||= [];
   $("figure-census-notes").value = figures.notes || "";
   $("inventory-notes").value = draft.missing_or_ambiguous;
-  for (const input of document.querySelectorAll("#census-form input, #census-form textarea")) input.addEventListener("input", updateCensusDraft);
+  renderFigurePanels();
+  for (const input of document.querySelectorAll("#inventory-counts input, #figure-census-notes, #inventory-notes")) input.addEventListener("input", updateCensusDraft);
   $("submit-audit").textContent = hasAudit() ? "Update census" : "Save census";
 }
 
@@ -640,8 +780,23 @@ function renderInventoryComparison() {
   const figures = audit.main_text_figure_census;
   comparison.push(figures
     ? element("section", { className: "figure-census-result" }, [
-      element("h4", { text: "Main-text figure gap" }),
+      element("h4", { text: "Main-text subfigure census" }),
       element("p", { text: `${figures.schema_relevant_figures} of ${figures.figures_reviewed} reviewed figures contained schema-relevant information. A text-only extraction would miss ${figures.figure_only_records} record${figures.figure_only_records === 1 ? "" : "s"} and ${figures.figure_only_atomic_values} atomic value${figures.figure_only_atomic_values === 1 ? "" : "s"} reported only in those figures.` }),
+      ...((figures.panels || []).length ? [element("div", { className: "saved-figure-panels" }, figures.panels.map((panel) => element("article", {}, [
+        element("div", { className: "saved-figure-panel-heading" }, [
+          element("strong", { text: `Figure ${panel.figure_number}${panel.panel_label || ""} · ${FIGURE_CLASSES[panel.figure_class] || humanLabel(panel.figure_class)}` }),
+          panel.page ? element("button", { properties: { type: "button" }, text: `Show page ${panel.page}`, events: { click: () => navigatePdf("main", panel.page) } }) : null,
+        ]),
+        element("p", { text: panel.description }),
+        element("p", { className: "muted", text: [
+          panel.page ? `page ${panel.page}` : null,
+          panel.x_axis_label ? `x: ${panel.x_axis_label}` : null,
+          panel.y_axis_label ? `y: ${panel.y_axis_label}` : null,
+          FIGURE_DATA_PRESENTATIONS[panel.data_presentation],
+          FIGURE_EXTRACTION_FEASIBILITY[panel.extraction_feasibility],
+          panel.schema_relevant ? `${panel.figure_only_records} figure-only records · ${panel.figure_only_atomic_values} figure-only values` : "Outside schema",
+        ].filter(Boolean).join(" · ") }),
+      ])))] : [element("p", { className: "muted", text: "This earlier census contains aggregate totals only. Add subfigures when updating it." })]),
       ...(figures.notes ? [element("p", { className: "callout", text: figures.notes })] : []),
     ])
     : element("p", { className: "callout", text: "This legacy inventory did not record a main-text figure census." }));
@@ -1264,6 +1419,12 @@ async function renderPdf() {
 
 async function submitAudit() {
   updateCensusDraft();
+  const invalid = document.querySelector("#census-form :invalid");
+  if (invalid) {
+    invalid.reportValidity();
+    invalid.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
   const draft = state.censusDraft;
   try {
     state.bundle = await request(`/api/inventory-audits/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ base_revision: state.bundle.revision, review_scope_sources: state.bundle.sources, ...draft }) });
@@ -2165,6 +2326,12 @@ document.querySelectorAll("[data-workspace-view]").forEach((button) => button.ad
 $("paper-filter").addEventListener("input", renderPapers);
 $("submit-audit").addEventListener("click", submitAudit);
 $("edit-census").addEventListener("click", editSavedCensus);
+$("add-figure-panel").addEventListener("click", () => {
+  updateCensusDraft();
+  state.censusDraft.main_text_figure_census.panels.push(emptyFigurePanel());
+  renderFigurePanels();
+  $("figure-panels").lastElementChild?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
 $("retry-pdf").addEventListener("click", () => navigatePdf(state.source, state.page));
 $("pdf-source").addEventListener("change", (event) => navigatePdf(event.target.value, 1));
 $("previous-page").addEventListener("click", () => navigatePdf(state.source, state.page - 1));

@@ -102,16 +102,14 @@
               <details class="record-definitions" open><summary>What counts as a family, device, or measurement?</summary><div id="inventory-definitions"></div></details>
               <div id="inventory-counts" class="count-grid"></div>
               <section class="figure-census">
-                <h4>Main-text figure gap</h4>
-                <p>Count only numbered figures in the main paper—not SI figures. We use these counts to estimate what the text-only extractor misses by ignoring figures.</p>
-                <div class="count-grid">
-                  <label>Main-text figures reviewed<input id="figures-reviewed" type="number" min="0" value="0" required /></label>
-                  <label>Figures relevant to the schema<input id="schema-relevant-figures" type="number" min="0" value="0" required /></label>
-                  <label>Figure-only records<input id="figure-only-records" type="number" min="0" value="0" required /></label>
-                  <label>Figure-only atomic values<input id="figure-only-values" type="number" min="0" value="0" required /></label>
+                <div class="figure-census-heading">
+                  <div><h4>Main-text subfigures</h4><p>Describe every panel in each numbered main-paper figure. Totals are calculated automatically.</p></div>
+                  <button id="add-figure-panel" type="button">Add subfigure</button>
                 </div>
-                <p class="muted"><strong>Figure-only</strong> means the record or atomic field value belongs in the schema but is not explicitly reported in the caption, running text, or a table. Count one numbered figure once, not each panel. Count field instances—not pixels or sampled points—and do not infer or digitize uncertain values.</p>
-                <label>Figure-only examples or ambiguities<textarea id="figure-census-notes" rows="3" placeholder="For example: Fig. 3 contains two stability checkpoints not stated in its caption or the text."></textarea></label>
+                <p class="muted"><strong>Figure-only</strong> means a schema record or atomic field value is visible in the panel but absent from running text, captions, and tables. Assign a fact spanning several panels to the single panel that best supports it. Do not count curve samples or uncertain visual estimates.</p>
+                <div id="figure-census-summary" class="figure-census-summary" role="status"></div>
+                <div id="figure-panels" class="figure-panel-list"></div>
+                <label>Figure census notes<textarea id="figure-census-notes" rows="3" placeholder="Record ambiguities that are not specific to one panel."></textarea></label>
               </section>
               <label>Missing, ambiguous, or difficult records<textarea id="inventory-notes" rows="4" placeholder="Describe devices or measurements that still need review…"></textarea></label>
               <button id="submit-audit" class="primary">Save census</button>

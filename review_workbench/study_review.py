@@ -155,11 +155,82 @@ class UndoMutationRequest(BaseModel):
     base_revision: int = Field(ge=0)
 
 
+FigureClass = Literal[
+    "jv",
+    "eqe",
+    "population_statistics",
+    "stability",
+    "characterization",
+    "device_structure",
+    "other",
+]
+
+
+class FigurePanelCensus(BaseModel):
+    """Describe one main-text panel and the effort needed to recover its data.
+
+    The panel is the annotation unit because panels within one numbered figure often
+    serve different scientific purposes. Raw axis text is retained for later auditing;
+    reviewers classify presentation and extraction effort without digitizing curves.
+    """
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    figure_number: str = Field(min_length=1, max_length=40)
+    panel_label: str = Field(default="", max_length=20)
+    page: int | None = Field(default=None, ge=1)
+    figure_class: FigureClass
+    description: str = Field(min_length=1, max_length=2000)
+    x_axis_label: str | None = Field(default=None, max_length=300)
+    y_axis_label: str | None = Field(default=None, max_length=300)
+    data_presentation: Literal[
+        "no_numeric_data",
+        "explicit_numeric_labels",
+        "inset_table",
+        "plotted_values_only",
+        "mixed",
+        "uncertain",
+    ]
+    extraction_feasibility: Literal[
+        "straightforward",
+        "partly_straightforward",
+        "requires_digitization",
+        "not_applicable",
+        "uncertain",
+    ]
+    schema_relevant: bool
+    figure_only_records: int = Field(default=0, ge=0)
+    figure_only_atomic_values: int = Field(default=0, ge=0)
+
+    @model_validator(mode="after")
+    def keep_loss_counts_schema_scoped(self) -> "FigurePanelCensus":
+        """Normalize labels and prevent out-of-scope panels from inflating loss."""
+
+        self.figure_number = self.figure_number.strip()
+        self.panel_label = self.panel_label.strip()
+        self.description = self.description.strip()
+        self.x_axis_label = self.x_axis_label.strip() if self.x_axis_label else None
+        self.y_axis_label = self.y_axis_label.strip() if self.y_axis_label else None
+        if not self.figure_number:
+            raise ValueError("figure number must not be blank")
+        if not self.description:
+            raise ValueError("panel description must not be blank")
+
+        if not self.schema_relevant and (
+            self.figure_only_records or self.figure_only_atomic_values
+        ):
+            raise ValueError(
+                "figure-only records or values require a schema-relevant panel"
+            )
+        return self
+
+
 class MainTextFigureCensus(BaseModel):
     """Measure schema content lost when main-text figures are not extracted.
 
-    Counts stay aggregate because reviewers should identify missing structured facts,
-    not digitize plot traces or create a second annotation interface for figures.
+    New reviews enumerate panels; the four totals are derived so arithmetic cannot
+    drift from the underlying annotations. Aggregate fields remain readable only for
+    review events saved before panel-level annotation was introduced.
     """
 
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -168,11 +239,34 @@ class MainTextFigureCensus(BaseModel):
     schema_relevant_figures: int = Field(default=0, ge=0)
     figure_only_records: int = Field(default=0, ge=0)
     figure_only_atomic_values: int = Field(default=0, ge=0)
+    panels: list[FigurePanelCensus] = Field(default_factory=list, max_length=300)
     notes: str = Field(default="", max_length=4000)
 
     @model_validator(mode="after")
     def validate_figure_counts(self) -> "MainTextFigureCensus":
         """Keep the denominator and claimed figure-only contribution coherent."""
+
+        if self.panels:
+            panel_keys = [
+                (panel.figure_number.casefold(), panel.panel_label.casefold())
+                for panel in self.panels
+            ]
+            if len(panel_keys) != len(set(panel_keys)):
+                raise ValueError("figure number and panel label must be unique")
+            figures = {panel.figure_number.casefold() for panel in self.panels}
+            relevant_figures = {
+                panel.figure_number.casefold()
+                for panel in self.panels
+                if panel.schema_relevant
+            }
+            self.figures_reviewed = len(figures)
+            self.schema_relevant_figures = len(relevant_figures)
+            self.figure_only_records = sum(
+                panel.figure_only_records for panel in self.panels
+            )
+            self.figure_only_atomic_values = sum(
+                panel.figure_only_atomic_values for panel in self.panels
+            )
 
         if self.schema_relevant_figures > self.figures_reviewed:
             raise ValueError("schema-relevant figures cannot exceed figures reviewed")
@@ -708,9 +802,7 @@ class StudyReviewStore:
 
         self.validate_identity(split, paper_id)
         revision = self.storage.load_revision(split, paper_id)
-        return self.storage.load_evidence(
-            split, paper_id, revision.evidence_version
-        )
+        return self.storage.load_evidence(split, paper_id, revision.evidence_version)
 
     def _materialize(
         self,
@@ -731,9 +823,7 @@ class StudyReviewStore:
         document = (
             source.document
             if revision.evidence_version == 1
-            else self.storage.load_evidence(
-                split, paper_id, revision.evidence_version
-            )
+            else self.storage.load_evidence(split, paper_id, revision.evidence_version)
         )
         if document is not None:
             write_json_atomic(self.document_path(split, paper_id), document)
@@ -1694,9 +1784,7 @@ class StudyReviewStore:
                     "before": copy.deepcopy(replacement["after"]),
                     "after": copy.deepcopy(replacement["before"]),
                 }
-                for replacement in target.details.get(
-                    "collection_replacements", []
-                )
+                for replacement in target.details.get("collection_replacements", [])
             ]
             event = ReviewEvent(
                 event_id=str(uuid.uuid4()),

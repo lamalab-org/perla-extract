@@ -301,26 +301,42 @@ views, and perspectives before extraction.
 
 ## Main-text figure-loss analysis
 
-The inventory includes a mandatory, separate census of numbered main-text figures.
-It does not census SI figures, and the main/SI scope is no longer represented by
-reviewer checkboxes. Submitting the inventory records all imported sources as the
-paper-wide record-search scope; figure counts answer a different question: what would
-a text-and-table-only extractor miss because it does not inspect main-text figures?
+The inventory includes a subfigure census for numbered main-text figures. It does not
+census SI figures. Add one entry for every panel—for example, Figure 2a and Figure
+2b—not one aggregate answer for the paper. This granularity lets us distinguish a J–V
+panel from a device schematic in the same numbered figure.
 
-Record four counts per paper:
+For each panel, record its main figure number, optional panel label, PDF page, a short
+description, and printed x- and y-axis labels. Choose one primary class:
 
-- **figures reviewed:** numbered main-text figures, with a multi-panel figure counted
-  once;
-- **schema-relevant figures:** reviewed figures containing at least one fact that fits
-  `StudyExtraction`, even when the fact is repeated in text or a caption;
-- **figure-only records:** complete schema records supported by a figure but not
-  explicitly reported in running text, captions, or tables; and
-- **figure-only atomic values:** individual schema field instances that would otherwise
-  be missing. Count stored values, not pixels, curve samples, or inferred values.
+- **J–V**;
+- **EQE**, including integrated EQE;
+- **population statistics**, including box, scatter, and violin plots;
+- **stability**, when device performance is followed over time;
+- **characterization**, such as IR, Raman, XPS, or XRD;
+- **device structure**, including schematics and annotated microscopy; or
+- **other**, including process diagrams.
 
-Do not digitize traces or guess visually ambiguous values during this census, and do
-not insert an approximate visual reading into the text-evidenced ground truth. After
-adjudication, calculate:
+Also record how numeric data are presented—explicit labels, an inset table, plotted
+values, mixed, or none—and whether recovery is straightforward, partly
+straightforward, requires digitization, not applicable, or uncertain. “Straightforward”
+means that values are printed; it does not mean that points could be estimated from a
+curve.
+
+Mark whether the panel contains any fact represented by `StudyExtraction`. For a
+schema-relevant panel, count complete schema records and individual atomic field values
+that are visible there but absent from running text, captions, and tables. Count stored
+field instances, not pixels or sampled curve points. When one fact spans multiple
+panels, assign it to the single panel providing the clearest support so totals are not
+duplicated. Do not add approximate visual readings to the text-evidenced ground truth.
+
+The app derives paper-level figure, relevant-figure, figure-only-record, and
+figure-only-value totals from these panel rows. Older aggregate-only census events stay
+in review history but are not the current annotation workflow. The administrator
+feedback download includes `figure_panels.csv` and a JSON summary grouped by class,
+numeric presentation, and extraction effort.
+
+After adjudication, calculate:
 
 - record loss as `figure_only_records / (final_records + figure_only_records)`; and
 - field-value loss as `figure_only_atomic_values /

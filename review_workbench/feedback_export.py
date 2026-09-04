@@ -29,7 +29,9 @@ def _compact_json(value: object) -> str:
 
 
 def _json_bytes(value: object) -> bytes:
-    return (json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode()
+    return (
+        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode()
 
 
 def _csv_bytes(rows: list[dict[str, Any]], fields: list[str]) -> bytes:
@@ -85,9 +87,7 @@ def _ground_truth_feedback(store: StudyReviewStore) -> list[dict[str, Any]]:
     ]
     with ThreadPoolExecutor(max_workers=min(8, len(identities) or 1)) as executor:
         return list(
-            executor.map(
-                lambda identity: _paper_feedback(store, *identity), identities
-            )
+            executor.map(lambda identity: _paper_feedback(store, *identity), identities)
         )
 
 
@@ -181,6 +181,52 @@ def _event_rows(papers: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return rows
 
 
+def _figure_panel_rows(papers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Flatten current panel censuses without treating superseded events as data."""
+
+    rows = []
+    for paper in papers:
+        audits = paper["current_review_state"]["inventory_audits"]
+        for reviewer_id, audit in audits.items():
+            census = audit.get("main_text_figure_census") or {}
+            for panel in census.get("panels", []):
+                rows.append(
+                    {
+                        "split": paper["split"],
+                        "paper_id": paper["paper_id"],
+                        "reviewer_id": reviewer_id,
+                        **panel,
+                    }
+                )
+    return rows
+
+
+def _figure_census_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize the current reviewer-level panel annotations for quick analysis."""
+
+    return {
+        "panel_count": len(rows),
+        "papers_with_panel_census": len(
+            {(row["split"], row["paper_id"]) for row in rows}
+        ),
+        "reviewer_paper_censuses": len(
+            {(row["split"], row["paper_id"], row["reviewer_id"]) for row in rows}
+        ),
+        "schema_relevant_panels": sum(bool(row["schema_relevant"]) for row in rows),
+        "figure_only_records": sum(row["figure_only_records"] for row in rows),
+        "figure_only_atomic_values": sum(
+            row["figure_only_atomic_values"] for row in rows
+        ),
+        "panels_by_class": dict(Counter(row["figure_class"] for row in rows)),
+        "panels_by_data_presentation": dict(
+            Counter(row["data_presentation"] for row in rows)
+        ),
+        "panels_by_extraction_feasibility": dict(
+            Counter(row["extraction_feasibility"] for row in rows)
+        ),
+    }
+
+
 def _comparison_rows(batches: list[dict[str, Any]]) -> list[dict[str, Any]]:
     rows = []
     for batch in batches:
@@ -189,8 +235,7 @@ def _comparison_rows(batches: list[dict[str, Any]]) -> list[dict[str, Any]]:
             item["reviewer_id"]: item for item in batch["native_utility_reviews"]
         }
         preferences = {
-            item["reviewer_id"]: item
-            for item in batch["pairwise_preference_reviews"]
+            item["reviewer_id"]: item for item in batch["pairwise_preference_reviews"]
         }
         for review in batch["reviews"]:
             verdicts = Counter(item["verdict"] for item in review["judgments"])
@@ -255,6 +300,7 @@ def build_feedback_archive(
     ]
     comparison_batches = _comparison_feedback(comparisons)
     event_rows = _event_rows(papers)
+    figure_panel_rows = _figure_panel_rows(papers)
     comparison_rows = _comparison_rows(comparison_batches)
     snapshot = {
         "format_version": 1,
@@ -262,18 +308,17 @@ def build_feedback_archive(
         "ground_truth_reviews": papers,
         "extractor_comparisons": comparison_batches,
         "uploaded_review_workbooks": workbook_metadata,
+        "figure_census_summary": _figure_census_summary(figure_panel_rows),
         "counts": {
             "papers_with_feedback": sum(bool(item["events"]) for item in papers),
             "review_events": len(event_rows),
             "reviewers": len(
-                {
-                    row["reviewer_id"]
-                    for row in [*event_rows, *comparison_rows]
-                }
+                {row["reviewer_id"] for row in [*event_rows, *comparison_rows]}
             ),
             "comparison_batches": len(comparison_batches),
             "comparison_responses": len(comparison_rows),
             "uploaded_review_workbooks": len(workbook_artifacts),
+            "figure_panels": len(figure_panel_rows),
         },
     }
     readme = """PERLA reviewer feedback export
@@ -284,6 +329,12 @@ the current review state derived from those immutable events.
 review_events.csv is one row per saved ground-truth review action. is_undone marks an
 edit that a later undo reversed. Reset events remain in history; feedback.json shows
 which decisions, census answers, and completion stages are current.
+
+figure_panels.csv is one row per subfigure in each reviewer's current main-text figure
+census. It records the scientific class, description, printed axis labels, numeric
+presentation, extraction effort, schema relevance, and figure-only record/value
+counts. Superseded census events remain losslessly available in feedback.json but do
+not appear in this analysis-ready table.
 
 comparison_reviews.csv is one row per started extractor-comparison response. It keeps
 the independent accuracy review, native-utility ratings, and rubric-level A/B
@@ -305,28 +356,97 @@ accepted or rejected validation outcome. A missing outcome means processing stop
 after receipt; the original bytes are still retained. Workbooks submitted before
 this archival feature was deployed are not recoverable as files.
 """
-    event_fields = list(event_rows[0]) if event_rows else [
-        "split", "paper_id", "current_paper_revision", "event_revision",
-        "event_id", "timestamp", "reviewer_id", "kind", "is_undone", "action",
-        "path", "note", "before_json", "after_json", "evidence_json", "details_json",
-    ]
-    comparison_fields = list(comparison_rows[0]) if comparison_rows else [
-        "comparison_id", "paper_id", "split", "reviewer_id", "blind_label",
-        "origin_if_revealed", "final", "revision", "started_at", "saved_at",
-        "submitted_at", "active_seconds", "confidence", "judgment_count", "correct",
-        "incorrect", "unsupported", "cannot_determine", "missing_fact_count",
-        "extra_records", "missing_records", "wrong_links", "notes", "judgments_json",
-        "missing_facts_json", "native_utility_submitted", "native_ratings_json",
-        "suitable_as_curation_start", "native_notes",
-        "pairwise_preference_submitted", "pairwise_preferences_json",
-        "pairwise_confidence", "pairwise_rationale",
-    ]
+    event_fields = (
+        list(event_rows[0])
+        if event_rows
+        else [
+            "split",
+            "paper_id",
+            "current_paper_revision",
+            "event_revision",
+            "event_id",
+            "timestamp",
+            "reviewer_id",
+            "kind",
+            "is_undone",
+            "action",
+            "path",
+            "note",
+            "before_json",
+            "after_json",
+            "evidence_json",
+            "details_json",
+        ]
+    )
+    comparison_fields = (
+        list(comparison_rows[0])
+        if comparison_rows
+        else [
+            "comparison_id",
+            "paper_id",
+            "split",
+            "reviewer_id",
+            "blind_label",
+            "origin_if_revealed",
+            "final",
+            "revision",
+            "started_at",
+            "saved_at",
+            "submitted_at",
+            "active_seconds",
+            "confidence",
+            "judgment_count",
+            "correct",
+            "incorrect",
+            "unsupported",
+            "cannot_determine",
+            "missing_fact_count",
+            "extra_records",
+            "missing_records",
+            "wrong_links",
+            "notes",
+            "judgments_json",
+            "missing_facts_json",
+            "native_utility_submitted",
+            "native_ratings_json",
+            "suitable_as_curation_start",
+            "native_notes",
+            "pairwise_preference_submitted",
+            "pairwise_preferences_json",
+            "pairwise_confidence",
+            "pairwise_rationale",
+        ]
+    )
+    figure_panel_fields = (
+        list(figure_panel_rows[0])
+        if figure_panel_rows
+        else [
+            "split",
+            "paper_id",
+            "reviewer_id",
+            "figure_number",
+            "panel_label",
+            "page",
+            "figure_class",
+            "description",
+            "x_axis_label",
+            "y_axis_label",
+            "data_presentation",
+            "extraction_feasibility",
+            "schema_relevant",
+            "figure_only_records",
+            "figure_only_atomic_values",
+        ]
+    )
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, "w") as archive:
         _zip_member(archive, "README.txt", readme.encode())
         _zip_member(archive, "feedback.json", _json_bytes(snapshot))
+        _zip_member(archive, "review_events.csv", _csv_bytes(event_rows, event_fields))
         _zip_member(
-            archive, "review_events.csv", _csv_bytes(event_rows, event_fields)
+            archive,
+            "figure_panels.csv",
+            _csv_bytes(figure_panel_rows, figure_panel_fields),
         )
         _zip_member(
             archive,
