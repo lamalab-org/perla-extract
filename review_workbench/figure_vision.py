@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import base64
 import json
+import math
 import re
 import unicodedata
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -220,6 +222,39 @@ def _validate_visual_response(
         raise ValueError("vision response omitted, invented, or swapped a figure")
 
 
+def validate_saved_figure_proposal(
+    artifact: dict[str, Any],
+    *,
+    paper_id: str,
+    manifest: FigureImageManifest,
+    model: str,
+) -> dict[str, Any]:
+    """Return a reusable proposal only when its sources and model output still match.
+
+    Long visual batches are intentionally resumable. Reuse must therefore verify the
+    source fingerprints and re-run both structural and figure-identity validation;
+    merely finding a JSON file is not enough evidence that it is safe to publish.
+    """
+
+    if (
+        artifact.get("format_version") != 1
+        or artifact.get("vision_prompt_version") != VISION_PROMPT_VERSION
+        or artifact.get("paper_id") != paper_id
+        or artifact.get("model") != model
+        or artifact.get("pdf_sha256") != manifest.pdf_sha256
+        or artifact.get("document_sha256") != manifest.document_sha256
+    ):
+        raise ValueError("saved proposal does not match the current inputs")
+    result = VisualPaperProposal.model_validate(
+        {"paper_id": paper_id, "figures": artifact.get("figures")}
+    )
+    _validate_visual_response(result, paper_id, manifest.figures)
+    proposal = artifact.get("review_proposal")
+    if not isinstance(proposal, dict) or not isinstance(proposal.get("panels"), list):
+        raise ValueError("saved proposal has no editable panel rows")
+    return proposal
+
+
 def _normalized(value: str) -> str:
     text = unicodedata.normalize("NFKC", value).casefold()
     return re.sub(r"\s+", " ", text).strip()
@@ -308,8 +343,9 @@ def classify_figure_images(
     reasoning_effort: str | None,
     max_cost_usd: float,
     client: ModelClient | None = None,
+    max_figures_per_call: int = 6,
 ) -> dict[str, Any]:
-    """Run one cached visual call and write a review-only, source-fingerprinted result."""
+    """Run bounded cached visual calls and write a source-fingerprinted proposal."""
 
     if not manifest.figures:
         raise click.ClickException(
@@ -322,27 +358,39 @@ def classify_figure_images(
             cache_dir=cache_dir,
             output_dir=output_path.parent,
             temperature=0,
-            max_model_calls=2,
+            max_model_calls=2 * math.ceil(len(manifest.figures) / max_figures_per_call),
             max_cost_usd=max_cost_usd,
         )
     call_start = len(client.calls)
-    result = client.complete(
-        kind="figure_vision",
-        slug=paper_id,
-        model=model,
-        system=(
-            "You inspect scientific figures conservatively. Never infer values from "
-            "plot coordinates and never claim text that is not visibly legible."
-        ),
-        prompt=_vision_prompt_content(paper_id, manifest.figures),
-        response_model=VisualPaperProposal,
-        max_output_tokens=30000,
-        reasoning_effort=reasoning_effort,
-        validate=lambda response: _validate_visual_response(
-            response, paper_id, manifest.figures
-        ),
-        validation_contract=f"figure-vision-{VISION_PROMPT_VERSION}",
-    )
+    figure_results = []
+    for start in range(0, len(manifest.figures), max_figures_per_call):
+        chunk = manifest.figures[start : start + max_figures_per_call]
+        suffix = (
+            ""
+            if len(manifest.figures) <= max_figures_per_call
+            else f"-figures-{start + 1}-{start + len(chunk)}"
+        )
+        chunk_result = client.complete(
+            kind="figure_vision",
+            slug=f"{paper_id}{suffix}",
+            model=model,
+            system=(
+                "You inspect scientific figures conservatively. Never infer values "
+                "from plot coordinates and never claim text that is not visibly "
+                "legible."
+            ),
+            prompt=_vision_prompt_content(paper_id, chunk),
+            response_model=VisualPaperProposal,
+            max_output_tokens=30000,
+            reasoning_effort=reasoning_effort,
+            validate=partial(
+                _validate_visual_response, paper_id=paper_id, figures=chunk
+            ),
+            validation_contract=f"figure-vision-{VISION_PROMPT_VERSION}",
+        )
+        figure_results.extend(chunk_result.figures)
+    result = VisualPaperProposal(paper_id=paper_id, figures=figure_results)
+    _validate_visual_response(result, paper_id, manifest.figures)
     document = json.loads(document_path.read_text(encoding="utf-8"))
     artifact = {
         "format_version": 1,
@@ -380,6 +428,7 @@ def classify_figure_images(
 )
 @click.option("--reasoning-effort", default=None)
 @click.option("--dpi", type=click.IntRange(min=96, max=300), default=180)
+@click.option("--max-figures-per-call", type=click.IntRange(min=1, max=12), default=6)
 @click.option(
     "--max-cost-usd", type=click.FloatRange(min=0, min_open=True), default=2.0
 )
@@ -397,6 +446,7 @@ def main(
     model: str | None,
     reasoning_effort: str | None,
     dpi: int,
+    max_figures_per_call: int,
     max_cost_usd: float,
     model_cache_dir: Path,
     refresh_figures: bool,
@@ -432,6 +482,7 @@ def main(
         cache_dir=model_cache_dir,
         reasoning_effort=reasoning_effort,
         max_cost_usd=max_cost_usd,
+        max_figures_per_call=max_figures_per_call,
     )
     click.echo(
         f"Wrote {len(artifact['review_proposal']['panels'])} panel proposals to "

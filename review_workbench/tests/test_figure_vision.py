@@ -9,6 +9,7 @@ from review_workbench.figure_vision import (
     _validate_visual_response,
     _vision_prompt_content,
     build_review_proposal,
+    validate_saved_figure_proposal,
 )
 
 
@@ -127,3 +128,42 @@ def test_unmatched_visual_value_stays_needs_human_comparison(tmp_path):
     candidate = proposal["panels"][0]["visual_candidates"][0]
     assert candidate["text_comparison"] == "needs_human_comparison"
     assert proposal["panels"][0]["figure_only_atomic_values"] == 0
+
+
+def test_saved_proposal_is_revalidated_before_reuse(tmp_path):
+    figure = rendered_figure(tmp_path)
+    manifest = FigureImageManifest(
+        format_version=1,
+        pdf_path="paper.pdf",
+        pdf_sha256="b" * 64,
+        document_sha256="c" * 64,
+        docling_version="test",
+        dpi=180,
+        margin_points=6,
+        figures=[figure],
+        captions_without_region=[],
+    )
+    artifact = {
+        "format_version": 1,
+        "vision_prompt_version": 1,
+        "paper_id": "paper",
+        "model": "model",
+        "pdf_sha256": "b" * 64,
+        "document_sha256": "c" * 64,
+        "figures": [item.model_dump(mode="json") for item in visual_result().figures],
+        "review_proposal": {"panels": [{"figure_number": "2"}]},
+    }
+
+    assert validate_saved_figure_proposal(
+        artifact, paper_id="paper", manifest=manifest, model="model"
+    ) == artifact["review_proposal"]
+
+    artifact["figures"][0]["image_sha256"] = "d" * 64
+    try:
+        validate_saved_figure_proposal(
+            artifact, paper_id="paper", manifest=manifest, model="model"
+        )
+    except ValueError as exc:
+        assert "omitted, invented, or swapped" in str(exc)
+    else:
+        raise AssertionError("a crop hash mismatch must prevent reuse")

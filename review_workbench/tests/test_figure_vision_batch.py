@@ -55,5 +55,6 @@ def test_render_only_batch_checkpoints_successes_and_failures(tmp_path, monkeypa
 
     assert result.exit_code == 0, result.output
     payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["status"] == "partial"
     assert payload["papers"]["good"]["localized_figures"] == 0
     assert "bad" in payload["failures"]

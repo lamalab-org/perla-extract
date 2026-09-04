@@ -106,7 +106,8 @@ const state = {
   queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
   studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
   pdfObjectUrl: null, pdfDisplayed: null, censusDraft: null, editingCensus: false, loadingPaperId: null,
-  annotationView: "current", authMode: "local", clerk: null, figureCensusProposals: {},
+  annotationView: "current", authMode: "local", clerk: null,
+  figureCensusProposals: {}, figureCensusPromise: null,
 };
 
 const LAPTOP_LAYOUT = "(max-width: 1400px)";
@@ -410,13 +411,20 @@ function savePaperCache() {
 
 async function loadFigureCensusProposals() {
   try {
-    const response = await fetch("/figure-census-proposals.json", { cache: "no-cache" });
+    const response = await fetch("/figure-census-proposals.json");
     if (!response.ok) return;
     const payload = await response.json();
     state.figureCensusProposals = payload.papers || {};
   } catch {
     state.figureCensusProposals = {};
   }
+}
+
+function ensureFigureCensusProposals() {
+  if (!state.figureCensusPromise) {
+    state.figureCensusPromise = loadFigureCensusProposals();
+  }
+  return state.figureCensusPromise;
 }
 
 async function loadPapers() {
@@ -485,7 +493,10 @@ async function selectPaper(paperId) {
   }
   let bundle;
   try {
-    bundle = await request(`/api/paper/${state.split}/${encodeURIComponent(paperId)}`);
+    [bundle] = await Promise.all([
+      request(`/api/paper/${state.split}/${encodeURIComponent(paperId)}`),
+      ensureFigureCensusProposals(),
+    ]);
   } catch (error) {
     if (state.bundle) setStatus(`Could not open ${paperId}: ${error.message}`, true);
     else {
@@ -595,11 +606,18 @@ function renderQualityArtifacts() {
 function savedCensusDraft() {
   const audit = state.bundle?.summary.inventory_audits?.[state.user.id];
   const proposal = state.figureCensusProposals[state.paperId];
-  return audit ? {
-    expected_counts: structuredClone(audit.expected_counts || {}),
-    main_text_figure_census: structuredClone(audit.main_text_figure_census || {}),
-    missing_or_ambiguous: audit.missing_or_ambiguous || "",
-  } : {
+  if (audit) {
+    const figureCensus = structuredClone(audit.main_text_figure_census || {});
+    if (!figureCensus.panels?.length && proposal?.panels?.length) {
+      figureCensus.panels = structuredClone(proposal.panels);
+    }
+    return {
+      expected_counts: structuredClone(audit.expected_counts || {}),
+      main_text_figure_census: figureCensus,
+      missing_or_ambiguous: audit.missing_or_ambiguous || "",
+    };
+  }
+  return {
     expected_counts: {},
     main_text_figure_census: proposal ? {
       figures_reviewed: 0,
@@ -700,8 +718,10 @@ function renderFigureCensusSummary() {
   const legacy = !panels.length && !state.censusDraft.main_text_figure_census.panels?.length
     && (totals.figures_reviewed || totals.schema_relevant_figures || totals.figure_only_records || totals.figure_only_atomic_values);
   const proposal = state.figureCensusProposals[state.paperId];
+  const savedPanels = state.bundle?.summary.inventory_audits?.[state.user.id]
+    ?.main_text_figure_census?.panels;
   const unresolvedCaptions = proposal?.captions_without_region?.length || 0;
-  const proposalPrefix = !hasAudit() && proposal
+  const proposalPrefix = proposal && !savedPanels?.length
     ? `${proposal.proposal_method === "caption_and_figure" ? "Figure-and-caption" : "Caption"}-derived draft—check every entry against the rendered figure. `
     : "";
   const localizationWarning = unresolvedCaptions
@@ -2520,8 +2540,9 @@ async function startApp() {
   $("empty-message").textContent = "Signing you in and fetching the paper list.";
   try {
     if (!state.user) await loadSession();
-    await loadFigureCensusProposals();
+    const figureProposals = ensureFigureCensusProposals();
     await loadPapers();
+    await figureProposals;
     $("empty-title").textContent = "Choose a paper";
     $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures.";
   } catch (error) { showStartupError(error); }
