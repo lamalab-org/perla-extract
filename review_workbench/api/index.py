@@ -703,9 +703,10 @@ class handler(BaseHandler):  # type: ignore[misc, valid-type]
                 "/api/pdf-page/",
                 "/api/pdf-text/",
                 "/api/search/",
+                "/api/figure-panel-image/",
             )
         ):
-            paper_id = unquote(parsed.path.split("/", 3)[-1])
+            paper_id = unquote(parsed.path.split("/", 3)[-1].split("/", 1)[0])
             query = parse_qs(parsed.query)
             source = query.get("source", ["main"])[0]
             split = query.get("split", [None])[0]

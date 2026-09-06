@@ -120,6 +120,87 @@ class ReviewApplication:
         )
         self.static_dir = REPO_ROOT / "review_workbench" / "review_app"
 
+    @lru_cache(maxsize=1)
+    def figure_census_proposals(self) -> dict[str, Any]:
+        """Load immutable model suggestions once and expose papers independently.
+
+        Reviewers need only the proposal for the open paper. Keeping the bundled
+        artifact as the source of truth preserves reproducibility while avoiding a
+        megabyte-scale browser download before record review can begin.
+        """
+
+        path = self.static_dir / "figure-census-proposals.json"
+        if not path.exists():
+            return {}
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        papers = payload.get("papers", {})
+        return papers if isinstance(papers, dict) else {}
+
+    def figure_census_proposal(self, paper_id: str) -> dict[str, Any]:
+        """Return one paper's optional proposal without treating it as review data."""
+
+        proposal = self.figure_census_proposals().get(paper_id)
+        return {"paper_id": paper_id, "proposal": proposal}
+
+    def render_figure_panel(
+        self, paper_id: str, proposal_panel_id: str, split: str
+    ) -> bytes:
+        """Render the proposed panel directly from its reviewed source PDF.
+
+        Coordinates are resolved from the frozen proposal rather than accepted from
+        the browser. This keeps the preview reproducible and prevents arbitrary crop
+        requests from becoming an unbounded rendering interface.
+        """
+
+        proposal = self.figure_census_proposals().get(paper_id) or {}
+        panel = next(
+            (
+                item
+                for item in proposal.get("panels", [])
+                if item.get("proposal_panel_id") == proposal_panel_id
+            ),
+            None,
+        )
+        if panel is None:
+            raise FileNotFoundError("figure-panel proposal not found")
+        page_number = panel.get("page")
+        figure_bbox = panel.get("figure_bbox_pdf")
+        panel_bbox = panel.get("panel_bbox_normalized")
+        if not isinstance(page_number, int) or not (
+            isinstance(figure_bbox, list)
+            and len(figure_bbox) == 4
+            and all(isinstance(value, (int, float)) for value in figure_bbox)
+        ):
+            raise FileNotFoundError("figure-panel preview is unavailable")
+
+        pdf_bytes = self.review_pdf(paper_id, "main", split)
+        expected_hash = proposal.get("pdf_sha256")
+        if expected_hash and hashlib.sha256(pdf_bytes).hexdigest() != expected_hash:
+            raise FileNotFoundError("figure-panel source PDF does not match the proposal")
+
+        with fitz.open(stream=pdf_bytes, filetype="pdf") as pdf:
+            if not 1 <= page_number <= len(pdf):
+                raise FileNotFoundError("figure-panel page is unavailable")
+            page = pdf[page_number - 1]
+            figure = fitz.Rect(*figure_bbox) & page.rect
+            clip = figure
+            if (
+                isinstance(panel_bbox, list)
+                and len(panel_bbox) == 4
+                and all(isinstance(value, (int, float)) for value in panel_bbox)
+            ):
+                x0, y0, x1, y1 = panel_bbox
+                if 0 <= x0 < x1 <= 1000 and 0 <= y0 < y1 <= 1000:
+                    clip = fitz.Rect(
+                        figure.x0 + figure.width * x0 / 1000,
+                        figure.y0 + figure.height * y0 / 1000,
+                        figure.x0 + figure.width * x1 / 1000,
+                        figure.y0 + figure.height * y1 / 1000,
+                    ) & page.rect
+            if clip.is_empty or clip.is_infinite:
+                raise FileNotFoundError("figure-panel crop is invalid")
+            return page.get_pixmap(matrix=fitz.Matrix(2, 2), clip=clip, alpha=False).tobytes("png")
+
     def create_comparison(self, payload: object) -> dict[str, Any]:
         """Freeze a blinded experiment from one legacy and one rich extraction."""
 
@@ -1074,6 +1155,21 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     return
                 if parts[:2] == ["api", "paper"] and len(parts) == 4:
                     self.send_json(application.get_paper(parts[2], parts[3]))
+                    return
+                if parts[:2] == ["api", "figure-census-proposal"] and len(parts) == 3:
+                    self.send_json(
+                        application.figure_census_proposal(parts[2]),
+                        headers={"Cache-Control": "private, max-age=300"},
+                    )
+                    return
+                if parts[:2] == ["api", "figure-panel-image"] and len(parts) == 4:
+                    self.send_bytes(
+                        application.render_figure_panel(
+                            parts[2], parts[3], query.get("split", ["dev"])[0]
+                        ),
+                        "image/png",
+                        {"Cache-Control": "private, max-age=3600, immutable"},
+                    )
                     return
                 if parts[:2] == ["api", "evidence"] and len(parts) == 4:
                     self.send_json(

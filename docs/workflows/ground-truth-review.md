@@ -330,11 +330,19 @@ field instances, not pixels or sampled curve points. When one fact spans multipl
 panels, assign it to the single panel providing the clearest support so totals are not
 duplicated. Do not add approximate visual readings to the text-evidenced ground truth.
 
-The app derives paper-level figure, relevant-figure, figure-only-record, and
-figure-only-value totals from these panel rows. Older aggregate-only census events stay
-in review history but are not the current annotation workflow. The administrator
-feedback download includes `figure_panels.csv` and a JSON summary grouped by class,
-numeric presentation, and extraction effort.
+The app presents these rows as a one-panel-at-a-time queue. **Confirm and next** marks
+an unchanged suggestion as checked; editing any field marks it as corrected. Progress
+counts only confirmed or corrected panels, and the server refuses to save a census
+containing unchecked suggestions. Draft changes are retained in the reviewer's browser
+for the same imported seed until the complete census is submitted. Arrow keys or
+`J`/`K` move through the current filter and `V` confirms the open panel.
+
+Paper-level figure, relevant-figure, figure-only-record, and figure-only-value totals
+are derived from the panel rows. Older aggregate-only or panel-level censuses remain
+readable, but their panels must be explicitly checked before an updated census can be
+saved. The administrator feedback download includes `figure_panels.csv`, including
+proposal identity and review status, and a JSON summary grouped by class, numeric
+presentation, and extraction effort.
 
 Caption-grounded drafts can be generated without sending figures to a vision model:
 
@@ -370,12 +378,16 @@ rendering settings, and image hash. Captions that cannot be localized unambiguou
 are listed as failures for manual inspection; the code does not guess a rectangle.
 Rerunning with the same inputs uses those verified crops.
 
-The review app pre-fills model-proposed panel rows but keeps every field editable.
-Reviewers can jump directly from a row to its main-paper page, add a missed panel,
+The review app loads only the open paper's proposal and keeps every field editable.
+When deterministic localization coordinates are available, it renders the active
+subfigure crop directly from the stored PDF; no extra model call or external image
+transfer occurs. Reviewers can also jump from the current panel to its main-paper page, add a missed panel,
 remove an extra panel, correct its class, axes, presentation, or relevance, and enter
-the verified figure-only record and atomic-value counts. Captions without an automatic
-image match are called out explicitly and must be added manually. Saving creates a
-reviewer event; it never mutates the static model proposal.
+the verified figure-only record and atomic-value counts. Filters expose unchecked,
+uncertain, schema-relevant, or all panels. Captions without an automatic image match
+are called out explicitly and must be added manually. A stable proposal identifier
+keeps visual candidates attached when a reviewer corrects a figure or panel label.
+Saving creates a reviewer event; it never mutates the static model proposal.
 
 An optional image-capable model can propose panels and visibly printed values. This is
 a separate, explicit command because it transmits figure crops to the configured model

@@ -172,10 +172,17 @@ class FigurePanelCensus(BaseModel):
     The panel is the annotation unit because panels within one numbered figure often
     serve different scientific purposes. Raw axis text is retained for later auditing;
     reviewers classify presentation and extraction effort without digitizing curves.
+    ``proposal_panel_id`` keeps the original suggestion identifiable when a reviewer
+    corrects its label, while ``review_status`` prevents untouched suggestions from
+    being exported as human ground truth.
     """
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
+    proposal_panel_id: str | None = Field(default=None, min_length=1, max_length=200)
+    review_status: Literal[
+        "unreviewed", "confirmed", "corrected", "legacy_unspecified"
+    ] = "legacy_unspecified"
     figure_number: str = Field(min_length=1, max_length=40)
     panel_label: str = Field(default="", max_length=20)
     page: int | None = Field(default=None, ge=1)
@@ -214,6 +221,9 @@ class FigurePanelCensus(BaseModel):
         self.y_axis_label = self.y_axis_label.strip() if self.y_axis_label else None
         self.caption_block_id = (
             self.caption_block_id.strip() if self.caption_block_id else None
+        )
+        self.proposal_panel_id = (
+            self.proposal_panel_id.strip() if self.proposal_panel_id else None
         )
         if not self.figure_number:
             raise ValueError("figure number must not be blank")
@@ -301,13 +311,28 @@ class InventoryAuditRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_counts(self) -> "InventoryAuditRequest":
-        """Keep the census generic but reject nonsensical negative counts."""
+        """Reject invalid counts and unchecked model suggestions.
+
+        A proposal becomes ground truth only after the reviewer explicitly confirms or
+        corrects every panel. Historical panel censuses predate this state and remain
+        readable, but must be checked before they can be submitted again.
+        """
 
         if any(
             not isinstance(value, int) or value < 0
             for value in self.expected_counts.values()
         ):
             raise ValueError("inventory counts must be non-negative integers")
+        unchecked = [
+            panel
+            for panel in self.main_text_figure_census.panels
+            if panel.review_status not in {"confirmed", "corrected"}
+        ]
+        if unchecked:
+            raise ValueError(
+                f"review every figure panel before saving the census "
+                f"({len(unchecked)} unchecked)"
+            )
         return self
 
 

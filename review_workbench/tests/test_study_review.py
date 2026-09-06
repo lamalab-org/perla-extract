@@ -908,6 +908,37 @@ def test_main_text_figure_census_rejects_duplicate_or_out_of_scope_panels():
         )
 
 
+def test_inventory_submission_requires_explicit_panel_review():
+    panel = {
+        "proposal_panel_id": "proposal-panel-1",
+        "figure_number": "2",
+        "figure_class": "jv",
+        "description": "Current-density scan.",
+        "data_presentation": "plotted_values_only",
+        "extraction_feasibility": "requires_digitization",
+        "schema_relevant": True,
+    }
+    with pytest.raises(ValueError, match="review every figure panel"):
+        InventoryAuditRequest(
+            base_revision=1,
+            review_scope_sources=["main"],
+            expected_counts={},
+            main_text_figure_census=MainTextFigureCensus(
+                panels=[FigurePanelCensus(**panel, review_status="unreviewed")]
+            ),
+        )
+
+    request = InventoryAuditRequest(
+        base_revision=1,
+        review_scope_sources=["main"],
+        expected_counts={},
+        main_text_figure_census=MainTextFigureCensus(
+            panels=[FigurePanelCensus(**panel, review_status="confirmed")]
+        ),
+    )
+    assert request.main_text_figure_census.panels[0].review_status == "confirmed"
+
+
 def test_summary_renames_legacy_searched_sources_without_rewriting_the_event(
     empty_study,
 ):

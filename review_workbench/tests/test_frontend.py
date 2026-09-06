@@ -118,7 +118,14 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
     assert "inset_table" in javascript
     assert "requires_digitization" in javascript
     assert "figureCensusTotals" in javascript
-    assert 'fetch("/figure-census-proposals.json"' in javascript
+    assert "/api/figure-census-proposal/" in javascript
+    assert "/api/figure-panel-image/" in javascript
+    assert 'id="figure-review-progress"' in html
+    assert 'id="figure-review-filter"' in html
+    assert "Confirm and next" in javascript
+    assert 'fromProposal ? "unreviewed"' in javascript
+    assert "Check ${unchecked.length} remaining subfigure" in javascript
+    assert "perla-census-draft" in javascript
     assert "Figure-and-caption" in javascript
     assert "Caption" in javascript
     assert "Values visibly printed in this panel" in javascript
@@ -343,7 +350,7 @@ def test_pdf_source_switch_is_visible_cached_and_waits_for_the_new_page():
     assert "The previous page is still shown." in source
     assert 'id="retry-pdf"' in html
     assert "URL.createObjectURL" in source
-    assert server.count("private, max-age=3600, immutable") == 2
+    assert server.count("private, max-age=3600, immutable") >= 3
 
 
 def test_record_count_corrections_are_explicit_and_reference_guarded():

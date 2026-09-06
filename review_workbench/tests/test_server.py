@@ -40,6 +40,24 @@ def test_uploaded_review_workbook_is_retained_byte_for_byte(tmp_path):
     assert artifacts[0]["archive_path"].startswith("uploaded_workbooks/dev/")
 
 
+def test_figure_proposals_are_served_one_paper_at_a_time(tmp_path):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+    app.static_dir = tmp_path / "static"
+    app.static_dir.mkdir()
+    (app.static_dir / "figure-census-proposals.json").write_text(
+        json.dumps({"papers": {"paper-a": {"panels": [{"figure_number": "1"}]}}})
+    )
+
+    assert app.figure_census_proposal("paper-a") == {
+        "paper_id": "paper-a",
+        "proposal": {"panels": [{"figure_number": "1"}]},
+    }
+    assert app.figure_census_proposal("missing") == {
+        "paper_id": "missing",
+        "proposal": None,
+    }
+
+
 def test_rejected_workbook_remains_archived(tmp_path, monkeypatch):
     app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
 
@@ -79,6 +97,69 @@ def pdf_pages(*texts: str) -> bytes:
     value = document.tobytes()
     document.close()
     return value
+
+
+def test_figure_panel_preview_is_rendered_from_frozen_coordinates(
+    tmp_path, monkeypatch
+):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+    app.static_dir = tmp_path / "static"
+    app.static_dir.mkdir()
+    (app.static_dir / "figure-census-proposals.json").write_text(
+        json.dumps(
+            {
+                "papers": {
+                    "paper-a": {
+                        "panels": [
+                            {
+                                "proposal_panel_id": "panel-a",
+                                "page": 1,
+                                "figure_bbox_pdf": [0.0, 0.0, 300.0, 300.0],
+                                "panel_bbox_normalized": [0, 0, 500, 1000],
+                            }
+                        ]
+                    }
+                }
+            }
+        )
+    )
+    monkeypatch.setattr(
+        app, "review_pdf", lambda paper_id, source, split: pdf_bytes("Figure")
+    )
+
+    image = app.render_figure_panel("paper-a", "panel-a", "dev")
+
+    assert image.startswith(b"\x89PNG\r\n\x1a\n")
+
+
+def test_figure_panel_preview_rejects_a_different_pdf_revision(tmp_path, monkeypatch):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+    app.static_dir = tmp_path / "static"
+    app.static_dir.mkdir()
+    (app.static_dir / "figure-census-proposals.json").write_text(
+        json.dumps(
+            {
+                "papers": {
+                    "paper-a": {
+                        "pdf_sha256": "0" * 64,
+                        "panels": [
+                            {
+                                "proposal_panel_id": "panel-a",
+                                "page": 1,
+                                "figure_bbox_pdf": [0.0, 0.0, 300.0, 300.0],
+                            }
+                        ],
+                    }
+                }
+            }
+        )
+    )
+    monkeypatch.setattr(
+        app, "review_pdf", lambda paper_id, source, split: pdf_bytes("Figure")
+    )
+
+    with pytest.raises(FileNotFoundError, match="does not match"):
+        app.render_figure_panel("paper-a", "panel-a", "dev")
 
 
 def test_imports_extractor_bundle_and_both_documents(tmp_path, empty_study, document_payload):

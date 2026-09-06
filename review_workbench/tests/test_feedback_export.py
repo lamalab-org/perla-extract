@@ -168,6 +168,8 @@ def test_feedback_download_flattens_only_current_subfigure_census(
             main_text_figure_census=MainTextFigureCensus(
                 panels=[
                     FigurePanelCensus(
+                        proposal_panel_id="proposal-panel-1",
+                        review_status="confirmed",
                         figure_number="2",
                         panel_label="a",
                         page=4,
@@ -200,6 +202,8 @@ def test_feedback_download_flattens_only_current_subfigure_census(
         )
 
     assert rows[0]["figure_class"] == "stability"
+    assert rows[0]["proposal_panel_id"] == "proposal-panel-1"
+    assert rows[0]["review_status"] == "confirmed"
     assert rows[0]["description"] == "Normalized efficiency over time."
     assert snapshot["figure_census_summary"] == {
         "panel_count": 1,

@@ -12,6 +12,7 @@ from perla_extract.study_extraction.artifacts import write_json_atomic
 from perla_extract.study_extraction.logging import configure_logging, logger
 from review_workbench.figure_images import build_figure_image_manifest
 from review_workbench.figure_vision import (
+    attach_review_geometry,
     classify_figure_images,
     validate_saved_figure_proposal,
 )
@@ -145,6 +146,7 @@ def main(
                         )
                     else:
                         logger.info("Using validated figure proposal for {}", paper_id)
+                        attach_review_geometry(proposal, manifest)
                         proposal["captions_without_region"] = (
                             manifest.captions_without_region
                         )

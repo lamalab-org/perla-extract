@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from functools import partial
@@ -269,6 +270,18 @@ def classify_captions(
             proposals[paper.paper_id] = {
                 "panels": [
                     {
+                        "proposal_panel_id": hashlib.sha256(
+                            json.dumps(
+                                {
+                                    "paper_id": paper.paper_id,
+                                    "caption_block_id": panel.caption_block_id,
+                                    "figure_number": panel.figure_number,
+                                    "panel_label": panel.panel_label,
+                                },
+                                sort_keys=True,
+                                separators=(",", ":"),
+                            ).encode("utf-8")
+                        ).hexdigest()[:24],
                         **panel.model_dump(mode="json"),
                         "page": caption_pages[panel.caption_block_id],
                         "figure_only_records": 0,

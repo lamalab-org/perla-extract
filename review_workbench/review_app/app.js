@@ -107,7 +107,8 @@ const state = {
   studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
   pdfObjectUrl: null, pdfDisplayed: null, censusDraft: null, editingCensus: false, loadingPaperId: null,
   annotationView: "current", authMode: "local", clerk: null,
-  figureCensusProposals: {}, figureCensusPromise: null,
+  figureCensusProposals: {}, figureProposalPromises: new Map(),
+  figureQueueIndex: 0, figureReviewFilter: "unreviewed", censusDirty: false,
 };
 
 const LAPTOP_LAYOUT = "(max-width: 1400px)";
@@ -409,22 +410,21 @@ function savePaperCache() {
   catch (error) { console.warn("Could not cache the paper list", error); }
 }
 
-async function loadFigureCensusProposals() {
+async function loadFigureCensusProposal(paperId) {
+  if (Object.hasOwn(state.figureCensusProposals, paperId)) return;
   try {
-    const response = await fetch("/figure-census-proposals.json");
-    if (!response.ok) return;
-    const payload = await response.json();
-    state.figureCensusProposals = payload.papers || {};
+    const payload = await request(`/api/figure-census-proposal/${encodeURIComponent(paperId)}`);
+    state.figureCensusProposals[paperId] = payload.proposal || null;
   } catch {
-    state.figureCensusProposals = {};
+    state.figureProposalPromises.delete(paperId);
   }
 }
 
-function ensureFigureCensusProposals() {
-  if (!state.figureCensusPromise) {
-    state.figureCensusPromise = loadFigureCensusProposals();
+function ensureFigureCensusProposal(paperId) {
+  if (!state.figureProposalPromises.has(paperId)) {
+    state.figureProposalPromises.set(paperId, loadFigureCensusProposal(paperId));
   }
-  return state.figureCensusPromise;
+  return state.figureProposalPromises.get(paperId);
 }
 
 async function loadPapers() {
@@ -495,7 +495,7 @@ async function selectPaper(paperId) {
   try {
     [bundle] = await Promise.all([
       request(`/api/paper/${state.split}/${encodeURIComponent(paperId)}`),
-      ensureFigureCensusProposals(),
+      ensureFigureCensusProposal(paperId),
     ]);
   } catch (error) {
     if (state.bundle) setStatus(`Could not open ${paperId}: ${error.message}`, true);
@@ -517,6 +517,9 @@ async function selectPaper(paperId) {
   state.activeCitation = null;
   state.censusDraft = null;
   state.editingCensus = false;
+  state.figureQueueIndex = 0;
+  state.figureReviewFilter = "unreviewed";
+  state.censusDirty = false;
   if (state.pdfObjectUrl) URL.revokeObjectURL(state.pdfObjectUrl);
   state.pdfObjectUrl = null;
   state.pdfDisplayed = null;
@@ -603,13 +606,72 @@ function renderQualityArtifacts() {
   $("quality-artifacts").replaceChildren(...sections);
 }
 
+function proposalPanelId(panel, index) {
+  return panel.proposal_panel_id || [
+    panel.image_sha256 || panel.caption_block_id || "proposal",
+    panel.figure_number || "figure",
+    panel.panel_label || "panel",
+    index,
+  ].join(":").slice(0, 200);
+}
+
+function normalizeFigurePanels(panels, fromProposal = false) {
+  return (panels || []).map((panel, index) => ({
+    ...structuredClone(panel),
+    proposal_panel_id: panel.proposal_panel_id || (fromProposal ? proposalPanelId(panel, index) : null),
+    review_status: panel.review_status || (fromProposal ? "unreviewed" : "legacy_unspecified"),
+  }));
+}
+
+function censusDraftKey() {
+  return `perla-census-draft:${state.user.id}:${state.split}:${state.paperId}`;
+}
+
+function censusDraftSource() {
+  return state.bundle.manifest?.seed_sha256 || `revision:${state.bundle.revision}`;
+}
+
+function restoreLocalCensusDraft() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(censusDraftKey()) || "null");
+    if (saved?.source !== censusDraftSource() || !saved?.draft) return null;
+    state.censusDirty = true;
+    return structuredClone(saved.draft);
+  } catch {
+    try { localStorage.removeItem(censusDraftKey()); } catch { /* Storage is optional. */ }
+    return null;
+  }
+}
+
+function persistLocalCensusDraft() {
+  if (!state.censusDraft) return;
+  try {
+    localStorage.setItem(censusDraftKey(), JSON.stringify({
+      source: censusDraftSource(),
+      draft: state.censusDraft,
+    }));
+    $("figure-draft-status").textContent = "Draft saved in this browser.";
+  } catch {
+    $("figure-draft-status").textContent = "This browser could not save the draft. Save the census before leaving.";
+  }
+}
+
+function clearLocalCensusDraft() {
+  try { localStorage.removeItem(censusDraftKey()); } catch { /* The server copy is saved. */ }
+  state.censusDirty = false;
+}
+
 function savedCensusDraft() {
+  const localDraft = restoreLocalCensusDraft();
+  if (localDraft) return localDraft;
   const audit = state.bundle?.summary.inventory_audits?.[state.user.id];
   const proposal = state.figureCensusProposals[state.paperId];
   if (audit) {
     const figureCensus = structuredClone(audit.main_text_figure_census || {});
     if (!figureCensus.panels?.length && proposal?.panels?.length) {
-      figureCensus.panels = structuredClone(proposal.panels);
+      figureCensus.panels = normalizeFigurePanels(proposal.panels, true);
+    } else {
+      figureCensus.panels = normalizeFigurePanels(figureCensus.panels);
     }
     return {
       expected_counts: structuredClone(audit.expected_counts || {}),
@@ -624,7 +686,7 @@ function savedCensusDraft() {
       schema_relevant_figures: 0,
       figure_only_records: 0,
       figure_only_atomic_values: 0,
-      panels: structuredClone(proposal.panels || []),
+      panels: normalizeFigurePanels(proposal.panels, true),
       notes: "",
     } : {},
     missing_or_ambiguous: "",
@@ -633,6 +695,7 @@ function savedCensusDraft() {
 
 function emptyFigurePanel() {
   return {
+    proposal_panel_id: null, review_status: "unreviewed",
     figure_number: "", panel_label: "", page: state.source === "main" ? state.page : null, caption_block_id: null, figure_class: "other",
     description: "", x_axis_label: null, y_axis_label: null,
     data_presentation: "uncertain", extraction_feasibility: "uncertain",
@@ -653,7 +716,8 @@ function figurePanelSelect(label, field, value, options) {
 
 function proposedFigurePanel(panel) {
   const proposals = state.figureCensusProposals[state.paperId]?.panels || [];
-  return proposals.find((candidate) =>
+  return proposals.find((candidate, index) =>
+    proposalPanelId(candidate, index) === panel.proposal_panel_id) || proposals.find((candidate) =>
     String(candidate.figure_number).toLowerCase() === String(panel.figure_number).toLowerCase()
     && String(candidate.panel_label || "").toLowerCase() === String(panel.panel_label || "").toLowerCase());
 }
@@ -678,26 +742,26 @@ function renderVisualCandidateEvidence(panel) {
   ]);
 }
 
-function readFigurePanels() {
-  return [...document.querySelectorAll("[data-figure-panel]")].map((card) => {
-    const value = (name) => card.querySelector(`[data-figure-field="${name}"]`);
-    const optionalText = (name) => value(name).value.trim() || null;
-    return {
-      figure_number: value("figure_number").value.trim(),
-      panel_label: value("panel_label").value.trim(),
-      page: value("page").value ? Number(value("page").value) : null,
-      caption_block_id: card.dataset.captionBlockId || null,
-      figure_class: value("figure_class").value,
-      description: value("description").value.trim(),
-      x_axis_label: optionalText("x_axis_label"),
-      y_axis_label: optionalText("y_axis_label"),
-      data_presentation: value("data_presentation").value,
-      extraction_feasibility: value("extraction_feasibility").value,
-      schema_relevant: value("schema_relevant").checked,
-      figure_only_records: Number(value("figure_only_records").value),
-      figure_only_atomic_values: Number(value("figure_only_atomic_values").value),
-    };
-  });
+function readFigurePanel(card, reviewStatus = card.dataset.reviewStatus) {
+  const value = (name) => card.querySelector(`[data-figure-field="${name}"]`);
+  const optionalText = (name) => value(name).value.trim() || null;
+  return {
+    proposal_panel_id: card.dataset.proposalPanelId || null,
+    review_status: reviewStatus,
+    figure_number: value("figure_number").value.trim(),
+    panel_label: value("panel_label").value.trim(),
+    page: value("page").value ? Number(value("page").value) : null,
+    caption_block_id: card.dataset.captionBlockId || null,
+    figure_class: value("figure_class").value,
+    description: value("description").value.trim(),
+    x_axis_label: optionalText("x_axis_label"),
+    y_axis_label: optionalText("y_axis_label"),
+    data_presentation: value("data_presentation").value,
+    extraction_feasibility: value("extraction_feasibility").value,
+    schema_relevant: value("schema_relevant").checked,
+    figure_only_records: Number(value("figure_only_records").value),
+    figure_only_atomic_values: Number(value("figure_only_atomic_values").value),
+  };
 }
 
 function figureCensusTotals(panels) {
@@ -713,7 +777,7 @@ function figureCensusTotals(panels) {
 }
 
 function renderFigureCensusSummary() {
-  const panels = document.querySelector("[data-figure-panel]") ? readFigurePanels() : [];
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
   const totals = panels.length ? figureCensusTotals(panels) : state.censusDraft.main_text_figure_census;
   const legacy = !panels.length && !state.censusDraft.main_text_figure_census.panels?.length
     && (totals.figures_reviewed || totals.schema_relevant_figures || totals.figure_only_records || totals.figure_only_atomic_values);
@@ -732,17 +796,125 @@ function renderFigureCensusSummary() {
     : `${panels.length} subfigure${panels.length === 1 ? "" : "s"} · ${totals.figures_reviewed || 0} main figure${totals.figures_reviewed === 1 ? "" : "s"} · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only record${totals.figure_only_records === 1 ? "" : "s"} · ${totals.figure_only_atomic_values || 0} figure-only value${totals.figure_only_atomic_values === 1 ? "" : "s"}`);
 }
 
+function figurePanelNeedsAttention(panel) {
+  const proposal = proposedFigurePanel(panel);
+  return panel.data_presentation === "uncertain"
+    || panel.extraction_feasibility === "uncertain"
+    || (proposal?.visual_candidates || []).some((candidate) => candidate.text_comparison !== "exact_text_match");
+}
+
+function filteredFigureIndexes() {
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  return panels.flatMap((panel, index) => {
+    const matches = state.figureReviewFilter === "all"
+      || (state.figureReviewFilter === "unreviewed" && ["unreviewed", "legacy_unspecified"].includes(panel.review_status))
+      || (state.figureReviewFilter === "attention" && figurePanelNeedsAttention(panel))
+      || (state.figureReviewFilter === "schema_relevant" && panel.schema_relevant);
+    return matches ? [index] : [];
+  });
+}
+
+function checkedFigurePanelCount() {
+  return (state.censusDraft.main_text_figure_census.panels || [])
+    .filter((panel) => ["confirmed", "corrected"].includes(panel.review_status)).length;
+}
+
+function renderFigureReviewToolbar() {
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  const visible = filteredFigureIndexes();
+  const position = visible.indexOf(state.figureQueueIndex);
+  $("figure-review-toolbar").hidden = !panels.length;
+  const queuePosition = position >= 0
+    ? `${position + 1} of ${visible.length} shown`
+    : visible.length
+      ? `editing current · ${visible.length} unchecked remain`
+      : "queue complete";
+  $("figure-review-progress").textContent = `${checkedFigurePanelCount()} of ${panels.length} checked · ${queuePosition}`;
+  $("figure-review-filter").value = state.figureReviewFilter;
+  $("previous-figure-panel").disabled = position <= 0;
+  $("next-figure-panel").disabled = position < 0 || position >= visible.length - 1;
+  if (!state.censusDirty) $("figure-draft-status").textContent = "Changes are kept in this browser until you save the census.";
+}
+
+function selectFigurePanel(index) {
+  updateCensusDraft();
+  state.figureQueueIndex = index;
+  renderFigurePanels();
+}
+
+function moveFigurePanel(offset) {
+  const visible = filteredFigureIndexes();
+  const position = visible.indexOf(state.figureQueueIndex);
+  const next = visible[position + offset];
+  if (next !== undefined) selectFigurePanel(next);
+}
+
+function confirmCurrentFigurePanel() {
+  const current = state.censusDraft.main_text_figure_census.panels[state.figureQueueIndex];
+  if (!current) return;
+  const invalid = document.querySelector("[data-figure-panel] :invalid");
+  if (invalid) {
+    invalid.reportValidity();
+    invalid.focus();
+    return;
+  }
+  const status = current.review_status === "corrected" ? "corrected" : "confirmed";
+  updateCensusDraft({ panelStatus: status, persist: true });
+  const remaining = filteredFigureIndexes();
+  if (state.figureReviewFilter === "unreviewed" && !remaining.length) {
+    state.figureReviewFilter = "all";
+    renderFigurePanels();
+    return;
+  }
+  const next = remaining.find((index) => index > state.figureQueueIndex) ?? remaining[0];
+  if (next !== undefined) state.figureQueueIndex = next;
+  renderFigurePanels();
+}
+
 function renderFigurePanels() {
   const panels = state.censusDraft.main_text_figure_census.panels || [];
-  const cards = panels.map((panel, index) => {
+  const visible = filteredFigureIndexes();
+  if (!visible.includes(state.figureQueueIndex)) state.figureQueueIndex = visible[0] ?? 0;
+  const panel = panels[state.figureQueueIndex];
+  if (!panel || !visible.length) {
+    const message = panels.length
+      ? "No subfigures match this filter. Choose All subfigures to revisit checked panels."
+      : "No subfigures are listed. Add one when the paper contains a numbered main-text figure.";
+    $("figure-panels").replaceChildren(element("p", { className: "figure-review-empty", text: message }));
+    renderFigureReviewToolbar();
+    renderFigureCensusSummary();
+    return;
+  }
+  const index = state.figureQueueIndex;
     const relevant = element("input", {
       properties: { type: "checkbox", checked: panel.schema_relevant },
       dataset: { figureField: "schema_relevant" },
     });
     const visualEvidence = renderVisualCandidateEvidence(panel);
-    const card = element("details", { className: "figure-panel-card", properties: { open: true }, dataset: { figurePanel: String(index), captionBlockId: panel.caption_block_id || "" } }, [
-      element("summary", { text: `${panel.figure_number ? `Figure ${panel.figure_number}` : "New subfigure"}${panel.panel_label ? panel.panel_label : ""} · ${FIGURE_CLASSES[panel.figure_class]}` }),
+    const proposal = proposedFigurePanel(panel);
+    const preview = proposal?.figure_bbox_pdf && panel.proposal_panel_id
+      ? element("figure", { className: "figure-panel-preview" }, [
+        element("img", {
+          attributes: {
+            src: `/api/figure-panel-image/${encodeURIComponent(state.paperId)}/${encodeURIComponent(panel.proposal_panel_id)}?split=${encodeURIComponent(state.split)}`,
+            alt: `Cropped view of Figure ${panel.figure_number}${panel.panel_label || ""}`,
+            loading: "lazy",
+          },
+        }),
+        element("figcaption", { text: "Localized crop from the main paper" }),
+      ])
+      : null;
+    const statusLabel = panel.review_status === "confirmed" ? "Confirmed" : panel.review_status === "corrected" ? "Corrected" : "Unchecked";
+    const card = element("section", { className: "figure-panel-card", dataset: { figurePanel: String(index), captionBlockId: panel.caption_block_id || "", proposalPanelId: panel.proposal_panel_id || "", reviewStatus: panel.review_status } }, [
+      element("div", { className: "figure-panel-heading" }, [
+        element("div", {}, [
+          element("strong", { text: `${panel.figure_number ? `Figure ${panel.figure_number}` : "New subfigure"}${panel.panel_label ? panel.panel_label : ""} · ${FIGURE_CLASSES[panel.figure_class]}` }),
+          element("span", { text: panel.proposal_panel_id ? "Model suggestion" : "Added by reviewer" }),
+        ]),
+        element("span", { className: `figure-review-state ${panel.review_status}`, text: statusLabel }),
+      ]),
       element("div", { className: "figure-panel-fields" }, [
+        ...(preview ? [preview] : []),
         element("div", { className: "figure-panel-grid compact" }, [
           figurePanelField("Main figure number", "figure_number", element("input", { properties: { value: panel.figure_number, required: true, placeholder: "2" } })),
           figurePanelField("Panel label", "panel_label", element("input", { properties: { value: panel.panel_label, placeholder: "a (optional)" } })),
@@ -766,9 +938,12 @@ function renderFigurePanels() {
           setWorkspaceView("split");
           navigatePdf("main", panel.page);
         } } })] : []),
+        element("button", { className: "primary confirm-figure-panel", properties: { type: "button" }, text: "Confirm and next", events: { click: confirmCurrentFigurePanel } }),
         element("button", { className: "danger-link", properties: { type: "button" }, text: "Remove subfigure", events: { click: () => {
           updateCensusDraft();
           state.censusDraft.main_text_figure_census.panels.splice(index, 1);
+          state.censusDirty = true;
+          persistLocalCensusDraft();
           renderFigurePanels();
         } } }),
       ]),
@@ -778,18 +953,26 @@ function renderFigurePanels() {
         card.querySelector('[data-figure-field="figure_only_records"]').value = 0;
         card.querySelector('[data-figure-field="figure_only_atomic_values"]').value = 0;
       }
-      updateCensusDraft();
+      updateCensusDraft({ panelStatus: "corrected", persist: true });
+      card.dataset.reviewStatus = "corrected";
+      const badge = card.querySelector(".figure-review-state");
+      badge.className = "figure-review-state corrected";
+      badge.textContent = "Corrected";
       renderFigureCensusSummary();
+      renderFigureReviewToolbar();
     }));
-    return card;
-  });
-  $("figure-panels").replaceChildren(...cards);
+  $("figure-panels").replaceChildren(card);
+  renderFigureReviewToolbar();
   renderFigureCensusSummary();
 }
 
-function updateCensusDraft() {
+function updateCensusDraft({ panelStatus = null, persist = false } = {}) {
   if (!document.querySelector("[data-count]")) return;
-  const panels = readFigurePanels();
+  const card = document.querySelector("[data-figure-panel]");
+  if (card && state.censusDraft.main_text_figure_census.panels[state.figureQueueIndex]) {
+    state.censusDraft.main_text_figure_census.panels[state.figureQueueIndex] = readFigurePanel(card, panelStatus || card.dataset.reviewStatus);
+  }
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
   const previousFigures = state.censusDraft?.main_text_figure_census || {};
   const totals = panels.length ? figureCensusTotals(panels) : {
     figures_reviewed: previousFigures.figures_reviewed || 0,
@@ -806,6 +989,10 @@ function updateCensusDraft() {
     },
     missing_or_ambiguous: $("inventory-notes").value,
   };
+  if (persist) {
+    state.censusDirty = true;
+    persistLocalCensusDraft();
+  }
 }
 
 function renderInventoryForm() {
@@ -829,7 +1016,9 @@ function renderInventoryForm() {
   $("figure-census-notes").value = figures.notes || "";
   $("inventory-notes").value = draft.missing_or_ambiguous;
   renderFigurePanels();
-  for (const input of document.querySelectorAll("#inventory-counts input, #figure-census-notes, #inventory-notes")) input.addEventListener("input", updateCensusDraft);
+  for (const input of document.querySelectorAll("#inventory-counts input, #figure-census-notes, #inventory-notes")) {
+    input.addEventListener("input", () => updateCensusDraft({ persist: true }));
+  }
   $("submit-audit").textContent = hasAudit() ? "Update census" : "Save census";
 }
 
@@ -870,6 +1059,7 @@ function renderInventoryComparison() {
         ]),
         element("p", { text: panel.description }),
         element("p", { className: "muted", text: [
+          panel.review_status === "confirmed" ? "confirmed by reviewer" : panel.review_status === "corrected" ? "corrected by reviewer" : "review status predates panel tracking",
           panel.page ? `page ${panel.page}` : null,
           panel.x_axis_label ? `x: ${panel.x_axis_label}` : null,
           panel.y_axis_label ? `y: ${panel.y_axis_label}` : null,
@@ -1503,6 +1693,24 @@ async function renderPdf() {
 
 async function submitAudit() {
   updateCensusDraft();
+  const panels = state.censusDraft.main_text_figure_census.panels;
+  const incompleteIndex = panels.findIndex((panel) => !panel.figure_number.trim() || !panel.description.trim());
+  if (incompleteIndex >= 0) {
+    state.figureReviewFilter = "all";
+    state.figureQueueIndex = incompleteIndex;
+    renderFigurePanels();
+    setStatus("Complete the figure number and description for this subfigure before saving.", true);
+    return;
+  }
+  const unchecked = state.censusDraft.main_text_figure_census.panels
+    .filter((panel) => !["confirmed", "corrected"].includes(panel.review_status));
+  if (unchecked.length) {
+    state.figureReviewFilter = "unreviewed";
+    state.figureQueueIndex = state.censusDraft.main_text_figure_census.panels.indexOf(unchecked[0]);
+    renderFigurePanels();
+    setStatus(`Check ${unchecked.length} remaining subfigure${unchecked.length === 1 ? "" : "s"} before saving the census.`, true);
+    return;
+  }
   const invalid = document.querySelector("#census-form :invalid");
   if (invalid) {
     invalid.reportValidity();
@@ -1512,6 +1720,7 @@ async function submitAudit() {
   const draft = state.censusDraft;
   try {
     state.bundle = await request(`/api/inventory-audits/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ base_revision: state.bundle.revision, review_scope_sources: state.bundle.sources, ...draft }) });
+    clearLocalCensusDraft();
     state.censusDraft = savedCensusDraft();
     state.editingCensus = false;
     renderStudy();
@@ -2410,11 +2619,23 @@ document.querySelectorAll("[data-workspace-view]").forEach((button) => button.ad
 $("paper-filter").addEventListener("input", renderPapers);
 $("submit-audit").addEventListener("click", submitAudit);
 $("edit-census").addEventListener("click", editSavedCensus);
+$("figure-review-filter").addEventListener("change", (event) => {
+  updateCensusDraft();
+  state.figureReviewFilter = event.target.value;
+  state.figureQueueIndex = filteredFigureIndexes()[0] ?? 0;
+  renderFigurePanels();
+});
+$("previous-figure-panel").addEventListener("click", () => moveFigurePanel(-1));
+$("next-figure-panel").addEventListener("click", () => moveFigurePanel(1));
 $("add-figure-panel").addEventListener("click", () => {
   updateCensusDraft();
   state.censusDraft.main_text_figure_census.panels.push(emptyFigurePanel());
+  state.figureReviewFilter = "all";
+  state.figureQueueIndex = state.censusDraft.main_text_figure_census.panels.length - 1;
+  state.censusDirty = true;
+  persistLocalCensusDraft();
   renderFigurePanels();
-  $("figure-panels").lastElementChild?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  $("figure-panels").scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
 $("retry-pdf").addEventListener("click", () => navigatePdf(state.source, state.page));
 $("pdf-source").addEventListener("change", (event) => navigatePdf(event.target.value, 1));
@@ -2507,6 +2728,15 @@ $("close-import").addEventListener("click", () => $("import-dialog").close());
 $("cancel-import").addEventListener("click", () => $("import-dialog").close());
 $("import-form").addEventListener("submit", importPaper);
 document.addEventListener("keydown", (event) => {
+  if (state.tab === "inventory" && !document.querySelector("dialog[open]") && !["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName)) {
+    const key = event.key.toLowerCase();
+    if (key === "arrowright" || key === "j") moveFigurePanel(1);
+    else if (key === "arrowleft" || key === "k") moveFigurePanel(-1);
+    else if (key === "v") confirmCurrentFigurePanel();
+    else return;
+    event.preventDefault();
+    return;
+  }
   if (state.tab !== "records" || $("record-dialog").open || ["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName)) return;
   const entry = currentEntry().entry;
   if (!entry) return;
@@ -2540,9 +2770,7 @@ async function startApp() {
   $("empty-message").textContent = "Signing you in and fetching the paper list.";
   try {
     if (!state.user) await loadSession();
-    const figureProposals = ensureFigureCensusProposals();
     await loadPapers();
-    await figureProposals;
     $("empty-title").textContent = "Choose a paper";
     $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures.";
   } catch (error) { showStartupError(error); }

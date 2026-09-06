@@ -104,6 +104,8 @@ def test_review_proposal_never_declares_unmatched_value_figure_only(tmp_path):
     )
 
     panel = proposal["panels"][0]
+    assert len(panel["proposal_panel_id"]) == 24
+    assert panel["figure_bbox_pdf"] == figure.bbox
     assert panel["figure_only_atomic_values"] == 0
     assert panel["visual_candidates"][0]["text_comparison"] == "exact_text_match"
     assert panel["visual_candidates"][0]["matching_block_ids"] == ["main-text-1"]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import math
 import re
@@ -295,7 +296,18 @@ def build_review_proposal(
     panels = []
     for figure in result.figures:
         source = by_figure[figure.figure_number]
-        for panel in figure.panels:
+        for panel_index, panel in enumerate(figure.panels):
+            identity = json.dumps(
+                {
+                    "image_sha256": figure.image_sha256,
+                    "figure_number": figure.figure_number,
+                    "panel_label": panel.panel_label,
+                    "panel_bbox_normalized": panel.panel_bbox_normalized,
+                    "panel_index": panel_index,
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
             candidates = []
             for value in panel.explicit_values:
                 matches = _text_matches(value, document)
@@ -310,6 +322,7 @@ def build_review_proposal(
                 )
             panels.append(
                 {
+                    "proposal_panel_id": hashlib.sha256(identity).hexdigest()[:24],
                     "figure_number": figure.figure_number,
                     "panel_label": panel.panel_label,
                     "page": source.page,
@@ -324,12 +337,47 @@ def build_review_proposal(
                     "figure_only_records": 0,
                     "figure_only_atomic_values": 0,
                     "panel_bbox_normalized": panel.panel_bbox_normalized,
+                    "figure_bbox_pdf": source.bbox,
                     "visual_candidates": candidates,
                     "visual_notes": panel.visual_notes,
                     "image_sha256": figure.image_sha256,
                 }
             )
     return {"proposal_method": "caption_and_figure", "panels": panels}
+
+
+def attach_review_geometry(
+    proposal: dict[str, Any], manifest: FigureImageManifest
+) -> dict[str, Any]:
+    """Attach deterministic crop identity and coordinates to a cached proposal.
+
+    Model responses intentionally contain coordinates relative to the rendered figure.
+    The app also needs the figure's PDF rectangle to display the selected panel without
+    shipping generated crop files. This enrichment is local and does not change the
+    scientific classification.
+    """
+
+    by_figure = {item.figure_number: item for item in manifest.figures}
+    for index, panel in enumerate(proposal.get("panels", [])):
+        source = by_figure.get(str(panel.get("figure_number", "")))
+        if source is None:
+            continue
+        panel["figure_bbox_pdf"] = source.bbox
+        identity = json.dumps(
+            {
+                "image_sha256": source.image_sha256,
+                "figure_number": panel.get("figure_number"),
+                "panel_label": panel.get("panel_label"),
+                "panel_bbox_normalized": panel.get("panel_bbox_normalized"),
+                "index": index,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        panel.setdefault(
+            "proposal_panel_id", hashlib.sha256(identity).hexdigest()[:24]
+        )
+    return proposal
 
 
 def classify_figure_images(

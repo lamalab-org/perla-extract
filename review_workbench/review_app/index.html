@@ -108,6 +108,21 @@
                 </div>
                 <p class="muted"><strong>Figure-only</strong> means a schema record or atomic field value is visible in the panel but absent from running text, captions, and tables. Assign a fact spanning several panels to the single panel that best supports it. Do not count curve samples or uncertain visual estimates.</p>
                 <div id="figure-census-summary" class="figure-census-summary" role="status"></div>
+                <div id="figure-review-toolbar" class="figure-review-toolbar" hidden>
+                  <div><strong id="figure-review-progress">0 of 0 checked</strong><span id="figure-draft-status">Changes are kept in this browser until you save the census.</span></div>
+                  <label>Show
+                    <select id="figure-review-filter">
+                      <option value="unreviewed">Unchecked first</option>
+                      <option value="all">All subfigures</option>
+                      <option value="attention">Uncertain or unmatched</option>
+                      <option value="schema_relevant">Schema-relevant</option>
+                    </select>
+                  </label>
+                  <div class="figure-review-navigation">
+                    <button id="previous-figure-panel" type="button" aria-label="Previous subfigure">←</button>
+                    <button id="next-figure-panel" type="button" aria-label="Next subfigure">Next →</button>
+                  </div>
+                </div>
                 <div id="figure-panels" class="figure-panel-list"></div>
                 <label>Figure census notes<textarea id="figure-census-notes" rows="3" placeholder="Record ambiguities that are not specific to one panel."></textarea></label>
               </section>
