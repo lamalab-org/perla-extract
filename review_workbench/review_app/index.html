@@ -7,46 +7,67 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
+  <section id="auth-gate" class="auth-gate" hidden>
+    <div class="auth-card">
+      <span class="eyebrow">PERLA</span>
+      <h1>Sign in to review ground truth</h1>
+      <p id="auth-help">Use the review account provided by the project team.</p>
+      <form id="internal-sign-in" class="internal-sign-in" hidden>
+        <label>Email<input id="login-email" type="email" autocomplete="username" required /></label>
+        <label>Password<input id="login-password" type="password" autocomplete="current-password" required /></label>
+        <button type="submit" class="primary">Sign in</button>
+      </form>
+      <button id="use-email-sign-in" class="auth-switch" type="button" hidden>Forgot your password? Use email recovery</button>
+      <div id="clerk-sign-in" hidden></div>
+      <button id="use-project-password" class="auth-switch" type="button" hidden>Use the project password instead</button>
+      <p id="login-status" role="alert"></p>
+    </div>
+  </section>
+
+  <div id="workbench" hidden>
   <header>
     <div><span class="eyebrow">PERLA</span><h1>Study ground-truth review</h1></div>
     <div class="header-actions">
-      <label>Dataset <select id="split"><option>calibration</option><option>dev</option><option>test</option></select></label>
+      <a class="button-link" href="/comparison.html">Extractor study</a>
+      <button id="toggle-paper-list" type="button" aria-controls="paper-rail" aria-expanded="true" aria-label="Hide paper list" title="Hide paper list">Papers</button>
+      <label>Dataset <select id="split"><option value="dev">Current review — refreshed extraction</option><option value="calibration">Legacy calibration — deprecated</option><option value="test">Held-out test</option></select></label>
       <button id="open-annotations">My edits &amp; undo</button>
+      <button id="download-all-feedback" type="button" hidden>Download feedback</button>
       <button id="open-import">Import extraction</button>
       <span id="reviewer" class="pill">Loading reviewer…</span>
+      <div id="clerk-user-button"></div>
+      <button id="sign-out" type="button" hidden>Sign out</button>
     </div>
   </header>
 
   <main>
-    <aside class="paper-rail">
+    <aside id="paper-rail" class="paper-rail">
       <div class="rail-heading"><h2>Papers</h2><span id="paper-count"></span></div>
       <input id="paper-filter" type="search" placeholder="Filter papers…" />
+      <p id="paper-load-status" class="muted" role="status">Loading papers…</p>
       <div id="paper-list" class="paper-list"></div>
     </aside>
 
     <section id="empty-state" class="empty-state">
-      <h2>Choose a paper</h2>
-      <p>Import the best current extraction, then establish independent record and main-text figure censuses before reviewing its candidates.</p>
+      <h2 id="empty-title">Choose a paper</h2>
+      <p id="empty-message">Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures.</p>
+      <button id="retry-startup" type="button" hidden>Try loading again</button>
     </section>
 
     <section id="workspace" hidden>
       <div class="study-heading">
         <div><span id="paper-split" class="eyebrow"></span><h2 id="paper-title"></h2><p id="paper-doi"></p></div>
         <div class="study-actions">
+          <div class="workspace-view-switch" role="group" aria-label="Workspace view">
+            <button type="button" data-workspace-view="split" aria-pressed="true">Both</button>
+            <button type="button" data-workspace-view="paper" aria-pressed="false">Paper</button>
+            <button type="button" data-workspace-view="review" aria-pressed="false">Review</button>
+          </div>
           <span id="revision" class="pill"></span>
-          <details id="review-downloads" class="download-menu">
-            <summary>Download review files</summary>
-            <div class="download-menu-panel">
-              <p>Use Excel for an offline review of record decisions and scalar values. Uploading a reviewed workbook validates and saves all of its changes together. Add or remove complete records in the browser.</p>
-              <button id="download-review-workbook" type="button">Editable Excel workbook (all records)</button>
-              <label class="workbook-upload">Upload reviewed Excel workbook<input id="review-workbook-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /></label>
-              <button id="download-study-json" type="button">Current study JSON</button>
-              <button id="download-main-pdf" type="button">Main paper PDF</button>
-              <button id="download-supplement-pdf" type="button">Supporting information PDF</button>
-            </div>
-          </details>
-          <button id="download-truth" hidden>Download PR bundle</button>
+          <button id="download-review-workbook" type="button" class="primary">Download Excel</button>
+          <button id="open-files" type="button">Files &amp; upload</button>
         </div>
+        <p id="file-action-status" class="file-action-status" role="status" hidden></p>
       </div>
       <p id="schema-compatibility" class="callout" hidden></p>
 
@@ -54,6 +75,7 @@
         <section class="pdf-panel">
           <div class="panel-toolbar">
             <select id="pdf-source" aria-label="Paper source"><option value="main">Main paper</option><option value="supplement">Supporting information (SI)</option></select>
+            <span id="pdf-current-source" class="source-badge" role="status">Main paper</span>
             <button id="previous-page" aria-label="Previous page">←</button>
             <label>Page <input id="page-number" type="number" min="1" value="1" /></label>
             <span id="page-count"></span>
@@ -63,45 +85,55 @@
             <div><span id="citation-page-label" class="eyebrow"></span><strong id="citation-block-label"></strong><span id="citation-match-label" class="citation-match"></span><blockquote id="citation-location-quote"></blockquote></div>
             <button id="clear-citation" aria-label="Clear evidence location">×</button>
           </div>
-          <div id="pdf-stage" aria-busy="false"><p id="pdf-message" class="pdf-message" role="status" hidden></p><div id="pdf-canvas"><img id="pdf-page" alt="Rendered PDF page" /><div id="pdf-highlights" aria-hidden="true"></div></div></div>
+          <div id="pdf-stage" aria-busy="false"><p id="pdf-message" class="pdf-message" role="status" hidden></p><button id="retry-pdf" type="button" hidden>Try loading this page again</button><div id="pdf-canvas"><img id="pdf-page" alt="Rendered PDF page" /><div id="pdf-highlights" aria-hidden="true"></div></div></div>
           <details class="source-text"><summary>Selectable page text</summary><pre id="pdf-text"></pre></details>
         </section>
 
         <section class="review-panel">
           <nav class="tabs">
-            <button data-tab="inventory" class="active">1 · Inventory</button>
+            <button data-tab="inventory" class="active">1 · Census</button>
             <button data-tab="records">2 · Records</button>
             <button data-tab="completeness">3 · Completeness</button>
             <button data-tab="history">History</button>
           </nav>
-          <p id="workflow-gate" class="callout workflow-gate">Complete and submit the blind inventory first. This keeps the model candidates from influencing your independent count; record review unlocks immediately afterward.</p>
-
           <div id="inventory-tab" class="tab-panel">
-            <div id="blind-audit">
-              <h3>Blind record and figure census</h3>
-              <p class="callout">Search every imported source before revealing the model candidates. Submitting records the main paper and available SI as the inventory scope; it does not treat either source as an extraction result.</p>
+            <div id="census-form">
+              <h3>Paper and figure census</h3>
               <details class="record-definitions" open><summary>What counts as a family, device, or measurement?</summary><div id="inventory-definitions"></div></details>
               <div id="inventory-counts" class="count-grid"></div>
               <section class="figure-census">
-                <h4>Main-text figure gap</h4>
-                <p>Count only numbered figures in the main paper—not SI figures. We use these counts to estimate what the text-only extractor misses by ignoring figures.</p>
-                <div class="count-grid">
-                  <label>Main-text figures reviewed<input id="figures-reviewed" type="number" min="0" value="0" required /></label>
-                  <label>Figures relevant to the schema<input id="schema-relevant-figures" type="number" min="0" value="0" required /></label>
-                  <label>Figure-only records<input id="figure-only-records" type="number" min="0" value="0" required /></label>
-                  <label>Figure-only atomic values<input id="figure-only-values" type="number" min="0" value="0" required /></label>
+                <div class="figure-census-heading">
+                  <div><h4>Main-text subfigures</h4><p>Describe every panel in each numbered main-paper figure. Totals are calculated automatically.</p></div>
+                  <button id="add-figure-panel" type="button">Add subfigure</button>
                 </div>
-                <p class="muted"><strong>Figure-only</strong> means the record or atomic field value belongs in the schema but is not explicitly reported in the caption, running text, or a table. Count one numbered figure once, not each panel. Count field instances—not pixels or sampled points—and do not infer or digitize uncertain values.</p>
-                <label>Figure-only examples or ambiguities<textarea id="figure-census-notes" rows="3" placeholder="For example: Fig. 3 contains two stability checkpoints not stated in its caption or the text."></textarea></label>
+                <p class="muted"><strong>Figure-only</strong> means a schema record or atomic field value is visible in the panel but absent from running text, captions, and tables. Assign a fact spanning several panels to the single panel that best supports it. Do not count curve samples or uncertain visual estimates.</p>
+                <div id="figure-census-summary" class="figure-census-summary" role="status"></div>
+                <div id="figure-review-toolbar" class="figure-review-toolbar" hidden>
+                  <div><strong id="figure-review-progress">0 of 0 checked</strong><span id="figure-draft-status">Changes are kept in this browser until you save the census.</span></div>
+                  <label>Show
+                    <select id="figure-review-filter">
+                      <option value="unreviewed">Unchecked first</option>
+                      <option value="all">All subfigures</option>
+                      <option value="attention">Uncertain or unmatched</option>
+                      <option value="schema_relevant">Schema-relevant</option>
+                    </select>
+                  </label>
+                  <div class="figure-review-navigation">
+                    <button id="previous-figure-panel" type="button" aria-label="Previous subfigure">←</button>
+                    <button id="next-figure-panel" type="button" aria-label="Next subfigure">Next →</button>
+                  </div>
+                </div>
+                <div id="figure-panels" class="figure-panel-list"></div>
+                <label>Figure census notes<textarea id="figure-census-notes" rows="3" placeholder="Record ambiguities that are not specific to one panel."></textarea></label>
               </section>
               <label>Missing, ambiguous, or difficult records<textarea id="inventory-notes" rows="4" placeholder="Describe devices or measurements that still need review…"></textarea></label>
-              <button id="submit-audit" class="primary">Submit censuses and reveal candidates</button>
+              <button id="submit-audit" class="primary">Save census</button>
             </div>
             <div id="inventory-revealed" hidden>
               <div id="inventory-comparison"></div>
               <div id="quality-artifacts"></div>
-              <div id="inventory-lists"></div>
-              <button data-stage="inventory" class="complete-stage primary">Mark inventory reviewed</button>
+              <button id="edit-census" type="button">Edit saved census</button>
+              <button data-stage="inventory" class="complete-stage primary">Mark census reviewed</button>
             </div>
           </div>
 
@@ -124,15 +156,19 @@
                     <option value="performance_observations">Performance observation</option>
                     <option value="population_statistics">Population statistic</option>
                     <option value="stability_tests">Stability test</option>
-                    <option value="identity_links">Cross-window identity link</option>
                   </select>
                   <button id="add-record">Create draft</button>
                 </div></details>
               </div>
             </div>
-            <p class="callout record-guidance"><strong>What does “Needs attention” mean?</strong> It shows records you marked for correction, records added or revised during the model's second evidence read, and device families with an A/B/X assignment that did not pass every automated check. These are review priorities, not claims that a record is correct or incorrect.</p>
-            <p class="callout record-guidance"><strong>Wrong number of devices or measurements?</strong> Add a missing record from the menu above, or copy the current record when it is a useful starting point. For an extra record, choose <strong>Remove extra record</strong>. Removal is blocked until linked measurements have been reassigned or removed.</p>
-            <p class="callout record-guidance"><strong>Choose one outcome for the complete record shown below.</strong> <strong>All fields match source</strong> means every displayed field is supported and the record belongs in the dataset. Use <strong>Cannot establish</strong> when the paper is genuinely ambiguous, or <strong>Correct fields</strong> when something is wrong or missing.</p>
+            <details class="record-guidance">
+              <summary>How to review records and fix missing or extra records</summary>
+              <div>
+                <p><strong>Needs attention</strong> shows records you marked for correction, records changed during the model's second evidence read, and A/B/X assignments that need a manual check. These are priorities, not correctness claims.</p>
+                <p><strong>Wrong number or type?</strong> Add a missing record, merge repeated descriptions of the same object, change a wrongly classified record, or remove an unsupported one. A merge moves explicit links automatically.</p>
+                <p><strong>Choose one outcome for the complete record.</strong> Use <strong>All fields match source</strong>, <strong>Cannot establish</strong>, or <strong>Correct fields</strong>.</p>
+              </div>
+            </details>
             <div id="review-queue"></div>
             <div class="queue-footer">
               <button id="previous-record" aria-label="Previous record">← Previous</button>
@@ -144,7 +180,6 @@
 
           <div id="completeness-tab" class="tab-panel" hidden>
             <h3>Final completeness audit</h3>
-            <p>Confirm that all distinctions required for scoring survived the review.</p>
             <div id="quality-gates" class="quality-gates"></div>
             <label>Completion note<textarea id="stage-note" rows="4" placeholder="Record remaining ambiguity or schema limitations…"></textarea></label>
             <button data-stage="completeness" class="complete-stage primary">Complete paper review</button>
@@ -161,20 +196,43 @@
     </section>
   </main>
 
+  <dialog id="files-dialog">
+    <form method="dialog" class="dialog-card files-dialog-card">
+      <div class="dialog-heading"><div><span class="eyebrow">Current paper</span><h2>Files for review</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <section class="file-section file-section-primary">
+        <div><h3>Review in Excel</h3><p>Work down the short Record review checklist. Open a record-type tab only when a scalar value is wrong, then upload the same workbook. The upload is validated and saved as one revision.</p></div>
+        <button id="download-review-workbook-dialog" type="button" class="primary">Download editable Excel</button>
+        <label class="workbook-upload"><span>Upload completed workbook</span><input id="review-workbook-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /></label>
+      </section>
+      <section class="file-section">
+        <div><h3>Source documents</h3><p>Keep the paper beside a local review or inspect the supporting information separately.</p></div>
+        <div class="file-actions"><button id="download-main-pdf" type="button">Download main paper</button><button id="download-supplement-pdf" type="button">Download supporting information</button></div>
+      </section>
+      <section class="file-section">
+        <div><h3>Structured data</h3><p>Download the current validated study record. Administrators can export a PR bundle after adjudication.</p></div>
+        <div class="file-actions"><button id="download-study-json" type="button">Download study JSON</button><button id="download-truth" type="button" hidden>Download adjudicated PR bundle</button></div>
+        <p id="final-export-help" class="muted" hidden>PR export becomes available after an administrator completes adjudication.</p>
+      </section>
+      <p id="files-status" role="status"></p>
+      <div class="dialog-actions"><span></span><button value="cancel">Close</button></div>
+    </form>
+  </dialog>
+
   <dialog id="annotations-dialog">
     <form method="dialog" class="dialog-card">
-      <div class="dialog-heading"><div><span class="eyebrow">Saved reviewer activity</span><h2>My annotations and edits</h2></div><button value="cancel" aria-label="Close">×</button></div>
-      <p class="callout">This is your persisted activity log for the selected dataset. Use <strong>Undo this saved edit</strong> to reverse a correction that has not since been changed. Undo creates another saved, validated audit event; it never erases history.</p>
+      <div class="dialog-heading"><div><span class="eyebrow">Your work in this dataset</span><h2>My review progress</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <div class="editor-mode" role="group" aria-label="Saved work view"><button id="show-current-annotations" type="button" class="active" aria-pressed="true">Current work</button><button id="show-annotation-history" type="button" aria-pressed="false">History</button></div>
+      <p id="annotation-help" class="callout"></p>
       <div id="annotation-summary"></div>
       <div id="annotation-list" class="annotation-list"></div>
-      <div class="dialog-actions"><span></span><button value="cancel">Close</button><button id="download-annotations" type="button" class="primary">Download my annotations</button></div>
+      <div class="dialog-actions"><button id="reset-annotations" type="button" class="danger">Reset all current progress</button><span></span><button value="cancel">Close</button><button id="download-annotations" type="button" class="primary">Download activity JSON</button></div>
       <p id="annotation-status" role="status"></p>
     </form>
   </dialog>
 
   <dialog id="record-dialog">
     <form method="dialog" class="dialog-card">
-      <div class="dialog-heading"><div><span id="record-kind" class="eyebrow"></span><h2 id="record-title">Edit record</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <div class="dialog-heading"><div><span id="record-kind" class="eyebrow"></span><h2 id="record-title">Edit record</h2></div><button id="close-record" type="button" aria-label="Close">×</button></div>
       <p id="record-dialog-help" class="callout"></p>
       <div id="record-dependencies" class="dependency-warning" hidden></div>
       <div class="editor-mode" role="group" aria-label="Record editor">
@@ -193,8 +251,28 @@
       <label>Evidence block ID<input id="citation-block" /></label>
       <label>Exact quote <span>Trim this to the smallest passage that supports the correction.</span><textarea id="citation-quote" rows="3"></textarea></label>
       <label><span id="mutation-note-label">Reason for correction</span> <span id="mutation-note-help">Explain what the extraction got wrong.</span><input id="mutation-note" placeholder="What did the extraction get wrong?" /></label>
-      <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove extra record</button><span></span><button id="reload-paper-dialog" type="button" hidden>Discard this edit and load latest</button><button value="cancel">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
+      <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove extra record</button><span></span><button id="reload-paper-dialog" type="button" hidden>Discard this edit and load latest</button><button id="cancel-record" type="button">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
       <p id="dialog-status" role="status"></p>
+    </form>
+  </dialog>
+
+  <dialog id="merge-dialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-heading"><div><span class="eyebrow">Duplicate record</span><h2>Merge into the correct record</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <p class="callout">All measurements and other explicit links will move to the record you keep. The duplicate will then be removed as one validated, undoable correction.</p>
+      <label>Keep this record<select id="merge-target"></select></label>
+      <label>Why are these the same scientific object?<input id="merge-note" placeholder="For example: repeated mention of the same device and protocol" /></label>
+      <div class="dialog-actions"><span></span><button value="cancel">Cancel</button><button id="confirm-merge" type="button" class="primary">Merge duplicate</button></div>
+      <p id="merge-status" role="status"></p>
+    </form>
+  </dialog>
+
+  <dialog id="reclassify-dialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-heading"><div><span class="eyebrow">Wrong record type</span><h2>Move information to the right record type</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <p class="callout">Choose the correct type, then complete its fields from the paper. Saving adds the corrected record and removes the wrongly typed one together.</p>
+      <label>Correct record type<select id="reclassify-target"></select></label>
+      <div class="dialog-actions"><span></span><button value="cancel">Cancel</button><button id="continue-reclassify" type="button" class="primary">Continue to fields</button></div>
     </form>
   </dialog>
 
@@ -202,7 +280,7 @@
     <form id="import-form" class="dialog-card">
       <div class="dialog-heading"><div><span class="eyebrow">New review</span><h2>Import extractor artifacts</h2></div><button type="button" id="close-import">×</button></div>
       <label>Paper identifier<input name="paper_id" required placeholder="10.1126--science.adf0194" /></label>
-      <label>Dataset split<select name="split"><option>calibration</option><option>dev</option><option>test</option></select></label>
+      <label>Dataset split<select name="split"><option value="dev">Current review — refreshed extraction</option><option value="calibration">Legacy calibration — deprecated</option><option value="test">Held-out test</option></select></label>
       <label>Main paper PDF<input name="pdf" type="file" accept="application/pdf" required /></label>
       <label>Supplement PDF<input name="supplement" type="file" accept="application/pdf" /></label>
       <label>extraction.json<input name="extraction" type="file" accept="application/json" required /></label>
@@ -217,6 +295,7 @@
     </form>
   </dialog>
 
+  </div>
   <script src="/app.js" type="module"></script>
 </body>
 </html>

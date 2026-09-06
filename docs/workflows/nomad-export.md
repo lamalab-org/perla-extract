@@ -41,6 +41,9 @@ Perovskite site ions come either from explicit source claims or from an accepted
 enrichment proposal that exactly reconstructs that formula. Processing fields and
 solution roles likewise consume only accepted index-based proposals. See
 [Interpret composition and processing](enrichment.md).
+The adapter repeats enrichment validation against the supplied parser blocks at its
+own trust boundary. An audit label alone is insufficient; calls that omit source
+blocks cannot project accepted enrichment.
 
 The classic NOMAD cell slot cannot faithfully represent several perovskite absorbers
 in one tandem. In that case the adapter does not choose one or create fictitious cells:
@@ -68,8 +71,8 @@ silently projected into NOMAD.
 
 The adapter targets `perovskite-solar-cell-database==1.2.14` at commit
 `afd75e69ebb07c8f7f82d203231b70f488e40997`. Local Pydantic models validate every
-normal run. The optional `nomad` dependency and manual CI job additionally compare the
-outbound fields with the installed upstream schema.
+normal run. Repository CI installs the optional `nomad` dependency in a dedicated job
+and compares the outbound fields with the pinned upstream schema.
 
 ## Historical reduced export
 

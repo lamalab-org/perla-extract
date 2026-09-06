@@ -57,9 +57,20 @@ default workflow writes it as `enrichment.json` before running downstream adapte
 ## Export to NOMAD
 
 `to_nomad_with_report` returns separately uploadable archives, source mappings,
-composition-normalization readiness, and explicit conversion issues.
+composition-normalization readiness, and explicit conversion issues. Supply the
+original `EvidenceBlock` list through `evidence_blocks` when applying enrichment; the
+adapter otherwise refuses to trust accepted semantic proposals.
 
 ::: perla_extract.study_extraction.nomad.to_nomad_with_report
+    options:
+      show_root_heading: true
+
+## Evaluate rich extractions
+
+`evaluate_study` matches records without run-local IDs and reports inventory,
+relationships, scalar fields, and atomic values separately.
+
+::: perla_extract.study_extraction.evaluation.evaluate_study
     options:
       show_root_heading: true
 
@@ -82,5 +93,21 @@ convenience wrapper that returns only the validated reduced cells.
 each supplied block appears exactly once as primary evidence.
 
 ::: perla_extract.study_extraction.partitioning.plan_evidence_windows
+    options:
+      show_root_heading: true
+
+## Discover and acquire papers
+
+`run_papersbot` combines any enabled discovery sources into one incremental paper
+state. Pass ordered `PdfSource` implementations when the deployment has an authorized
+retrieval mechanism beyond stored Zotero attachments and open-access repositories.
+One source may return multiple `AcquiredPdf` records; each becomes a separately hashed
+`PaperDocument` instead of being collapsed into a single paper-level path.
+
+::: perla_extract.papersbot.run_papersbot
+    options:
+      show_root_heading: true
+
+::: perla_extract.papersbot.PdfSource
     options:
       show_root_heading: true

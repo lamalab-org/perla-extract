@@ -1,16 +1,40 @@
 const $ = (id) => document.getElementById(id);
+const REVIEW_TOKEN_KEY = "review-token";
 const COLLECTIONS = {
   device_families: "Device families",
   individual_devices: "Individual devices",
   performance_observations: "Performance observations",
   population_statistics: "Population statistics",
   stability_tests: "Stability tests",
-  identity_links: "Cross-window identity links",
+};
+const FIGURE_CLASSES = {
+  jv: "J–V",
+  eqe: "EQE / integrated EQE",
+  population_statistics: "Population statistics",
+  stability: "Stability",
+  characterization: "Characterization",
+  device_structure: "Device structure",
+  other: "Other",
+};
+const FIGURE_DATA_PRESENTATIONS = {
+  no_numeric_data: "No numeric data",
+  explicit_numeric_labels: "Explicit printed numbers",
+  inset_table: "Inset table",
+  plotted_values_only: "Plotted values only",
+  mixed: "Mixed",
+  uncertain: "Uncertain",
+};
+const FIGURE_EXTRACTION_FEASIBILITY = {
+  straightforward: "Straightforward from printed values",
+  partly_straightforward: "Some values are straightforward",
+  requires_digitization: "Requires plot digitization",
+  not_applicable: "No numeric extraction applicable",
+  uncertain: "Uncertain",
 };
 const RECORD_GUIDANCE = {
   device_families: {
-    census: "One shared recipe or architecture variant, such as a control or treatment group. Do not count a champion, scan direction, or mean as another family.",
-    review: "Check the shared stack, composition, architecture, and fabrication recipe. Performance numbers belong in linked observations or population statistics.",
+    census: "One complete photovoltaic design defined by its layer materials, absorber composition, and topology. A treatment condition, thickness, champion, scan, or mean is not another family when that design is unchanged. Characterization-only films and partial stacks are not device families.",
+    review: "Check that this is a complete photovoltaic device design and that its shared stack, composition, and architecture are correct. Specimen-specific processing and performance belong in linked records.",
   },
   individual_devices: {
     census: "One particular measured specimen that the paper distinguishes, such as a champion, representative, or certified cell. Multiple measurements of the same cell are not additional devices.",
@@ -28,10 +52,6 @@ const RECORD_GUIDANCE = {
     census: "One aging experiment on a stated specimen or device group. Its checkpoints and multiple reported outcomes remain inside that test.",
     review: "Check what specimen was aged, how confidently it links to a device or family, all test-wide conditions, and every checkpoint's time, local conditions, and outcomes.",
   },
-  identity_links: {
-    census: "One explicit claim that records extracted from different text regions refer to the same real-world entity.",
-    review: "Check that the cited evidence supports identity; similarity alone is not enough.",
-  },
 };
 const DECISION_GUIDANCE = {
   verified: "All fields match the source",
@@ -39,14 +59,13 @@ const DECISION_GUIDANCE = {
   needs_correction: "One or more fields need correction",
 };
 const QUALITY_GATES = [
-  "Main-paper device variants checked",
-  "Supporting-information device variants checked",
+  "Main-paper device designs and experimental variants checked",
+  "Supporting-information device designs and experimental variants checked",
   "Champion and representative devices kept distinct",
   "Individual observations and population statistics kept distinct",
   "Scan directions and stabilized measurements kept distinct",
   "Composition, layer stack, and processing details checked",
   "Stability specimens, conditions, and checkpoints checked",
-  "Every cross-window identity link explicitly justified",
   "Every retained reported value has source evidence",
   "Remaining uncertainty recorded without inventing a value",
 ];
@@ -76,26 +95,112 @@ const REPAIR_STATUS_TEXT = {
   not_needed: "The automated audit found no targeted text reread to perform.",
   failed: "The targeted text reread failed; no repair result was applied.",
 };
+const SPLIT_LABELS = {
+  dev: "Current review",
+  calibration: "Legacy calibration",
+  test: "Held-out test",
+};
 const state = {
-  split: "calibration", papers: [], paperId: null, bundle: null, user: null,
+  split: "dev", papers: [], paperId: null, bundle: null, user: null,
   page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null,
   queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
-  studySchema: null, activeCitation: null, pdfRequest: 0,
+  studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
+  pdfObjectUrl: null, pdfDisplayed: null, censusDraft: null, editingCensus: false, loadingPaperId: null,
+  annotationView: "current", authMode: "local", clerk: null,
+  figureCensusProposals: {}, figureProposalPromises: new Map(),
+  figureQueueIndex: 0, figureReviewFilter: "unreviewed", censusDirty: false,
 };
 
+const LAPTOP_LAYOUT = "(max-width: 1400px)";
+const PDF_VIEW_VERSION = 2;
+
+function setPaperListOpen(open, remember = true) {
+  document.querySelector("main").classList.toggle("paper-list-hidden", !open);
+  const button = $("toggle-paper-list");
+  button.setAttribute("aria-expanded", String(open));
+  button.setAttribute("aria-label", open ? "Hide paper list" : "Show paper list");
+  button.title = open ? "Hide paper list" : "Show paper list";
+  button.textContent = "Papers";
+  if (remember) sessionStorage.setItem("perla-paper-list-open", String(open));
+}
+
+function setWorkspaceView(view, remember = true) {
+  if (!["split", "paper", "review"].includes(view)) return;
+  document.querySelector(".workspace-grid").dataset.view = view;
+  document.querySelectorAll("[data-workspace-view]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.workspaceView === view));
+  });
+  if (remember) sessionStorage.setItem("perla-workspace-view", view);
+}
+
+function initializeWorkspaceLayout() {
+  const savedPaperList = sessionStorage.getItem("perla-paper-list-open");
+  const paperListOpen = savedPaperList == null
+    ? !window.matchMedia(LAPTOP_LAYOUT).matches
+    : savedPaperList === "true";
+  setPaperListOpen(paperListOpen, false);
+  setWorkspaceView(sessionStorage.getItem("perla-workspace-view") || "split", false);
+}
+
+async function authorizationHeaders(headers = {}) {
+  const token = localStorage.getItem(REVIEW_TOKEN_KEY);
+  if (token) return { ...headers, Authorization: `Bearer ${token}` };
+  if (!state.clerk?.session) return headers;
+  const clerkToken = await state.clerk.session.getToken();
+  return clerkToken ? { ...headers, Authorization: `Bearer ${clerkToken}` } : headers;
+}
+
 async function request(url, options = {}) {
-  const token = localStorage.getItem("review-token");
-  const headers = { ...(options.headers || {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  const { responseType, ...fetchOptions } = options;
+  const headers = await authorizationHeaders(options.headers || {});
   if (options.body && !(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
-  const response = await fetch(url, { ...options, headers });
-  const payload = response.headers.get("content-type")?.includes("json") ? await response.json() : await response.text();
+  const response = await fetch(url, { ...fetchOptions, headers });
   if (!response.ok) {
+    const payload = response.headers.get("content-type")?.includes("json") ? await response.json() : await response.text();
     const error = new Error(payload.error || `Request failed (${response.status})`);
     error.code = payload.code || "request_failed";
+    error.status = response.status;
     if (error.code === "review_revision_conflict") showRevisionConflictActions();
     throw error;
   }
-  return payload;
+  if (responseType === "blob") return response.blob();
+  if (responseType === "pdfPage") return {
+    blob: await response.blob(),
+    pageCount: Number(response.headers.get("X-PDF-Pages")) || null,
+  };
+  return response.headers.get("content-type")?.includes("json") ? response.json() : response.text();
+}
+
+function transientRequest(error) {
+  return error.name !== "AbortError" && (!error.status || error.status === 408 || error.status === 429 || error.status >= 500);
+}
+
+async function requestWithRetry(url, options = {}, attempts = 2) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try { return await request(url, options); }
+    catch (error) {
+      lastError = error;
+      if (attempt === attempts || !transientRequest(error)) throw error;
+      console.warn(`Retrying ${url} after a temporary failure (${attempt}/${attempts})`, error);
+      await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+    }
+  }
+  throw lastError;
+}
+
+async function loadPdfPage(url, signal) {
+  const { blob, pageCount } = await requestWithRetry(url, { responseType: "pdfPage", signal });
+  const objectUrl = URL.createObjectURL(blob);
+  const preview = new Image();
+  try {
+    preview.src = objectUrl;
+    await preview.decode();
+    return { objectUrl, pageCount };
+  } catch (error) {
+    URL.revokeObjectURL(objectUrl);
+    throw error;
+  }
 }
 
 function element(tag, options = {}, children = []) {
@@ -138,7 +243,6 @@ function entityDetail(kind, item) {
     const outcomeCount = checkpoints.reduce((count, checkpoint) => count + (checkpoint.outcomes || []).length, 0);
     return `${conditionCount} test-wide condition${conditionCount === 1 ? "" : "s"} · ${checkpoints.length} checkpoint${checkpoints.length === 1 ? "" : "s"} · ${outcomeCount} outcome${outcomeCount === 1 ? "" : "s"}`;
   }
-  if (kind === "identity_links") return `${item.entity_kind}: ${(item.candidate_ids || []).join(" = ")}`;
   return metrics(item) || item.statistic_type || item.measurement_type || item.link_status || "";
 }
 
@@ -199,16 +303,155 @@ async function loadSession() {
   const payload = await request("/api/session");
   state.user = payload.user;
   $("reviewer").textContent = payload.user.name;
+  $("download-all-feedback").hidden = payload.user.role !== "admin";
+}
+
+function loadScript(src, attributes = {}) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    Object.entries(attributes).forEach(([name, value]) => script.setAttribute(name, value));
+    script.addEventListener("load", resolve, { once: true });
+    script.addEventListener("error", () => reject(new Error("The sign-in service could not be loaded.")), { once: true });
+    document.head.append(script);
+  });
+}
+
+function internalSignInEnabled() {
+  return state.authMode === "internal" || state.authMode === "internal_or_clerk";
+}
+
+function clerkSignInEnabled() {
+  return state.authMode === "clerk" || state.authMode === "internal_or_clerk";
+}
+
+function showInternalSignIn() {
+  $("internal-sign-in").hidden = !internalSignInEnabled();
+  $("clerk-sign-in").hidden = true;
+  $("use-email-sign-in").hidden = !clerkSignInEnabled();
+  $("use-project-password").hidden = true;
+  $("auth-help").textContent = "Use the review password provided by the project team.";
+}
+
+function showClerkSignIn() {
+  $("internal-sign-in").hidden = true;
+  $("clerk-sign-in").hidden = false;
+  $("use-email-sign-in").hidden = true;
+  $("use-project-password").hidden = !internalSignInEnabled();
+  $("auth-help").textContent = "Sign in with your email account. Choose Forgot password in the form to receive a recovery code.";
+}
+
+function showSignIn(message = "") {
+  $("workbench").hidden = true;
+  $("auth-gate").hidden = false;
+  $("login-status").textContent = message;
+  if (internalSignInEnabled()) showInternalSignIn();
+  else if (clerkSignInEnabled()) showClerkSignIn();
+}
+
+function showWorkbench() {
+  $("auth-gate").hidden = true;
+  $("workbench").hidden = false;
+  $("sign-out").hidden = !localStorage.getItem(REVIEW_TOKEN_KEY);
+}
+
+async function initializeAuthentication() {
+  const response = await fetch("/api/auth/config");
+  if (!response.ok) throw new Error("The sign-in service is temporarily unavailable.");
+  const config = await response.json();
+  state.authMode = config.enabled ? config.mode : "local";
+  if (state.authMode === "internal") {
+    if (!localStorage.getItem(REVIEW_TOKEN_KEY)) {
+      showSignIn();
+      return false;
+    }
+    return true;
+  }
+  if (state.authMode === "internal_or_clerk" && localStorage.getItem(REVIEW_TOKEN_KEY)) return true;
+  if (state.authMode === "internal_or_clerk") showSignIn();
+  if (clerkSignInEnabled()) {
+    await loadScript(`${config.frontend_api}/npm/@clerk/ui@1/dist/ui.browser.js`, { crossorigin: "anonymous" });
+    await loadScript(`${config.frontend_api}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`, {
+      crossorigin: "anonymous", "data-clerk-publishable-key": config.publishable_key,
+    });
+    await window.Clerk.load({
+      ui: { ClerkUI: window.__internal_ClerkUICtor },
+      appearance: {
+        options: { elevation: "flush", socialButtonsPlacement: "bottom" },
+        variables: {
+          colorPrimary: "#176b52",
+          colorForeground: "#17201d",
+          colorMutedForeground: "#66716d",
+          colorBackground: "#ffffff",
+          borderRadius: "0.5rem",
+          fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+        },
+      },
+    });
+    state.clerk = window.Clerk;
+    if (!state.clerk.isSignedIn) {
+      if (state.authMode === "clerk") showSignIn();
+      state.clerk.mountSignIn($("clerk-sign-in"));
+      return false;
+    }
+    state.clerk.mountUserButton($("clerk-user-button"));
+  }
+  return true;
 }
 
 async function loadStudySchema() {
   state.studySchema = await request("/api/study-schema");
 }
 
+function paperCacheKey() { return `perla-paper-list:${state.split}`; }
+
+function savePaperCache() {
+  try { localStorage.setItem(paperCacheKey(), JSON.stringify(state.papers)); }
+  catch (error) { console.warn("Could not cache the paper list", error); }
+}
+
+async function loadFigureCensusProposal(paperId) {
+  if (Object.hasOwn(state.figureCensusProposals, paperId)) return;
+  try {
+    const payload = await request(`/api/figure-census-proposal/${encodeURIComponent(paperId)}`);
+    state.figureCensusProposals[paperId] = payload.proposal || null;
+  } catch {
+    state.figureProposalPromises.delete(paperId);
+  }
+}
+
+function ensureFigureCensusProposal(paperId) {
+  if (!state.figureProposalPromises.has(paperId)) {
+    state.figureProposalPromises.set(paperId, loadFigureCensusProposal(paperId));
+  }
+  return state.figureProposalPromises.get(paperId);
+}
+
 async function loadPapers() {
-  const payload = await request(`/api/papers?split=${encodeURIComponent(state.split)}`);
-  state.papers = payload.papers;
-  renderPapers();
+  const status = $("paper-load-status");
+  if (!state.paperId) setPaperListOpen(true, false);
+  status.hidden = false;
+  status.textContent = "Loading papers…";
+  if (!state.papers.length) {
+    try {
+      state.papers = JSON.parse(localStorage.getItem(paperCacheKey()) || "[]");
+      if (state.papers.length) renderPapers();
+    } catch { localStorage.removeItem(paperCacheKey()); }
+  }
+  try {
+    const payload = await request(`/api/papers?split=${encodeURIComponent(state.split)}`);
+    const known = new Map(state.papers.map((paper) => [paper.id, paper]));
+    state.papers = payload.papers.map((paper) => {
+      const cached = known.get(paper.id);
+      return cached?.revision === paper.revision ? { ...cached, ...paper } : paper;
+    });
+    savePaperCache();
+    renderPapers();
+    status.hidden = true;
+  } catch (error) {
+    if (!state.papers.length) throw error;
+    status.textContent = "Showing the saved paper list while the latest list reconnects.";
+  }
 }
 
 function renderPapers() {
@@ -216,33 +459,80 @@ function renderPapers() {
   const papers = state.papers.filter((paper) => paper.id.toLowerCase().includes(query));
   $("paper-count").textContent = papers.length;
   const cards = papers.map((paper) => {
-    const completed = Object.keys(paper.completed_stages || {});
+    const completed = paper.completed_stages ? Object.keys(paper.completed_stages) : [];
+    const hasCounts = Number.isInteger(paper.device_families)
+      && Number.isInteger(paper.individual_devices)
+      && Number.isInteger(paper.performance_observations);
+    const loading = paper.id === state.loadingPaperId;
     return element("button", {
-      className: `paper-card ${paper.id === state.paperId ? "selected" : ""}`,
+      className: `paper-card ${paper.id === state.paperId ? "selected" : ""} ${loading ? "loading" : ""}`,
+      properties: { disabled: loading },
+      attributes: loading ? { "aria-busy": "true" } : {},
       events: { click: () => selectPaper(paper.id) },
     }, [
       element("strong", { text: paper.id }),
-      element("span", { text: `${paper.device_families} families · ${paper.individual_devices} individual devices · ${paper.performance_observations} observations` }),
-      element("span", { text: `${completed.length}/4 review stages · revision ${paper.revision}` }),
+      element("span", { text: hasCounts
+        ? `${paper.device_families} families · ${paper.individual_devices} individual devices · ${paper.performance_observations} observations`
+        : "Open to inspect extracted records" }),
+      element("span", { text: loading
+        ? "Loading review…"
+        : `${paper.completed_stages ? `${completed.length}/4 review stages · ` : ""}revision ${paper.revision}` }),
     ]);
   });
   $("paper-list").replaceChildren(...(cards.length ? cards : [element("p", { className: "muted", text: "No imported papers in this split." })]));
 }
 
 async function selectPaper(paperId) {
+  if (state.loadingPaperId) return;
+  state.loadingPaperId = paperId;
+  renderPapers();
+  if (state.bundle) setStatus(`Loading ${paperId}…`);
+  else {
+    $("empty-title").textContent = "Loading paper…";
+    $("empty-message").textContent = "Fetching the review records. The paper will appear as soon as they are ready.";
+  }
+  let bundle;
+  try {
+    [bundle] = await Promise.all([
+      request(`/api/paper/${state.split}/${encodeURIComponent(paperId)}`),
+      ensureFigureCensusProposal(paperId),
+    ]);
+  } catch (error) {
+    if (state.bundle) setStatus(`Could not open ${paperId}: ${error.message}`, true);
+    else {
+      $("empty-title").textContent = "Could not open this paper";
+      $("empty-message").textContent = error.message;
+      $("empty-state").hidden = false;
+    }
+    return;
+  } finally {
+    state.loadingPaperId = null;
+    renderPapers();
+  }
   state.paperId = paperId;
-  state.bundle = await request(`/api/paper/${state.split}/${encodeURIComponent(paperId)}`);
+  state.bundle = bundle;
   state.queueIndex = 0;
   state.queueKey = null;
   state.evidenceCache.clear();
   state.activeCitation = null;
+  state.censusDraft = null;
+  state.editingCensus = false;
+  state.figureQueueIndex = 0;
+  state.figureReviewFilter = "unreviewed";
+  state.censusDirty = false;
+  if (state.pdfObjectUrl) URL.revokeObjectURL(state.pdfObjectUrl);
+  state.pdfObjectUrl = null;
+  state.pdfDisplayed = null;
+  $("pdf-page").removeAttribute("src");
   state.source = state.bundle.sources.includes("main") ? "main" : state.bundle.sources[0];
   state.page = 1;
   $("empty-state").hidden = true;
   $("workspace").hidden = false;
-  renderPapers();
   renderStudy();
-  await renderPdf();
+  if (window.matchMedia(LAPTOP_LAYOUT).matches) setPaperListOpen(false, false);
+  savePaperCache();
+  try { await renderPdf(); }
+  catch (error) { setStatus(`The records are ready, but the PDF page did not load: ${error.message}`, true); }
 }
 
 function hasAudit() { return Boolean(state.bundle?.summary.inventory_audits?.[state.user.id]); }
@@ -252,7 +542,7 @@ function renderStudy() {
   const paper = state.papers.find((candidate) => candidate.id === state.paperId);
   if (paper) Object.assign(paper, state.bundle.summary, { revision: state.bundle.revision });
   renderPapers();
-  $("paper-split").textContent = state.split;
+  $("paper-split").textContent = SPLIT_LABELS[state.split] || state.split;
   $("paper-title").textContent = truth.paper.title || state.paperId;
   $("paper-doi").textContent = truth.paper.doi || "DOI not reported";
   $("revision").textContent = `Revision ${state.bundle.revision}`;
@@ -270,18 +560,13 @@ function renderStudy() {
   })));
   $("download-main-pdf").hidden = !state.bundle.sources.includes("main");
   $("download-supplement-pdf").hidden = !state.bundle.sources.includes("supplement");
-  $("blind-audit").hidden = hasAudit();
+  $("census-form").hidden = hasAudit() && !state.editingCensus;
   $("inventory-revealed").hidden = !hasAudit();
-  $("workflow-gate").hidden = hasAudit();
-  if (!hasAudit() && ["records", "completeness"].includes(state.tab)) setTab("inventory");
   renderInventoryForm();
+  renderReviewQueue();
   if (hasAudit()) {
     renderInventoryComparison();
     renderQualityArtifacts();
-    renderRecordGroups("inventory-lists", true);
-    renderReviewQueue();
-  } else {
-    $("review-queue").replaceChildren(element("p", { className: "callout", text: "Submit the blind device census before reviewing model candidates." }));
   }
   renderStageControls();
   renderQualityGates();
@@ -321,30 +606,432 @@ function renderQualityArtifacts() {
   $("quality-artifacts").replaceChildren(...sections);
 }
 
+function proposalPanelId(panel, index) {
+  return panel.proposal_panel_id || [
+    panel.image_sha256 || panel.caption_block_id || "proposal",
+    panel.figure_number || "figure",
+    panel.panel_label || "panel",
+    index,
+  ].join(":").slice(0, 200);
+}
+
+function normalizeFigurePanels(panels, fromProposal = false) {
+  return (panels || []).map((panel, index) => ({
+    ...structuredClone(panel),
+    proposal_panel_id: panel.proposal_panel_id || (fromProposal ? proposalPanelId(panel, index) : null),
+    review_status: panel.review_status || (fromProposal ? "unreviewed" : "legacy_unspecified"),
+  }));
+}
+
+function censusDraftKey() {
+  return `perla-census-draft:${state.user.id}:${state.split}:${state.paperId}`;
+}
+
+function censusDraftSource() {
+  return state.bundle.manifest?.seed_sha256 || `revision:${state.bundle.revision}`;
+}
+
+function restoreLocalCensusDraft() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(censusDraftKey()) || "null");
+    if (saved?.source !== censusDraftSource() || !saved?.draft) return null;
+    state.censusDirty = true;
+    return structuredClone(saved.draft);
+  } catch {
+    try { localStorage.removeItem(censusDraftKey()); } catch { /* Storage is optional. */ }
+    return null;
+  }
+}
+
+function persistLocalCensusDraft() {
+  if (!state.censusDraft) return;
+  try {
+    localStorage.setItem(censusDraftKey(), JSON.stringify({
+      source: censusDraftSource(),
+      draft: state.censusDraft,
+    }));
+    $("figure-draft-status").textContent = "Draft saved in this browser.";
+  } catch {
+    $("figure-draft-status").textContent = "This browser could not save the draft. Save the census before leaving.";
+  }
+}
+
+function clearLocalCensusDraft() {
+  try { localStorage.removeItem(censusDraftKey()); } catch { /* The server copy is saved. */ }
+  state.censusDirty = false;
+}
+
+function savedCensusDraft() {
+  const localDraft = restoreLocalCensusDraft();
+  if (localDraft) return localDraft;
+  const audit = state.bundle?.summary.inventory_audits?.[state.user.id];
+  const proposal = state.figureCensusProposals[state.paperId];
+  if (audit) {
+    const figureCensus = structuredClone(audit.main_text_figure_census || {});
+    if (!figureCensus.panels?.length && proposal?.panels?.length) {
+      figureCensus.panels = normalizeFigurePanels(proposal.panels, true);
+    } else {
+      figureCensus.panels = normalizeFigurePanels(figureCensus.panels);
+    }
+    return {
+      expected_counts: structuredClone(audit.expected_counts || {}),
+      main_text_figure_census: figureCensus,
+      missing_or_ambiguous: audit.missing_or_ambiguous || "",
+    };
+  }
+  return {
+    expected_counts: {},
+    main_text_figure_census: proposal ? {
+      figures_reviewed: 0,
+      schema_relevant_figures: 0,
+      figure_only_records: 0,
+      figure_only_atomic_values: 0,
+      panels: normalizeFigurePanels(proposal.panels, true),
+      notes: "",
+    } : {},
+    missing_or_ambiguous: "",
+  };
+}
+
+function emptyFigurePanel() {
+  return {
+    proposal_panel_id: null, review_status: "unreviewed",
+    figure_number: "", panel_label: "", page: state.source === "main" ? state.page : null, caption_block_id: null, figure_class: "other",
+    description: "", x_axis_label: null, y_axis_label: null,
+    data_presentation: "uncertain", extraction_feasibility: "uncertain",
+    schema_relevant: false, figure_only_records: 0, figure_only_atomic_values: 0,
+  };
+}
+
+function figurePanelField(label, field, control) {
+  control.dataset.figureField = field;
+  return element("label", {}, [element("span", { text: label }), control]);
+}
+
+function figurePanelSelect(label, field, value, options) {
+  const select = element("select", { properties: { value }, dataset: { figureField: field } },
+    Object.entries(options).map(([key, text]) => element("option", { properties: { value: key, selected: key === value }, text })));
+  return element("label", {}, [element("span", { text: label }), select]);
+}
+
+function proposedFigurePanel(panel) {
+  const proposals = state.figureCensusProposals[state.paperId]?.panels || [];
+  return proposals.find((candidate, index) =>
+    proposalPanelId(candidate, index) === panel.proposal_panel_id) || proposals.find((candidate) =>
+    String(candidate.figure_number).toLowerCase() === String(panel.figure_number).toLowerCase()
+    && String(candidate.panel_label || "").toLowerCase() === String(panel.panel_label || "").toLowerCase());
+}
+
+function renderVisualCandidateEvidence(panel) {
+  const proposal = proposedFigurePanel(panel);
+  const candidates = proposal?.visual_candidates || [];
+  const notes = proposal?.visual_notes || [];
+  if (!candidates.length && !notes.length) return null;
+  const rows = candidates.map((candidate) => element("li", {}, [
+    element("strong", { text: `${candidate.name}: ${candidate.raw_value}` }),
+    element("span", {
+      text: candidate.text_comparison === "exact_text_match"
+        ? "Also found verbatim in extracted text; do not count it as figure-only."
+        : "Not found verbatim in extracted text; compare the figure with the paper before counting it.",
+    }),
+  ]));
+  return element("aside", { className: "figure-visual-evidence" }, [
+    element("strong", { text: "Values visibly printed in this panel" }),
+    ...(rows.length ? [element("ul", {}, rows)] : []),
+    ...notes.map((note) => element("p", { text: note })),
+  ]);
+}
+
+function readFigurePanel(card, reviewStatus = card.dataset.reviewStatus) {
+  const value = (name) => card.querySelector(`[data-figure-field="${name}"]`);
+  const optionalText = (name) => value(name).value.trim() || null;
+  return {
+    proposal_panel_id: card.dataset.proposalPanelId || null,
+    review_status: reviewStatus,
+    figure_number: value("figure_number").value.trim(),
+    panel_label: value("panel_label").value.trim(),
+    page: value("page").value ? Number(value("page").value) : null,
+    caption_block_id: card.dataset.captionBlockId || null,
+    figure_class: value("figure_class").value,
+    description: value("description").value.trim(),
+    x_axis_label: optionalText("x_axis_label"),
+    y_axis_label: optionalText("y_axis_label"),
+    data_presentation: value("data_presentation").value,
+    extraction_feasibility: value("extraction_feasibility").value,
+    schema_relevant: value("schema_relevant").checked,
+    figure_only_records: Number(value("figure_only_records").value),
+    figure_only_atomic_values: Number(value("figure_only_atomic_values").value),
+  };
+}
+
+function figureCensusTotals(panels) {
+  const figureNumbers = new Set(panels.map((panel) => panel.figure_number.trim().toLowerCase()).filter(Boolean));
+  const relevantFigures = new Set(panels.filter((panel) => panel.schema_relevant)
+    .map((panel) => panel.figure_number.trim().toLowerCase()).filter(Boolean));
+  return {
+    figures_reviewed: figureNumbers.size,
+    schema_relevant_figures: relevantFigures.size,
+    figure_only_records: panels.reduce((total, panel) => total + panel.figure_only_records, 0),
+    figure_only_atomic_values: panels.reduce((total, panel) => total + panel.figure_only_atomic_values, 0),
+  };
+}
+
+function renderFigureCensusSummary() {
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  const totals = panels.length ? figureCensusTotals(panels) : state.censusDraft.main_text_figure_census;
+  const legacy = !panels.length && !state.censusDraft.main_text_figure_census.panels?.length
+    && (totals.figures_reviewed || totals.schema_relevant_figures || totals.figure_only_records || totals.figure_only_atomic_values);
+  const proposal = state.figureCensusProposals[state.paperId];
+  const savedPanels = state.bundle?.summary.inventory_audits?.[state.user.id]
+    ?.main_text_figure_census?.panels;
+  const unresolvedCaptions = proposal?.captions_without_region?.length || 0;
+  const proposalPrefix = proposal && !savedPanels?.length
+    ? `${proposal.proposal_method === "caption_and_figure" ? "Figure-and-caption" : "Caption"}-derived draft—check every entry against the rendered figure. `
+    : "";
+  const localizationWarning = unresolvedCaptions
+    ? `${unresolvedCaptions} numbered figure caption${unresolvedCaptions === 1 ? " has" : "s have"} no automatic image match; add ${unresolvedCaptions === 1 ? "it" : "them"} manually. `
+    : "";
+  $("figure-census-summary").textContent = proposalPrefix + localizationWarning + (legacy
+    ? `Earlier aggregate census: ${totals.figures_reviewed || 0} figures · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only records · ${totals.figure_only_atomic_values || 0} figure-only values. Add subfigures to replace it.`
+    : `${panels.length} subfigure${panels.length === 1 ? "" : "s"} · ${totals.figures_reviewed || 0} main figure${totals.figures_reviewed === 1 ? "" : "s"} · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only record${totals.figure_only_records === 1 ? "" : "s"} · ${totals.figure_only_atomic_values || 0} figure-only value${totals.figure_only_atomic_values === 1 ? "" : "s"}`);
+}
+
+function figurePanelNeedsAttention(panel) {
+  const proposal = proposedFigurePanel(panel);
+  return panel.data_presentation === "uncertain"
+    || panel.extraction_feasibility === "uncertain"
+    || (proposal?.visual_candidates || []).some((candidate) => candidate.text_comparison !== "exact_text_match");
+}
+
+function filteredFigureIndexes() {
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  return panels.flatMap((panel, index) => {
+    const matches = state.figureReviewFilter === "all"
+      || (state.figureReviewFilter === "unreviewed" && ["unreviewed", "legacy_unspecified"].includes(panel.review_status))
+      || (state.figureReviewFilter === "attention" && figurePanelNeedsAttention(panel))
+      || (state.figureReviewFilter === "schema_relevant" && panel.schema_relevant);
+    return matches ? [index] : [];
+  });
+}
+
+function checkedFigurePanelCount() {
+  return (state.censusDraft.main_text_figure_census.panels || [])
+    .filter((panel) => ["confirmed", "corrected"].includes(panel.review_status)).length;
+}
+
+function renderFigureReviewToolbar() {
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  const visible = filteredFigureIndexes();
+  const position = visible.indexOf(state.figureQueueIndex);
+  $("figure-review-toolbar").hidden = !panels.length;
+  const queuePosition = position >= 0
+    ? `${position + 1} of ${visible.length} shown`
+    : visible.length
+      ? `editing current · ${visible.length} unchecked remain`
+      : "queue complete";
+  $("figure-review-progress").textContent = `${checkedFigurePanelCount()} of ${panels.length} checked · ${queuePosition}`;
+  $("figure-review-filter").value = state.figureReviewFilter;
+  $("previous-figure-panel").disabled = position <= 0;
+  $("next-figure-panel").disabled = position < 0 || position >= visible.length - 1;
+  if (!state.censusDirty) $("figure-draft-status").textContent = "Changes are kept in this browser until you save the census.";
+}
+
+function selectFigurePanel(index) {
+  updateCensusDraft();
+  state.figureQueueIndex = index;
+  renderFigurePanels();
+}
+
+function moveFigurePanel(offset) {
+  const visible = filteredFigureIndexes();
+  const position = visible.indexOf(state.figureQueueIndex);
+  const next = visible[position + offset];
+  if (next !== undefined) selectFigurePanel(next);
+}
+
+function confirmCurrentFigurePanel() {
+  const current = state.censusDraft.main_text_figure_census.panels[state.figureQueueIndex];
+  if (!current) return;
+  const invalid = document.querySelector("[data-figure-panel] :invalid");
+  if (invalid) {
+    invalid.reportValidity();
+    invalid.focus();
+    return;
+  }
+  const status = current.review_status === "corrected" ? "corrected" : "confirmed";
+  updateCensusDraft({ panelStatus: status, persist: true });
+  const remaining = filteredFigureIndexes();
+  if (state.figureReviewFilter === "unreviewed" && !remaining.length) {
+    state.figureReviewFilter = "all";
+    renderFigurePanels();
+    return;
+  }
+  const next = remaining.find((index) => index > state.figureQueueIndex) ?? remaining[0];
+  if (next !== undefined) state.figureQueueIndex = next;
+  renderFigurePanels();
+}
+
+function renderFigurePanels() {
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  const visible = filteredFigureIndexes();
+  if (!visible.includes(state.figureQueueIndex)) state.figureQueueIndex = visible[0] ?? 0;
+  const panel = panels[state.figureQueueIndex];
+  if (!panel || !visible.length) {
+    const message = panels.length
+      ? "No subfigures match this filter. Choose All subfigures to revisit checked panels."
+      : "No subfigures are listed. Add one when the paper contains a numbered main-text figure.";
+    $("figure-panels").replaceChildren(element("p", { className: "figure-review-empty", text: message }));
+    renderFigureReviewToolbar();
+    renderFigureCensusSummary();
+    return;
+  }
+  const index = state.figureQueueIndex;
+    const relevant = element("input", {
+      properties: { type: "checkbox", checked: panel.schema_relevant },
+      dataset: { figureField: "schema_relevant" },
+    });
+    const visualEvidence = renderVisualCandidateEvidence(panel);
+    const proposal = proposedFigurePanel(panel);
+    const preview = proposal?.figure_bbox_pdf && panel.proposal_panel_id
+      ? element("figure", { className: "figure-panel-preview" }, [
+        element("img", {
+          attributes: {
+            src: `/api/figure-panel-image/${encodeURIComponent(state.paperId)}/${encodeURIComponent(panel.proposal_panel_id)}?split=${encodeURIComponent(state.split)}`,
+            alt: `Cropped view of Figure ${panel.figure_number}${panel.panel_label || ""}`,
+            loading: "lazy",
+          },
+        }),
+        element("figcaption", { text: "Localized crop from the main paper" }),
+      ])
+      : null;
+    const statusLabel = panel.review_status === "confirmed" ? "Confirmed" : panel.review_status === "corrected" ? "Corrected" : "Unchecked";
+    const card = element("section", { className: "figure-panel-card", dataset: { figurePanel: String(index), captionBlockId: panel.caption_block_id || "", proposalPanelId: panel.proposal_panel_id || "", reviewStatus: panel.review_status } }, [
+      element("div", { className: "figure-panel-heading" }, [
+        element("div", {}, [
+          element("strong", { text: `${panel.figure_number ? `Figure ${panel.figure_number}` : "New subfigure"}${panel.panel_label ? panel.panel_label : ""} · ${FIGURE_CLASSES[panel.figure_class]}` }),
+          element("span", { text: panel.proposal_panel_id ? "Model suggestion" : "Added by reviewer" }),
+        ]),
+        element("span", { className: `figure-review-state ${panel.review_status}`, text: statusLabel }),
+      ]),
+      element("div", { className: "figure-panel-fields" }, [
+        ...(preview ? [preview] : []),
+        element("div", { className: "figure-panel-grid compact" }, [
+          figurePanelField("Main figure number", "figure_number", element("input", { properties: { value: panel.figure_number, required: true, placeholder: "2" } })),
+          figurePanelField("Panel label", "panel_label", element("input", { properties: { value: panel.panel_label, placeholder: "a (optional)" } })),
+          figurePanelField("PDF page", "page", element("input", { properties: { type: "number", min: "1", value: panel.page ?? "", placeholder: "optional" } })),
+          figurePanelSelect("Figure class", "figure_class", panel.figure_class, FIGURE_CLASSES),
+        ]),
+        figurePanelField("What the panel shows", "description", element("textarea", { properties: { value: panel.description, required: true, rows: 2, placeholder: "Brief scientific description" } })),
+        element("div", { className: "figure-panel-grid" }, [
+          figurePanelField("X-axis label", "x_axis_label", element("input", { properties: { value: panel.x_axis_label || "", placeholder: "As printed; optional" } })),
+          figurePanelField("Y-axis label", "y_axis_label", element("input", { properties: { value: panel.y_axis_label || "", placeholder: "As printed; optional" } })),
+          figurePanelSelect("Numeric presentation", "data_presentation", panel.data_presentation, FIGURE_DATA_PRESENTATIONS),
+          figurePanelSelect("Extraction effort", "extraction_feasibility", panel.extraction_feasibility, FIGURE_EXTRACTION_FEASIBILITY),
+        ]),
+        element("label", { className: "figure-relevance" }, [relevant, element("span", { text: "Contains information represented by the extraction schema" })]),
+        ...(visualEvidence ? [visualEvidence] : []),
+        element("div", { className: "figure-panel-grid compact figure-loss-counts" }, [
+          figurePanelField("Figure-only records", "figure_only_records", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_records } })),
+          figurePanelField("Figure-only atomic values", "figure_only_atomic_values", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_atomic_values } })),
+        ]),
+        ...(panel.page ? [element("button", { properties: { type: "button" }, text: "Show figure in paper", events: { click: () => {
+          setWorkspaceView("split");
+          navigatePdf("main", panel.page);
+        } } })] : []),
+        element("button", { className: "primary confirm-figure-panel", properties: { type: "button" }, text: "Confirm and next", events: { click: confirmCurrentFigurePanel } }),
+        element("button", { className: "danger-link", properties: { type: "button" }, text: "Remove subfigure", events: { click: () => {
+          updateCensusDraft();
+          state.censusDraft.main_text_figure_census.panels.splice(index, 1);
+          state.censusDirty = true;
+          persistLocalCensusDraft();
+          renderFigurePanels();
+        } } }),
+      ]),
+    ]);
+    card.querySelectorAll("input, textarea, select").forEach((input) => input.addEventListener("input", () => {
+      if (input.dataset.figureField === "schema_relevant" && !input.checked) {
+        card.querySelector('[data-figure-field="figure_only_records"]').value = 0;
+        card.querySelector('[data-figure-field="figure_only_atomic_values"]').value = 0;
+      }
+      updateCensusDraft({ panelStatus: "corrected", persist: true });
+      card.dataset.reviewStatus = "corrected";
+      const badge = card.querySelector(".figure-review-state");
+      badge.className = "figure-review-state corrected";
+      badge.textContent = "Corrected";
+      renderFigureCensusSummary();
+      renderFigureReviewToolbar();
+    }));
+  $("figure-panels").replaceChildren(card);
+  renderFigureReviewToolbar();
+  renderFigureCensusSummary();
+}
+
+function updateCensusDraft({ panelStatus = null, persist = false } = {}) {
+  if (!document.querySelector("[data-count]")) return;
+  const card = document.querySelector("[data-figure-panel]");
+  if (card && state.censusDraft.main_text_figure_census.panels[state.figureQueueIndex]) {
+    state.censusDraft.main_text_figure_census.panels[state.figureQueueIndex] = readFigurePanel(card, panelStatus || card.dataset.reviewStatus);
+  }
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  const previousFigures = state.censusDraft?.main_text_figure_census || {};
+  const totals = panels.length ? figureCensusTotals(panels) : {
+    figures_reviewed: previousFigures.figures_reviewed || 0,
+    schema_relevant_figures: previousFigures.schema_relevant_figures || 0,
+    figure_only_records: previousFigures.figure_only_records || 0,
+    figure_only_atomic_values: previousFigures.figure_only_atomic_values || 0,
+  };
+  state.censusDraft = {
+    expected_counts: Object.fromEntries([...document.querySelectorAll("[data-count]")].map((input) => [input.dataset.count, Number(input.value)])),
+    main_text_figure_census: {
+      ...totals,
+      panels,
+      notes: $("figure-census-notes").value,
+    },
+    missing_or_ambiguous: $("inventory-notes").value,
+  };
+  if (persist) {
+    state.censusDirty = true;
+    persistLocalCensusDraft();
+  }
+}
+
 function renderInventoryForm() {
+  state.censusDraft ||= savedCensusDraft();
+  const draft = state.censusDraft;
   const definitions = Object.entries(COLLECTIONS)
-    .filter(([key]) => key !== "identity_links")
     .map(([key, label]) => element("article", {}, [
       element("strong", { text: label }),
       element("p", { text: RECORD_GUIDANCE[key].census }),
     ]));
   $("inventory-definitions").replaceChildren(...definitions);
   const inputs = Object.entries(COLLECTIONS)
-    .filter(([key]) => key !== "identity_links")
     .map(([key, label]) => element("label", {}, [
       element("strong", { text: label }),
       element("span", { text: RECORD_GUIDANCE[key].census }),
-      element("input", { properties: { type: "number", min: "0", value: "0" }, dataset: { count: key } }),
+      element("input", { properties: { type: "number", min: "0", value: String(draft.expected_counts[key] ?? 0) }, dataset: { count: key } }),
     ]));
   $("inventory-counts").replaceChildren(...inputs);
-  for (const id of ["figures-reviewed", "schema-relevant-figures", "figure-only-records", "figure-only-values"]) $(id).value = "0";
-  $("figure-census-notes").value = "";
-  $("inventory-notes").value = "";
+  const figures = draft.main_text_figure_census;
+  figures.panels ||= [];
+  $("figure-census-notes").value = figures.notes || "";
+  $("inventory-notes").value = draft.missing_or_ambiguous;
+  renderFigurePanels();
+  for (const input of document.querySelectorAll("#inventory-counts input, #figure-census-notes, #inventory-notes")) {
+    input.addEventListener("input", () => updateCensusDraft({ persist: true }));
+  }
+  $("submit-audit").textContent = hasAudit() ? "Update census" : "Save census";
+}
+
+function editSavedCensus() {
+  state.censusDraft = savedCensusDraft();
+  state.editingCensus = true;
+  renderStudy();
+  $("census-form").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function renderInventoryComparison() {
   const audit = state.bundle.summary.inventory_audits[state.user.id];
-  const rows = Object.entries(COLLECTIONS).filter(([key]) => key !== "identity_links").map(([key, label]) => {
+  const rows = Object.entries(COLLECTIONS).map(([key, label]) => {
     const expected = audit.expected_counts[key] ?? 0;
     const extracted = state.bundle.summary[key] ?? 0;
     const difference = expected === extracted ? "match" : `${extracted - expected > 0 ? "+" : ""}${extracted - expected}`;
@@ -355,42 +1042,37 @@ function renderInventoryComparison() {
       element("td", { className: expected === extracted ? "match" : "difference", text: difference }),
     ]);
   });
-  const header = element("tr", {}, ["Record type", "Your census", "Current truth", "Difference"].map((label) => element("th", { text: label })));
+  const header = element("tr", {}, ["Record type", "Your census", "Current records", "Difference"].map((label) => element("th", { text: label })));
   const comparison = [
-    element("h3", { text: "Census versus candidates" }),
+    element("h3", { text: "Saved census versus current records" }),
     element("table", {}, [element("thead", {}, [header]), element("tbody", {}, rows)]),
   ];
   const figures = audit.main_text_figure_census;
   comparison.push(figures
     ? element("section", { className: "figure-census-result" }, [
-      element("h4", { text: "Main-text figure gap" }),
+      element("h4", { text: "Main-text subfigure census" }),
       element("p", { text: `${figures.schema_relevant_figures} of ${figures.figures_reviewed} reviewed figures contained schema-relevant information. A text-only extraction would miss ${figures.figure_only_records} record${figures.figure_only_records === 1 ? "" : "s"} and ${figures.figure_only_atomic_values} atomic value${figures.figure_only_atomic_values === 1 ? "" : "s"} reported only in those figures.` }),
+      ...((figures.panels || []).length ? [element("div", { className: "saved-figure-panels" }, figures.panels.map((panel) => element("article", {}, [
+        element("div", { className: "saved-figure-panel-heading" }, [
+          element("strong", { text: `Figure ${panel.figure_number}${panel.panel_label || ""} · ${FIGURE_CLASSES[panel.figure_class] || humanLabel(panel.figure_class)}` }),
+          panel.page ? element("button", { properties: { type: "button" }, text: `Show page ${panel.page}`, events: { click: () => navigatePdf("main", panel.page) } }) : null,
+        ]),
+        element("p", { text: panel.description }),
+        element("p", { className: "muted", text: [
+          panel.review_status === "confirmed" ? "confirmed by reviewer" : panel.review_status === "corrected" ? "corrected by reviewer" : "review status predates panel tracking",
+          panel.page ? `page ${panel.page}` : null,
+          panel.x_axis_label ? `x: ${panel.x_axis_label}` : null,
+          panel.y_axis_label ? `y: ${panel.y_axis_label}` : null,
+          FIGURE_DATA_PRESENTATIONS[panel.data_presentation],
+          FIGURE_EXTRACTION_FEASIBILITY[panel.extraction_feasibility],
+          panel.schema_relevant ? `${panel.figure_only_records} figure-only records · ${panel.figure_only_atomic_values} figure-only values` : "Outside schema",
+        ].filter(Boolean).join(" · ") }),
+      ])))] : [element("p", { className: "muted", text: "This earlier census contains aggregate totals only. Add subfigures when updating it." })]),
       ...(figures.notes ? [element("p", { className: "callout", text: figures.notes })] : []),
     ])
     : element("p", { className: "callout", text: "This legacy inventory did not record a main-text figure census." }));
   if (audit.missing_or_ambiguous) comparison.push(element("p", { className: "callout", text: audit.missing_or_ambiguous }));
   $("inventory-comparison").replaceChildren(...comparison);
-}
-
-function recordCard(kind, item, index) {
-  const summary = element("div", {}, [
-    element("span", { className: "eyebrow", text: entityId(kind, item, index) }),
-    element("h4", { text: entityTitle(kind, item, index) }),
-    element("p", { text: entityDetail(kind, item) }),
-  ]);
-  return element("article", { className: "record-card" }, [summary]);
-}
-
-function renderRecordGroups(target) {
-  const truth = state.bundle.ground_truth;
-  const groups = Object.entries(COLLECTIONS).map(([kind, label]) => {
-    const records = truth[kind].map((item, index) => recordCard(kind, item, index));
-    return element("section", { className: "record-group" }, [
-      element("div", { className: "group-heading" }, [element("h3", { text: label }), element("span", { text: truth[kind].length })]),
-      ...(records.length ? records : [element("p", { className: "muted", text: "No records" })]),
-    ]);
-  });
-  $(target).replaceChildren(...groups);
 }
 
 function recordEntries() {
@@ -561,10 +1243,6 @@ function renderReviewTarget(entry) {
     content.push(reportedValueGroup(entry, "Specimen-specific properties", entry.item.reported_properties || [], ["reported_properties"]));
   }
   return element("section", { className: "review-target" }, [
-    element("div", { className: "review-target-heading" }, [
-      element("span", { className: "eyebrow", text: "Current review target" }),
-      element("h4", { text: `Review this ${singularCollection(entry.kind).toLowerCase()}` }),
-    ]),
     element("p", { className: "review-instruction", text: RECORD_GUIDANCE[entry.kind].review }),
     ...content,
   ]);
@@ -642,6 +1320,17 @@ function recordReferences(entry) {
   return recordEntries().filter((candidate) => keys.has(candidate.key));
 }
 
+function linkedRecordSummary(references) {
+  const counts = references.reduce((result, reference) => {
+    result[reference.kind] = (result[reference.kind] || 0) + 1;
+    return result;
+  }, {});
+  return Object.entries(counts).map(([kind, count]) => {
+    const label = count === 1 ? singularCollection(kind) : COLLECTIONS[kind];
+    return `${count} ${label.toLowerCase()}`;
+  }).join(" and ");
+}
+
 function normalizedCitation(value) {
   let result = "";
   for (const character of String(value || "").normalize("NFKC").replaceAll("−", "-").replaceAll("–", "-").replaceAll("—", "-")) {
@@ -697,9 +1386,12 @@ function clearCitation() {
 
 async function navigatePdf(source, page) {
   clearCitation();
+  const sourceChanged = source !== state.source;
   state.source = source;
   const requestedPage = Number(page);
-  state.page = Number.isFinite(requestedPage) ? Math.max(1, Math.min(state.pageCount, requestedPage)) : 1;
+  state.page = Number.isFinite(requestedPage)
+    ? Math.max(1, sourceChanged ? requestedPage : Math.min(state.pageCount, requestedPage))
+    : 1;
   $("pdf-source").value = state.source;
   try {
     if (await renderPdf()) setStatus(`Showing ${state.source === "main" ? "the main paper" : "the supplement"}, page ${state.page}.`);
@@ -725,6 +1417,9 @@ async function focusCitation(citation, selectForCorrection = false, scroll = tru
     if (selectForCorrection) {
       $("citation-block").value = block.block_id;
       $("citation-quote").value = citation.quote || block.text.slice(0, 1600);
+    }
+    if (document.querySelector(".workspace-grid").dataset.view === "review") {
+      setWorkspaceView(window.matchMedia("(max-width: 920px)").matches ? "paper" : "split", false);
     }
     if (!await renderPdf()) return false;
     if (scroll) {
@@ -784,6 +1479,9 @@ function renderReviewQueue() {
   const attention = attentionReasons(entry);
   const flags = attention.map((reason) => element("span", { className: "attention-flag", text: reason.label, attributes: { title: reason.explanation } }));
   const context = relatedContext(entry);
+  const mergeCandidates = state.bundle.ground_truth[entry.kind]
+    .map((item, index) => ({ item, index }))
+    .filter(({ index }) => index !== entry.index);
   const actions = element("div", { className: "queue-actions" }, [
     element("div", { className: "decision-actions" }, [
       element("button", { className: decision === "verified" ? "active" : "", text: "All fields match source  V", attributes: { title: DECISION_GUIDANCE.verified }, events: { click: () => decideEntry(entry, "verified") } }),
@@ -791,8 +1489,10 @@ function renderReviewQueue() {
       element("button", { className: decision === "needs_correction" ? "active" : "", text: "Correct fields  C", attributes: { title: DECISION_GUIDANCE.needs_correction }, events: { click: () => beginCorrection(entry) } }),
     ]),
     element("div", { className: "record-management-actions" }, [
-      element("span", { className: "muted", text: "Record structure" }),
-      element("button", { text: "Copy as missing record", events: { click: () => copyMissingRecord(entry) } }),
+      element("span", { className: "muted", text: "Fix record structure" }),
+      ...(mergeCandidates.length ? [element("button", { text: "Merge duplicate", events: { click: () => beginMerge(entry, mergeCandidates) } })] : []),
+      element("button", { text: "Change record type", events: { click: () => beginReclassification(entry) } }),
+      element("button", { text: "Duplicate and edit", events: { click: () => copyMissingRecord(entry) } }),
       element("button", { className: "remove-extra", text: "Remove extra record", events: { click: () => beginRemoval(entry) } }),
     ]),
     ...(context.device ? [element("button", {
@@ -848,11 +1548,16 @@ function renderStageControls() {
   const decisions = state.bundle.summary.record_decisions?.[state.user.id] || {};
   const reviewed = Object.values(decisions).filter((decision) => decision === "verified" || decision === "uncertain").length;
   const remaining = state.bundle.summary.record_count - reviewed;
-  const labels = { inventory: "Mark inventory reviewed", fields: "Mark all record fields reviewed", completeness: "Complete paper review", adjudication: "Complete adjudication" };
+  const labels = {
+    inventory: ["Mark census reviewed", "Census reviewed"],
+    fields: ["Mark all record fields reviewed", "Record fields reviewed"],
+    completeness: ["Complete paper review", "Paper review completed"],
+    adjudication: ["Complete adjudication", "Adjudication completed"],
+  };
   document.querySelectorAll(".complete-stage").forEach((button) => {
     const prerequisites = { inventory: hasAudit(), fields: mine("inventory") && remaining === 0, completeness: mine("fields"), adjudication: mine("completeness") };
     button.disabled = mine(button.dataset.stage) || !prerequisites[button.dataset.stage];
-    button.textContent = mine(button.dataset.stage) ? `${button.dataset.stage} completed` : labels[button.dataset.stage];
+    button.textContent = labels[button.dataset.stage][mine(button.dataset.stage) ? 1 : 0];
     if (button.dataset.stage === "fields" && remaining > 0 && !mine("fields")) button.textContent = `Review ${remaining} remaining record${remaining === 1 ? "" : "s"}`;
   });
   $("complete-adjudication").hidden = state.user.role !== "admin";
@@ -860,13 +1565,15 @@ function renderStageControls() {
   const canExport = state.user.role === "admin" && finalEvent?.kind === "stage_complete" && finalEvent?.details?.stage === "adjudication";
   $("download-truth").hidden = state.user.role !== "admin";
   $("download-truth").disabled = !canExport;
-  $("add-record").disabled = !hasAudit();
-  $("new-record-kind").disabled = !hasAudit();
-  for (const tab of ["records", "completeness"]) {
-    const button = document.querySelector(`[data-tab="${tab}"]`);
-    button.disabled = !hasAudit();
-    button.title = hasAudit() ? "" : "Submit the blind inventory to unlock this step.";
-  }
+  $("final-export-help").hidden = state.user.role !== "admin" || canExport;
+  $("add-record").disabled = false;
+  $("new-record-kind").disabled = false;
+  const recordsTab = document.querySelector('[data-tab="records"]');
+  recordsTab.disabled = false;
+  recordsTab.title = "Review extracted records at any time.";
+  const completenessTab = document.querySelector('[data-tab="completeness"]');
+  completenessTab.disabled = !hasAudit();
+  completenessTab.title = hasAudit() ? "" : "Save the census before opening the final completeness check.";
 }
 
 function renderHistory() {
@@ -886,70 +1593,142 @@ function renderHistory() {
 
 async function renderPdf() {
   if (!state.paperId || !state.source) return false;
+  state.pdfAbortController?.abort();
+  const controller = new AbortController();
+  state.pdfAbortController = controller;
   const requestId = ++state.pdfRequest;
   const paperId = state.paperId;
   const source = state.source;
   const page = state.page;
   const split = state.split;
   const sourceLabel = source === "supplement" ? "supporting information" : "main paper";
-  const query = `source=${source}&split=${split}&page=${page}&scale=1.5`;
+  const query = `source=${source}&split=${split}&page=${page}&scale=1.5&view=${PDF_VIEW_VERSION}`;
   const image = $("pdf-page");
   const message = $("pdf-message");
+  const sourceStatus = $("pdf-current-source");
+  const displayed = state.pdfDisplayed;
   $("pdf-stage").setAttribute("aria-busy", "true");
   message.hidden = false;
   message.className = "pdf-message";
   message.textContent = `Loading ${sourceLabel}, page ${page}… Large SI files can take a few seconds the first time.`;
-  $("pdf-canvas").hidden = true;
+  sourceStatus.textContent = `Loading ${sourceLabel} · page ${page}`;
+  $("retry-pdf").hidden = true;
+  $("pdf-canvas").hidden = !displayed || displayed.paperId !== paperId;
   $("pdf-text").textContent = "";
-  for (const control of [$("pdf-source"), $("previous-page"), $("next-page"), $("page-number")]) control.disabled = true;
-  image.src = `/api/pdf-page/${encodeURIComponent(paperId)}?${query}`;
-  let text;
+  for (const control of [$("previous-page"), $("next-page"), $("page-number")]) control.disabled = true;
+  $("pdf-source").disabled = false;
   try {
-    [text] = await Promise.all([
-      request(`/api/pdf-text/${encodeURIComponent(paperId)}?source=${source}&split=${split}&page=${page}`),
-      image.decode(),
-    ]);
+    const loadedPage = await loadPdfPage(
+      `/api/pdf-page/${encodeURIComponent(paperId)}?${query}`,
+      controller.signal,
+    );
+    if (requestId !== state.pdfRequest || paperId !== state.paperId || source !== state.source || page !== state.page) {
+      URL.revokeObjectURL(loadedPage.objectUrl);
+      return false;
+    }
+    if (state.pdfObjectUrl) URL.revokeObjectURL(state.pdfObjectUrl);
+    state.pdfObjectUrl = loadedPage.objectUrl;
+    image.src = loadedPage.objectUrl;
+    if (loadedPage.pageCount) state.pageCount = loadedPage.pageCount;
+    state.pdfDisplayed = { paperId, source, page, pageCount: state.pageCount };
+    $("page-number").value = page;
+    $("page-number").max = state.pageCount;
+    $("page-count").textContent = `/ ${state.pageCount}`;
+    sourceStatus.textContent = `${source === "main" ? "Main paper" : "Supporting information"} · page ${page} of ${state.pageCount}`;
+    $("pdf-canvas").hidden = false;
+    message.hidden = true;
+    for (const control of [$("previous-page"), $("next-page"), $("page-number")]) control.disabled = false;
+
+    const text = await requestWithRetry(
+      `/api/pdf-text/${encodeURIComponent(paperId)}?source=${source}&split=${split}&page=${page}&view=${PDF_VIEW_VERSION}`,
+      { signal: controller.signal },
+    ).then((value) => ({ value })).catch((error) => ({ error }));
+    if (requestId !== state.pdfRequest || paperId !== state.paperId || source !== state.source || page !== state.page) return false;
+    if (text.value) {
+      if (text.value.page_count) {
+        state.pageCount = text.value.page_count;
+        state.pdfDisplayed.pageCount = state.pageCount;
+        sourceStatus.textContent = `${source === "main" ? "Main paper" : "Supporting information"} · page ${page} of ${state.pageCount}`;
+      }
+      $("page-number").max = state.pageCount;
+      $("page-count").textContent = `/ ${state.pageCount}`;
+      $("pdf-text").textContent = text.value.text;
+      renderCitationLocation(text.value.lines || []);
+    } else if (text.error?.name !== "AbortError") {
+      $("pdf-text").textContent = "Selectable text is temporarily unavailable. The PDF page above is still ready for review.";
+      renderCitationLocation([]);
+    }
+    return true;
   } catch (error) {
-    if (requestId !== state.pdfRequest) return false;
+    if (error.name === "AbortError" || requestId !== state.pdfRequest) return false;
+    controller.abort();
+    if (displayed?.paperId === paperId) {
+      state.source = displayed.source;
+      state.page = displayed.page;
+      state.pageCount = displayed.pageCount;
+      $("pdf-source").value = displayed.source;
+      $("page-number").value = displayed.page;
+      $("page-number").max = displayed.pageCount;
+      $("page-count").textContent = `/ ${displayed.pageCount}`;
+      sourceStatus.textContent = `${displayed.source === "main" ? "Main paper" : "Supporting information"} · page ${displayed.page} of ${displayed.pageCount}`;
+      $("pdf-canvas").hidden = false;
+    } else {
+      sourceStatus.textContent = `${source === "main" ? "Main paper" : "Supporting information"} unavailable`;
+    }
     message.className = "pdf-message error";
-    message.textContent = `Could not open the ${sourceLabel}. ${error.message}`;
+    message.textContent = `Could not open the ${sourceLabel}. ${error.message}${displayed?.paperId === paperId ? " The previous page is still shown." : ""}`;
+    $("retry-pdf").hidden = false;
     throw error;
   } finally {
     if (requestId === state.pdfRequest) {
       $("pdf-stage").setAttribute("aria-busy", "false");
-      for (const control of [$("pdf-source"), $("previous-page"), $("next-page"), $("page-number")]) control.disabled = false;
+      $("pdf-source").disabled = false;
+      if (!$("pdf-canvas").hidden) {
+        for (const control of [$("previous-page"), $("next-page"), $("page-number")]) control.disabled = false;
+      }
+      if (state.pdfAbortController === controller) state.pdfAbortController = null;
     }
   }
-  if (requestId !== state.pdfRequest || paperId !== state.paperId || source !== state.source || page !== state.page) return false;
-  state.pageCount = text.page_count;
-  $("page-number").value = page;
-  $("page-number").max = state.pageCount;
-  $("page-count").textContent = `/ ${state.pageCount}`;
-  $("pdf-text").textContent = text.text;
-  renderCitationLocation(text.lines || []);
-  $("pdf-canvas").hidden = false;
-  message.hidden = true;
-  return true;
 }
 
 async function submitAudit() {
-  const counts = Object.fromEntries([...document.querySelectorAll("[data-count]")].map((input) => [input.dataset.count, Number(input.value)]));
-  const mainTextFigureCensus = {
-    figures_reviewed: Number($("figures-reviewed").value),
-    schema_relevant_figures: Number($("schema-relevant-figures").value),
-    figure_only_records: Number($("figure-only-records").value),
-    figure_only_atomic_values: Number($("figure-only-values").value),
-    notes: $("figure-census-notes").value,
-  };
+  updateCensusDraft();
+  const panels = state.censusDraft.main_text_figure_census.panels;
+  const incompleteIndex = panels.findIndex((panel) => !panel.figure_number.trim() || !panel.description.trim());
+  if (incompleteIndex >= 0) {
+    state.figureReviewFilter = "all";
+    state.figureQueueIndex = incompleteIndex;
+    renderFigurePanels();
+    setStatus("Complete the figure number and description for this subfigure before saving.", true);
+    return;
+  }
+  const unchecked = state.censusDraft.main_text_figure_census.panels
+    .filter((panel) => !["confirmed", "corrected"].includes(panel.review_status));
+  if (unchecked.length) {
+    state.figureReviewFilter = "unreviewed";
+    state.figureQueueIndex = state.censusDraft.main_text_figure_census.panels.indexOf(unchecked[0]);
+    renderFigurePanels();
+    setStatus(`Check ${unchecked.length} remaining subfigure${unchecked.length === 1 ? "" : "s"} before saving the census.`, true);
+    return;
+  }
+  const invalid = document.querySelector("#census-form :invalid");
+  if (invalid) {
+    invalid.reportValidity();
+    invalid.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  const draft = state.censusDraft;
   try {
-    state.bundle = await request(`/api/inventory-audits/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ base_revision: state.bundle.revision, review_scope_sources: state.bundle.sources, expected_counts: counts, main_text_figure_census: mainTextFigureCensus, missing_or_ambiguous: $("inventory-notes").value }) });
+    state.bundle = await request(`/api/inventory-audits/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ base_revision: state.bundle.revision, review_scope_sources: state.bundle.sources, ...draft }) });
+    clearLocalCensusDraft();
+    state.censusDraft = savedCensusDraft();
+    state.editingCensus = false;
     renderStudy();
-    setStatus("Record and main-text figure censuses saved. Model candidates are now visible.");
+    setStatus("Record and main-text figure census saved.");
   } catch (error) { setStatus(error.message, true); }
 }
 
 function openRecord(kind, index = null, template = null, intent = index == null ? "add" : "edit") {
-  if (!hasAudit()) return setStatus("Complete the blind inventory audit first.", true);
   const source = template || (index == null ? newRecordDraft(kind) : state.bundle.ground_truth[kind][index]);
   const item = index == null && template ? copiedRecordDraft(kind, source) : structuredClone(source);
   const entry = index == null ? null : { kind, index, item, key: recordKey(kind, item, index) };
@@ -980,17 +1759,20 @@ function openRecord(kind, index = null, template = null, intent = index == null 
   $("citation-block").value = citation?.block_id || "";
   $("citation-quote").value = citation?.quote || "";
   $("mutation-note").value = "";
-  $("remove-record").hidden = index == null;
+  $("remove-record").hidden = intent !== "remove";
   $("remove-record").disabled = references.length > 0;
+  $("remove-record").textContent = references.length ? "Resolve linked records first" : "Remove extra record";
   const dependency = $("record-dependencies");
-  dependency.hidden = references.length === 0;
+  dependency.hidden = intent !== "remove" || references.length === 0;
   dependency.replaceChildren();
-  if (references.length) {
+  if (intent === "remove" && references.length) {
+    const type = singularCollection(kind).toLowerCase();
     dependency.append(
-      element("strong", { text: "This record cannot be removed yet." }),
-      element("p", { text: "Correct these linked records first: reassign them to the right device or family, or remove them if they are also extra." }),
+      element("strong", { text: `${references.length} linked record${references.length === 1 ? " must" : "s must"} be handled first` }),
+      element("p", { text: `This ${type} is used by ${linkedRecordSummary(references)}. Removing it now would leave ${references.length === 1 ? "that record" : "those records"} pointing to something that no longer exists.` }),
+      element("p", { text: "Open each linked record below and change its family or device link. If the linked record is also unsupported by the paper, remove it instead." }),
       element("ul", {}, references.map((reference) => element("li", {}, [element("button", {
-        text: `Review ${COLLECTIONS[reference.kind]} · ${entityId(reference.kind, reference.item, reference.index)}`,
+        text: `Open ${singularCollection(reference.kind).toLowerCase()} · ${entityId(reference.kind, reference.item, reference.index)}`,
         properties: { type: "button" },
         events: { click: () => reviewReferencedRecord(reference) },
       })]))),
@@ -1095,10 +1877,6 @@ async function submitDecision(entry, decision) {
 }
 
 async function decideEntry(entry, decision) {
-  if (!hasAudit()) {
-    setTab("inventory");
-    return setStatus("Submit the blind inventory before recording a source-review decision.", true);
-  }
   const title = entityTitle(entry.kind, entry.item, entry.index);
   const keepPosition = $("record-status-filter").value === "remaining";
   const actionButtons = [...document.querySelectorAll(".queue-actions button")];
@@ -1121,33 +1899,106 @@ async function decideEntry(entry, decision) {
   }
 }
 
-async function beginCorrection(entry) {
-  if (!hasAudit()) return setStatus("Submit the blind inventory before correcting model candidates.", true);
-  try {
-    if (recordDecision(entry.kind, entry.item, entry.index) !== "needs_correction") state.bundle = await submitDecision(entry, "needs_correction");
-    renderStudy();
-    const current = recordEntries().find((candidate) => candidate.key === entry.key) || entry;
-    openRecord(current.kind, current.index, null, "edit");
-  } catch (error) { setStatus(error.message, true); }
+function beginCorrection(entry) {
+  openRecord(entry.kind, entry.index, null, "edit");
 }
 
-async function beginRemoval(entry) {
-  if (!hasAudit()) return setStatus("Submit the blind inventory before removing model candidates.", true);
-  try {
-    if (recordDecision(entry.kind, entry.item, entry.index) !== "needs_correction") state.bundle = await submitDecision(entry, "needs_correction");
-    renderStudy();
-    const current = recordEntries().find((candidate) => candidate.key === entry.key) || entry;
-    openRecord(current.kind, current.index, null, "remove");
-  } catch (error) { setStatus(error.message, true); }
+function beginRemoval(entry) {
+  openRecord(entry.kind, entry.index, null, "remove");
 }
 
 function copyMissingRecord(entry) {
   openRecord(entry.kind, null, entry.item, "copy");
 }
 
-function addMissingRecord() {
+function beginMerge(entry, candidates) {
+  state.structuralEntry = entry;
+  $("merge-target").replaceChildren(...candidates.map(({ item, index }) => element("option", {
+    text: `${entityTitle(entry.kind, item, index)} · ${entityId(entry.kind, item, index)}`,
+    properties: { value: entityId(entry.kind, item, index) },
+  })));
+  $("merge-note").value = "";
+  $("merge-status").textContent = "";
+  $("merge-dialog").showModal();
+}
+
+async function confirmMerge() {
+  const entry = state.structuralEntry;
+  const note = $("merge-note").value.trim();
+  if (!entry || !note) {
+    $("merge-status").textContent = "Explain why both records describe the same scientific object.";
+    return;
+  }
+  const button = $("confirm-merge");
+  button.disabled = true;
+  try {
+    state.bundle = await request(`/api/record-merges/${state.split}/${encodeURIComponent(state.paperId)}`, {
+      method: "POST",
+      body: JSON.stringify({
+        collection: entry.kind,
+        source_record_id: entityId(entry.kind, entry.item, entry.index),
+        target_record_id: $("merge-target").value,
+        note,
+        base_revision: state.bundle.revision,
+      }),
+    });
+    $("merge-dialog").close();
+    state.queueKey = null;
+    renderStudy();
+    setStatus("Merged the duplicate and moved its explicit links to the retained record.");
+  } catch (error) {
+    $("merge-status").textContent = error.message;
+  } finally { button.disabled = false; }
+}
+
+function beginReclassification(entry) {
+  const references = recordReferences(entry);
+  if (references.length) {
+    setStatus(`Relink the ${references.length} dependent record${references.length === 1 ? "" : "s"} before changing this record type.`, true);
+    beginRemoval(entry);
+    return;
+  }
+  state.structuralEntry = entry;
+  $("reclassify-target").replaceChildren(...Object.entries(COLLECTIONS)
+    .filter(([kind]) => kind !== entry.kind)
+    .map(([value, text]) => element("option", { text: singularCollection(value), properties: { value } })));
+  $("reclassify-dialog").showModal();
+}
+
+function continueReclassification() {
+  const entry = state.structuralEntry;
+  if (!entry) return;
+  const targetKind = $("reclassify-target").value;
+  const draft = newRecordDraft(targetKind);
+  draft.evidence = structuredClone(entry.item.evidence || []);
+  $("reclassify-dialog").close();
+  openRecord(targetKind, null, draft, "reclassify");
+  state.edit.source = {
+    kind: entry.kind,
+    recordId: entityId(entry.kind, entry.item, entry.index),
+  };
+  $("record-title").textContent = `Change ${singularCollection(entry.kind).toLowerCase()} to ${singularCollection(targetKind).toLowerCase()}`;
+  $("record-dialog-help").textContent = "Complete the corrected record. Saving removes the old record and adds this one in a single validated revision.";
+  $("save-record").textContent = "Save new record type";
+  $("mutation-note-label").textContent = "Reason for changing record type";
+  $("mutation-note-help").textContent = "Required: explain why the original record type was wrong.";
+}
+
+async function addMissingRecord() {
   document.querySelector(".add-record-menu").open = false;
-  openRecord($("new-record-kind").value, null, null, "add");
+  const button = $("add-record");
+  try {
+    if (!state.studySchema) {
+      button.disabled = true;
+      button.textContent = "Preparing…";
+      await loadStudySchema();
+    }
+    openRecord($("new-record-kind").value, null, null, "add");
+  } catch (error) { setStatus(`Could not prepare a new record: ${error.message}`, true); }
+  finally {
+    button.disabled = false;
+    button.textContent = "Create draft";
+  }
 }
 
 async function reviewReferencedRecord(reference) {
@@ -1177,17 +2028,23 @@ async function saveRecord() {
     if (!blockId || !quote) throw new Error("Choose an evidence block and provide an exact quote.");
     const citation = { block_id: blockId, quote };
     attachMissingEvidence(value, citation);
-    const payload = { action: index == null ? "add" : "replace", path: `/${pointerPart(kind)}/${index == null ? "-" : index}`, value, evidence: [citation], note: $("mutation-note").value, base_revision: state.bundle.revision };
-    state.bundle = await request(`/api/mutations/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify(payload) });
+    const note = $("mutation-note").value.trim();
+    const reclassifying = state.edit.intent === "reclassify";
+    if (reclassifying && !note) throw new Error("Explain why the original record type was wrong.");
+    const payload = reclassifying
+      ? { source_collection: state.edit.source.kind, source_record_id: state.edit.source.recordId, target_collection: kind, value, evidence: [citation], note, base_revision: state.bundle.revision }
+      : { action: index == null ? "add" : "replace", path: `/${pointerPart(kind)}/${index == null ? "-" : index}`, value, evidence: [citation], note, base_revision: state.bundle.revision };
+    const endpoint = reclassifying ? "record-reclassifications" : "mutations";
+    state.bundle = await request(`/api/${endpoint}/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify(payload) });
     $("record-dialog").close();
     renderStudy();
-    setStatus(index == null ? `Added the missing ${singularCollection(kind).toLowerCase()} and revalidated the study.` : "Correction saved and the complete study schema revalidated.");
+    setStatus(reclassifying ? "Changed the record type and revalidated the complete study." : index == null ? `Added the missing ${singularCollection(kind).toLowerCase()} and revalidated the study.` : "Correction saved and the complete study schema revalidated.");
   } catch (error) { $("dialog-status").textContent = error.message; }
 }
 
 async function removeRecord() {
   const note = $("mutation-note").value.trim();
-  if (state.edit.references.length) return $("dialog-status").textContent = "Correct the linked records listed above before removing this record.";
+  if (state.edit.references.length) return $("dialog-status").textContent = "Open and resolve each linked record listed above. This record can then be removed safely.";
   if (!note) {
     $("dialog-status").textContent = "Explain why the paper does not support this record before removing it.";
     $("mutation-note").focus();
@@ -1237,14 +2094,14 @@ async function completeStage(stage) {
 }
 
 function setTab(tab) {
-  if (["records", "completeness"].includes(tab) && !hasAudit()) {
-    setStatus("Submit the blind inventory before opening model-assisted record review.", true);
+  if (tab === "completeness" && !hasAudit()) {
+    setStatus("Save the census before opening the final completeness check.", true);
     return;
   }
   state.tab = tab;
   document.querySelectorAll("[data-tab]").forEach((button) => button.classList.toggle("active", button.dataset.tab === tab));
   for (const name of ["inventory", "records", "completeness", "history"]) $(`${name}-tab`).hidden = name !== tab;
-  if (tab === "records" && hasAudit()) {
+  if (tab === "records") {
     renderReviewQueue();
     const citation = currentEntry().entry?.item.evidence?.[0];
     if (citation) focusCitation(citation, false, false);
@@ -1288,6 +2145,12 @@ function annotationSubject(event) {
   if (event.kind === "mutation") return event.details?.undoes_event_id
     ? "Reversed an earlier saved correction"
     : `${event.action} ${event.path}`;
+  if (event.kind === "structural_mutation") {
+    if (event.details?.undoes_event_id) return "Reversed an earlier structural correction";
+    if (event.details?.operation === "merge_records") return `Merged ${event.details.source_record_id} into ${event.details.target_record_id}`;
+    if (event.details?.operation === "reclassify_record") return `Changed ${event.details.source_record_id} from ${humanLabel(event.details.source_collection)} to ${humanLabel(event.details.target_collection)}`;
+    return "Structural record correction";
+  }
   if (event.kind === "spreadsheet_review") {
     if (event.details?.undoes_event_id) return "Reversed an earlier reviewed workbook";
     const corrections = event.details?.changed_fields?.length || 0;
@@ -1297,26 +2160,30 @@ function annotationSubject(event) {
   }
   if (event.kind === "record_decision") return `${event.details.record_key} · ${DECISION_GUIDANCE[event.details.decision] || humanLabel(event.details.decision)}`;
   if (event.kind === "stage_complete") return `${humanLabel(event.details.stage)} stage completed`;
+  if (event.kind === "review_reset") {
+    const cleared = event.details?.cleared_record_decisions || 0;
+    const census = event.details?.cleared_inventory_audit ? " · census cleared" : "";
+    const stages = event.details?.cleared_stages?.length || 0;
+    return `${cleared} record decision${cleared === 1 ? "" : "s"} cleared${census} · ${stages} completed stage${stages === 1 ? "" : "s"} cleared`;
+  }
   if (event.kind === "inventory_audit") {
     const counts = Object.entries(event.details.expected_counts || {}).map(([name, count]) => `${humanLabel(name)}: ${count}`);
     const figures = event.details.main_text_figure_census;
     if (figures) counts.push(`Main-text figure-only values: ${figures.figure_only_atomic_values}`);
-    return counts.join(" · ") || "Blind inventory saved";
+    return counts.join(" · ") || "Census saved";
   }
   return event.note || humanLabel(event.kind);
 }
 
 function annotationIsCurrent(paper, event) {
-  if (event.kind === "record_decision") return paper.current_record_decisions?.[event.details.record_key] === event.details.decision;
-  if (event.kind === "inventory_audit") return JSON.stringify(paper.current_inventory_audit) === JSON.stringify(event.details);
-  if (event.kind === "stage_complete") return paper.completed_stages.includes(event.details.stage);
+  if (["record_decision", "inventory_audit", "stage_complete"].includes(event.kind)) return paper.current_event_ids?.includes(event.event_id) || false;
   return null;
 }
 
 function annotationMutationState(paper, event) {
-  if (paper.undone_event_ids?.includes(event.event_id)) return "undone";
-  if (paper.undoable_event_ids?.includes(event.event_id)) return "can undo";
-  return "saved history";
+  if (paper.undone_event_ids?.includes(event.event_id)) return "already undone";
+  if (paper.undoable_event_ids?.includes(event.event_id)) return "undo available";
+  return "kept in history";
 }
 
 function annotationValue(value) {
@@ -1325,15 +2192,31 @@ function annotationValue(value) {
   return JSON.stringify(value, null, 2);
 }
 
+function annotationActionHelp(paper, event, canUndo, current) {
+  if (canUndo) return "This correction is still the current version and can be safely reversed.";
+  if (event.kind === "record_decision") return current
+    ? "To change this decision, open the paper's Records tab and choose a different outcome."
+    : "This decision is no longer part of your current review state; it remains here as history.";
+  if (event.kind === "inventory_audit") return current
+    ? "To change these counts, open the paper's Census tab and choose Edit saved census."
+    : "A newer census replaced these counts; this entry remains as history.";
+  if (event.kind === "stage_complete") return "Review milestones remain in the audit history and are not field edits.";
+  if (event.kind === "review_reset") return "The reset cleared reviewer-specific progress without changing the shared scientific data.";
+  if (paper.undone_event_ids?.includes(event.event_id)) return "This correction has already been undone.";
+  if (["mutation", "structural_mutation", "spreadsheet_review"].includes(event.kind)) return "This older correction cannot be safely undone because the affected record changed afterward.";
+  return "This saved action is part of the audit history and has no reversible data change.";
+}
+
 function annotationEvent(paper, event) {
   const current = annotationIsCurrent(paper, event);
-  const stateLabel = ["mutation", "spreadsheet_review"].includes(event.kind)
+  const stateLabel = ["mutation", "structural_mutation", "spreadsheet_review"].includes(event.kind)
     ? annotationMutationState(paper, event)
     : event.kind === "record_decision"
       ? current === true ? "current decision" : "no longer current"
       : current === true ? "current" : current === false ? "superseded" : "saved";
   const stateClass = stateLabel.replaceAll(" ", "-");
   const canUndo = paper.undoable_event_ids?.includes(event.event_id);
+  const actionHelp = annotationActionHelp(paper, event, canUndo, current);
   return element("article", { className: "annotation-event" }, [
     element("div", { className: "annotation-event-heading" }, [
       element("strong", { text: `r${event.revision} · ${humanLabel(event.kind)}` }),
@@ -1350,6 +2233,7 @@ function annotationEvent(paper, event) {
       element("summary", { text: `Inspect ${event.details.record_replacements.length} corrected record${event.details.record_replacements.length === 1 ? "" : "s"}` }),
       element("pre", { text: JSON.stringify(event.details.record_replacements, null, 2) }),
     ])] : []),
+    element("p", { className: "annotation-action-help", text: actionHelp }),
     ...(canUndo ? [element("button", {
       text: "Undo this saved edit",
       properties: { type: "button" },
@@ -1397,12 +2281,64 @@ async function undoAnnotation(paper, event, button) {
   }
 }
 
-function renderReviewerProgress(progress) {
-  $("annotation-summary").replaceChildren(element("p", {
-    text: `${progress.annotation_count} saved annotation${progress.annotation_count === 1 ? "" : "s"} across ${progress.paper_count} paper${progress.paper_count === 1 ? "" : "s"} in ${progress.split}.`,
-  }));
-  const papers = [...progress.papers].sort((left, right) => right.last_saved_at.localeCompare(left.last_saved_at));
-  const cards = papers.map((paper) => element("section", { className: "annotation-paper" }, [
+function paperCurrentCounts(paper) {
+  return {
+    decisions: Object.keys(paper.current_record_decisions || {}).length,
+    census: Number(paper.current_inventory_audit != null),
+    stages: paper.completed_stages?.length || 0,
+    corrections: paper.undoable_event_ids?.length || 0,
+  };
+}
+
+async function openProgressPaper(paper, tab = "records") {
+  $("annotations-dialog").close();
+  try {
+    if (state.paperId !== paper.paper_id) await selectPaper(paper.paper_id);
+    if (state.paperId !== paper.paper_id) return;
+    setTab(tab);
+  } catch (error) { setStatus(`Could not open ${paper.paper_id}: ${error.message}`, true); }
+}
+
+function currentWorkPaper(paper) {
+  const counts = paperCurrentCounts(paper);
+  const decisionItems = Object.entries(paper.current_record_decisions || {}).map(([key, decision]) => element("li", {}, [
+    element("code", { text: key }),
+    element("span", { text: DECISION_GUIDANCE[decision] || humanLabel(decision) }),
+  ]));
+  const corrections = paper.events.filter((event) => paper.undoable_event_ids?.includes(event.event_id));
+  return element("section", { className: "annotation-paper current-work-paper" }, [
+    element("div", { className: "annotation-paper-heading" }, [
+      element("div", {}, [
+        element("strong", { text: paper.paper_id }),
+        element("span", { className: "muted", text: `Last saved ${new Date(paper.last_saved_at).toLocaleString()}` }),
+      ]),
+      element("span", { className: "pill", text: `${counts.decisions + counts.census + counts.stages} progress item${counts.decisions + counts.census + counts.stages === 1 ? "" : "s"}` }),
+    ]),
+    element("div", { className: "current-work-counts" }, [
+      element("span", { text: `${counts.decisions} record decision${counts.decisions === 1 ? "" : "s"}` }),
+      element("span", { text: counts.census ? "Census saved" : "No census saved" }),
+      element("span", { text: `${counts.stages} stage${counts.stages === 1 ? "" : "s"} completed` }),
+      ...(counts.corrections ? [element("span", { text: `${counts.corrections} reversible scientific edit${counts.corrections === 1 ? "" : "s"}` })] : []),
+    ]),
+    ...(decisionItems.length ? [element("details", { className: "current-decisions" }, [
+      element("summary", { text: `Inspect ${decisionItems.length} current record decision${decisionItems.length === 1 ? "" : "s"}` }),
+      element("ul", {}, decisionItems),
+    ])] : []),
+    ...(paper.completed_stages.length ? [element("p", { className: "muted", text: `Completed: ${paper.completed_stages.map(humanLabel).join(" · ")}` })] : []),
+    ...(corrections.length ? [element("div", { className: "current-corrections" }, [
+      element("strong", { text: "Scientific edits that can still be undone" }),
+      ...corrections.map((event) => annotationEvent(paper, event)),
+    ])] : []),
+    element("div", { className: "annotation-paper-actions" }, [
+      element("button", { text: "Continue reviewing records", properties: { type: "button" }, events: { click: () => openProgressPaper(paper, "records") } }),
+      element("button", { text: counts.census ? "Open saved census" : "Open census", properties: { type: "button" }, events: { click: () => openProgressPaper(paper, "inventory") } }),
+      ...(paper.resettable_review_count ? [element("button", { className: "danger", text: "Reset this paper", properties: { type: "button" }, events: { click: (event) => resetPaperProgress(paper, event.currentTarget) } })] : []),
+    ]),
+  ]);
+}
+
+function historyPaper(paper) {
+  return element("section", { className: "annotation-paper" }, [
     element("div", { className: "annotation-paper-heading" }, [
       element("div", {}, [
         element("strong", { text: paper.paper_id }),
@@ -1410,28 +2346,129 @@ function renderReviewerProgress(progress) {
       ]),
       element("span", { className: "pill", text: `${paper.events.length} saved` }),
     ]),
-    ...(paper.completed_stages.length ? [element("p", { className: "muted", text: `Completed stages: ${paper.completed_stages.map(humanLabel).join(" · ")}` })] : []),
     ...[...paper.events].reverse().map((event) => annotationEvent(paper, event)),
-  ]));
-  $("annotation-list").replaceChildren(...(cards.length ? cards : [
-    element("p", { className: "empty-queue", text: "You have not saved annotations in this dataset yet." }),
-  ]));
+  ]);
+}
+
+function renderReviewerProgress(progress) {
+  state.annotations = progress;
+  const history = [...progress.papers].sort((left, right) => right.last_saved_at.localeCompare(left.last_saved_at));
+  const current = history.filter((paper) => paper.resettable_review_count > 0 || paper.undoable_event_ids?.length);
+  const reversibleEdits = current.reduce((count, paper) => count + (paper.undoable_event_ids?.length || 0), 0);
+  const showingCurrent = state.annotationView === "current";
+  $("show-current-annotations").classList.toggle("active", showingCurrent);
+  $("show-current-annotations").setAttribute("aria-pressed", String(showingCurrent));
+  $("show-annotation-history").classList.toggle("active", !showingCurrent);
+  $("show-annotation-history").setAttribute("aria-pressed", String(!showingCurrent));
+  $("annotation-help").textContent = showingCurrent
+    ? "Continue a paper or reset reviewer-only progress here. Reset clears your decisions, census, and completed stages; it does not alter scientific corrections or the audit history."
+    : "This is the complete append-only history of what you saved. Current and superseded labels describe whether an action still affects your review state.";
+  $("annotation-summary").replaceChildren(element("p", { text: showingCurrent
+    ? `${progress.resettable_review_count} current decision or progress item${progress.resettable_review_count === 1 ? "" : "s"} and ${reversibleEdits} reversible scientific edit${reversibleEdits === 1 ? "" : "s"} across ${current.length} paper${current.length === 1 ? "" : "s"}.`
+    : `${progress.annotation_count} saved action${progress.annotation_count === 1 ? "" : "s"} across ${progress.paper_count} paper${progress.paper_count === 1 ? "" : "s"}.` }));
+  $("reset-annotations").hidden = !showingCurrent;
+  $("reset-annotations").disabled = progress.resettable_review_count === 0;
+  const papers = showingCurrent ? current : history;
+  const cards = papers.map(showingCurrent ? currentWorkPaper : historyPaper);
+  $("annotation-list").replaceChildren(...(cards.length ? cards : [element("div", { className: "empty-queue" }, [
+    element("strong", { text: showingCurrent ? "No current review work" : "No saved activity" }),
+    element("p", { text: showingCurrent ? "Your decisions, census, and completed stages are clear in this dataset. Open History to inspect earlier actions." : "You have not saved review activity in this dataset yet." }),
+  ])]));
+}
+
+function setAnnotationView(view) {
+  state.annotationView = view;
+  if (state.annotations) renderReviewerProgress(state.annotations);
+}
+
+async function applyReviewerResets(papers, button) {
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  const failures = [];
+  let resetCount = 0;
+  for (const paper of papers) {
+    try {
+      const bundle = await request(`/api/reviewer-resets/${state.split}/${encodeURIComponent(paper.paper_id)}`, {
+        method: "POST",
+        body: JSON.stringify({ base_revision: paper.current_revision }),
+      });
+      resetCount += 1;
+      if (state.paperId === paper.paper_id) state.bundle = bundle;
+    } catch (error) { failures.push(`${paper.paper_id}: ${error.message}`); }
+  }
+  await loadReviewerProgress();
+  if (state.bundle) renderStudy();
+  button.removeAttribute("aria-busy");
+  return { resetCount, failures };
+}
+
+function reportReviewerReset({ resetCount, failures }) {
+  if (failures.length) {
+    $("annotation-status").textContent = `${resetCount} paper${resetCount === 1 ? "" : "s"} reset. Could not reset ${failures.join("; ")}`;
+    $("annotation-status").className = "error";
+  } else {
+    $("annotation-status").textContent = `Current review progress reset for ${resetCount} paper${resetCount === 1 ? "" : "s"}. Saved history is unchanged.`;
+    $("annotation-status").className = "success";
+  }
+}
+
+async function resetPaperProgress(paper, button) {
+  if (!window.confirm(`Reset your current record decisions, census, and completed stages for ${paper.paper_id}? Scientific corrections and saved history are kept.`)) return;
+  $("annotation-status").textContent = `Resetting current progress for ${paper.paper_id}…`;
+  $("annotation-status").className = "";
+  try { reportReviewerReset(await applyReviewerResets([paper], button)); }
+  catch (error) { $("annotation-status").textContent = error.message; $("annotation-status").className = "error"; button.disabled = false; button.removeAttribute("aria-busy"); }
+}
+
+async function resetReviewerProgress() {
+  const button = $("reset-annotations");
+  try {
+    const progress = await loadReviewerProgress();
+    const papers = progress.papers.filter((paper) => paper.resettable_review_count > 0);
+    if (!papers.length) return;
+    if (!window.confirm(`Reset all ${progress.resettable_review_count} current decision or progress item${progress.resettable_review_count === 1 ? "" : "s"} across ${papers.length} paper${papers.length === 1 ? "" : "s"} in ${progress.split}? Scientific corrections and saved history are kept.`)) return;
+    $("annotation-status").textContent = "Resetting current review progress…";
+    $("annotation-status").className = "";
+    reportReviewerReset(await applyReviewerResets(papers, button));
+  } catch (error) { $("annotation-status").textContent = error.message; $("annotation-status").className = "error"; button.disabled = false; button.removeAttribute("aria-busy"); }
+}
+
+function reviewerProgressCacheKey() { return `perla-review-progress:${state.user.id}:${state.split}`; }
+
+function saveReviewerProgressCache(progress) {
+  try { sessionStorage.setItem(reviewerProgressCacheKey(), JSON.stringify(progress)); }
+  catch (error) { console.warn("Could not cache review progress", error); }
+}
+
+function cachedReviewerProgress() {
+  try { return JSON.parse(sessionStorage.getItem(reviewerProgressCacheKey()) || "null"); }
+  catch { sessionStorage.removeItem(reviewerProgressCacheKey()); return null; }
 }
 
 async function loadReviewerProgress() {
   const progress = await request(`/api/reviewer-progress/${encodeURIComponent(state.split)}`);
   state.annotations = progress;
+  saveReviewerProgressCache(progress);
   renderReviewerProgress(progress);
   return progress;
 }
 
 async function openReviewerProgress() {
+  if (!state.user) {
+    setStatus("Sign in before opening saved review progress.", true);
+    return;
+  }
+  state.annotationView = "current";
   $("annotations-dialog").showModal();
-  $("annotation-summary").replaceChildren(element("p", { className: "muted", text: "Loading your saved work…" }));
-  $("annotation-list").replaceChildren();
-  $("annotation-status").textContent = "";
+  const cached = state.annotations || cachedReviewerProgress();
+  if (cached) renderReviewerProgress(cached);
+  else {
+    $("annotation-summary").replaceChildren(element("p", { className: "muted", text: "Loading your current review work…" }));
+    $("annotation-list").replaceChildren();
+  }
+  $("annotation-status").textContent = cached ? "Refreshing saved progress…" : "";
   $("annotation-status").className = "";
-  try { await loadReviewerProgress(); }
+  try { await loadReviewerProgress(); $("annotation-status").textContent = ""; }
   catch (error) { $("annotation-status").textContent = error.message; $("annotation-status").className = "error"; }
 }
 
@@ -1439,6 +2476,13 @@ async function downloadReviewerProgress() {
   const progress = await loadReviewerProgress();
   const blob = new Blob([`${JSON.stringify(progress, null, 2)}\n`], { type: "application/json" });
   saveBlob(blob, `perla-${state.user.id}-${state.split}-annotations.json`);
+}
+
+async function downloadAllFeedback() {
+  await downloadResponse(
+    "/api/reviewer-feedback-export",
+    "perla-reviewer-feedback.zip",
+  );
 }
 
 function saveBlob(blob, filename) {
@@ -1452,9 +2496,8 @@ function saveBlob(blob, filename) {
 }
 
 async function downloadResponse(url, filename) {
-  const token = localStorage.getItem("review-token");
   const response = await fetch(url, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    headers: await authorizationHeaders(),
   });
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
@@ -1498,8 +2541,15 @@ async function uploadReviewWorkbook(file) {
     );
     renderStudy();
     await loadReviewerProgress();
-    setStatus("Reviewed workbook saved as one validated revision. The import is visible in My edits & undo.");
-    $("review-downloads").open = false;
+    const importMode = state.bundle.events.at(-1)?.details?.workbook_import_mode;
+    setStatus(
+      state.bundle.workbook_archived === false
+        ? "Review changes were saved, but the original Excel file could not be archived. Please keep your local copy and contact the administrator."
+        : importMode === "comments_only_from_older_workbook"
+          ? "Excel comments and the original workbook were saved. Because the workbook was based on an older paper revision, its value edits were not applied."
+          : "Reviewed workbook saved as one validated revision and archived. The import is visible in My edits & undo.",
+      state.bundle.workbook_archived === false,
+    );
   } catch (error) {
     setStatus(error.message, true);
   } finally {
@@ -1515,17 +2565,31 @@ async function downloadPaper(source) {
 }
 
 async function runDownload(button, loadingMessage, completeMessage, operation) {
+  const label = button.textContent;
   button.disabled = true;
-  setStatus(loadingMessage);
+  button.setAttribute("aria-busy", "true");
+  button.textContent = "Preparing…";
+  setFileStatus(loadingMessage);
   try {
     const result = await operation();
-    $("review-downloads").open = false;
-    setStatus(typeof completeMessage === "function" ? completeMessage(result) : completeMessage);
+    setFileStatus(typeof completeMessage === "function" ? completeMessage(result) : completeMessage);
   } catch (error) {
-    setStatus(error.message, true);
+    setFileStatus(error.message, true);
   } finally {
     button.disabled = false;
+    button.removeAttribute("aria-busy");
+    button.textContent = label;
   }
+}
+
+function setFileStatus(message, error = false) {
+  for (const id of ["file-action-status", "files-status"]) {
+    const status = $(id);
+    status.hidden = false;
+    status.textContent = message;
+    status.className = error ? "error" : "success";
+  }
+  setStatus(message, error);
 }
 
 async function downloadGroundTruth() {
@@ -1549,9 +2613,31 @@ async function importPaper(event) {
   } catch (error) { $("import-status").textContent = error.message; }
 }
 
-$("split").addEventListener("change", async (event) => { state.split = event.target.value; state.paperId = null; state.bundle = null; state.annotations = null; $("workspace").hidden = true; $("empty-state").hidden = false; await loadPapers(); });
+$("split").addEventListener("change", async (event) => { state.pdfAbortController?.abort(); state.split = event.target.value; state.papers = []; state.paperId = null; state.bundle = null; state.annotations = null; state.censusDraft = null; state.editingCensus = false; $("workspace").hidden = true; $("empty-title").textContent = "Choose a paper"; $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures."; $("empty-state").hidden = false; try { await loadPapers(); } catch (error) { showStartupError(error); } });
+$("toggle-paper-list").addEventListener("click", () => setPaperListOpen(document.querySelector("main").classList.contains("paper-list-hidden")));
+document.querySelectorAll("[data-workspace-view]").forEach((button) => button.addEventListener("click", () => setWorkspaceView(button.dataset.workspaceView)));
 $("paper-filter").addEventListener("input", renderPapers);
 $("submit-audit").addEventListener("click", submitAudit);
+$("edit-census").addEventListener("click", editSavedCensus);
+$("figure-review-filter").addEventListener("change", (event) => {
+  updateCensusDraft();
+  state.figureReviewFilter = event.target.value;
+  state.figureQueueIndex = filteredFigureIndexes()[0] ?? 0;
+  renderFigurePanels();
+});
+$("previous-figure-panel").addEventListener("click", () => moveFigurePanel(-1));
+$("next-figure-panel").addEventListener("click", () => moveFigurePanel(1));
+$("add-figure-panel").addEventListener("click", () => {
+  updateCensusDraft();
+  state.censusDraft.main_text_figure_census.panels.push(emptyFigurePanel());
+  state.figureReviewFilter = "all";
+  state.figureQueueIndex = state.censusDraft.main_text_figure_census.panels.length - 1;
+  state.censusDirty = true;
+  persistLocalCensusDraft();
+  renderFigurePanels();
+  $("figure-panels").scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+$("retry-pdf").addEventListener("click", () => navigatePdf(state.source, state.page));
 $("pdf-source").addEventListener("change", (event) => navigatePdf(event.target.value, 1));
 $("previous-page").addEventListener("click", () => navigatePdf(state.source, state.page - 1));
 $("next-page").addEventListener("click", () => navigatePdf(state.source, state.page + 1));
@@ -1572,18 +2658,23 @@ $("previous-record").addEventListener("click", () => moveQueue(-1));
 $("next-record").addEventListener("click", () => moveQueue(1));
 $("show-fields-editor").addEventListener("click", () => setRecordEditorMode("fields"));
 $("show-json-editor").addEventListener("click", () => setRecordEditorMode("json"));
+$("close-record").addEventListener("click", () => $("record-dialog").close());
+$("cancel-record").addEventListener("click", () => $("record-dialog").close());
 $("save-record").addEventListener("click", saveRecord);
 $("remove-record").addEventListener("click", removeRecord);
+$("confirm-merge").addEventListener("click", confirmMerge);
+$("continue-reclassify").addEventListener("click", continueReclassification);
 $("reload-paper").addEventListener("click", reloadLatestPaper);
 $("reload-paper-dialog").addEventListener("click", reloadLatestPaper);
 $("search-evidence").addEventListener("click", searchEvidence);
 $("evidence-query").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); searchEvidence(); } });
-$("download-truth").addEventListener("click", async () => {
-  try {
-    await downloadGroundTruth();
-    setStatus("Downloaded the adjudicated PR bundle.");
-  } catch (error) { setStatus(error.message, true); }
-});
+$("open-files").addEventListener("click", () => $("files-dialog").showModal());
+$("download-truth").addEventListener("click", (event) => runDownload(
+  event.currentTarget,
+  "Preparing the adjudicated PR bundle…",
+  "Downloaded the adjudicated PR bundle.",
+  downloadGroundTruth,
+));
 $("download-study-json").addEventListener("click", (event) => runDownload(
   event.currentTarget,
   "Preparing the latest validated study JSON…",
@@ -1591,6 +2682,12 @@ $("download-study-json").addEventListener("click", (event) => runDownload(
   downloadStudyJson,
 ));
 $("download-review-workbook").addEventListener("click", (event) => runDownload(
+  event.currentTarget,
+  "Preparing an editable workbook for the latest paper revision…",
+  "Downloaded the all-record Excel review workbook.",
+  () => downloadReviewWorkbook(),
+));
+$("download-review-workbook-dialog").addEventListener("click", (event) => runDownload(
   event.currentTarget,
   "Preparing an editable workbook for the latest paper revision…",
   "Downloaded the all-record Excel review workbook.",
@@ -1610,6 +2707,15 @@ $("download-supplement-pdf").addEventListener("click", (event) => runDownload(
   () => downloadPaper("supplement"),
 ));
 $("open-annotations").addEventListener("click", openReviewerProgress);
+$("download-all-feedback").addEventListener("click", (event) => runDownload(
+  event.currentTarget,
+  "Preparing all reviewer feedback…",
+  "Downloaded all reviewer feedback.",
+  downloadAllFeedback,
+));
+$("show-current-annotations").addEventListener("click", () => setAnnotationView("current"));
+$("show-annotation-history").addEventListener("click", () => setAnnotationView("history"));
+$("reset-annotations").addEventListener("click", resetReviewerProgress);
 $("download-annotations").addEventListener("click", async () => {
   try {
     await downloadReviewerProgress();
@@ -1622,6 +2728,15 @@ $("close-import").addEventListener("click", () => $("import-dialog").close());
 $("cancel-import").addEventListener("click", () => $("import-dialog").close());
 $("import-form").addEventListener("submit", importPaper);
 document.addEventListener("keydown", (event) => {
+  if (state.tab === "inventory" && !document.querySelector("dialog[open]") && !["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName)) {
+    const key = event.key.toLowerCase();
+    if (key === "arrowright" || key === "j") moveFigurePanel(1);
+    else if (key === "arrowleft" || key === "k") moveFigurePanel(-1);
+    else if (key === "v") confirmCurrentFigurePanel();
+    else return;
+    event.preventDefault();
+    return;
+  }
   if (state.tab !== "records" || $("record-dialog").open || ["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName)) return;
   const entry = currentEntry().entry;
   if (!entry) return;
@@ -1635,6 +2750,77 @@ document.addEventListener("keydown", (event) => {
   event.preventDefault();
 });
 
-await loadStudySchema();
-await loadSession();
-await loadPapers();
+function showStartupError(error) {
+  if (error.status === 401) {
+    state.user = null;
+    if (internalSignInEnabled()) localStorage.removeItem(REVIEW_TOKEN_KEY);
+    showSignIn("Your session expired. Sign in again to continue; your saved reviews are unchanged.");
+    return;
+  }
+  $("paper-load-status").hidden = true;
+  $("empty-title").textContent = "The review workspace did not load";
+  $("empty-message").textContent = `${error.message} Your saved reviews are unchanged.`;
+  $("retry-startup").hidden = false;
+  $("reviewer").textContent = state.user?.name || "Not connected";
+}
+
+async function startApp() {
+  $("retry-startup").hidden = true;
+  $("empty-title").textContent = "Loading review workspace…";
+  $("empty-message").textContent = "Signing you in and fetching the paper list.";
+  try {
+    if (!state.user) await loadSession();
+    await loadPapers();
+    $("empty-title").textContent = "Choose a paper";
+    $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures.";
+  } catch (error) { showStartupError(error); }
+}
+
+$("retry-startup").addEventListener("click", startApp);
+
+$("use-email-sign-in").addEventListener("click", showClerkSignIn);
+$("use-project-password").addEventListener("click", showInternalSignIn);
+
+initializeWorkspaceLayout();
+
+$("internal-sign-in").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const submit = event.currentTarget.querySelector('button[type="submit"]');
+  submit.disabled = true;
+  $("login-status").textContent = "Signing in…";
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: $("login-email").value, password: $("login-password").value }),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Sign-in failed.");
+    localStorage.setItem(REVIEW_TOKEN_KEY, payload.token);
+    state.user = payload.user;
+    $("download-all-feedback").hidden = payload.user.role !== "admin";
+    $("login-password").value = "";
+    showWorkbench();
+    await startApp();
+  } catch (error) {
+    showSignIn(error.message);
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+$("sign-out").addEventListener("click", () => {
+  localStorage.removeItem(REVIEW_TOKEN_KEY);
+  state.user = null;
+  state.papers = [];
+  showSignIn("Signed out.");
+});
+
+try {
+  if (await initializeAuthentication()) {
+    showWorkbench();
+    await startApp();
+  }
+} catch (error) {
+  showSignIn(error.message);
+}

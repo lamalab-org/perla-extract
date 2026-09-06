@@ -26,7 +26,7 @@ from .models import (
     ReportedValue,
     StudyExtraction,
 )
-from .units import convert_reported_value
+from .units import convert_reported_value, is_concentration_unit
 from .vocabulary import NormalizedAtmosphere
 
 if TYPE_CHECKING:
@@ -64,6 +64,9 @@ Rules:
   when its role is unclear.
 - Link concentration_condition_index only to an explicitly reported concentration of
   that solute; otherwise set it to null.
+- Equal concentration values attached to different named solutes are separate atomic
+  conditions. Link each solute to its own condition index rather than treating the
+  repeated number as a duplicate.
 - Emit at most one proposal for each supplied step_id.
 """
 
@@ -231,8 +234,7 @@ def composition_context(
             "layer_id": absorber.layer_id,
             "reported_formula": absorber.formula.raw_value,
             "reported_constituents": [
-                {"name": item.name, "role": item.role}
-                for item in absorber.constituents
+                {"name": item.name, "role": item.role} for item in absorber.constituents
             ],
             "evidence": _local_evidence(
                 _citations_for_absorber(family, absorber), by_id
@@ -290,6 +292,22 @@ def processing_context(
 
 _FORMULA_TRANSLATION = str.maketrans("₀₁₂₃₄₅₆₇₈₉₋⁰¹²³⁴⁵⁶⁷⁸⁹⁻", "0123456789-0123456789-")
 
+_ELEMENT_SYMBOLS = frozenset(
+    "H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu "
+    "Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs "
+    "Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl "
+    "Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs "
+    "Mt Ds Rg Cn Nh Fl Mc Lv Ts Og".split()
+)
+
+
+def _valid_formula_token(value: str) -> bool:
+    """Reject arbitrary character splits while allowing elements and source acronyms."""
+
+    return value in _ELEMENT_SYMBOLS or bool(
+        re.fullmatch(r"[A-Z]{2,}[A-Za-z0-9+-]*", value)
+    )
+
 
 def _formula_key(value: str) -> str:
     """Remove typographic presentation while retaining chemical token order."""
@@ -330,15 +348,9 @@ def _reported_formula_candidates(value: str) -> set[str]:
     candidates = {_formula_key(normalized)}
     final_group = re.search(r"\(([^()]*)\)\s*([0-9]+(?:\.[0-9]+)?)\s*$", normalized)
     fractional_terms = (
-        re.findall(r"[A-Za-z]+0?\.\d+", final_group.group(1))
-        if final_group
-        else []
+        re.findall(r"[A-Za-z]+0?\.\d+", final_group.group(1)) if final_group else []
     )
-    if (
-        final_group
-        and len(fractional_terms) >= 2
-        and final_group.group(2).isdigit()
-    ):
+    if final_group and len(fractional_terms) >= 2 and final_group.group(2).isdigit():
         candidates.add(
             _formula_key(
                 normalized[: final_group.start()]
@@ -446,6 +458,11 @@ def validate_composition_proposals(
             for site in ("A", "B", "X")
         ):
             issues.append("a complete A/B/X site assignment was not proposed")
+            status = "needs_review"
+        elif any(not _valid_formula_token(ion.abbreviation) for ion in proposal.ions):
+            issues.append(
+                "one or more ion abbreviations are neither element symbols nor intact acronyms"
+            )
             status = "needs_review"
         elif not _formula_reconstructs(target[1].formula.raw_value, proposal.ions):
             issues.append(
@@ -570,18 +587,21 @@ def validate_processing_proposals(
                             f"concentration_condition_index {concentration} is assigned more than once"
                         )
                     used_concentrations.add(concentration)
+                    if concentration in used_conditions:
+                        issues.append(
+                            f"condition_index {concentration} cannot serve as both a process field and concentration"
+                        )
                     if assignment.role != "solute":
                         issues.append("only a solute may reference a concentration")
-                    elif concentration >= len(step.conditions):
+                    elif not 0 <= concentration < len(step.conditions):
                         issues.append(
                             f"concentration_condition_index {concentration} is out of range"
                         )
-                    elif (
-                        step.conditions[concentration].value_number is None
-                        or not step.conditions[concentration].unit
+                    elif step.conditions[concentration].value_number is None or not (
+                        is_concentration_unit(step.conditions[concentration].unit)
                     ):
                         issues.append(
-                            "a concentration must reference an explicit number and unit"
+                            "a concentration must reference an explicit number and concentration-compatible unit"
                         )
             status = "needs_review" if issues else "accepted"
         seen.add(proposal.step_id)

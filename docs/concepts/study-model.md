@@ -77,11 +77,20 @@ erDiagram
 
 ## Device families and composition
 
-A `DeviceFamily` is one group-level recipe or architecture variant that can describe
-several fabricated specimens. Split families when the paper presents a control,
-treatment, composition, stack, or fabrication recipe as a distinct reusable design.
-Do not create another family for a champion label, scan direction, measurement
-protocol, stability checkpoint, or summary statistic.
+A `DeviceFamily` is one complete photovoltaic design that can describe several
+fabricated specimens. Its identity comes from the ordered functional-layer materials,
+absorber composition or compositions, and cell polarity or topology. Split families
+when one of those design-defining features changes. A material intentionally retained
+in the finished device can distinguish a family.
+
+Do not create another family solely because the paper changes a fabrication parameter,
+post-treatment, thickness, area, measurement protocol, scan direction, aging
+condition, or champion label while keeping the underlying design. Those distinctions
+belong to the linked specimen when the source identifies one. If a paper reports only
+a group-level process arm that the schema cannot attach faithfully, preserve that gap
+in `unresolved_notes` rather than manufacturing another family. Films, partial stacks,
+substrates, and other specimens made only for characterization are context rather than
+photovoltaic device families.
 
 An `IndividualDevice` is one particular measured specimen distinguished by the paper,
 for example a champion, representative, or certified cell. Multiple measurements on
@@ -146,9 +155,15 @@ Bounds, ranges, approximations, and other qualifiers therefore remain visible in
 represented with `null`, `not_reported`, or an empty collection as allowed by the
 specific field; the extractor must not create a placeholder value.
 
-## Cross-window identity links
+## Experimental objects before records
 
-Long documents can cause the same entity to be proposed in more than one extraction
-window. `CrossWindowIdentityLink` records positive identity evidence between those
-candidates. It does not merge them or choose a preferred candidate. This keeps
-disagreements and partial records available for inspection and later curation.
+Before constructing this schema, the extractor records experimental objects and
+atomic source claims in a neutral ledger. An object may be a study target, supporting
+context, or uncertain. Its role may describe a device design, processing arm,
+characterization specimen, population, measurement, or stability experiment. These
+roles are evidence for record construction rather than records themselves.
+
+This intermediate layer matters because one paper may characterize many films while
+reporting only one photovoltaic architecture. Claim-reading windows can collect those
+objects independently, but their ledgers are combined before one global call decides
+which objects justify device families and how observations link to them.

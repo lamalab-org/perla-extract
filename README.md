@@ -9,24 +9,28 @@ performance observations, population summaries, and stability experiments distin
 
 ```bash
 pip install perla-extract
-export OPENROUTER_API_KEY="your-openrouter-key"  # for the default backend
+export OPENAI_API_KEY="your-openai-key"
 
 perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
-  --model openrouter/openai/gpt-5.6-sol:exacto \
+  --model openai/gpt-5.2 \
+  --max-cost-usd 2.00 \
   --output-dir results/paper
 ```
 
 Model calls use LiteLLM. The provider-prefixed model name selects the backend and its
-standard credential—for example, `openai/...` with `OPENAI_API_KEY` or
-`anthropic/...` with `ANTHROPIC_API_KEY`. The default uses OpenRouter with an explicit
-quality-first `:exacto` suffix, but the extraction workflow itself is provider-neutral.
+standard credential—for example, `openai/...` with `OPENAI_API_KEY`,
+`openrouter/...` with `OPENROUTER_API_KEY`, or `anthropic/...` with
+`ANTHROPIC_API_KEY`. The default calls OpenAI directly; the extraction workflow itself
+remains provider-neutral.
 
 The extraction directory contains the refined rich result, its retained first draft,
-an independent source-grounded record inventory and coverage audit, a bounded repair
-pass for audit-visible gaps, local evidence checks, and a separate audited
-composition/processing enrichment. Accepted interpretations feed atomic archives for
+a source-grounded ledger of experimental objects and atomic claims, a claim-coverage
+audit, a bounded repair pass for audit-visible gaps, local evidence checks, and audited
+conservative finalization of unsupported optional claims, and audited
+composition/processing enrichment. Every finalization preserves the complete candidate
+and exact removed content. Accepted interpretations feed atomic archives for
 the pinned NOMAD schema without rewriting reported facts in `extraction.json`. Use
 `--dry-run` to parse the documents and estimate call size without calling a model.
 Every model request contains parser-produced text and tables only; the workflow does
@@ -39,8 +43,10 @@ The [documentation site](docs/index.md) explains:
 - [the study and evidence model](docs/concepts/study-model.md);
 - [single-call and long-supplement extraction](docs/workflows/extraction.md);
 - [human ground-truth review](docs/workflows/ground-truth-review.md);
+- [deterministic rich-schema evaluation](docs/workflows/evaluation.md);
 - [audited composition and processing interpretation](docs/workflows/enrichment.md);
-- [direct NOMAD export](docs/workflows/nomad-export.md); and
+- [direct NOMAD export](docs/workflows/nomad-export.md);
+- [paper discovery and Zotero journal-club intake](docs/workflows/papersbot.md); and
 - [the optional reduced-schema compatibility boundary](docs/compatibility/reduced-schema.md).
 
 Build it locally with:
@@ -54,9 +60,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development and test commands.
 
 ## Discover new papers
 
-PapersBot checks the packaged journal feeds, applies a replaceable JSON selection
-policy, resolves open-access PDF links, and records incremental state as readable
-JSON. It is deliberately separate from scientific data extraction:
+PapersBot combines packaged journal feeds, OpenAlex topic searches, and an optional
+Zotero group; applies one replaceable JSON selection policy; retrieves available PDFs;
+and records incremental state as readable JSON. It is deliberately separate from
+scientific data extraction:
 
 ```bash
 pip install 'perla-extract[papersbot]'
@@ -64,8 +71,14 @@ perla-papersbot downloaded_papers --state-dir .papersbot-state
 ```
 
 Use `--feeds-file` or repeated `--feed` options to replace the journal list and
-`--selection-file` to replace the relevance policy. The daily GitHub workflow caches
-the state and publishes newly downloaded PDFs as a run artifact.
+`--selection-file` to replace the relevance policy. `--zotero-group-id` also ingests a
+Zotero group, including stored PDF attachments. A configured collection can be a
+journal-club-curated intake queue. Zotero access is read-only and works with a key
+scoped to that group. The supported unattended deployment is an internal cron job,
+with ordinary settings available through `PAPERSBOT_` environment variables. Each PDF
+acquisition records its source and access basis; authorized local retrieval mechanisms
+can implement the small `PdfSource` interface without adding publisher cases to the
+bot.
 
 ## Authors
 

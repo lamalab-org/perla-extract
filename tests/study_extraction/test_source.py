@@ -5,6 +5,7 @@ import pytest
 
 from perla_extract.study_extraction.models import EvidenceBlock
 from perla_extract.study_extraction.source import (
+    _cache_identity,
     _scientific_evidence_blocks,
     parse_pdf,
 )
@@ -60,6 +61,24 @@ def test_mismatched_cache_identity_is_rebuilt(tmp_path):
     _, event = parse_pdf(FIXTURE, "main", parser="pymupdf", cache_dir=tmp_path)
 
     assert event["cache_hit"] is False
+
+
+def test_docling_cache_identity_includes_native_typography_dependency():
+    """Invalidate Docling evidence when its PyMuPDF supplement changes."""
+
+    shared = {
+        "source_hash": "source",
+        "source": "main",
+        "parser": "docling",
+    }
+    first = _cache_identity(
+        **shared, dependency_versions={"docling": "2.0", "PyMuPDF": "1.24"}
+    )
+    upgraded = _cache_identity(
+        **shared, dependency_versions={"docling": "2.0", "PyMuPDF": "1.25"}
+    )
+
+    assert first != upgraded
 
 
 def test_evidence_view_uses_parser_semantics_without_section_name_rules():

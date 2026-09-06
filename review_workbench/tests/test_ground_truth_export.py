@@ -7,6 +7,10 @@ import zipfile
 
 import pytest
 
+from perla_extract.study_extraction.models import (
+    STUDY_SCHEMA_VERSION,
+    study_schema_sha256,
+)
 from review_workbench.ground_truth_export import (
     GROUND_TRUTH_FILENAMES,
     build_ground_truth_export,
@@ -27,7 +31,11 @@ PAPER_ID = "10.0000--example"
 
 
 def _adjudicate(
-    store: StudyReviewStore, study: dict, document: dict
+    store: StudyReviewStore,
+    study: dict,
+    document: dict,
+    *,
+    decision: str = "verified",
 ) -> dict:
     """Create a fully reviewed fixture through the public state transitions."""
 
@@ -63,7 +71,7 @@ def _adjudicate(
                 RecordDecisionRequest(
                     collection=collection,
                     record_id=record[identifier],
-                    decision="verified",
+                    decision=decision,
                     base_revision=bundle["revision"],
                 ),
                 "ada",
@@ -153,9 +161,13 @@ def test_export_is_deterministic_and_refuses_conflicting_overwrites(
     assert first == second
     assert first.manifest.revision == bundle["revision"]
     assert first.manifest.frozen_at == bundle["events"][-1]["timestamp"]
-    assert set(first.manifest.files) == set(GROUND_TRUTH_FILENAMES) - {
-        "manifest.json"
-    }
+    assert first.manifest.artifact_format_version == 3
+    assert first.manifest.evidence_version == 1
+    assert len(first.manifest.evidence_document_sha256) == 64
+    assert first.manifest.study_schema_version == STUDY_SCHEMA_VERSION
+    assert first.manifest.study_schema_sha256 == study_schema_sha256()
+    assert first.manifest.review.uncertain_record_keys == []
+    assert set(first.manifest.files) == set(GROUND_TRUTH_FILENAMES) - {"manifest.json"}
     assert all(len(digest) == 64 for digest in first.manifest.files.values())
 
     target = write_ground_truth_export(first, tmp_path / "dataset" / "v1")
@@ -183,6 +195,23 @@ def test_browser_archive_contains_the_same_four_stable_files(
     assert first == ground_truth_zip(export)
     with zipfile.ZipFile(io.BytesIO(first)) as archive:
         assert sorted(archive.namelist()) == sorted(GROUND_TRUTH_FILENAMES)
-        assert json.loads(archive.read("ground_truth.json")) == export.files()[
-            "ground_truth.json"
-        ]
+        assert (
+            json.loads(archive.read("ground_truth.json"))
+            == export.files()["ground_truth.json"]
+        )
+
+
+def test_export_preserves_adjudicator_abstentions(
+    tmp_path, empty_study, document_payload
+):
+    """An uncertain record must be masked instead of becoming a benchmark label."""
+
+    store = StudyReviewStore(tmp_path / "review")
+    study = _study_with_evidence(empty_study, "champion device")
+    _adjudicate(store, study, document_payload, decision="uncertain")
+
+    export = build_ground_truth_export(store, SPLIT, PAPER_ID)
+
+    assert export.manifest.review.uncertain_record_keys == [
+        "device_families:family-control"
+    ]

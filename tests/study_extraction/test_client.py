@@ -4,9 +4,12 @@ from types import SimpleNamespace
 import litellm
 import pytest
 
+from perla_extract.study_extraction.claims import ClaimLedger
 from perla_extract.study_extraction.client import (
+    ModelBudgetExceeded,
     ModelCallError,
     ModelClient,
+    _request_artifact,
     _strict_schema,
 )
 from perla_extract.study_extraction.models import PaperMetadata, StudyExtraction
@@ -22,6 +25,31 @@ def empty_result() -> dict:
         stability_tests=[],
         unresolved_notes=[],
     ).model_dump(mode="json")
+
+
+def test_multimodal_request_artifact_retains_hash_but_not_pixels():
+    body = {
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "inspect"},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": "data:image/png;base64,cGl4ZWxz"},
+                    },
+                ],
+            }
+        ]
+    }
+
+    artifact = _request_artifact(body)
+
+    assert artifact["messages"][0]["content"][1]["image_url"]["url"].startswith(
+        "embedded-image:sha256="
+    )
+    assert "cGl4ZWxz" not in json.dumps(artifact)
+    assert body["messages"][0]["content"][1]["image_url"]["url"].endswith("cGl4ZWxz")
 
 
 def test_only_validated_model_results_enter_cache(tmp_path, monkeypatch):
@@ -65,10 +93,13 @@ def test_only_validated_model_results_enter_cache(tmp_path, monkeypatch):
 
     assert first == second
     assert second_client.calls[0]["cache_hit"] is True
+    assert client.calls[0]["request_sha256"] == second_client.calls[0]["request_sha256"]
+    assert client.calls[0]["cache_key_sha256"] != client.calls[0]["request_sha256"]
 
 
 def test_provider_schema_requires_nullable_defaulted_fields():
     schema = _strict_schema(StudyExtraction)
+    assert "identity_links" not in schema["properties"]
     family = schema["$defs"]["DeviceFamily"]
     assert "absorbers" in family["required"]
     assert "default" not in family["properties"]["absorbers"]
@@ -94,6 +125,17 @@ def test_provider_schema_requires_nullable_defaulted_fields():
                 assert_closed_objects_only(child)
 
     assert_closed_objects_only(schema)
+
+
+def test_only_empty_legacy_identity_links_are_migrated():
+    legacy = empty_result()
+    legacy["identity_links"] = []
+    migrated = StudyExtraction.model_validate(legacy)
+
+    assert "identity_links" not in migrated.model_dump(mode="json")
+    legacy["identity_links"] = [{"link_id": "unresolved"}]
+    with pytest.raises(ValueError, match="manual migration"):
+        StudyExtraction.model_validate(legacy)
 
 
 @pytest.mark.parametrize("invalid_cache", ["{", "[]"])
@@ -214,6 +256,191 @@ def test_litellm_timeout_becomes_retryable_model_error(tmp_path, monkeypatch):
     assert failure["error_type"] == "Timeout"
 
 
+def test_pydantic_failure_gets_one_error_aware_repair(tmp_path, monkeypatch):
+    """Give semantic validation errors back to the model and account for both calls."""
+
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        heartbeat_seconds=0,
+    )
+    bodies = []
+
+    def respond(body, _failure):
+        bodies.append(body)
+        usage = {
+            "prompt_tokens": 10,
+            "completion_tokens": 5,
+            "total_tokens": 15,
+            "cost": 0.01,
+            "latency_seconds": 1,
+        }
+        return ({"paper": {}}, usage) if len(bodies) == 1 else (empty_result(), usage)
+
+    monkeypatch.setattr(client, "_live", respond)
+
+    result = client.complete(
+        kind="test",
+        slug="repair",
+        model="test/model",
+        system="system",
+        prompt="prompt",
+        response_model=StudyExtraction,
+        max_output_tokens=100,
+        reasoning_effort=None,
+    )
+
+    assert result.model_dump(mode="json") == empty_result()
+    assert len(bodies) == 2
+    assert bodies[0]["messages"] == bodies[1]["messages"][:2]
+    assert "failed local Pydantic validation" in bodies[1]["messages"][-1]["content"]
+    assert '"paper":{}' in bodies[1]["messages"][-2]["content"]
+    assert (tmp_path / "out/requests/repair.validation-repair.request.json").exists()
+    assert client.calls[0]["validation_repair"] is True
+    assert client.calls[0]["attempt_count"] == 2
+    assert client.calls[0]["usage"]["total_tokens"] == 30
+    assert client.calls[0]["usage"]["cost"] == 0.02
+
+
+def test_domain_validation_participates_in_repair_and_cache_validation(
+    tmp_path, monkeypatch
+):
+    """Callers can reject schema-valid omissions before they enter the cache."""
+
+    client = ModelClient(cache_dir=tmp_path / "cache", output_dir=tmp_path / "out")
+    corrected = empty_result()
+    corrected["paper"]["title"] = "Expected paper"
+    responses = iter([(empty_result(), {}), (corrected, {})])
+    monkeypatch.setattr(client, "_live", lambda *_args: next(responses))
+
+    def require_title(result):
+        if result.paper.title != "Expected paper":
+            raise ValueError("response omitted the expected paper title")
+
+    result = client.complete(
+        kind="test",
+        slug="domain-repair",
+        model="test/model",
+        system="system",
+        prompt="prompt",
+        response_model=StudyExtraction,
+        max_output_tokens=100,
+        reasoning_effort=None,
+        validate=require_title,
+        validation_contract="title-v1",
+    )
+
+    assert result.paper.title == "Expected paper"
+    assert client.calls[0]["validation_repair"] is True
+
+
+def test_model_validator_error_is_logged_and_repaired(tmp_path, monkeypatch):
+    """A ValueError stored in Pydantic context must not break failure logging."""
+
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        heartbeat_seconds=0,
+    )
+    invalid = {
+        "objects": [],
+        "claims": [
+            {
+                "claim_id": "claim-1",
+                "kind": "identity",
+                "label": "unsupported link",
+                "subject_object_ids": ["missing-object"],
+                "scope": "target",
+                "raw_value": None,
+                "shared_targets": [],
+                "evidence": [{"block_id": "main-p1-b1", "quote": "reported device"}],
+            }
+        ],
+    }
+    responses = iter([(invalid, {}), ({"objects": [], "claims": []}, {})])
+    monkeypatch.setattr(client, "_live", lambda *_args: next(responses))
+
+    result = client.complete(
+        kind="source_claim_ledger",
+        slug="claims",
+        model="test/model",
+        system="system",
+        prompt="prompt",
+        response_model=ClaimLedger,
+        max_output_tokens=100,
+        reasoning_effort=None,
+    )
+
+    assert result == ClaimLedger(objects=[], claims=[])
+    repair_request = json.loads(
+        (tmp_path / "out/requests/claims.validation-repair.request.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    repair_instruction = repair_request["messages"][-1]["content"]
+    assert "unknown experimental objects" in repair_instruction
+    assert '"ctx"' not in repair_instruction
+
+
+def test_model_call_budget_counts_provider_requests_not_cache_reads(
+    tmp_path, monkeypatch
+):
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        max_model_calls=1,
+    )
+    monkeypatch.setattr(
+        client,
+        "_live",
+        lambda body, failure: (empty_result(), {"cost": 0.01}),
+    )
+    request = {
+        "kind": "test",
+        "model": "test/model",
+        "system": "system",
+        "prompt": "prompt",
+        "response_model": StudyExtraction,
+        "max_output_tokens": 100,
+        "reasoning_effort": None,
+    }
+    client.complete(slug="first", **request)
+    client.complete(slug="cached", **request)
+
+    with pytest.raises(ModelBudgetExceeded, match="model-call budget exhausted"):
+        client.complete(slug="different", **{**request, "prompt": "different"})
+    assert client.budget_status()["provider_requests"] == 1
+
+
+@pytest.mark.parametrize("reported_cost", [0.02, None])
+def test_cost_budget_fails_closed_before_a_second_call(
+    tmp_path, monkeypatch, reported_cost
+):
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        max_cost_usd=0.01,
+    )
+    monkeypatch.setattr(
+        client,
+        "_live",
+        lambda body, failure: (empty_result(), {"cost": reported_cost}),
+    )
+    request = {
+        "kind": "test",
+        "model": "test/model",
+        "system": "system",
+        "response_model": StudyExtraction,
+        "max_output_tokens": 100,
+        "reasoning_effort": None,
+    }
+    client.complete(slug="first", prompt="first", **request)
+
+    with pytest.raises(ModelBudgetExceeded, match="cost budget"):
+        client.complete(slug="second", prompt="second", **request)
+    assert client.budget_status()["provider_requests"] == 1
+
+
 def test_litellm_request_preserves_schema_and_provider_prefix(tmp_path):
     client = ModelClient(
         cache_dir=tmp_path / "cache",
@@ -318,3 +545,43 @@ def test_unusable_litellm_response_becomes_inspectable_error(
 
     failure = json.loads(failure_path.read_text(encoding="utf-8"))
     assert failure["content"] is None
+
+
+def test_invalid_json_response_retains_usage_for_budget_accounting(
+    tmp_path, monkeypatch
+):
+    """A charged malformed response must count before any application retry."""
+
+    payload = {
+        "model": "provider-model",
+        "choices": [{"finish_reason": "stop", "message": {"content": "{"}}],
+        "usage": {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 12},
+    }
+    response = SimpleNamespace(
+        model_dump=lambda: payload,
+        _hidden_params={"custom_llm_provider": "test", "response_cost": 0.02},
+    )
+    monkeypatch.setattr(litellm, "completion", lambda **_kwargs: response)
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        heartbeat_seconds=0,
+        max_cost_usd=0.01,
+    )
+
+    with pytest.raises(ModelBudgetExceeded, match="cost budget"):
+        client.complete(
+            kind="test",
+            slug="invalid",
+            model="test/model",
+            system="system",
+            prompt="prompt",
+            response_model=StudyExtraction,
+            max_output_tokens=100,
+            reasoning_effort=None,
+        )
+
+    assert client.budget_status()["reported_cost_usd"] == 0.02
+    assert client.budget_status()["provider_requests"] == 1
+    assert client.calls[0]["usage"]["total_tokens"] == 12
+    assert client.calls[0]["attempt_count"] == 1

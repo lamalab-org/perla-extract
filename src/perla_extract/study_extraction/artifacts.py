@@ -23,11 +23,13 @@ def _replace_after_contention(source: Path, target: Path) -> None:
 
 
 def write_json_atomic(path: Path, value: object) -> None:
-    """Replace a JSON artifact only after its complete contents reach disk.
+    """Replace a JSON artifact only after its complete contents are written and closed.
 
     A writer-specific temporary file avoids collisions when two extraction jobs
     share a cache directory. Closing it before replacement also keeps this usable
-    on platforms that do not permit replacing an open file.
+    on platforms that do not permit replacing an open file. This prevents partial
+    readers; it does not claim power-loss durability because no filesystem sync is
+    requested for these reproducible artifacts.
     """
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -72,6 +74,27 @@ def write_json_exclusive(path: Path, value: object) -> None:
             temporary = Path(stream.name)
             json.dump(value, stream, indent=2, ensure_ascii=False)
             stream.write("\n")
+        os.link(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
+def write_bytes_exclusive(path: Path, value: bytes) -> None:
+    """Publish immutable binary input without exposing a partial file or overwriting."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as stream:
+            temporary = Path(stream.name)
+            stream.write(value)
         os.link(temporary, path)
     finally:
         if temporary is not None:

@@ -81,7 +81,7 @@ def test_click_help_exposes_frontier_default() -> None:
     result = CliRunner().invoke(cli.main, ["--help"])
 
     assert result.exit_code == 0
-    assert "openrouter/openai/gpt-5.6-sol:exacto" in result.stdout
+    assert "openai/gpt-5.2" in result.stdout
     assert "--json-logs" in result.stdout
 
 
@@ -91,18 +91,20 @@ def test_public_entry_points_share_scientific_defaults() -> None:
     names = {
         "model",
         "reasoning_effort",
-        "use_inventory",
-        "inventory_model",
-        "inventory_max_output_tokens",
+        "use_claim_ledger",
+        "claim_model",
+        "claim_max_output_tokens",
+        "claim_recall_passes",
         "use_enrichment",
         "enrichment_model",
         "enrichment_max_output_tokens",
         "use_refinement",
         "refinement_model",
         "parser",
-        "mode",
+        "claim_mode",
         "single_call_max_input_tokens",
-        "window_input_tokens",
+        "claim_window_input_tokens",
+        "assembly_max_input_tokens",
         "max_output_tokens",
         "temperature",
         "heartbeat_seconds",

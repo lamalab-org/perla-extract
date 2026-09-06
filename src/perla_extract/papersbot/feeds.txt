@@ -181,7 +181,6 @@ https://onlinelibrary.wiley.com/action/showFeed?jc=23670932&type=etoc&feed=rss
 https://onlinelibrary.wiley.com/action/showFeed?jc=26289725&type=etoc&feed=rss
 # Elsevier
 https://rss.sciencedirect.com/publication/science/00108545
-https://rss.sciencedirect.com/publication/science/00108545
 https://rss.sciencedirect.com/publication/science/00201693
 https://rss.sciencedirect.com/publication/science/00404020
 https://rss.sciencedirect.com/publication/science/00404039

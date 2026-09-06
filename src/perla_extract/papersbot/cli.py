@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 
 import click
@@ -13,12 +14,25 @@ from perla_extract.study_extraction.logging import configure_logging
 from .bot import run_papersbot
 
 
-@click.command(context_settings={"show_default": True})
+def _environment_flag(name: str) -> bool:
+    """Read an explicit automation opt-in without treating any nonempty value as true."""
+
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+@click.command(
+    context_settings={"show_default": True, "auto_envvar_prefix": "PAPERSBOT"}
+)
 @click.argument(
-    "download_dir", type=click.Path(path_type=Path, file_okay=False), default="downloaded_papers"
+    "download_dir",
+    type=click.Path(path_type=Path, file_okay=False),
+    default="downloaded_papers",
+    envvar="PAPERSBOT_DOWNLOAD_DIR",
 )
 @click.option(
-    "--state-dir", type=click.Path(path_type=Path, file_okay=False), default=".papersbot-state"
+    "--state-dir",
+    type=click.Path(path_type=Path, file_okay=False),
+    default=".papersbot-state",
 )
 @click.option(
     "--feed",
@@ -41,14 +55,80 @@ from .bot import run_papersbot
     default=lambda: os.environ.get("UNPAYWALL_EMAIL"),
     help="Email required by Unpaywall; OpenAlex remains available without it.",
 )
+@click.option(
+    "--openalex-email",
+    default=lambda: os.environ.get("OPENALEX_EMAIL") or os.environ.get("OA_EMAIL"),
+    help="Contact email sent with OpenAlex requests.",
+)
+@click.option(
+    "--openalex-api-key",
+    default=lambda: os.environ.get("OPENALEX_API_KEY"),
+    show_default=False,
+    help="Optional free API key for a larger OpenAlex budget.",
+)
+@click.option(
+    "--rss/--no-rss",
+    default=True,
+    envvar="PAPERSBOT_RSS",
+    help="Use journal feeds for low-latency discovery.",
+)
+@click.option(
+    "--openalex/--no-openalex",
+    "openalex_enabled",
+    default=True,
+    envvar="PAPERSBOT_OPENALEX",
+    help="Use configured OpenAlex topics for completeness and backfill.",
+)
+@click.option(
+    "--openalex-start-date",
+    type=click.DateTime(formats=["%Y-%m-%d"]),
+    help="Override the incremental OpenAlex start date (YYYY-MM-DD).",
+)
+@click.option(
+    "--openalex-end-date",
+    type=click.DateTime(formats=["%Y-%m-%d"]),
+    help="Override the OpenAlex end date (YYYY-MM-DD).",
+)
+@click.option(
+    "--zotero-group-id",
+    default=lambda: os.environ.get("ZOTERO_GROUP_ID"),
+    help="Zotero group ID to ingest. ZOTERO_GROUP_ID is the environment fallback.",
+)
+@click.option(
+    "--zotero-collection-key",
+    default=lambda: os.environ.get("ZOTERO_COLLECTION_KEY"),
+    help="Optionally limit Zotero ingestion to one journal-club collection.",
+)
+@click.option(
+    "--zotero-api-key",
+    default=lambda: os.environ.get("ZOTERO_API_KEY"),
+    show_default=False,
+    help="API key for member-only group reads. Never stored in bot artifacts.",
+)
+@click.option(
+    "--zotero-curated/--no-zotero-curated",
+    default=lambda: _environment_flag("ZOTERO_CURATED"),
+    help="Treat every item in the configured Zotero collection as human-approved.",
+)
 @click.option("--max-attempts", type=click.IntRange(min=1), default=4)
 @click.option("--request-timeout", type=click.FloatRange(min=1), default=30.0)
+@click.option("--request-retries", type=click.IntRange(min=0), default=3)
 @click.option(
     "--log-level",
     type=click.Choice(("DEBUG", "INFO", "WARNING", "ERROR"), case_sensitive=False),
     default="INFO",
 )
 @click.option("--json-logs", is_flag=True, help="Write structured JSON logs to stderr.")
+@click.option(
+    "--log-file",
+    type=click.Path(path_type=Path, dir_okay=False),
+    help="Also write structured JSONL logs to this file.",
+)
+@click.option(
+    "--fail-on-partial/--allow-partial",
+    default=False,
+    help="Exit nonzero when a run completes with recorded source or paper errors.",
+)
 def main(
     download_dir: Path,
     state_dir: Path,
@@ -56,14 +136,27 @@ def main(
     feeds_file: Path | None,
     selection_file: Path | None,
     unpaywall_email: str | None,
+    openalex_email: str | None,
+    openalex_api_key: str | None,
+    rss: bool,
+    openalex_enabled: bool,
+    openalex_start_date: datetime | None,
+    openalex_end_date: datetime | None,
+    zotero_group_id: str | None,
+    zotero_collection_key: str | None,
+    zotero_api_key: str | None,
+    zotero_curated: bool,
     max_attempts: int,
     request_timeout: float,
+    request_retries: int,
     log_level: str,
     json_logs: bool,
+    log_file: Path | None,
+    fail_on_partial: bool,
 ) -> None:
-    """Find relevant feed entries and download their open-access PDFs."""
+    """Discover papers and retrieve open or group-supplied PDFs."""
 
-    configure_logging(level=log_level, json_output=json_logs)
+    configure_logging(level=log_level, json_output=json_logs, log_file=log_file)
     try:
         result = run_papersbot(
             download_dir,
@@ -72,12 +165,28 @@ def main(
             feeds_file=feeds_file,
             selection_file=selection_file,
             unpaywall_email=unpaywall_email,
+            openalex_email=openalex_email,
+            openalex_api_key=openalex_api_key,
+            rss_enabled=rss,
+            openalex_enabled=openalex_enabled,
+            openalex_start_date=(
+                openalex_start_date.date() if openalex_start_date else None
+            ),
+            openalex_end_date=(openalex_end_date.date() if openalex_end_date else None),
+            zotero_group_id=zotero_group_id,
+            zotero_collection_key=zotero_collection_key,
+            zotero_api_key=zotero_api_key,
+            zotero_curated=zotero_curated,
             max_attempts=max_attempts,
             request_timeout=request_timeout,
+            request_retries=request_retries,
         )
     except (OSError, RuntimeError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
-    click.echo(json.dumps(result.model_dump(mode="json"), indent=2))
+    payload = result.model_dump(mode="json")
+    click.echo(json.dumps(payload, indent=2))
+    if fail_on_partial and payload.get("status") != "complete":
+        raise click.exceptions.Exit(2)
 
 
 if __name__ == "__main__":

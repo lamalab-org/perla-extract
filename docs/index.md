@@ -12,17 +12,16 @@ as the same measurement.
 ```mermaid
 flowchart LR
     A["Paper + Supporting Information"] --> B["Parser-independent evidence blocks"]
-    B --> C0["Independent record inventory and conservative routing"]
-    C0 --> C{"Routed evidence fits one model context?"}
-    C -->|Yes| D["Complete-study draft"]
-    C -->|No| E["Structure-aware evidence windows"]
-    E --> F["Lossless candidate union"]
-    F --> G["Explicit cross-window identity links"]
-    D --> R["Evidence-complete refinement"]
-    G --> R
+    B --> C{"Claim evidence fits one model context?"}
+    C -->|Yes| D["Independent complete-evidence claim readings"]
+    C -->|No| E["Independent claim readings in structural windows"]
+    D --> F["Ground and combine claim ledger"]
+    E --> F
+    F --> G["One global study assembly"]
+    G --> R["Evidence-complete reconciliation"]
     R --> H["Rich StudyExtraction"]
-    H --> I["Citation repair, evidence checks, and coverage audit"]
-    I --> T["Targeted text/table repair with monotonic gates"]
+    H --> I["Citation checks and claim-coverage audit"]
+    I --> T["Targeted text/table repair with semantic gates"]
     T --> L["Audited composition and processing enrichment"]
     L --> J["Atomic NOMAD archives"]
     H --> K["Human ground-truth review"]
@@ -38,14 +37,13 @@ result; they do not erase model output.
 
 - **Keep scientific reporting levels separate.** Individual measurements,
   population statistics, and stability experiments are different record types.
-- **Prefer a complete-study view.** A shallow inventory removes only cited,
-  high-confidence irrelevant blocks from the expensive request. The complete parse is
-  preserved, grounded inventory candidates guide recall, and remaining long inputs
-  use structural windows.
+- **Separate reading from record construction.** Long inputs may use structural
+  windows and repeated source readings to collect neutral claims, but one global call
+  constructs the final records from their grounded union and cited passages.
 - **Re-read before review.** A second pass audits the complete draft against the same
   evidence. The first draft and a record-level change index remain inspectable.
-- **Preserve candidates.** Cross-window linking adds identity links instead of
-  guessing which candidate should replace another.
+- **Treat scope as data.** Study targets, processing arms, characterization specimens,
+  populations, and measurements remain distinct before any are mapped to records.
 - **Use generic reported values.** Layers and processing steps contain `ReportedValue`
   records. Every value denotes one semantic quantity, while shared citation IDs avoid
   repeating the same evidence. Property-specific regular expressions do not decide
@@ -60,6 +58,7 @@ result; they do not erase model output.
 - [Understand the study model](concepts/study-model.md)
 - [Understand evidence validation](concepts/evidence.md)
 - [Review and curate ground truth](workflows/ground-truth-review.md)
+- [Score rich extractions deterministically](workflows/evaluation.md)
 - [Create quality-first review seeds, then reduce cost](workflows/quality-first-ground-truth.md)
 - [Interpret composition and processing](workflows/enrichment.md)
 - [Export directly to NOMAD](workflows/nomad-export.md)

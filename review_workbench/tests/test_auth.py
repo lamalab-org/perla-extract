@@ -5,12 +5,14 @@ import json
 
 import pytest
 
-pytest.importorskip("jwt", reason="JWT support is isolated to the Vercel workbench")
+jwt = pytest.importorskip("jwt", reason="JWT support is isolated to the Vercel workbench")
 
 from review_workbench.auth import (
     AuthenticationError,
     ClerkAuthenticator,
     InternalAuthenticator,
+    InternalOrClerkAuthenticator,
+    clerk_key_allowed,
     hash_password,
 )
 from review_workbench.server import ReviewApplication
@@ -19,6 +21,12 @@ from review_workbench.server import ReviewApplication
 def publishable_key(domain="example.clerk.accounts.dev"):
     encoded = base64.urlsafe_b64encode(f"{domain}$".encode()).decode().rstrip("=")
     return f"pk_test_{encoded}"
+
+
+def test_development_clerk_keys_are_not_used_in_production():
+    assert clerk_key_allowed("pk_test_example", "preview") is True
+    assert clerk_key_allowed("pk_test_example", "production") is False
+    assert clerk_key_allowed("pk_live_example", "production") is True
 
 
 def test_clerk_authenticator_maps_allowlisted_account_to_admin(monkeypatch):
@@ -167,3 +175,102 @@ def test_internal_authenticator_merges_additive_accounts(monkeypatch):
 
     assert auth.login("existing@example.org", "existing")[1]["email"] == "existing@example.org"
     assert auth.login("new@example.org", "new password")[1]["name"] == "New Reviewer"
+
+
+def test_internal_authenticator_applies_password_overrides_last(monkeypatch):
+    monkeypatch.setenv(
+        "REVIEW_INTERNAL_ACCOUNT_OVERRIDES",
+        json.dumps(
+            {
+                "reviewer@example.org": {
+                    "name": "Current Reviewer",
+                    "password_hash": hash_password("rotated", iterations=1_000),
+                }
+            }
+        ),
+    )
+    auth = InternalAuthenticator(
+        json.dumps(
+            {
+                "reviewer@example.org": {
+                    "name": "Old Reviewer",
+                    "password_hash": hash_password("old", iterations=1_000),
+                }
+            }
+        ),
+        "s" * 32,
+    )
+
+    assert auth.login("reviewer@example.org", "rotated")[1]["name"] == "Current Reviewer"
+    with pytest.raises(AuthenticationError, match="incorrect"):
+        auth.login("reviewer@example.org", "old")
+
+
+def test_internal_authenticator_merges_named_account_layers(monkeypatch):
+    monkeypatch.setenv(
+        "REVIEW_INTERNAL_ACCOUNT_LAYER_20260827_REVIEWER",
+        json.dumps(
+            {
+                "reviewer@example.org": {
+                    "name": "Recovered Reviewer",
+                    "role": "reviewer",
+                    "password_hash": hash_password("recovered", iterations=1_000),
+                }
+            }
+        ),
+    )
+    auth = InternalAuthenticator(
+        json.dumps(
+            {
+                "existing@example.org": {
+                    "password_hash": hash_password("existing", iterations=1_000)
+                }
+            }
+        ),
+        "s" * 32,
+    )
+
+    assert auth.login("existing@example.org", "existing")[1]["email"] == "existing@example.org"
+    assert auth.login("reviewer@example.org", "recovered")[1]["name"] == "Recovered Reviewer"
+
+
+def test_internal_or_clerk_authenticator_preserves_password_login_and_routes_tokens(
+    monkeypatch,
+):
+    internal = InternalAuthenticator(
+        json.dumps(
+            {
+                "reviewer@example.org": {
+                    "password_hash": hash_password("existing", iterations=1_000)
+                }
+            }
+        ),
+        "s" * 32,
+    )
+    clerk = ClerkAuthenticator(
+        publishable_key=publishable_key(),
+        secret_key="sk_test_example",
+        admin_emails="",
+        reviewer_emails="reviewer@example.org",
+    )
+    auth = InternalOrClerkAuthenticator(internal, clerk)
+
+    internal_token, internal_user = auth.login("reviewer@example.org", "existing")
+    assert auth.authenticate({"Authorization": f"Bearer {internal_token}"}) == internal_user
+
+    clerk_user = {
+        "id": "user_123",
+        "email": "reviewer@example.org",
+        "name": "Email Reviewer",
+        "role": "reviewer",
+    }
+    monkeypatch.setattr(clerk, "authenticate", lambda headers: clerk_user)
+    clerk_token = jwt.encode({"sub": "user_123"}, "k" * 48, algorithm="HS384")
+    migrated_user = {**clerk_user, "id": internal_user["id"]}
+    assert auth.authenticate({"Authorization": f"Bearer {clerk_token}"}) == migrated_user
+    assert auth.authenticate({"Cookie": "__session=clerk-cookie"}) == migrated_user
+
+    config = auth.public_config()
+    assert config["enabled"] is True
+    assert config["mode"] == "internal_or_clerk"
+    assert config["frontend_api"] == "https://example.clerk.accounts.dev"

@@ -388,7 +388,7 @@ def _docling_bbox(item: object) -> list[float] | None:
     bbox = getattr(provenance[0], "bbox", None)
     values = [getattr(bbox, name, None) for name in ("l", "t", "r", "b")]
     return (
-        [float(value) for value in values]
+        [float(value) for value in values if value is not None]
         if all(value is not None for value in values)
         else None
     )
@@ -441,6 +441,24 @@ def _native_typography_blocks(
     return blocks
 
 
+@lru_cache(maxsize=1)
+def _docling_runtime() -> tuple[Any, Any, Any]:
+    """Load Docling's converter and local layout models once per batch process.
+
+    A converter owns large ML models. Recreating it for every paper and supplement is
+    expensive and can trigger needless remote registry checks even though extraction
+    is sequential. Returning the Docling enums with it keeps those dependency-specific
+    objects inside this adapter.
+    """
+
+    try:
+        from docling.document_converter import DocumentConverter
+        from docling_core.types.doc import ContentLayer, DocItemLabel
+    except ImportError as exc:
+        raise RuntimeError("Docling is not installed; reinstall perla-extract") from exc
+    return DocumentConverter(), ContentLayer, DocItemLabel
+
+
 def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
     """Adapt Docling structure without leaking its object model downstream.
 
@@ -451,13 +469,8 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
     typography blocks support subscripts and superscripts that conversion may normalize.
     """
 
-    try:
-        from docling.document_converter import DocumentConverter
-        from docling_core.types.doc import ContentLayer, DocItemLabel
-    except ImportError as exc:
-        raise RuntimeError("Docling is not installed; reinstall perla-extract") from exc
-
-    document = DocumentConverter().convert(str(path)).document
+    converter, ContentLayer, DocItemLabel = _docling_runtime()
+    document = converter.convert(str(path)).document
     layout_items: list[dict[str, Any]] = []
     items = document.iterate_items(
         included_content_layers={ContentLayer.BODY, ContentLayer.FURNITURE}
@@ -572,7 +585,11 @@ def _scientific_evidence_blocks(
 
 
 def _cache_identity(
-    *, source_hash: str, source: str, parser: str, parser_version: str
+    *,
+    source_hash: str,
+    source: str,
+    parser: str,
+    dependency_versions: dict[str, str],
 ) -> dict[str, object]:
     """Describe all reproducibility-relevant inputs to a parsed document.
 
@@ -589,8 +606,20 @@ def _cache_identity(
         "source_sha256": source_hash,
         "source": source,
         "parser": parser,
-        "parser_version": parser_version,
+        "dependency_versions": dependency_versions,
     }
+
+
+def _parser_dependency_versions(parser: str) -> dict[str, str]:
+    """Fingerprint every installed package that contributes parser output.
+
+    The Docling adapter supplements structural conversion with PyMuPDF typography,
+    so either dependency can change the resulting evidence. The lightweight parser
+    depends on PyMuPDF alone.
+    """
+
+    names = ("docling", "PyMuPDF") if parser == "docling" else ("PyMuPDF",)
+    return {name: _package_version(name) for name in names}
 
 
 def parse_pdf(
@@ -615,16 +644,21 @@ def parse_pdf(
             f"Unknown parser {parser!r}; choose from {available_parsers()}"
         )
     source_hash = _sha256(path)
-    version = _package_version("docling" if parser == "docling" else "PyMuPDF")
-    if version == "not-installed":
+    dependency_versions = _parser_dependency_versions(parser)
+    if "not-installed" in dependency_versions.values():
+        missing = ", ".join(
+            name
+            for name, version in dependency_versions.items()
+            if version == "not-installed"
+        )
         raise RuntimeError(
-            f"The selected {parser} parser is not installed; reinstall perla-extract"
+            f"The selected {parser} parser requires {missing}; reinstall perla-extract"
         )
     identity = _cache_identity(
         source_hash=source_hash,
         source=source,
         parser=parser,
-        parser_version=version,
+        dependency_versions=dependency_versions,
     )
     key = hashlib.sha256(
         json.dumps(identity, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -685,7 +719,10 @@ def parse_pdf(
         "source_path": str(path),
         "source_sha256": source_hash,
         "parser": parser,
-        "parser_version": version,
+        "parser_version": dependency_versions[
+            "docling" if parser == "docling" else "PyMuPDF"
+        ],
+        "dependency_versions": dependency_versions,
         "parser_implementation_sha256": identity["parser_implementation_sha256"],
         "evidence_schema_sha256": identity["evidence_schema_sha256"],
         "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,

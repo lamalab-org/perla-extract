@@ -1,6 +1,6 @@
 import pytest
 
-from perla_extract.study_extraction.inventory import EvidenceInventory
+from perla_extract.study_extraction.claims import ClaimLedger
 from perla_extract.study_extraction.models import (
     DeviceFamily,
     EvidenceBlock,
@@ -91,21 +91,24 @@ def test_public_study_compacts_and_round_trips_span_references():
     )
 
 
-def test_span_expansion_handles_singular_inventory_evidence():
+def test_span_expansion_handles_singular_experimental_object_evidence():
     spans = build_evidence_spans([block()])
     payload = {
-        "items": [],
-        "exclusions": [
+        "objects": [
             {
-                "evidence": spans[0].span_id,
-                "reason": "document furniture",
+                "object_id": "device",
+                "label": "device",
+                "role": "device_design",
+                "scope": "target",
+                "evidence": [spans[0].span_id],
             }
         ],
+        "claims": [],
     }
 
-    expanded = EvidenceInventory.model_validate(expand_span_citations(payload, spans))
+    expanded = ClaimLedger.model_validate(expand_span_citations(payload, spans))
 
-    assert expanded.exclusions[0].evidence.quote == spans[0].text
+    assert expanded.objects[0].evidence[0].quote == spans[0].text
 
 
 def test_span_response_rejects_an_unknown_reference():

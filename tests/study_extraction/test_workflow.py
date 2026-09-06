@@ -1,7 +1,14 @@
 import json
 from pathlib import Path
 
-from perla_extract.study_extraction.inventory import InventoryItem
+from perla_extract.study_extraction.claims import ClaimLedger, ExperimentalObject
+from perla_extract.study_extraction.guidance import (
+    COMPOSITION_BOUNDARY_POLICY,
+    DEVICE_FAMILY_POLICY,
+    EVIDENCE_INTERPRETATION_POLICY,
+    RECORD_BOUNDARY_POLICY,
+    SHARED_QUANTITY_POLICY,
+)
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
     EvidenceBlock,
@@ -12,8 +19,13 @@ from perla_extract.study_extraction.models import (
     StudyExtraction,
     study_schema_sha256,
 )
+from perla_extract.study_extraction.refinement import REFINEMENT_PROMPT
+from perla_extract.study_extraction.repair import REPAIR_PROMPT
 from perla_extract.study_extraction.workflow import (
+    CLAIM_LEDGER_PROMPT,
+    EXTRACTION_PROMPT,
     ExtractionConfig,
+    _claim_ledger_prompt,
     _gate_final_candidate_against_draft,
     _run_model_calls,
     _select_refinement_candidate,
@@ -29,9 +41,11 @@ class RecordingClient:
 
     def __init__(self) -> None:
         self.prompts: list[str] = []
+        self.kinds: list[str] = []
 
     def complete(self, **request):
         self.prompts.append(request["prompt"])
+        self.kinds.append(request["kind"])
         return StudyExtraction(
             paper=PaperMetadata(title=None, doi=None),
             device_families=[],
@@ -41,6 +55,63 @@ class RecordingClient:
             stability_tests=[],
             unresolved_notes=[f"pass {len(self.prompts)}"],
         )
+
+
+def test_every_semantic_pass_uses_the_same_device_family_boundary():
+    """Keep high-recall passes from silently reintroducing treatment-arm families."""
+
+    for prompt in (
+        EXTRACTION_PROMPT,
+        CLAIM_LEDGER_PROMPT,
+        REFINEMENT_PROMPT,
+        REPAIR_PROMPT,
+    ):
+        assert DEVICE_FAMILY_POLICY in prompt
+    assert "processing/composition variant" not in EXTRACTION_PROMPT
+    assert "processing/composition variants" not in CLAIM_LEDGER_PROMPT
+    assert "characterization-only partial structures" in REFINEMENT_PROMPT
+
+
+def test_every_semantic_pass_uses_shared_record_and_evidence_boundaries():
+    """Keep record typing and source interpretation consistent across model calls."""
+
+    for prompt in (
+        EXTRACTION_PROMPT,
+        CLAIM_LEDGER_PROMPT,
+        REFINEMENT_PROMPT,
+        REPAIR_PROMPT,
+    ):
+        assert RECORD_BOUNDARY_POLICY in prompt
+        assert COMPOSITION_BOUNDARY_POLICY in prompt
+        assert EVIDENCE_INTERPRETATION_POLICY in prompt
+
+
+def test_value_producing_passes_share_the_atomic_shared_quantity_rule():
+    """Keep equal list-scoped values distinct without inferring missing quantities."""
+
+    for prompt in EXTRACTION_PROMPT, REFINEMENT_PROMPT, REPAIR_PROMPT:
+        assert SHARED_QUANTITY_POLICY in prompt
+    assert (
+        "Equal values for different materials are not duplicates" in EXTRACTION_PROMPT
+    )
+    assert "kind=reported_quantity" in CLAIM_LEDGER_PROMPT
+    assert 'raw_value="1.4 M"' in CLAIM_LEDGER_PROMPT
+
+
+def test_recall_pass_repeats_source_without_treating_prior_model_as_evidence():
+    """A second reading changes instructions but carries no previous model ledger."""
+
+    block = EvidenceBlock(
+        block_id="b", source="main", page=1, kind="text", text="Device reached 20%."
+    )
+    prompt = _claim_ledger_prompt([block], recall_pass=2)
+
+    assert "INDEPENDENT OBJECT-FIRST READING" in prompt
+    assert "Device reached 20%." in prompt
+    assert "fallible ledger came from an earlier" not in prompt
+    assert "INDEPENDENT CLAIM-FIRST READING" in _claim_ledger_prompt(
+        [block], recall_pass=3
+    )
 
 
 def test_dry_run_writes_a_complete_request_plan(tmp_path):
@@ -81,7 +152,57 @@ def test_dry_run_writes_a_complete_request_plan(tmp_path):
     )
 
 
-def test_quality_pass_receives_grounded_inventory_and_retains_draft(tmp_path):
+def test_no_claims_dry_run_reports_the_stage_as_disabled(tmp_path):
+    report = run_extraction(
+        ExtractionConfig(
+            pdf=FIXTURE,
+            supplement=None,
+            output_dir=tmp_path / "output",
+            parser="pymupdf",
+            document_cache_dir=tmp_path / "documents",
+            model_cache_dir=tmp_path / "models",
+            use_claim_ledger=False,
+            use_refinement=False,
+            use_enrichment=False,
+            use_targeted_repair=False,
+            dry_run=True,
+        )
+    )
+
+    assert report["claim_mode"] == "disabled"
+    assert report["planned_claim_calls"] == 0
+    plan = json.loads((tmp_path / "output" / "claim_window_plan.json").read_text())
+    assert plan == {
+        "mode": "disabled",
+        "recall_passes": 0,
+        "approximate_request_tokens": 0,
+        "windows": [],
+    }
+
+
+def test_oversized_assembly_fails_before_any_provider_request(tmp_path):
+    """A context overflow must be explicit and must not fall through to repair calls."""
+
+    report = run_extraction(
+        ExtractionConfig(
+            pdf=FIXTURE,
+            supplement=None,
+            output_dir=tmp_path / "output",
+            parser="pymupdf",
+            document_cache_dir=tmp_path / "documents",
+            model_cache_dir=tmp_path / "models",
+            use_claim_ledger=False,
+            assembly_max_input_tokens=1,
+        )
+    )
+
+    assert report["status"] == "failed"
+    assert report["budget"]["provider_requests"] == 0
+    extraction = json.loads((tmp_path / "output/extraction.json").read_text())
+    assert "assembly request estimate" in extraction["unresolved_notes"][0]
+
+
+def test_quality_pass_receives_grounded_claims_and_retains_draft(tmp_path):
     block = EvidenceBlock(
         block_id="result",
         source="main",
@@ -89,11 +210,17 @@ def test_quality_pass_receives_grounded_inventory_and_retains_draft(tmp_path):
         kind="text",
         text="The control device reached 20.1% efficiency.",
     )
-    inventory = InventoryItem(
-        item_id="candidate-1",
-        kind="device_family",
-        label="control device",
-        evidence=[EvidenceCitation(block_id="result", quote="control device")],
+    ledger = ClaimLedger(
+        objects=[
+            ExperimentalObject(
+                object_id="candidate-1",
+                role="device_design",
+                scope="target",
+                label="control device",
+                evidence=[EvidenceCitation(block_id="result", quote="control device")],
+            )
+        ],
+        claims=[],
     )
     client = RecordingClient()
     config = ExtractionConfig(
@@ -103,14 +230,13 @@ def test_quality_pass_receives_grounded_inventory_and_retains_draft(tmp_path):
         parser="pymupdf",
     )
 
-    result, draft_result, errors = _run_model_calls(
-        config, client, [block], "single", None, [inventory]
-    )
+    result, draft_result, errors = _run_model_calls(config, client, [block], ledger)
 
     assert errors == []
     assert result.unresolved_notes == ["pass 2"]
     assert draft_result is not None
     assert draft_result.unresolved_notes == ["pass 1"]
+    assert client.kinds == ["complete_study", "study_refinement"]
     assert "candidate-1" in client.prompts[0]
     assert "DRAFT EXTRACTION" in client.prompts[1]
     draft = StudyExtraction.model_validate_json(
@@ -165,15 +291,68 @@ def test_refinement_is_rejected_when_the_grounded_draft_strictly_dominates():
     draft = candidate([("40 ms", 40)])
     refinement = candidate([("60 ms", 60), ("80 ms", 80)])
 
-    selected, audit = _select_refinement_candidate(
-        draft, refinement, [block], None
-    )
+    selected, audit = _select_refinement_candidate(draft, refinement, [block], None)
 
     assert selected == draft
     assert audit["selected"] == "draft"
     assert audit["draft_quality"]["source_verified_values"] == 1
     assert audit["refinement_quality"]["source_verified_values"] == 0
     assert audit["refinement_quality"]["reported_values"] == 2
+
+
+def test_refinement_may_remove_grounded_values_to_correct_entity_precision():
+    block = EvidenceBlock(
+        block_id="result",
+        source="main",
+        page=1,
+        kind="text",
+        text="The same device was reported at 40 ms and 80 ms.",
+    )
+    citation = EvidenceCitation(block_id="result", quote=block.text)
+
+    def candidate(raw_values: list[str]) -> StudyExtraction:
+        return StudyExtraction(
+            paper=PaperMetadata(title=None, doi=None),
+            device_families=[],
+            individual_devices=[
+                IndividualDevice(
+                    device_id="device-a",
+                    family_id=None,
+                    label="Device A",
+                    variant=None,
+                    champion_status="not_reported",
+                    selection_basis="not_reported",
+                    reported_properties=[
+                        ReportedValue(
+                            name="delay",
+                            raw_value=raw_value,
+                            value_number=float(raw_value.split()[0]),
+                            unit="ms",
+                            evidence=[citation],
+                        )
+                        for raw_value in raw_values
+                    ],
+                    evidence=[citation],
+                )
+            ],
+            performance_observations=[],
+            population_statistics=[],
+            stability_tests=[],
+            unresolved_notes=[],
+        )
+
+    draft = candidate(["40 ms", "80 ms"])
+    refinement = candidate(["40 ms"])
+
+    selected, selection = _select_refinement_candidate(draft, refinement, [block], None)
+    final, audit = _gate_final_candidate_against_draft(
+        draft, selected, [block], None, selection
+    )
+
+    assert final == refinement
+    assert audit["selected"] == "refinement"
+    assert audit["draft_quality"]["source_verified_values"] == 2
+    assert audit["final_candidate_quality"]["source_verified_values"] == 1
 
 
 def test_final_candidate_cannot_trade_validation_for_more_values():
@@ -218,9 +397,7 @@ def test_final_candidate_cannot_trade_validation_for_more_values():
         )
 
     draft = candidate([("40 ms", 40)])
-    candidate_with_extra_unsupported_value = candidate(
-        [("40 ms", 40), ("80 ms", 80)]
-    )
+    candidate_with_extra_unsupported_value = candidate([("40 ms", 40), ("80 ms", 80)])
     selected, audit = _gate_final_candidate_against_draft(
         draft,
         candidate_with_extra_unsupported_value,

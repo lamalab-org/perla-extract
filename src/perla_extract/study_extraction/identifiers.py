@@ -1,4 +1,4 @@
-"""Centralize identifier invariants shared by candidate collection and linking."""
+"""Centralize identifier invariants shared by validation and export."""
 
 from __future__ import annotations
 
@@ -33,10 +33,3 @@ def duplicate_entity_ids(study: StudyExtraction) -> dict[EntityKind, list[str]]:
         for kind, ids in entity_id_lists(study).items()
         if len(ids) != len(set(ids))
     }
-
-
-def window_namespace(identifier: str) -> str | None:
-    """Recover the extraction-window prefix added during candidate collection."""
-
-    namespace, separator, _ = identifier.partition(":")
-    return namespace if separator and namespace else None

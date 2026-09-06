@@ -23,13 +23,13 @@ EntityKind = Literal[
     "population_statistic",
     "stability_test",
 ]
-STUDY_SCHEMA_VERSION = 4
+STUDY_SCHEMA_VERSION = 6
 
 
 class StrictModel(BaseModel):
     """Reject unexpected fields so model-output and schema drift stay visible."""
 
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
 
 
 class EvidenceBlock(StrictModel):
@@ -199,11 +199,12 @@ class AbsorberComponent(StrictModel):
 
 
 class DeviceFamily(StrictModel):
-    """Collect the composition and fabrication shared by a reported device variant.
+    """Describe one complete photovoltaic design shared by fabricated specimens.
 
-    Performance observations link to individual devices rather than directly to this
-    record, so family-level structure is not confused with a champion or population
-    result.
+    Family identity comes from the functional-layer materials, absorber composition,
+    and device topology—not every treatment arm or fabrication setting. Performance
+    observations link to individual devices rather than directly to this record, so
+    family-level structure is not confused with a champion or population result.
     """
 
     family_id: Identifier
@@ -252,9 +253,7 @@ class DeviceFamily(StrictModel):
         citations: list[dict[str, object]] = []
         for claim in [formula, *properties, *constituents]:
             claim_data = (
-                claim.model_dump(mode="json")
-                if isinstance(claim, BaseModel)
-                else claim
+                claim.model_dump(mode="json") if isinstance(claim, BaseModel) else claim
             )
             if isinstance(claim_data, dict):
                 citations.extend(
@@ -264,9 +263,7 @@ class DeviceFamily(StrictModel):
                 )
         if not citations:
             citations.extend(
-                item.model_dump(mode="json")
-                if isinstance(item, BaseModel)
-                else item
+                item.model_dump(mode="json") if isinstance(item, BaseModel) else item
                 for item in data.get("evidence", [])
                 if isinstance(item, (dict, BaseModel))
             )
@@ -277,9 +274,7 @@ class DeviceFamily(StrictModel):
             }.values()
         )[:15]
         absorber_layers = [
-            layer.model_dump(mode="json")
-            if isinstance(layer, BaseModel)
-            else layer
+            layer.model_dump(mode="json") if isinstance(layer, BaseModel) else layer
             for layer in data.get("layers", [])
             if (
                 layer.role == "absorber"
@@ -321,6 +316,18 @@ class IndividualDevice(StrictModel):
         list[ReportedValue], Field(default_factory=list, max_length=60)
     ]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
+
+    @model_validator(mode="after")
+    def keep_champion_fields_consistent(self) -> IndividualDevice:
+        """Prevent two fields from making incompatible claims about one specimen."""
+
+        marked_champion = self.champion_status == "yes"
+        selected_as_champion = self.selection_basis == "champion"
+        if marked_champion != selected_as_champion:
+            raise ValueError(
+                "champion_status=yes and selection_basis=champion must occur together"
+            )
+        return self
 
 
 class PerformanceObservation(StrictModel):
@@ -413,6 +420,25 @@ class StabilityTest(StrictModel):
     ]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
+    @model_validator(mode="after")
+    def keep_link_status_consistent(self) -> StabilityTest:
+        """Require identifiers that match the relationship asserted by link_status."""
+
+        if self.link_status == "explicit_device_link" and self.device_id is None:
+            raise ValueError("explicit_device_link requires device_id")
+        if self.link_status == "explicit_family_link":
+            if self.family_id is None:
+                raise ValueError("explicit_family_link requires family_id")
+            if self.device_id is not None:
+                raise ValueError("explicit_family_link cannot also identify a device")
+        if self.link_status in {"stability_specimen_only", "not_reported"} and (
+            self.family_id is not None or self.device_id is not None
+        ):
+            raise ValueError(
+                f"{self.link_status} cannot assert a family or device relationship"
+            )
+        return self
+
 
 class PaperMetadata(StrictModel):
     """Identify the supplied paper without trying to infer missing metadata."""
@@ -421,35 +447,13 @@ class PaperMetadata(StrictModel):
     doi: Annotated[str | None, Field(max_length=300)]
 
 
-class CrossWindowIdentityLink(StrictModel):
-    """Link window candidates that denote the same real-world entity.
-
-    Candidates remain intact and auditable. The link communicates identity without
-    selecting one candidate or heuristically merging possibly conflicting details.
-    """
-
-    link_id: Identifier
-    entity_kind: EntityKind
-    candidate_ids: Annotated[list[Identifier], Field(min_length=2, max_length=100)]
-    rationale: ShortText
-    evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=20)]
-
-    @model_validator(mode="after")
-    def validate_candidate_ids(self) -> CrossWindowIdentityLink:
-        """Reject duplicate candidates because one link denotes one identity set."""
-
-        if len(self.candidate_ids) != len(set(self.candidate_ids)):
-            raise ValueError("candidate_ids must be unique")
-        return self
-
-
 class StudyExtraction(StrictModel):
     """Represent all supported study entities without flattening reporting levels.
 
     The model deliberately keeps families, individual devices, protocol-specific
     observations, population statistics, and stability tests in separate collections.
-    Windowed extraction may add identity links, but candidates remain intact so
-    linking cannot silently discard conflicting evidence.
+    Claim collection may use multiple source windows, but final study entities are
+    reconciled globally before this schema is produced.
     """
 
     paper: PaperMetadata
@@ -458,8 +462,25 @@ class StudyExtraction(StrictModel):
     performance_observations: list[PerformanceObservation]
     population_statistics: list[PopulationStatistic]
     stability_tests: list[StabilityTest]
-    identity_links: list[CrossWindowIdentityLink] = Field(default_factory=list)
     unresolved_notes: list[ShortText]
+
+    @model_validator(mode="before")
+    @classmethod
+    def accept_empty_legacy_identity_links(cls, value: object) -> object:
+        """Load older empty-link artifacts without retaining a retired abstraction.
+
+        Claim-first extraction no longer emits partial schema candidates, so there is
+        nothing to link after assembly. A non-empty legacy link is rejected rather than
+        silently discarded because it may encode unresolved scientific identity.
+        """
+
+        if not isinstance(value, dict) or "identity_links" not in value:
+            return value
+        if value["identity_links"] not in (None, []):
+            raise ValueError("non-empty legacy identity_links require manual migration")
+        migrated = dict(value)
+        migrated.pop("identity_links")
+        return migrated
 
 
 def study_schema_sha256() -> str:

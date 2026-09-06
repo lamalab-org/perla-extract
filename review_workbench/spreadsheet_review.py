@@ -19,38 +19,58 @@ from zipfile import BadZipFile, ZipFile
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.formatting.rule import FormulaRule
-from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
 FORMAT_NAME = "perla-review-workbook"
-FORMAT_VERSION = 1
-SHEETS = ("Instructions", "Record review", "Field corrections", "_meta")
+FORMAT_VERSION = 4
+FIXED_SHEETS = ("Instructions", "Record review")
 RECORD_HEADERS = (
-    "Record type",
-    "record_type",
-    "record_id",
-    "family context",
-    "device context",
-    "Label",
     "Review outcome",
     "Reviewer note",
+    "Record kind",
+    "Record label",
+    "Linked at",
+    "Family",
+    "Individual device",
+    "_record_collection",
+    "_record_id",
 )
 FIELD_HEADERS = (
-    "Record type",
-    "record_type",
-    "record_id",
+    "Record label",
     "Field group",
     "Field",
-    "JSON path",
-    "Current value",
-    "Reviewed value",
-    "Value type",
-    "Editable",
+    "Extracted value",
+    "Corrected value",
+    "Corrected value type",
     "Reviewer note",
-    "Evidence block",
     "Evidence quote",
+    "Evidence block",
+    "Linked at",
+    "Family",
+    "Individual device",
+    "Schema path",
+    "_editable",
+    "_record_collection",
+    "_record_id",
+    "Record kind",
 )
+RECORD_COLLECTION_COLUMN = RECORD_HEADERS.index("_record_collection")
+RECORD_ID_COLUMN = RECORD_HEADERS.index("_record_id")
+RECORD_OUTCOME_COLUMN = RECORD_HEADERS.index("Review outcome")
+RECORD_NOTE_COLUMN = RECORD_HEADERS.index("Reviewer note")
+FIELD_COLLECTION_COLUMN = FIELD_HEADERS.index("_record_collection")
+FIELD_ID_COLUMN = FIELD_HEADERS.index("_record_id")
+FIELD_PATH_COLUMN = FIELD_HEADERS.index("Schema path")
+FIELD_CURRENT_COLUMN = FIELD_HEADERS.index("Extracted value")
+FIELD_REVIEWED_COLUMN = FIELD_HEADERS.index("Corrected value")
+FIELD_TYPE_COLUMN = FIELD_HEADERS.index("Corrected value type")
+FIELD_EDITABLE_COLUMN = FIELD_HEADERS.index("_editable")
+FIELD_NOTE_COLUMN = FIELD_HEADERS.index("Reviewer note")
+FIELD_EVIDENCE_BLOCK_COLUMN = FIELD_HEADERS.index("Evidence block")
+FIELD_EVIDENCE_QUOTE_COLUMN = FIELD_HEADERS.index("Evidence quote")
 OUTCOME_TO_DECISION = {
     "All fields match source": "verified",
     "Cannot establish from source": "uncertain",
@@ -60,6 +80,11 @@ DECISION_TO_OUTCOME = {value: key for key, value in OUTCOME_TO_DECISION.items()}
 NO_OUTCOME = "Not reviewed"
 MAX_WORKBOOK_BYTES = 15 * 1024 * 1024
 MAX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024
+BRAND = "176B52"
+BRAND_SOFT = "E2F2EC"
+EDITABLE_FILL = "FFF3BF"
+READ_ONLY_FILL = "E7E9E8"
+CHANGED_FILL = "FFE0B2"
 
 
 @dataclass(frozen=True)
@@ -85,6 +110,20 @@ class WorkbookDecision:
 
 
 @dataclass(frozen=True)
+class WorkbookComment:
+    """Preserve an Excel cell comment with enough row context to interpret it."""
+
+    sheet: str
+    cell: str
+    kind: str
+    text: str
+    author: str
+    record_collection: str | None
+    record_id: str | None
+    schema_path: str | None
+
+
+@dataclass(frozen=True)
 class WorkbookReview:
     """Validated edits and metadata ready for one atomic review transition."""
 
@@ -92,7 +131,18 @@ class WorkbookReview:
     scope_device_id: str | None
     changes: tuple[WorkbookChange, ...]
     decisions: tuple[WorkbookDecision, ...]
+    comments: tuple[WorkbookComment, ...]
     sha256: str
+
+
+@dataclass(frozen=True)
+class WorkbookMetadata:
+    """Identify the immutable seed revision to which a workbook was bound."""
+
+    paper_id: str
+    split: str
+    base_revision: int
+    schema_sha256: str
 
 
 @dataclass(frozen=True)
@@ -100,6 +150,16 @@ class _FieldRow:
     values: tuple[Any, ...]
     current_value: Any
     editable: bool
+
+
+@dataclass(frozen=True)
+class _RecordContext:
+    """Human-readable relationship context derived from explicit schema links."""
+
+    record_label: str
+    link_scope: str
+    family: str
+    device: str
 
 
 def _pointer_part(value: object) -> str:
@@ -131,6 +191,7 @@ def _scalar_rows(
     record_index: int,
     value: Any,
     label: str,
+    context: _RecordContext,
     path: tuple[str | int, ...] = (),
     inherited_citation: dict[str, Any] | None = None,
 ) -> Iterable[_FieldRow]:
@@ -150,6 +211,7 @@ def _scalar_rows(
                 record_index,
                 item,
                 label,
+                context,
                 (*path, index),
                 citation,
             )
@@ -163,6 +225,7 @@ def _scalar_rows(
                     record_index,
                     item,
                     label,
+                    context,
                     (*path, key),
                     citation,
                 )
@@ -175,19 +238,23 @@ def _scalar_rows(
     )
     yield _FieldRow(
         values=(
-            label,
-            collection,
-            record_id,
+            context.record_label,
             " › ".join(str(part) for part in path[:-1]),
             field,
-            json_path,
             value,
             value,
             _value_type(value),
-            "Yes" if editable else "No",
             "",
-            str(citation.get("block_id", "")) if citation else "",
             str(citation.get("quote", "")) if citation else "",
+            str(citation.get("block_id", "")) if citation else "",
+            context.link_scope,
+            context.family,
+            context.device,
+            json_path,
+            "Yes" if editable else "No",
+            collection,
+            record_id,
+            label,
         ),
         current_value=value,
         editable=editable,
@@ -240,50 +307,221 @@ def _records_in_scope(
     return selected
 
 
+def _entity_display(record: dict[str, Any] | None, record_id: str) -> str:
+    """Pair a readable entity label with its immutable identifier."""
+
+    if not record_id:
+        return ""
+    record = record or {}
+    label = str(record.get("label") or record.get("specimen_label") or "").strip()
+    return f"{label} [{record_id}]" if label and label != record_id else record_id
+
+
+def _record_context(
+    truth: dict[str, Any],
+    record: dict[str, Any],
+    record_id: str,
+    identifiers: dict[str, str],
+) -> _RecordContext:
+    """Resolve explicit family and device links without inventing membership.
+
+    Population statistics normally point only to a device family. The resulting
+    ``Device family only`` label is intentional: devices that happen to share that
+    family are context, but are not assumed to be members of the reported sample.
+    """
+
+    family_identifier = identifiers["device_families"]
+    device_identifier = identifiers["individual_devices"]
+    families = {
+        str(item[family_identifier]): item for item in truth.get("device_families", [])
+    }
+    devices = {
+        str(item[device_identifier]): item
+        for item in truth.get("individual_devices", [])
+    }
+    device_id = str(record.get(device_identifier) or "")
+    family_id = str(record.get(family_identifier) or "")
+    device = devices.get(device_id)
+    if device is not None and not family_id:
+        family_id = str(device.get(family_identifier) or "")
+    if device_id:
+        link_scope = "Individual device"
+    elif family_id:
+        link_scope = "Device family (no individual device link)"
+    else:
+        link_scope = "No explicit device or family link"
+    return _RecordContext(
+        record_label=str(
+            record.get("label") or record.get("specimen_label") or record_id
+        ),
+        link_scope=link_scope,
+        family=_entity_display(families.get(family_id), family_id),
+        device=_entity_display(device, device_id),
+    )
+
+
 def _contract(
     truth: dict[str, Any],
     identifiers: dict[str, str],
     labels: dict[str, str],
     device_id: str | None,
 ) -> tuple[list[tuple[Any, ...]], list[_FieldRow]]:
-    records, fields = [], []
-    for collection, index, record in _records_in_scope(
-        truth, identifiers, device_id
-    ):
+    records: list[tuple[Any, ...]] = []
+    fields: list[_FieldRow] = []
+    for collection, index, record in _records_in_scope(truth, identifiers, device_id):
         record_id = str(record[identifiers[collection]])
-        linked_family = str(record.get(identifiers["device_families"], "") or "")
-        linked_device = str(record.get(identifiers["individual_devices"], "") or "")
+        context = _record_context(truth, record, record_id, identifiers)
         records.append(
             (
-                labels[collection],
-                collection,
-                record_id,
-                linked_family,
-                linked_device,
-                str(record.get("label") or record.get("specimen_label") or ""),
                 NO_OUTCOME,
                 "",
+                labels[collection],
+                context.record_label,
+                context.link_scope,
+                context.family,
+                context.device,
+                collection,
+                record_id,
             )
         )
         fields.extend(
-            _scalar_rows(collection, record_id, index, record, labels[collection])
+            _scalar_rows(
+                collection, record_id, index, record, labels[collection], context
+            )
         )
+    priority = {
+        "device_families": 0,
+        "population_statistics": 1,
+        "individual_devices": 2,
+        "performance_observations": 3,
+        "stability_tests": 4,
+    }
+    records.sort(
+        key=lambda row: (
+            str(row[RECORD_HEADERS.index("Family")]),
+            str(row[RECORD_HEADERS.index("Individual device")]),
+            priority.get(str(row[RECORD_COLLECTION_COLUMN]), 99),
+            str(row[RECORD_HEADERS.index("Record label")]),
+        )
+    )
     return records, fields
 
 
 def _style_sheet(sheet: Any, widths: tuple[int, ...]) -> None:
+    """Apply shared presentation without defining sheet-level data behavior.
+
+    Review grids are Excel tables, and each table owns its AutoFilter. Adding a
+    second worksheet AutoFilter over the same range makes Excel repair the file
+    by removing the table, even though permissive readers accept the package.
+    """
+
     sheet.sheet_view.showGridLines = False
     sheet.freeze_panes = "A2"
-    sheet.auto_filter.ref = sheet.dimensions
     for index, width in enumerate(widths, 1):
-        sheet.column_dimensions[chr(64 + index)].width = width
+        sheet.column_dimensions[get_column_letter(index)].width = width
     for cell in sheet[1]:
-        cell.fill = PatternFill("solid", fgColor="176B52")
+        cell.fill = PatternFill("solid", fgColor=BRAND)
         cell.font = Font(bold=True, color="FFFFFF")
-        cell.alignment = Alignment(wrap_text=True, vertical="top")
+        cell.alignment = Alignment(wrap_text=True, vertical="center")
     for row in sheet.iter_rows(min_row=2):
         for cell in row:
             cell.alignment = Alignment(wrap_text=True, vertical="top")
+
+
+def _hide_columns(sheet: Any, *headers: str) -> None:
+    """Keep importer metadata in the workbook without burdening reviewers."""
+
+    for header in headers:
+        index = next(
+            index for index, cell in enumerate(sheet[1], 1) if cell.value == header
+        )
+        sheet.column_dimensions[get_column_letter(index)].hidden = True
+
+
+def _field_sheet_name(collection: str) -> str:
+    """Turn a schema collection name into a stable, readable Excel tab name.
+
+    Collection keys are the durable grouping already defined by the scientific
+    schema. Reusing them avoids maintaining a second list of domain categories in
+    the spreadsheet layer. Excel limits worksheet titles to 31 characters.
+    """
+
+    return collection.replace("_", " ").title()[:31]
+
+
+def _field_rows_by_collection(
+    field_rows: Iterable[_FieldRow], identifiers: dict[str, str]
+) -> dict[str, list[_FieldRow]]:
+    """Group flattened scalar rows by their existing top-level record collection."""
+
+    grouped: dict[str, list[_FieldRow]] = {collection: [] for collection in identifiers}
+    for row in field_rows:
+        grouped[str(row.values[FIELD_COLLECTION_COLUMN])].append(row)
+    return {collection: rows for collection, rows in grouped.items() if rows}
+
+
+def _add_field_sheet(
+    book: Workbook, collection: str, field_rows: list[_FieldRow]
+) -> None:
+    """Add one filterable correction tab for a scientific record collection."""
+
+    sheet = book.create_sheet(_field_sheet_name(collection))
+    sheet.append(FIELD_HEADERS)
+    for field_row in field_rows:
+        sheet.append(field_row.values)
+    _keep_source_strings_literal(sheet)
+    _style_sheet(
+        sheet,
+        (42, 34, 24, 24, 24, 19, 38, 68, 28, 34, 42, 42, 52, 11, 27, 32, 20),
+    )
+    sheet.freeze_panes = "D2"
+    sheet.sheet_properties.tabColor = "5F8A7B"
+    _hide_columns(
+        sheet,
+        "_editable",
+        "_record_collection",
+        "_record_id",
+        "Record kind",
+    )
+    last_column = get_column_letter(len(FIELD_HEADERS))
+    sheet.add_table(
+        Table(
+            displayName=f"Fields_{collection}",
+            ref=f"A1:{last_column}{len(field_rows) + 1}",
+            tableStyleInfo=TableStyleInfo(
+                name="TableStyleMedium2",
+                showRowStripes=True,
+                showColumnStripes=False,
+            ),
+        )
+    )
+    type_validation = DataValidation(
+        type="list", formula1='"text,integer,number,boolean,null"'
+    )
+    sheet.add_data_validation(type_validation)
+    type_column = get_column_letter(FIELD_TYPE_COLUMN + 1)
+    type_validation.add(f"{type_column}2:{type_column}{len(field_rows) + 1}")
+    for row_index, field_row in enumerate(field_rows, 2):
+        fill = EDITABLE_FILL if field_row.editable else READ_ONLY_FILL
+        for column in (
+            FIELD_REVIEWED_COLUMN,
+            FIELD_TYPE_COLUMN,
+            FIELD_NOTE_COLUMN,
+            FIELD_EVIDENCE_BLOCK_COLUMN,
+            FIELD_EVIDENCE_QUOTE_COLUMN,
+        ):
+            sheet.cell(row_index, column + 1).fill = PatternFill("solid", fgColor=fill)
+        if not field_row.editable:
+            sheet.row_dimensions[row_index].hidden = True
+    current_column = get_column_letter(FIELD_CURRENT_COLUMN + 1)
+    reviewed_column = get_column_letter(FIELD_REVIEWED_COLUMN + 1)
+    sheet.conditional_formatting.add(
+        f"A2:{last_column}{len(field_rows) + 1}",
+        FormulaRule(
+            formula=[f"${current_column}2<>${reviewed_column}2"],
+            fill=PatternFill("solid", fgColor=CHANGED_FILL),
+        ),
+    )
 
 
 def _keep_source_strings_literal(sheet: Any) -> None:
@@ -319,44 +557,107 @@ def create_review_workbook(
     instructions = book.active
     instructions.title = "Instructions"
     records = book.create_sheet("Record review")
-    fields = book.create_sheet("Field corrections")
-    meta = book.create_sheet("_meta")
 
     instructions.sheet_view.showGridLines = False
+    instructions.sheet_properties.tabColor = BRAND
     instructions.merge_cells("A1:B1")
     instructions["A1"] = "PERLA offline review workbook"
-    instructions["A1"].fill = PatternFill("solid", fgColor="176B52")
+    instructions["A1"].fill = PatternFill("solid", fgColor=BRAND)
     instructions["A1"].font = Font(bold=True, color="FFFFFF", size=16)
+    instructions["A1"].alignment = Alignment(vertical="center")
+    instructions.row_dimensions[1].height = 28
     guidance = (
         ("Paper", truth.get("paper", {}).get("title") or paper_id),
-        ("Scope", f"Device {device_id} plus linked context" if device_id else "All paper records"),
-        ("1", "Give one outcome for each complete record on Record review."),
-        ("2", "Correct only wrong scalar values on Field corrections. Edit yellow cells; identifiers are read-only."),
-        ("3", "Keep atomic values separate. Do not combine multiple measurements, conditions, or outcomes in one cell."),
-        ("4", "Every correction needs a short note and an exact evidence block and quote."),
-        ("5", "You may sort or filter rows. Do not add, delete, or rename rows or sheets; add or remove complete records in the browser."),
-        ("6", "Upload this file to the same paper. Stale or structurally changed workbooks are rejected."),
+        (
+            "Scope",
+            f"Device {device_id} plus linked context"
+            if device_id
+            else "All paper records",
+        ),
+        (
+            "Start here",
+            "Use Record review as the checklist. Choose one outcome for each complete record; you do not need to review every row on the detail tabs.",
+        ),
+        (
+            "If correct",
+            "Choose All fields match source. No detail-sheet edits are needed.",
+        ),
+        (
+            "If uncertain",
+            "Choose Cannot establish from source and explain the uncertainty in Reviewer note.",
+        ),
+        (
+            "If wrong",
+            "Choose Correct fields, then open that record type's tab and edit only the wrong scalar rows.",
+        ),
+        (
+            "Corrections",
+            "Yellow cells accept input. Keep each value atomic and provide a short note plus the exact supporting evidence quote and block.",
+        ),
+        (
+            "Relationships",
+            "Linked at, Family, and Individual device are explicit schema links. Family-only statistics are not silently assigned to one of the family's devices.",
+        ),
+        (
+            "Structure",
+            "Do not add, delete, or rename rows or sheets. Add, remove, or relink complete records in the browser.",
+        ),
+        (
+            "Finish",
+            "Upload this file to the same paper. The app validates all changes together and rejects stale or structurally altered workbooks.",
+        ),
     )
     for row in guidance:
         instructions.append(row)
-    instructions.column_dimensions["A"].width = 18
-    instructions.column_dimensions["B"].width = 90
-    for row in instructions.iter_rows(min_row=3):
-        row[0].fill = PatternFill("solid", fgColor="E2F2EC")
-        row[0].font = Font(bold=True, color="176B52")
+    instructions.append(("", ""))
+    instructions.append(
+        (
+            "Workbook map",
+            "Open a tab below only when you need its records or scalar values.",
+        )
+    )
+    instructions.append(
+        ("Record review", f"Main checklist · {len(record_rows)} complete records")
+    )
+    for collection, rows in _field_rows_by_collection(field_rows, identifiers).items():
+        instructions.append(
+            (
+                _field_sheet_name(collection),
+                f"Corrections for {labels[collection].lower()} records · "
+                f"{sum(row.editable for row in rows)} editable scalar fields",
+            )
+        )
+    instructions.column_dimensions["A"].width = 22
+    instructions.column_dimensions["B"].width = 105
+    separator = Side(style="thin", color="DCE3DF")
+    for row in instructions.iter_rows(min_row=2):
+        row[0].fill = PatternFill("solid", fgColor=BRAND_SOFT)
+        row[0].font = Font(bold=True, color=BRAND)
+        row[0].alignment = Alignment(wrap_text=True, vertical="top")
         row[1].alignment = Alignment(wrap_text=True, vertical="top")
+        for cell in row:
+            cell.border = Border(bottom=separator)
+    for row_index in range(2, instructions.max_row + 1):
+        instructions.row_dimensions[row_index].height = 34
+    instructions.freeze_panes = "A2"
 
     records.append(RECORD_HEADERS)
     for row in record_rows:
-        key = f"{row[1]}:{row[2]}"
+        key = f"{row[RECORD_COLLECTION_COLUMN]}:{row[RECORD_ID_COLUMN]}"
         outcome = DECISION_TO_OUTCOME.get(current_decisions.get(key, ""), NO_OUTCOME)
-        records.append((*row[:6], outcome, row[7]))
+        values = list(row)
+        values[RECORD_OUTCOME_COLUMN] = outcome
+        records.append(values)
     _keep_source_strings_literal(records)
-    _style_sheet(records, (19, 28, 32, 30, 30, 54, 28, 45))
+    _style_sheet(records, (28, 44, 20, 48, 34, 46, 46, 27, 32))
+    records.freeze_panes = "E2"
+    records.sheet_properties.tabColor = BRAND
+    _hide_columns(records, "_record_collection", "_record_id")
+    record_last_column = get_column_letter(len(RECORD_HEADERS))
     records.add_table(
         Table(
             displayName="RecordReviewTable",
-            ref=f"A1:H{len(record_rows) + 1}",
+            ref=f"A1:{record_last_column}{len(record_rows) + 1}",
             tableStyleInfo=TableStyleInfo(
                 name="TableStyleMedium2", showRowStripes=True, showColumnStripes=False
             ),
@@ -367,39 +668,34 @@ def create_review_workbook(
         formula1='"Not reviewed,All fields match source,Cannot establish from source,Correct fields"',
     )
     records.add_data_validation(outcome_validation)
-    outcome_validation.add(f"G2:G{len(record_rows) + 1}")
-    for row in records.iter_rows(min_row=2, min_col=7, max_col=8):
+    outcome_column = get_column_letter(RECORD_OUTCOME_COLUMN + 1)
+    outcome_validation.add(f"{outcome_column}2:{outcome_column}{len(record_rows) + 1}")
+    for row in records.iter_rows(
+        min_row=2,
+        min_col=RECORD_OUTCOME_COLUMN + 1,
+        max_col=RECORD_NOTE_COLUMN + 1,
+    ):
         for cell in row:
-            cell.fill = PatternFill("solid", fgColor="FFF3BF")
-
-    fields.append(FIELD_HEADERS)
-    for field_row in field_rows:
-        fields.append(field_row.values)
-    _keep_source_strings_literal(fields)
-    _style_sheet(fields, (19, 27, 32, 34, 23, 48, 28, 28, 13, 11, 38, 28, 68))
-    fields.freeze_panes = "D2"
-    fields.add_table(
-        Table(
-            displayName="FieldCorrectionsTable",
-            ref=f"A1:M{len(field_rows) + 1}",
-            tableStyleInfo=TableStyleInfo(
-                name="TableStyleMedium2", showRowStripes=True, showColumnStripes=False
+            cell.fill = PatternFill("solid", fgColor=EDITABLE_FILL)
+    record_range = f"A2:{record_last_column}{len(record_rows) + 1}"
+    for outcome, fill in (
+        ("All fields match source", "DDF2E8"),
+        ("Cannot establish from source", EDITABLE_FILL),
+        ("Correct fields", CHANGED_FILL),
+    ):
+        records.conditional_formatting.add(
+            record_range,
+            FormulaRule(
+                formula=[f'$A2="{outcome}"'],
+                fill=PatternFill("solid", fgColor=fill),
             ),
         )
-    )
-    type_validation = DataValidation(
-        type="list", formula1='"text,integer,number,boolean,null"'
-    )
-    fields.add_data_validation(type_validation)
-    type_validation.add(f"I2:I{len(field_rows) + 1}")
-    for row_index, field_row in enumerate(field_rows, 2):
-        fill = "FFF3BF" if field_row.editable else "E7E9E8"
-        for column in (8, 9, 11, 12, 13):
-            fields.cell(row_index, column).fill = PatternFill("solid", fgColor=fill)
-    fields.conditional_formatting.add(
-        f"A2:M{len(field_rows) + 1}",
-        FormulaRule(formula=["$G2<>$H2"], fill=PatternFill("solid", fgColor="FFE0B2")),
-    )
+
+    grouped_fields = _field_rows_by_collection(field_rows, identifiers)
+    for collection, collection_rows in grouped_fields.items():
+        _add_field_sheet(book, collection, collection_rows)
+
+    meta = book.create_sheet("_meta")
 
     metadata = {
         "format": FORMAT_NAME,
@@ -483,6 +779,234 @@ def _rows(sheet: Any, headers: tuple[str, ...]) -> list[tuple[Any, ...]]:
     ]
 
 
+def _load_review_workbook(data: bytes) -> Workbook:
+    """Apply upload limits once before any semantic workbook inspection."""
+
+    if not data or len(data) > MAX_WORKBOOK_BYTES:
+        raise ValueError("review workbook must be a non-empty XLSX smaller than 15 MiB")
+    try:
+        with ZipFile(BytesIO(data)) as archive:
+            if (
+                sum(item.file_size for item in archive.infolist())
+                > MAX_UNCOMPRESSED_BYTES
+            ):
+                raise ValueError(
+                    "review workbook expands beyond the 100 MiB safety limit"
+                )
+    except BadZipFile as error:
+        raise ValueError("review workbook is not a readable XLSX file") from error
+    try:
+        book = load_workbook(
+            BytesIO(data), data_only=False, read_only=False, keep_links=False
+        )
+    except Exception as error:  # malformed OOXML can fail in several XML readers
+        raise ValueError("review workbook is not a readable XLSX file") from error
+    return book
+
+
+def _workbook_comments(book: Workbook) -> tuple[WorkbookComment, ...]:
+    """Extract comments generically while attaching record or field identity when present."""
+
+    comments = []
+    for sheet in book.worksheets:
+        if sheet.title == "_meta":
+            continue
+        headers = {
+            _cell_text(cell.value): cell.column
+            for cell in sheet[1]
+            if _cell_text(cell.value)
+        }
+        for row in sheet.iter_rows():
+            record_collection = (
+                _cell_text(sheet.cell(row[0].row, headers["_record_collection"]).value)
+                if "_record_collection" in headers and row[0].row > 1
+                else ""
+            )
+            record_id = (
+                _cell_text(sheet.cell(row[0].row, headers["_record_id"]).value)
+                if "_record_id" in headers and row[0].row > 1
+                else ""
+            )
+            schema_path = (
+                _cell_text(sheet.cell(row[0].row, headers["Schema path"]).value)
+                if "Schema path" in headers and row[0].row > 1
+                else ""
+            )
+            for cell in row:
+                if (
+                    row[0].row > 1
+                    and cell.column == headers.get("Reviewer note")
+                    and _cell_text(cell.value)
+                ):
+                    comments.append(
+                        WorkbookComment(
+                            sheet=sheet.title,
+                            cell=cell.coordinate,
+                            kind="reviewer_note",
+                            text=_cell_text(cell.value)[:8000],
+                            author="",
+                            record_collection=record_collection or None,
+                            record_id=record_id or None,
+                            schema_path=schema_path or None,
+                        )
+                    )
+                if cell.comment is not None and cell.comment.text.strip():
+                    comments.append(
+                        WorkbookComment(
+                            sheet=sheet.title,
+                            cell=cell.coordinate,
+                            kind="cell_comment",
+                            text=cell.comment.text.strip()[:8000],
+                            author=(cell.comment.author or "")[:200],
+                            record_collection=record_collection or None,
+                            record_id=record_id or None,
+                            schema_path=schema_path or None,
+                        )
+                    )
+    return tuple(comments)
+
+
+def read_review_workbook_comments(
+    data: bytes, *, paper_id: str, split: str
+) -> tuple[int, tuple[WorkbookComment, ...], str]:
+    """Recover comments from a stale PERLA workbook without applying stale values."""
+
+    book = _load_review_workbook(data)
+    if "_meta" not in book.sheetnames:
+        raise ValueError("review workbook metadata sheet is missing")
+    metadata = _metadata(book["_meta"])
+    for key, expected in {
+        "format": FORMAT_NAME,
+        "paper_id": paper_id,
+        "split": split,
+    }.items():
+        if metadata.get(key) != expected:
+            raise ValueError(f"review workbook metadata does not match {key}")
+    comments = _workbook_comments(book)
+    return (
+        int(metadata.get("base_revision", 0)),
+        comments,
+        hashlib.sha256(data).hexdigest(),
+    )
+
+
+def _workbook_metadata(book: Workbook) -> WorkbookMetadata:
+    """Validate typed identity fields from an already safety-checked workbook."""
+
+    if "_meta" not in book.sheetnames:
+        raise ValueError("review workbook metadata sheet is missing")
+    metadata = _metadata(book["_meta"])
+    if metadata.get("format") != FORMAT_NAME:
+        raise ValueError("review workbook metadata does not match format")
+    paper_id = metadata.get("paper_id")
+    split = metadata.get("split")
+    schema_sha256 = metadata.get("schema_sha256")
+    if not isinstance(paper_id, str) or not paper_id:
+        raise ValueError("review workbook paper_id metadata is incomplete")
+    if not isinstance(split, str) or not split:
+        raise ValueError("review workbook split metadata is incomplete")
+    if not isinstance(schema_sha256, str) or not schema_sha256:
+        raise ValueError("review workbook identity metadata is incomplete")
+    return WorkbookMetadata(
+        paper_id=paper_id,
+        split=split,
+        base_revision=int(metadata.get("base_revision", 0)),
+        schema_sha256=schema_sha256,
+    )
+
+
+def read_review_workbook_metadata(data: bytes) -> WorkbookMetadata:
+    """Read identity metadata through the same safety checks as a full import."""
+
+    return _workbook_metadata(_load_review_workbook(data))
+
+
+def read_review_workbook_feedback(
+    data: bytes, *, paper_id: str, split: str
+) -> WorkbookReview:
+    """Recover decisions and proposals from an older workbook without applying them.
+
+    Stable hidden identifiers are retained as reviewer-supplied context, but this
+    function intentionally does not compare them with current truth. Its output is
+    suitable for an adjudication queue, never for direct mutation.
+    """
+
+    book = _load_review_workbook(data)
+    metadata = _workbook_metadata(book)
+    if metadata.paper_id != paper_id or metadata.split != split:
+        raise ValueError("review workbook identity does not match the requested paper")
+    if "Record review" not in book.sheetnames:
+        raise ValueError("review workbook has no Record review sheet")
+    decisions: list[WorkbookDecision] = []
+    for row_number, row in enumerate(
+        _rows(book["Record review"], RECORD_HEADERS), start=2
+    ):
+        outcome = _cell_text(row[RECORD_OUTCOME_COLUMN]) or NO_OUTCOME
+        if outcome not in {NO_OUTCOME, *OUTCOME_TO_DECISION}:
+            raise ValueError(f"Record review row {row_number} has an unknown outcome")
+        collection = _cell_text(row[RECORD_COLLECTION_COLUMN])
+        record_id = _cell_text(row[RECORD_ID_COLUMN])
+        if outcome != NO_OUTCOME and collection and record_id:
+            decisions.append(
+                WorkbookDecision(
+                    collection=collection,
+                    record_id=record_id,
+                    decision=OUTCOME_TO_DECISION[outcome],
+                    note=_cell_text(row[RECORD_NOTE_COLUMN]),
+                )
+            )
+
+    changes: list[WorkbookChange] = []
+    for sheet in book.worksheets:
+        if sheet.title in {*FIXED_SHEETS, "_meta"}:
+            continue
+        headers = tuple(_cell_text(cell.value) for cell in sheet[1])
+        if headers != FIELD_HEADERS:
+            continue
+        for row_number, row in enumerate(_rows(sheet, FIELD_HEADERS), start=2):
+            reviewed_type = _cell_text(row[FIELD_TYPE_COLUMN])
+            if row[FIELD_REVIEWED_COLUMN] == row[FIELD_CURRENT_COLUMN]:
+                continue
+            try:
+                reviewed = _decode_value(row[FIELD_REVIEWED_COLUMN], reviewed_type)
+            except (TypeError, ValueError) as error:
+                raise ValueError(
+                    f"{sheet.title} row {row_number} has an invalid value: {error}"
+                ) from error
+            collection = _cell_text(row[FIELD_COLLECTION_COLUMN])
+            record_id = _cell_text(row[FIELD_ID_COLUMN])
+            path = _cell_text(row[FIELD_PATH_COLUMN])
+            if not collection or not record_id or not path:
+                raise ValueError(
+                    f"{sheet.title} row {row_number} lacks correction identity"
+                )
+            block_id = _cell_text(row[FIELD_EVIDENCE_BLOCK_COLUMN])
+            quote = _cell_text(row[FIELD_EVIDENCE_QUOTE_COLUMN])
+            changes.append(
+                WorkbookChange(
+                    collection=collection,
+                    record_id=record_id,
+                    path=path,
+                    value=reviewed,
+                    note=_cell_text(row[FIELD_NOTE_COLUMN]),
+                    evidence=(
+                        ({"block_id": block_id, "quote": quote},)
+                        if block_id and quote
+                        else ()
+                    ),
+                )
+            )
+    return WorkbookReview(
+        base_revision=metadata.base_revision,
+        scope_device_id=_cell_text(_metadata(book["_meta"]).get("scope_device_id"))
+        or None,
+        changes=tuple(changes),
+        decisions=tuple(decisions),
+        comments=_workbook_comments(book),
+        sha256=hashlib.sha256(data).hexdigest(),
+    )
+
+
 def read_review_workbook(
     data: bytes,
     *,
@@ -494,24 +1018,11 @@ def read_review_workbook(
     revision: int,
     schema_sha256: str,
 ) -> WorkbookReview:
-    """Validate an uploaded workbook and return only its intentional edits."""
+    """Validate an uploaded workbook and return its intentional review content."""
 
-    if not data or len(data) > MAX_WORKBOOK_BYTES:
-        raise ValueError("review workbook must be a non-empty XLSX smaller than 15 MiB")
-    try:
-        with ZipFile(BytesIO(data)) as archive:
-            if sum(item.file_size for item in archive.infolist()) > MAX_UNCOMPRESSED_BYTES:
-                raise ValueError("review workbook expands beyond the 100 MiB safety limit")
-    except BadZipFile as error:
-        raise ValueError("review workbook is not a readable XLSX file") from error
-    try:
-        book = load_workbook(
-            BytesIO(data), data_only=False, read_only=False, keep_links=False
-        )
-    except Exception as error:  # malformed OOXML can fail in several XML readers
-        raise ValueError("review workbook is not a readable XLSX file") from error
-    if tuple(book.sheetnames) != SHEETS:
-        raise ValueError("review workbook sheets were added, removed, or renamed")
+    book = _load_review_workbook(data)
+    if "_meta" not in book.sheetnames:
+        raise ValueError("review workbook metadata sheet is missing")
     metadata = _metadata(book["_meta"])
     expected_meta = {
         "format": FORMAT_NAME,
@@ -529,99 +1040,160 @@ def read_review_workbook(
                     "this workbook was downloaded from an older paper revision; "
                     "download a new workbook and transfer the reviewed changes"
                 )
+            if key == "format_version":
+                raise ValueError(
+                    "this workbook uses an older layout; download a fresh workbook"
+                )
             raise ValueError(f"review workbook metadata does not match {key}")
     device_id = _cell_text(metadata.get("scope_device_id")) or None
-    expected_records, expected_fields = _contract(
-        truth, identifiers, labels, device_id
+    expected_records, expected_fields = _contract(truth, identifiers, labels, device_id)
+    grouped_fields = _field_rows_by_collection(expected_fields, identifiers)
+    expected_sheets = (
+        *FIXED_SHEETS,
+        *(_field_sheet_name(collection) for collection in grouped_fields),
+        "_meta",
     )
+    if tuple(book.sheetnames) != expected_sheets:
+        raise ValueError("review workbook sheets were added, removed, or renamed")
     record_rows = _rows(book["Record review"], RECORD_HEADERS)
-    field_rows = _rows(book["Field corrections"], FIELD_HEADERS)
-    if len(record_rows) != len(expected_records) or len(field_rows) != len(expected_fields):
+    field_rows = [
+        (sheet_name, row_number, row)
+        for collection in grouped_fields
+        for sheet_name in (_field_sheet_name(collection),)
+        for row_number, row in enumerate(
+            _rows(book[sheet_name], FIELD_HEADERS), start=2
+        )
+    ]
+    if len(record_rows) != len(expected_records) or len(field_rows) != len(
+        expected_fields
+    ):
         raise ValueError("review workbook rows were added, removed, or left incomplete")
 
-    expected_record_map = {(row[1], row[2]): row for row in expected_records}
-    actual_record_keys = [(_cell_text(row[1]), _cell_text(row[2])) for row in record_rows]
+    expected_record_map = {
+        (row[RECORD_COLLECTION_COLUMN], row[RECORD_ID_COLUMN]): row
+        for row in expected_records
+    }
+    actual_record_keys = [
+        (
+            _cell_text(row[RECORD_COLLECTION_COLUMN]),
+            _cell_text(row[RECORD_ID_COLUMN]),
+        )
+        for row in record_rows
+    ]
     if len(set(actual_record_keys)) != len(actual_record_keys) or set(
         actual_record_keys
     ) != set(expected_record_map):
         raise ValueError("Record review identities were added, removed, or duplicated")
     decisions: list[WorkbookDecision] = []
     for row_number, actual in enumerate(record_rows, 2):
-        expected = expected_record_map[(_cell_text(actual[1]), _cell_text(actual[2]))]
-        if tuple(map(_cell_text, actual[:6])) != tuple(map(_cell_text, expected[:6])):
+        expected = expected_record_map[
+            (
+                _cell_text(actual[RECORD_COLLECTION_COLUMN]),
+                _cell_text(actual[RECORD_ID_COLUMN]),
+            )
+        ]
+        immutable_columns = tuple(
+            index
+            for index in range(len(RECORD_HEADERS))
+            if index not in {RECORD_OUTCOME_COLUMN, RECORD_NOTE_COLUMN}
+        )
+        if any(
+            _cell_text(actual[index]) != _cell_text(expected[index])
+            for index in immutable_columns
+        ):
             raise ValueError(f"Record review row {row_number} identity was changed")
-        outcome = _cell_text(actual[6]) or NO_OUTCOME
+        outcome = _cell_text(actual[RECORD_OUTCOME_COLUMN]) or NO_OUTCOME
         if outcome not in {NO_OUTCOME, *OUTCOME_TO_DECISION}:
             raise ValueError(f"Record review row {row_number} has an unknown outcome")
         if outcome != NO_OUTCOME:
             decisions.append(
                 WorkbookDecision(
-                    collection=str(actual[1]),
-                    record_id=str(actual[2]),
+                    collection=str(actual[RECORD_COLLECTION_COLUMN]),
+                    record_id=str(actual[RECORD_ID_COLUMN]),
                     decision=OUTCOME_TO_DECISION[outcome],
-                    note=_cell_text(actual[7]),
+                    note=_cell_text(actual[RECORD_NOTE_COLUMN]),
                 )
             )
 
-    expected_field_map = {str(row.values[5]): row for row in expected_fields}
-    actual_field_keys = [_cell_text(row[5]) for row in field_rows]
+    expected_field_map = {
+        str(row.values[FIELD_PATH_COLUMN]): row for row in expected_fields
+    }
+    actual_field_keys = [_cell_text(row[FIELD_PATH_COLUMN]) for _, _, row in field_rows]
     if len(set(actual_field_keys)) != len(actual_field_keys) or set(
         actual_field_keys
     ) != set(expected_field_map):
         raise ValueError("Field correction paths were added, removed, or duplicated")
     changes: list[WorkbookChange] = []
-    for row_number, actual in enumerate(field_rows, 2):
-        expected = expected_field_map[_cell_text(actual[5])]
+    for sheet_name, row_number, actual in field_rows:
+        expected = expected_field_map[_cell_text(actual[FIELD_PATH_COLUMN])]
         expected_values = expected.values
-        immutable_text_columns = (0, 1, 2, 3, 4, 5, 9)
+        mutable_columns = {
+            FIELD_REVIEWED_COLUMN,
+            FIELD_TYPE_COLUMN,
+            FIELD_NOTE_COLUMN,
+            FIELD_EVIDENCE_BLOCK_COLUMN,
+            FIELD_EVIDENCE_QUOTE_COLUMN,
+        }
+        immutable_text_columns = tuple(
+            index
+            for index in range(len(FIELD_HEADERS))
+            if index not in {*mutable_columns, FIELD_CURRENT_COLUMN}
+        )
         if any(
             _cell_text(actual[index]) != _cell_text(expected_values[index])
             for index in immutable_text_columns
         ):
-            raise ValueError(f"Field corrections row {row_number} identity was changed")
+            raise ValueError(f"{sheet_name} row {row_number} identity was changed")
         try:
-            current = _decode_value(actual[6], _value_type(expected.current_value))
+            current = _decode_value(
+                actual[FIELD_CURRENT_COLUMN], _value_type(expected.current_value)
+            )
         except (TypeError, ValueError) as error:
             raise ValueError(
-                f"Field corrections row {row_number} current value was changed"
+                f"{sheet_name} row {row_number} current value was changed"
             ) from error
         if current != expected.current_value:
-            raise ValueError(f"Field corrections row {row_number} current value was changed")
-        reviewed_type = _cell_text(actual[8])
+            raise ValueError(f"{sheet_name} row {row_number} current value was changed")
+        reviewed_type = _cell_text(actual[FIELD_TYPE_COLUMN])
         try:
-            reviewed = _decode_value(actual[7], reviewed_type)
+            reviewed = _decode_value(actual[FIELD_REVIEWED_COLUMN], reviewed_type)
         except (TypeError, ValueError) as error:
             raise ValueError(
-                f"Field corrections row {row_number} has an invalid reviewed value: {error}"
+                f"{sheet_name} row {row_number} has an invalid reviewed value: {error}"
             ) from error
         if reviewed == expected.current_value and reviewed_type == _value_type(
             expected.current_value
         ):
             continue
         if not expected.editable:
-            raise ValueError(f"Field corrections row {row_number} is read-only")
-        note = _cell_text(actual[10])
-        block_id, quote = _cell_text(actual[11]), _cell_text(actual[12])
+            raise ValueError(f"{sheet_name} row {row_number} is read-only")
+        note = _cell_text(actual[FIELD_NOTE_COLUMN])
+        block_id = _cell_text(actual[FIELD_EVIDENCE_BLOCK_COLUMN])
+        quote = _cell_text(actual[FIELD_EVIDENCE_QUOTE_COLUMN])
         if not note:
-            raise ValueError(f"Field corrections row {row_number} needs a reviewer note")
+            raise ValueError(f"{sheet_name} row {row_number} needs a reviewer note")
         if not block_id or not quote:
-            raise ValueError(f"Field corrections row {row_number} needs exact evidence")
+            raise ValueError(f"{sheet_name} row {row_number} needs exact evidence")
         changes.append(
             WorkbookChange(
-                collection=str(actual[1]),
-                record_id=str(actual[2]),
-                path=str(actual[5]),
+                collection=str(actual[FIELD_COLLECTION_COLUMN]),
+                record_id=str(actual[FIELD_ID_COLUMN]),
+                path=str(actual[FIELD_PATH_COLUMN]),
                 value=reviewed,
                 note=note,
                 evidence=({"block_id": block_id, "quote": quote},),
             )
         )
-    if not changes and not decisions:
-        raise ValueError("review workbook contains no decisions or corrections")
+    comments = _workbook_comments(book)
+    if not changes and not decisions and not comments:
+        raise ValueError(
+            "review workbook contains no decisions, corrections, or cell comments"
+        )
     return WorkbookReview(
         base_revision=revision,
         scope_device_id=device_id,
         changes=tuple(changes),
         decisions=tuple(decisions),
+        comments=comments,
         sha256=hashlib.sha256(data).hexdigest(),
     )

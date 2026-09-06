@@ -18,8 +18,8 @@ pip install -e '.[dev,docs]'
 
 ## Inspect the planned run
 
-`--dry-run` parses and caches the documents, chooses single or windowed mode, and
-writes a call estimate without contacting a model provider:
+`--dry-run` parses and caches the documents, chooses a single or windowed claim-reading
+mode, and writes a call estimate without contacting a model provider:
 
 ```bash
 perla-extract \
@@ -35,12 +35,13 @@ parser events, and selected mode.
 ## Extract
 
 ```bash
-export OPENROUTER_API_KEY="your-openrouter-key"  # for the default backend
+export OPENAI_API_KEY="your-openai-key"
 
 perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
-  --model openrouter/openai/gpt-5.6-sol:exacto \
+  --model openai/gpt-5.2 \
+  --max-cost-usd 2.00 \
   --output-dir results/paper
 ```
 
@@ -48,24 +49,34 @@ Progress and periodic heartbeats go to stderr. The final report is printed as JS
 stdout. `--json-logs` emits machine-readable logs; `--log-level DEBUG` shows parser
 details.
 
-Model transport is provider-neutral through LiteLLM. Choose a different backend with
-its provider-prefixed model name and standard credential, such as `openai/...` with
-`OPENAI_API_KEY` or `anthropic/...` with `ANTHROPIC_API_KEY`. The explicit `:exacto`
-suffix preserves the previous quality-first routing for the default OpenRouter model.
+Model transport is provider-neutral through LiteLLM. The default calls OpenAI directly
+with `OPENAI_API_KEY`. Choose another backend with its provider-prefixed model name and
+standard credential, such as `openrouter/...` with `OPENROUTER_API_KEY` or
+`anthropic/...` with `ANTHROPIC_API_KEY`.
+
+OpenRouter can also route an eligible model through a provider key stored in its BYOK
+settings. The local process still receives only `OPENROUTER_API_KEY`; do not place the
+upstream OpenAI key in a project environment file as well. Pin the BYOK credential if
+shared OpenRouter capacity must never be used, then verify `is_byok` in OpenRouter's
+generation record with a small run before starting a costly cohort. BYOK configuration
+and fallback behavior are documented by
+[OpenRouter](https://openrouter.ai/docs/guides/overview/auth/byok).
 
 ## Read the result
 
 | Artifact | Purpose |
 | --- | --- |
-| `extraction.json` | Complete rich study result, including records that need review |
+| `extraction.json` | Final rich study result after audited source-grounding safeguards |
 | `grounded_values.json` | Conservative subset of reported values that passed local source checks |
 | `validation.json` | Evidence, identifier, and relationship findings |
-| `evidence_inventory.json` | Independent, value-free record inventory used for routing and recall review |
-| `inventory_grounding.json` | Inventory candidates admitted to or rejected from extraction guidance |
-| `evidence_routing.json` | Auditable block-selection decisions; the complete parse remains preserved |
-| `coverage_audit.json` | Covered, possible, and unmatched inventory candidates |
+| `claim_ledger.json` | Experimental objects and atomic source claims collected before record construction |
+| `claim_grounding.json` | Ledger entries admitted to or rejected from assembly guidance |
+| `claim_window_plan.json` | Single-call or section-aware claim-reading plan |
+| `claim_coverage_audit.json` | Covered, possible, unmatched, context, and unsupported-record findings |
 | `targeted_repair.json` | Evidence-local repair worklist, proposed-record counts, quality gates, and decision |
 | `citation_repairs.json` | Audited non-contiguous-quote and unique-pointer repairs |
+| `conservative_finalization.json` | Exact unsupported optional claims removed after repair, with paths and reasons |
+| `pre_conservative_extraction.json` | Complete pre-finalization candidate, written only when a claim was removed |
 | `document.json` | Model-facing scientific evidence blocks with source and page locations |
 | `report.json` | Status, counts, usage, cost, cache information, and failures |
 | `run_configuration.json` | Non-secret configuration and source fingerprints |
@@ -75,19 +86,17 @@ suffix preserves the previous quality-first routing for the default OpenRouter m
 | `enrichment.json` | Absorber-scoped composition and processing proposals with deterministic decisions |
 | `draft_extraction.json` | First complete-study result retained before the default quality pass |
 | `refinement_audit.json` | Record IDs added, removed, or changed by the complete-study quality pass |
-| `quality_comparison.json` | Draft-versus-final evidence issue and inventory coverage counts |
+| `quality_comparison.json` | Draft-versus-final validation and semantic claim-coverage counts |
 | `reduced.json` | Optional historical export when `--reduced-export` is passed |
 
-Windowed runs additionally write `window_plan.json`, first-pass results under
-`draft_windows/`, their lossless `draft_candidates.json` union, change indexes under
-`refinement_audits/`, refined per-window results,
-`candidates.json`, and—when cross-window linking is attempted—`identity_links.json`.
-Requests and preserved failure responses are stored under `requests/`.
+When claim collection is windowed, every window still contributes to one combined
+`claim_ledger.json`; final study assembly remains global. Requests and preserved
+failure responses are stored under `requests/`.
 
-`report.json` uses `complete` only when local validation and inventory coverage report
+`report.json` uses `complete` only when local validation and claim coverage report
 no findings.
 `complete_needs_review` means the model call completed but at least one local check
-needs attention. `partial` means a window, identity-linking call, or conversion failed
+needs attention. `partial` means a claim-reading window, optional call, or conversion failed
 while inspectable output was still produced; `failed` means no model call succeeded.
 
 ## Caching and repeatability
@@ -111,8 +120,8 @@ compatibility breaks and automatically computed SHA-256 fingerprints for the gen
 Pydantic schema, all model prompts, and the exact deterministic evidence-span catalog.
 A schema, prompt, or citable-evidence change therefore changes provenance and cache
 identity without relying on a date string or a manual patch bump.
-Version 4 separates layer constituents and source-backed physical form and changes the
-model transport from generated quotations to deterministic evidence-span IDs. Older
-JSON remains readable because the new layer fields default to empty or
-`not_reported`; it is not exactly comparable to a version-4 extraction until those
-new fields have been reviewed or the seed has been regenerated.
+Version 6 adds finite-number, champion, and stability-link invariants and strengthens
+nested relationship validation. Earlier rich JSON may remain structurally readable,
+but it is not benchmark-equivalent until it passes the current schema, relationship,
+and evidence gates. Regenerate model seeds rather than silently relabelling an older
+artifact as version 6.

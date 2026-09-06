@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections.abc import Sequence
 from copy import deepcopy
 from difflib import SequenceMatcher
+from typing import Any
 
 from .models import EvidenceBlock, StudyExtraction
 
@@ -46,7 +48,37 @@ def source_contains_text(source: object, query: object) -> bool:
     haystack, offsets, boundary_source = _normalized_with_offsets(source)
     if not needle:
         return False
-    for match in re.finditer(re.escape(needle), haystack):
+    matches = list(re.finditer(re.escape(needle), haystack))
+    if not matches and "±" in raw_query:
+        # Broken embedded font maps occasionally decode the ± separator as an
+        # unrelated non-ASCII glyph. The query must explicitly contain ±, and the
+        # source may contribute at most one such glyph at that exact position.
+        uncertainty_parts = [
+            re.escape(normalized_source_text(part)) for part in raw_query.split("±")
+        ]
+        if all(uncertainty_parts):
+            matches = list(
+                re.finditer(r"(?:[^\x00-\x7f])?".join(uncertainty_parts), haystack)
+            )
+    if not matches and re.search(r"[a-z]", needle):
+        # PDF text layers sometimes omit a dash that is visually present, including
+        # in ranges (``200–300 nm``) and compact labels (``I–V``). Only dashes with
+        # an alphanumeric character on both sides are optional here. A leading minus
+        # remains mandatory, so ``-0.5 V`` can never be grounded by ``0.5 V``.
+        parts: list[str] = []
+        for index, character in enumerate(needle):
+            if (
+                character == "-"
+                and index > 0
+                and index + 1 < len(needle)
+                and needle[index - 1].isalnum()
+                and needle[index + 1].isalnum()
+            ):
+                parts.append(r"\-?")
+            else:
+                parts.append(re.escape(character))
+        matches = list(re.finditer("".join(parts), haystack))
+    for match in matches:
         source_start = offsets[match.start()]
         source_end = offsets[match.end() - 1]
         before = boundary_source[source_start - 1] if source_start else ""
@@ -74,9 +106,47 @@ def assembled_from_quotes(raw_value: object, references: list[dict]) -> bool:
     )
 
 
+def assembled_with_shared_unit(
+    raw_value: object,
+    unit: object,
+    references: list[dict],
+    unit_sources: Sequence[object] | None = None,
+) -> bool:
+    """Recognize a source value whose unit is printed once for a coordinated list.
+
+    Tables and prose commonly write ``0.2 and 0.1 Å s-1``. Representing either scalar
+    as ``raw_value='0.2 Å s-1'`` is source-preserving, although that exact concatenated
+    string is absent. This check is vocabulary-free: the declared unit must be the
+    exact normalized suffix of the raw value. The remaining value text must occur in
+    its exact citation, while the unit may occur in a corresponding wider source such
+    as the same table block. It verifies textual support, not whether the source
+    grammar assigns the unit to the value.
+    """
+
+    raw = normalized_source_text(raw_value)
+    normalized_unit = normalized_source_text(unit)
+    if not normalized_unit or not raw.endswith(normalized_unit):
+        return False
+    value_text = raw[: -len(normalized_unit)]
+    if not value_text:
+        return False
+    literal_raw = unicodedata.normalize("NFKC", str(raw_value)).strip()
+    literal_unit = unicodedata.normalize("NFKC", str(unit)).strip()
+    value_query = value_text
+    if literal_raw.casefold().endswith(literal_unit.casefold()):
+        value_query = literal_raw[: -len(literal_unit)].strip()
+    contexts = unit_sources or [reference.get("quote") for reference in references]
+    return any(
+        source_contains_text(reference.get("quote"), value_query)
+        and index < len(contexts)
+        and source_contains_text(contexts[index], unit)
+        for index, reference in enumerate(references)
+    )
+
+
 def repair_noncontiguous_citation_quotes(
     extraction: StudyExtraction, blocks: list[EvidenceBlock]
-) -> tuple[StudyExtraction, dict[str, object]]:
+) -> tuple[StudyExtraction, dict[str, Any]]:
     """Replace a stitched excerpt only when it is an ordered subset of one block.
 
     Structured-output models sometimes copy several real passages from one block but
@@ -101,9 +171,7 @@ def repair_noncontiguous_citation_quotes(
             position += 1
         return True
 
-    def replacement(
-        reference: dict, path: str, *, allow_split: bool
-    ) -> list[dict]:
+    def replacement(reference: dict, path: str, *, allow_split: bool) -> list[dict]:
         block = block_by_id.get(str(reference["block_id"]))
         quote = str(reference["quote"])
         if block is None or source_contains_text(block.text, quote):
@@ -137,9 +205,7 @@ def repair_noncontiguous_citation_quotes(
         ):
             return [reference]
         source_quotes = [
-            raw_source[
-                offsets[match.b] : offsets[match.b + match.size - 1] + 1
-            ].strip()
+            raw_source[offsets[match.b] : offsets[match.b + match.size - 1] + 1].strip()
             for match in matches
         ]
         if any(
@@ -197,7 +263,7 @@ def repair_noncontiguous_citation_quotes(
 
 def repair_unique_citation_pointers(
     extraction: StudyExtraction, blocks: list[EvidenceBlock]
-) -> tuple[StudyExtraction, dict[str, object]]:
+) -> tuple[StudyExtraction, dict[str, Any]]:
     """Relink a citation only when its unchanged quote has one source match.
 
     A repair corrects transport metadata, not scientific content. Zero or multiple

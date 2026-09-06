@@ -7,22 +7,41 @@ from pathlib import Path
 
 from .artifacts import write_json_atomic
 from .client import ModelCallError, ModelClient
+from .guidance import (
+    COMPOSITION_BOUNDARY_POLICY,
+    DEVICE_FAMILY_POLICY,
+    EVIDENCE_INTERPRETATION_POLICY,
+    RECORD_BOUNDARY_POLICY,
+    SHARED_QUANTITY_POLICY,
+)
 from .models import EvidenceBlock, StudyExtraction
-from .spans import build_evidence_spans
+from .spans import EvidenceSpan, build_evidence_spans
 from .transport import (
     compact_to_span_citations,
     expand_span_citations,
     span_citation_schema,
 )
 
-REFINEMENT_PROMPT = """Audit the supplied draft against all supplied evidence and
+REFINEMENT_PROMPT = f"""Audit the supplied draft against all supplied evidence and
 return a complete corrected StudyExtraction.
 
-Treat the draft and independent inventory as fallible aids, never as source evidence.
-For every grounded inventory candidate, either represent the source-supported record
-at the correct reporting level or explain the unresolved conflict in unresolved_notes.
+{DEVICE_FAMILY_POLICY}
+{RECORD_BOUNDARY_POLICY}
+{COMPOSITION_BOUNDARY_POLICY}
+{EVIDENCE_INTERPRETATION_POLICY}
+{SHARED_QUANTITY_POLICY}
+Treat the draft and claim ledger as fallible aids, never as source evidence. Reconcile
+experimental objects globally before deciding final record identity. For every
+grounded target claim, either represent the supported fact at the correct reporting
+level or explain the unresolved conflict in unresolved_notes. Context objects and
+claims must not create output records.
 Recover supported records and atomic values the draft missed. Remove or correct
 duplicates, unsupported claims, wrong links, and mixed individual/population records.
+In particular, consolidate draft families that are only processing arms of the same
+device design, and remove characterization-only partial structures from
+device_families. Do not discard their supported facts: move specimen-specific values
+to the appropriate individual device, or state an unresolved group-only distinction
+in unresolved_notes when the present schema cannot represent it faithfully.
 Keep specimen-specific values on IndividualDevice.reported_properties and conditions
 that change during aging on the corresponding StabilityCheckpoint.conditions.
 Preserve correct content. Every retained or added scientific claim must cite supplied
@@ -32,7 +51,9 @@ not a patch or commentary.
 
 
 def _prompt(
-    evidence_prompt: str, draft: StudyExtraction, blocks: list[EvidenceBlock]
+    evidence_prompt: str,
+    draft: StudyExtraction,
+    spans: list[EvidenceSpan],
 ) -> str:
     """Put the fallible draft before the unchanged extraction evidence and rules."""
 
@@ -40,10 +61,10 @@ def _prompt(
         REFINEMENT_PROMPT
         + "\n\nDRAFT EXTRACTION WITH EVIDENCE SPAN REFERENCES:\n"
         + json.dumps(
-            compact_to_span_citations(draft, build_evidence_spans(blocks)),
+            compact_to_span_citations(draft, spans),
             ensure_ascii=False,
         )
-        + "\n\nEVIDENCE AND INVENTORY:\n"
+        + "\n\nCLAIMS AND SOURCE EVIDENCE:\n"
         + evidence_prompt
     )
 
@@ -57,7 +78,6 @@ def _audit(draft: StudyExtraction, refined: StudyExtraction) -> dict[str, object
         "performance_observations": "observation_id",
         "population_statistics": "population_id",
         "stability_tests": "test_id",
-        "identity_links": "link_id",
     }
     changes: dict[str, object] = {}
     for collection, identifier in identifiers.items():
@@ -97,26 +117,24 @@ def refine_draft(
     slug: str,
     draft_path: Path,
     audit_path: Path,
+    spans: list[EvidenceSpan] | None = None,
 ) -> tuple[StudyExtraction, str | None]:
     """Refine a valid draft, retaining it as the safe fallback and audit baseline."""
 
     write_json_atomic(draft_path, draft.model_dump(mode="json"))
+    citation_spans = spans or build_evidence_spans(blocks)
     try:
         refined = client.complete(
             kind=kind,
             slug=slug,
             model=model,
             system=system_prompt,
-            prompt=_prompt(evidence_prompt, draft, blocks),
+            prompt=_prompt(evidence_prompt, draft, citation_spans),
             response_model=StudyExtraction,
             max_output_tokens=max_output_tokens,
             reasoning_effort=reasoning_effort,
-            request_schema=span_citation_schema(
-                StudyExtraction, build_evidence_spans(blocks)
-            ),
-            decode=lambda payload: expand_span_citations(
-                payload, build_evidence_spans(blocks)
-            ),
+            request_schema=span_citation_schema(StudyExtraction, citation_spans),
+            decode=lambda payload: expand_span_citations(payload, citation_spans),
         )
     except ModelCallError as exc:
         return draft, str(exc)

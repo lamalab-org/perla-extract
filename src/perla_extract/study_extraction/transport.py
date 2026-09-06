@@ -36,7 +36,7 @@ def span_citation_schema(
     """Replace every model-facing citation object with a known evidence-span ID.
 
     All response models share the same ``EvidenceCitation`` definition, including the
-    inventory, full extraction, identity-link, and targeted-repair calls. Applying one
+    claim-ledger, full extraction, refinement, and targeted-repair calls. Applying one
     mechanical schema transformation keeps citation behavior consistent everywhere.
     """
 
@@ -98,7 +98,7 @@ def compact_to_span_citations(
 ) -> dict[str, object]:
     """Replace exact public citations with span IDs for a subsequent model prompt.
 
-    Refinement and identity linking receive records produced from the same span
+    Refinement and global study assembly receive records produced from the same span
     catalog. Failing on a non-matching citation is intentional: silently dropping or
     approximating evidence would make the next model call less auditable.
     """

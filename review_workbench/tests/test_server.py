@@ -16,6 +16,70 @@ def test_revision_conflict_message_is_actionable_without_internal_details():
     assert "stale" not in REVISION_CONFLICT_RESPONSE["error"]
 
 
+def test_uploaded_review_workbook_is_retained_byte_for_byte(tmp_path):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+    relative = app._workbook_submission_relative_path(
+        "dev",
+        "10.0000--example",
+        "2026-09-03T10:00:00+00:00",
+        "submission-1",
+        "reviewer-1",
+        "reviewed workbook.xlsx",
+    )
+    body = b"exact xlsx bytes"
+    receipt = {"submission_id": "submission-1", "status": "received"}
+
+    app._archive_workbook_submission(relative, body, receipt)
+    app._record_workbook_outcome(relative, {"status": "rejected"})
+    artifacts = app.uploaded_review_workbooks()
+
+    assert len(artifacts) == 1
+    assert artifacts[0]["data"] == body
+    assert artifacts[0]["receipt"] == receipt
+    assert artifacts[0]["outcome"] == {"status": "rejected"}
+    assert artifacts[0]["archive_path"].startswith("uploaded_workbooks/dev/")
+
+
+def test_figure_proposals_are_served_one_paper_at_a_time(tmp_path):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+    app.static_dir = tmp_path / "static"
+    app.static_dir.mkdir()
+    (app.static_dir / "figure-census-proposals.json").write_text(
+        json.dumps({"papers": {"paper-a": {"panels": [{"figure_number": "1"}]}}})
+    )
+
+    assert app.figure_census_proposal("paper-a") == {
+        "paper_id": "paper-a",
+        "proposal": {"panels": [{"figure_number": "1"}]},
+    }
+    assert app.figure_census_proposal("missing") == {
+        "paper_id": "missing",
+        "proposal": None,
+    }
+
+
+def test_rejected_workbook_remains_archived(tmp_path, monkeypatch):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+
+    def reject(*args, **kwargs):
+        raise ValueError("invalid workbook")
+
+    monkeypatch.setattr(app.store, "import_review_workbook", reject)
+    with pytest.raises(ValueError, match="invalid workbook"):
+        app.import_review_workbook(
+            "dev",
+            "10.0000--example",
+            b"not really xlsx",
+            "reviewer-1",
+            filename="attempt.xlsx",
+        )
+
+    artifact = app.uploaded_review_workbooks()[0]
+    assert artifact["data"] == b"not really xlsx"
+    assert artifact["outcome"]["status"] == "rejected"
+    assert artifact["outcome"]["message"] == "invalid workbook"
+
+
 def pdf_bytes(text: str) -> bytes:
     document = fitz.open()
     page = document.new_page()
@@ -23,6 +87,79 @@ def pdf_bytes(text: str) -> bytes:
     value = document.tobytes()
     document.close()
     return value
+
+
+def pdf_pages(*texts: str) -> bytes:
+    document = fitz.open()
+    for text in texts:
+        page = document.new_page()
+        page.insert_text((72, 72), text)
+    value = document.tobytes()
+    document.close()
+    return value
+
+
+def test_figure_panel_preview_is_rendered_from_frozen_coordinates(
+    tmp_path, monkeypatch
+):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+    app.static_dir = tmp_path / "static"
+    app.static_dir.mkdir()
+    (app.static_dir / "figure-census-proposals.json").write_text(
+        json.dumps(
+            {
+                "papers": {
+                    "paper-a": {
+                        "panels": [
+                            {
+                                "proposal_panel_id": "panel-a",
+                                "page": 1,
+                                "figure_bbox_pdf": [0.0, 0.0, 300.0, 300.0],
+                                "panel_bbox_normalized": [0, 0, 500, 1000],
+                            }
+                        ]
+                    }
+                }
+            }
+        )
+    )
+    monkeypatch.setattr(
+        app, "review_pdf", lambda paper_id, source, split: pdf_bytes("Figure")
+    )
+
+    image = app.render_figure_panel("paper-a", "panel-a", "dev")
+
+    assert image.startswith(b"\x89PNG\r\n\x1a\n")
+
+
+def test_figure_panel_preview_rejects_a_different_pdf_revision(tmp_path, monkeypatch):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+    app.static_dir = tmp_path / "static"
+    app.static_dir.mkdir()
+    (app.static_dir / "figure-census-proposals.json").write_text(
+        json.dumps(
+            {
+                "papers": {
+                    "paper-a": {
+                        "pdf_sha256": "0" * 64,
+                        "panels": [
+                            {
+                                "proposal_panel_id": "panel-a",
+                                "page": 1,
+                                "figure_bbox_pdf": [0.0, 0.0, 300.0, 300.0],
+                            }
+                        ],
+                    }
+                }
+            }
+        )
+    )
+    monkeypatch.setattr(
+        app, "review_pdf", lambda paper_id, source, split: pdf_bytes("Figure")
+    )
+
+    with pytest.raises(FileNotFoundError, match="does not match"):
+        app.render_figure_panel("paper-a", "panel-a", "dev")
 
 
 def test_imports_extractor_bundle_and_both_documents(tmp_path, empty_study, document_payload):
@@ -78,3 +215,43 @@ def test_evidence_search_returns_source_and_page(tmp_path, empty_study, document
 
     with pytest.raises(FileNotFoundError, match="evidence block missing"):
         app.evidence_block("calibration", "10.0000--example", "missing")
+
+
+def test_concatenated_supplement_is_exposed_as_logical_si(
+    tmp_path, empty_study, document_payload
+):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+    main = pdf_pages("Main page one", "Main page two")
+    combined = pdf_pages(
+        "Main page one",
+        "Main page two",
+        "Supporting information first page",
+        "Supporting information second page with searchable detail",
+    )
+    app.import_paper(
+        "calibration",
+        "10.0000--example",
+        main,
+        json.dumps(empty_study).encode(),
+        supplement_bytes=combined,
+        document_bytes=json.dumps(document_payload).encode(),
+        reviewer_id="ada",
+    )
+
+    page = app.pdf_page_text("10.0000--example", "supplement", 1)
+    assert page["text"].startswith("Supporting information first page")
+    assert page["page_count"] == 2
+    _, rendered_count = app.render_pdf_page("10.0000--example", "supplement", 1)
+    assert rendered_count == 2
+    assert (
+        app.search_pdf("10.0000--example", "supplement", "searchable")[0]["page"] == 2
+    )
+    assert (
+        app.evidence_block("calibration", "10.0000--example", "supplement_p3_table_1")[
+            "page"
+        ]
+        == 1
+    )
+    with fitz.open(stream=app.review_pdf("10.0000--example", "supplement")) as pdf:
+        assert len(pdf) == 2
+        assert pdf[0].get_text().startswith("Supporting information first page")

@@ -15,11 +15,16 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from perla_extract.study_extraction.artifacts import write_json_atomic
-from perla_extract.study_extraction.models import EvidenceBlock, StudyExtraction
+from perla_extract.study_extraction.models import (
+    STUDY_SCHEMA_VERSION,
+    EvidenceBlock,
+    StudyExtraction,
+    study_schema_sha256,
+)
 from perla_extract.study_extraction.validation import validate_study
 from review_workbench.study_review import ReviewEvent, StudyReviewStore
 
-GROUND_TRUTH_FORMAT_VERSION = 1
+GROUND_TRUTH_FORMAT_VERSION = 3
 GROUND_TRUTH_FILENAMES = (
     "ground_truth.json",
     "seed_extraction.json",
@@ -45,19 +50,45 @@ def _sha256(value: object) -> str:
     return hashlib.sha256(_json_bytes(value)).hexdigest()
 
 
+class GroundTruthReview(BaseModel):
+    """Freeze the human decisions that define the benchmark label boundary."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    event_count: int = Field(ge=1)
+    reviewers: list[str]
+    adjudicators: list[str] = Field(min_length=1)
+    completed_stages: dict[str, list[str]]
+    uncertain_record_keys: list[str]
+
+
+class GroundTruthValidation(BaseModel):
+    """Record the deterministic gate applied to the final reviewed revision."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    status: str
+    counts: dict[str, Any]
+    issue_count: int = Field(ge=0)
+
+
 class GroundTruthManifest(BaseModel):
     """Describe exactly which reviewed revision and inputs a benchmark item contains."""
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
     artifact_format_version: int = Field(ge=1)
+    study_schema_version: int = Field(ge=1)
+    study_schema_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     paper_id: str
     split: str
     revision: int = Field(ge=1)
+    evidence_version: int = Field(ge=1)
+    evidence_document_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     frozen_at: str
     source_manifest: dict[str, Any]
-    review: dict[str, Any]
-    validation: dict[str, Any]
+    review: GroundTruthReview
+    validation: GroundTruthValidation
     files: dict[str, str]
 
 
@@ -109,6 +140,7 @@ def build_ground_truth_export(
     store.validate_identity(split, paper_id)
     source = store.storage.load_source(split, paper_id)
     revision = store.storage.load_revision(split, paper_id)
+    document = store.load_document(split, paper_id)
     events = [ReviewEvent.model_validate(event) for event in revision.events]
     final_event = events[-1]
     if not (
@@ -119,7 +151,7 @@ def build_ground_truth_export(
 
     truth = StudyExtraction.model_validate(revision.ground_truth)
     seed = StudyExtraction.model_validate(source.seed_extraction)
-    validation = validate_study(truth, _evidence_blocks(source.document))
+    validation = validate_study(truth, _evidence_blocks(document))
     issues = validation.get("issues", [])
     if validation.get("status") != "verified":
         reasons = "; ".join(
@@ -133,9 +165,10 @@ def build_ground_truth_export(
     adjudicator = final_event.reviewer_id
     decisions = summary["record_decisions"].get(adjudicator, {})
     accepted = {"verified", "uncertain"}
-    if sum(decision in accepted for decision in decisions.values()) != summary[
-        "record_count"
-    ]:
+    if (
+        sum(decision in accepted for decision in decisions.values())
+        != summary["record_count"]
+    ):
         raise ValueError("adjudicator must review every current record before export")
 
     ground_truth = truth.model_dump(mode="json")
@@ -147,11 +180,20 @@ def build_ground_truth_export(
         "review_events.json": _sha256(review_events),
     }
     reviewers = sorted({event.reviewer_id for event in events})
+    uncertain_record_keys = sorted(
+        record_key
+        for record_key, decision in decisions.items()
+        if decision == "uncertain"
+    )
     manifest = GroundTruthManifest(
         artifact_format_version=GROUND_TRUTH_FORMAT_VERSION,
+        study_schema_version=STUDY_SCHEMA_VERSION,
+        study_schema_sha256=study_schema_sha256(),
         paper_id=paper_id,
         split=split,
         revision=revision.revision,
+        evidence_version=revision.evidence_version,
+        evidence_document_sha256=_sha256(document),
         frozen_at=final_event.timestamp,
         source_manifest=source.manifest,
         review={
@@ -159,6 +201,7 @@ def build_ground_truth_export(
             "reviewers": reviewers,
             "adjudicators": [adjudicator],
             "completed_stages": summary["completed_stages"],
+            "uncertain_record_keys": uncertain_record_keys,
         },
         validation={
             "status": validation["status"],
@@ -190,13 +233,17 @@ def write_ground_truth_export(export: GroundTruthExport, output_root: Path) -> P
             raise ValueError(f"ground-truth export target is not a directory: {target}")
         existing_names = sorted(path.name for path in target.iterdir())
         if existing_names != sorted(GROUND_TRUTH_FILENAMES):
-            raise ValueError(f"existing export is incomplete or has extra files: {target}")
+            raise ValueError(
+                f"existing export is incomplete or has extra files: {target}"
+            )
         if all(
             json.loads((target / name).read_text(encoding="utf-8")) == value
             for name, value in files.items()
         ):
             return target
-        raise ValueError(f"refusing to overwrite a different ground-truth export: {target}")
+        raise ValueError(
+            f"refusing to overwrite a different ground-truth export: {target}"
+        )
 
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = Path(tempfile.mkdtemp(prefix=f".{target.name}.", dir=target.parent))
@@ -206,7 +253,9 @@ def write_ground_truth_export(export: GroundTruthExport, output_root: Path) -> P
         try:
             os.rename(temporary, target)
         except FileExistsError:
-            raise ValueError(f"another export created the target concurrently: {target}")
+            raise ValueError(
+                f"another export created the target concurrently: {target}"
+            )
     finally:
         if temporary.exists():
             shutil.rmtree(temporary)

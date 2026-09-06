@@ -5,14 +5,15 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 import click
 
 from .logging import configure_logging, logger
 from .source import available_parsers
 from .workflow import (
+    DEFAULT_CLAIM_MODEL,
     DEFAULT_EXTRACTION_MODEL,
-    DEFAULT_INVENTORY_MODEL,
     ExtractionConfig,
     run_extraction,
 )
@@ -52,9 +53,10 @@ def extract_study(
     output_dir: str | Path = "study_extraction",
     model: str = DEFAULT_EXTRACTION_MODEL,
     reasoning_effort: str = "omit",
-    use_inventory: bool = True,
-    inventory_model: str | None = DEFAULT_INVENTORY_MODEL,
-    inventory_max_output_tokens: int = 20_000,
+    use_claim_ledger: bool = True,
+    claim_model: str | None = DEFAULT_CLAIM_MODEL,
+    claim_max_output_tokens: int = 30_000,
+    claim_recall_passes: int = 2,
     use_enrichment: bool = True,
     enrichment_model: str | None = None,
     enrichment_max_output_tokens: int = 20_000,
@@ -64,10 +66,13 @@ def extract_study(
     repair_model: str | None = None,
     repair_max_output_tokens: int = 30_000,
     parser: str = "docling",
-    mode: str = "auto",
+    claim_mode: str = "auto",
     single_call_max_input_tokens: int = 90_000,
-    window_input_tokens: int = 60_000,
+    claim_window_input_tokens: int = 60_000,
+    assembly_max_input_tokens: int = 180_000,
     max_output_tokens: int = 80_000,
+    max_model_calls: int | None = None,
+    max_cost_usd: float | None = None,
     temperature: float | None = None,
     heartbeat_seconds: float = 20,
     timeout_seconds: float = 600,
@@ -94,9 +99,10 @@ def extract_study(
         output_dir=Path(output_dir),
         model=model,
         reasoning_effort=_reasoning(reasoning_effort),
-        use_inventory=use_inventory,
-        inventory_model=inventory_model,
-        inventory_max_output_tokens=inventory_max_output_tokens,
+        use_claim_ledger=use_claim_ledger,
+        claim_model=claim_model,
+        claim_max_output_tokens=claim_max_output_tokens,
+        claim_recall_passes=claim_recall_passes,
         use_enrichment=use_enrichment,
         enrichment_model=enrichment_model,
         enrichment_max_output_tokens=enrichment_max_output_tokens,
@@ -106,10 +112,13 @@ def extract_study(
         repair_model=repair_model,
         repair_max_output_tokens=repair_max_output_tokens,
         parser=parser,
-        mode=mode,
+        claim_mode=claim_mode,
         single_call_max_input_tokens=single_call_max_input_tokens,
-        window_input_tokens=window_input_tokens,
+        claim_window_input_tokens=claim_window_input_tokens,
+        assembly_max_input_tokens=assembly_max_input_tokens,
         max_output_tokens=max_output_tokens,
+        max_model_calls=max_model_calls,
+        max_cost_usd=max_cost_usd,
         temperature=temperature,
         heartbeat_seconds=heartbeat_seconds,
         timeout_seconds=timeout_seconds,
@@ -139,18 +148,22 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 )
 @click.option("--reasoning-effort", type=click.Choice(REASONING_LEVELS), default="omit")
 @click.option(
-    "--inventory/--no-inventory",
-    "use_inventory",
+    "--claims/--no-claims",
+    "use_claim_ledger",
     default=True,
-    help="Run an independent record inventory for routing and recall review.",
+    help="Collect neutral source claims before assembling study records.",
 )
 @click.option(
-    "--inventory-model",
-    default=DEFAULT_INVENTORY_MODEL,
-    help="LiteLLM model for the compact inventory.",
+    "--claim-model",
+    default=DEFAULT_CLAIM_MODEL,
+    help="LiteLLM model for source-claim collection.",
 )
+@click.option("--claim-max-output-tokens", type=click.IntRange(min=1), default=30_000)
 @click.option(
-    "--inventory-max-output-tokens", type=click.IntRange(min=1), default=20_000
+    "--claim-recall-passes",
+    type=click.IntRange(min=1, max=3),
+    default=2,
+    help="Read each claim window again for omissions before global assembly.",
 )
 @click.option(
     "--enrichment/--no-enrichment",
@@ -191,13 +204,31 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 @click.option("--repair-max-output-tokens", type=click.IntRange(min=1), default=30_000)
 @click.option("--parser", type=click.Choice(available_parsers()), default="docling")
 @click.option(
-    "--mode", type=click.Choice(("auto", "single", "windowed")), default="auto"
+    "--claim-mode", type=click.Choice(("auto", "single", "windowed")), default="auto"
 )
 @click.option(
     "--single-call-max-input-tokens", type=click.IntRange(min=1), default=90_000
 )
-@click.option("--window-input-tokens", type=click.IntRange(min=1), default=60_000)
+@click.option("--claim-window-input-tokens", type=click.IntRange(min=1), default=60_000)
+@click.option(
+    "--assembly-max-input-tokens",
+    type=click.IntRange(min=1),
+    default=180_000,
+    help="Fail visibly instead of sending an unexpectedly oversized assembly call.",
+)
 @click.option("--max-output-tokens", type=click.IntRange(min=1), default=80_000)
+@click.option(
+    "--max-model-calls",
+    type=click.IntRange(min=1),
+    default=None,
+    help="Stop before sending more than this many provider requests, including retries.",
+)
+@click.option(
+    "--max-cost-usd",
+    type=click.FloatRange(min=0, min_open=True),
+    default=None,
+    help="Stop before the next call once provider-reported spend reaches this amount.",
+)
 @click.option("--temperature", type=float, default=None)
 @click.option("--heartbeat-seconds", type=click.FloatRange(min=0), default=20.0)
 @click.option(
@@ -221,7 +252,7 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     default="INFO",
 )
 @click.option("--json-logs", is_flag=True, help="Write structured JSON logs to stderr.")
-def main(log_level: str, json_logs: bool, **options: object) -> None:
+def main(log_level: str, json_logs: bool, **options: Any) -> None:
     """Extract devices, performance, processing, and stability from one study."""
 
     configure_logging(level=log_level, json_output=json_logs)

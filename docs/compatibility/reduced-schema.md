@@ -47,13 +47,13 @@ processing conditions, protocol identity, and ordered stability checkpoints.
 - `cells`: the validated reduced rows;
 - `mappings`: each rich source kind and ID mapped to its reduced row index; and
 - `issues`: explicit conversion limitations such as incompatible units, ambiguous
-  metrics, dangling links, uncollapsed identity links, and stability retained in notes.
+  metrics, dangling references, and stability retained in notes.
 
 ## Why the reverse direction is not deterministic
 
 A reduced cell does not retain enough information to reconstruct stable rich entity
 identifiers, multiple measurement protocols for one device, ordered stability
-checkpoints, complete evidence, or cross-window candidate identity. Converting it
+checkpoints, complete evidence, or the pre-assembly source-claim ledger. Converting it
 back could therefore create only a partial rich record; it cannot recover values that
 were never encoded. The authoritative ground truth should remain `StudyExtraction`.
 

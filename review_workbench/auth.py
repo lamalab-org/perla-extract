@@ -25,6 +25,26 @@ class AuthenticationError(PermissionError):
         self.status = status
 
 
+def _account_mapping(raw: str, variable: str) -> dict:
+    """Parse one account layer so deployments can add or rotate users independently."""
+
+    try:
+        loaded = json.loads(raw) if raw else {}
+    except json.JSONDecodeError as error:
+        raise ValueError(f"{variable} is not valid JSON") from error
+    if not isinstance(loaded, dict):
+        raise ValueError(f"{variable} must be a JSON object")
+    return loaded
+
+
+def clerk_key_allowed(publishable_key: str, deployment: str | None) -> bool:
+    """Prevent a development identity instance from serving a production deployment."""
+
+    return bool(publishable_key) and (
+        deployment != "production" or publishable_key.startswith("pk_live_")
+    )
+
+
 def hash_password(password: str, *, iterations: int = 600_000) -> str:
     """Return a portable PBKDF2 hash suitable for a Vercel environment value."""
     salt = secrets.token_bytes(16)
@@ -79,22 +99,18 @@ class InternalAuthenticator:
         self.session_secret = session_secret or os.environ.get(
             "REVIEW_SESSION_SECRET", ""
         )
-        try:
-            loaded = json.loads(raw_accounts) if raw_accounts else {}
-        except json.JSONDecodeError as error:
-            raise ValueError("REVIEW_INTERNAL_ACCOUNTS is not valid JSON") from error
-        if not isinstance(loaded, dict):
-            raise ValueError("REVIEW_INTERNAL_ACCOUNTS must be a JSON object")
-        raw_additions = os.environ.get("REVIEW_INTERNAL_ACCOUNT_ADDITIONS", "")
-        try:
-            additions = json.loads(raw_additions) if raw_additions else {}
-        except json.JSONDecodeError as error:
-            raise ValueError(
-                "REVIEW_INTERNAL_ACCOUNT_ADDITIONS is not valid JSON"
-            ) from error
-        if not isinstance(additions, dict):
-            raise ValueError("REVIEW_INTERNAL_ACCOUNT_ADDITIONS must be a JSON object")
-        loaded = {**loaded, **additions}
+        loaded = _account_mapping(raw_accounts, "REVIEW_INTERNAL_ACCOUNTS")
+        for variable in (
+            "REVIEW_INTERNAL_ACCOUNT_ADDITIONS",
+            "REVIEW_INTERNAL_ACCOUNT_OVERRIDES",
+        ):
+            loaded.update(_account_mapping(os.environ.get(variable, ""), variable))
+        for variable in sorted(
+            name
+            for name in os.environ
+            if name.startswith("REVIEW_INTERNAL_ACCOUNT_LAYER_")
+        ):
+            loaded.update(_account_mapping(os.environ[variable], variable))
         self.accounts = {
             str(email).strip().lower(): account
             for email, account in loaded.items()
@@ -242,7 +258,8 @@ class ClerkAuthenticator:
             return authorization.removeprefix("Bearer ").strip()
         cookie = SimpleCookie()
         cookie.load(headers.get("Cookie", ""))
-        return cookie.get("__session").value if cookie.get("__session") else ""
+        session = cookie.get("__session")
+        return session.value if session is not None else ""
 
     @lru_cache(maxsize=64)
     def _user(self, user_id: str) -> dict:
@@ -261,8 +278,11 @@ class ClerkAuthenticator:
         token = self._token(headers)
         if not token:
             raise AuthenticationError("Sign in is required")
+        jwks = self.jwks
+        if jwks is None:
+            raise AuthenticationError("Authentication is not configured", 503)
         try:
-            signing_key = self.jwks.get_signing_key_from_jwt(token)
+            signing_key = jwks.get_signing_key_from_jwt(token)
             claims = jwt.decode(
                 token,
                 signing_key.key,
@@ -294,3 +314,57 @@ class ClerkAuthenticator:
             "name": name or email,
             "role": "admin" if email in self.admin_emails else "reviewer",
         }
+
+
+class InternalOrClerkAuthenticator:
+    """Keep fixed accounts usable while reviewers move to recoverable sign-in.
+
+    Internal sessions use HS256 and Clerk sessions use its asymmetric signing keys,
+    so the JWT header can route a request without attempting both providers. This is
+    intentionally a migration boundary: Clerk supplies email recovery, while existing
+    project passwords continue to work until every reviewer has moved across.
+    """
+
+    def __init__(
+        self,
+        internal: InternalAuthenticator | None = None,
+        clerk: ClerkAuthenticator | None = None,
+    ):
+        self.internal = internal or InternalAuthenticator()
+        self.clerk = clerk or ClerkAuthenticator()
+
+    @property
+    def configured(self) -> bool:
+        return self.internal.configured and self.clerk.configured
+
+    def public_config(self) -> dict[str, object]:
+        config = self.clerk.public_config()
+        return {**config, "enabled": self.configured, "mode": "internal_or_clerk"}
+
+    def login(self, email: str, password: str) -> tuple[str, dict[str, str]]:
+        """Preserve the fixed-account login endpoint during the migration."""
+
+        return self.internal.login(email, password)
+
+    def authenticate(self, headers) -> dict[str, str]:
+        """Route bearer sessions by their signed algorithm; Clerk also accepts cookies."""
+
+        token = self.internal._token(headers)
+        if not token:
+            return self._preserve_internal_identity(self.clerk.authenticate(headers))
+        try:
+            algorithm = jwt.get_unverified_header(token).get("alg")
+        except Exception as error:
+            raise AuthenticationError("The session is invalid or expired") from error
+        if algorithm == "HS256":
+            return self.internal.authenticate(headers)
+        return self._preserve_internal_identity(self.clerk.authenticate(headers))
+
+    def _preserve_internal_identity(self, user: dict[str, str]) -> dict[str, str]:
+        """Keep one review history when the same email changes sign-in provider."""
+
+        email = user.get("email", "").lower()
+        account = self.internal.accounts.get(email)
+        if not account:
+            return user
+        return {**user, "id": self.internal._user(email, account)["id"]}
