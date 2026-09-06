@@ -26,6 +26,14 @@ def _read(path: Path | None, *, required: bool = True) -> bytes | None:
     return None
 
 
+def _required(path: Path | None) -> bytes:
+    """Read a mandatory artifact and expose a non-optional type to callers."""
+
+    value = _read(path)
+    assert value is not None
+    return value
+
+
 def _admissible(run_dir: Path) -> None:
     """Reject a run that has not passed the evidence checks required for review."""
 
@@ -94,17 +102,19 @@ def import_run(
     app.import_paper(
         split,
         paper_id,
-        _read(main),
-        _read(run_dir / "extraction.json"),
-        supplement_bytes=_read(supplement, required=False),
-        document_bytes=_read(run_dir / "document.json"),
-        configuration_bytes=_read(configuration_path),
-        coverage_bytes=_read(
-            run_dir / "claim_coverage_audit.json", required=False
+        _required(main),
+        _required(run_dir / "extraction.json"),
+        supplement_bytes=_read(supplement, required=False) or b"",
+        document_bytes=_required(run_dir / "document.json"),
+        configuration_bytes=_required(configuration_path),
+        coverage_bytes=(
+            _read(run_dir / "claim_coverage_audit.json", required=False) or b""
         ),
-        refinement_bytes=_read(run_dir / "refinement_audit.json", required=False),
-        repair_bytes=_read(run_dir / "targeted_repair.json", required=False),
-        enrichment_bytes=_read(run_dir / "enrichment.json", required=False),
+        refinement_bytes=(
+            _read(run_dir / "refinement_audit.json", required=False) or b""
+        ),
+        repair_bytes=_read(run_dir / "targeted_repair.json", required=False) or b"",
+        enrichment_bytes=_read(run_dir / "enrichment.json", required=False) or b"",
         reviewer_id=reviewer_id,
     )
     logger.info("Imported {} into {}", paper_id, split)

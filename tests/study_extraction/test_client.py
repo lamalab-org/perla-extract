@@ -4,10 +4,12 @@ from types import SimpleNamespace
 import litellm
 import pytest
 
+from perla_extract.study_extraction.claims import ClaimLedger
 from perla_extract.study_extraction.client import (
     ModelBudgetExceeded,
     ModelCallError,
     ModelClient,
+    _request_artifact,
     _strict_schema,
 )
 from perla_extract.study_extraction.models import PaperMetadata, StudyExtraction
@@ -23,6 +25,31 @@ def empty_result() -> dict:
         stability_tests=[],
         unresolved_notes=[],
     ).model_dump(mode="json")
+
+
+def test_multimodal_request_artifact_retains_hash_but_not_pixels():
+    body = {
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "inspect"},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": "data:image/png;base64,cGl4ZWxz"},
+                    },
+                ],
+            }
+        ]
+    }
+
+    artifact = _request_artifact(body)
+
+    assert artifact["messages"][0]["content"][1]["image_url"]["url"].startswith(
+        "embedded-image:sha256="
+    )
+    assert "cGl4ZWxz" not in json.dumps(artifact)
+    assert body["messages"][0]["content"][1]["image_url"]["url"].endswith("cGl4ZWxz")
 
 
 def test_only_validated_model_results_enter_cache(tmp_path, monkeypatch):
@@ -273,6 +300,86 @@ def test_pydantic_failure_gets_one_error_aware_repair(tmp_path, monkeypatch):
     assert client.calls[0]["attempt_count"] == 2
     assert client.calls[0]["usage"]["total_tokens"] == 30
     assert client.calls[0]["usage"]["cost"] == 0.02
+
+
+def test_domain_validation_participates_in_repair_and_cache_validation(
+    tmp_path, monkeypatch
+):
+    """Callers can reject schema-valid omissions before they enter the cache."""
+
+    client = ModelClient(cache_dir=tmp_path / "cache", output_dir=tmp_path / "out")
+    corrected = empty_result()
+    corrected["paper"]["title"] = "Expected paper"
+    responses = iter([(empty_result(), {}), (corrected, {})])
+    monkeypatch.setattr(client, "_live", lambda *_args: next(responses))
+
+    def require_title(result):
+        if result.paper.title != "Expected paper":
+            raise ValueError("response omitted the expected paper title")
+
+    result = client.complete(
+        kind="test",
+        slug="domain-repair",
+        model="test/model",
+        system="system",
+        prompt="prompt",
+        response_model=StudyExtraction,
+        max_output_tokens=100,
+        reasoning_effort=None,
+        validate=require_title,
+        validation_contract="title-v1",
+    )
+
+    assert result.paper.title == "Expected paper"
+    assert client.calls[0]["validation_repair"] is True
+
+
+def test_model_validator_error_is_logged_and_repaired(tmp_path, monkeypatch):
+    """A ValueError stored in Pydantic context must not break failure logging."""
+
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        heartbeat_seconds=0,
+    )
+    invalid = {
+        "objects": [],
+        "claims": [
+            {
+                "claim_id": "claim-1",
+                "kind": "identity",
+                "label": "unsupported link",
+                "subject_object_ids": ["missing-object"],
+                "scope": "target",
+                "raw_value": None,
+                "shared_targets": [],
+                "evidence": [{"block_id": "main-p1-b1", "quote": "reported device"}],
+            }
+        ],
+    }
+    responses = iter([(invalid, {}), ({"objects": [], "claims": []}, {})])
+    monkeypatch.setattr(client, "_live", lambda *_args: next(responses))
+
+    result = client.complete(
+        kind="source_claim_ledger",
+        slug="claims",
+        model="test/model",
+        system="system",
+        prompt="prompt",
+        response_model=ClaimLedger,
+        max_output_tokens=100,
+        reasoning_effort=None,
+    )
+
+    assert result == ClaimLedger(objects=[], claims=[])
+    repair_request = json.loads(
+        (tmp_path / "out/requests/claims.validation-repair.request.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    repair_instruction = repair_request["messages"][-1]["content"]
+    assert "unknown experimental objects" in repair_instruction
+    assert '"ctx"' not in repair_instruction
 
 
 def test_model_call_budget_counts_provider_requests_not_cache_reads(

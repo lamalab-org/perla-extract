@@ -34,7 +34,14 @@ from .evidence import (
     repair_noncontiguous_citation_quotes,
     repair_unique_citation_pointers,
 )
-from .guidance import DEVICE_FAMILY_POLICY, SHARED_QUANTITY_POLICY
+from .finalization import remove_unsupported_optional_claims
+from .guidance import (
+    COMPOSITION_BOUNDARY_POLICY,
+    DEVICE_FAMILY_POLICY,
+    EVIDENCE_INTERPRETATION_POLICY,
+    RECORD_BOUNDARY_POLICY,
+    SHARED_QUANTITY_POLICY,
+)
 from .logging import logger
 from .models import (
     STUDY_SCHEMA_VERSION,
@@ -77,6 +84,9 @@ observation, population statistic, and stability specimen. Connect records only 
 the evidence supports the connection.
 
 {DEVICE_FAMILY_POLICY}
+{RECORD_BOUNDARY_POLICY}
+{COMPOSITION_BOUNDARY_POLICY}
+{EVIDENCE_INTERPRETATION_POLICY}
 {SHARED_QUANTITY_POLICY}
 Rules:
 - Preserve a device as one coherent object. Do not create one device per metric,
@@ -141,6 +151,9 @@ assembled. Return a neutral ledger of experimental objects and source claims, no
 draft StudyExtraction.
 
 {DEVICE_FAMILY_POLICY}
+{RECORD_BOUNDARY_POLICY}
+{COMPOSITION_BOUNDARY_POLICY}
+{EVIDENCE_INTERPRETATION_POLICY}
 Rules:
 - Describe what each source-mentioned object is used for: a reusable device design,
   individual device, processing arm, characterization specimen, population,
@@ -899,6 +912,8 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         "pre_repair_validation.json",
         "pre_repair_claim_coverage_audit.json",
         "targeted_repair.json",
+        "pre_conservative_extraction.json",
+        "conservative_finalization.json",
     ):
         (config.output_dir / name).unlink(missing_ok=True)
     for directory in ("draft_windows", "refinement_audits"):
@@ -1031,6 +1046,25 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             config.output_dir / "refinement_selection.json", refinement_selection
         )
     write_json_atomic(config.output_dir / "citation_repairs.json", citation_repairs)
+
+    pre_finalization = extraction
+    extraction, conservative_finalization = remove_unsupported_optional_claims(
+        extraction, blocks
+    )
+    if conservative_finalization["removal_count"]:
+        write_json_atomic(
+            config.output_dir / "pre_conservative_extraction.json",
+            pre_finalization.model_dump(mode="json"),
+        )
+        logger.warning(
+            "Removed {} unsupported optional atomic claim(s); full details remain "
+            "in the finalization audit",
+            conservative_finalization["removal_count"],
+        )
+    write_json_atomic(
+        config.output_dir / "conservative_finalization.json",
+        conservative_finalization,
+    )
 
     write_json_atomic(
         config.output_dir / "extraction.json", extraction.model_dump(mode="json")
@@ -1232,6 +1266,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         **counts,
         "validation_issue_count": len(validation["issues"]),
         "citation_repair_count": citation_repairs["repair_count"],
+        "conservative_removal_count": conservative_finalization["removal_count"],
         "refinement_calls": sum(
             call.get("kind") in {"study_refinement", "evidence_window_refinement"}
             for call in client.calls

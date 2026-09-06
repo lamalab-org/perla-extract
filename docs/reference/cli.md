@@ -88,6 +88,17 @@ Because providers report cost only after a response, one response can cross the 
 threshold; if cost is omitted, a configured monetary limit fails closed before the next
 request. A cache hit has zero new usage in the aggregate `usage` object;
 the original call metadata remains under `calls[].cached_response_usage` for provenance.
+
+## Revalidate cached runs
+
+```bash
+perla-extract-revalidate --runs-dir results/review-v1
+```
+
+This reapplies the current deterministic evidence checks to existing
+`extraction.json` and `document.json` files without contacting a model. It refreshes
+only `validation.json`, `grounded_values.json`, and their derived report counts/status;
+the extraction, requests, usage, and cost provenance remain unchanged.
 Requests contain parser-produced text and tables only. No option enables rendered-page
 or vision-model input in this workflow.
 

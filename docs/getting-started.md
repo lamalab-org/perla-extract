@@ -54,11 +54,19 @@ with `OPENAI_API_KEY`. Choose another backend with its provider-prefixed model n
 standard credential, such as `openrouter/...` with `OPENROUTER_API_KEY` or
 `anthropic/...` with `ANTHROPIC_API_KEY`.
 
+OpenRouter can also route an eligible model through a provider key stored in its BYOK
+settings. The local process still receives only `OPENROUTER_API_KEY`; do not place the
+upstream OpenAI key in a project environment file as well. Pin the BYOK credential if
+shared OpenRouter capacity must never be used, then verify `is_byok` in OpenRouter's
+generation record with a small run before starting a costly cohort. BYOK configuration
+and fallback behavior are documented by
+[OpenRouter](https://openrouter.ai/docs/guides/overview/auth/byok).
+
 ## Read the result
 
 | Artifact | Purpose |
 | --- | --- |
-| `extraction.json` | Complete rich study result, including records that need review |
+| `extraction.json` | Final rich study result after audited source-grounding safeguards |
 | `grounded_values.json` | Conservative subset of reported values that passed local source checks |
 | `validation.json` | Evidence, identifier, and relationship findings |
 | `claim_ledger.json` | Experimental objects and atomic source claims collected before record construction |
@@ -67,6 +75,8 @@ standard credential, such as `openrouter/...` with `OPENROUTER_API_KEY` or
 | `claim_coverage_audit.json` | Covered, possible, unmatched, context, and unsupported-record findings |
 | `targeted_repair.json` | Evidence-local repair worklist, proposed-record counts, quality gates, and decision |
 | `citation_repairs.json` | Audited non-contiguous-quote and unique-pointer repairs |
+| `conservative_finalization.json` | Exact unsupported optional claims removed after repair, with paths and reasons |
+| `pre_conservative_extraction.json` | Complete pre-finalization candidate, written only when a claim was removed |
 | `document.json` | Model-facing scientific evidence blocks with source and page locations |
 | `report.json` | Status, counts, usage, cost, cache information, and failures |
 | `run_configuration.json` | Non-secret configuration and source fingerprints |

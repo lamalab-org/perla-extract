@@ -44,22 +44,26 @@ def prepare(output: Path) -> Path:
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
-    for relative, contents in saved_vercel_files.items():
-        target = vercel_dir / relative
+    for saved_relative, contents in saved_vercel_files.items():
+        target = vercel_dir / saved_relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(contents)
 
-    for relative in (
+    for relative_file in (
         "review_workbench/__init__.py",
         "review_workbench/auth.py",
         "review_workbench/ground_truth_export.py",
+        "review_workbench/expert_comparison.py",
+        "review_workbench/feedback_export.py",
         "review_workbench/review_storage.py",
         "review_workbench/server.py",
         "review_workbench/spreadsheet_review.py",
         "review_workbench/study_review.py",
         "src/perla_extract/__init__.py",
+        "src/perla_extract/pydantic_model_reduced.py",
         "src/perla_extract/study_extraction/__init__.py",
         "src/perla_extract/study_extraction/artifacts.py",
+        "src/perla_extract/study_extraction/compatibility.py",
         "src/perla_extract/study_extraction/evidence.py",
         "src/perla_extract/study_extraction/enrichment.py",
         "src/perla_extract/study_extraction/identifiers.py",
@@ -68,7 +72,7 @@ def prepare(output: Path) -> Path:
         "src/perla_extract/study_extraction/validation.py",
         "src/perla_extract/study_extraction/vocabulary.py",
     ):
-        copy_file(relative, output)
+        copy_file(relative_file, output)
 
     copy_file("review_workbench/api/index.py", output, "api/index.py")
     shutil.copytree(

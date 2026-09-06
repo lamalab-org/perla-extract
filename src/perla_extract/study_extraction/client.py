@@ -18,6 +18,7 @@ from .logging import logger
 from .progress import heartbeat
 
 ResponseModel = TypeVar("ResponseModel", bound=BaseModel)
+MessageContent = str | list[dict[str, object]]
 VALIDATION_REPAIR_VERSION = 1
 RETRYABLE_ERRORS = (
     litellm.RateLimitError,
@@ -82,6 +83,32 @@ def _canonical(value: object) -> bytes:
     return json.dumps(
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
     ).encode("utf-8")
+
+
+def _request_artifact(body: dict) -> dict:
+    """Keep image request provenance without duplicating base64 pixels on disk."""
+
+    artifact = deepcopy(body)
+
+    def redact(value: object) -> None:
+        if isinstance(value, dict):
+            image_url = value.get("image_url")
+            if isinstance(image_url, dict):
+                url = image_url.get("url")
+                if isinstance(url, str) and url.startswith("data:image/"):
+                    image_url["url"] = (
+                        "embedded-image:sha256="
+                        f"{hashlib.sha256(url.encode('utf-8')).hexdigest()}"
+                        f";encoded_characters={len(url)}"
+                    )
+            for child in value.values():
+                redact(child)
+        elif isinstance(value, list):
+            for child in value:
+                redact(child)
+
+    redact(artifact)
+    return artifact
 
 
 def _validation_repair_request(
@@ -226,7 +253,7 @@ class ModelClient:
         *,
         model: str,
         system: str,
-        prompt: str,
+        prompt: MessageContent,
         schema: dict,
         max_output_tokens: int,
         reasoning_effort: str | None,
@@ -329,12 +356,14 @@ class ModelClient:
         slug: str,
         model: str,
         system: str,
-        prompt: str,
+        prompt: MessageContent,
         response_model: type[ResponseModel],
         max_output_tokens: int,
         reasoning_effort: str | None,
         request_schema: dict[str, object] | None = None,
         decode: Callable[[object], object] | None = None,
+        validate: Callable[[ResponseModel], None] | None = None,
+        validation_contract: str | None = None,
     ) -> ResponseModel:
         """Return a schema-valid response from cache or a bounded live request.
 
@@ -343,6 +372,10 @@ class ModelClient:
         raised, so downstream code never receives an unvalidated partial object.
         """
 
+        if (validate is None) != (validation_contract is None):
+            raise ValueError(
+                "validate and validation_contract must be provided together"
+            )
         schema = _strict_schema(response_model, request_schema)
         body = self._request(
             model=model,
@@ -358,13 +391,14 @@ class ModelClient:
                 {
                     "request_sha256": request_hash,
                     "validation_repair_version": VALIDATION_REPAIR_VERSION,
+                    "validation_contract": validation_contract,
                 }
             )
         ).hexdigest()
         request_path = self.output_dir / "requests" / f"{slug}.request.json"
         cache_path = self.cache_dir / f"{cache_key}.json"
         failure_path = self.output_dir / "requests" / f"{slug}.failure.json"
-        write_json_atomic(request_path, body)
+        write_json_atomic(request_path, _request_artifact(body))
         logger.info(
             "Prepared model call {} (model={}, request={})",
             kind,
@@ -384,12 +418,15 @@ class ModelClient:
             try:
                 cached = json.loads(cache_path.read_text(encoding="utf-8"))
                 validated = response_model.model_validate(cached["result"])
+                if validate:
+                    validate(validated)
             except (
                 OSError,
                 TypeError,
                 json.JSONDecodeError,
                 KeyError,
                 ValidationError,
+                ValueError,
             ):
                 logger.warning("Ignoring invalid model cache entry {}", cache_path.name)
             else:
@@ -424,9 +461,11 @@ class ModelClient:
                 attempt_usage.append(usage)
                 decoded_result = decode(raw_result) if decode else raw_result
                 validated = response_model.model_validate(decoded_result)
+                if validate:
+                    validate(validated)
             except (TypeError, ValueError) as exc:
                 validation_errors: list[dict[str, Any]] = (
-                    exc.errors(include_url=False)
+                    exc.errors(include_url=False, include_context=False)
                     if isinstance(exc, ValidationError)
                     else [{"type": type(exc).__name__, "message": str(exc)}]
                 )
@@ -448,7 +487,7 @@ class ModelClient:
                         self.output_dir
                         / "requests"
                         / f"{slug}.validation-repair.request.json",
-                        current_body,
+                        _request_artifact(current_body),
                     )
                     validation_repair = True
             except ModelCallError as exc:

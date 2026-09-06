@@ -7,6 +7,30 @@ const COLLECTIONS = {
   population_statistics: "Population statistics",
   stability_tests: "Stability tests",
 };
+const FIGURE_CLASSES = {
+  jv: "J–V",
+  eqe: "EQE / integrated EQE",
+  population_statistics: "Population statistics",
+  stability: "Stability",
+  characterization: "Characterization",
+  device_structure: "Device structure",
+  other: "Other",
+};
+const FIGURE_DATA_PRESENTATIONS = {
+  no_numeric_data: "No numeric data",
+  explicit_numeric_labels: "Explicit printed numbers",
+  inset_table: "Inset table",
+  plotted_values_only: "Plotted values only",
+  mixed: "Mixed",
+  uncertain: "Uncertain",
+};
+const FIGURE_EXTRACTION_FEASIBILITY = {
+  straightforward: "Straightforward from printed values",
+  partly_straightforward: "Some values are straightforward",
+  requires_digitization: "Requires plot digitization",
+  not_applicable: "No numeric extraction applicable",
+  uncertain: "Uncertain",
+};
 const RECORD_GUIDANCE = {
   device_families: {
     census: "One complete photovoltaic design defined by its layer materials, absorber composition, and topology. A treatment condition, thickness, champion, scan, or mean is not another family when that design is unchanged. Characterization-only films and partial stacks are not device families.",
@@ -83,6 +107,8 @@ const state = {
   studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
   pdfObjectUrl: null, pdfDisplayed: null, censusDraft: null, editingCensus: false, loadingPaperId: null,
   annotationView: "current", authMode: "local", clerk: null,
+  figureCensusProposals: {}, figureProposalPromises: new Map(),
+  figureQueueIndex: 0, figureReviewFilter: "unreviewed", censusDirty: false,
 };
 
 const LAPTOP_LAYOUT = "(max-width: 1400px)";
@@ -277,6 +303,7 @@ async function loadSession() {
   const payload = await request("/api/session");
   state.user = payload.user;
   $("reviewer").textContent = payload.user.name;
+  $("download-all-feedback").hidden = payload.user.role !== "admin";
 }
 
 function loadScript(src, attributes = {}) {
@@ -383,6 +410,23 @@ function savePaperCache() {
   catch (error) { console.warn("Could not cache the paper list", error); }
 }
 
+async function loadFigureCensusProposal(paperId) {
+  if (Object.hasOwn(state.figureCensusProposals, paperId)) return;
+  try {
+    const payload = await request(`/api/figure-census-proposal/${encodeURIComponent(paperId)}`);
+    state.figureCensusProposals[paperId] = payload.proposal || null;
+  } catch {
+    state.figureProposalPromises.delete(paperId);
+  }
+}
+
+function ensureFigureCensusProposal(paperId) {
+  if (!state.figureProposalPromises.has(paperId)) {
+    state.figureProposalPromises.set(paperId, loadFigureCensusProposal(paperId));
+  }
+  return state.figureProposalPromises.get(paperId);
+}
+
 async function loadPapers() {
   const status = $("paper-load-status");
   if (!state.paperId) setPaperListOpen(true, false);
@@ -449,7 +493,10 @@ async function selectPaper(paperId) {
   }
   let bundle;
   try {
-    bundle = await request(`/api/paper/${state.split}/${encodeURIComponent(paperId)}`);
+    [bundle] = await Promise.all([
+      request(`/api/paper/${state.split}/${encodeURIComponent(paperId)}`),
+      ensureFigureCensusProposal(paperId),
+    ]);
   } catch (error) {
     if (state.bundle) setStatus(`Could not open ${paperId}: ${error.message}`, true);
     else {
@@ -470,6 +517,9 @@ async function selectPaper(paperId) {
   state.activeCitation = null;
   state.censusDraft = null;
   state.editingCensus = false;
+  state.figureQueueIndex = 0;
+  state.figureReviewFilter = "unreviewed";
+  state.censusDirty = false;
   if (state.pdfObjectUrl) URL.revokeObjectURL(state.pdfObjectUrl);
   state.pdfObjectUrl = null;
   state.pdfDisplayed = null;
@@ -556,32 +606,393 @@ function renderQualityArtifacts() {
   $("quality-artifacts").replaceChildren(...sections);
 }
 
+function proposalPanelId(panel, index) {
+  return panel.proposal_panel_id || [
+    panel.image_sha256 || panel.caption_block_id || "proposal",
+    panel.figure_number || "figure",
+    panel.panel_label || "panel",
+    index,
+  ].join(":").slice(0, 200);
+}
+
+function normalizeFigurePanels(panels, fromProposal = false) {
+  return (panels || []).map((panel, index) => ({
+    ...structuredClone(panel),
+    proposal_panel_id: panel.proposal_panel_id || (fromProposal ? proposalPanelId(panel, index) : null),
+    review_status: panel.review_status || (fromProposal ? "unreviewed" : "legacy_unspecified"),
+  }));
+}
+
+function censusDraftKey() {
+  return `perla-census-draft:${state.user.id}:${state.split}:${state.paperId}`;
+}
+
+function censusDraftSource() {
+  return state.bundle.manifest?.seed_sha256 || `revision:${state.bundle.revision}`;
+}
+
+function restoreLocalCensusDraft() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(censusDraftKey()) || "null");
+    if (saved?.source !== censusDraftSource() || !saved?.draft) return null;
+    state.censusDirty = true;
+    return structuredClone(saved.draft);
+  } catch {
+    try { localStorage.removeItem(censusDraftKey()); } catch { /* Storage is optional. */ }
+    return null;
+  }
+}
+
+function persistLocalCensusDraft() {
+  if (!state.censusDraft) return;
+  try {
+    localStorage.setItem(censusDraftKey(), JSON.stringify({
+      source: censusDraftSource(),
+      draft: state.censusDraft,
+    }));
+    $("figure-draft-status").textContent = "Draft saved in this browser.";
+  } catch {
+    $("figure-draft-status").textContent = "This browser could not save the draft. Save the census before leaving.";
+  }
+}
+
+function clearLocalCensusDraft() {
+  try { localStorage.removeItem(censusDraftKey()); } catch { /* The server copy is saved. */ }
+  state.censusDirty = false;
+}
+
 function savedCensusDraft() {
+  const localDraft = restoreLocalCensusDraft();
+  if (localDraft) return localDraft;
   const audit = state.bundle?.summary.inventory_audits?.[state.user.id];
-  return audit ? {
-    expected_counts: structuredClone(audit.expected_counts || {}),
-    main_text_figure_census: structuredClone(audit.main_text_figure_census || {}),
-    missing_or_ambiguous: audit.missing_or_ambiguous || "",
-  } : {
+  const proposal = state.figureCensusProposals[state.paperId];
+  if (audit) {
+    const figureCensus = structuredClone(audit.main_text_figure_census || {});
+    if (!figureCensus.panels?.length && proposal?.panels?.length) {
+      figureCensus.panels = normalizeFigurePanels(proposal.panels, true);
+    } else {
+      figureCensus.panels = normalizeFigurePanels(figureCensus.panels);
+    }
+    return {
+      expected_counts: structuredClone(audit.expected_counts || {}),
+      main_text_figure_census: figureCensus,
+      missing_or_ambiguous: audit.missing_or_ambiguous || "",
+    };
+  }
+  return {
     expected_counts: {},
-    main_text_figure_census: {},
+    main_text_figure_census: proposal ? {
+      figures_reviewed: 0,
+      schema_relevant_figures: 0,
+      figure_only_records: 0,
+      figure_only_atomic_values: 0,
+      panels: normalizeFigurePanels(proposal.panels, true),
+      notes: "",
+    } : {},
     missing_or_ambiguous: "",
   };
 }
 
-function updateCensusDraft() {
+function emptyFigurePanel() {
+  return {
+    proposal_panel_id: null, review_status: "unreviewed",
+    figure_number: "", panel_label: "", page: state.source === "main" ? state.page : null, caption_block_id: null, figure_class: "other",
+    description: "", x_axis_label: null, y_axis_label: null,
+    data_presentation: "uncertain", extraction_feasibility: "uncertain",
+    schema_relevant: false, figure_only_records: 0, figure_only_atomic_values: 0,
+  };
+}
+
+function figurePanelField(label, field, control) {
+  control.dataset.figureField = field;
+  return element("label", {}, [element("span", { text: label }), control]);
+}
+
+function figurePanelSelect(label, field, value, options) {
+  const select = element("select", { properties: { value }, dataset: { figureField: field } },
+    Object.entries(options).map(([key, text]) => element("option", { properties: { value: key, selected: key === value }, text })));
+  return element("label", {}, [element("span", { text: label }), select]);
+}
+
+function proposedFigurePanel(panel) {
+  const proposals = state.figureCensusProposals[state.paperId]?.panels || [];
+  return proposals.find((candidate, index) =>
+    proposalPanelId(candidate, index) === panel.proposal_panel_id) || proposals.find((candidate) =>
+    String(candidate.figure_number).toLowerCase() === String(panel.figure_number).toLowerCase()
+    && String(candidate.panel_label || "").toLowerCase() === String(panel.panel_label || "").toLowerCase());
+}
+
+function renderVisualCandidateEvidence(panel) {
+  const proposal = proposedFigurePanel(panel);
+  const candidates = proposal?.visual_candidates || [];
+  const notes = proposal?.visual_notes || [];
+  if (!candidates.length && !notes.length) return null;
+  const rows = candidates.map((candidate) => element("li", {}, [
+    element("strong", { text: `${candidate.name}: ${candidate.raw_value}` }),
+    element("span", {
+      text: candidate.text_comparison === "exact_text_match"
+        ? "Also found verbatim in extracted text; do not count it as figure-only."
+        : "Not found verbatim in extracted text; compare the figure with the paper before counting it.",
+    }),
+  ]));
+  return element("aside", { className: "figure-visual-evidence" }, [
+    element("strong", { text: "Values visibly printed in this panel" }),
+    ...(rows.length ? [element("ul", {}, rows)] : []),
+    ...notes.map((note) => element("p", { text: note })),
+  ]);
+}
+
+function readFigurePanel(card, reviewStatus = card.dataset.reviewStatus) {
+  const value = (name) => card.querySelector(`[data-figure-field="${name}"]`);
+  const optionalText = (name) => value(name).value.trim() || null;
+  return {
+    proposal_panel_id: card.dataset.proposalPanelId || null,
+    review_status: reviewStatus,
+    figure_number: value("figure_number").value.trim(),
+    panel_label: value("panel_label").value.trim(),
+    page: value("page").value ? Number(value("page").value) : null,
+    caption_block_id: card.dataset.captionBlockId || null,
+    figure_class: value("figure_class").value,
+    description: value("description").value.trim(),
+    x_axis_label: optionalText("x_axis_label"),
+    y_axis_label: optionalText("y_axis_label"),
+    data_presentation: value("data_presentation").value,
+    extraction_feasibility: value("extraction_feasibility").value,
+    schema_relevant: value("schema_relevant").checked,
+    figure_only_records: Number(value("figure_only_records").value),
+    figure_only_atomic_values: Number(value("figure_only_atomic_values").value),
+  };
+}
+
+function figureCensusTotals(panels) {
+  const figureNumbers = new Set(panels.map((panel) => panel.figure_number.trim().toLowerCase()).filter(Boolean));
+  const relevantFigures = new Set(panels.filter((panel) => panel.schema_relevant)
+    .map((panel) => panel.figure_number.trim().toLowerCase()).filter(Boolean));
+  return {
+    figures_reviewed: figureNumbers.size,
+    schema_relevant_figures: relevantFigures.size,
+    figure_only_records: panels.reduce((total, panel) => total + panel.figure_only_records, 0),
+    figure_only_atomic_values: panels.reduce((total, panel) => total + panel.figure_only_atomic_values, 0),
+  };
+}
+
+function renderFigureCensusSummary() {
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  const totals = panels.length ? figureCensusTotals(panels) : state.censusDraft.main_text_figure_census;
+  const legacy = !panels.length && !state.censusDraft.main_text_figure_census.panels?.length
+    && (totals.figures_reviewed || totals.schema_relevant_figures || totals.figure_only_records || totals.figure_only_atomic_values);
+  const proposal = state.figureCensusProposals[state.paperId];
+  const savedPanels = state.bundle?.summary.inventory_audits?.[state.user.id]
+    ?.main_text_figure_census?.panels;
+  const unresolvedCaptions = proposal?.captions_without_region?.length || 0;
+  const proposalPrefix = proposal && !savedPanels?.length
+    ? `${proposal.proposal_method === "caption_and_figure" ? "Figure-and-caption" : "Caption"}-derived draft—check every entry against the rendered figure. `
+    : "";
+  const localizationWarning = unresolvedCaptions
+    ? `${unresolvedCaptions} numbered figure caption${unresolvedCaptions === 1 ? " has" : "s have"} no automatic image match; add ${unresolvedCaptions === 1 ? "it" : "them"} manually. `
+    : "";
+  $("figure-census-summary").textContent = proposalPrefix + localizationWarning + (legacy
+    ? `Earlier aggregate census: ${totals.figures_reviewed || 0} figures · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only records · ${totals.figure_only_atomic_values || 0} figure-only values. Add subfigures to replace it.`
+    : `${panels.length} subfigure${panels.length === 1 ? "" : "s"} · ${totals.figures_reviewed || 0} main figure${totals.figures_reviewed === 1 ? "" : "s"} · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only record${totals.figure_only_records === 1 ? "" : "s"} · ${totals.figure_only_atomic_values || 0} figure-only value${totals.figure_only_atomic_values === 1 ? "" : "s"}`);
+}
+
+function figurePanelNeedsAttention(panel) {
+  const proposal = proposedFigurePanel(panel);
+  return panel.data_presentation === "uncertain"
+    || panel.extraction_feasibility === "uncertain"
+    || (proposal?.visual_candidates || []).some((candidate) => candidate.text_comparison !== "exact_text_match");
+}
+
+function filteredFigureIndexes() {
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  return panels.flatMap((panel, index) => {
+    const matches = state.figureReviewFilter === "all"
+      || (state.figureReviewFilter === "unreviewed" && ["unreviewed", "legacy_unspecified"].includes(panel.review_status))
+      || (state.figureReviewFilter === "attention" && figurePanelNeedsAttention(panel))
+      || (state.figureReviewFilter === "schema_relevant" && panel.schema_relevant);
+    return matches ? [index] : [];
+  });
+}
+
+function checkedFigurePanelCount() {
+  return (state.censusDraft.main_text_figure_census.panels || [])
+    .filter((panel) => ["confirmed", "corrected"].includes(panel.review_status)).length;
+}
+
+function renderFigureReviewToolbar() {
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  const visible = filteredFigureIndexes();
+  const position = visible.indexOf(state.figureQueueIndex);
+  $("figure-review-toolbar").hidden = !panels.length;
+  const queuePosition = position >= 0
+    ? `${position + 1} of ${visible.length} shown`
+    : visible.length
+      ? `editing current · ${visible.length} unchecked remain`
+      : "queue complete";
+  $("figure-review-progress").textContent = `${checkedFigurePanelCount()} of ${panels.length} checked · ${queuePosition}`;
+  $("figure-review-filter").value = state.figureReviewFilter;
+  $("previous-figure-panel").disabled = position <= 0;
+  $("next-figure-panel").disabled = position < 0 || position >= visible.length - 1;
+  if (!state.censusDirty) $("figure-draft-status").textContent = "Changes are kept in this browser until you save the census.";
+}
+
+function selectFigurePanel(index) {
+  updateCensusDraft();
+  state.figureQueueIndex = index;
+  renderFigurePanels();
+}
+
+function moveFigurePanel(offset) {
+  const visible = filteredFigureIndexes();
+  const position = visible.indexOf(state.figureQueueIndex);
+  const next = visible[position + offset];
+  if (next !== undefined) selectFigurePanel(next);
+}
+
+function confirmCurrentFigurePanel() {
+  const current = state.censusDraft.main_text_figure_census.panels[state.figureQueueIndex];
+  if (!current) return;
+  const invalid = document.querySelector("[data-figure-panel] :invalid");
+  if (invalid) {
+    invalid.reportValidity();
+    invalid.focus();
+    return;
+  }
+  const status = current.review_status === "corrected" ? "corrected" : "confirmed";
+  updateCensusDraft({ panelStatus: status, persist: true });
+  const remaining = filteredFigureIndexes();
+  if (state.figureReviewFilter === "unreviewed" && !remaining.length) {
+    state.figureReviewFilter = "all";
+    renderFigurePanels();
+    return;
+  }
+  const next = remaining.find((index) => index > state.figureQueueIndex) ?? remaining[0];
+  if (next !== undefined) state.figureQueueIndex = next;
+  renderFigurePanels();
+}
+
+function renderFigurePanels() {
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  const visible = filteredFigureIndexes();
+  if (!visible.includes(state.figureQueueIndex)) state.figureQueueIndex = visible[0] ?? 0;
+  const panel = panels[state.figureQueueIndex];
+  if (!panel || !visible.length) {
+    const message = panels.length
+      ? "No subfigures match this filter. Choose All subfigures to revisit checked panels."
+      : "No subfigures are listed. Add one when the paper contains a numbered main-text figure.";
+    $("figure-panels").replaceChildren(element("p", { className: "figure-review-empty", text: message }));
+    renderFigureReviewToolbar();
+    renderFigureCensusSummary();
+    return;
+  }
+  const index = state.figureQueueIndex;
+    const relevant = element("input", {
+      properties: { type: "checkbox", checked: panel.schema_relevant },
+      dataset: { figureField: "schema_relevant" },
+    });
+    const visualEvidence = renderVisualCandidateEvidence(panel);
+    const proposal = proposedFigurePanel(panel);
+    const preview = proposal?.figure_bbox_pdf && panel.proposal_panel_id
+      ? element("figure", { className: "figure-panel-preview" }, [
+        element("img", {
+          attributes: {
+            src: `/api/figure-panel-image/${encodeURIComponent(state.paperId)}/${encodeURIComponent(panel.proposal_panel_id)}?split=${encodeURIComponent(state.split)}`,
+            alt: `Cropped view of Figure ${panel.figure_number}${panel.panel_label || ""}`,
+            loading: "lazy",
+          },
+        }),
+        element("figcaption", { text: "Localized crop from the main paper" }),
+      ])
+      : null;
+    const statusLabel = panel.review_status === "confirmed" ? "Confirmed" : panel.review_status === "corrected" ? "Corrected" : "Unchecked";
+    const card = element("section", { className: "figure-panel-card", dataset: { figurePanel: String(index), captionBlockId: panel.caption_block_id || "", proposalPanelId: panel.proposal_panel_id || "", reviewStatus: panel.review_status } }, [
+      element("div", { className: "figure-panel-heading" }, [
+        element("div", {}, [
+          element("strong", { text: `${panel.figure_number ? `Figure ${panel.figure_number}` : "New subfigure"}${panel.panel_label ? panel.panel_label : ""} · ${FIGURE_CLASSES[panel.figure_class]}` }),
+          element("span", { text: panel.proposal_panel_id ? "Model suggestion" : "Added by reviewer" }),
+        ]),
+        element("span", { className: `figure-review-state ${panel.review_status}`, text: statusLabel }),
+      ]),
+      element("div", { className: "figure-panel-fields" }, [
+        ...(preview ? [preview] : []),
+        element("div", { className: "figure-panel-grid compact" }, [
+          figurePanelField("Main figure number", "figure_number", element("input", { properties: { value: panel.figure_number, required: true, placeholder: "2" } })),
+          figurePanelField("Panel label", "panel_label", element("input", { properties: { value: panel.panel_label, placeholder: "a (optional)" } })),
+          figurePanelField("PDF page", "page", element("input", { properties: { type: "number", min: "1", value: panel.page ?? "", placeholder: "optional" } })),
+          figurePanelSelect("Figure class", "figure_class", panel.figure_class, FIGURE_CLASSES),
+        ]),
+        figurePanelField("What the panel shows", "description", element("textarea", { properties: { value: panel.description, required: true, rows: 2, placeholder: "Brief scientific description" } })),
+        element("div", { className: "figure-panel-grid" }, [
+          figurePanelField("X-axis label", "x_axis_label", element("input", { properties: { value: panel.x_axis_label || "", placeholder: "As printed; optional" } })),
+          figurePanelField("Y-axis label", "y_axis_label", element("input", { properties: { value: panel.y_axis_label || "", placeholder: "As printed; optional" } })),
+          figurePanelSelect("Numeric presentation", "data_presentation", panel.data_presentation, FIGURE_DATA_PRESENTATIONS),
+          figurePanelSelect("Extraction effort", "extraction_feasibility", panel.extraction_feasibility, FIGURE_EXTRACTION_FEASIBILITY),
+        ]),
+        element("label", { className: "figure-relevance" }, [relevant, element("span", { text: "Contains information represented by the extraction schema" })]),
+        ...(visualEvidence ? [visualEvidence] : []),
+        element("div", { className: "figure-panel-grid compact figure-loss-counts" }, [
+          figurePanelField("Figure-only records", "figure_only_records", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_records } })),
+          figurePanelField("Figure-only atomic values", "figure_only_atomic_values", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_atomic_values } })),
+        ]),
+        ...(panel.page ? [element("button", { properties: { type: "button" }, text: "Show figure in paper", events: { click: () => {
+          setWorkspaceView("split");
+          navigatePdf("main", panel.page);
+        } } })] : []),
+        element("button", { className: "primary confirm-figure-panel", properties: { type: "button" }, text: "Confirm and next", events: { click: confirmCurrentFigurePanel } }),
+        element("button", { className: "danger-link", properties: { type: "button" }, text: "Remove subfigure", events: { click: () => {
+          updateCensusDraft();
+          state.censusDraft.main_text_figure_census.panels.splice(index, 1);
+          state.censusDirty = true;
+          persistLocalCensusDraft();
+          renderFigurePanels();
+        } } }),
+      ]),
+    ]);
+    card.querySelectorAll("input, textarea, select").forEach((input) => input.addEventListener("input", () => {
+      if (input.dataset.figureField === "schema_relevant" && !input.checked) {
+        card.querySelector('[data-figure-field="figure_only_records"]').value = 0;
+        card.querySelector('[data-figure-field="figure_only_atomic_values"]').value = 0;
+      }
+      updateCensusDraft({ panelStatus: "corrected", persist: true });
+      card.dataset.reviewStatus = "corrected";
+      const badge = card.querySelector(".figure-review-state");
+      badge.className = "figure-review-state corrected";
+      badge.textContent = "Corrected";
+      renderFigureCensusSummary();
+      renderFigureReviewToolbar();
+    }));
+  $("figure-panels").replaceChildren(card);
+  renderFigureReviewToolbar();
+  renderFigureCensusSummary();
+}
+
+function updateCensusDraft({ panelStatus = null, persist = false } = {}) {
   if (!document.querySelector("[data-count]")) return;
+  const card = document.querySelector("[data-figure-panel]");
+  if (card && state.censusDraft.main_text_figure_census.panels[state.figureQueueIndex]) {
+    state.censusDraft.main_text_figure_census.panels[state.figureQueueIndex] = readFigurePanel(card, panelStatus || card.dataset.reviewStatus);
+  }
+  const panels = state.censusDraft.main_text_figure_census.panels || [];
+  const previousFigures = state.censusDraft?.main_text_figure_census || {};
+  const totals = panels.length ? figureCensusTotals(panels) : {
+    figures_reviewed: previousFigures.figures_reviewed || 0,
+    schema_relevant_figures: previousFigures.schema_relevant_figures || 0,
+    figure_only_records: previousFigures.figure_only_records || 0,
+    figure_only_atomic_values: previousFigures.figure_only_atomic_values || 0,
+  };
   state.censusDraft = {
     expected_counts: Object.fromEntries([...document.querySelectorAll("[data-count]")].map((input) => [input.dataset.count, Number(input.value)])),
     main_text_figure_census: {
-      figures_reviewed: Number($("figures-reviewed").value),
-      schema_relevant_figures: Number($("schema-relevant-figures").value),
-      figure_only_records: Number($("figure-only-records").value),
-      figure_only_atomic_values: Number($("figure-only-values").value),
+      ...totals,
+      panels,
       notes: $("figure-census-notes").value,
     },
     missing_or_ambiguous: $("inventory-notes").value,
   };
+  if (persist) {
+    state.censusDirty = true;
+    persistLocalCensusDraft();
+  }
 }
 
 function renderInventoryForm() {
@@ -601,13 +1012,13 @@ function renderInventoryForm() {
     ]));
   $("inventory-counts").replaceChildren(...inputs);
   const figures = draft.main_text_figure_census;
-  $("figures-reviewed").value = figures.figures_reviewed ?? 0;
-  $("schema-relevant-figures").value = figures.schema_relevant_figures ?? 0;
-  $("figure-only-records").value = figures.figure_only_records ?? 0;
-  $("figure-only-values").value = figures.figure_only_atomic_values ?? 0;
+  figures.panels ||= [];
   $("figure-census-notes").value = figures.notes || "";
   $("inventory-notes").value = draft.missing_or_ambiguous;
-  for (const input of document.querySelectorAll("#census-form input, #census-form textarea")) input.addEventListener("input", updateCensusDraft);
+  renderFigurePanels();
+  for (const input of document.querySelectorAll("#inventory-counts input, #figure-census-notes, #inventory-notes")) {
+    input.addEventListener("input", () => updateCensusDraft({ persist: true }));
+  }
   $("submit-audit").textContent = hasAudit() ? "Update census" : "Save census";
 }
 
@@ -639,8 +1050,24 @@ function renderInventoryComparison() {
   const figures = audit.main_text_figure_census;
   comparison.push(figures
     ? element("section", { className: "figure-census-result" }, [
-      element("h4", { text: "Main-text figure gap" }),
+      element("h4", { text: "Main-text subfigure census" }),
       element("p", { text: `${figures.schema_relevant_figures} of ${figures.figures_reviewed} reviewed figures contained schema-relevant information. A text-only extraction would miss ${figures.figure_only_records} record${figures.figure_only_records === 1 ? "" : "s"} and ${figures.figure_only_atomic_values} atomic value${figures.figure_only_atomic_values === 1 ? "" : "s"} reported only in those figures.` }),
+      ...((figures.panels || []).length ? [element("div", { className: "saved-figure-panels" }, figures.panels.map((panel) => element("article", {}, [
+        element("div", { className: "saved-figure-panel-heading" }, [
+          element("strong", { text: `Figure ${panel.figure_number}${panel.panel_label || ""} · ${FIGURE_CLASSES[panel.figure_class] || humanLabel(panel.figure_class)}` }),
+          panel.page ? element("button", { properties: { type: "button" }, text: `Show page ${panel.page}`, events: { click: () => navigatePdf("main", panel.page) } }) : null,
+        ]),
+        element("p", { text: panel.description }),
+        element("p", { className: "muted", text: [
+          panel.review_status === "confirmed" ? "confirmed by reviewer" : panel.review_status === "corrected" ? "corrected by reviewer" : "review status predates panel tracking",
+          panel.page ? `page ${panel.page}` : null,
+          panel.x_axis_label ? `x: ${panel.x_axis_label}` : null,
+          panel.y_axis_label ? `y: ${panel.y_axis_label}` : null,
+          FIGURE_DATA_PRESENTATIONS[panel.data_presentation],
+          FIGURE_EXTRACTION_FEASIBILITY[panel.extraction_feasibility],
+          panel.schema_relevant ? `${panel.figure_only_records} figure-only records · ${panel.figure_only_atomic_values} figure-only values` : "Outside schema",
+        ].filter(Boolean).join(" · ") }),
+      ])))] : [element("p", { className: "muted", text: "This earlier census contains aggregate totals only. Add subfigures when updating it." })]),
       ...(figures.notes ? [element("p", { className: "callout", text: figures.notes })] : []),
     ])
     : element("p", { className: "callout", text: "This legacy inventory did not record a main-text figure census." }));
@@ -959,9 +1386,12 @@ function clearCitation() {
 
 async function navigatePdf(source, page) {
   clearCitation();
+  const sourceChanged = source !== state.source;
   state.source = source;
   const requestedPage = Number(page);
-  state.page = Number.isFinite(requestedPage) ? Math.max(1, Math.min(state.pageCount, requestedPage)) : 1;
+  state.page = Number.isFinite(requestedPage)
+    ? Math.max(1, sourceChanged ? requestedPage : Math.min(state.pageCount, requestedPage))
+    : 1;
   $("pdf-source").value = state.source;
   try {
     if (await renderPdf()) setStatus(`Showing ${state.source === "main" ? "the main paper" : "the supplement"}, page ${state.page}.`);
@@ -1049,6 +1479,9 @@ function renderReviewQueue() {
   const attention = attentionReasons(entry);
   const flags = attention.map((reason) => element("span", { className: "attention-flag", text: reason.label, attributes: { title: reason.explanation } }));
   const context = relatedContext(entry);
+  const mergeCandidates = state.bundle.ground_truth[entry.kind]
+    .map((item, index) => ({ item, index }))
+    .filter(({ index }) => index !== entry.index);
   const actions = element("div", { className: "queue-actions" }, [
     element("div", { className: "decision-actions" }, [
       element("button", { className: decision === "verified" ? "active" : "", text: "All fields match source  V", attributes: { title: DECISION_GUIDANCE.verified }, events: { click: () => decideEntry(entry, "verified") } }),
@@ -1056,8 +1489,10 @@ function renderReviewQueue() {
       element("button", { className: decision === "needs_correction" ? "active" : "", text: "Correct fields  C", attributes: { title: DECISION_GUIDANCE.needs_correction }, events: { click: () => beginCorrection(entry) } }),
     ]),
     element("div", { className: "record-management-actions" }, [
-      element("span", { className: "muted", text: "Record structure" }),
-      element("button", { text: "Copy as missing record", events: { click: () => copyMissingRecord(entry) } }),
+      element("span", { className: "muted", text: "Fix record structure" }),
+      ...(mergeCandidates.length ? [element("button", { text: "Merge duplicate", events: { click: () => beginMerge(entry, mergeCandidates) } })] : []),
+      element("button", { text: "Change record type", events: { click: () => beginReclassification(entry) } }),
+      element("button", { text: "Duplicate and edit", events: { click: () => copyMissingRecord(entry) } }),
       element("button", { className: "remove-extra", text: "Remove extra record", events: { click: () => beginRemoval(entry) } }),
     ]),
     ...(context.device ? [element("button", {
@@ -1258,9 +1693,34 @@ async function renderPdf() {
 
 async function submitAudit() {
   updateCensusDraft();
+  const panels = state.censusDraft.main_text_figure_census.panels;
+  const incompleteIndex = panels.findIndex((panel) => !panel.figure_number.trim() || !panel.description.trim());
+  if (incompleteIndex >= 0) {
+    state.figureReviewFilter = "all";
+    state.figureQueueIndex = incompleteIndex;
+    renderFigurePanels();
+    setStatus("Complete the figure number and description for this subfigure before saving.", true);
+    return;
+  }
+  const unchecked = state.censusDraft.main_text_figure_census.panels
+    .filter((panel) => !["confirmed", "corrected"].includes(panel.review_status));
+  if (unchecked.length) {
+    state.figureReviewFilter = "unreviewed";
+    state.figureQueueIndex = state.censusDraft.main_text_figure_census.panels.indexOf(unchecked[0]);
+    renderFigurePanels();
+    setStatus(`Check ${unchecked.length} remaining subfigure${unchecked.length === 1 ? "" : "s"} before saving the census.`, true);
+    return;
+  }
+  const invalid = document.querySelector("#census-form :invalid");
+  if (invalid) {
+    invalid.reportValidity();
+    invalid.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
   const draft = state.censusDraft;
   try {
     state.bundle = await request(`/api/inventory-audits/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ base_revision: state.bundle.revision, review_scope_sources: state.bundle.sources, ...draft }) });
+    clearLocalCensusDraft();
     state.censusDraft = savedCensusDraft();
     state.editingCensus = false;
     renderStudy();
@@ -1451,6 +1911,79 @@ function copyMissingRecord(entry) {
   openRecord(entry.kind, null, entry.item, "copy");
 }
 
+function beginMerge(entry, candidates) {
+  state.structuralEntry = entry;
+  $("merge-target").replaceChildren(...candidates.map(({ item, index }) => element("option", {
+    text: `${entityTitle(entry.kind, item, index)} · ${entityId(entry.kind, item, index)}`,
+    properties: { value: entityId(entry.kind, item, index) },
+  })));
+  $("merge-note").value = "";
+  $("merge-status").textContent = "";
+  $("merge-dialog").showModal();
+}
+
+async function confirmMerge() {
+  const entry = state.structuralEntry;
+  const note = $("merge-note").value.trim();
+  if (!entry || !note) {
+    $("merge-status").textContent = "Explain why both records describe the same scientific object.";
+    return;
+  }
+  const button = $("confirm-merge");
+  button.disabled = true;
+  try {
+    state.bundle = await request(`/api/record-merges/${state.split}/${encodeURIComponent(state.paperId)}`, {
+      method: "POST",
+      body: JSON.stringify({
+        collection: entry.kind,
+        source_record_id: entityId(entry.kind, entry.item, entry.index),
+        target_record_id: $("merge-target").value,
+        note,
+        base_revision: state.bundle.revision,
+      }),
+    });
+    $("merge-dialog").close();
+    state.queueKey = null;
+    renderStudy();
+    setStatus("Merged the duplicate and moved its explicit links to the retained record.");
+  } catch (error) {
+    $("merge-status").textContent = error.message;
+  } finally { button.disabled = false; }
+}
+
+function beginReclassification(entry) {
+  const references = recordReferences(entry);
+  if (references.length) {
+    setStatus(`Relink the ${references.length} dependent record${references.length === 1 ? "" : "s"} before changing this record type.`, true);
+    beginRemoval(entry);
+    return;
+  }
+  state.structuralEntry = entry;
+  $("reclassify-target").replaceChildren(...Object.entries(COLLECTIONS)
+    .filter(([kind]) => kind !== entry.kind)
+    .map(([value, text]) => element("option", { text: singularCollection(value), properties: { value } })));
+  $("reclassify-dialog").showModal();
+}
+
+function continueReclassification() {
+  const entry = state.structuralEntry;
+  if (!entry) return;
+  const targetKind = $("reclassify-target").value;
+  const draft = newRecordDraft(targetKind);
+  draft.evidence = structuredClone(entry.item.evidence || []);
+  $("reclassify-dialog").close();
+  openRecord(targetKind, null, draft, "reclassify");
+  state.edit.source = {
+    kind: entry.kind,
+    recordId: entityId(entry.kind, entry.item, entry.index),
+  };
+  $("record-title").textContent = `Change ${singularCollection(entry.kind).toLowerCase()} to ${singularCollection(targetKind).toLowerCase()}`;
+  $("record-dialog-help").textContent = "Complete the corrected record. Saving removes the old record and adds this one in a single validated revision.";
+  $("save-record").textContent = "Save new record type";
+  $("mutation-note-label").textContent = "Reason for changing record type";
+  $("mutation-note-help").textContent = "Required: explain why the original record type was wrong.";
+}
+
 async function addMissingRecord() {
   document.querySelector(".add-record-menu").open = false;
   const button = $("add-record");
@@ -1495,11 +2028,17 @@ async function saveRecord() {
     if (!blockId || !quote) throw new Error("Choose an evidence block and provide an exact quote.");
     const citation = { block_id: blockId, quote };
     attachMissingEvidence(value, citation);
-    const payload = { action: index == null ? "add" : "replace", path: `/${pointerPart(kind)}/${index == null ? "-" : index}`, value, evidence: [citation], note: $("mutation-note").value, base_revision: state.bundle.revision };
-    state.bundle = await request(`/api/mutations/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify(payload) });
+    const note = $("mutation-note").value.trim();
+    const reclassifying = state.edit.intent === "reclassify";
+    if (reclassifying && !note) throw new Error("Explain why the original record type was wrong.");
+    const payload = reclassifying
+      ? { source_collection: state.edit.source.kind, source_record_id: state.edit.source.recordId, target_collection: kind, value, evidence: [citation], note, base_revision: state.bundle.revision }
+      : { action: index == null ? "add" : "replace", path: `/${pointerPart(kind)}/${index == null ? "-" : index}`, value, evidence: [citation], note, base_revision: state.bundle.revision };
+    const endpoint = reclassifying ? "record-reclassifications" : "mutations";
+    state.bundle = await request(`/api/${endpoint}/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify(payload) });
     $("record-dialog").close();
     renderStudy();
-    setStatus(index == null ? `Added the missing ${singularCollection(kind).toLowerCase()} and revalidated the study.` : "Correction saved and the complete study schema revalidated.");
+    setStatus(reclassifying ? "Changed the record type and revalidated the complete study." : index == null ? `Added the missing ${singularCollection(kind).toLowerCase()} and revalidated the study.` : "Correction saved and the complete study schema revalidated.");
   } catch (error) { $("dialog-status").textContent = error.message; }
 }
 
@@ -1606,6 +2145,12 @@ function annotationSubject(event) {
   if (event.kind === "mutation") return event.details?.undoes_event_id
     ? "Reversed an earlier saved correction"
     : `${event.action} ${event.path}`;
+  if (event.kind === "structural_mutation") {
+    if (event.details?.undoes_event_id) return "Reversed an earlier structural correction";
+    if (event.details?.operation === "merge_records") return `Merged ${event.details.source_record_id} into ${event.details.target_record_id}`;
+    if (event.details?.operation === "reclassify_record") return `Changed ${event.details.source_record_id} from ${humanLabel(event.details.source_collection)} to ${humanLabel(event.details.target_collection)}`;
+    return "Structural record correction";
+  }
   if (event.kind === "spreadsheet_review") {
     if (event.details?.undoes_event_id) return "Reversed an earlier reviewed workbook";
     const corrections = event.details?.changed_fields?.length || 0;
@@ -1658,13 +2203,13 @@ function annotationActionHelp(paper, event, canUndo, current) {
   if (event.kind === "stage_complete") return "Review milestones remain in the audit history and are not field edits.";
   if (event.kind === "review_reset") return "The reset cleared reviewer-specific progress without changing the shared scientific data.";
   if (paper.undone_event_ids?.includes(event.event_id)) return "This correction has already been undone.";
-  if (["mutation", "spreadsheet_review"].includes(event.kind)) return "This older correction cannot be safely undone because the affected record changed afterward.";
+  if (["mutation", "structural_mutation", "spreadsheet_review"].includes(event.kind)) return "This older correction cannot be safely undone because the affected record changed afterward.";
   return "This saved action is part of the audit history and has no reversible data change.";
 }
 
 function annotationEvent(paper, event) {
   const current = annotationIsCurrent(paper, event);
-  const stateLabel = ["mutation", "spreadsheet_review"].includes(event.kind)
+  const stateLabel = ["mutation", "structural_mutation", "spreadsheet_review"].includes(event.kind)
     ? annotationMutationState(paper, event)
     : event.kind === "record_decision"
       ? current === true ? "current decision" : "no longer current"
@@ -1933,6 +2478,13 @@ async function downloadReviewerProgress() {
   saveBlob(blob, `perla-${state.user.id}-${state.split}-annotations.json`);
 }
 
+async function downloadAllFeedback() {
+  await downloadResponse(
+    "/api/reviewer-feedback-export",
+    "perla-reviewer-feedback.zip",
+  );
+}
+
 function saveBlob(blob, filename) {
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
@@ -1989,7 +2541,15 @@ async function uploadReviewWorkbook(file) {
     );
     renderStudy();
     await loadReviewerProgress();
-    setStatus("Reviewed workbook saved as one validated revision. The import is visible in My edits & undo.");
+    const importMode = state.bundle.events.at(-1)?.details?.workbook_import_mode;
+    setStatus(
+      state.bundle.workbook_archived === false
+        ? "Review changes were saved, but the original Excel file could not be archived. Please keep your local copy and contact the administrator."
+        : importMode === "comments_only_from_older_workbook"
+          ? "Excel comments and the original workbook were saved. Because the workbook was based on an older paper revision, its value edits were not applied."
+          : "Reviewed workbook saved as one validated revision and archived. The import is visible in My edits & undo.",
+      state.bundle.workbook_archived === false,
+    );
   } catch (error) {
     setStatus(error.message, true);
   } finally {
@@ -2059,6 +2619,24 @@ document.querySelectorAll("[data-workspace-view]").forEach((button) => button.ad
 $("paper-filter").addEventListener("input", renderPapers);
 $("submit-audit").addEventListener("click", submitAudit);
 $("edit-census").addEventListener("click", editSavedCensus);
+$("figure-review-filter").addEventListener("change", (event) => {
+  updateCensusDraft();
+  state.figureReviewFilter = event.target.value;
+  state.figureQueueIndex = filteredFigureIndexes()[0] ?? 0;
+  renderFigurePanels();
+});
+$("previous-figure-panel").addEventListener("click", () => moveFigurePanel(-1));
+$("next-figure-panel").addEventListener("click", () => moveFigurePanel(1));
+$("add-figure-panel").addEventListener("click", () => {
+  updateCensusDraft();
+  state.censusDraft.main_text_figure_census.panels.push(emptyFigurePanel());
+  state.figureReviewFilter = "all";
+  state.figureQueueIndex = state.censusDraft.main_text_figure_census.panels.length - 1;
+  state.censusDirty = true;
+  persistLocalCensusDraft();
+  renderFigurePanels();
+  $("figure-panels").scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
 $("retry-pdf").addEventListener("click", () => navigatePdf(state.source, state.page));
 $("pdf-source").addEventListener("change", (event) => navigatePdf(event.target.value, 1));
 $("previous-page").addEventListener("click", () => navigatePdf(state.source, state.page - 1));
@@ -2084,6 +2662,8 @@ $("close-record").addEventListener("click", () => $("record-dialog").close());
 $("cancel-record").addEventListener("click", () => $("record-dialog").close());
 $("save-record").addEventListener("click", saveRecord);
 $("remove-record").addEventListener("click", removeRecord);
+$("confirm-merge").addEventListener("click", confirmMerge);
+$("continue-reclassify").addEventListener("click", continueReclassification);
 $("reload-paper").addEventListener("click", reloadLatestPaper);
 $("reload-paper-dialog").addEventListener("click", reloadLatestPaper);
 $("search-evidence").addEventListener("click", searchEvidence);
@@ -2127,6 +2707,12 @@ $("download-supplement-pdf").addEventListener("click", (event) => runDownload(
   () => downloadPaper("supplement"),
 ));
 $("open-annotations").addEventListener("click", openReviewerProgress);
+$("download-all-feedback").addEventListener("click", (event) => runDownload(
+  event.currentTarget,
+  "Preparing all reviewer feedback…",
+  "Downloaded all reviewer feedback.",
+  downloadAllFeedback,
+));
 $("show-current-annotations").addEventListener("click", () => setAnnotationView("current"));
 $("show-annotation-history").addEventListener("click", () => setAnnotationView("history"));
 $("reset-annotations").addEventListener("click", resetReviewerProgress);
@@ -2142,6 +2728,15 @@ $("close-import").addEventListener("click", () => $("import-dialog").close());
 $("cancel-import").addEventListener("click", () => $("import-dialog").close());
 $("import-form").addEventListener("submit", importPaper);
 document.addEventListener("keydown", (event) => {
+  if (state.tab === "inventory" && !document.querySelector("dialog[open]") && !["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName)) {
+    const key = event.key.toLowerCase();
+    if (key === "arrowright" || key === "j") moveFigurePanel(1);
+    else if (key === "arrowleft" || key === "k") moveFigurePanel(-1);
+    else if (key === "v") confirmCurrentFigurePanel();
+    else return;
+    event.preventDefault();
+    return;
+  }
   if (state.tab !== "records" || $("record-dialog").open || ["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName)) return;
   const entry = currentEntry().entry;
   if (!entry) return;
@@ -2203,6 +2798,7 @@ $("internal-sign-in").addEventListener("submit", async (event) => {
     if (!response.ok) throw new Error(payload.error || "Sign-in failed.");
     localStorage.setItem(REVIEW_TOKEN_KEY, payload.token);
     state.user = payload.user;
+    $("download-all-feedback").hidden = payload.user.role !== "admin";
     $("login-password").value = "";
     showWorkbench();
     await startApp();

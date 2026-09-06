@@ -161,7 +161,9 @@ def test_export_is_deterministic_and_refuses_conflicting_overwrites(
     assert first == second
     assert first.manifest.revision == bundle["revision"]
     assert first.manifest.frozen_at == bundle["events"][-1]["timestamp"]
-    assert first.manifest.artifact_format_version == 2
+    assert first.manifest.artifact_format_version == 3
+    assert first.manifest.evidence_version == 1
+    assert len(first.manifest.evidence_document_sha256) == 64
     assert first.manifest.study_schema_version == STUDY_SCHEMA_VERSION
     assert first.manifest.study_schema_sha256 == study_schema_sha256()
     assert first.manifest.review.uncertain_record_keys == []

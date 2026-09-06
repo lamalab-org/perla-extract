@@ -282,6 +282,7 @@ tags
 *.pdf
 extraction_cache
 output
+/results/figure-census-*/
 
 # LiteLLM cache
 .litellm_cache/

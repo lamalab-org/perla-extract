@@ -113,6 +113,15 @@ exact record as unsupported. The candidate is accepted only when validation and
 semantic claim-coverage issues do not increase. The gate intentionally does not
 reward a larger value count: unsupported extra records are defects, not recall.
 
+After the model passes, deterministic finalization handles the narrow case that no
+repair can make source-grounded: an optional atomic value or material-form label that
+does not occur in its cited evidence. A claim is removed only when the remaining
+Pydantic model is valid, the total evidence-issue count falls, and no issue category
+increases. `pre_conservative_extraction.json` retains the complete candidate and
+`conservative_finalization.json` records the exact path, reason, and removed content.
+Required records, invalid links, unknown evidence blocks, and ambiguous semantic
+relationships are never discarded by this step.
+
 ## Evidence and atomic values
 
 PERLA divides parser blocks into stable sentence, table-row, or bounded text spans.
@@ -127,6 +136,19 @@ separate values. Device-specific process coordinates belong to
 `IndividualDevice.reported_properties`; stage-specific aging conditions belong to
 `StabilityCheckpoint.conditions`.
 
+All semantic passes use the same record-boundary rules. A device area is a device
+property, not a population; a group comparison is not an aggregate unless the paper
+reports a statistic over multiple devices; and an aged film prepared only for
+characterization is not a photovoltaic stability test. Processing solvents do not
+become layers, surface modifiers do not silently become part of a bulk formula, and a
+concentration or treatment label alone does not create another device family.
+
+The extractor also separates reporting from inference. It retains atomic qualitative
+claims such as `over 80%`, but does not replace them with a more precise estimate.
+Likely scan directions, circuit conditions, and shared specimen identities remain
+unknown unless the supplied text or table states them. Such cases are review items,
+not ordinary extracted facts.
+
 This workflow is text-only. It never sends rendered PDF pages or images to a model.
 Formula recovery is limited to what the selected parser preserves in text and tables;
 unreadable chemistry remains a review item rather than a vision-assisted guess.
@@ -135,7 +157,8 @@ unreadable chemistry remains a review item rather than a vision-assisted guess.
 
 The run directory contains the complete scientific parse in `document.json`, the
 claim ledger and its schema, grounding decisions, the assembled draft, validation
-results, claim-coverage audits, repair artifacts, and the final `extraction.json`.
+results, claim-coverage audits, repair and finalization artifacts, and the final
+`extraction.json`.
 Raw requests and failures remain under `requests/`.
 
 Every response must first satisfy the provider's strict JSON Schema and then the richer
@@ -153,8 +176,9 @@ another request when the provider did not return usable cost information.
 Parser and ledger failures fail open where safe: the full scientific evidence remains
 available, and an empty ledger falls back to complete source evidence. A failed initial
 study assembly produces a valid empty extraction with an unresolved note. A failed optional
-reconciliation or rejected repair preserves the preceding valid result. Local
-validation never silently drops unsupported scientific records.
+reconciliation or rejected repair preserves the preceding valid result. The only
+deterministic removal is an unsupported optional atomic claim, and both the unabridged
+candidate and an exact removal audit are retained.
 
 After validation, compact semantic passes interpret composition and processing roles
 from existing records and their cited evidence. These enrichments write separate

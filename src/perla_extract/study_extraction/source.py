@@ -441,6 +441,24 @@ def _native_typography_blocks(
     return blocks
 
 
+@lru_cache(maxsize=1)
+def _docling_runtime() -> tuple[Any, Any, Any]:
+    """Load Docling's converter and local layout models once per batch process.
+
+    A converter owns large ML models. Recreating it for every paper and supplement is
+    expensive and can trigger needless remote registry checks even though extraction
+    is sequential. Returning the Docling enums with it keeps those dependency-specific
+    objects inside this adapter.
+    """
+
+    try:
+        from docling.document_converter import DocumentConverter
+        from docling_core.types.doc import ContentLayer, DocItemLabel
+    except ImportError as exc:
+        raise RuntimeError("Docling is not installed; reinstall perla-extract") from exc
+    return DocumentConverter(), ContentLayer, DocItemLabel
+
+
 def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
     """Adapt Docling structure without leaking its object model downstream.
 
@@ -451,13 +469,8 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
     typography blocks support subscripts and superscripts that conversion may normalize.
     """
 
-    try:
-        from docling.document_converter import DocumentConverter
-        from docling_core.types.doc import ContentLayer, DocItemLabel
-    except ImportError as exc:
-        raise RuntimeError("Docling is not installed; reinstall perla-extract") from exc
-
-    document = DocumentConverter().convert(str(path)).document
+    converter, ContentLayer, DocItemLabel = _docling_runtime()
+    document = converter.convert(str(path)).document
     layout_items: list[dict[str, Any]] = []
     items = document.iterate_items(
         included_content_layers={ContentLayer.BODY, ContentLayer.FURNITURE}

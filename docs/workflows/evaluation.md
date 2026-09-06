@@ -51,7 +51,8 @@ the predicted, truth, and matched counts when aggregating reports.
 ## Reviewer uncertainty
 
 A record marked `uncertain` at final adjudication is not a positive or negative label.
-The format-2 ground-truth manifest stores those record keys as an abstention mask.
+The format-3 ground-truth manifest stores those record keys as an abstention mask and
+binds the truth revision to the evidence-document version used during review.
 Certain truth records are matched first; a remaining prediction that matches an
 uncertain record is excluded from both precision and recall. The report lists every
 masked prediction so abstention cannot silently improve a score.

@@ -37,6 +37,9 @@ Every scientific record carries one or more `EvidenceCitation` values. A citatio
 supplied block and contains an exact supporting passage. Every `ReportedValue.raw_value`
 must also occur in at least one cited block. A value assembled from multiple exact
 quotes is accepted only when their normalized contents join to the complete raw value.
+When a table prints a unit once in its header, an atomic row value may reuse that unit
+only from the same cited parser block. This establishes source presence; assigning the
+value to the correct column remains a semantic review question.
 Extraction validation and human corrections use the same conservative matcher, so
 Unicode normalization and harmless OCR spacing are accepted consistently at both
 boundaries without allowing text to join across surrounding word characters.
@@ -71,7 +74,9 @@ After extraction, `validate_study` checks:
 
 1. cited block identifiers exist;
 2. evidence quotes occur in those blocks after conservative Unicode and whitespace
-   normalization;
+   normalization, including an internal dash omitted by PDF text extraction while
+   preserving unary signs, and one corrupt non-ASCII font glyph at an explicitly
+   reported `±` separator;
 3. reported values occur in their cited evidence;
 4. source-reported material-form wording occurs in its cited evidence;
 5. top-level and nested identifiers are unique;
@@ -82,20 +87,31 @@ After extraction, `validate_study` checks:
 Pydantic additionally rejects non-finite normalized numbers, contradictory champion
 fields, and a stability `link_status` whose required identifiers are absent.
 
+Validation findings carry structured field/index locations internally. JSON paths are
+rendered only in public artifacts, so repair and finalization logic does not depend on
+parsing display strings.
+
 ```mermaid
 flowchart LR
-    A["extraction.json"] --> B["Pydantic structure"]
+    A["Model candidate"] --> B["Pydantic structure"]
     C["document.json"] --> D["Quote and value checks"]
     B --> D
+    D --> H["Audited removal of unsupported optional claims"]
+    H --> I["extraction.json"]
     D --> E["validation.json"]
     D --> F["grounded_values.json"]
-    A --> G["Full result remains unchanged"]
+    A --> G["pre_conservative_extraction.json"]
 ```
 
 `grounded_values.json` is a conservative value-level subset. It is useful when precision
 matters more than recall, but it is not a replacement for `extraction.json`: local text
 matching cannot prove that a supported value was attached to the correct scientific
 entity or that no device was missed.
+
+If finalization removes an unsupported optional claim, the exact original object is
+available in `pre_conservative_extraction.json` and its decision is recorded in
+`conservative_finalization.json`. This turns an otherwise invalid study into a safer
+review seed without erasing evidence of what the model attempted.
 
 ## What still requires review
 

@@ -8,7 +8,7 @@ import sys
 import tempfile
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import parse_qs, unquote, urlencode, urlparse
 from urllib.request import Request, urlopen
@@ -23,6 +23,12 @@ sys.path[:0] = [str(PROJECT_ROOT), str(PROJECT_ROOT / "src")]
 
 from perla_extract.study_extraction.artifacts import write_json_atomic  # noqa: E402
 from review_workbench.auth import clerk_key_allowed  # noqa: E402
+from review_workbench.expert_comparison import (  # noqa: E402
+    ComparisonReview,
+    ComparisonSource,
+    NativeUtilityReview,
+    PairwisePreferenceReview,
+)
 from review_workbench.review_storage import (  # noqa: E402
     ReviewPaperSource,
     ReviewRevision,
@@ -145,6 +151,7 @@ class BlobReviewStateStorage:
 
     source_prefix = "workbench/review-sources/"
     revision_prefix = "workbench/review-revisions/"
+    evidence_prefix = "workbench/review-evidence/"
 
     def __init__(self, blob: BlobStore):
         self.blob = blob
@@ -157,6 +164,9 @@ class BlobReviewStateStorage:
 
     def _revision_path(self, split: str, paper_id: str, revision: int) -> str:
         return f"{self._revision_prefix(split, paper_id)}{revision:08d}.json"
+
+    def _evidence_path(self, split: str, paper_id: str, version: int) -> str:
+        return f"{self.evidence_prefix}{split}/{paper_id}/{version:08d}.json"
 
     @staticmethod
     def _body(value: Any) -> bytes:
@@ -200,6 +210,24 @@ class BlobReviewStateStorage:
             latest = max(revisions, key=lambda item: str(item.get("pathname", "")))
             return ReviewRevision.model_validate_json(self.blob.download(latest))
         return self.load_source(split, paper_id).initial_revision
+
+    def create_evidence(
+        self, split: str, paper_id: str, version: int, document: Any
+    ) -> None:
+        """Store a parsed document immutably before a revision can reference it."""
+
+        self._put_exclusive(self._evidence_path(split, paper_id, version), document)
+
+    def load_evidence(self, split: str, paper_id: str, version: int) -> Any:
+        """Load the seed document or an immutable document added by a refresh."""
+
+        if version == 1:
+            return self.load_source(split, paper_id).document
+        pathname = self._evidence_path(split, paper_id, version)
+        item = self.blob.find(pathname)
+        if item is None:
+            raise FileNotFoundError(pathname)
+        return json.loads(self.blob.download(item))
 
     def compare_and_swap(
         self,
@@ -259,6 +287,133 @@ class BlobReviewStateStorage:
             return list(executor.map(head, paper_ids))
 
 
+class BlobComparisonStorage:
+    """Persist blinded comparison sources and reviewer drafts as immutable blobs."""
+
+    source_prefix = "workbench/comparison-sources/"
+    review_prefix = "workbench/comparison-reviews/"
+    utility_prefix = "workbench/comparison-utility/"
+    preference_prefix = "workbench/comparison-preferences/"
+
+    def __init__(self, blob: BlobStore):
+        self.blob = blob
+
+    @staticmethod
+    def _body(value: Any) -> bytes:
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode()
+
+    def _put_exclusive(self, pathname: str, value: Any) -> None:
+        try:
+            self.blob.put(
+                pathname, self._body(value), "application/json", overwrite=False
+            )
+        except Exception as error:
+            if self.blob.find(pathname) is not None:
+                raise FileExistsError(pathname) from error
+            raise
+
+    def _source_path(self, comparison_id: str) -> str:
+        return f"{self.source_prefix}{comparison_id}.json"
+
+    def _review_prefix(self, comparison_id: str, reviewer_id: str) -> str:
+        return f"{self.review_prefix}{comparison_id}/{reviewer_id}/"
+
+    def create(self, source: ComparisonSource) -> None:
+        try:
+            self._put_exclusive(
+                self._source_path(source.comparison_id), source.model_dump(mode="json")
+            )
+        except FileExistsError as error:
+            raise ValueError("comparison already exists") from error
+
+    def list_ids(self) -> list[str]:
+        return sorted(
+            Path(str(item["pathname"])).stem
+            for item in self.blob.list(self.source_prefix)
+            if str(item.get("pathname", "")).endswith(".json")
+        )
+
+    def load_source(self, comparison_id: str) -> ComparisonSource:
+        item = self.blob.find(self._source_path(comparison_id))
+        if item is None:
+            raise FileNotFoundError(comparison_id)
+        return ComparisonSource.model_validate_json(self.blob.download(item))
+
+    def load_review(
+        self, comparison_id: str, reviewer_id: str
+    ) -> ComparisonReview | None:
+        items = self.blob.list(self._review_prefix(comparison_id, reviewer_id))
+        if not items:
+            return None
+        latest = max(items, key=lambda item: str(item.get("pathname", "")))
+        return ComparisonReview.model_validate_json(self.blob.download(latest))
+
+    def compare_and_swap(
+        self, expected_revision: int, review: ComparisonReview
+    ) -> None:
+        current = self.load_review(review.comparison_id, review.reviewer_id)
+        current_revision = current.revision if current else 0
+        if (
+            current_revision != expected_revision
+            or review.revision != expected_revision + 1
+        ):
+            raise StaleRevisionError("comparison review changed in another session")
+        pathname = (
+            f"{self._review_prefix(review.comparison_id, review.reviewer_id)}"
+            f"{review.revision:08d}.json"
+        )
+        try:
+            self._put_exclusive(pathname, review.model_dump(mode="json"))
+        except FileExistsError as error:
+            raise StaleRevisionError(
+                "comparison review changed in another session"
+            ) from error
+
+    def _utility_path(self, comparison_id: str, reviewer_id: str) -> str:
+        return f"{self.utility_prefix}{comparison_id}/{reviewer_id}.json"
+
+    def load_utility(
+        self, comparison_id: str, reviewer_id: str
+    ) -> NativeUtilityReview | None:
+        item = self.blob.find(self._utility_path(comparison_id, reviewer_id))
+        return (
+            NativeUtilityReview.model_validate_json(self.blob.download(item))
+            if item
+            else None
+        )
+
+    def save_utility(self, review: NativeUtilityReview) -> None:
+        try:
+            self._put_exclusive(
+                self._utility_path(review.comparison_id, review.reviewer_id),
+                review.model_dump(mode="json"),
+            )
+        except FileExistsError as error:
+            raise ValueError("native utility review is already submitted") from error
+
+    def _preference_path(self, comparison_id: str, reviewer_id: str) -> str:
+        return f"{self.preference_prefix}{comparison_id}/{reviewer_id}.json"
+
+    def load_preference(
+        self, comparison_id: str, reviewer_id: str
+    ) -> PairwisePreferenceReview | None:
+        item = self.blob.find(self._preference_path(comparison_id, reviewer_id))
+        return (
+            PairwisePreferenceReview.model_validate_json(self.blob.download(item))
+            if item
+            else None
+        )
+
+    def save_preference(self, review: PairwisePreferenceReview) -> None:
+        try:
+            self._put_exclusive(
+                self._preference_path(review.comparison_id, review.reviewer_id),
+                review.model_dump(mode="json"),
+            )
+        except FileExistsError as error:
+            raise ValueError("pairwise preference is already submitted") from error
+
+
 class VercelReviewApplication(ReviewApplication):
     """Adapt the filesystem-oriented review core to Vercel's ephemeral runtime.
 
@@ -270,6 +425,7 @@ class VercelReviewApplication(ReviewApplication):
     users_pathname = "workbench/review-users.json"
     pdf_prefix = "papers/"
     review_pdf_prefix = "workbench/review-pdfs/"
+    review_workbook_prefix = "workbench/review-workbooks/"
 
     def __init__(self, blob: BlobStore, workspace: Path):
         self.blob = blob
@@ -279,7 +435,12 @@ class VercelReviewApplication(ReviewApplication):
         ground_truth, pdfs = workspace / "review_data", workspace / "pdfs"
         ground_truth.mkdir(parents=True, exist_ok=True)
         pdfs.mkdir(parents=True, exist_ok=True)
-        super().__init__(pdfs, ground_truth, BlobReviewStateStorage(blob))
+        super().__init__(
+            pdfs,
+            ground_truth,
+            BlobReviewStateStorage(blob),
+            BlobComparisonStorage(blob),
+        )
         self._hydrate()
 
     def _hydrate(self) -> None:
@@ -399,6 +560,70 @@ class VercelReviewApplication(ReviewApplication):
             or (None, paper_id, source) in self.remote_pdfs
         ]
 
+    def _archive_workbook_submission(
+        self, relative: Path, data: bytes, receipt: dict[str, Any]
+    ) -> None:
+        """Persist exact bytes and receipt before any workbook validation."""
+
+        pathname = f"{self.review_workbook_prefix}{relative.as_posix()}"
+        self.blob.put(
+            pathname,
+            data,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            overwrite=False,
+        )
+        self.blob.put(
+            str(PurePosixPath(pathname).with_suffix(".received.json")),
+            json.dumps(receipt, ensure_ascii=False, separators=(",", ":")).encode(),
+            "application/json",
+            overwrite=False,
+        )
+
+    def _record_workbook_outcome(
+        self, relative: Path, outcome: dict[str, Any]
+    ) -> None:
+        """Persist an immutable accepted or rejected validation outcome."""
+
+        pathname = PurePosixPath(
+            f"{self.review_workbook_prefix}{relative.as_posix()}"
+        ).with_suffix(".outcome.json")
+        self.blob.put(
+            str(pathname),
+            json.dumps(outcome, ensure_ascii=False, separators=(",", ":")).encode(),
+            "application/json",
+            overwrite=False,
+        )
+
+    def uploaded_review_workbooks(self) -> list[dict[str, Any]]:
+        """Download retained workbook uploads only when an administrator exports."""
+
+        items = self.blob.list(self.review_workbook_prefix)
+        by_path = {str(item.get("pathname", "")): item for item in items}
+        artifacts = []
+        for pathname, item in by_path.items():
+            if not pathname.lower().endswith(".xlsx"):
+                continue
+            relative = Path(pathname.removeprefix(self.review_workbook_prefix))
+            receipt_item = by_path.get(
+                str(PurePosixPath(pathname).with_suffix(".received.json"))
+            )
+            outcome_item = by_path.get(
+                str(PurePosixPath(pathname).with_suffix(".outcome.json"))
+            )
+            artifacts.append(
+                self._uploaded_workbook_artifact(
+                    relative,
+                    self.blob.download(item),
+                    json.loads(self.blob.download(receipt_item))
+                    if receipt_item
+                    else None,
+                    json.loads(self.blob.download(outcome_item))
+                    if outcome_item
+                    else None,
+                )
+            )
+        return artifacts
+
     def _write_users(self, users: list[dict[str, str]]) -> None:
         """Persist remotely only when the shared application changed the directory."""
 
@@ -439,7 +664,7 @@ blob_store = BlobStore()
 review_application = VercelReviewApplication(
     blob_store, Path("/tmp/perla-study-review")
 )
-authenticator = None
+authenticator: Any = None
 has_internal_accounts = bool(os.environ.get("REVIEW_INTERNAL_ACCOUNTS"))
 clerk_publishable_key = os.environ.get("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "")
 has_clerk = clerk_key_allowed(
@@ -462,7 +687,7 @@ elif has_clerk:
 BaseHandler = make_handler(review_application, authenticator)
 
 
-class handler(BaseHandler):
+class handler(BaseHandler):  # type: ignore[misc, valid-type]
     """Hydrate source PDFs before delegating requests to the shared HTTP handler.
 
     Only routes that read PDFs trigger the lazy download; all review behavior remains
@@ -478,9 +703,10 @@ class handler(BaseHandler):
                 "/api/pdf-page/",
                 "/api/pdf-text/",
                 "/api/search/",
+                "/api/figure-panel-image/",
             )
         ):
-            paper_id = unquote(parsed.path.split("/", 3)[-1])
+            paper_id = unquote(parsed.path.split("/", 3)[-1].split("/", 1)[0])
             query = parse_qs(parsed.query)
             source = query.get("source", ["main"])[0]
             split = query.get("split", [None])[0]

@@ -3,7 +3,10 @@ from pathlib import Path
 
 from perla_extract.study_extraction.claims import ClaimLedger, ExperimentalObject
 from perla_extract.study_extraction.guidance import (
+    COMPOSITION_BOUNDARY_POLICY,
     DEVICE_FAMILY_POLICY,
+    EVIDENCE_INTERPRETATION_POLICY,
+    RECORD_BOUNDARY_POLICY,
     SHARED_QUANTITY_POLICY,
 )
 from perla_extract.study_extraction.models import (
@@ -67,6 +70,20 @@ def test_every_semantic_pass_uses_the_same_device_family_boundary():
     assert "processing/composition variant" not in EXTRACTION_PROMPT
     assert "processing/composition variants" not in CLAIM_LEDGER_PROMPT
     assert "characterization-only partial structures" in REFINEMENT_PROMPT
+
+
+def test_every_semantic_pass_uses_shared_record_and_evidence_boundaries():
+    """Keep record typing and source interpretation consistent across model calls."""
+
+    for prompt in (
+        EXTRACTION_PROMPT,
+        CLAIM_LEDGER_PROMPT,
+        REFINEMENT_PROMPT,
+        REPAIR_PROMPT,
+    ):
+        assert RECORD_BOUNDARY_POLICY in prompt
+        assert COMPOSITION_BOUNDARY_POLICY in prompt
+        assert EVIDENCE_INTERPRETATION_POLICY in prompt
 
 
 def test_value_producing_passes_share_the_atomic_shared_quantity_rule():

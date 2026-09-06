@@ -24,7 +24,7 @@ from perla_extract.study_extraction.models import (
 from perla_extract.study_extraction.validation import validate_study
 from review_workbench.study_review import ReviewEvent, StudyReviewStore
 
-GROUND_TRUTH_FORMAT_VERSION = 2
+GROUND_TRUTH_FORMAT_VERSION = 3
 GROUND_TRUTH_FILENAMES = (
     "ground_truth.json",
     "seed_extraction.json",
@@ -83,6 +83,8 @@ class GroundTruthManifest(BaseModel):
     paper_id: str
     split: str
     revision: int = Field(ge=1)
+    evidence_version: int = Field(ge=1)
+    evidence_document_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     frozen_at: str
     source_manifest: dict[str, Any]
     review: GroundTruthReview
@@ -138,6 +140,7 @@ def build_ground_truth_export(
     store.validate_identity(split, paper_id)
     source = store.storage.load_source(split, paper_id)
     revision = store.storage.load_revision(split, paper_id)
+    document = store.load_document(split, paper_id)
     events = [ReviewEvent.model_validate(event) for event in revision.events]
     final_event = events[-1]
     if not (
@@ -148,7 +151,7 @@ def build_ground_truth_export(
 
     truth = StudyExtraction.model_validate(revision.ground_truth)
     seed = StudyExtraction.model_validate(source.seed_extraction)
-    validation = validate_study(truth, _evidence_blocks(source.document))
+    validation = validate_study(truth, _evidence_blocks(document))
     issues = validation.get("issues", [])
     if validation.get("status") != "verified":
         reasons = "; ".join(
@@ -189,6 +192,8 @@ def build_ground_truth_export(
         paper_id=paper_id,
         split=split,
         revision=revision.revision,
+        evidence_version=revision.evidence_version,
+        evidence_document_sha256=_sha256(document),
         frozen_at=final_event.timestamp,
         source_manifest=source.manifest,
         review={

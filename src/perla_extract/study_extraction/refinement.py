@@ -7,7 +7,13 @@ from pathlib import Path
 
 from .artifacts import write_json_atomic
 from .client import ModelCallError, ModelClient
-from .guidance import DEVICE_FAMILY_POLICY, SHARED_QUANTITY_POLICY
+from .guidance import (
+    COMPOSITION_BOUNDARY_POLICY,
+    DEVICE_FAMILY_POLICY,
+    EVIDENCE_INTERPRETATION_POLICY,
+    RECORD_BOUNDARY_POLICY,
+    SHARED_QUANTITY_POLICY,
+)
 from .models import EvidenceBlock, StudyExtraction
 from .spans import EvidenceSpan, build_evidence_spans
 from .transport import (
@@ -20,6 +26,9 @@ REFINEMENT_PROMPT = f"""Audit the supplied draft against all supplied evidence a
 return a complete corrected StudyExtraction.
 
 {DEVICE_FAMILY_POLICY}
+{RECORD_BOUNDARY_POLICY}
+{COMPOSITION_BOUNDARY_POLICY}
+{EVIDENCE_INTERPRETATION_POLICY}
 {SHARED_QUANTITY_POLICY}
 Treat the draft and claim ledger as fallible aids, never as source evidence. Reconcile
 experimental objects globally before deciding final record identity. For every

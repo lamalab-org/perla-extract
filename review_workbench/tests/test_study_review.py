@@ -7,17 +7,22 @@ from io import BytesIO
 
 import pytest
 from openpyxl import load_workbook
+from openpyxl.comments import Comment
 from openpyxl.utils import get_column_letter
 
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
+    StudyExtraction,
     study_schema_sha256,
 )
 from review_workbench.study_review import (
+    FigurePanelCensus,
     InventoryAuditRequest,
     MainTextFigureCensus,
     MutationRequest,
     RecordDecisionRequest,
+    RecordMergeRequest,
+    RecordReclassificationRequest,
     ReviewerResetRequest,
     ReviewEvent,
     StageRequest,
@@ -39,6 +44,84 @@ def test_ground_truth_refresh_is_a_distinct_audit_event():
     )
 
     assert event.kind == "ground_truth_refresh"
+
+
+def test_ground_truth_refresh_preserves_seed_and_appends_audited_revision(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    seed(store, empty_study, document_payload)
+    replacement = study_with_family(empty_study)
+
+    refreshed = store.refresh_ground_truth(
+        "calibration",
+        "10.0000--example",
+        replacement,
+        base_revision=1,
+        reviewer_id="admin@example.org",
+        reason="Replace the draft with the revised extraction.",
+        provenance={"run": "review-v1"},
+    )
+
+    assert refreshed["revision"] == 2
+    assert refreshed["ground_truth"] == StudyExtraction.model_validate(
+        replacement
+    ).model_dump(mode="json")
+    assert refreshed["seed_extraction"] == empty_study
+    assert refreshed["events"][-1]["kind"] == "ground_truth_refresh"
+    assert refreshed["events"][-1]["details"]["provenance"] == {"run": "review-v1"}
+
+
+def test_ground_truth_refresh_rejects_evidence_from_another_document(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    seed(store, empty_study, document_payload)
+    replacement = study_with_family(empty_study)
+    replacement["device_families"][0]["evidence"][0]["block_id"] = "missing"
+
+    with pytest.raises(ValueError, match="evidence-validation issues"):
+        store.refresh_ground_truth(
+            "calibration",
+            "10.0000--example",
+            replacement,
+            base_revision=1,
+            reviewer_id="admin@example.org",
+            reason="Replace the draft with the revised extraction.",
+        )
+
+
+def test_ground_truth_refresh_versions_a_matching_reparsed_document(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    seed(store, empty_study, document_payload)
+    replacement = study_with_family(empty_study)
+    replacement["device_families"][0]["evidence"][0]["block_id"] = "reparsed-p1"
+    reparsed = copy.deepcopy(document_payload)
+    reparsed["blocks"][0]["block_id"] = "reparsed-p1"
+
+    refreshed = store.refresh_ground_truth(
+        "calibration",
+        "10.0000--example",
+        replacement,
+        document=reparsed,
+        base_revision=1,
+        reviewer_id="admin@example.org",
+        reason="Promote a new extraction and its parser document together.",
+    )
+
+    assert refreshed["revision"] == 2
+    assert (
+        store.storage.load_revision("calibration", "10.0000--example").evidence_version
+        == 2
+    )
+    assert store.load_document("calibration", "10.0000--example") == reparsed
+    assert (
+        store.storage.load_source("calibration", "10.0000--example").document
+        == document_payload
+    )
+    assert refreshed["events"][-1]["details"]["replacement_evidence_version"] == 2
 
 
 def study_with_family(empty_study):
@@ -144,7 +227,6 @@ def test_reviewer_can_undo_an_untouched_saved_correction(
         UndoMutationRequest(event_id=correction_id, base_revision=2),
         "ada",
     )
-
     assert undone["ground_truth"]["unresolved_notes"] == ["Initial model note"]
     assert undone["events"][-1]["details"] == {"undoes_event_id": correction_id}
     assert undone["events"][-1]["before"] == "Checked against the paper"
@@ -234,11 +316,135 @@ def test_review_workbook_import_is_atomic_attributable_and_undoable(
     assert progress["current_event_ids"] == []
 
 
+def test_excel_cell_comments_are_feedback_even_without_value_edits(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    seed(store, study_with_family(empty_study), document_payload)
+    data = store.review_workbook("calibration", "10.0000--example", "ada")
+    book = load_workbook(BytesIO(data))
+    book["Record review"]["B2"] = "The family grouping needs discussion."
+    book["Record review"]["E2"].comment = Comment(
+        "This should be one family, not several.", "Jesper"
+    )
+    output = BytesIO()
+    book.save(output)
+
+    imported = store.import_review_workbook(
+        "calibration",
+        "10.0000--example",
+        output.getvalue(),
+        "ada",
+        filename="comments.xlsx",
+    )
+    details = imported["events"][-1]["details"]
+
+    assert imported["revision"] == 2
+    assert details["workbook_import_mode"] == "validated_current_workbook"
+    assert details["cell_comments"] == [
+        {
+            "sheet": "Record review",
+            "cell": "B2",
+            "kind": "reviewer_note",
+            "text": "The family grouping needs discussion.",
+            "author": "",
+            "record_collection": "device_families",
+            "record_id": "family-control",
+            "schema_path": None,
+        },
+        {
+            "sheet": "Record review",
+            "cell": "E2",
+            "kind": "cell_comment",
+            "text": "This should be one family, not several.",
+            "author": "Jesper",
+            "record_collection": "device_families",
+            "record_id": "family-control",
+            "schema_path": None,
+        },
+    ]
+
+    recovered = store.import_review_workbook(
+        "calibration",
+        "10.0000--example",
+        output.getvalue(),
+        "ada",
+        filename="older-comments.xlsx",
+    )
+    recovered_details = recovered["events"][-1]["details"]
+
+    assert recovered["revision"] == 3
+    assert recovered_details["workbook_import_mode"] == (
+        "comments_only_from_older_workbook"
+    )
+    assert recovered_details["workbook_base_revision"] == 1
+    assert recovered_details["cell_comments"][1]["author"] == "Jesper"
+
+
+def test_review_workbook_rejects_a_value_that_contradicts_its_evidence(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path)
+    study = study_with_family(empty_study)
+    study["individual_devices"] = [
+        {
+            "device_id": "device-1",
+            "family_id": "family-control",
+            "label": "Champion device",
+            "variant": None,
+            "champion_status": "yes",
+            "selection_basis": "champion",
+            "reported_properties": [
+                {
+                    "name": "PCE",
+                    "raw_value": "24.1%",
+                    "value_number": 24.1,
+                    "unit": "%",
+                    "evidence": [
+                        {
+                            "block_id": "main_p1_text_1",
+                            "quote": "The champion device reached a PCE of 24.1%.",
+                        }
+                    ],
+                }
+            ],
+            "evidence": [{"block_id": "main_p1_text_1", "quote": "champion device"}],
+        }
+    ]
+    seed(store, study, document_payload)
+    data = store.review_workbook("calibration", "10.0000--example", "ada")
+    book = load_workbook(BytesIO(data))
+    sheet = book["Individual Devices"]
+    headers = {cell.value: cell.column for cell in sheet[1]}
+    raw_value_row = next(
+        row
+        for row in range(2, sheet.max_row + 1)
+        if sheet.cell(row, headers["Field"]).value == "raw_value"
+    )
+    sheet.cell(raw_value_row, headers["Corrected value"]).value = "25.0%"
+    sheet.cell(raw_value_row, headers["Reviewer note"]).value = "Corrected PCE."
+    output = BytesIO()
+    book.save(output)
+
+    with pytest.raises(ValueError, match="source-grounding problem"):
+        store.import_review_workbook(
+            "calibration",
+            "10.0000--example",
+            output.getvalue(),
+            "ada",
+        )
+
+    assert store.revision("calibration", "10.0000--example") == 1
+
+
 def test_review_workbook_groups_fields_by_scientific_record_type(
     tmp_path, empty_study, document_payload
 ):
     study = study_with_family(empty_study)
-    citation = {"block_id": "main_p1_text_1", "quote": "champion device"}
+    citation = {
+        "block_id": "main_p1_text_1",
+        "quote": "The champion device reached a PCE of 24.1%.",
+    }
     study["individual_devices"] = [
         {
             "device_id": "device-1",
@@ -344,9 +550,7 @@ def test_review_workbook_groups_fields_by_scientific_record_type(
     }
     assert rows["observation-1"]["Linked at"] == "Individual device"
     assert rows["observation-1"]["Family"] == "Control [family-control]"
-    assert rows["observation-1"]["Individual device"] == (
-        "Champion device [device-1]"
-    )
+    assert rows["observation-1"]["Individual device"] == ("Champion device [device-1]")
     assert rows["population-1"]["Linked at"] == (
         "Device family (no individual device link)"
     )
@@ -435,9 +639,7 @@ def test_review_workbook_rejects_stale_or_structurally_changed_files(
         "ada",
     )
     with pytest.raises(ValueError, match="older paper revision"):
-        store.import_review_workbook(
-            "calibration", "10.0000--example", original, "ada"
-        )
+        store.import_review_workbook("calibration", "10.0000--example", original, "ada")
 
 
 def test_undo_finds_an_appended_value_but_never_overwrites_later_work(
@@ -611,6 +813,7 @@ def test_reviewer_progress_contains_only_that_reviewers_persisted_work(
         "schema_relevant_figures": 2,
         "figure_only_records": 1,
         "figure_only_atomic_values": 3,
+        "panels": [],
         "notes": "Figure 3 contains stability values absent from the caption.",
     }
     assert paper["current_event_ids"] == [audited["events"][-1]["event_id"]]
@@ -628,6 +831,112 @@ def test_main_text_figure_census_rejects_incoherent_counts():
             schema_relevant_figures=0,
             figure_only_atomic_values=1,
         )
+
+
+def test_main_text_figure_census_derives_totals_from_subfigures():
+    census = MainTextFigureCensus(
+        figures_reviewed=99,
+        schema_relevant_figures=99,
+        figure_only_records=99,
+        figure_only_atomic_values=99,
+        panels=[
+            FigurePanelCensus(
+                figure_number=" 2 ",
+                panel_label=" a ",
+                page=4,
+                figure_class="jv",
+                description=" Reverse and forward current-density scans. ",
+                x_axis_label="Voltage (V)",
+                y_axis_label="Current density (mA cm−2)",
+                data_presentation="explicit_numeric_labels",
+                extraction_feasibility="straightforward",
+                schema_relevant=True,
+                figure_only_atomic_values=2,
+            ),
+            FigurePanelCensus(
+                figure_number="2",
+                panel_label="b",
+                page=4,
+                figure_class="eqe",
+                description="EQE spectrum and integrated current.",
+                x_axis_label="Wavelength (nm)",
+                y_axis_label="EQE (%)",
+                data_presentation="mixed",
+                extraction_feasibility="partly_straightforward",
+                schema_relevant=True,
+                figure_only_records=1,
+                figure_only_atomic_values=1,
+            ),
+            FigurePanelCensus(
+                figure_number="3",
+                figure_class="characterization",
+                description="Surface morphology image.",
+                data_presentation="no_numeric_data",
+                extraction_feasibility="not_applicable",
+                schema_relevant=False,
+            ),
+        ],
+    )
+
+    assert census.figures_reviewed == 2
+    assert census.schema_relevant_figures == 1
+    assert census.figure_only_records == 1
+    assert census.figure_only_atomic_values == 3
+    assert census.panels[0].figure_number == "2"
+    assert census.panels[0].panel_label == "a"
+
+
+def test_main_text_figure_census_rejects_duplicate_or_out_of_scope_panels():
+    common = {
+        "figure_number": "2",
+        "figure_class": "jv",
+        "description": "Current-density scan.",
+        "data_presentation": "plotted_values_only",
+        "extraction_feasibility": "requires_digitization",
+        "schema_relevant": True,
+    }
+    with pytest.raises(
+        ValueError, match="figure number and panel label must be unique"
+    ):
+        MainTextFigureCensus(
+            panels=[FigurePanelCensus(**common), FigurePanelCensus(**common)]
+        )
+
+    with pytest.raises(ValueError, match="require a schema-relevant panel"):
+        FigurePanelCensus(
+            **{**common, "schema_relevant": False, "figure_only_atomic_values": 1}
+        )
+
+
+def test_inventory_submission_requires_explicit_panel_review():
+    panel = {
+        "proposal_panel_id": "proposal-panel-1",
+        "figure_number": "2",
+        "figure_class": "jv",
+        "description": "Current-density scan.",
+        "data_presentation": "plotted_values_only",
+        "extraction_feasibility": "requires_digitization",
+        "schema_relevant": True,
+    }
+    with pytest.raises(ValueError, match="review every figure panel"):
+        InventoryAuditRequest(
+            base_revision=1,
+            review_scope_sources=["main"],
+            expected_counts={},
+            main_text_figure_census=MainTextFigureCensus(
+                panels=[FigurePanelCensus(**panel, review_status="unreviewed")]
+            ),
+        )
+
+    request = InventoryAuditRequest(
+        base_revision=1,
+        review_scope_sources=["main"],
+        expected_counts={},
+        main_text_figure_census=MainTextFigureCensus(
+            panels=[FigurePanelCensus(**panel, review_status="confirmed")]
+        ),
+    )
+    assert request.main_text_figure_census.panels[0].review_status == "confirmed"
 
 
 def test_summary_renames_legacy_searched_sources_without_rewriting_the_event(
@@ -654,7 +963,9 @@ def test_bundle_marks_readable_older_schema_as_not_exactly_comparable(
     source = store.storage.load_source("calibration", "10.0000--example")
     source.manifest["schema_version"] = 1
     source.manifest["schema_sha256"] = "historical"
-    source_path = store.root / "state" / "sources" / "calibration" / "10.0000--example.json"
+    source_path = (
+        store.root / "state" / "sources" / "calibration" / "10.0000--example.json"
+    )
     payload = json.loads(source_path.read_text())
     payload["manifest"] = source.manifest
     source_path.write_text(json.dumps(payload))
@@ -775,9 +1086,7 @@ def test_referenced_records_must_be_reassigned_or_removed_before_their_target(
     seed(store, study, document_payload)
     bundle = store.load_bundle("calibration", "10.0000--example")
     assert bundle["summary"]["record_references"] == {
-        "individual_devices:device-1": [
-            "performance_observations:observation-1"
-        ]
+        "individual_devices:device-1": ["performance_observations:observation-1"]
     }
 
     remove_device = MutationRequest(
@@ -803,15 +1112,146 @@ def test_referenced_records_must_be_reassigned_or_removed_before_their_target(
     removed = store.mutate(
         "calibration",
         "10.0000--example",
-        remove_device.model_copy(update={"base_revision": without_observation["revision"]}),
+        remove_device.model_copy(
+            update={"base_revision": without_observation["revision"]}
+        ),
         "ada",
     )
     assert removed["ground_truth"]["individual_devices"] == []
 
 
-def test_census_precedes_inventory_completion(
+def test_duplicate_merge_retargets_links_and_is_undoable(
     tmp_path, empty_study, document_payload
 ):
+    study = study_with_family(empty_study)
+    duplicate = copy.deepcopy(study["device_families"][0])
+    duplicate["family_id"] = "family-duplicate"
+    duplicate["label"] = "Control repeated in supplement"
+    study["device_families"].append(duplicate)
+    study["individual_devices"] = [
+        {
+            "device_id": "device-1",
+            "family_id": "family-duplicate",
+            "label": "Champion device",
+            "variant": None,
+            "champion_status": "yes",
+            "selection_basis": "champion",
+            "reported_properties": [],
+            "evidence": duplicate["evidence"],
+        }
+    ]
+    store = StudyReviewStore(tmp_path)
+    seed(store, study, document_payload)
+
+    merged = store.merge_records(
+        "calibration",
+        "10.0000--example",
+        RecordMergeRequest(
+            collection="device_families",
+            source_record_id="family-duplicate",
+            target_record_id="family-control",
+            base_revision=1,
+            note="Both labels identify the same complete stack.",
+        ),
+        "ada",
+    )
+
+    assert [
+        item["family_id"] for item in merged["ground_truth"]["device_families"]
+    ] == ["family-control"]
+    assert (
+        merged["ground_truth"]["individual_devices"][0]["family_id"] == "family-control"
+    )
+    event_id = merged["events"][-1]["event_id"]
+    assert (
+        event_id
+        in store.reviewer_progress("calibration", "ada")["papers"][0][
+            "undoable_event_ids"
+        ]
+    )
+
+    undone = store.undo_mutation(
+        "calibration",
+        "10.0000--example",
+        UndoMutationRequest(event_id=event_id, base_revision=2),
+        "ada",
+    )
+    assert len(undone["ground_truth"]["device_families"]) == 2
+    assert (
+        undone["ground_truth"]["individual_devices"][0]["family_id"]
+        == "family-duplicate"
+    )
+
+
+def test_record_reclassification_replaces_wrong_type_atomically(
+    tmp_path, empty_study, document_payload
+):
+    study = study_with_family(empty_study)
+    citation = {
+        "block_id": "main_p1_text_1",
+        "quote": "The champion device reached a PCE of 24.1%.",
+    }
+    metric = {
+        "name": "PCE",
+        "raw_value": "24.1%",
+        "value_number": 24.1,
+        "unit": "%",
+        "evidence": [citation],
+    }
+    study["individual_devices"] = [
+        {
+            "device_id": "device-1",
+            "family_id": "family-control",
+            "label": "Champion device",
+            "variant": None,
+            "champion_status": "yes",
+            "selection_basis": "champion",
+            "reported_properties": [],
+            "evidence": [citation],
+        }
+    ]
+    study["population_statistics"] = [
+        {
+            "population_id": "population-1",
+            "family_id": "family-control",
+            "label": "Best device result",
+            "statistic_type": "maximum",
+            "sample_size": None,
+            "metrics": [metric],
+            "evidence": [citation],
+        }
+    ]
+    corrected = {
+        "observation_id": "observation-1",
+        "device_id": "device-1",
+        "measurement_type": "jv_scan",
+        "scan_direction": "not_reported",
+        "metrics": [metric],
+        "evidence": [citation],
+    }
+    store = StudyReviewStore(tmp_path)
+    seed(store, study, document_payload)
+
+    reclassified = store.reclassify_record(
+        "calibration",
+        "10.0000--example",
+        RecordReclassificationRequest(
+            source_collection="population_statistics",
+            source_record_id="population-1",
+            target_collection="performance_observations",
+            value=corrected,
+            evidence=[citation],
+            base_revision=1,
+            note="The source reports one best device, not an aggregate.",
+        ),
+        "ada",
+    )
+
+    assert reclassified["ground_truth"]["population_statistics"] == []
+    assert reclassified["ground_truth"]["performance_observations"] == [corrected]
+
+
+def test_census_precedes_inventory_completion(tmp_path, empty_study, document_payload):
     store = StudyReviewStore(tmp_path)
     seed(store, empty_study, document_payload)
     with pytest.raises(ValueError, match="paper census"):

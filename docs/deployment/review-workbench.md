@@ -7,6 +7,9 @@ performance, population statistics, stability, and record relationships without
 modifying the immutable model seed.
 
 For the scientific protocol, start with [Build ground truth](../workflows/ground-truth-review.md).
+The separate [blinded extractor comparison](../workflows/expert-comparison.md) uses
+the same authentication and PDFs but writes an independent immutable experiment log;
+comparison answers never alter ground truth.
 
 ## Run locally
 
@@ -36,11 +39,16 @@ so reviewers can focus their attention without treating any model artifact as tr
 The app stores immutable seeds, compiled truth, event history, evidence blocks, and
 manifests under the ground-truth directory.
 
-The figure census is deliberately limited to numbered figures in the main paper. It
-records how many figures contain schema-relevant content and how many schema records or
-atomic values are available only from those figures. The app records all imported
-sources as the record-search scope; reviewers do not toggle main/SI checkboxes,
-because those flags are not measurements of figure-extraction loss.
+The figure census is deliberately limited to numbered figures in the main paper. A
+one-panel queue asks reviewers to confirm or correct each subfigure's scientific class,
+description, axes, numeric presentation, extraction effort, schema relevance, and
+figure-only contribution. Unchecked model suggestions cannot be submitted as human
+ground truth. Browser-local drafts protect long reviews, and only the selected paper's
+proposal is loaded. Paper-level totals are derived from confirmed/corrected rows. The
+app records all imported sources as the record-search scope; reviewers do not toggle
+main/SI checkboxes because those flags are not measurements of figure-extraction loss.
+Administrator feedback exports include proposal identities and review states in the
+analysis-ready `figure_panels.csv` alongside the lossless event history.
 
 For a validated batch, use the same import contract non-interactively:
 
@@ -55,6 +63,41 @@ python review_workbench/import_runs.py \
 The command refuses incomplete runs and any run with unresolved evidence-validation
 issues. Existing review items are still protected by the immutable-seed storage
 contract, so rerunning it cannot silently replace a seed.
+
+To seed the deployed Vercel dataset from the same validated runs, first inspect the
+exact missing set and then repeat without `--dry-run`:
+
+```bash
+python -m review_workbench.import_vercel_runs \
+  --manifest data/study_extraction/cohorts/review-v1.json \
+  --runs-dir results/review-v1 \
+  --pdf-dir /path/to/main-papers \
+  --env-file review_workbench/.vercel-build/.vercel/.env.production.local \
+  --split dev \
+  --dry-run
+```
+
+This command imports only included manifest papers with absent IDs. Exclusions and
+unrelated run directories are ignored, and it cannot replace an immutable seed or any
+human revision already stored for an existing paper.
+
+After approving a regenerated batch, add `--refresh-existing`. The command still
+refuses incomplete or evidence-invalid runs. For each included existing paper, it
+stores the run's `document.json` as a new immutable evidence version and appends a
+ground-truth revision bound to it; identical papers are no-ops. Run with `--dry-run`
+first to see how many papers would change:
+
+```bash
+python -m review_workbench.import_vercel_runs \
+  --manifest data/study_extraction/cohorts/review-v1.json \
+  --runs-dir results/review-v1 \
+  --pdf-dir /path/to/main-papers \
+  --env-file review_workbench/.vercel-build/.vercel/.env.production.local \
+  --split dev \
+  --reviewer-id administrator@example.org \
+  --refresh-existing \
+  --dry-run
+```
 
 ## Review records efficiently
 
@@ -126,19 +169,20 @@ hash with the running extractor. Older seeds that remain structurally readable a
 not silently presented as current outputs: the interface warns that newly introduced
 fields still need regeneration or explicit human review.
 
-Before introducing a regenerated dataset, copy the previous production state to a
-versioned private Blob path and verify its digest. Keep the old `papers/` prefix
-read-only; when a regenerated item with the same paper ID uses different PDF bytes,
-also preserve the old PDF below the versioned legacy path. Import the new records into
-a separate split such as `calibration`; do not overwrite the legacy state object or
-reuse an existing rich review item. This keeps historical drafts recoverable while
-preventing reviewers from comparing flat and rich records as equivalent annotations.
+An administrator may replace an active pre-annotation with a regenerated extraction.
+The refresh validates the extraction against the regenerated `document.json`, stores
+that parsed document as a new immutable evidence version, and appends a revision that
+points to it. It never rewrites the seed, an earlier evidence document, or an earlier
+review revision. Changed record digests reopen stale reviewer decisions automatically.
+Use a separate split only when the papers, schema boundary, or review protocol differ;
+a routine extractor improvement belongs in the existing split as an audited refresh.
 
 Review state is committed under `state/`. One immutable source bundle contains the
-seed, evidence document, manifest, and initial revision. Each saved human change writes
-one new revision snapshot containing both the validated truth and complete event
-history. The familiar `seeds/`, `events/`, `documents/`, `manifests/`, and split
-directories are refreshed as derived, inspectable exports.
+seed, initial evidence document, manifest, and initial revision. A regenerated parser
+document is stored once as another immutable evidence version. Each review revision
+records which version supports its citations; later human edits inherit that binding.
+The familiar `seeds/`, `events/`, `documents/`, `manifests/`, and split directories are
+refreshed as derived, inspectable exports of the active revision.
 
 Every authenticated reviewer can open **My edits & undo** from the header. **Current
 work** is the default view: it groups active decisions, census state, completed stages,
@@ -152,9 +196,44 @@ events, so prior activity remains inspectable instead of being deleted. Correcti
 workbook imports that are still untouched offer
 **Undo this saved edit**. Undo writes a linked, validated revision instead of deleting history; the
 action is unavailable once later work changes the same value. **Download my
-annotations** saves the same reviewer-scoped ledger
-as readable JSON, including exact before/after values and revision timestamps. It is a
-personal progress export and is deliberately separate from adjudicated ground truth.
+annotations** saves the same reviewer-scoped ledger as readable JSON, including exact
+before/after values and revision timestamps. It is a personal progress export and is
+deliberately separate from adjudicated ground truth.
+
+Administrators also see **Download feedback** in the header. It produces one ZIP for
+the complete deployment rather than requiring a paper-by-paper download:
+
+- `feedback.json` is the lossless snapshot, with immutable event history and the
+  current decisions, census answers, and completion stages derived from it;
+- `review_events.csv` is one row per saved ground-truth review action and explicitly
+  marks edits that were later undone;
+- `comparison_reviews.csv` contains blinded extractor-study responses, native-output
+  utility ratings, and dimension-specific A/B preferences. Candidate origins remain
+  blank until every assigned review stage in that comparison is final;
+- the comparison batches inside `feedback.json` include the exact frozen rubric
+  questions, minimum acceptable bars, and preference rules shown to reviewers;
+- `README.txt` explains the files and how resets, drafts, and superseded answers are
+  represented.
+
+Every authenticated Excel submission within the documented 15 MiB limit is retained
+byte-for-byte under `uploaded_workbooks/` before validation begins. This includes
+accepted, rejected, stale, comment-only, and no-op files. `feedback.json` contains an
+immutable receipt with its filename, paper, reviewer, timestamp, size, and SHA-256,
+plus a separate accepted or rejected validation outcome. If archival fails, the app
+does not process the review. Earlier uploads cannot be reconstructed as identical
+files because the previous deployment did not retain their bytes.
+
+Excel cell comments and standalone text in a **Reviewer note** cell are review
+feedback too. A comment-only workbook is accepted, archived, and represented in the
+event history with its sheet, cell, kind, author, text, and record or schema-path
+context when available. If a reviewer still has a commented workbook based on an
+older paper revision, uploading it recovers and archives the comments but
+deliberately does not apply stale value edits.
+
+The export contains stable reviewer IDs and scientific review content, but no PDFs,
+passwords, session tokens, or deployment configuration. Treat it as research data: it
+may contain reviewer-written notes and should be stored with the same access controls
+as the ground-truth dataset.
 
 After the final administrator adjudication, **Download PR bundle** produces a
 deterministic ZIP containing the rich ground truth, immutable seed, complete review

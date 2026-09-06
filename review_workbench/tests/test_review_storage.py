@@ -1,15 +1,23 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import pytest
 
 from review_workbench.api.index import (
+    BlobComparisonStorage,
     BlobReviewStateStorage,
     BlobStore,
     VercelReviewApplication,
+)
+from review_workbench.expert_comparison import (
+    NativeUtilityReview,
+    PairwisePreferenceReview,
+    build_comparison_source,
 )
 from review_workbench.review_storage import (
     ReviewPaperSource,
@@ -79,6 +87,26 @@ def test_blob_find_lists_the_parent_directory_before_matching_exact_path():
 
     assert blob.find(pathname) == {"pathname": pathname}
     assert blob.prefixes == ["workbench/review-sources/calibration/"]
+
+
+def test_vercel_application_retains_and_lists_uploaded_workbooks():
+    blob = MemoryBlobStore()
+    app = object.__new__(VercelReviewApplication)
+    app.blob = blob
+    relative = Path(
+        "dev/10.0000--example/"
+        "00000002--event-1--reviewer-1--review.xlsx"
+    )
+
+    app._archive_workbook_submission(
+        relative, b"xlsx", {"submission_id": "submission-1"}
+    )
+    app._record_workbook_outcome(relative, {"status": "accepted"})
+    artifacts = app.uploaded_review_workbooks()
+
+    assert artifacts[0]["data"] == b"xlsx"
+    assert artifacts[0]["receipt"]["submission_id"] == "submission-1"
+    assert artifacts[0]["outcome"]["status"] == "accepted"
 
 
 class PagedBlobStore(BlobStore):
@@ -188,6 +216,34 @@ def test_blob_revision_paths_are_compare_and_swap_commits():
     assert len(blob.objects) == 2
 
 
+def test_blob_evidence_versions_are_immutable_and_seed_version_remains_available():
+    blob = MemoryBlobStore()
+    storage = BlobReviewStateStorage(blob)  # type: ignore[arg-type]
+    storage.create(
+        "dev",
+        "10.0000--example",
+        ReviewPaperSource(
+            seed_extraction={"note": "seed"},
+            manifest={},
+            document={"blocks": [{"block_id": "original"}]},
+            initial_revision=revision(1, "seed"),
+        ),
+    )
+
+    storage.create_evidence(
+        "dev", "10.0000--example", 2, {"blocks": [{"block_id": "reparsed"}]}
+    )
+
+    assert storage.load_evidence("dev", "10.0000--example", 1) == {
+        "blocks": [{"block_id": "original"}]
+    }
+    assert storage.load_evidence("dev", "10.0000--example", 2) == {
+        "blocks": [{"block_id": "reparsed"}]
+    }
+    with pytest.raises(FileExistsError):
+        storage.create_evidence("dev", "10.0000--example", 2, {"blocks": []})
+
+
 def test_blob_paper_heads_do_not_download_full_studies():
     blob = MemoryBlobStore()
     storage = BlobReviewStateStorage(blob)  # type: ignore[arg-type]
@@ -205,6 +261,78 @@ def test_blob_paper_heads_do_not_download_full_studies():
         ("paper-b", 1),
     ]
     assert blob.downloads == 0
+
+
+def test_blob_comparison_storage_keeps_sources_reviews_and_utility_separate():
+    blob = MemoryBlobStore()
+    storage = BlobComparisonStorage(blob)  # type: ignore[arg-type]
+    source = build_comparison_source(
+        comparison_id="comparison-1",
+        paper_id="paper-1",
+        title="Paper",
+        split="dev",
+        historical={"cells": []},
+        extracted={
+            "paper": {"title": "Paper", "doi": "10.0000/example"},
+            "device_families": [],
+            "individual_devices": [],
+            "performance_observations": [],
+            "population_statistics": [],
+            "stability_tests": [],
+            "unresolved_notes": [],
+        },
+        reviewer_ids=["ada"],
+        randomization_seed="secret",
+    )
+    storage.create(source)
+    assignment = source.assignments[0]
+    utility = NativeUtilityReview(
+        comparison_id=source.comparison_id,
+        reviewer_id=assignment.reviewer_id,
+        blind_label=assignment.blind_label,
+        candidate_sha256=source.candidates[assignment.blind_label].native_sha256,
+        submitted_at=datetime(2026, 9, 1, tzinfo=timezone.utc),
+        ratings={
+            "chemical_detail": 4,
+            "relationships": 4,
+            "verification_ease": 3,
+            "nomad_usefulness": 5,
+        },
+        suitable_as_curation_start="yes",
+    )
+    storage.save_utility(utility)
+    preference = PairwisePreferenceReview(
+        comparison_id=source.comparison_id,
+        reviewer_id=assignment.reviewer_id,
+        candidate_hashes={
+            label: candidate.native_sha256
+            for label, candidate in source.candidates.items()
+        },
+        submitted_at=datetime(2026, 9, 1, tzinfo=timezone.utc),
+        preferences={
+            "factual_correctness": "tie",
+            "coverage_completeness": "B",
+            "chemical_detail": "B",
+            "record_relationships": "B",
+            "evidence_traceability": "A",
+            "nomad_readiness": "B",
+            "curation_effort": "B",
+            "overall_preference": "B",
+        },
+        confidence=4,
+    )
+    storage.save_preference(preference)
+
+    assert storage.list_ids() == ["comparison-1"]
+    assert storage.load_source("comparison-1").source_hashes == {}
+    assert storage.load_utility("comparison-1", "ada") == utility
+    assert storage.load_preference("comparison-1", "ada") == preference
+    assert any(
+        path.startswith("workbench/comparison-utility/") for path in blob.objects
+    )
+    assert any(
+        path.startswith("workbench/comparison-preferences/") for path in blob.objects
+    )
 
 
 def test_blob_current_revision_does_not_download_immutable_source_again():

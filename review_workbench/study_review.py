@@ -25,9 +25,11 @@ from perla_extract.study_extraction.artifacts import write_json_atomic
 from perla_extract.study_extraction.evidence import source_contains_text
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
+    EvidenceBlock,
     StudyExtraction,
     study_schema_sha256,
 )
+from perla_extract.study_extraction.validation import validate_study
 from review_workbench.review_storage import (
     LocalReviewStateStorage,
     ReviewPaperSource,
@@ -38,6 +40,7 @@ from review_workbench.review_storage import (
 from review_workbench.spreadsheet_review import (
     create_review_workbook,
     read_review_workbook,
+    read_review_workbook_comments,
 )
 
 PAPER_ID = re.compile(r"^[A-Za-z0-9.-]+--[A-Za-z0-9._-]+$")
@@ -101,6 +104,48 @@ class MutationRequest(BaseModel):
         return self
 
 
+class RecordMergeRequest(BaseModel):
+    """Merge one duplicate record into another without breaking its links."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    collection: RecordCollection
+    source_record_id: str = Field(min_length=1, max_length=200)
+    target_record_id: str = Field(min_length=1, max_length=200)
+    base_revision: int = Field(ge=0)
+    note: str = Field(min_length=1, max_length=2000)
+
+    @model_validator(mode="after")
+    def require_distinct_records(self) -> "RecordMergeRequest":
+        """A merge needs two different records from the same collection."""
+
+        if self.source_record_id == self.target_record_id:
+            raise ValueError("source and target records must differ")
+        return self
+
+
+class RecordReclassificationRequest(BaseModel):
+    """Replace a wrongly typed record with a valid record of another type."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    source_collection: RecordCollection
+    source_record_id: str = Field(min_length=1, max_length=200)
+    target_collection: RecordCollection
+    value: dict[str, Any]
+    evidence: list[Citation] = Field(min_length=1, max_length=20)
+    base_revision: int = Field(ge=0)
+    note: str = Field(min_length=1, max_length=2000)
+
+    @model_validator(mode="after")
+    def require_new_type(self) -> "RecordReclassificationRequest":
+        """Ordinary field correction remains the clearer same-type operation."""
+
+        if self.source_collection == self.target_collection:
+            raise ValueError("target collection must differ from source collection")
+        return self
+
+
 class UndoMutationRequest(BaseModel):
     """Identify one saved correction to reverse against the latest paper state."""
 
@@ -110,11 +155,96 @@ class UndoMutationRequest(BaseModel):
     base_revision: int = Field(ge=0)
 
 
+FigureClass = Literal[
+    "jv",
+    "eqe",
+    "population_statistics",
+    "stability",
+    "characterization",
+    "device_structure",
+    "other",
+]
+
+
+class FigurePanelCensus(BaseModel):
+    """Describe one main-text panel and the effort needed to recover its data.
+
+    The panel is the annotation unit because panels within one numbered figure often
+    serve different scientific purposes. Raw axis text is retained for later auditing;
+    reviewers classify presentation and extraction effort without digitizing curves.
+    ``proposal_panel_id`` keeps the original suggestion identifiable when a reviewer
+    corrects its label, while ``review_status`` prevents untouched suggestions from
+    being exported as human ground truth.
+    """
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    proposal_panel_id: str | None = Field(default=None, min_length=1, max_length=200)
+    review_status: Literal[
+        "unreviewed", "confirmed", "corrected", "legacy_unspecified"
+    ] = "legacy_unspecified"
+    figure_number: str = Field(min_length=1, max_length=40)
+    panel_label: str = Field(default="", max_length=20)
+    page: int | None = Field(default=None, ge=1)
+    caption_block_id: str | None = Field(default=None, min_length=1, max_length=300)
+    figure_class: FigureClass
+    description: str = Field(min_length=1, max_length=2000)
+    x_axis_label: str | None = Field(default=None, max_length=300)
+    y_axis_label: str | None = Field(default=None, max_length=300)
+    data_presentation: Literal[
+        "no_numeric_data",
+        "explicit_numeric_labels",
+        "inset_table",
+        "plotted_values_only",
+        "mixed",
+        "uncertain",
+    ]
+    extraction_feasibility: Literal[
+        "straightforward",
+        "partly_straightforward",
+        "requires_digitization",
+        "not_applicable",
+        "uncertain",
+    ]
+    schema_relevant: bool
+    figure_only_records: int = Field(default=0, ge=0)
+    figure_only_atomic_values: int = Field(default=0, ge=0)
+
+    @model_validator(mode="after")
+    def keep_loss_counts_schema_scoped(self) -> "FigurePanelCensus":
+        """Normalize labels and prevent out-of-scope panels from inflating loss."""
+
+        self.figure_number = self.figure_number.strip()
+        self.panel_label = self.panel_label.strip()
+        self.description = self.description.strip()
+        self.x_axis_label = self.x_axis_label.strip() if self.x_axis_label else None
+        self.y_axis_label = self.y_axis_label.strip() if self.y_axis_label else None
+        self.caption_block_id = (
+            self.caption_block_id.strip() if self.caption_block_id else None
+        )
+        self.proposal_panel_id = (
+            self.proposal_panel_id.strip() if self.proposal_panel_id else None
+        )
+        if not self.figure_number:
+            raise ValueError("figure number must not be blank")
+        if not self.description:
+            raise ValueError("panel description must not be blank")
+
+        if not self.schema_relevant and (
+            self.figure_only_records or self.figure_only_atomic_values
+        ):
+            raise ValueError(
+                "figure-only records or values require a schema-relevant panel"
+            )
+        return self
+
+
 class MainTextFigureCensus(BaseModel):
     """Measure schema content lost when main-text figures are not extracted.
 
-    Counts stay aggregate because reviewers should identify missing structured facts,
-    not digitize plot traces or create a second annotation interface for figures.
+    New reviews enumerate panels; the four totals are derived so arithmetic cannot
+    drift from the underlying annotations. Aggregate fields remain readable only for
+    review events saved before panel-level annotation was introduced.
     """
 
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -123,11 +253,34 @@ class MainTextFigureCensus(BaseModel):
     schema_relevant_figures: int = Field(default=0, ge=0)
     figure_only_records: int = Field(default=0, ge=0)
     figure_only_atomic_values: int = Field(default=0, ge=0)
+    panels: list[FigurePanelCensus] = Field(default_factory=list, max_length=300)
     notes: str = Field(default="", max_length=4000)
 
     @model_validator(mode="after")
     def validate_figure_counts(self) -> "MainTextFigureCensus":
         """Keep the denominator and claimed figure-only contribution coherent."""
+
+        if self.panels:
+            panel_keys = [
+                (panel.figure_number.casefold(), panel.panel_label.casefold())
+                for panel in self.panels
+            ]
+            if len(panel_keys) != len(set(panel_keys)):
+                raise ValueError("figure number and panel label must be unique")
+            figures = {panel.figure_number.casefold() for panel in self.panels}
+            relevant_figures = {
+                panel.figure_number.casefold()
+                for panel in self.panels
+                if panel.schema_relevant
+            }
+            self.figures_reviewed = len(figures)
+            self.schema_relevant_figures = len(relevant_figures)
+            self.figure_only_records = sum(
+                panel.figure_only_records for panel in self.panels
+            )
+            self.figure_only_atomic_values = sum(
+                panel.figure_only_atomic_values for panel in self.panels
+            )
 
         if self.schema_relevant_figures > self.figures_reviewed:
             raise ValueError("schema-relevant figures cannot exceed figures reviewed")
@@ -158,13 +311,28 @@ class InventoryAuditRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_counts(self) -> "InventoryAuditRequest":
-        """Keep the census generic but reject nonsensical negative counts."""
+        """Reject invalid counts and unchecked model suggestions.
+
+        A proposal becomes ground truth only after the reviewer explicitly confirms or
+        corrects every panel. Historical panel censuses predate this state and remain
+        readable, but must be checked before they can be submitted again.
+        """
 
         if any(
             not isinstance(value, int) or value < 0
             for value in self.expected_counts.values()
         ):
             raise ValueError("inventory counts must be non-negative integers")
+        unchecked = [
+            panel
+            for panel in self.main_text_figure_census.panels
+            if panel.review_status not in {"confirmed", "corrected"}
+        ]
+        if unchecked:
+            raise ValueError(
+                f"review every figure panel before saving the census "
+                f"({len(unchecked)} unchecked)"
+            )
         return self
 
 
@@ -209,6 +377,7 @@ class ReviewEvent(BaseModel):
     reviewer_id: str
     kind: Literal[
         "mutation",
+        "structural_mutation",
         "spreadsheet_review",
         "inventory_audit",
         "record_decision",
@@ -392,9 +561,7 @@ def _record_catalog(truth: dict[str, Any]) -> dict[str, str]:
     return catalog
 
 
-def _record(
-    truth: dict[str, Any], collection: str, record_id: str
-) -> dict[str, Any]:
+def _record(truth: dict[str, Any], collection: str, record_id: str) -> dict[str, Any]:
     """Resolve a stable top-level record identity without relying on list position."""
 
     identifier = RECORD_IDENTIFIERS[collection]
@@ -450,7 +617,11 @@ def _contains_record_reference(
         for field, child in value.items():
             if at_root and field == root_identifier:
                 continue
-            if field == reference_field and child is not None and str(child) == target_id:
+            if (
+                field == reference_field
+                and child is not None
+                and str(child) == target_id
+            ):
                 return True
             if field == "candidate_ids" and isinstance(child, list):
                 if any(str(candidate) == target_id for candidate in child):
@@ -477,9 +648,7 @@ def _contains_record_reference(
     return False
 
 
-def _record_references(
-    truth: dict[str, Any], collection: str, index: int
-) -> list[str]:
+def _record_references(truth: dict[str, Any], collection: str, index: int) -> list[str]:
     """List records that must be corrected before a referenced record is removed."""
 
     target = truth[collection][index]
@@ -502,6 +671,91 @@ def _record_references(
     return references
 
 
+def _replace_record_reference(
+    value: object,
+    reference_field: str,
+    source_id: str,
+    target_id: str,
+    *,
+    root_identifier: str | None = None,
+    at_root: bool = True,
+) -> None:
+    """Retarget explicit schema identifiers while preserving record identities.
+
+    This is the write-side counterpart of ``_contains_record_reference``. Restricting
+    replacement to identifier fields and candidate lists prevents an ID-like string in
+    a label, note, chemical name, or evidence quote from being rewritten by a merge.
+    """
+
+    if isinstance(value, dict):
+        for field, child in value.items():
+            if at_root and field == root_identifier:
+                continue
+            if field == reference_field and str(child) == source_id:
+                value[field] = target_id
+            elif field == "candidate_ids" and isinstance(child, list):
+                value[field] = [
+                    target_id if str(candidate) == source_id else candidate
+                    for candidate in child
+                ]
+            else:
+                _replace_record_reference(
+                    child,
+                    reference_field,
+                    source_id,
+                    target_id,
+                    root_identifier=root_identifier,
+                    at_root=False,
+                )
+    elif isinstance(value, list):
+        for child in value:
+            _replace_record_reference(
+                child,
+                reference_field,
+                source_id,
+                target_id,
+                root_identifier=root_identifier,
+                at_root=False,
+            )
+
+
+def _changed_collections(
+    before: dict[str, Any], after: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Store only changed top-level record collections for exact structural undo."""
+
+    return [
+        {
+            "collection": collection,
+            "before": copy.deepcopy(before[collection]),
+            "after": copy.deepcopy(after[collection]),
+        }
+        for collection in RECORD_IDENTIFIERS
+        if before[collection] != after[collection]
+    ]
+
+
+def _reverse_structural_mutation(
+    truth: dict[str, Any], event: ReviewEvent
+) -> dict[str, Any]:
+    """Undo a merge or reclassification only while all affected records are unchanged."""
+
+    if event.kind != "structural_mutation":
+        raise ValueError("only a structural mutation can be reversed here")
+    result = copy.deepcopy(truth)
+    replacements = event.details.get("collection_replacements", [])
+    if not replacements:
+        raise ValueError("structural mutation has no reversible collection snapshot")
+    for replacement in replacements:
+        collection = str(replacement["collection"])
+        if result.get(collection) != replacement["after"]:
+            raise ValueError(
+                f"{collection} has changed since the structural correction"
+            )
+        result[collection] = copy.deepcopy(replacement["before"])
+    return StudyExtraction.model_validate(result).model_dump(mode="json")
+
+
 def _record_reference_catalog(truth: dict[str, Any]) -> dict[str, list[str]]:
     """Expose deletion dependencies from the same check enforced on mutation."""
 
@@ -518,11 +772,7 @@ def _removed_record_location(path: str) -> tuple[str, int] | None:
     """Recognize deletion of a complete top-level record collection item."""
 
     parts = _decode_pointer(path)
-    if (
-        len(parts) == 2
-        and parts[0] in RECORD_IDENTIFIERS
-        and parts[1].isdigit()
-    ):
+    if len(parts) == 2 and parts[0] in RECORD_IDENTIFIERS and parts[1].isdigit():
         return parts[0], int(parts[1])
     return None
 
@@ -577,10 +827,11 @@ class StudyReviewStore:
         return self.storage.load_revision(split, paper_id).ground_truth
 
     def load_document(self, split: str, paper_id: str) -> Any:
-        """Return the immutable evidence document captured with the model seed."""
+        """Return the evidence document bound to the active ground-truth revision."""
 
         self.validate_identity(split, paper_id)
-        return self.storage.load_source(split, paper_id).document
+        revision = self.storage.load_revision(split, paper_id)
+        return self.storage.load_evidence(split, paper_id, revision.evidence_version)
 
     def _materialize(
         self,
@@ -598,8 +849,13 @@ class StudyReviewStore:
         write_json_atomic(self.seed_path(split, paper_id), source.seed_extraction)
         write_json_atomic(self.truth_path(split, paper_id), revision.ground_truth)
         write_json_atomic(self.events_path(split, paper_id), revision.events)
-        if source.document is not None:
-            write_json_atomic(self.document_path(split, paper_id), source.document)
+        document = (
+            source.document
+            if revision.evidence_version == 1
+            else self.storage.load_evidence(split, paper_id, revision.evidence_version)
+        )
+        if document is not None:
+            write_json_atomic(self.document_path(split, paper_id), document)
         write_json_atomic(self.manifest_path(split, paper_id), source.manifest)
 
     def _commit(
@@ -609,11 +865,14 @@ class StudyReviewStore:
         current: ReviewRevision,
         truth: dict[str, Any],
         event: dict[str, Any],
+        *,
+        evidence_version: int | None = None,
     ) -> dict[str, Any]:
         """Atomically commit truth and audit event as the next paper revision."""
 
         revision = ReviewRevision(
             revision=current.revision + 1,
+            evidence_version=evidence_version or current.evidence_version,
             ground_truth=truth,
             events=[*current.events, event],
         )
@@ -695,9 +954,7 @@ class StudyReviewStore:
             )
             papers = []
             for paper_id, revision in zip(paper_ids, revisions, strict=True):
-                paper = self._reviewer_paper_progress(
-                    paper_id, revision, reviewer_id
-                )
+                paper = self._reviewer_paper_progress(paper_id, revision, reviewer_id)
                 if paper is not None:
                     papers.append(paper)
         result = ReviewerProgress(
@@ -732,14 +989,21 @@ class StudyReviewStore:
         }
         undoable_event_ids: list[str] = []
         for event in events:
-            if event.kind not in {
-                "mutation",
-                "spreadsheet_review",
-            } or event.event_id in undone_event_ids:
+            if (
+                event.kind
+                not in {
+                    "mutation",
+                    "structural_mutation",
+                    "spreadsheet_review",
+                }
+                or event.event_id in undone_event_ids
+            ):
                 continue
             try:
                 if event.kind == "mutation":
                     self._prepare_mutation_undo(revision.ground_truth, event)
+                elif event.kind == "structural_mutation":
+                    _reverse_structural_mutation(revision.ground_truth, event)
                 else:
                     _reverse_spreadsheet_review(revision.ground_truth, event)
             except (IndexError, KeyError, TypeError, ValueError):
@@ -761,9 +1025,7 @@ class StudyReviewStore:
             completed_stages=completed_stages,
             current_inventory_audit=current_inventory_audit,
             current_record_decisions=current_record_decisions,
-            current_event_ids=self._current_reviewer_event_ids(
-                revision, reviewer_id
-            ),
+            current_event_ids=self._current_reviewer_event_ids(revision, reviewer_id),
             resettable_review_count=(
                 len(completed_stages)
                 + len(current_record_decisions)
@@ -782,9 +1044,7 @@ class StudyReviewStore:
 
         catalog = _record_catalog(revision.ground_truth)
         current: dict[str, str] = {}
-        parsed_events = [
-            ReviewEvent.model_validate(event) for event in revision.events
-        ]
+        parsed_events = [ReviewEvent.model_validate(event) for event in revision.events]
         undone_event_ids = {
             str(event.details.get("undoes_event_id"))
             for event in parsed_events
@@ -810,7 +1070,9 @@ class StudyReviewStore:
                 stage = str(event.details.get("stage", ""))
                 current[f"stage:{stage}"] = event.event_id
         current_ids = set(current.values())
-        return [event.event_id for event in parsed_events if event.event_id in current_ids]
+        return [
+            event.event_id for event in parsed_events if event.event_id in current_ids
+        ]
 
     @staticmethod
     def summary(truth: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any]:
@@ -838,7 +1100,10 @@ class StudyReviewStore:
                 )
             elif event["kind"] == "inventory_audit":
                 details = copy.deepcopy(event["details"])
-                if "review_scope_sources" not in details and "searched_sources" in details:
+                if (
+                    "review_scope_sources" not in details
+                    and "searched_sources" in details
+                ):
                     details["review_scope_sources"] = details.pop("searched_sources")
                 audits[event["reviewer_id"]] = details
             elif event["kind"] == "record_decision":
@@ -852,8 +1117,8 @@ class StudyReviewStore:
                 for details in event["details"].get("decisions", []):
                     record_key = str(details["record_key"])
                     if catalog.get(record_key) == details.get("record_digest"):
-                        decisions.setdefault(event["reviewer_id"], {})[record_key] = str(
-                            details["decision"]
+                        decisions.setdefault(event["reviewer_id"], {})[record_key] = (
+                            str(details["decision"])
                         )
             elif event["kind"] == "review_reset":
                 reviewer_id = event["reviewer_id"]
@@ -933,6 +1198,93 @@ class StudyReviewStore:
         self._materialize(split, paper_id, source, revision)
         return self.load_bundle(split, paper_id)
 
+    def refresh_ground_truth(
+        self,
+        split: str,
+        paper_id: str,
+        extraction: object,
+        *,
+        base_revision: int,
+        reviewer_id: str,
+        reason: str,
+        provenance: dict[str, Any] | None = None,
+        document: object | None = None,
+    ) -> dict[str, Any]:
+        """Make a newer validated extraction the active review draft.
+
+        Refreshes are administrative replacements, not ordinary reviewer edits. The
+        immutable seed and every earlier revision remain available, while changed
+        record digests reopen any decisions that no longer describe the active draft.
+        Requiring the replacement to validate against the paper's stored evidence
+        prevents a run made from a different parser document from breaking citations.
+        """
+
+        if not reviewer_id.strip():
+            raise ValueError("reviewer_id is required")
+        if not reason.strip():
+            raise ValueError("ground-truth refresh requires a reason")
+        current = self._validate_revision(split, paper_id, base_revision)
+        if isinstance(extraction, dict) and isinstance(
+            extraction.get("extraction"), dict
+        ):
+            extraction = extraction["extraction"]
+        truth = StudyExtraction.model_validate(extraction).model_dump(mode="json")
+        current_document = self.load_document(split, paper_id)
+        replacement_document = document if document is not None else current_document
+        if truth == current.ground_truth and replacement_document == current_document:
+            raise ValueError("replacement is identical to the active ground truth")
+
+        raw_blocks = (
+            replacement_document.get("blocks")
+            if isinstance(replacement_document, dict)
+            else replacement_document
+        )
+        if isinstance(raw_blocks, list):
+            blocks = [EvidenceBlock.model_validate(block) for block in raw_blocks]
+            validation = validate_study(StudyExtraction.model_validate(truth), blocks)
+            if validation.get("issues"):
+                raise ValueError(
+                    "replacement has unresolved evidence-validation issues"
+                )
+
+        evidence_version = current.evidence_version
+        if replacement_document != current_document:
+            evidence_version = current.revision + 1
+            self.storage.create_evidence(
+                split, paper_id, evidence_version, replacement_document
+            )
+
+        event = ReviewEvent(
+            event_id=str(uuid.uuid4()),
+            revision=current.revision + 1,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            reviewer_id=reviewer_id,
+            kind="ground_truth_refresh",
+            note=reason.strip(),
+            details={
+                "previous_sha256": _digest(current.ground_truth),
+                "replacement_sha256": _digest(truth),
+                "previous_record_counts": {
+                    key: len(current.ground_truth[key]) for key in RECORD_IDENTIFIERS
+                },
+                "replacement_record_counts": {
+                    key: len(truth[key]) for key in RECORD_IDENTIFIERS
+                },
+                "previous_evidence_version": current.evidence_version,
+                "replacement_evidence_version": evidence_version,
+                "replacement_evidence_sha256": _digest(replacement_document),
+                "provenance": copy.deepcopy(provenance or {}),
+            },
+        ).model_dump(mode="json")
+        return self._commit(
+            split,
+            paper_id,
+            current,
+            truth,
+            event,
+            evidence_version=evidence_version,
+        )
+
     def _validate_revision(
         self, split: str, paper_id: str, base_revision: int
     ) -> ReviewRevision:
@@ -978,6 +1330,42 @@ class StudyReviewStore:
                 raise ValueError(
                     f"quote is not present in evidence block {citation.block_id}"
                 )
+
+    def _reject_new_grounding_issues(
+        self,
+        split: str,
+        paper_id: str,
+        before: dict[str, Any],
+        after: dict[str, Any],
+    ) -> None:
+        """Prevent a spreadsheet correction from contradicting its source evidence.
+
+        Imported seeds can contain pre-existing validation findings. Comparing issue
+        sets therefore blocks only newly introduced failures instead of making an
+        unrelated historical issue prevent all review work.
+        """
+
+        document = self.load_document(split, paper_id)
+        raw_blocks = document.get("blocks") if isinstance(document, dict) else document
+        if not isinstance(raw_blocks, list):
+            return
+        blocks = [EvidenceBlock.model_validate(block) for block in raw_blocks]
+
+        def issues(value: dict[str, Any]) -> set[tuple[str, str]]:
+            result = validate_study(StudyExtraction.model_validate(value), blocks)
+            return {
+                (str(item.get("path")), str(item.get("reason")))
+                for item in result.get("issues", [])
+                if isinstance(item, dict)
+            }
+
+        introduced = sorted(issues(after) - issues(before))
+        if introduced:
+            detail = "; ".join(f"{path}: {reason}" for path, reason in introduced[:5])
+            raise ValueError(
+                "review workbook correction introduces a source-grounding problem: "
+                + detail
+            )
 
     def review_workbook(
         self,
@@ -1025,16 +1413,58 @@ class StudyReviewStore:
 
         self.validate_identity(split, paper_id)
         current = self.storage.load_revision(split, paper_id)
-        review = read_review_workbook(
-            data,
-            truth=current.ground_truth,
-            identifiers=RECORD_IDENTIFIERS,
-            labels=RECORD_LABELS,
-            paper_id=paper_id,
-            split=split,
-            revision=current.revision,
-            schema_sha256=study_schema_sha256(),
-        )
+        safe_filename = Path(filename).name[:240] or "review.xlsx"
+        try:
+            review = read_review_workbook(
+                data,
+                truth=current.ground_truth,
+                identifiers=RECORD_IDENTIFIERS,
+                labels=RECORD_LABELS,
+                paper_id=paper_id,
+                split=split,
+                revision=current.revision,
+                schema_sha256=study_schema_sha256(),
+            )
+        except ValueError as error:
+            if not any(
+                phrase in str(error)
+                for phrase in ("older paper revision", "older layout")
+            ):
+                raise
+            base_revision, comments, workbook_sha256 = read_review_workbook_comments(
+                data, paper_id=paper_id, split=split
+            )
+            if not comments:
+                raise error
+            current = self.storage.load_revision(split, paper_id)
+            event = ReviewEvent(
+                event_id=str(uuid.uuid4()),
+                revision=current.revision + 1,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                reviewer_id=reviewer_id,
+                kind="spreadsheet_review",
+                note=f"Imported comments from older workbook {safe_filename}.",
+                details={
+                    "workbook_sha256": workbook_sha256,
+                    "filename": safe_filename,
+                    "workbook_import_mode": "comments_only_from_older_workbook",
+                    "workbook_base_revision": base_revision,
+                    "cell_comments": [
+                        {
+                            "sheet": item.sheet,
+                            "cell": item.cell,
+                            "kind": item.kind,
+                            "text": item.text,
+                            "author": item.author,
+                            "record_collection": item.record_collection,
+                            "record_id": item.record_id,
+                            "schema_path": item.schema_path,
+                        }
+                        for item in comments
+                    ],
+                },
+            ).model_dump(mode="json")
+            return self._commit(split, paper_id, current, current.ground_truth, event)
         # Read again through the normal transition guard immediately before commit.
         current = self._validate_revision(split, paper_id, review.base_revision)
         proposed = copy.deepcopy(current.ground_truth)
@@ -1057,10 +1487,14 @@ class StudyReviewStore:
                 continue
             changed_keys.add((change.collection, change.record_id))
             evidence.extend(citations)
-            changed_paths.append(
-                {"path": change.path, "note": change.note}
-            )
+            changed_paths.append({"path": change.path, "note": change.note})
         validated = StudyExtraction.model_validate(proposed).model_dump(mode="json")
+        self._reject_new_grounding_issues(
+            split,
+            paper_id,
+            current.ground_truth,
+            validated,
+        )
         replacements = [
             {
                 "collection": collection,
@@ -1073,9 +1507,9 @@ class StudyReviewStore:
             for collection, record_id in sorted(changed_keys)
         ]
 
-        existing_decisions = self.summary(
-            current.ground_truth, current.events
-        )["record_decisions"].get(reviewer_id, {})
+        existing_decisions = self.summary(current.ground_truth, current.events)[
+            "record_decisions"
+        ].get(reviewer_id, {})
         decision_details = []
         for decision in review.decisions:
             record_key = f"{decision.collection}:{decision.record_id}"
@@ -1094,15 +1528,13 @@ class StudyReviewStore:
                     "note": decision.note,
                 }
             )
-        if not replacements and not decision_details:
-            raise ValueError("review workbook contains no new decisions or corrections")
+        if not replacements and not decision_details and not review.comments:
+            raise ValueError(
+                "review workbook contains no new decisions, corrections, or comments"
+            )
         unique_evidence = list(
-            {
-                (item.block_id, item.quote): item
-                for item in evidence
-            }.values()
+            {(item.block_id, item.quote): item for item in evidence}.values()
         )
-        safe_filename = Path(filename).name[:240] or "review.xlsx"
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
             revision=current.revision + 1,
@@ -1115,9 +1547,23 @@ class StudyReviewStore:
                 "workbook_sha256": review.sha256,
                 "filename": safe_filename,
                 "scope": {"device": review.scope_device_id},
+                "workbook_import_mode": "validated_current_workbook",
                 "record_replacements": replacements,
                 "changed_fields": changed_paths,
                 "decisions": decision_details,
+                "cell_comments": [
+                    {
+                        "sheet": item.sheet,
+                        "cell": item.cell,
+                        "kind": item.kind,
+                        "text": item.text,
+                        "author": item.author,
+                        "record_collection": item.record_collection,
+                        "record_id": item.record_id,
+                        "schema_path": item.schema_path,
+                    }
+                    for item in review.comments
+                ],
             },
         ).model_dump(mode="json")
         return self._commit(split, paper_id, current, validated, event)
@@ -1152,6 +1598,12 @@ class StudyReviewStore:
         if request.action == "replace" and before == request.value:
             raise ValueError("replacement does not change the record")
         validated = StudyExtraction.model_validate(proposed).model_dump(mode="json")
+        self._reject_new_grounding_issues(
+            split,
+            paper_id,
+            current_revision.ground_truth,
+            validated,
+        )
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
             revision=current_revision.revision + 1,
@@ -1166,6 +1618,127 @@ class StudyReviewStore:
             note=request.note,
         ).model_dump(mode="json")
         return self._commit(split, paper_id, current_revision, validated, event)
+
+    def merge_records(
+        self,
+        split: str,
+        paper_id: str,
+        request: RecordMergeRequest,
+        reviewer_id: str,
+    ) -> dict[str, Any]:
+        """Merge a duplicate into its canonical record and retarget explicit links.
+
+        Reference updates and deletion happen in one validated transition, avoiding
+        the broken-link intermediate state that made this common correction tedious.
+        """
+
+        current = self._validate_revision(split, paper_id, request.base_revision)
+        before = current.ground_truth
+        proposed = copy.deepcopy(before)
+        identifier = RECORD_IDENTIFIERS[request.collection]
+        records = proposed[request.collection]
+        source_index = next(
+            (
+                index
+                for index, record in enumerate(records)
+                if str(record[identifier]) == request.source_record_id
+            ),
+            None,
+        )
+        if source_index is None:
+            raise ValueError(
+                f"unknown {request.collection} record {request.source_record_id}"
+            )
+        if not any(
+            str(record[identifier]) == request.target_record_id for record in records
+        ):
+            raise ValueError(
+                f"unknown {request.collection} record {request.target_record_id}"
+            )
+        for collection, root_identifier in RECORD_IDENTIFIERS.items():
+            for record in proposed[collection]:
+                _replace_record_reference(
+                    record,
+                    identifier,
+                    request.source_record_id,
+                    request.target_record_id,
+                    root_identifier=root_identifier,
+                )
+        del records[source_index]
+        validated = StudyExtraction.model_validate(proposed).model_dump(mode="json")
+        self._reject_new_grounding_issues(split, paper_id, before, validated)
+        event = ReviewEvent(
+            event_id=str(uuid.uuid4()),
+            revision=current.revision + 1,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            reviewer_id=reviewer_id,
+            kind="structural_mutation",
+            note=request.note,
+            details={
+                "operation": "merge_records",
+                "collection": request.collection,
+                "source_record_id": request.source_record_id,
+                "target_record_id": request.target_record_id,
+                "collection_replacements": _changed_collections(before, validated),
+            },
+        ).model_dump(mode="json")
+        return self._commit(split, paper_id, current, validated, event)
+
+    def reclassify_record(
+        self,
+        split: str,
+        paper_id: str,
+        request: RecordReclassificationRequest,
+        reviewer_id: str,
+    ) -> dict[str, Any]:
+        """Atomically replace a record that belongs to the wrong collection."""
+
+        current = self._validate_revision(split, paper_id, request.base_revision)
+        self._validate_citations(split, paper_id, request.evidence)
+        before = current.ground_truth
+        proposed = copy.deepcopy(before)
+        identifier = RECORD_IDENTIFIERS[request.source_collection]
+        records = proposed[request.source_collection]
+        source_index = next(
+            (
+                index
+                for index, record in enumerate(records)
+                if str(record[identifier]) == request.source_record_id
+            ),
+            None,
+        )
+        if source_index is None:
+            raise ValueError(
+                f"unknown {request.source_collection} record "
+                f"{request.source_record_id}"
+            )
+        references = _record_references(before, request.source_collection, source_index)
+        if references:
+            raise ValueError(
+                "relink these dependent records before changing the record type: "
+                + ", ".join(references)
+            )
+        del records[source_index]
+        proposed[request.target_collection].append(copy.deepcopy(request.value))
+        validated = StudyExtraction.model_validate(proposed).model_dump(mode="json")
+        self._reject_new_grounding_issues(split, paper_id, before, validated)
+        event = ReviewEvent(
+            event_id=str(uuid.uuid4()),
+            revision=current.revision + 1,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            reviewer_id=reviewer_id,
+            kind="structural_mutation",
+            evidence=request.evidence,
+            note=request.note,
+            details={
+                "operation": "reclassify_record",
+                "source_collection": request.source_collection,
+                "source_record_id": request.source_record_id,
+                "target_collection": request.target_collection,
+                "collection_replacements": _changed_collections(before, validated),
+            },
+        ).model_dump(mode="json")
+        return self._commit(split, paper_id, current, validated, event)
 
     def undo_mutation(
         self,
@@ -1228,6 +1801,32 @@ class StudyReviewStore:
                     "record_replacements": inverse_replacements,
                     "changed_fields": target.details.get("changed_fields", []),
                     "decisions": [],
+                },
+            ).model_dump(mode="json")
+        elif target.kind == "structural_mutation":
+            validated = _reverse_structural_mutation(
+                current_revision.ground_truth, target
+            )
+            inverse_replacements = [
+                {
+                    **replacement,
+                    "before": copy.deepcopy(replacement["after"]),
+                    "after": copy.deepcopy(replacement["before"]),
+                }
+                for replacement in target.details.get("collection_replacements", [])
+            ]
+            event = ReviewEvent(
+                event_id=str(uuid.uuid4()),
+                revision=current_revision.revision + 1,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                reviewer_id=reviewer_id,
+                kind="structural_mutation",
+                evidence=target.evidence,
+                note="Undid a previously saved structural correction.",
+                details={
+                    "undoes_event_id": target.event_id,
+                    "operation": f"undo_{target.details.get('operation', 'structural')}",
+                    "collection_replacements": inverse_replacements,
                 },
             ).model_dump(mode="json")
         else:
@@ -1347,9 +1946,7 @@ class StudyReviewStore:
         current_revision = self._validate_revision(
             split, paper_id, request.base_revision
         )
-        summary = self.summary(
-            current_revision.ground_truth, current_revision.events
-        )
+        summary = self.summary(current_revision.ground_truth, current_revision.events)
         decisions = summary["record_decisions"].get(reviewer_id, {})
         inventory = summary["inventory_audits"].get(reviewer_id)
         stages = [
@@ -1402,9 +1999,7 @@ class StudyReviewStore:
             request.stage == "inventory"
             and reviewer_id not in current_summary["inventory_audits"]
         ):
-            raise ValueError(
-                "save the paper census before completing inventory"
-            )
+            raise ValueError("save the paper census before completing inventory")
         prerequisite = {
             "fields": "inventory",
             "completeness": "fields",
@@ -1414,9 +2009,7 @@ class StudyReviewStore:
             raise ValueError(f"complete the {prerequisite} stage first")
         if request.stage == "fields":
             truth = current_revision.ground_truth
-            decisions = current_summary["record_decisions"].get(
-                reviewer_id, {}
-            )
+            decisions = current_summary["record_decisions"].get(reviewer_id, {})
             unresolved = [
                 record_key
                 for record_key in _record_catalog(truth)
