@@ -498,6 +498,21 @@ def test_device_family_editor_has_a_focused_stack_workflow():
     assert "absorber.layer_id = null" in source
     assert "step.target_layer_ids = remaining" in source
     assert 'const fields = ["layer_id"' not in source
+
+
+def test_structured_editor_prioritizes_scientific_fields_over_schema_plumbing():
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    styles = (APP / "styles.css").read_text(encoding="utf-8")
+
+    assert "Schema field" in source
+    assert "Technical details" in source
+    assert "Record links and identifiers" in source
+    assert "isTechnicalRecordField" in source
+    assert "Materials and fabrication" in source
+    assert "item?.label" in source
+    assert 'encodeURIComponent(String(part)).replaceAll("-", "%2D")' in source
+    assert ".editor-group .editor-group { grid-column:1 / -1;" in styles
+    assert ".device-related-editor > .editor-group > .editor-fields { grid-template-columns:1fr;" in styles
     assert "attachMissingEvidence(value, citation)" in source
 
 

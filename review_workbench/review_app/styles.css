@@ -286,7 +286,7 @@ th,td { padding:.55rem; border-bottom:1px solid var(--line); text-align:left; } 
 .status-actions p { flex:1; min-width:220px; }
 #status,.success { color:var(--brand); }.error,#dialog-status,#import-status { color:var(--danger); }
 dialog { border:0; border-radius:18px; padding:0; box-shadow:0 24px 80px #0005; width:min(760px,92vw); }
-#record-dialog { width:min(980px,94vw); }
+#record-dialog { width:min(1080px,96vw); }
 dialog::backdrop { background:#16201d99; backdrop-filter:blur(4px); }
 .dialog-card { display:grid; gap:12px; padding:20px; max-height:90vh; overflow:auto; }
 .dialog-heading button { border:0; font-size:1.4rem; }.dialog-actions span { flex:1; }
@@ -297,11 +297,25 @@ dialog::backdrop { background:#16201d99; backdrop-filter:blur(4px); }
 .editor-mode { display:flex; gap:4px; padding:4px; border-radius:9px; background:var(--wash); }
 .editor-mode button { flex:1; border:0; background:transparent; }
 .editor-mode button.active { color:white; background:var(--brand); }
-.json-path { display:block; color:var(--brand); font:10px/1.35 ui-monospace, monospace; overflow-wrap:anywhere; }
+.json-path { display:block; margin-top:5px; color:var(--brand); font:10px/1.4 ui-monospace, monospace; overflow-wrap:anywhere; }
 .structured-editor { display:grid; gap:8px; }
 .editor-group { border:1px solid var(--line); border-radius:8px; padding:8px; }
 .editor-group > summary { cursor:pointer; color:var(--ink); font-size:.82rem; font-weight:700; }
-.editor-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; padding-top:9px; }
+.editor-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr)); align-items:start; gap:10px; padding-top:10px; }
+.editor-group .editor-group { grid-column:1 / -1; background:#fff; }
+.editor-field { display:grid; align-self:start; min-width:0; gap:6px; }
+.editor-field > input,.editor-field > select,.editor-field > textarea { width:100%; min-width:0; }
+.editor-field-heading { display:flex; align-items:baseline; justify-content:space-between; gap:8px; min-width:0; }
+.editor-field-heading > label { color:#53605b; font-size:.76rem; font-weight:650; }
+.field-schema-path { position:relative; flex:none; }
+.field-schema-path > summary { color:#7b8782; cursor:pointer; font-size:.66rem; list-style:none; text-decoration:underline; text-decoration-color:#c7d1cd; text-underline-offset:2px; }
+.field-schema-path > summary::-webkit-details-marker { display:none; }
+.editor-field-heading:has(.field-schema-path[open]) { flex-wrap:wrap; }
+.field-schema-path[open] { flex-basis:100%; width:100%; }
+.field-schema-path[open] > summary { color:var(--brand); }
+.editor-technical { grid-column:1 / -1; margin-top:2px; padding-top:7px; border-top:1px solid #e5ebe8; }
+.editor-technical > summary { width:max-content; color:#697570; cursor:pointer; font-size:.72rem; }
+.editor-technical > p { margin:7px 0 0; color:var(--muted); font-size:.7rem; }
 .device-identity-editor,.device-stack-editor,.device-related-editor { display:grid; gap:10px; padding:13px; border:1px solid var(--line); border-radius:10px; background:#fff; }
 .device-identity-editor h3,.device-stack-editor h3,.device-related-editor h3 { margin:0; font-size:.95rem; }
 .device-stack-heading { display:flex; align-items:start; justify-content:space-between; gap:12px; }
@@ -316,7 +330,8 @@ dialog::backdrop { background:#16201d99; backdrop-filter:blur(4px); }
 .stack-layer-actions .danger-link { color:var(--danger); }
 .stack-layer-advanced { margin-left:40px; }
 .stack-layer-advanced > summary { cursor:pointer; color:var(--muted); font-size:.7rem; }
-.device-related-editor > .editor-group { background:#fafcfb; }
+.device-related-editor > .editor-group { background:#f8fbf9; }
+.device-related-editor > .editor-group > .editor-fields { grid-template-columns:1fr; }
 .editor-fields textarea { min-height:78px; }.evidence-search { border-top:1px solid var(--line); padding-top:9px; }.evidence-search summary { cursor:pointer; color:var(--brand); font-size:.82rem; }
 .evidence-picker { display:grid; grid-template-columns:1fr auto; align-items:end; gap:8px; }
 #evidence-results { display:grid; gap:5px; max-height:220px; overflow:auto; }
