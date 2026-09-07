@@ -89,6 +89,16 @@ the JSON immediately and keeps the raw editor open when it is invalid. Saving ei
 view still checks the complete `StudyExtraction`, including references and evidence, so raw
 editing does not bypass scientific validation.
 
+Device-family corrections have a focused **Device stack** editor. Each row exposes the
+layer material and function, with controls to reorder, add, or remove layers. Less
+frequently changed composition, material-form, and property fields remain in a
+collapsed section on that row. Reordering updates the sequence numbers; stable layer
+IDs and evidence stay attached. Removing a layer clears references to its ID from
+absorber components and processing steps without deleting their scientific content.
+The raw stack string remains available as the paper's
+verbatim representation, but changing it does not silently rewrite the structured
+layers.
+
 Review-priority labels describe provenance or the current reviewer's action; they are
 not correctness judgments. **Added during the second extraction read** means the record
 was absent from the first draft. **Revised during the second extraction read** means at
@@ -324,9 +334,10 @@ means that values are printed; it does not mean that points could be estimated f
 curve.
 
 Mark whether the panel contains any fact represented by `StudyExtraction`. For a
-schema-relevant panel, count complete schema records and individual atomic field values
-that are visible there but absent from running text, captions, and tables. Count stored
-field instances, not pixels or sampled curve points. When one fact spans multiple
+schema-relevant panel, count complete schema records and individual populated fields
+that are visible there but absent from running text, captions, and tables. A populated
+field is one stored fact, such as PCE, Voc, layer thickness, or test duration. It is not
+a point sampled from a curve. When one fact spans multiple
 panels, assign it to the single panel providing the clearest support so totals are not
 duplicated. Do not add approximate visual readings to the text-evidenced ground truth.
 
@@ -383,7 +394,7 @@ When deterministic localization coordinates are available, it renders the active
 subfigure crop directly from the stored PDF; no extra model call or external image
 transfer occurs. Reviewers can also jump from the current panel to its main-paper page, add a missed panel,
 remove an extra panel, correct its class, axes, presentation, or relevance, and enter
-the verified figure-only record and atomic-value counts. Filters expose unchecked,
+the verified figure-only record and populated-field counts. Filters expose unchecked,
 uncertain, schema-relevant, or all panels. Captions without an automatic image match
 are called out explicitly and must be added manually. A stable proposal identifier
 keeps visual candidates attached when a reviewer corrects a figure or panel label.
