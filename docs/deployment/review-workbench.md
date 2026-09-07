@@ -325,8 +325,10 @@ Vercel's `all_except_custom_domains` SSO setting still protects an additional
 `vercel.app` alias, even when it points at the production deployment. For this setup,
 disable Vercel SSO protection only after the workbench's own authentication variables
 are configured. Confirm the boundary from a signed-out client: the HTML landing pages
-may load, but `/api/papers` and `/api/comparisons` must both return HTTP 401. A custom
-domain exempted by Vercel protection can retain the outer SSO layer instead.
+may load, but `/api/papers` and `/api/comparisons` must both return HTTP 401. The
+`all_except_custom_domains` mode exempts custom domains too; retaining an outer SSO
+layer therefore requires a Vercel protection configuration that explicitly covers the
+chosen hostname.
 
 ### Clerk
 
