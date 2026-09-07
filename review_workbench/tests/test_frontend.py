@@ -416,7 +416,9 @@ def test_startup_defers_schema_and_shows_real_loading_states():
     assert "if (await initializeAuthentication())" in source
     assert "await startApp();" in source
     assert not source.rstrip().endswith("await loadStudySchema();")
-    assert "if (!state.studySchema)" in source
+    assert "return state.studySchema || loadStudySchema();" in source
+    assert 'throw new Error("The server returned an incomplete study schema.")' in source
+    assert "state.studySchema?.properties?.[kind]?.items" in source
 
 
 def test_failed_navigation_keeps_an_open_paper_and_progress_requires_a_session():
