@@ -120,6 +120,9 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
     assert "figureCensusTotals" in javascript
     assert "/api/figure-census-proposal/" in javascript
     assert "/api/figure-panel-image/" in javascript
+    assert 'responseType: "blob"' in javascript
+    assert "loadAuthenticatedImage" in javascript
+    assert 'src: `/api/figure-panel-image/' not in javascript
     assert 'id="figure-review-progress"' in html
     assert 'id="figure-review-filter"' in html
     assert "Confirm and next" in javascript
@@ -129,6 +132,9 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
     assert "Figure-and-caption" in javascript
     assert "Caption" in javascript
     assert "Values visibly printed in this panel" in javascript
+    assert "Individual field values shown only here" in javascript
+    assert "A field is one item such as PCE" in javascript
+    assert "atomic values" not in html.lower()
     assert "do not count it as figure-only" in javascript
     assert "Show figure in paper" in javascript
     assert "no automatic image match" in javascript
@@ -455,6 +461,18 @@ def test_corrections_default_to_fields_and_existing_evidence():
     assert "MATERIAL_FORMS" in source
     assert "schema_compatibility" in source
     assert "fields added since import still require review or regeneration" in source
+
+
+def test_device_family_editor_has_a_focused_stack_workflow():
+    source = (APP / "app.js").read_text(encoding="utf-8")
+
+    assert "renderDeviceStackEditor" in source
+    assert "Correct the material, function, and order directly" in source
+    assert "moveLayer" in source
+    assert "removeLayer" in source
+    assert "addLayer" in source
+    assert "recordSchemaNode" in source
+    assert "Composition, form, properties, and ID" in source
 
 
 def test_ui_builds_untrusted_content_with_dom_nodes():

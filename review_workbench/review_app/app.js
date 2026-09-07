@@ -42,7 +42,7 @@ const RECORD_GUIDANCE = {
   },
   performance_observations: {
     census: "One measurement protocol on one device. Forward and reverse scans, stabilized output, and certification are separate observations—not separate devices.",
-    review: "Check the linked device, measurement type, scan direction, and every atomic metric shown below.",
+    review: "Check the linked device, measurement type, scan direction, and each reported metric shown below.",
   },
   population_statistics: {
     census: "One reported aggregate over multiple devices, such as a mean, median, range, or distribution. Do not count it as an individual device.",
@@ -109,6 +109,7 @@ const state = {
   annotationView: "current", authMode: "local", clerk: null,
   figureCensusProposals: {}, figureProposalPromises: new Map(),
   figureQueueIndex: 0, figureReviewFilter: "unreviewed", censusDirty: false,
+  figurePanelRequest: 0, figurePanelAbortController: null, figurePanelObjectUrl: null,
 };
 
 const LAPTOP_LAYOUT = "(max-width: 1400px)";
@@ -200,6 +201,38 @@ async function loadPdfPage(url, signal) {
   } catch (error) {
     URL.revokeObjectURL(objectUrl);
     throw error;
+  }
+}
+
+async function loadAuthenticatedImage(image, status, url) {
+  state.figurePanelAbortController?.abort();
+  const controller = new AbortController();
+  state.figurePanelAbortController = controller;
+  const requestId = ++state.figurePanelRequest;
+  status.textContent = "Loading figure crop…";
+  status.classList.remove("error");
+  let objectUrl = null;
+  try {
+    const blob = await requestWithRetry(url, {
+      responseType: "blob",
+      signal: controller.signal,
+    });
+    objectUrl = URL.createObjectURL(blob);
+    image.src = objectUrl;
+    await image.decode();
+    if (requestId !== state.figurePanelRequest || !image.isConnected) {
+      URL.revokeObjectURL(objectUrl);
+      return;
+    }
+    if (state.figurePanelObjectUrl) URL.revokeObjectURL(state.figurePanelObjectUrl);
+    state.figurePanelObjectUrl = objectUrl;
+    status.textContent = "Localized crop from the main paper";
+  } catch (error) {
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    if (error.name === "AbortError") return;
+    image.removeAttribute("src");
+    status.textContent = `Crop unavailable: ${error.message}. Use “Show figure in paper” below.`;
+    status.classList.add("error");
   }
 }
 
@@ -520,6 +553,11 @@ async function selectPaper(paperId) {
   state.figureQueueIndex = 0;
   state.figureReviewFilter = "unreviewed";
   state.censusDirty = false;
+  state.figurePanelAbortController?.abort();
+  state.figurePanelAbortController = null;
+  state.figurePanelRequest += 1;
+  if (state.figurePanelObjectUrl) URL.revokeObjectURL(state.figurePanelObjectUrl);
+  state.figurePanelObjectUrl = null;
   if (state.pdfObjectUrl) URL.revokeObjectURL(state.pdfObjectUrl);
   state.pdfObjectUrl = null;
   state.pdfDisplayed = null;
@@ -792,8 +830,8 @@ function renderFigureCensusSummary() {
     ? `${unresolvedCaptions} numbered figure caption${unresolvedCaptions === 1 ? " has" : "s have"} no automatic image match; add ${unresolvedCaptions === 1 ? "it" : "them"} manually. `
     : "";
   $("figure-census-summary").textContent = proposalPrefix + localizationWarning + (legacy
-    ? `Earlier aggregate census: ${totals.figures_reviewed || 0} figures · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only records · ${totals.figure_only_atomic_values || 0} figure-only values. Add subfigures to replace it.`
-    : `${panels.length} subfigure${panels.length === 1 ? "" : "s"} · ${totals.figures_reviewed || 0} main figure${totals.figures_reviewed === 1 ? "" : "s"} · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only record${totals.figure_only_records === 1 ? "" : "s"} · ${totals.figure_only_atomic_values || 0} figure-only value${totals.figure_only_atomic_values === 1 ? "" : "s"}`);
+    ? `Earlier aggregate census: ${totals.figures_reviewed || 0} figures · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only records · ${totals.figure_only_atomic_values || 0} individual field values shown only in figures. Add subfigures to replace it.`
+    : `${panels.length} subfigure${panels.length === 1 ? "" : "s"} · ${totals.figures_reviewed || 0} main figure${totals.figures_reviewed === 1 ? "" : "s"} · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only record${totals.figure_only_records === 1 ? "" : "s"} · ${totals.figure_only_atomic_values || 0} individual field value${totals.figure_only_atomic_values === 1 ? "" : "s"} shown only in figures`);
 }
 
 function figurePanelNeedsAttention(panel) {
@@ -817,6 +855,13 @@ function filteredFigureIndexes() {
 function checkedFigurePanelCount() {
   return (state.censusDraft.main_text_figure_census.panels || [])
     .filter((panel) => ["confirmed", "corrected"].includes(panel.review_status)).length;
+}
+
+function setFigureLossVisibility(card, relevant) {
+  const box = card.querySelector(".figure-loss-box");
+  if (!box) return;
+  box.hidden = !relevant;
+  box.querySelectorAll("input").forEach((input) => { input.disabled = !relevant; });
 }
 
 function renderFigureReviewToolbar() {
@@ -892,16 +937,20 @@ function renderFigurePanels() {
     });
     const visualEvidence = renderVisualCandidateEvidence(panel);
     const proposal = proposedFigurePanel(panel);
-    const preview = proposal?.figure_bbox_pdf && panel.proposal_panel_id
+    const previewImage = proposal?.figure_bbox_pdf && panel.proposal_panel_id
+      ? element("img", {
+        attributes: {
+          alt: `Cropped view of Figure ${panel.figure_number}${panel.panel_label || ""}`,
+        },
+      })
+      : null;
+    const previewStatus = previewImage
+      ? element("figcaption", { text: "Loading figure crop…" })
+      : null;
+    const preview = previewImage
       ? element("figure", { className: "figure-panel-preview" }, [
-        element("img", {
-          attributes: {
-            src: `/api/figure-panel-image/${encodeURIComponent(state.paperId)}/${encodeURIComponent(panel.proposal_panel_id)}?split=${encodeURIComponent(state.split)}`,
-            alt: `Cropped view of Figure ${panel.figure_number}${panel.panel_label || ""}`,
-            loading: "lazy",
-          },
-        }),
-        element("figcaption", { text: "Localized crop from the main paper" }),
+        previewImage,
+        previewStatus,
       ])
       : null;
     const statusLabel = panel.review_status === "confirmed" ? "Confirmed" : panel.review_status === "corrected" ? "Corrected" : "Unchecked";
@@ -922,17 +971,24 @@ function renderFigurePanels() {
           figurePanelSelect("Figure class", "figure_class", panel.figure_class, FIGURE_CLASSES),
         ]),
         figurePanelField("What the panel shows", "description", element("textarea", { properties: { value: panel.description, required: true, rows: 2, placeholder: "Brief scientific description" } })),
-        element("div", { className: "figure-panel-grid" }, [
-          figurePanelField("X-axis label", "x_axis_label", element("input", { properties: { value: panel.x_axis_label || "", placeholder: "As printed; optional" } })),
-          figurePanelField("Y-axis label", "y_axis_label", element("input", { properties: { value: panel.y_axis_label || "", placeholder: "As printed; optional" } })),
-          figurePanelSelect("Numeric presentation", "data_presentation", panel.data_presentation, FIGURE_DATA_PRESENTATIONS),
-          figurePanelSelect("Extraction effort", "extraction_feasibility", panel.extraction_feasibility, FIGURE_EXTRACTION_FEASIBILITY),
+        element("details", { className: "figure-panel-details" }, [
+          element("summary", { text: "Axes and extraction details" }),
+          element("div", { className: "figure-panel-grid" }, [
+            figurePanelField("X-axis label", "x_axis_label", element("input", { properties: { value: panel.x_axis_label || "", placeholder: "As printed; optional" } })),
+            figurePanelField("Y-axis label", "y_axis_label", element("input", { properties: { value: panel.y_axis_label || "", placeholder: "As printed; optional" } })),
+            figurePanelSelect("How numbers are shown", "data_presentation", panel.data_presentation, FIGURE_DATA_PRESENTATIONS),
+            figurePanelSelect("Effort needed to extract numbers", "extraction_feasibility", panel.extraction_feasibility, FIGURE_EXTRACTION_FEASIBILITY),
+          ]),
         ]),
-        element("label", { className: "figure-relevance" }, [relevant, element("span", { text: "Contains information represented by the extraction schema" })]),
+        element("label", { className: "figure-relevance" }, [relevant, element("span", { text: "Relevant to the solar-cell extraction schema" })]),
         ...(visualEvidence ? [visualEvidence] : []),
-        element("div", { className: "figure-panel-grid compact figure-loss-counts" }, [
-          figurePanelField("Figure-only records", "figure_only_records", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_records } })),
-          figurePanelField("Figure-only atomic values", "figure_only_atomic_values", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_atomic_values } })),
+        element("div", { className: "figure-loss-box" }, [
+          element("strong", { text: "What would text-only extraction miss here?" }),
+          element("p", { text: "Count complete records separately from individual populated fields. A field is one item such as PCE, Voc, layer thickness, or stability duration—not points sampled from a curve." }),
+          element("div", { className: "figure-panel-grid compact figure-loss-counts" }, [
+            figurePanelField("Complete records shown only here", "figure_only_records", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_records } })),
+            figurePanelField("Individual field values shown only here", "figure_only_atomic_values", element("input", { properties: { type: "number", min: "0", value: panel.figure_only_atomic_values } })),
+          ]),
         ]),
         ...(panel.page ? [element("button", { properties: { type: "button" }, text: "Show figure in paper", events: { click: () => {
           setWorkspaceView("split");
@@ -953,6 +1009,7 @@ function renderFigurePanels() {
         card.querySelector('[data-figure-field="figure_only_records"]').value = 0;
         card.querySelector('[data-figure-field="figure_only_atomic_values"]').value = 0;
       }
+      if (input.dataset.figureField === "schema_relevant") setFigureLossVisibility(card, input.checked);
       updateCensusDraft({ panelStatus: "corrected", persist: true });
       card.dataset.reviewStatus = "corrected";
       const badge = card.querySelector(".figure-review-state");
@@ -961,7 +1018,12 @@ function renderFigurePanels() {
       renderFigureCensusSummary();
       renderFigureReviewToolbar();
     }));
+  setFigureLossVisibility(card, relevant.checked);
   $("figure-panels").replaceChildren(card);
+  if (previewImage && previewStatus) {
+    const url = `/api/figure-panel-image/${encodeURIComponent(state.paperId)}/${encodeURIComponent(panel.proposal_panel_id)}?split=${encodeURIComponent(state.split)}`;
+    loadAuthenticatedImage(previewImage, previewStatus, url);
+  }
   renderFigureReviewToolbar();
   renderFigureCensusSummary();
 }
@@ -1051,7 +1113,7 @@ function renderInventoryComparison() {
   comparison.push(figures
     ? element("section", { className: "figure-census-result" }, [
       element("h4", { text: "Main-text subfigure census" }),
-      element("p", { text: `${figures.schema_relevant_figures} of ${figures.figures_reviewed} reviewed figures contained schema-relevant information. A text-only extraction would miss ${figures.figure_only_records} record${figures.figure_only_records === 1 ? "" : "s"} and ${figures.figure_only_atomic_values} atomic value${figures.figure_only_atomic_values === 1 ? "" : "s"} reported only in those figures.` }),
+      element("p", { text: `${figures.schema_relevant_figures} of ${figures.figures_reviewed} reviewed figures contained schema-relevant information. A text-only extraction would miss ${figures.figure_only_records} complete record${figures.figure_only_records === 1 ? "" : "s"} and ${figures.figure_only_atomic_values} individual field value${figures.figure_only_atomic_values === 1 ? "" : "s"} reported only in those figures.` }),
       ...((figures.panels || []).length ? [element("div", { className: "saved-figure-panels" }, figures.panels.map((panel) => element("article", {}, [
         element("div", { className: "saved-figure-panel-heading" }, [
           element("strong", { text: `Figure ${panel.figure_number}${panel.panel_label || ""} · ${FIGURE_CLASSES[panel.figure_class] || humanLabel(panel.figure_class)}` }),
@@ -1065,7 +1127,7 @@ function renderInventoryComparison() {
           panel.y_axis_label ? `y: ${panel.y_axis_label}` : null,
           FIGURE_DATA_PRESENTATIONS[panel.data_presentation],
           FIGURE_EXTRACTION_FEASIBILITY[panel.extraction_feasibility],
-          panel.schema_relevant ? `${panel.figure_only_records} figure-only records · ${panel.figure_only_atomic_values} figure-only values` : "Outside schema",
+          panel.schema_relevant ? `${panel.figure_only_records} figure-only records · ${panel.figure_only_atomic_values} individual field values` : "Outside schema",
         ].filter(Boolean).join(" · ") }),
       ])))] : [element("p", { className: "muted", text: "This earlier census contains aggregate totals only. Add subfigures when updating it." })]),
       ...(figures.notes ? [element("p", { className: "callout", text: figures.notes })] : []),
@@ -1832,6 +1894,122 @@ function updateEditValue(path, rawValue, original) {
   $("record-json").value = JSON.stringify(state.edit.value, null, 2);
 }
 
+function recordSchemaNode(kind, path = []) {
+  let node = resolvedSchema(state.studySchema.properties[kind].items);
+  for (const part of path) {
+    node = resolvedSchema(part === "items" ? node.items : node.properties?.[part]);
+  }
+  return node;
+}
+
+function layerRoleOptions() {
+  const choices = recordSchemaNode("device_families", ["layers", "items", "role"]).enum;
+  return choices || ["not_reported"];
+}
+
+function syncLayerOrder() {
+  state.edit.value.layers.forEach((layer, index) => { layer.sequence = index + 1; });
+  $("record-json").value = JSON.stringify(state.edit.value, null, 2);
+}
+
+function moveLayer(index, offset) {
+  const target = index + offset;
+  const layers = state.edit.value.layers;
+  if (target < 0 || target >= layers.length) return;
+  [layers[index], layers[target]] = [layers[target], layers[index]];
+  syncLayerOrder();
+  renderStructuredEditor();
+}
+
+function removeLayer(index) {
+  state.edit.value.layers.splice(index, 1);
+  syncLayerOrder();
+  renderStructuredEditor();
+}
+
+function addLayer() {
+  const layers = state.edit.value.layers;
+  const used = new Set(layers.map((layer) => layer.layer_id));
+  let suffix = layers.length + 1;
+  while (used.has(`review-layer-${suffix}`)) suffix += 1;
+  layers.push({
+    layer_id: `review-layer-${suffix}`,
+    sequence: layers.length + 1,
+    role: "not_reported",
+    material: "",
+    constituents: [],
+    material_form_raw: null,
+    material_form: "not_reported",
+    reported_properties: [],
+    evidence: [],
+  });
+  syncLayerOrder();
+  renderStructuredEditor();
+  document.querySelector(".stack-layer:last-of-type input")?.focus();
+}
+
+function renderLayerAdvanced(layer, index) {
+  const fields = ["layer_id", "constituents", "material_form_raw", "material_form", "reported_properties"]
+    .map((key) => structuredNode(key, layer[key], ["layers", index, key]));
+  return element("details", { className: "stack-layer-advanced" }, [
+    element("summary", { text: "Composition, form, properties, and ID" }),
+    element("div", { className: "editor-fields" }, fields),
+  ]);
+}
+
+function renderDeviceStackEditor() {
+  const layers = state.edit.value.layers || [];
+  const stackRaw = element("input", {
+    properties: {
+      value: state.edit.value.full_stack_raw || "",
+      placeholder: "For example: glass / ITO / ETL / absorber / HTL / metal",
+    },
+  });
+  stackRaw.addEventListener("input", () => updateEditValue(["full_stack_raw"], stackRaw.value, state.edit.value.full_stack_raw));
+  const cards = layers.map((layer, index) => {
+    const material = element("input", { properties: { value: layer.material || "", placeholder: "Layer material", required: true } });
+    material.addEventListener("input", () => {
+      layer.material = material.value;
+      $("record-json").value = JSON.stringify(state.edit.value, null, 2);
+    });
+    const role = element("select", {}, layerRoleOptions().map((choice) => element("option", {
+      text: humanLabel(choice),
+      properties: { value: choice, selected: layer.role === choice },
+    })));
+    role.addEventListener("change", () => {
+      layer.role = role.value;
+      $("record-json").value = JSON.stringify(state.edit.value, null, 2);
+    });
+    return element("article", { className: "stack-layer" }, [
+      element("div", { className: "stack-layer-main" }, [
+        element("strong", { className: "stack-position", text: String(index + 1), attributes: { "aria-label": `Layer ${index + 1}` } }),
+        element("label", {}, [element("span", { text: "Material" }), material]),
+        element("label", {}, [element("span", { text: "Function" }), role]),
+        element("div", { className: "stack-layer-actions" }, [
+          element("button", { text: "↑", properties: { type: "button", disabled: index === 0 }, attributes: { "aria-label": "Move layer up" }, events: { click: () => moveLayer(index, -1) } }),
+          element("button", { text: "↓", properties: { type: "button", disabled: index === layers.length - 1 }, attributes: { "aria-label": "Move layer down" }, events: { click: () => moveLayer(index, 1) } }),
+          element("button", { className: "danger-link", text: "Remove", properties: { type: "button" }, attributes: { "aria-label": `Remove layer ${index + 1}` }, events: { click: () => removeLayer(index) } }),
+        ]),
+      ]),
+      renderLayerAdvanced(layer, index),
+    ]);
+  });
+  return element("section", { className: "device-stack-editor" }, [
+    element("div", { className: "device-stack-heading" }, [
+      element("div", {}, [
+        element("h3", { text: "Device stack" }),
+        element("p", { text: "Correct the material, function, and order directly. Layer IDs and evidence stay attached automatically." }),
+      ]),
+      element("button", { text: "+ Add layer", properties: { type: "button" }, events: { click: addLayer } }),
+    ]),
+    element("label", { className: "stack-raw" }, [
+      element("span", { text: "Stack exactly as written in the paper (optional)" }),
+      stackRaw,
+    ]),
+    element("div", { className: "stack-layers" }, cards.length ? cards : [element("p", { className: "muted", text: "No layers extracted. Add the first layer above." })]),
+  ]);
+}
+
 function structuredLeaf(label, value, path) {
   let input;
   if (path.at(-1) === "material_form") {
@@ -1868,8 +2046,29 @@ function structuredNode(label, value, path, open = false) {
 }
 
 function renderStructuredEditor() {
-  const fields = Object.entries(state.edit.value).filter(([key]) => key !== "evidence").map(([key, value]) => structuredNode(key, value, [key], true));
-  $("structured-editor").replaceChildren(...fields);
+  const entries = Object.entries(state.edit.value).filter(([key]) => key !== "evidence");
+  if (state.edit.kind !== "device_families") {
+    $("structured-editor").replaceChildren(...entries.map(([key, value]) => structuredNode(key, value, [key], true)));
+    return;
+  }
+  const simple = entries
+    .filter(([key, value]) => !["full_stack_raw", "layers"].includes(key) && (value == null || typeof value !== "object"))
+    .map(([key, value]) => structuredLeaf(key, value, [key]));
+  const related = entries
+    .filter(([key, value]) => !["full_stack_raw", "layers"].includes(key) && value != null && typeof value === "object")
+    .map(([key, value]) => structuredNode(key, value, [key], false));
+  $("structured-editor").replaceChildren(
+    element("section", { className: "device-identity-editor" }, [
+      element("h3", { text: "Device family" }),
+      element("div", { className: "editor-fields" }, simple),
+    ]),
+    renderDeviceStackEditor(),
+    element("section", { className: "device-related-editor" }, [
+      element("h3", { text: "Absorber and processing details" }),
+      element("p", { className: "muted", text: "Open only the section that needs correction." }),
+      ...related,
+    ]),
+  );
 }
 
 async function submitDecision(entry, decision) {
@@ -2169,7 +2368,7 @@ function annotationSubject(event) {
   if (event.kind === "inventory_audit") {
     const counts = Object.entries(event.details.expected_counts || {}).map(([name, count]) => `${humanLabel(name)}: ${count}`);
     const figures = event.details.main_text_figure_census;
-    if (figures) counts.push(`Main-text figure-only values: ${figures.figure_only_atomic_values}`);
+    if (figures) counts.push(`Individual field values shown only in main-text figures: ${figures.figure_only_atomic_values}`);
     return counts.join(" · ") || "Census saved";
   }
   return event.note || humanLabel(event.kind);
