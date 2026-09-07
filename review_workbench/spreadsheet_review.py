@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from io import BytesIO
@@ -18,7 +19,6 @@ from typing import Any, Iterable
 from zipfile import BadZipFile, ZipFile
 
 from openpyxl import Workbook, load_workbook
-from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.formatting.rule import FormulaRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
@@ -86,6 +86,7 @@ BRAND_SOFT = "E2F2EC"
 EDITABLE_FILL = "FFF3BF"
 READ_ONLY_FILL = "E7E9E8"
 CHANGED_FILL = "FFE0B2"
+UNSAFE_EXCEL_CONTROLS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]")
 
 
 @dataclass(frozen=True)
@@ -180,16 +181,17 @@ def _value_type(value: Any) -> str:
 
 
 def _excel_value(value: Any) -> Any:
-    """Remove XML-forbidden controls from text crossing into an XLSX cell.
+    """Remove spreadsheet-unsafe controls from text crossing into an XLSX cell.
 
     PDF text layers occasionally encode spacing or mathematical glyphs as control
-    characters. JSON can preserve those characters, but OOXML cannot: openpyxl
-    rejects the whole workbook when even one source quote contains one. Replacing
-    only the forbidden controls with spaces keeps the review artifact usable while
-    retaining the surrounding source text and conservative normalized matching.
+    characters. JSON can preserve those characters, but openpyxl rejects C0 controls
+    and Excel may repair files containing DEL or C1 controls. Replacing only those
+    controls with spaces keeps the review artifact usable while retaining the
+    surrounding source text and conservative normalized matching. Tabs and line
+    breaks remain intact.
     """
 
-    return ILLEGAL_CHARACTERS_RE.sub(" ", value) if isinstance(value, str) else value
+    return UNSAFE_EXCEL_CONTROLS.sub(" ", value) if isinstance(value, str) else value
 
 
 def _excel_row(*values: Any) -> tuple[Any, ...]:

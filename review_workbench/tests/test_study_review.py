@@ -322,7 +322,7 @@ def test_review_workbook_sanitizes_pdf_control_characters(
     """A malformed PDF glyph must not make the complete Excel export fail."""
 
     study = study_with_family(empty_study)
-    study["device_families"][0]["label"] = "Control\x00 family"
+    study["device_families"][0]["label"] = "Control\x00 family\x80"
     study["device_families"][0]["evidence"][0]["quote"] = (
         "The champion\x0e device reached a PCE of 24.1%."
     )
@@ -331,9 +331,9 @@ def test_review_workbook_sanitizes_pdf_control_characters(
 
     data = store.review_workbook("calibration", "10.0000--example", "ada")
     book = load_workbook(BytesIO(data))
-    assert book["Record review"]["D2"].value == "Control  family"
+    assert book["Record review"]["D2"].value == "Control  family "
     assert all(
-        "\x00" not in str(cell.value) and "\x0e" not in str(cell.value)
+        all(control not in str(cell.value) for control in ("\x00", "\x0e", "\x80"))
         for sheet in book.worksheets
         for row in sheet.iter_rows()
         for cell in row
