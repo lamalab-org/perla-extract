@@ -6,7 +6,36 @@ import json
 import fitz
 import pytest
 
-from review_workbench.server import REVISION_CONFLICT_RESPONSE, ReviewApplication
+from review_workbench.server import (
+    REVISION_CONFLICT_RESPONSE,
+    ReviewApplication,
+    review_app_asset,
+)
+
+
+def test_comparison_hostname_has_a_distinct_landing_page():
+    hosts = {"perla-extractor-comparison.vercel.app"}
+
+    assert (
+        review_app_asset("/", "perla-extractor-comparison.vercel.app", hosts)
+        == "comparison.html"
+    )
+    assert (
+        review_app_asset("/", "perla-extractor-comparison.vercel.app:443", hosts)
+        == "comparison.html"
+    )
+    assert (
+        review_app_asset("/", "perla-ground-truth-review.vercel.app", hosts)
+        == "index.html"
+    )
+    assert (
+        review_app_asset("/review", "perla-extractor-comparison.vercel.app", hosts)
+        == "index.html"
+    )
+    assert (
+        review_app_asset("/comparison.html", "localhost:8765", hosts)
+        == "comparison.html"
+    )
 
 
 def test_revision_conflict_message_is_actionable_without_internal_details():
