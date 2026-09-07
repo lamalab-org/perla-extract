@@ -110,14 +110,15 @@ def test_comparison_authentication_stays_on_its_own_hostname():
 def test_ui_allows_record_review_before_the_census():
     html = (APP / "index.html").read_text(encoding="utf-8")
     javascript = (APP / "app.js").read_text(encoding="utf-8")
-    assert "Paper and figure census" in html
+    assert "Check what the paper contains" in html
+    assert "Save paper &amp; figure check" in html
     assert "submit-audit" in html
     assert "hasAudit()" in javascript
     assert "renderReviewQueue();" in javascript
     assert "Review extracted records at any time" in javascript
     assert "model-assisted record review" not in javascript
     assert "renderQualityArtifacts()" in javascript
-    assert "Mark census reviewed" in html
+    assert "Continue to record review" in javascript
     assert "Mark inventory reviewed" not in html
     assert "Blind inventory" not in javascript
 
@@ -253,8 +254,8 @@ def test_pipeline_statuses_are_explained_as_review_priorities():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
 
-    assert "How to review records and fix missing or extra records" in html
-    assert "These are priorities, not correctness claims" in html
+    assert "Start here: review one record at a time" in html
+    assert "is a priority list, not a claim that a record is wrong" in html
     assert "Passed automated checks" in source
     assert "It still requires human comparison with the source" in source
     assert "You marked this for correction" in source
@@ -316,7 +317,7 @@ def test_record_review_prioritizes_the_current_record_over_device_context():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
 
-    assert "Review queue" in html
+    assert "Review extracted records" in html
     assert "record-status-filter" in html
     assert "record-kind-filter" in html
     assert "Related device context (expand if needed)" in source
@@ -337,7 +338,7 @@ def test_inventory_defines_counts_without_hiding_records():
     assert "One particular measured specimen" in source
     assert "Multiple measurements of the same cell are not additional devices" in source
     assert "You can inspect and correct Records now" not in html
-    assert "Edit saved census" in html
+    assert "Edit paper &amp; figure check" in html
     assert 'tab === "completeness" && !hasAudit()' in source
     assert '["records", "completeness"].includes(tab) && !hasAudit()' not in source
 
@@ -357,7 +358,8 @@ def test_stability_review_shows_every_atomic_value_before_related_context():
     )
     assert "All fields match source" in html
     assert '"All fields match source (V)"' in source
-    assert '"Cannot establish from source (U)"' in source
+    assert '"Cannot verify from source (U)"' in source
+    assert "Cannot verify</option>" in html
     assert "Choose one outcome for the complete record" in source
     assert "Verify  V" not in source
 
@@ -415,13 +417,13 @@ def test_record_count_corrections_are_explicit_and_reference_guarded():
     assert "/api/record-merges/" in source
     assert '"record-reclassifications"' in source
     assert "Remove extra record" in html
-    assert "A merge moves explicit links automatically" in html
+    assert "Merging repeated records moves their explicit links automatically" in html
     assert "/api/study-schema" in source
     assert "draftFromSchema" in source
     assert "recordReferences" in source
     assert "reviewReferencedRecord" in source
     assert "Add missing record" in source
-    assert "Save field correction" in source
+    assert "Save my correction" in source
     assert "other records refer to it" in backend
     assert 'dependency.hidden = intent !== "remove"' in source
     assert '$("remove-record").hidden = intent !== "remove"' in source
@@ -500,7 +502,7 @@ def test_corrections_default_to_fields_and_existing_evidence():
 
     assert "structured-editor" in html
     assert "Raw record JSON" in html
-    assert "Fields" in html
+    assert ">Form</button>" in html
     assert "renderStructuredEditor" in source
     assert "setRecordEditorMode" in source
     assert "recordFieldPath" in source
@@ -575,8 +577,8 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     source = (APP / "app.js").read_text(encoding="utf-8")
     server = (APP.parent / "server.py").read_text(encoding="utf-8")
 
-    assert '>My review</button>' in html
-    assert "My review progress" in html
+    assert '>My work &amp; undo</button>' in html
+    assert "My work &amp; undo" in html
     assert "Current work" in html
     assert "History" in html
     assert "Download activity JSON" in html
