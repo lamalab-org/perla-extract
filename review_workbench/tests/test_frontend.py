@@ -541,6 +541,20 @@ def test_structured_editor_prioritizes_scientific_fields_over_schema_plumbing():
     assert "attachMissingEvidence(value, citation)" in source
 
 
+def test_structured_editor_can_reorder_sequenced_items_without_raw_json():
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    styles = (APP / "styles.css").read_text(encoding="utf-8")
+
+    assert "function moveOrderedItem" in source
+    assert "function isOrderedArray" in source
+    assert 'Object.hasOwn(item, "sequence")' in source
+    assert 'text: "↑ Earlier"' in source
+    assert 'text: "↓ Later"' in source
+    assert 'text: "Position"' in source
+    assert 'entry.sequence = position + 1' in source
+    assert ".ordered-array-controls" in styles
+
+
 def test_ui_builds_untrusted_content_with_dom_nodes():
     source = (APP / "app.js").read_text(encoding="utf-8")
     assert "innerHTML" not in source

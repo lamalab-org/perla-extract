@@ -2201,6 +2201,62 @@ function technicalFields(entries, path) {
   ]);
 }
 
+function editValueAt(path) {
+  return path.reduce((value, key) => value?.[key], state.edit.value);
+}
+
+function moveOrderedItem(path, index, targetIndex) {
+  const items = editValueAt(path);
+  if (!Array.isArray(items) || targetIndex < 0 || targetIndex >= items.length || index === targetIndex) return;
+  const [item] = items.splice(index, 1);
+  items.splice(targetIndex, 0, item);
+  items.forEach((entry, position) => {
+    if (entry && typeof entry === "object" && Object.hasOwn(entry, "sequence")) entry.sequence = position + 1;
+  });
+  $("record-json").value = JSON.stringify(state.edit.value, null, 2);
+  renderStructuredEditor();
+  const pathKey = JSON.stringify(path);
+  const moved = [...document.querySelectorAll(".ordered-array-item")]
+    .find((node) => node.dataset.arrayPath === pathKey && Number(node.dataset.arrayIndex) === targetIndex);
+  const details = moved?.querySelector(":scope > details");
+  if (details) details.open = true;
+  moved?.querySelector("select")?.focus();
+}
+
+function orderedArrayItem(label, item, index, path, itemCount) {
+  const position = element("select", {
+    attributes: { "aria-label": `Position of ${humanLabel(label)}` },
+  }, Array.from({ length: itemCount }, (_, optionIndex) => element("option", {
+    text: String(optionIndex + 1),
+    properties: { value: String(optionIndex), selected: optionIndex === index },
+  })));
+  position.addEventListener("change", () => moveOrderedItem(path, index, Number(position.value)));
+  return element("div", {
+    className: "ordered-array-item",
+    attributes: { "data-array-path": JSON.stringify(path), "data-array-index": String(index) },
+  }, [
+    element("div", { className: "ordered-array-controls" }, [
+      element("span", { className: "ordered-array-position", text: `Step ${index + 1}` }),
+      element("label", { className: "ordered-array-jump" }, [element("span", { text: "Position" }), position]),
+      element("button", {
+        text: "↑ Earlier",
+        properties: { type: "button", disabled: index === 0 },
+        events: { click: () => moveOrderedItem(path, index, index - 1) },
+      }),
+      element("button", {
+        text: "↓ Later",
+        properties: { type: "button", disabled: index === itemCount - 1 },
+        events: { click: () => moveOrderedItem(path, index, index + 1) },
+      }),
+    ]),
+    structuredNode(label, item, [...path, index]),
+  ]);
+}
+
+function isOrderedArray(value) {
+  return value.length > 1 && value.every((item) => item && typeof item === "object" && Object.hasOwn(item, "sequence"));
+}
+
 function structuredNode(label, value, path, open = false) {
   if (value == null || typeof value !== "object") return structuredLeaf(label, value, path);
   const array = Array.isArray(value);
@@ -2209,7 +2265,10 @@ function structuredNode(label, value, path, open = false) {
     : Object.entries(value).filter(([key]) => key !== "evidence").map(([key, item]) => [key, item, key]);
   const technical = array ? [] : entries.filter(([key]) => isTechnicalRecordField(key));
   const primary = array ? entries : entries.filter(([key]) => !isTechnicalRecordField(key));
-  const children = primary.map(([childLabel, item, key]) => structuredNode(childLabel, item, [...path, key]));
+  const ordered = array && isOrderedArray(value);
+  const children = primary.map(([childLabel, item, key]) => ordered
+    ? orderedArrayItem(childLabel, item, key, path, value.length)
+    : structuredNode(childLabel, item, [...path, key]));
   const technicalSection = technicalFields(technical, path);
   if (technicalSection) children.push(technicalSection);
   const count = array ? ` (${value.length})` : "";
