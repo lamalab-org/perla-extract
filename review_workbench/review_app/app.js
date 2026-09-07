@@ -31,6 +31,43 @@ const FIGURE_EXTRACTION_FEASIBILITY = {
   not_applicable: "No numeric extraction applicable",
   uncertain: "Uncertain",
 };
+const FIGURE_SCHEMA_DESTINATIONS = {
+  jv: {
+    label: "Performance observations → metrics",
+    path: "/performance_observations/*/metrics",
+    boundary: "Only reported device-performance values belong here; curve samples are not individual schema values.",
+  },
+  eqe: {
+    label: "Performance observations → EQE-related metrics",
+    path: "/performance_observations/*/metrics",
+    boundary: "Integrated current or another explicitly reported EQE result can populate this section; the spectrum itself does not become a list of values.",
+  },
+  population_statistics: {
+    label: "Population statistics",
+    path: "/population_statistics/*",
+    boundary: "The panel must report a device-population result, not merely compare a few selected specimens.",
+  },
+  stability: {
+    label: "Stability tests → conditions and checkpoints",
+    path: "/stability_tests/*",
+    boundary: "Reported aging conditions, checkpoint times, or outcomes belong here; sampled curve points do not.",
+  },
+  device_structure: {
+    label: "Device families → architecture, layers, and absorbers",
+    path: "/device_families/*",
+    boundary: "The schematic or annotated image must identify a storable part of the photovoltaic device.",
+  },
+  characterization: {
+    label: "Usually outside the extraction schema",
+    path: "/device_families/*/layers/*/reported_properties",
+    boundary: "Only a clearly reported property tied to a specific device layer or absorber is in scope; characterization relevance alone is not enough.",
+  },
+  other: {
+    label: "No default schema destination",
+    path: null,
+    boundary: "Mark this relevant only when the panel clearly reports a device, processing, performance, population, or stability fact stored by the schema.",
+  },
+};
 const RECORD_GUIDANCE = {
   device_families: {
     census: "One complete photovoltaic design defined by its layer materials, absorber composition, and topology. A treatment condition, thickness, champion, scan, or mean is not another family when that design is unchanged. Characterization-only films and partial stacks are not device families.",
@@ -662,11 +699,32 @@ function proposalPanelId(panel, index) {
 }
 
 function normalizeFigurePanels(panels, fromProposal = false) {
-  return (panels || []).map((panel, index) => ({
-    ...structuredClone(panel),
-    proposal_panel_id: panel.proposal_panel_id || (fromProposal ? proposalPanelId(panel, index) : null),
-    review_status: panel.review_status || (fromProposal ? "unreviewed" : "legacy_unspecified"),
-  }));
+  return (panels || []).map((panel, index) => {
+    const reviewStatus = panel.review_status || (fromProposal ? "unreviewed" : "legacy_unspecified");
+    return {
+      ...structuredClone(panel),
+      proposal_panel_id: panel.proposal_panel_id || (fromProposal ? proposalPanelId(panel, index) : null),
+      review_status: reviewStatus,
+      schema_relevant: reviewStatus === "unreviewed" ? conservativeFigureRelevance(panel) : Boolean(panel.schema_relevant),
+    };
+  });
+}
+
+function conservativeFigureRelevance(panel) {
+  if (panel.figure_class === "device_structure") return true;
+  const schemaResultClasses = new Set(["jv", "eqe", "population_statistics", "stability"]);
+  const directlyReported = new Set(["explicit_numeric_labels", "inset_table", "mixed"]);
+  return schemaResultClasses.has(panel.figure_class) && directlyReported.has(panel.data_presentation);
+}
+
+function renderFigureSchemaDestination(figureClass) {
+  const destination = FIGURE_SCHEMA_DESTINATIONS[figureClass] || FIGURE_SCHEMA_DESTINATIONS.other;
+  return element("aside", { className: "figure-schema-destination" }, [
+    element("span", { className: "eyebrow", text: "Where this maps in the schema" }),
+    element("strong", { text: destination.label }),
+    ...(destination.path ? [element("code", { text: destination.path })] : []),
+    element("p", { text: destination.boundary }),
+  ]);
 }
 
 function censusDraftKey() {
@@ -1006,7 +1064,9 @@ function renderFigurePanels() {
             figurePanelSelect("Effort needed to extract numbers", "extraction_feasibility", panel.extraction_feasibility, FIGURE_EXTRACTION_FEASIBILITY),
           ]),
         ]),
-        element("label", { className: "figure-relevance" }, [relevant, element("span", { text: "Relevant to the solar-cell extraction schema" })]),
+        renderFigureSchemaDestination(panel.figure_class),
+        element("label", { className: "figure-relevance" }, [relevant, element("span", { text: "This panel contributes a storable value or fact" })]),
+        element("p", { className: "figure-relevance-help", text: "Check this only when omitting the figure would leave a record or populated field incomplete. Being scientifically relevant to solar cells is not enough." }),
         ...(visualEvidence ? [visualEvidence] : []),
         element("div", { className: "figure-loss-box" }, [
           element("strong", { text: "What would text-only extraction miss here?" }),
@@ -1036,6 +1096,9 @@ function renderFigurePanels() {
         card.querySelector('[data-figure-field="figure_only_atomic_values"]').value = 0;
       }
       if (input.dataset.figureField === "schema_relevant") setFigureLossVisibility(card, input.checked);
+      if (input.dataset.figureField === "figure_class") {
+        card.querySelector(".figure-schema-destination").replaceWith(renderFigureSchemaDestination(input.value));
+      }
       updateCensusDraft({ panelStatus: "corrected", persist: true });
       card.dataset.reviewStatus = "corrected";
       const badge = card.querySelector(".figure-review-state");
@@ -1153,6 +1216,7 @@ function renderInventoryComparison() {
           panel.y_axis_label ? `y: ${panel.y_axis_label}` : null,
           FIGURE_DATA_PRESENTATIONS[panel.data_presentation],
           FIGURE_EXTRACTION_FEASIBILITY[panel.extraction_feasibility],
+          FIGURE_SCHEMA_DESTINATIONS[panel.figure_class]?.label,
           panel.schema_relevant ? `${panel.figure_only_records} figure-only records · ${panel.figure_only_atomic_values} individual field values` : "Outside schema",
         ].filter(Boolean).join(" · ") }),
       ])))] : [element("p", { className: "muted", text: "This earlier census contains aggregate totals only. Add subfigures when updating it." })]),

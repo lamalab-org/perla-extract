@@ -25,7 +25,7 @@ from review_workbench.figure_images import (
 from review_workbench.figure_labels import caption_panel_labels
 from review_workbench.study_review import FigureClass
 
-VISION_PROMPT_VERSION = 2
+VISION_PROMPT_VERSION = 3
 
 if TYPE_CHECKING:
     from perla_extract.study_extraction.client import ModelClient
@@ -182,11 +182,17 @@ not_applicable, straightforward, straightforward, requires_digitization,
 partly_straightforward, or uncertain respectively.
 
 StudyExtraction covers device composition/layers, processing, individual performance,
-population statistics, and stability. Mark schema_relevant accordingly. explicit_values
-may contain only atomic values printed as annotations or in inset tables that map to the
-schema. Never include axis ticks, legend labels, curve samples, visually estimated
-coordinates, or values found only in the caption. Preserve each printed value verbatim
-and keep different metrics in separate objects. Use visual_notes for ambiguity."""
+population statistics, and stability. Set schema_relevant=true only when omitting the
+panel would prevent recovery of a complete record or an explicitly printed field value.
+A matching scientific topic is not sufficient, and a plotted curve without printed
+schema values is not schema-relevant merely because it could be digitized. An annotated
+device-structure panel may be relevant when it visibly identifies architecture, layers,
+or absorber composition. Characterization is normally outside scope unless a printed
+property is tied to a specific device layer or absorber. explicit_values may contain
+only atomic values printed as annotations or in inset tables that map to the schema.
+Never include axis ticks, legend labels, curve samples, visually estimated coordinates,
+or values found only in the caption. Preserve each printed value verbatim and keep
+different metrics in separate objects. Use visual_notes for ambiguity."""
     content: list[dict[str, object]] = [
         {
             "type": "text",

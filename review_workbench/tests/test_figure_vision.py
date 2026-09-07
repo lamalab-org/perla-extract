@@ -4,6 +4,7 @@ import pytest
 
 from review_workbench.figure_images import FigureImageManifest, RenderedFigure
 from review_workbench.figure_vision import (
+    VISION_PROMPT_VERSION,
     VisibleAtomicValue,
     VisualFigureProposal,
     VisualPanelProposal,
@@ -158,7 +159,7 @@ def test_saved_proposal_is_revalidated_before_reuse(tmp_path):
     )
     artifact = {
         "format_version": 1,
-        "vision_prompt_version": 2,
+        "vision_prompt_version": VISION_PROMPT_VERSION,
         "paper_id": "paper",
         "model": "model",
         "pdf_sha256": "b" * 64,

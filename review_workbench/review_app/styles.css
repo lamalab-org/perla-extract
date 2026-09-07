@@ -145,6 +145,11 @@ label { display:grid; gap:.35rem; font-size:.82rem; color:var(--muted); }
 .figure-panel-fields .figure-relevance { display:flex; align-items:center; gap:8px; }
 .figure-panel-fields .figure-relevance input { width:auto; }
 .figure-panel-fields .figure-relevance span { margin:0; color:var(--ink); }
+.figure-schema-destination { display:grid; gap:4px; padding:11px 12px; border:1px solid var(--line); border-radius:9px; background:var(--wash); }
+.figure-schema-destination .eyebrow { margin:0; }
+.figure-schema-destination code { width:max-content; max-width:100%; color:var(--brand); font-size:.7rem; overflow-wrap:anywhere; }
+.figure-schema-destination p,.figure-relevance-help { margin:0; color:var(--muted); font-size:.75rem; line-height:1.4; }
+.figure-relevance-help { margin-top:-4px; padding-left:24px; }
 .figure-visual-evidence { padding:9px 11px; border-left:3px solid #d8b64c; border-radius:6px; background:#fff9e8; font-size:.76rem; line-height:1.4; }
 .figure-visual-evidence ul { display:grid; gap:7px; margin:7px 0 0; padding-left:18px; }
 .figure-visual-evidence li span { display:block; color:var(--muted); }

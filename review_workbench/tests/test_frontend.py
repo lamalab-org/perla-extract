@@ -139,6 +139,10 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
     assert "Values visibly printed in this panel" in javascript
     assert "Individual field values shown only here" in javascript
     assert "A field is one item such as PCE" in javascript
+    assert "Where this maps in the schema" in javascript
+    assert "scientifically relevant to solar cells is not enough" in javascript
+    assert "conservativeFigureRelevance" in javascript
+    assert "/performance_observations/*/metrics" in javascript
     assert "atomic values" not in html.lower()
     assert "do not count it as figure-only" in javascript
     assert "Show figure in paper" in javascript
