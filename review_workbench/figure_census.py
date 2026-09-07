@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from perla_extract.study_extraction.artifacts import write_json_atomic
 from perla_extract.study_extraction.client import ModelClient
 from perla_extract.study_extraction.logging import logger
+from review_workbench.figure_labels import caption_panel_labels
 from review_workbench.study_review import FigureClass
 
 CAPTION_PATTERN = re.compile(
@@ -204,6 +205,22 @@ def _validate_batch(result: FigureProposalBatch, batch: list[PaperInput]) -> Non
             for panel in paper.panels
         ):
             raise ValueError(f"classifier changed a figure number for {paper_id}")
+        caption_text = {
+            str(item["caption_block_id"]): str(item["caption"])
+            for item in expected_papers[paper_id]["captions"]
+        }
+        for block_id, text in caption_text.items():
+            expected_labels = caption_panel_labels(text)
+            returned_labels = {
+                panel.panel_label.casefold()
+                for panel in paper.panels
+                if panel.caption_block_id == block_id and panel.panel_label
+            }
+            if not expected_labels.issubset(returned_labels):
+                missing = ", ".join(sorted(expected_labels - returned_labels))
+                raise ValueError(
+                    f"classifier omitted captioned panel(s) {missing} for {paper_id}"
+                )
 
 
 def classify_captions(

@@ -28,7 +28,6 @@
           ],
           "visual_candidates": [],
           "visual_notes": [
-            "Only panel a is visibly supplied; panel b from the caption is not present apart from an indeterminate narrow edge at right.",
             "The scale-bar value is microscopy metadata and is not a schema value."
           ],
           "image_sha256": "7a2d2a393259647fca34a9d9df391748948a7ed1881df0408f9c1efd7a983578",
@@ -39,6 +38,39 @@
             172.87318420410156
           ],
           "proposal_panel_id": "7b31357ab5d10f2f1f5f0c76"
+        },
+        {
+          "figure_number": "1",
+          "panel_label": "b",
+          "page": 2,
+          "caption_block_id": "main_p2_0020_text_4263c8e02237",
+          "figure_class": "characterization",
+          "description": "Cross-sectional SEM micrograph of a freeze-dried SSG film.",
+          "x_axis_label": null,
+          "y_axis_label": null,
+          "data_presentation": "no_numeric_data",
+          "extraction_feasibility": "not_applicable",
+          "schema_relevant": false,
+          "figure_only_records": 0,
+          "figure_only_atomic_values": 0,
+          "panel_bbox_normalized": [
+            0,
+            0,
+            1000,
+            1000
+          ],
+          "visual_candidates": [],
+          "visual_notes": [
+            "The caption identifies this as the cross-section SEM image."
+          ],
+          "image_sha256": "9873623ce42e5af6ae0908bafa46243ebdab059469bc84eedea873635107a7c9",
+          "figure_bbox_pdf": [
+            171.5,
+            69.45,
+            291.0,
+            172.87
+          ],
+          "proposal_panel_id": "801d40aef57614d6c2b07bde"
         },
         {
           "figure_number": "2",

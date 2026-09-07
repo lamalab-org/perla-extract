@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from review_workbench.figure_images import FigureImageManifest, RenderedFigure
 from review_workbench.figure_vision import (
     VisibleAtomicValue,
@@ -72,6 +74,15 @@ def test_multimodal_prompt_binds_pixels_to_crop_hash(tmp_path):
 
     assert content[1]["text"].find(figure.image_sha256) > 0
     assert content[2]["image_url"]["url"].startswith("data:image/png;base64,")
+
+
+def test_visual_validation_rejects_an_omitted_captioned_panel(tmp_path):
+    figure = rendered_figure(tmp_path).model_copy(
+        update={"caption": "Figure 2. (a) J-V response and (b) EQE spectrum."}
+    )
+
+    with pytest.raises(ValueError, match=r"omitted captioned panel\(s\): b"):
+        _validate_visual_response(visual_result(), "paper", [figure])
 
 
 def test_review_proposal_never_declares_unmatched_value_figure_only(tmp_path):
@@ -147,7 +158,7 @@ def test_saved_proposal_is_revalidated_before_reuse(tmp_path):
     )
     artifact = {
         "format_version": 1,
-        "vision_prompt_version": 1,
+        "vision_prompt_version": 2,
         "paper_id": "paper",
         "model": "model",
         "pdf_sha256": "b" * 64,

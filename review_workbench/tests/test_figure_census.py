@@ -10,6 +10,7 @@ from review_workbench.figure_census import (
     PaperFigureProposal,
     _validate_batch,
     caption_blocks,
+    caption_panel_labels,
 )
 
 
@@ -111,4 +112,45 @@ def test_classifier_batch_validation_rejects_missing_caption():
     ]
 
     with pytest.raises(ValueError, match="omitted or invented captions"):
+        _validate_batch(result, batch)
+
+
+def test_caption_panel_labels_are_typographic_not_scientific_guesses():
+    assert caption_panel_labels(
+        "Figure 1. SEM images: a) surface image and b) cross-section image."
+    ) == {"a", "b"}
+    assert caption_panel_labels("Figure 2. A-site and B-site ion assignments.") == set()
+
+
+def test_classifier_batch_validation_rejects_an_omitted_captioned_panel():
+    panel = CaptionPanelProposal(
+        caption_block_id="main-1",
+        figure_number="1",
+        panel_label="a",
+        figure_class="characterization",
+        description="Surface SEM image.",
+        x_axis_label=None,
+        y_axis_label=None,
+        data_presentation="no_numeric_data",
+        extraction_feasibility="not_applicable",
+        schema_relevant=False,
+    )
+    result = FigureProposalBatch(
+        papers=[PaperFigureProposal(paper_id="paper", panels=[panel])]
+    )
+    batch = [
+        {
+            "paper_id": "paper",
+            "captions": [
+                {
+                    "caption_block_id": "main-1",
+                    "figure_number": "1",
+                    "page": 2,
+                    "caption": "Figure 1. a) Surface SEM and b) cross-section SEM.",
+                }
+            ],
+        }
+    ]
+
+    with pytest.raises(ValueError, match=r"omitted captioned panel\(s\) b"):
         _validate_batch(result, batch)

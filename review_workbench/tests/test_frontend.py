@@ -129,6 +129,8 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
     assert 'fromProposal ? "unreviewed"' in javascript
     assert "Check ${unchecked.length} remaining subfigure" in javascript
     assert "perla-census-draft" in javascript
+    assert "function mergeNewProposalPanels" in javascript
+    assert "return mergeNewProposalPanels(structuredClone(saved.draft))" in javascript
     assert "Figure-and-caption" in javascript
     assert "Caption" in javascript
     assert "Values visibly printed in this panel" in javascript
@@ -153,6 +155,17 @@ def test_ui_covers_every_rich_record_collection():
         "stability_tests",
     ):
         assert collection in javascript
+
+
+def test_field_correction_opens_before_the_structured_editor_renders():
+    javascript = (APP / "app.js").read_text(encoding="utf-8")
+    start = javascript.index("function openRecord(")
+    end = javascript.index("\nfunction humanLabel", start)
+    source = javascript[start:end]
+
+    assert source.index("dialog.showModal()") < source.index("renderStructuredEditor()")
+    assert 'setRecordEditorMode("json", false)' in source
+    assert "The complete record is open as JSON so your correction is not blocked." in source
 
 
 def test_record_review_layout_responds_to_panel_width_without_overlays():

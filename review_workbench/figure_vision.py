@@ -22,9 +22,10 @@ from review_workbench.figure_images import (
     RenderedFigure,
     build_figure_image_manifest,
 )
+from review_workbench.figure_labels import caption_panel_labels
 from review_workbench.study_review import FigureClass
 
-VISION_PROMPT_VERSION = 1
+VISION_PROMPT_VERSION = 2
 
 if TYPE_CHECKING:
     from perla_extract.study_extraction.client import ModelClient
@@ -221,6 +222,19 @@ def _validate_visual_response(
     returned = {(item.figure_number, item.image_sha256) for item in result.figures}
     if returned != expected:
         raise ValueError("vision response omitted, invented, or swapped a figure")
+    source_by_figure = {item.figure_number: item for item in figures}
+    for figure in result.figures:
+        expected_labels = caption_panel_labels(
+            source_by_figure[figure.figure_number].caption
+        )
+        returned_labels = {
+            panel.panel_label.casefold()
+            for panel in figure.panels
+            if panel.panel_label
+        }
+        if not expected_labels.issubset(returned_labels):
+            missing = ", ".join(sorted(expected_labels - returned_labels))
+            raise ValueError(f"vision response omitted captioned panel(s): {missing}")
 
 
 def validate_saved_figure_proposal(

@@ -19,7 +19,7 @@ from perla_extract.study_extraction.source import _docling_runtime
 FIGURE_PREFIX = re.compile(
     r"^\s*(?:fig(?:ure)?\.?)\s*(?P<number>[0-9]+)\b", re.IGNORECASE
 )
-FIGURE_IMAGE_FORMAT_VERSION = 4
+FIGURE_IMAGE_FORMAT_VERSION = 5
 
 
 class FigureRegion(BaseModel):
@@ -179,6 +179,41 @@ def geometry_match_score(
     return max(vertical_gap, 0.0) + abs(picture_center - caption_center) * 0.05
 
 
+def adjacent_panel_score(
+    picture: list[float], figure: list[float], caption: list[float], *, page_height: float
+) -> float | None:
+    """Score an unlinked picture that is geometrically part of a captioned figure.
+
+    PDF parsers often expose a multi-panel figure as several picture objects while
+    attaching the caption to only one of them. A candidate is accepted only when it
+    lies above and within the horizontal span of the caption and nearly touches the
+    already-linked figure horizontally or vertically. This uses page layout alone;
+    it does not depend on publisher templates, panel labels, or scientific content.
+    """
+
+    caption_overlap = max(
+        0.0, min(picture[2], caption[2]) - max(picture[0], caption[0])
+    )
+    picture_width = picture[2] - picture[0]
+    if picture_width <= 0 or caption_overlap / picture_width < 0.25:
+        return None
+    if picture[3] > caption[1] + 3:
+        return None
+
+    x_overlap = max(0.0, min(picture[2], figure[2]) - max(picture[0], figure[0]))
+    y_overlap = max(0.0, min(picture[3], figure[3]) - max(picture[1], figure[1]))
+    smaller_width = min(picture_width, figure[2] - figure[0])
+    smaller_height = min(picture[3] - picture[1], figure[3] - figure[1])
+    x_gap = max(0.0, max(picture[0], figure[0]) - min(picture[2], figure[2]))
+    y_gap = max(0.0, max(picture[1], figure[1]) - min(picture[3], figure[3]))
+    max_gap = max(12.0, page_height * 0.02)
+    beside = x_gap <= max_gap and smaller_height > 0 and y_overlap / smaller_height >= 0.25
+    stacked = y_gap <= max_gap and smaller_width > 0 and x_overlap / smaller_width >= 0.25
+    if not (beside or stacked):
+        return None
+    return x_gap + y_gap
+
+
 def discover_figure_regions(
     pdf_path: Path, document_path: Path | None = None
 ) -> tuple[list[FigureRegion], list[dict[str, object]]]:
@@ -237,6 +272,46 @@ def discover_figure_regions(
             )
 
         linked_keys = {(region.page, region.figure_number) for region in raw_regions}
+
+        # A linked Docling picture may be only one panel of a tiled figure. Grow it
+        # through immediately adjacent, otherwise-unclaimed pictures before falling
+        # back to matching captions that have no linked picture at all.
+        for region in raw_regions:
+            caption_block = captions.get((region.page, region.figure_number))
+            if caption_block is None:
+                continue
+            caption_bbox = _caption_rect(
+                caption_block, page_height=float(pdf[region.page - 1].rect.height)
+            )
+            if caption_bbox is None:
+                continue
+            while True:
+                adjacent = [
+                    (score, picture_id, picture_bbox)
+                    for picture_id, picture_page, picture_bbox in pictures
+                    if picture_page == region.page
+                    and picture_id not in used_picture_ids
+                    and (
+                        score := adjacent_panel_score(
+                            picture_bbox,
+                            region.bbox,
+                            caption_bbox,
+                            page_height=float(pdf[region.page - 1].rect.height),
+                        )
+                    )
+                    is not None
+                ]
+                if not adjacent:
+                    break
+                _score, picture_id, picture_bbox = min(adjacent)
+                used_picture_ids.add(picture_id)
+                region.bbox = [
+                    min(region.bbox[0], picture_bbox[0]),
+                    min(region.bbox[1], picture_bbox[1]),
+                    max(region.bbox[2], picture_bbox[2]),
+                    max(region.bbox[3], picture_bbox[3]),
+                ]
+
         for (page, number), caption_block in captions.items():
             if (page, number) in linked_keys or page < 1 or page > len(pdf):
                 continue
@@ -422,6 +497,7 @@ __all__ = [
     "RenderedFigure",
     "build_figure_image_manifest",
     "discover_figure_regions",
+    "adjacent_panel_score",
     "geometry_match_score",
     "pdf_rect_from_docling_bbox",
     "render_figure_regions",
