@@ -1959,6 +1959,20 @@ function openRecord(kind, index = null, template = null, intent = index == null 
 }
 
 function humanLabel(value) {
+  const preferred = {
+    raw_value: "Reported value",
+    value_number: "Numeric value",
+    full_stack_raw: "Stack as reported",
+  };
+  if (preferred[value]) return preferred[value];
+  if (String(value).endsWith("_id")) {
+    return `${String(value).slice(0, -3).replaceAll("_", " ")} record ID`
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+  if (String(value).endsWith("_ids")) {
+    return `${String(value).slice(0, -4).replaceAll("_", " ")} links`
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
   return String(value).replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
@@ -2159,21 +2173,46 @@ function structuredLeaf(label, value, path) {
   } else {
     input = element("input", { properties: { value: value ?? "", type: typeof value === "number" ? "number" : "text", placeholder: value === null ? "Not reported" : "" } });
   }
+  const inputId = `record-field-${path.map((part) => encodeURIComponent(String(part)).replaceAll("-", "%2D")).join("-")}`;
+  input.id = inputId;
   input.addEventListener("input", () => updateEditValue(path, input.value, value));
-  return element("label", {}, [
-    element("span", { text: humanLabel(label) }),
-    element("code", { className: "json-path", text: recordFieldPath(path) }),
+  return element("div", { className: "editor-field" }, [
+    element("div", { className: "editor-field-heading" }, [
+      element("label", { text: humanLabel(label), attributes: { for: inputId } }),
+      element("details", { className: "field-schema-path" }, [
+        element("summary", { text: "Schema field" }),
+        element("code", { className: "json-path", text: recordFieldPath(path) }),
+      ]),
+    ]),
     input,
+  ]);
+}
+
+function isTechnicalRecordField(key) {
+  return key === "sequence" || key.endsWith("_id") || key.endsWith("_ids");
+}
+
+function technicalFields(entries, path) {
+  if (!entries.length) return null;
+  return element("details", { className: "editor-technical" }, [
+    element("summary", { text: "Technical details" }),
+    element("p", { text: "Record links and identifiers. Most corrections do not need these." }),
+    element("div", { className: "editor-fields" }, entries.map(([key, value]) => structuredLeaf(key, value, [...path, key]))),
   ]);
 }
 
 function structuredNode(label, value, path, open = false) {
   if (value == null || typeof value !== "object") return structuredLeaf(label, value, path);
-  const entries = Array.isArray(value)
-    ? value.map((item, index) => [item?.name || item?.material || item?.operation || `Item ${index + 1}`, item, index])
+  const array = Array.isArray(value);
+  const entries = array
+    ? value.map((item, index) => [item?.label || item?.name || item?.material || item?.operation || `Item ${index + 1}`, item, index])
     : Object.entries(value).filter(([key]) => key !== "evidence").map(([key, item]) => [key, item, key]);
-  const children = entries.map(([childLabel, item, key]) => structuredNode(childLabel, item, [...path, key]));
-  const count = Array.isArray(value) ? ` (${value.length})` : "";
+  const technical = array ? [] : entries.filter(([key]) => isTechnicalRecordField(key));
+  const primary = array ? entries : entries.filter(([key]) => !isTechnicalRecordField(key));
+  const children = primary.map(([childLabel, item, key]) => structuredNode(childLabel, item, [...path, key]));
+  const technicalSection = technicalFields(technical, path);
+  if (technicalSection) children.push(technicalSection);
+  const count = array ? ` (${value.length})` : "";
   return element("details", { className: "editor-group", properties: { open } }, [
     element("summary", { text: `${humanLabel(label)}${count}` }),
     element("div", { className: "editor-fields" }, children.length ? children : [element("p", { className: "muted", text: "No editable fields" })]),
@@ -2187,8 +2226,9 @@ function renderStructuredEditor() {
     return;
   }
   const simple = entries
-    .filter(([key, value]) => !["full_stack_raw", "layers"].includes(key) && (value == null || typeof value !== "object"))
+    .filter(([key, value]) => !["full_stack_raw", "layers"].includes(key) && !isTechnicalRecordField(key) && (value == null || typeof value !== "object"))
     .map(([key, value]) => structuredLeaf(key, value, [key]));
+  const technical = entries.filter(([key, value]) => !["full_stack_raw", "layers"].includes(key) && isTechnicalRecordField(key) && (value == null || typeof value !== "object"));
   const related = entries
     .filter(([key, value]) => !["full_stack_raw", "layers"].includes(key) && value != null && typeof value === "object")
     .map(([key, value]) => structuredNode(key, value, [key], false));
@@ -2196,11 +2236,11 @@ function renderStructuredEditor() {
     element("section", { className: "device-identity-editor" }, [
       element("h3", { text: "Device family" }),
       element("div", { className: "editor-fields" }, simple),
+      technicalFields(technical, []),
     ]),
     renderDeviceStackEditor(),
     element("section", { className: "device-related-editor" }, [
-      element("h3", { text: "Absorber and processing details" }),
-      element("p", { className: "muted", text: "Open only the section that needs correction." }),
+      element("h3", { text: "Materials and fabrication" }),
       ...related,
     ]),
   );
