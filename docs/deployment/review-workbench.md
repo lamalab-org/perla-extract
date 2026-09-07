@@ -316,6 +316,12 @@ workflow; `/review` opens ground-truth review, and the existing `/comparison.htm
 address remains valid for local development and old bookmarks. Both surfaces therefore
 share the same accounts, PDFs, immutable responses, and feedback export.
 
+Each hostname presents its own sign-in screen. This is intentional: browser storage
+and identity cookies are scoped to a hostname, so redirecting an unauthenticated
+comparison request to that hostname's `/` route would only reload the comparison and
+create a sign-in loop. A project-password session established on one hostname does not
+silently authenticate the other.
+
 For the hosted PERLA workbench, the intended split is:
 
 - `perla-ground-truth-review.vercel.app` — ground-truth correction;
@@ -359,3 +365,10 @@ opens Clerk's prebuilt sign-in form. The reviewer chooses **Forgot password**, r
 a code at the verified email address, and sets a new password there. Fixed internal
 passwords remain available only as a migration fallback; the application never emails,
 stores, or logs a plaintext password itself.
+
+Clerk can instead provide passwordless email links through the same prebuilt sign-in
+surface. This requires a production Clerk instance (`pk_live_` and `sk_live_`) and the
+**Email verification link** sign-in strategy enabled in that instance. Keep Clerk's
+same-device-and-browser protection enabled unless the project explicitly accepts the
+additional risk of cross-device links. Test-instance keys are deliberately not enabled
+on a production workbench and cannot deliver the production email-link experience.
