@@ -15,13 +15,16 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from perla_extract.study_extraction.artifacts import write_json_atomic
 from perla_extract.study_extraction.client import ModelClient
 from perla_extract.study_extraction.logging import logger
-from review_workbench.figure_labels import caption_panel_labels
+from review_workbench.figure_labels import (
+    caption_panel_labels,
+    conservative_schema_relevance,
+)
 from review_workbench.study_review import FigureClass
 
 CAPTION_PATTERN = re.compile(
     r"^\s*(?:fig(?:ure)?\.?)\s*(?P<number>[0-9]+)\b", re.IGNORECASE
 )
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 
 
 class CaptionInput(TypedDict):
@@ -175,8 +178,13 @@ Choose one primary scientific class:
 
 StudyExtraction represents photovoltaic device composition and layers, processing,
 individual performance observations, population statistics, and stability tests.
-schema_relevant means the panel can contribute one of those facts; characterization
-alone is normally outside the schema.
+Set schema_relevant=true only when omitting this panel would prevent recovery of a
+complete record or an explicitly reported field value. A matching scientific topic is
+not sufficient. Curve samples, axis ticks, and values that would need to be inferred
+are not schema fields. A device-structure panel may be relevant when it visibly labels
+architecture, layers, or absorber composition. Characterization is normally outside
+the schema unless the caption explicitly reports a property tied to a specific device
+layer or absorber.
 
 Paraphrase a concise description. Never infer an axis label: set it to null unless the
 caption states the label explicitly. Classify numeric presentation only when the
@@ -307,6 +315,9 @@ def classify_captions(
                             ).encode("utf-8")
                         ).hexdigest()[:24],
                         **panel.model_dump(mode="json"),
+                        "schema_relevant": conservative_schema_relevance(
+                            panel.figure_class, panel.data_presentation
+                        ),
                         "page": caption_pages[panel.caption_block_id],
                         "figure_only_records": 0,
                         "figure_only_atomic_values": 0,

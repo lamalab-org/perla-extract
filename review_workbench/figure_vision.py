@@ -22,10 +22,13 @@ from review_workbench.figure_images import (
     RenderedFigure,
     build_figure_image_manifest,
 )
-from review_workbench.figure_labels import caption_panel_labels
+from review_workbench.figure_labels import (
+    caption_panel_labels,
+    conservative_schema_relevance,
+)
 from review_workbench.study_review import FigureClass
 
-VISION_PROMPT_VERSION = 2
+VISION_PROMPT_VERSION = 3
 
 if TYPE_CHECKING:
     from perla_extract.study_extraction.client import ModelClient
@@ -182,11 +185,17 @@ not_applicable, straightforward, straightforward, requires_digitization,
 partly_straightforward, or uncertain respectively.
 
 StudyExtraction covers device composition/layers, processing, individual performance,
-population statistics, and stability. Mark schema_relevant accordingly. explicit_values
-may contain only atomic values printed as annotations or in inset tables that map to the
-schema. Never include axis ticks, legend labels, curve samples, visually estimated
-coordinates, or values found only in the caption. Preserve each printed value verbatim
-and keep different metrics in separate objects. Use visual_notes for ambiguity."""
+population statistics, and stability. Set schema_relevant=true only when omitting the
+panel would prevent recovery of a complete record or an explicitly printed field value.
+A matching scientific topic is not sufficient, and a plotted curve without printed
+schema values is not schema-relevant merely because it could be digitized. An annotated
+device-structure panel may be relevant when it visibly identifies architecture, layers,
+or absorber composition. Characterization is normally outside scope unless a printed
+property is tied to a specific device layer or absorber. explicit_values may contain
+only atomic values printed as annotations or in inset tables that map to the schema.
+Never include axis ticks, legend labels, curve samples, visually estimated coordinates,
+or values found only in the caption. Preserve each printed value verbatim and keep
+different metrics in separate objects. Use visual_notes for ambiguity."""
     content: list[dict[str, object]] = [
         {
             "type": "text",
@@ -354,7 +363,9 @@ def build_review_proposal(
                     "y_axis_label": panel.y_axis_label,
                     "data_presentation": panel.data_presentation,
                     "extraction_feasibility": panel.extraction_feasibility,
-                    "schema_relevant": panel.schema_relevant,
+                    "schema_relevant": conservative_schema_relevance(
+                        panel.figure_class, panel.data_presentation
+                    ),
                     "figure_only_records": 0,
                     "figure_only_atomic_values": 0,
                     "panel_bbox_normalized": panel.panel_bbox_normalized,

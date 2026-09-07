@@ -333,11 +333,25 @@ straightforward, requires digitization, not applicable, or uncertain. “Straigh
 means that values are printed; it does not mean that points could be estimated from a
 curve.
 
-Mark whether the panel contains any fact represented by `StudyExtraction`. For a
-schema-relevant panel, count complete schema records and individual populated fields
-that are visible there but absent from running text, captions, and tables. A populated
-field is one stored fact, such as PCE, Voc, layer thickness, or test duration. It is not
-a point sampled from a curve. When one fact spans multiple
+The app shows the coarse `StudyExtraction` destination implied by the selected figure
+class—for example, performance metrics for a J–V panel or layers and absorbers for a
+device schematic. This is orientation, not another annotation task: reviewers do not
+map individual fields.
+
+Mark a panel schema-relevant only when omitting it would leave a schema record or a
+populated field incomplete. Sharing a scientific topic with the schema is not enough.
+In particular, axis ticks, legend labels, and points that could merely be sampled from
+a curve are not stored field values. Unreviewed proposals use a conservative default:
+J–V, EQE, population, and stability panels are preselected only when they contain
+explicit labels, an inset table, or mixed printed and plotted data; annotated device
+structures may also be preselected. Characterization and other panels start outside
+scope and require a reviewer to opt them in when they visibly contribute a specific
+stored fact.
+
+For a schema-relevant panel, count complete schema records and individual populated
+fields that are visible there but absent from running text, captions, and tables. A
+populated field is one stored fact, such as PCE, Voc, layer thickness, or test duration.
+It is not a point sampled from a curve. When one fact spans multiple
 panels, assign it to the single panel providing the clearest support so totals are not
 duplicated. Do not add approximate visual readings to the text-evidenced ground truth.
 

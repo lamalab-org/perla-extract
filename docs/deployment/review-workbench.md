@@ -42,7 +42,10 @@ manifests under the ground-truth directory.
 The figure census is deliberately limited to numbered figures in the main paper. A
 one-panel queue asks reviewers to confirm or correct each subfigure's scientific class,
 description, axes, numeric presentation, extraction effort, schema relevance, and
-figure-only contribution. Unchecked model suggestions cannot be submitted as human
+figure-only contribution. A read-only destination shows which coarse schema section
+matches the selected class; reviewers do not map individual fields. Relevance requires
+a storable fact or value, not merely a related scientific topic, and unreviewed model
+suggestions are defaulted conservatively. Unchecked suggestions cannot be submitted as human
 ground truth. Browser-local drafts protect long reviews, and only the selected paper's
 proposal is loaded. Paper-level totals are derived from confirmed/corrected rows. The
 app records all imported sources as the record-search scope; reviewers do not toggle
