@@ -40,6 +40,9 @@ async function initializeAuth() {
   const response = await fetch("/api/auth/config");
   if (!response.ok) throw new Error("The sign-in service is temporarily unavailable.");
   const config = await response.json();
+  if (!config.enabled && config.mode !== "local") {
+    throw new Error("Authentication is not completely configured for this deployment.");
+  }
   state.authMode = config.enabled ? config.mode : "local";
   if (!localStorage.getItem(TOKEN_KEY) && clerkSignInEnabled() && !state.clerk) {
     await loadScript(`${config.frontend_api}/npm/@clerk/ui@1/dist/ui.browser.js`, { crossorigin: "anonymous" });

@@ -98,6 +98,7 @@ def test_comparison_authentication_stays_on_its_own_hostname():
     assert "return initializeAuth()" in javascript
     assert "state.clerk.addListener" in javascript
     assert "startComparison().catch(showAuthenticationError)" in javascript
+    assert "Authentication is not completely configured" in javascript
     assert "finally" in javascript
 
 
