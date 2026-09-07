@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const TOKEN_KEY = "review-token";
 const state = {
-  clerk: null, user: null, assignments: [], current: null, source: "main", page: 1,
+  authMode: "local", clerk: null, user: null, assignments: [], current: null, source: "main", page: 1,
   pageCount: 1, pdfUrl: null, activeSeconds: 0, lastTick: Date.now(), judgments: new Map(),
   missingFacts: [], native: null, nativeSeconds: 0, preference: null,
   preferenceSeconds: 0,
@@ -36,8 +36,11 @@ function loadScript(src, attributes = {}) {
 }
 
 async function initializeAuth() {
-  const config = await fetch("/api/auth/config").then((response) => response.json());
-  if (!localStorage.getItem(TOKEN_KEY) && ["clerk", "internal_or_clerk"].includes(config.mode)) {
+  const response = await fetch("/api/auth/config");
+  if (!response.ok) throw new Error("The sign-in service is temporarily unavailable.");
+  const config = await response.json();
+  state.authMode = config.enabled ? config.mode : "local";
+  if (!localStorage.getItem(TOKEN_KEY) && clerkSignInEnabled()) {
     await loadScript(`${config.frontend_api}/npm/@clerk/ui@1/dist/ui.browser.js`, { crossorigin: "anonymous" });
     await loadScript(`${config.frontend_api}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`, {
       crossorigin: "anonymous", "data-clerk-publishable-key": config.publishable_key,
@@ -48,11 +51,64 @@ async function initializeAuth() {
   try {
     state.user = (await request("/api/session")).user;
   } catch (error) {
-    if (error.status === 401) window.location.assign("/");
+    if (error.status === 401 && localStorage.getItem(TOKEN_KEY)) {
+      localStorage.removeItem(TOKEN_KEY);
+      return initializeAuth();
+    }
+    if (error.status === 401) {
+      showSignIn();
+      return false;
+    }
     throw error;
   }
+  showComparison();
   $("reviewer").textContent = state.user.name;
   $("open-import").hidden = state.user.role !== "admin";
+  return true;
+}
+
+function internalSignInEnabled() {
+  return state.authMode === "internal" || state.authMode === "internal_or_clerk";
+}
+
+function clerkSignInEnabled() {
+  return state.authMode === "clerk" || state.authMode === "internal_or_clerk";
+}
+
+function showInternalSignIn() {
+  $("internal-sign-in").hidden = !internalSignInEnabled();
+  $("clerk-sign-in").hidden = true;
+  $("use-email-sign-in").hidden = !clerkSignInEnabled();
+  $("use-project-password").hidden = true;
+  $("auth-help").textContent = "Use the review password provided by the project team.";
+}
+
+function showClerkSignIn() {
+  $("internal-sign-in").hidden = true;
+  $("clerk-sign-in").hidden = false;
+  $("use-email-sign-in").hidden = true;
+  $("use-project-password").hidden = !internalSignInEnabled();
+  $("auth-help").textContent = "Use an available email sign-in method to continue.";
+  state.clerk?.mountSignIn($("clerk-sign-in"));
+}
+
+function showSignIn(message = "") {
+  $("comparison-app").hidden = true;
+  $("auth-gate").hidden = false;
+  $("login-status").textContent = message;
+  if (internalSignInEnabled()) showInternalSignIn();
+  else showClerkSignIn();
+}
+
+function showComparison() {
+  $("auth-gate").hidden = true;
+  $("comparison-app").hidden = false;
+}
+
+async function startComparison() {
+  if (!await initializeAuth()) return;
+  state.assignments = (await request("/api/comparisons")).comparisons;
+  renderList();
 }
 
 function updateTimer() {
@@ -507,12 +563,40 @@ $("import-form").onsubmit = async (event) => {
   } catch (error) { $("import-status").textContent = error.message; }
 };
 
+$("use-email-sign-in").onclick = showClerkSignIn;
+$("use-project-password").onclick = showInternalSignIn;
+$("internal-sign-in").onsubmit = async (event) => {
+  event.preventDefault();
+  const submit = event.currentTarget.querySelector('button[type="submit"]');
+  submit.disabled = true;
+  $("login-status").textContent = "Signing in…";
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: $("login-email").value, password: $("login-password").value }),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Sign-in failed.");
+    localStorage.setItem(TOKEN_KEY, payload.token);
+    $("login-password").value = "";
+    await startComparison();
+  } catch (error) {
+    showSignIn(error.message);
+  } finally {
+    submit.disabled = false;
+  }
+};
+$("sign-out").onclick = async () => {
+  localStorage.removeItem(TOKEN_KEY);
+  await state.clerk?.signOut();
+  state.user = null;
+  state.assignments = [];
+  showSignIn("Signed out.");
+};
+
 try {
-  await initializeAuth();
-  state.assignments = (await request("/api/comparisons")).comparisons;
-  renderList();
+  await startComparison();
 } catch (error) {
-  $("reviewer").textContent = "Could not connect";
-  $("comparison-empty").innerHTML = `<h2>Comparison workspace unavailable</h2><p></p><a href="/">Return to sign in</a>`;
-  $("comparison-empty").querySelector("p").textContent = error.message;
+  showSignIn(error.message);
 }

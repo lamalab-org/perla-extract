@@ -83,6 +83,20 @@ def test_deployed_authentication_has_a_recoverable_sign_in_flow():
     assert "#clerk-sign-in[hidden]" in styles
 
 
+def test_comparison_authentication_stays_on_its_own_hostname():
+    html = (APP / "comparison.html").read_text(encoding="utf-8")
+    javascript = (APP / "comparison.js").read_text(encoding="utf-8")
+
+    assert 'id="auth-gate"' in html
+    assert 'id="internal-sign-in"' in html
+    assert 'id="use-email-sign-in"' in html
+    assert 'id="sign-out"' in html
+    assert 'fetch("/api/auth/login"' in javascript
+    assert "localStorage.setItem(TOKEN_KEY, payload.token)" in javascript
+    assert "window.location.assign" not in javascript
+    assert "return initializeAuth()" in javascript
+
+
 def test_ui_allows_record_review_before_the_census():
     html = (APP / "index.html").read_text(encoding="utf-8")
     javascript = (APP / "app.js").read_text(encoding="utf-8")
