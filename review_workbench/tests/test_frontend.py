@@ -1,4 +1,8 @@
+import shutil
+import subprocess
 from pathlib import Path
+
+import pytest
 
 APP = Path(__file__).resolve().parents[1] / "review_app"
 
@@ -555,6 +559,64 @@ def test_structured_editor_can_reorder_sequenced_items_without_raw_json():
     assert 'text: "Position"' in source
     assert 'entry.sequence = position + 1' in source
     assert ".ordered-array-controls" in styles
+
+
+def test_ordered_item_moves_preserve_content_and_renumber_sequences():
+    if shutil.which("node") is None:
+        pytest.skip("Node.js is needed to execute the browser-side reorder helper")
+
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    helper_source = source[
+        source.index("function editValueAt") : source.index(
+            "function orderedArrayItem", source.index("function editValueAt")
+        )
+    ]
+    script = (
+        """
+const assert = require("node:assert/strict");
+const steps = [
+  { sequence: 7, operation: "A", conditions: [{ value: 10 }] },
+  { sequence: 2, operation: "B", conditions: [{ value: 20 }] },
+  { sequence: 99, operation: "C", conditions: [{ value: 30 }] },
+];
+const state = { edit: { value: { processing_steps: steps } } };
+const recordJson = { value: "" };
+const focused = [];
+const opened = [];
+const nodes = [0, 1, 2].map((index) => ({
+  dataset: { arrayPath: JSON.stringify(["processing_steps"]), arrayIndex: String(index) },
+  querySelector(selector) {
+    if (selector === ":scope > details") return { set open(value) { if (value) opened.push(index); } };
+    if (selector === "select") return { focus() { focused.push(index); } };
+    return null;
+  },
+}));
+const document = { querySelectorAll() { return nodes; } };
+const $ = (id) => { assert.equal(id, "record-json"); return recordJson; };
+let renderCount = 0;
+function renderStructuredEditor() { renderCount += 1; }
+"""
+        + helper_source
+        + """
+moveOrderedItem(["processing_steps"], 0, 2); // direct position: A after C
+assert.deepEqual(steps.map((step) => step.operation), ["B", "C", "A"]);
+assert.deepEqual(steps.map((step) => step.sequence), [1, 2, 3]);
+assert.equal(steps[2].conditions[0].value, 10);
+
+moveOrderedItem(["processing_steps"], 2, 1); // Earlier: A before C
+assert.deepEqual(steps.map((step) => step.operation), ["B", "A", "C"]);
+
+moveOrderedItem(["processing_steps"], 0, 1); // Later: B after A
+assert.deepEqual(steps.map((step) => step.operation), ["A", "B", "C"]);
+assert.deepEqual(steps.map((step) => step.sequence), [1, 2, 3]);
+assert.deepEqual(steps.map((step) => step.conditions[0].value), [10, 20, 30]);
+assert.equal(renderCount, 3);
+assert.deepEqual(opened, [2, 1, 1]);
+assert.deepEqual(focused, [2, 1, 1]);
+assert.deepEqual(JSON.parse(recordJson.value).processing_steps, steps);
+"""
+    )
+    subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
 
 
 def test_ui_builds_untrusted_content_with_dom_nodes():
