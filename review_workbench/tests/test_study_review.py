@@ -316,6 +316,44 @@ def test_review_workbook_import_is_atomic_attributable_and_undoable(
     assert progress["current_event_ids"] == []
 
 
+def test_review_workbook_sanitizes_pdf_control_characters(
+    tmp_path, empty_study, document_payload
+):
+    """A malformed PDF glyph must not make the complete Excel export fail."""
+
+    study = study_with_family(empty_study)
+    study["device_families"][0]["label"] = "Control\x00 family"
+    study["device_families"][0]["evidence"][0]["quote"] = (
+        "The champion\x0e device reached a PCE of 24.1%."
+    )
+    store = StudyReviewStore(tmp_path)
+    seed(store, study, document_payload)
+
+    data = store.review_workbook("calibration", "10.0000--example", "ada")
+    book = load_workbook(BytesIO(data))
+    assert book["Record review"]["D2"].value == "Control  family"
+    assert all(
+        "\x00" not in str(cell.value) and "\x0e" not in str(cell.value)
+        for sheet in book.worksheets
+        for row in sheet.iter_rows()
+        for cell in row
+    )
+
+    book["Record review"]["A2"] = "All fields match source"
+    output = BytesIO()
+    book.save(output)
+    updated = store.import_review_workbook(
+        "calibration",
+        "10.0000--example",
+        output.getvalue(),
+        "ada",
+        filename="control-character-review.xlsx",
+    )
+    assert updated["summary"]["record_decisions"]["ada"] == {
+        "device_families:family-control": "verified"
+    }
+
+
 def test_excel_cell_comments_are_feedback_even_without_value_edits(
     tmp_path, empty_study, document_payload
 ):
