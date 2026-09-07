@@ -206,6 +206,8 @@ async function loadPdfPage(url, signal) {
 
 async function loadAuthenticatedImage(image, status, url) {
   state.figurePanelAbortController?.abort();
+  if (state.figurePanelObjectUrl) URL.revokeObjectURL(state.figurePanelObjectUrl);
+  state.figurePanelObjectUrl = null;
   const controller = new AbortController();
   state.figurePanelAbortController = controller;
   const requestId = ++state.figurePanelRequest;
@@ -224,7 +226,6 @@ async function loadAuthenticatedImage(image, status, url) {
       URL.revokeObjectURL(objectUrl);
       return;
     }
-    if (state.figurePanelObjectUrl) URL.revokeObjectURL(state.figurePanelObjectUrl);
     state.figurePanelObjectUrl = objectUrl;
     status.textContent = "Localized crop from the main paper";
   } catch (error) {
@@ -1922,9 +1923,28 @@ function moveLayer(index, offset) {
 }
 
 function removeLayer(index) {
-  state.edit.value.layers.splice(index, 1);
+  const [removed] = state.edit.value.layers.splice(index, 1);
+  let detachedAbsorbers = 0;
+  let detachedSteps = 0;
+  for (const absorber of state.edit.value.absorbers || []) {
+    if (absorber.layer_id === removed.layer_id) {
+      absorber.layer_id = null;
+      detachedAbsorbers += 1;
+    }
+  }
+  for (const step of state.edit.value.processing_steps || []) {
+    const targets = step.target_layer_ids || [];
+    const remaining = targets.filter((layerId) => layerId !== removed.layer_id);
+    if (remaining.length !== targets.length) {
+      step.target_layer_ids = remaining;
+      detachedSteps += 1;
+    }
+  }
   syncLayerOrder();
   renderStructuredEditor();
+  if (detachedAbsorbers || detachedSteps) {
+    $("dialog-status").textContent = `Removed the layer and cleared its link from ${detachedAbsorbers} absorber${detachedAbsorbers === 1 ? "" : "s"} and ${detachedSteps} processing step${detachedSteps === 1 ? "" : "s"}. Their scientific content is preserved.`;
+  }
 }
 
 function addLayer() {
@@ -1949,10 +1969,10 @@ function addLayer() {
 }
 
 function renderLayerAdvanced(layer, index) {
-  const fields = ["layer_id", "constituents", "material_form_raw", "material_form", "reported_properties"]
+  const fields = ["constituents", "material_form_raw", "material_form", "reported_properties"]
     .map((key) => structuredNode(key, layer[key], ["layers", index, key]));
   return element("details", { className: "stack-layer-advanced" }, [
-    element("summary", { text: "Composition, form, properties, and ID" }),
+    element("summary", { text: "Composition, form, and properties" }),
     element("div", { className: "editor-fields" }, fields),
   ]);
 }

@@ -91,9 +91,11 @@ editing does not bypass scientific validation.
 
 Device-family corrections have a focused **Device stack** editor. Each row exposes the
 layer material and function, with controls to reorder, add, or remove layers. Less
-frequently changed composition, material-form, property, and ID fields remain in a
-collapsed section on that row. Reordering updates the sequence numbers; existing layer
-IDs and evidence stay attached. The raw stack string remains available as the paper's
+frequently changed composition, material-form, and property fields remain in a
+collapsed section on that row. Reordering updates the sequence numbers; stable layer
+IDs and evidence stay attached. Removing a layer clears references to its ID from
+absorber components and processing steps without deleting their scientific content.
+The raw stack string remains available as the paper's
 verbatim representation, but changing it does not silently rewrite the structured
 layers.
 

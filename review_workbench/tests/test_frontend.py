@@ -472,7 +472,11 @@ def test_device_family_editor_has_a_focused_stack_workflow():
     assert "removeLayer" in source
     assert "addLayer" in source
     assert "recordSchemaNode" in source
-    assert "Composition, form, properties, and ID" in source
+    assert "Composition, form, and properties" in source
+    assert "absorber.layer_id = null" in source
+    assert "step.target_layer_ids = remaining" in source
+    assert 'const fields = ["layer_id"' not in source
+    assert "attachMissingEvidence(value, citation)" in source
 
 
 def test_ui_builds_untrusted_content_with_dom_nodes():
