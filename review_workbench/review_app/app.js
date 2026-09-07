@@ -437,6 +437,10 @@ async function loadStudySchema() {
   state.studySchema = await request("/api/study-schema");
 }
 
+async function ensureStudySchema() {
+  if (!state.studySchema) await loadStudySchema();
+}
+
 function paperCacheKey() { return `perla-paper-list:${state.split}`; }
 
 function savePaperCache() {
@@ -2146,16 +2150,25 @@ async function decideEntry(entry, decision) {
   }
 }
 
+async function openPreparedRecord(kind, index, template, intent) {
+  try {
+    await ensureStudySchema();
+    openRecord(kind, index, template, intent);
+  } catch (error) {
+    setStatus(`Could not prepare the record editor: ${error.message}`, true);
+  }
+}
+
 function beginCorrection(entry) {
-  openRecord(entry.kind, entry.index, null, "edit");
+  return openPreparedRecord(entry.kind, entry.index, null, "edit");
 }
 
 function beginRemoval(entry) {
-  openRecord(entry.kind, entry.index, null, "remove");
+  return openPreparedRecord(entry.kind, entry.index, null, "remove");
 }
 
 function copyMissingRecord(entry) {
-  openRecord(entry.kind, null, entry.item, "copy");
+  return openPreparedRecord(entry.kind, null, entry.item, "copy");
 }
 
 function beginMerge(entry, candidates) {
@@ -2198,11 +2211,17 @@ async function confirmMerge() {
   } finally { button.disabled = false; }
 }
 
-function beginReclassification(entry) {
+async function beginReclassification(entry) {
   const references = recordReferences(entry);
   if (references.length) {
     setStatus(`Relink the ${references.length} dependent record${references.length === 1 ? "" : "s"} before changing this record type.`, true);
     beginRemoval(entry);
+    return;
+  }
+  try {
+    await ensureStudySchema();
+  } catch (error) {
+    setStatus(`Could not prepare the record editor: ${error.message}`, true);
     return;
   }
   state.structuralEntry = entry;
@@ -2238,7 +2257,7 @@ async function addMissingRecord() {
     if (!state.studySchema) {
       button.disabled = true;
       button.textContent = "Preparing…";
-      await loadStudySchema();
+      await ensureStudySchema();
     }
     openRecord($("new-record-kind").value, null, null, "add");
   } catch (error) { setStatus(`Could not prepare a new record: ${error.message}`, true); }
@@ -3045,6 +3064,7 @@ $("internal-sign-in").addEventListener("submit", async (event) => {
     if (!response.ok) throw new Error(payload.error || "Sign-in failed.");
     localStorage.setItem(REVIEW_TOKEN_KEY, payload.token);
     state.user = payload.user;
+    $("reviewer").textContent = payload.user.name;
     $("download-all-feedback").hidden = payload.user.role !== "admin";
     $("login-password").value = "";
     showWorkbench();

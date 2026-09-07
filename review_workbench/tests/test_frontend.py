@@ -68,6 +68,9 @@ def test_deployed_authentication_has_a_recoverable_sign_in_flow():
     assert 'id="sign-out"' in html
     assert 'fetch("/api/auth/config")' in javascript
     assert 'fetch("/api/auth/login"' in javascript
+    assert '$("reviewer").textContent = payload.user.name' in javascript
+    assert "async function openPreparedRecord" in javascript
+    assert "await ensureStudySchema()" in javascript
     assert 'state.authMode === "internal_or_clerk"' in javascript
     assert "Choose Forgot password in the form" in javascript
     assert 'elevation: "flush"' in javascript
@@ -454,9 +457,9 @@ def test_correction_and_removal_dialogs_open_without_saving_a_decision_first():
         )
     ]
 
-    assert "openRecord" in correction
+    assert "openPreparedRecord" in correction
     assert "submitDecision" not in correction
-    assert "openRecord" in removal
+    assert "openPreparedRecord" in removal
     assert "submitDecision" not in removal
 
 

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from io import BytesIO
@@ -85,6 +86,7 @@ BRAND_SOFT = "E2F2EC"
 EDITABLE_FILL = "FFF3BF"
 READ_ONLY_FILL = "E7E9E8"
 CHANGED_FILL = "FFE0B2"
+UNSAFE_EXCEL_CONTROLS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]")
 
 
 @dataclass(frozen=True)
@@ -178,6 +180,26 @@ def _value_type(value: Any) -> str:
     return "text"
 
 
+def _excel_value(value: Any) -> Any:
+    """Remove spreadsheet-unsafe controls from text crossing into an XLSX cell.
+
+    PDF text layers occasionally encode spacing or mathematical glyphs as control
+    characters. JSON can preserve those characters, but openpyxl rejects C0 controls
+    and Excel may repair files containing DEL or C1 controls. Replacing only those
+    controls with spaces keeps the review artifact usable while retaining the
+    surrounding source text and conservative normalized matching. Tabs and line
+    breaks remain intact.
+    """
+
+    return UNSAFE_EXCEL_CONTROLS.sub(" ", value) if isinstance(value, str) else value
+
+
+def _excel_row(*values: Any) -> tuple[Any, ...]:
+    """Return cell values after applying the workbook text boundary once."""
+
+    return tuple(_excel_value(value) for value in values)
+
+
 def _citation(value: Any, inherited: dict[str, Any] | None) -> dict[str, Any] | None:
     if not isinstance(value, dict):
         return inherited
@@ -236,27 +258,28 @@ def _scalar_rows(
     json_path = "/" + "/".join(
         _pointer_part(part) for part in (collection, record_index, *path)
     )
+    cell_value = _excel_value(value)
     yield _FieldRow(
         values=(
-            context.record_label,
-            " › ".join(str(part) for part in path[:-1]),
-            field,
-            value,
-            value,
+            _excel_value(context.record_label),
+            _excel_value(" › ".join(str(part) for part in path[:-1])),
+            _excel_value(field),
+            cell_value,
+            cell_value,
             _value_type(value),
             "",
-            str(citation.get("quote", "")) if citation else "",
-            str(citation.get("block_id", "")) if citation else "",
-            context.link_scope,
-            context.family,
-            context.device,
-            json_path,
+            _excel_value(str(citation.get("quote", ""))) if citation else "",
+            _excel_value(str(citation.get("block_id", ""))) if citation else "",
+            _excel_value(context.link_scope),
+            _excel_value(context.family),
+            _excel_value(context.device),
+            _excel_value(json_path),
             "Yes" if editable else "No",
-            collection,
-            record_id,
-            label,
+            _excel_value(collection),
+            _excel_value(record_id),
+            _excel_value(label),
         ),
-        current_value=value,
+        current_value=cell_value,
         editable=editable,
     )
 
@@ -372,7 +395,7 @@ def _contract(
         record_id = str(record[identifiers[collection]])
         context = _record_context(truth, record, record_id, identifiers)
         records.append(
-            (
+            _excel_row(
                 NO_OUTCOME,
                 "",
                 labels[collection],
