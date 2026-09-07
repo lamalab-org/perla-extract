@@ -119,6 +119,10 @@ def test_caption_panel_labels_are_typographic_not_scientific_guesses():
     assert caption_panel_labels(
         "Figure 1. SEM images: a) surface image and b) cross-section image."
     ) == {"a", "b"}
+    assert caption_panel_labels("Fig. 1(a) Surface and Figure 1.(b) cross-section.") == {
+        "a",
+        "b",
+    }
     assert caption_panel_labels("Figure 2. A-site and B-site ion assignments.") == set()
 
 

@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 import click
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from perla_extract.study_extraction.artifacts import write_json_atomic
 from perla_extract.study_extraction.logging import configure_logging, logger
@@ -82,6 +82,13 @@ class VisualPanelProposal(BaseModel):
     explicit_values: list[VisibleAtomicValue] = Field(default_factory=list)
     visual_notes: list[str] = Field(default_factory=list)
 
+    @field_validator("panel_label", mode="before")
+    @classmethod
+    def trim_panel_label(cls, value: object) -> object:
+        """Canonicalize harmless model whitespace before identity validation."""
+
+        return value.strip() if isinstance(value, str) else value
+
     @model_validator(mode="after")
     def validate_panel_geometry_and_effort(self) -> "VisualPanelProposal":
         if self.panel_bbox_normalized is not None:
@@ -124,7 +131,7 @@ class VisualFigureProposal(BaseModel):
 
     @model_validator(mode="after")
     def require_unique_panel_labels(self) -> "VisualFigureProposal":
-        labels = [panel.panel_label.casefold() for panel in self.panels]
+        labels = [panel.panel_label.strip().casefold() for panel in self.panels]
         if len(labels) != len(set(labels)):
             raise ValueError("panel labels must be unique within a figure")
         return self
@@ -228,7 +235,7 @@ def _validate_visual_response(
             source_by_figure[figure.figure_number].caption
         )
         returned_labels = {
-            panel.panel_label.casefold()
+            panel.panel_label.strip().casefold()
             for panel in figure.panels
             if panel.panel_label
         }

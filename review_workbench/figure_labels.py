@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 PANEL_MARKER = re.compile(
-    r"(?:^|[\s;,:])(?:\(([a-z])\)|([a-z])\))(?=\s|[,:;.])", re.IGNORECASE
+    r"\(([a-z])\)|(?<!\w)([a-z])\)(?=\s|[,:;.])", re.IGNORECASE
 )
 
 
@@ -20,4 +20,3 @@ def caption_panel_labels(caption: str) -> set[str]:
         (match.group(1) or match.group(2)).casefold()
         for match in PANEL_MARKER.finditer(caption)
     }
-
