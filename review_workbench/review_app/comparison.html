@@ -11,7 +11,7 @@
   <section id="auth-gate" class="auth-gate" hidden>
     <div class="auth-card">
       <span class="eyebrow">PERLA</span>
-      <h1>Sign in to the extractor study</h1>
+      <h1 id="auth-title">Sign in to the extractor study</h1>
       <p id="auth-help">Use the review account provided by the project team.</p>
       <form id="internal-sign-in" class="internal-sign-in" hidden>
         <label>Email<input id="login-email" type="email" autocomplete="username" required /></label>
@@ -21,6 +21,7 @@
       <button id="use-email-sign-in" class="auth-switch" type="button" hidden>Sign in by email</button>
       <div id="clerk-sign-in" hidden></div>
       <button id="use-project-password" class="auth-switch" type="button" hidden>Use the project password instead</button>
+      <button id="retry-auth" type="button" hidden>Try again</button>
       <p id="login-status" role="alert"></p>
     </div>
   </section>

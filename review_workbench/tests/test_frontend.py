@@ -90,11 +90,15 @@ def test_comparison_authentication_stays_on_its_own_hostname():
     assert 'id="auth-gate"' in html
     assert 'id="internal-sign-in"' in html
     assert 'id="use-email-sign-in"' in html
+    assert 'id="retry-auth"' in html
     assert 'id="sign-out"' in html
     assert 'fetch("/api/auth/login"' in javascript
     assert "localStorage.setItem(TOKEN_KEY, payload.token)" in javascript
     assert "window.location.assign" not in javascript
     assert "return initializeAuth()" in javascript
+    assert "state.clerk.addListener" in javascript
+    assert "startComparison().catch(showAuthenticationError)" in javascript
+    assert "finally" in javascript
 
 
 def test_ui_allows_record_review_before_the_census():

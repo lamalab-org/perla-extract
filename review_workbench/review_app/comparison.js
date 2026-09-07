@@ -1,7 +1,8 @@
 const $ = (id) => document.getElementById(id);
 const TOKEN_KEY = "review-token";
 const state = {
-  authMode: "local", clerk: null, user: null, assignments: [], current: null, source: "main", page: 1,
+  authMode: "local", clerk: null, clerkListenerAdded: false, starting: false, user: null,
+  assignments: [], current: null, source: "main", page: 1,
   pageCount: 1, pdfUrl: null, activeSeconds: 0, lastTick: Date.now(), judgments: new Map(),
   missingFacts: [], native: null, nativeSeconds: 0, preference: null,
   preferenceSeconds: 0,
@@ -40,13 +41,19 @@ async function initializeAuth() {
   if (!response.ok) throw new Error("The sign-in service is temporarily unavailable.");
   const config = await response.json();
   state.authMode = config.enabled ? config.mode : "local";
-  if (!localStorage.getItem(TOKEN_KEY) && clerkSignInEnabled()) {
+  if (!localStorage.getItem(TOKEN_KEY) && clerkSignInEnabled() && !state.clerk) {
     await loadScript(`${config.frontend_api}/npm/@clerk/ui@1/dist/ui.browser.js`, { crossorigin: "anonymous" });
     await loadScript(`${config.frontend_api}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`, {
       crossorigin: "anonymous", "data-clerk-publishable-key": config.publishable_key,
     });
     await window.Clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
     state.clerk = window.Clerk;
+    if (!state.clerkListenerAdded) {
+      state.clerk.addListener(({ session }) => {
+        if (session && !state.user) startComparison().catch(showAuthenticationError);
+      });
+      state.clerkListenerAdded = true;
+    }
   }
   try {
     state.user = (await request("/api/session")).user;
@@ -95,9 +102,24 @@ function showClerkSignIn() {
 function showSignIn(message = "") {
   $("comparison-app").hidden = true;
   $("auth-gate").hidden = false;
+  $("auth-title").textContent = "Sign in to the extractor study";
+  $("retry-auth").hidden = true;
   $("login-status").textContent = message;
   if (internalSignInEnabled()) showInternalSignIn();
   else showClerkSignIn();
+}
+
+function showAuthenticationError(error) {
+  $("comparison-app").hidden = true;
+  $("auth-gate").hidden = false;
+  $("auth-title").textContent = "The sign-in service did not load";
+  $("auth-help").textContent = "Your reviews are unchanged. Check your connection and try again.";
+  $("internal-sign-in").hidden = true;
+  $("clerk-sign-in").hidden = true;
+  $("use-email-sign-in").hidden = true;
+  $("use-project-password").hidden = true;
+  $("retry-auth").hidden = false;
+  $("login-status").textContent = error?.message || String(error);
 }
 
 function showComparison() {
@@ -106,9 +128,15 @@ function showComparison() {
 }
 
 async function startComparison() {
-  if (!await initializeAuth()) return;
-  state.assignments = (await request("/api/comparisons")).comparisons;
-  renderList();
+  if (state.starting) return;
+  state.starting = true;
+  try {
+    if (!await initializeAuth()) return;
+    state.assignments = (await request("/api/comparisons")).comparisons;
+    renderList();
+  } finally {
+    state.starting = false;
+  }
 }
 
 function updateTimer() {
@@ -565,6 +593,7 @@ $("import-form").onsubmit = async (event) => {
 
 $("use-email-sign-in").onclick = showClerkSignIn;
 $("use-project-password").onclick = showInternalSignIn;
+$("retry-auth").onclick = () => window.location.reload();
 $("internal-sign-in").onsubmit = async (event) => {
   event.preventDefault();
   const submit = event.currentTarget.querySelector('button[type="submit"]');
@@ -589,14 +618,17 @@ $("internal-sign-in").onsubmit = async (event) => {
 };
 $("sign-out").onclick = async () => {
   localStorage.removeItem(TOKEN_KEY);
-  await state.clerk?.signOut();
-  state.user = null;
-  state.assignments = [];
-  showSignIn("Signed out.");
+  try {
+    await state.clerk?.signOut();
+  } finally {
+    state.user = null;
+    state.assignments = [];
+    showSignIn("Signed out.");
+  }
 };
 
 try {
   await startComparison();
 } catch (error) {
-  showSignIn(error.message);
+  showAuthenticationError(error);
 }
