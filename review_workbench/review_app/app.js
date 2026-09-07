@@ -434,11 +434,14 @@ async function initializeAuthentication() {
 }
 
 async function loadStudySchema() {
-  state.studySchema = await request("/api/study-schema");
+  const schema = await request("/api/study-schema");
+  if (!schema?.properties || !schema?.$defs) throw new Error("The server returned an incomplete study schema.");
+  state.studySchema = schema;
+  return schema;
 }
 
 async function ensureStudySchema() {
-  if (!state.studySchema) await loadStudySchema();
+  return state.studySchema || loadStudySchema();
 }
 
 function paperCacheKey() { return `perla-paper-list:${state.split}`; }
@@ -1357,9 +1360,14 @@ function renderDeviceContext(entry) {
   ]);
 }
 
-function resolvedSchema(node) {
+function resolvedSchema(node, schema = state.studySchema) {
   let result = node || {};
-  while (result.$ref) result = state.studySchema.$defs[result.$ref.split("/").at(-1)];
+  const visited = new Set();
+  while (result.$ref) {
+    if (!schema?.$defs || visited.has(result.$ref)) return {};
+    visited.add(result.$ref);
+    result = schema.$defs[result.$ref.split("/").at(-1)] || {};
+  }
   return result;
 }
 
@@ -1928,16 +1936,21 @@ function updateEditValue(path, rawValue, original) {
 }
 
 function recordSchemaNode(kind, path = []) {
-  let node = resolvedSchema(state.studySchema.properties[kind].items);
+  let node = resolvedSchema(state.studySchema?.properties?.[kind]?.items);
   for (const part of path) {
-    node = resolvedSchema(part === "items" ? node.items : node.properties?.[part]);
+    node = resolvedSchema(part === "items" ? node?.items : node?.properties?.[part]);
   }
   return node;
 }
 
 function layerRoleOptions() {
   const choices = recordSchemaNode("device_families", ["layers", "items", "role"]).enum;
-  return choices || ["not_reported"];
+  if (Array.isArray(choices) && choices.length) return choices;
+  const rolesInStudy = state.bundle?.ground_truth?.device_families
+    ?.flatMap((family) => family.layers || [])
+    .map((layer) => layer.role)
+    .filter(Boolean) || [];
+  return [...new Set([...rolesInStudy, "not_reported"])];
 }
 
 function syncLayerOrder() {
@@ -2152,7 +2165,7 @@ async function decideEntry(entry, decision) {
 
 async function openPreparedRecord(kind, index, template, intent) {
   try {
-    await ensureStudySchema();
+    state.studySchema = await ensureStudySchema();
     openRecord(kind, index, template, intent);
   } catch (error) {
     setStatus(`Could not prepare the record editor: ${error.message}`, true);
