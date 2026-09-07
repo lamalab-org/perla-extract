@@ -15,7 +15,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from perla_extract.study_extraction.artifacts import write_json_atomic
 from perla_extract.study_extraction.client import ModelClient
 from perla_extract.study_extraction.logging import logger
-from review_workbench.figure_labels import caption_panel_labels
+from review_workbench.figure_labels import (
+    caption_panel_labels,
+    conservative_schema_relevance,
+)
 from review_workbench.study_review import FigureClass
 
 CAPTION_PATTERN = re.compile(
@@ -312,6 +315,9 @@ def classify_captions(
                             ).encode("utf-8")
                         ).hexdigest()[:24],
                         **panel.model_dump(mode="json"),
+                        "schema_relevant": conservative_schema_relevance(
+                            panel.figure_class, panel.data_presentation
+                        ),
                         "page": caption_pages[panel.caption_block_id],
                         "figure_only_records": 0,
                         "figure_only_atomic_values": 0,

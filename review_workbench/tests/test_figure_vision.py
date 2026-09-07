@@ -144,6 +144,30 @@ def test_unmatched_visual_value_stays_needs_human_comparison(tmp_path):
     assert proposal["panels"][0]["figure_only_atomic_values"] == 0
 
 
+def test_review_proposal_does_not_count_a_plotted_curve_from_model_opinion(tmp_path):
+    figure = rendered_figure(tmp_path)
+    manifest = FigureImageManifest(
+        format_version=1,
+        pdf_path="paper.pdf",
+        pdf_sha256="b" * 64,
+        document_sha256="c" * 64,
+        docling_version="test",
+        dpi=180,
+        margin_points=6,
+        figures=[figure],
+        captions_without_region=[],
+    )
+    plotted = visual_result()
+    plotted.figures[0].panels[0].data_presentation = "plotted_values_only"
+    plotted.figures[0].panels[0].extraction_feasibility = "requires_digitization"
+    plotted.figures[0].panels[0].explicit_values = []
+    plotted.figures[0].panels[0].schema_relevant = True
+
+    proposal = build_review_proposal(plotted, manifest, {"blocks": []})
+
+    assert proposal["panels"][0]["schema_relevant"] is False
+
+
 def test_saved_proposal_is_revalidated_before_reuse(tmp_path):
     figure = rendered_figure(tmp_path)
     manifest = FigureImageManifest(

@@ -711,6 +711,7 @@ function normalizeFigurePanels(panels, fromProposal = false) {
 }
 
 function conservativeFigureRelevance(panel) {
+  // Keep this rule aligned with figure_labels.conservative_schema_relevance.
   if (panel.figure_class === "device_structure") return true;
   const schemaResultClasses = new Set(["jv", "eqe", "population_statistics", "stability"]);
   const directlyReported = new Set(["explicit_numeric_labels", "inset_table", "mixed"]);
