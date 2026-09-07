@@ -10,6 +10,7 @@ def test_blinded_comparison_is_a_separate_review_workflow():
     backend = (APP.parent / "expert_comparison.py").read_text(encoding="utf-8")
 
     assert 'href="/comparison.html"' in main
+    assert 'href="/review"' in html
     assert "one randomly assigned output" in html
     assert "Values and units are separate claims" in html
     assert (

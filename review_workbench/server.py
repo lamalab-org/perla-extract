@@ -6,6 +6,7 @@ import email.policy
 import hashlib
 import json
 import mimetypes
+import os
 import re
 import sys
 import uuid
@@ -68,6 +69,26 @@ REVISION_CONFLICT_RESPONSE = {
         "review your change again, and then save it."
     ),
 }
+
+
+def review_app_asset(
+    request_path: str, request_host: str, comparison_hosts: set[str]
+) -> str:
+    """Choose the review surface while keeping both workflows on one backend.
+
+    A dedicated hostname can lead reviewers directly into the blinded comparison
+    without copying authentication, PDFs, or review storage into another service.
+    Explicit paths remain available for local development and old bookmarks.
+    """
+
+    if request_path == "/review":
+        return "index.html"
+    if request_path in {"/compare", "/comparison.html"}:
+        return "comparison.html"
+    if request_path != "/":
+        return request_path.lstrip("/")
+    hostname = urlparse(f"//{request_host}").hostname or ""
+    return "comparison.html" if hostname.casefold() in comparison_hosts else "index.html"
 
 
 def _same_pdf_page(left: fitz.Page, right: fitz.Page) -> bool:
@@ -985,6 +1006,12 @@ class ReviewApplication:
 def make_handler(application: ReviewApplication, authenticator=None):
     """Build an HTTP handler while keeping authentication optional for local use."""
 
+    comparison_hosts = {
+        host.strip().casefold()
+        for host in os.environ.get("REVIEW_COMPARISON_HOSTS", "").split(",")
+        if host.strip()
+    }
+
     class Handler(BaseHTTPRequestHandler):
         def send_json(
             self,
@@ -1273,7 +1300,9 @@ def make_handler(application: ReviewApplication, authenticator=None):
                             "application/pdf",
                         )
                     return
-                asset = "index.html" if parsed.path == "/" else parsed.path.lstrip("/")
+                asset = review_app_asset(
+                    parsed.path, self.headers.get("Host", ""), comparison_hosts
+                )
                 if asset not in {
                     "index.html",
                     "app.js",

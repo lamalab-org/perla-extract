@@ -303,8 +303,23 @@ changing reviewer identities or saved annotations.
 | `REVIEW_INTERNAL_ACCOUNT_OVERRIDES` | Optional final account layer for an independently deployable password rotation |
 | `REVIEW_INTERNAL_ACCOUNT_LAYER_*` | Optional named JSON layers, applied alphabetically after the legacy layers, so later password resets can be deployed without replacing write-only secrets |
 | `REVIEW_SESSION_SECRET` | At least 32 characters; signs seven-day sessions |
+| `REVIEW_COMPARISON_HOSTS` | Optional comma-separated hostnames whose root URL opens the blinded extractor study instead of ground-truth review |
 
 An account role is `reviewer` unless it is explicitly `admin`.
+
+### Dedicated comparison hostname
+
+The blinded extractor study can use a separate hostname without a second backend.
+Point an additional Vercel alias at the same deployment and list its hostname in
+`REVIEW_COMPARISON_HOSTS`. Requests to `/` on that hostname open the comparison
+workflow; `/review` opens ground-truth review, and the existing `/comparison.html`
+address remains valid for local development and old bookmarks. Both surfaces therefore
+share the same accounts, PDFs, immutable responses, and feedback export.
+
+For the hosted PERLA workbench, the intended split is:
+
+- `perla-ground-truth-review.vercel.app` — ground-truth correction;
+- `perla-extractor-comparison.vercel.app` — blinded extractor comparison.
 
 ### Clerk
 
