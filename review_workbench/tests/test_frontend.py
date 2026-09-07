@@ -100,6 +100,11 @@ def test_comparison_authentication_stays_on_its_own_hostname():
     assert "startComparison().catch(showAuthenticationError)" in javascript
     assert "Authentication is not completely configured" in javascript
     assert "finally" in javascript
+    assert "function clearComparison()" in javascript
+    assert "state.current = null" in javascript
+    assert "state.judgments.clear()" in javascript
+    assert '$("records").replaceChildren()' in javascript
+    assert '$("comparison-workspace").hidden = true' in javascript
 
 
 def test_ui_allows_record_review_before_the_census():

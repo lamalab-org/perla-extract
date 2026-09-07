@@ -130,6 +130,22 @@ function showComparison() {
   $("comparison-app").hidden = false;
 }
 
+function clearComparison() {
+  state.user = null;
+  state.assignments = [];
+  state.current = null;
+  state.judgments.clear();
+  state.missingFacts = [];
+  state.native = null;
+  state.preference = null;
+  if (state.pdfUrl) URL.revokeObjectURL(state.pdfUrl);
+  state.pdfUrl = null;
+  $("pdf-page").removeAttribute("src");
+  $("records").replaceChildren();
+  $("comparison-workspace").hidden = true;
+  $("comparison-empty").hidden = false;
+}
+
 async function startComparison() {
   if (state.starting) return;
   state.starting = true;
@@ -624,8 +640,7 @@ $("sign-out").onclick = async () => {
   try {
     await state.clerk?.signOut();
   } finally {
-    state.user = null;
-    state.assignments = [];
+    clearComparison();
     showSignIn("Signed out.");
   }
 };
