@@ -591,7 +591,7 @@ function renderStudy() {
   $("paper-split").textContent = SPLIT_LABELS[state.split] || state.split;
   $("paper-title").textContent = truth.paper.title || state.paperId;
   $("paper-doi").textContent = truth.paper.doi || "DOI not reported";
-  $("revision").textContent = `Revision ${state.bundle.revision}`;
+  $("revision").textContent = `Version ${state.bundle.revision}`;
   const compatibility = state.bundle.schema_compatibility;
   const compatibilityNotice = $("schema-compatibility");
   compatibilityNotice.hidden = compatibility?.exact_match !== false;
@@ -1533,7 +1533,7 @@ function renderRecordEvidence(entry) {
   if (!citation) return element("section", { className: "record-evidence" }, [element("strong", { text: "No record-level evidence supplied" })]);
   return element("section", { className: "record-evidence" }, [
     element("div", { className: "evidence-heading" }, [
-      element("strong", { text: `Supporting evidence · ${citation.block_id}` }),
+      element("div", {}, [element("strong", { text: "Source evidence" }), element("code", { text: citation.block_id })]),
       element("button", { text: "Show in paper", events: { click: () => focusCitation(citation) } }),
     ]),
     element("blockquote", { text: citation.quote }),
@@ -1561,6 +1561,8 @@ function renderReviewQueue() {
   const decisions = state.bundle.summary.record_decisions?.[state.user.id] || {};
   const completed = Object.values(decisions).filter((value) => value === "verified" || value === "uncertain").length;
   $("queue-progress").textContent = `${completed} of ${total} reviewed · ${total - completed} remaining`;
+  $("queue-progress-bar").max = Math.max(total, 1);
+  $("queue-progress-bar").value = completed;
   $("queue-position").textContent = entries.length ? `${state.queueIndex + 1} / ${entries.length}` : "0 / 0";
   $("previous-record").disabled = state.queueIndex <= 0;
   $("next-record").disabled = state.queueIndex >= entries.length - 1;
@@ -1575,29 +1577,32 @@ function renderReviewQueue() {
   const mergeCandidates = state.bundle.ground_truth[entry.kind]
     .map((item, index) => ({ item, index }))
     .filter(({ index }) => index !== entry.index);
+  const recordOptions = element("details", { className: "record-options" }, [
+    element("summary", { text: "Record options" }),
+    element("div", { className: "record-management-actions" }, [
+      ...(mergeCandidates.length ? [element("button", { text: "Merge duplicate", events: { click: () => beginMerge(entry, mergeCandidates) } })] : []),
+      element("button", { text: "Change type", events: { click: () => beginReclassification(entry) } }),
+      element("button", { text: "Duplicate as missing", events: { click: () => copyMissingRecord(entry) } }),
+      element("button", { className: "remove-extra", text: "Remove record", events: { click: () => beginRemoval(entry) } }),
+      ...(context.device ? [element("button", {
+        text: "Download this device as Excel",
+        attributes: { title: "Includes this device, its family, linked performance, family statistics, and linked stability tests." },
+        events: { click: (event) => runDownload(
+          event.currentTarget,
+          "Preparing the device review workbook…",
+          "Downloaded an Excel workbook for this device and its linked context.",
+          () => downloadReviewWorkbook(context.device[state.bundle.summary.record_identifiers.individual_devices]),
+        ) },
+      })] : []),
+    ]),
+  ]);
   const actions = element("div", { className: "queue-actions" }, [
     element("div", { className: "decision-actions" }, [
-      element("button", { className: decision === "verified" ? "active" : "", text: "All fields match source  V", attributes: { title: DECISION_GUIDANCE.verified }, events: { click: () => decideEntry(entry, "verified") } }),
-      element("button", { className: decision === "uncertain" ? "active" : "", text: "Cannot establish from source  U", attributes: { title: DECISION_GUIDANCE.uncertain }, events: { click: () => decideEntry(entry, "uncertain") } }),
-      element("button", { className: decision === "needs_correction" ? "active" : "", text: "Correct fields  C", attributes: { title: DECISION_GUIDANCE.needs_correction }, events: { click: () => beginCorrection(entry) } }),
+      element("button", { className: decision === "verified" ? "active" : "", attributes: { title: DECISION_GUIDANCE.verified, "aria-label": "All fields match source (V)" }, events: { click: () => decideEntry(entry, "verified") } }, [element("span", { text: "Matches source" }), element("kbd", { text: "V" })]),
+      element("button", { className: decision === "uncertain" ? "active" : "", attributes: { title: DECISION_GUIDANCE.uncertain, "aria-label": "Cannot establish from source (U)" }, events: { click: () => decideEntry(entry, "uncertain") } }, [element("span", { text: "Cannot verify" }), element("kbd", { text: "U" })]),
+      element("button", { className: decision === "needs_correction" ? "active" : "", attributes: { title: DECISION_GUIDANCE.needs_correction, "aria-label": "Correct fields (C)" }, events: { click: () => beginCorrection(entry) } }, [element("span", { text: "Correct fields" }), element("kbd", { text: "C" })]),
     ]),
-    element("div", { className: "record-management-actions" }, [
-      element("span", { className: "muted", text: "Fix record structure" }),
-      ...(mergeCandidates.length ? [element("button", { text: "Merge duplicate", events: { click: () => beginMerge(entry, mergeCandidates) } })] : []),
-      element("button", { text: "Change record type", events: { click: () => beginReclassification(entry) } }),
-      element("button", { text: "Duplicate and edit", events: { click: () => copyMissingRecord(entry) } }),
-      element("button", { className: "remove-extra", text: "Remove extra record", events: { click: () => beginRemoval(entry) } }),
-    ]),
-    ...(context.device ? [element("button", {
-      text: "Download Excel for this device",
-      attributes: { title: "Includes this device, its family, linked performance, family statistics, and linked stability tests." },
-      events: { click: (event) => runDownload(
-        event.currentTarget,
-        "Preparing the device review workbook…",
-        "Downloaded an Excel workbook for this device and its linked context.",
-        () => downloadReviewWorkbook(context.device[state.bundle.summary.record_identifiers.individual_devices]),
-      ) },
-    })] : []),
+    recordOptions,
   ]);
   $("review-queue").replaceChildren(element("article", { className: "queue-card" }, [
     element("div", { className: "queue-heading" }, [
@@ -1611,7 +1616,7 @@ function renderReviewQueue() {
     renderReviewTarget(entry),
     renderRecordEvidence(entry),
     renderDeviceContext(entry),
-    element("p", { className: "decision-help", text: "Your decision applies to the complete current record above—not only the first number or the linked device context." }),
+    element("p", { className: "decision-help", text: "Choose one outcome for the complete record." }),
     element("p", { className: "queue-decision-status", attributes: { id: "queue-decision-status", role: "status" } }),
     actions,
   ]));
@@ -2826,7 +2831,7 @@ async function uploadReviewWorkbook(file) {
         ? "Review changes were saved, but the original Excel file could not be archived. Please keep your local copy and contact the administrator."
         : importMode === "comments_only_from_older_workbook"
           ? "Excel comments and the original workbook were saved. Because the workbook was based on an older paper revision, its value edits were not applied."
-          : "Reviewed workbook saved as one validated revision and archived. The import is visible in My edits & undo.",
+          : "Reviewed workbook saved as one validated revision and archived. The import is visible in My review.",
       state.bundle.workbook_archived === false,
     );
   } catch (error) {
@@ -3051,7 +3056,7 @@ async function startApp() {
     if (!state.user) await loadSession();
     await loadPapers();
     $("empty-title").textContent = "Choose a paper";
-    $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures.";
+    $("empty-message").textContent = "Compare extracted records with the paper and correct anything that is wrong or missing.";
   } catch (error) { showStartupError(error); }
 }
 
@@ -3094,6 +3099,21 @@ $("sign-out").addEventListener("click", () => {
   state.user = null;
   state.papers = [];
   showSignIn("Signed out.");
+});
+
+// Native details elements keep these lightweight menus keyboard-accessible. Closing
+// an open menu when focus moves elsewhere gives them the predictable behaviour of
+// an application popover without introducing a custom menu component.
+document.addEventListener("click", (event) => {
+  document.querySelectorAll("details.global-menu[open], details.record-options[open]").forEach((menu) => {
+    if (!menu.contains(event.target)) menu.open = false;
+  });
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  const openMenus = [...document.querySelectorAll("details.global-menu[open], details.record-options[open]")];
+  openMenus.forEach((menu) => { menu.open = false; });
+  openMenus.at(-1)?.querySelector("summary")?.focus();
 });
 
 try {
