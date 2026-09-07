@@ -28,15 +28,20 @@
   <header>
     <div><span class="eyebrow">PERLA</span><h1>Study ground-truth review</h1></div>
     <div class="header-actions">
-      <a class="button-link" href="/comparison.html">Extractor study</a>
       <button id="toggle-paper-list" type="button" aria-controls="paper-rail" aria-expanded="true" aria-label="Hide paper list" title="Hide paper list">Papers</button>
-      <label>Dataset <select id="split"><option value="dev">Current review — refreshed extraction</option><option value="calibration">Legacy calibration — deprecated</option><option value="test">Held-out test</option></select></label>
-      <button id="open-annotations">My edits &amp; undo</button>
-      <button id="download-all-feedback" type="button" hidden>Download feedback</button>
-      <button id="open-import">Import extraction</button>
+      <label class="dataset-picker"><span>Dataset</span><select id="split"><option value="dev">Current review — refreshed extraction</option><option value="calibration">Legacy calibration — deprecated</option><option value="test">Held-out test</option></select></label>
+      <button id="open-annotations">My review</button>
       <span id="reviewer" class="pill">Loading reviewer…</span>
       <div id="clerk-user-button"></div>
-      <button id="sign-out" type="button" hidden>Sign out</button>
+      <details class="global-menu">
+        <summary aria-label="More actions" title="More actions">•••</summary>
+        <div>
+          <a class="button-link" href="/comparison.html">Extractor comparison</a>
+          <button id="download-all-feedback" type="button" hidden>Download all feedback</button>
+          <button id="open-import">Import extraction</button>
+          <button id="sign-out" type="button" hidden>Sign out</button>
+        </div>
+      </details>
     </div>
   </header>
 
@@ -50,7 +55,7 @@
 
     <section id="empty-state" class="empty-state">
       <h2 id="empty-title">Choose a paper</h2>
-      <p id="empty-message">Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures.</p>
+      <p id="empty-message">Compare extracted records with the paper and correct anything that is wrong or missing.</p>
       <button id="retry-startup" type="button" hidden>Try loading again</button>
     </section>
 
@@ -65,7 +70,7 @@
           </div>
           <span id="revision" class="pill"></span>
           <button id="download-review-workbook" type="button" class="primary">Download Excel</button>
-          <button id="open-files" type="button">Files &amp; upload</button>
+          <button id="open-files" type="button">Files</button>
         </div>
         <p id="file-action-status" class="file-action-status" role="status" hidden></p>
       </div>
@@ -139,7 +144,7 @@
 
           <div id="records-tab" class="tab-panel" hidden>
             <div class="records-toolbar">
-              <div><h3>Review queue</h3><p id="queue-progress">Choose a record to begin.</p></div>
+              <div class="queue-progress-copy"><h3>Review queue</h3><p id="queue-progress">Choose a record to begin.</p><progress id="queue-progress-bar" max="1" value="0" aria-label="Record review progress"></progress></div>
               <div class="queue-filters">
                 <select id="record-status-filter" aria-label="Record status">
                   <option value="remaining">Remaining</option>

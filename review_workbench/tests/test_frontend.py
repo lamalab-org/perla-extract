@@ -327,9 +327,9 @@ def test_stability_review_shows_every_atomic_value_before_related_context():
         "renderDeviceContext(entry)", source.index("renderReviewTarget(entry)")
     )
     assert "All fields match source" in html
-    assert "All fields match source  V" in source
-    assert "Cannot establish from source  U" in source
-    assert "Your decision applies to the complete current record" in source
+    assert '"All fields match source (V)"' in source
+    assert '"Cannot establish from source (U)"' in source
+    assert "Choose one outcome for the complete record" in source
     assert "Verify  V" not in source
 
 
@@ -380,9 +380,9 @@ def test_record_count_corrections_are_explicit_and_reference_guarded():
     source = (APP / "app.js").read_text(encoding="utf-8")
     backend = (APP.parent / "study_review.py").read_text(encoding="utf-8")
 
-    assert "Duplicate and edit" in source
+    assert "Duplicate as missing" in source
     assert "Merge duplicate" in source
-    assert "Change record type" in source
+    assert "Change type" in source
     assert "/api/record-merges/" in source
     assert '"record-reclassifications"' in source
     assert "Remove extra record" in html
@@ -517,7 +517,7 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     source = (APP / "app.js").read_text(encoding="utf-8")
     server = (APP.parent / "server.py").read_text(encoding="utf-8")
 
-    assert "My edits &amp; undo" in html
+    assert '>My review</button>' in html
     assert "My review progress" in html
     assert "Current work" in html
     assert "History" in html
@@ -599,7 +599,7 @@ def test_reviewers_can_round_trip_a_device_or_paper_excel_review():
     assert "Upload completed workbook" in html
     assert "Work down the short Record review checklist" in html
     assert "only when a scalar value is wrong" in html
-    assert "Download Excel for this device" in source
+    assert "Download this device as Excel" in source
     assert "downloadReviewWorkbook" in source
     assert "uploadReviewWorkbook" in source
     assert "/api/review-workbook/" in source
