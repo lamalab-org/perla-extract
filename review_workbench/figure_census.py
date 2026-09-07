@@ -10,11 +10,12 @@ from pathlib import Path
 from typing import Any, Literal, TypedDict
 
 import click
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from perla_extract.study_extraction.artifacts import write_json_atomic
 from perla_extract.study_extraction.client import ModelClient
 from perla_extract.study_extraction.logging import logger
+from review_workbench.figure_labels import caption_panel_labels
 from review_workbench.study_review import FigureClass
 
 CAPTION_PATTERN = re.compile(
@@ -64,6 +65,13 @@ class CaptionPanelProposal(BaseModel):
     ]
     schema_relevant: bool
 
+    @field_validator("panel_label", mode="before")
+    @classmethod
+    def trim_panel_label(cls, value: object) -> object:
+        """Canonicalize harmless model whitespace before identity validation."""
+
+        return value.strip() if isinstance(value, str) else value
+
     @model_validator(mode="after")
     def keep_effort_consistent_with_presentation(self) -> "CaptionPanelProposal":
         """Make the recoverability label a consequence, not a second model opinion."""
@@ -94,7 +102,7 @@ class PaperFigureProposal(BaseModel):
     @model_validator(mode="after")
     def require_unique_panels(self) -> "PaperFigureProposal":
         keys = [
-            (panel.figure_number.casefold(), panel.panel_label.casefold())
+            (panel.figure_number.casefold(), panel.panel_label.strip().casefold())
             for panel in self.panels
         ]
         if len(keys) != len(set(keys)):
@@ -204,6 +212,22 @@ def _validate_batch(result: FigureProposalBatch, batch: list[PaperInput]) -> Non
             for panel in paper.panels
         ):
             raise ValueError(f"classifier changed a figure number for {paper_id}")
+        caption_text = {
+            str(item["caption_block_id"]): str(item["caption"])
+            for item in expected_papers[paper_id]["captions"]
+        }
+        for block_id, text in caption_text.items():
+            expected_labels = caption_panel_labels(text)
+            returned_labels = {
+                panel.panel_label.strip().casefold()
+                for panel in paper.panels
+                if panel.caption_block_id == block_id and panel.panel_label
+            }
+            if not expected_labels.issubset(returned_labels):
+                missing = ", ".join(sorted(expected_labels - returned_labels))
+                raise ValueError(
+                    f"classifier omitted captioned panel(s) {missing} for {paper_id}"
+                )
 
 
 def classify_captions(

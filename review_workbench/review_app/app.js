@@ -670,12 +670,30 @@ function censusDraftSource() {
   return state.bundle.manifest?.seed_sha256 || `revision:${state.bundle.revision}`;
 }
 
+function mergeNewProposalPanels(draft) {
+  const savedPanels = draft?.main_text_figure_census?.panels;
+  const proposedPanels = state.figureCensusProposals[state.paperId]?.panels;
+  if (!Array.isArray(savedPanels) || !Array.isArray(proposedPanels)) return draft;
+  const identities = new Set(savedPanels.flatMap((panel) => [
+    panel.proposal_panel_id ? `id:${panel.proposal_panel_id}` : null,
+    `label:${String(panel.figure_number).toLowerCase()}:${String(panel.panel_label || "").toLowerCase()}`,
+  ].filter(Boolean)));
+  for (const panel of normalizeFigurePanels(proposedPanels, true)) {
+    const labelIdentity = `label:${String(panel.figure_number).toLowerCase()}:${String(panel.panel_label || "").toLowerCase()}`;
+    if (identities.has(`id:${panel.proposal_panel_id}`) || identities.has(labelIdentity)) continue;
+    savedPanels.push(panel);
+    identities.add(`id:${panel.proposal_panel_id}`);
+    identities.add(labelIdentity);
+  }
+  return draft;
+}
+
 function restoreLocalCensusDraft() {
   try {
     const saved = JSON.parse(localStorage.getItem(censusDraftKey()) || "null");
     if (saved?.source !== censusDraftSource() || !saved?.draft) return null;
     state.censusDirty = true;
-    return structuredClone(saved.draft);
+    return mergeNewProposalPanels(structuredClone(saved.draft));
   } catch {
     try { localStorage.removeItem(censusDraftKey()); } catch { /* Storage is optional. */ }
     return null;
@@ -1816,8 +1834,16 @@ function openRecord(kind, index = null, template = null, intent = index == null 
   $("mutation-note").placeholder = intent === "remove" ? "Why should this record not exist?" : adding ? "Why was this record added?" : "What did the extraction get wrong?";
   $("save-record").textContent = adding ? "Add missing record" : "Save field correction";
   $("save-record").hidden = intent === "remove";
-  renderStructuredEditor();
-  setRecordEditorMode("fields", false);
+  const dialog = $("record-dialog");
+  if (!dialog.open) dialog.showModal();
+  let editorError = null;
+  try {
+    renderStructuredEditor();
+    setRecordEditorMode("fields", false);
+  } catch (error) {
+    editorError = error;
+    setRecordEditorMode("json", false);
+  }
   const citation = item.evidence?.[0];
   $("citation-block").value = citation?.block_id || "";
   $("citation-quote").value = citation?.quote || "";
@@ -1842,8 +1868,10 @@ function openRecord(kind, index = null, template = null, intent = index == null 
     );
   }
   $("evidence-results").replaceChildren();
-  $("dialog-status").textContent = "";
-  $("record-dialog").showModal();
+  $("dialog-status").textContent = editorError
+    ? `The field layout could not be displayed (${editorError.message}). The complete record is open as JSON so your correction is not blocked.`
+    : "";
+  dialog.querySelector(".dialog-card")?.scrollTo({ top: 0 });
   if (intent === "remove") $("mutation-note").focus();
   if (citation) focusCitation(citation, false, false);
 }

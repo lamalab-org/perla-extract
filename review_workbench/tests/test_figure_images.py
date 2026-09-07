@@ -6,6 +6,7 @@ import pymupdf
 
 from review_workbench.figure_images import (
     FigureRegion,
+    adjacent_panel_score,
     geometry_match_score,
     pdf_rect_from_docling_bbox,
     render_figure_regions,
@@ -60,5 +61,31 @@ def test_geometry_match_requires_caption_below_and_horizontal_overlap():
     )
     assert (
         geometry_match_score(picture, [540.0, 462.0, 590.0, 490.0], page_height=842)
+        is None
+    )
+
+
+def test_adjacent_panel_recovers_a_tiled_picture_without_using_content():
+    linked_panel = [50.0, 70.0, 175.0, 173.0]
+    adjacent_panel = [176.0, 70.0, 291.0, 173.0]
+    caption = [50.0, 180.0, 291.0, 205.0]
+
+    assert (
+        adjacent_panel_score(
+            adjacent_panel, linked_panel, caption, page_height=794
+        )
+        is not None
+    )
+
+
+def test_adjacent_panel_rejects_an_unrelated_page_picture():
+    linked_panel = [50.0, 70.0, 175.0, 173.0]
+    distant_picture = [400.0, 40.0, 550.0, 140.0]
+    caption = [50.0, 180.0, 291.0, 205.0]
+
+    assert (
+        adjacent_panel_score(
+            distant_picture, linked_panel, caption, page_height=794
+        )
         is None
     )
