@@ -92,7 +92,7 @@ const RECORD_GUIDANCE = {
 };
 const DECISION_GUIDANCE = {
   verified: "All fields match the source",
-  uncertain: "Cannot establish from the source",
+  uncertain: "Cannot verify from the source",
   needs_correction: "One or more fields need correction",
 };
 const QUALITY_GATES = [
@@ -775,7 +775,7 @@ function persistLocalCensusDraft() {
     }));
     $("figure-draft-status").textContent = "Draft saved in this browser.";
   } catch {
-    $("figure-draft-status").textContent = "This browser could not save the draft. Save the census before leaving.";
+    $("figure-draft-status").textContent = "This browser could not save the draft. Save this step before leaving.";
   }
 }
 
@@ -963,7 +963,7 @@ function renderFigureReviewToolbar() {
   $("figure-review-filter").value = state.figureReviewFilter;
   $("previous-figure-panel").disabled = position <= 0;
   $("next-figure-panel").disabled = position < 0 || position >= visible.length - 1;
-  if (!state.censusDirty) $("figure-draft-status").textContent = "Changes are kept in this browser until you save the census.";
+  if (!state.censusDirty) $("figure-draft-status").textContent = "Changes are kept in this browser until you save this step.";
 }
 
 function selectFigurePanel(index) {
@@ -1171,7 +1171,7 @@ function renderInventoryForm() {
   for (const input of document.querySelectorAll("#inventory-counts input, #figure-census-notes, #inventory-notes")) {
     input.addEventListener("input", () => updateCensusDraft({ persist: true }));
   }
-  $("submit-audit").textContent = hasAudit() ? "Update census" : "Save census";
+  $("submit-audit").textContent = hasAudit() ? "Update paper & figure check" : "Save paper & figure check";
 }
 
 function editSavedCensus() {
@@ -1664,7 +1664,7 @@ function renderReviewQueue() {
   const actions = element("div", { className: "queue-actions" }, [
     element("div", { className: "decision-actions" }, [
       element("button", { className: decision === "verified" ? "active" : "", attributes: { title: DECISION_GUIDANCE.verified, "aria-label": "All fields match source (V)" }, events: { click: () => decideEntry(entry, "verified") } }, [element("span", { text: "Matches source" }), element("kbd", { text: "V" })]),
-      element("button", { className: decision === "uncertain" ? "active" : "", attributes: { title: DECISION_GUIDANCE.uncertain, "aria-label": "Cannot establish from source (U)" }, events: { click: () => decideEntry(entry, "uncertain") } }, [element("span", { text: "Cannot verify" }), element("kbd", { text: "U" })]),
+      element("button", { className: decision === "uncertain" ? "active" : "", attributes: { title: DECISION_GUIDANCE.uncertain, "aria-label": "Cannot verify from source (U)" }, events: { click: () => decideEntry(entry, "uncertain") } }, [element("span", { text: "Cannot verify" }), element("kbd", { text: "U" })]),
       element("button", { className: decision === "needs_correction" ? "active" : "", attributes: { title: DECISION_GUIDANCE.needs_correction, "aria-label": "Correct fields (C)" }, events: { click: () => beginCorrection(entry) } }, [element("span", { text: "Correct fields" }), element("kbd", { text: "C" })]),
     ]),
     recordOptions,
@@ -1712,8 +1712,8 @@ function renderStageControls() {
   const reviewed = Object.values(decisions).filter((decision) => decision === "verified" || decision === "uncertain").length;
   const remaining = state.bundle.summary.record_count - reviewed;
   const labels = {
-    inventory: ["Mark census reviewed", "Census reviewed"],
-    fields: ["Mark all record fields reviewed", "Record fields reviewed"],
+    inventory: ["Continue to record review", "Paper & figures checked"],
+    fields: ["Continue to finish", "Records reviewed"],
     completeness: ["Complete paper review", "Paper review completed"],
     adjudication: ["Complete adjudication", "Adjudication completed"],
   };
@@ -1736,7 +1736,7 @@ function renderStageControls() {
   recordsTab.title = "Review extracted records at any time.";
   const completenessTab = document.querySelector('[data-tab="completeness"]');
   completenessTab.disabled = !hasAudit();
-  completenessTab.title = hasAudit() ? "" : "Save the census before opening the final completeness check.";
+  completenessTab.title = hasAudit() ? "" : "Save the paper and figure check before finishing this paper.";
 }
 
 function renderHistory() {
@@ -1887,7 +1887,7 @@ async function submitAudit() {
     state.censusDraft = savedCensusDraft();
     state.editingCensus = false;
     renderStudy();
-    setStatus("Record and main-text figure census saved.");
+    setStatus("Paper and main-text figure check saved.");
   } catch (error) { setStatus(error.message, true); }
 }
 
@@ -1907,14 +1907,14 @@ function openRecord(kind, index = null, template = null, intent = index == null 
       ? "Remove this record only if it should not exist in the ground truth. Linked records are never deleted automatically."
       : index == null
         ? "Fill the missing record from the paper. The draft shape comes from the current schema; blank required fields must be completed before it can be saved."
-        : "Correct this record's scientific fields. Saving replaces this record only; it does not create another device or measurement.";
+        : "Change only the fields that are wrong. The existing source evidence stays attached unless you replace it below.";
   $("record-json").value = JSON.stringify(item, null, 2);
   const adding = index == null;
-  $("evidence-search-label").textContent = adding ? "Choose evidence for this missing record" : "Choose correction evidence";
+  $("evidence-search-label").textContent = adding ? "Choose source evidence for this new record" : "Source evidence for this correction";
   $("mutation-note-label").textContent = intent === "remove" ? "Reason for removal" : adding ? "Review note" : "Reason for correction";
   $("mutation-note-help").textContent = intent === "remove" ? "Required: explain why this record is not supported by the paper." : adding ? "Optional: explain why this record was missing." : "Explain what the extraction got wrong.";
   $("mutation-note").placeholder = intent === "remove" ? "Why should this record not exist?" : adding ? "Why was this record added?" : "What did the extraction get wrong?";
-  $("save-record").textContent = adding ? "Add missing record" : "Save field correction";
+  $("save-record").textContent = adding ? "Add missing record" : "Save my correction";
   $("save-record").hidden = intent === "remove";
   const dialog = $("record-dialog");
   if (!dialog.open) dialog.showModal();
@@ -1930,6 +1930,12 @@ function openRecord(kind, index = null, template = null, intent = index == null 
   $("citation-block").value = citation?.block_id || "";
   $("citation-quote").value = citation?.quote || "";
   $("mutation-note").value = "";
+  document.querySelector(".evidence-search").open = adding || !citation;
+  $("record-save-help").replaceChildren(
+    document.createTextNode("Your change is saved with your name. Administrators can retrieve it. If no later edit changes the same record, you can undo it from "),
+    element("strong", { text: "My work & undo" }),
+    document.createTextNode("."),
+  );
   $("remove-record").hidden = intent !== "remove";
   $("remove-record").disabled = references.length > 0;
   $("remove-record").textContent = references.length ? "Resolve linked records first" : "Remove extra record";
@@ -2201,6 +2207,62 @@ function technicalFields(entries, path) {
   ]);
 }
 
+function editValueAt(path) {
+  return path.reduce((value, key) => value?.[key], state.edit.value);
+}
+
+function moveOrderedItem(path, index, targetIndex) {
+  const items = editValueAt(path);
+  if (!Array.isArray(items) || targetIndex < 0 || targetIndex >= items.length || index === targetIndex) return;
+  const [item] = items.splice(index, 1);
+  items.splice(targetIndex, 0, item);
+  items.forEach((entry, position) => {
+    if (entry && typeof entry === "object" && Object.hasOwn(entry, "sequence")) entry.sequence = position + 1;
+  });
+  $("record-json").value = JSON.stringify(state.edit.value, null, 2);
+  renderStructuredEditor();
+  const pathKey = JSON.stringify(path);
+  const moved = [...document.querySelectorAll(".ordered-array-item")]
+    .find((node) => node.dataset.arrayPath === pathKey && Number(node.dataset.arrayIndex) === targetIndex);
+  const details = moved?.querySelector(":scope > details");
+  if (details) details.open = true;
+  moved?.querySelector("select")?.focus();
+}
+
+function orderedArrayItem(label, item, index, path, itemCount) {
+  const position = element("select", {
+    attributes: { "aria-label": `Position of ${humanLabel(label)}` },
+  }, Array.from({ length: itemCount }, (_, optionIndex) => element("option", {
+    text: String(optionIndex + 1),
+    properties: { value: String(optionIndex), selected: optionIndex === index },
+  })));
+  position.addEventListener("change", () => moveOrderedItem(path, index, Number(position.value)));
+  return element("div", {
+    className: "ordered-array-item",
+    attributes: { "data-array-path": JSON.stringify(path), "data-array-index": String(index) },
+  }, [
+    element("div", { className: "ordered-array-controls" }, [
+      element("span", { className: "ordered-array-position", text: `Step ${index + 1}` }),
+      element("label", { className: "ordered-array-jump" }, [element("span", { text: "Position" }), position]),
+      element("button", {
+        text: "↑ Earlier",
+        properties: { type: "button", disabled: index === 0 },
+        events: { click: () => moveOrderedItem(path, index, index - 1) },
+      }),
+      element("button", {
+        text: "↓ Later",
+        properties: { type: "button", disabled: index === itemCount - 1 },
+        events: { click: () => moveOrderedItem(path, index, index + 1) },
+      }),
+    ]),
+    structuredNode(label, item, [...path, index]),
+  ]);
+}
+
+function isOrderedArray(value) {
+  return value.length > 1 && value.every((item) => item && typeof item === "object" && Object.hasOwn(item, "sequence"));
+}
+
 function structuredNode(label, value, path, open = false) {
   if (value == null || typeof value !== "object") return structuredLeaf(label, value, path);
   const array = Array.isArray(value);
@@ -2209,7 +2271,10 @@ function structuredNode(label, value, path, open = false) {
     : Object.entries(value).filter(([key]) => key !== "evidence").map(([key, item]) => [key, item, key]);
   const technical = array ? [] : entries.filter(([key]) => isTechnicalRecordField(key));
   const primary = array ? entries : entries.filter(([key]) => !isTechnicalRecordField(key));
-  const children = primary.map(([childLabel, item, key]) => structuredNode(childLabel, item, [...path, key]));
+  const ordered = array && isOrderedArray(value);
+  const children = primary.map(([childLabel, item, key]) => ordered
+    ? orderedArrayItem(childLabel, item, key, path, value.length)
+    : structuredNode(childLabel, item, [...path, key]));
   const technicalSection = technicalFields(technical, path);
   if (technicalSection) children.push(technicalSection);
   const count = array ? ` (${value.length})` : "";
@@ -2427,7 +2492,11 @@ async function saveRecord() {
     state.bundle = await request(`/api/${endpoint}/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify(payload) });
     $("record-dialog").close();
     renderStudy();
-    setStatus(reclassifying ? "Changed the record type and revalidated the complete study." : index == null ? `Added the missing ${singularCollection(kind).toLowerCase()} and revalidated the study.` : "Correction saved and the complete study schema revalidated.");
+    setStatus(reclassifying
+      ? "Record type changed and saved. Review the updated record, then choose Matches source."
+      : index == null
+        ? `Added the missing ${singularCollection(kind).toLowerCase()}. Review the new record, then choose Matches source.`
+        : "Correction saved for administrators. Review the updated record, then choose Matches source; undo remains available in My work & undo.");
   } catch (error) { $("dialog-status").textContent = error.message; }
 }
 
@@ -2474,17 +2543,19 @@ function chooseEvidence(block) {
 }
 
 async function completeStage(stage) {
-  if (stage === "completeness" && [...document.querySelectorAll("[data-gate]")].some((input) => !input.checked)) return setStatus("Complete every quality gate first.", true);
+  if (stage === "completeness" && [...document.querySelectorAll("[data-gate]")].some((input) => !input.checked)) return setStatus("Confirm every checklist item first.", true);
   try {
     state.bundle = await request(`/api/stages/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ stage, base_revision: state.bundle.revision, note: $("stage-note").value }) });
     renderStudy();
-    setStatus(`${stage} stage completed.`);
+    if (stage === "inventory") setTab("records");
+    if (stage === "fields") setTab("completeness");
+    setStatus(stage === "completeness" ? "Paper review completed." : `${humanLabel(stage)} completed.`);
   } catch (error) { setStatus(error.message, true); }
 }
 
 function setTab(tab) {
   if (tab === "completeness" && !hasAudit()) {
-    setStatus("Save the census before opening the final completeness check.", true);
+    setStatus("Save the paper and figure check before finishing this paper.", true);
     return;
   }
   state.tab = tab;
@@ -2936,7 +3007,7 @@ async function uploadReviewWorkbook(file) {
         ? "Review changes were saved, but the original Excel file could not be archived. Please keep your local copy and contact the administrator."
         : importMode === "comments_only_from_older_workbook"
           ? "Excel comments and the original workbook were saved. Because the workbook was based on an older paper revision, its value edits were not applied."
-          : "Reviewed workbook saved as one validated revision and archived. The import is visible in My review.",
+          : "Reviewed workbook saved as one validated revision and archived. The import is visible in My work & undo.",
       state.bundle.workbook_archived === false,
     );
   } catch (error) {

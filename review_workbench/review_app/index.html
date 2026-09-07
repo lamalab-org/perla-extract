@@ -30,7 +30,7 @@
     <div class="header-actions">
       <button id="toggle-paper-list" type="button" aria-controls="paper-rail" aria-expanded="true" aria-label="Hide paper list" title="Hide paper list">Papers</button>
       <label class="dataset-picker"><span>Dataset</span><select id="split"><option value="dev">Current review — refreshed extraction</option><option value="calibration">Legacy calibration — deprecated</option><option value="test">Held-out test</option></select></label>
-      <button id="open-annotations">My review</button>
+      <button id="open-annotations">My work &amp; undo</button>
       <span id="reviewer" class="pill">Loading reviewer…</span>
       <div id="clerk-user-button"></div>
       <details class="global-menu">
@@ -96,14 +96,15 @@
 
         <section class="review-panel">
           <nav class="tabs">
-            <button data-tab="inventory" class="active">1 · Census</button>
-            <button data-tab="records">2 · Records</button>
-            <button data-tab="completeness">3 · Completeness</button>
+            <button data-tab="inventory" class="active">1 · Paper &amp; figures</button>
+            <button data-tab="records">2 · Review records</button>
+            <button data-tab="completeness">3 · Finish</button>
             <button data-tab="history">History</button>
           </nav>
           <div id="inventory-tab" class="tab-panel">
             <div id="census-form">
-              <h3>Paper and figure census</h3>
+              <h3>Check what the paper contains</h3>
+              <p class="muted">Count what the paper actually reports, then check each main-text figure panel. You can review extracted records in the next tab at any time.</p>
               <details class="record-definitions" open><summary>What counts as a family, device, or measurement?</summary><div id="inventory-definitions"></div></details>
               <div id="inventory-counts" class="count-grid"></div>
               <section class="figure-census">
@@ -114,7 +115,7 @@
                 <p class="muted"><strong>Figure-only</strong> means that a complete record or one populated field—such as PCE, Voc, thickness, or test duration—is visible in the panel but absent from running text, captions, and tables. Assign a fact spanning several panels to the single panel that best supports it. Do not count curve samples or uncertain visual estimates.</p>
                 <div id="figure-census-summary" class="figure-census-summary" role="status"></div>
                 <div id="figure-review-toolbar" class="figure-review-toolbar" hidden>
-                  <div><strong id="figure-review-progress">0 of 0 checked</strong><span id="figure-draft-status">Changes are kept in this browser until you save the census.</span></div>
+                  <div><strong id="figure-review-progress">0 of 0 checked</strong><span id="figure-draft-status">Changes are kept in this browser until you save this step.</span></div>
                   <label>Show
                     <select id="figure-review-filter">
                       <option value="unreviewed">Unchecked first</option>
@@ -129,29 +130,29 @@
                   </div>
                 </div>
                 <div id="figure-panels" class="figure-panel-list"></div>
-                <label>Figure census notes<textarea id="figure-census-notes" rows="3" placeholder="Record ambiguities that are not specific to one panel."></textarea></label>
+                <label>Figure review notes<textarea id="figure-census-notes" rows="3" placeholder="Record ambiguities that are not specific to one panel."></textarea></label>
               </section>
               <label>Missing, ambiguous, or difficult records<textarea id="inventory-notes" rows="4" placeholder="Describe devices or measurements that still need review…"></textarea></label>
-              <button id="submit-audit" class="primary">Save census</button>
+              <button id="submit-audit" class="primary">Save paper &amp; figure check</button>
             </div>
             <div id="inventory-revealed" hidden>
               <div id="inventory-comparison"></div>
               <div id="quality-artifacts"></div>
-              <button id="edit-census" type="button">Edit saved census</button>
-              <button data-stage="inventory" class="complete-stage primary">Mark census reviewed</button>
+              <button id="edit-census" type="button">Edit paper &amp; figure check</button>
+              <button data-stage="inventory" class="complete-stage primary">Continue to record review</button>
             </div>
           </div>
 
           <div id="records-tab" class="tab-panel" hidden>
             <div class="records-toolbar">
-              <div class="queue-progress-copy"><h3>Review queue</h3><p id="queue-progress">Choose a record to begin.</p><progress id="queue-progress-bar" max="1" value="0" aria-label="Record review progress"></progress></div>
+              <div class="queue-progress-copy"><h3>Review extracted records</h3><p id="queue-progress">Choose a record to begin.</p><progress id="queue-progress-bar" max="1" value="0" aria-label="Record review progress"></progress></div>
               <div class="queue-filters">
                 <select id="record-status-filter" aria-label="Record status">
                   <option value="remaining">Remaining</option>
                   <option value="attention">Needs attention</option>
                   <option value="all">All records</option>
                   <option value="verified">All fields match source</option>
-                  <option value="uncertain">Cannot establish from source</option>
+                  <option value="uncertain">Cannot verify</option>
                 </select>
                 <select id="record-kind-filter" aria-label="Record type filter"><option value="all">All record types</option></select>
                 <details class="add-record-menu"><summary>Add missing record</summary><div class="record-add">
@@ -166,12 +167,15 @@
                 </div></details>
               </div>
             </div>
-            <details class="record-guidance">
-              <summary>How to review records and fix missing or extra records</summary>
+            <details class="record-guidance" open>
+              <summary>Start here: review one record at a time</summary>
               <div>
-                <p><strong>Needs attention</strong> shows records you marked for correction, records changed during the model's second evidence read, and A/B/X assignments that need a manual check. These are priorities, not correctness claims.</p>
-                <p><strong>Wrong number or type?</strong> Add a missing record, merge repeated descriptions of the same object, change a wrongly classified record, or remove an unsupported one. A merge moves explicit links automatically.</p>
-                <p><strong>Choose one outcome for the complete record.</strong> Use <strong>All fields match source</strong>, <strong>Cannot establish</strong>, or <strong>Correct fields</strong>.</p>
+                <ol class="review-guide-steps">
+                  <li><strong>Compare</strong><span>Read the highlighted source passage and check the complete record beside it.</span></li>
+                  <li><strong>Choose</strong><span>Select <em>Matches source</em>, <em>Cannot verify</em>, or <em>Correct fields</em>.</span></li>
+                  <li><strong>Continue</strong><span>Your choice is saved with your account. You can change it or undo a saved correction later.</span></li>
+                </ol>
+                <p><strong>Needs attention</strong> is a priority list, not a claim that a record is wrong. Use <strong>Add missing record</strong> or the record options when an entire device, measurement, or other record is missing, repeated, or in the wrong category. Merging repeated records moves their explicit links automatically.</p>
               </div>
             </details>
             <div id="review-queue"></div>
@@ -179,12 +183,13 @@
               <button id="previous-record" aria-label="Previous record">← Previous</button>
               <span id="queue-position"></span>
               <button id="next-record" aria-label="Next record">Next →</button>
-              <button data-stage="fields" class="complete-stage primary">Mark all record fields reviewed</button>
+              <button data-stage="fields" class="complete-stage primary">Finish record review</button>
             </div>
           </div>
 
           <div id="completeness-tab" class="tab-panel" hidden>
-            <h3>Final completeness audit</h3>
+            <h3>Finish this paper</h3>
+            <p class="muted">Confirm the checklist, note anything that remains uncertain, and complete your review.</p>
             <div id="quality-gates" class="quality-gates"></div>
             <label>Completion note<textarea id="stage-note" rows="4" placeholder="Record remaining ambiguity or schema limitations…"></textarea></label>
             <button data-stage="completeness" class="complete-stage primary">Complete paper review</button>
@@ -225,7 +230,7 @@
 
   <dialog id="annotations-dialog">
     <form method="dialog" class="dialog-card">
-      <div class="dialog-heading"><div><span class="eyebrow">Your work in this dataset</span><h2>My review progress</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <div class="dialog-heading"><div><span class="eyebrow">Your work in this dataset</span><h2>My work &amp; undo</h2></div><button value="cancel" aria-label="Close">×</button></div>
       <div class="editor-mode" role="group" aria-label="Saved work view"><button id="show-current-annotations" type="button" class="active" aria-pressed="true">Current work</button><button id="show-annotation-history" type="button" aria-pressed="false">History</button></div>
       <p id="annotation-help" class="callout"></p>
       <div id="annotation-summary"></div>
@@ -241,21 +246,22 @@
       <p id="record-dialog-help" class="callout"></p>
       <div id="record-dependencies" class="dependency-warning" hidden></div>
       <div class="editor-mode" role="group" aria-label="Record editor">
-        <button id="show-fields-editor" type="button" class="active" aria-pressed="true">Fields</button>
-        <button id="show-json-editor" type="button" aria-pressed="false">Raw record JSON</button>
+        <button id="show-fields-editor" type="button" class="active" aria-pressed="true">Form</button>
+        <button id="show-json-editor" type="button" aria-pressed="false">Raw JSON (advanced)</button>
       </div>
       <div id="fields-editor-panel"><div id="structured-editor" class="structured-editor"></div></div>
       <div id="json-editor-panel" hidden><p class="callout">Edit the complete JSON for this one record. Saving still validates the entire study and its evidence.</p><label>Raw record JSON<textarea id="record-json" rows="22" spellcheck="false"></textarea></label></div>
-      <details class="evidence-search"><summary id="evidence-search-label">Choose correction evidence</summary>
+      <details class="evidence-search"><summary id="evidence-search-label">Source evidence for this correction</summary>
         <div class="evidence-picker">
           <label>Find evidence<input id="evidence-query" type="search" placeholder="Search extracted evidence…" /></label>
           <button id="search-evidence" type="button">Search</button>
         </div>
         <div id="evidence-results"></div>
+        <label class="technical-evidence-field">Evidence block ID <span>Internal link to the highlighted source passage.</span><input id="citation-block" /></label>
+        <label>Exact quote <span>Trim this to the smallest passage that supports the correction.</span><textarea id="citation-quote" rows="3"></textarea></label>
       </details>
-      <label>Evidence block ID<input id="citation-block" /></label>
-      <label>Exact quote <span>Trim this to the smallest passage that supports the correction.</span><textarea id="citation-quote" rows="3"></textarea></label>
       <label><span id="mutation-note-label">Reason for correction</span> <span id="mutation-note-help">Explain what the extraction got wrong.</span><input id="mutation-note" placeholder="What did the extraction get wrong?" /></label>
+      <p id="record-save-help" class="save-explainer">Your change is saved with your name. Administrators can retrieve it. If no later edit changes the same record, you can undo it from <strong>My work &amp; undo</strong>.</p>
       <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove extra record</button><span></span><button id="reload-paper-dialog" type="button" hidden>Discard this edit and load latest</button><button id="cancel-record" type="button">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
       <p id="dialog-status" role="status"></p>
     </form>
