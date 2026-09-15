@@ -300,8 +300,9 @@ Converting first keeps the comparison consistent across unit representations.
 
 Conversion requires both raw values to contain one unqualified number, with either
 no suffix or a suffix matching the stated unit. Each parsed number must agree with
-its raw number within an internal check of `1e-9` relative and `1e-12` absolute
-tolerance. That consistency check is separate from the scoring tolerance.
+its raw number within an internal relative tolerance of `1e-9`, with no absolute
+allowance. This prevents a small nonzero raw number from being accepted as a parsed
+zero. That consistency check is separate from the scoring tolerance.
 
 If both units are missing, eligible numbers can match without conversion. If only
 one unit is missing, they cannot. If a unit is unrecognized, the scorer requires

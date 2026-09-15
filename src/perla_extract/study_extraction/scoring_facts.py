@@ -62,6 +62,8 @@ def is_plain_number(value: ReportedValue) -> bool:
 
     Ranges, inequalities, uncertainties and chemical formulas fall back to literal
     comparison. Their central numeric value alone does not represent the claim.
+    The consistency check has no absolute allowance: a small nonzero raw number
+    must never qualify as a parsed zero, regardless of the chosen unit.
     """
 
     raw = scientific_text(value.raw_value)
@@ -71,7 +73,7 @@ def is_plain_number(value: ReportedValue) -> bool:
         and value.value_number is not None
         and math.isfinite(value.value_number)
         and math.isclose(
-            float(match[1]), value.value_number, rel_tol=1e-9, abs_tol=1e-12
+            float(match[1]), value.value_number, rel_tol=1e-9, abs_tol=0.0
         )
         and scientific_text(match[2]) in {"", scientific_text(value.unit or "")}
     )

@@ -31,7 +31,11 @@ from perla_extract.study_extraction.models import (
     StudyExtraction,
     study_schema_sha256,
 )
-from perla_extract.study_extraction.scoring_facts import UnorderedContext, equal_value
+from perla_extract.study_extraction.scoring_facts import (
+    UnorderedContext,
+    equal_value,
+    is_plain_number,
+)
 
 EVIDENCE = [EvidenceCitation(block_id="b", quote="reported")]
 
@@ -971,6 +975,36 @@ def test_default_tolerance_has_no_absolute_floor(a, b, unit, expected):
         )
         is expected
     )
+
+
+@pytest.mark.parametrize("raw", ["1e-13", "-1e-13", "0.0000000000001 m"])
+def test_inconsistent_tiny_raw_number_cannot_match_zero(raw):
+    inconsistent = value(raw, 0.0, "m")
+    zero = value("0", 0.0, "m")
+    config = EvaluationConfig()
+
+    assert not is_plain_number(inconsistent)
+    assert not equal_value(
+        inconsistent,
+        zero,
+        config.numeric_relative_tolerance,
+        config.numeric_absolute_tolerance,
+    )
+
+
+@pytest.mark.parametrize(
+    "raw,number,expected",
+    [
+        ("0", 0.0, True),
+        ("1e-13", 1e-13, True),
+        ("-1e-13 m", -1e-13, True),
+        ("1e-13", 1.0000000001e-13, True),
+        ("1e-13", 2e-13, False),
+        ("0", 1e-13, False),
+    ],
+)
+def test_raw_number_consistency_uses_only_relative_tolerance(raw, number, expected):
+    assert is_plain_number(value(raw, number, "m")) is expected
 
 
 def test_cli_attaches_evidence_validation_for_complete_prediction_run(tmp_path):
