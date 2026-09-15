@@ -182,8 +182,25 @@ revision events.
 ## Recover a batch of offline reviews
 
 When experts return workbooks from an older seed, preserve their feedback before
-regenerating anything. From the repository root, compile them against the matching run
-directories:
+regenerating anything. To prepare a revised draft **including saved browser corrections**,
+use a local snapshot of the workbench's `state/` directory:
+
+```bash
+PYTHONPATH=.:src python -m review_workbench.compile_review_batch \
+  --workbook "paper-a - Reviewer.review.xlsx" \
+  --workbook "paper-b - Reviewer.review.xlsx" \
+  --review-data review_data/production-snapshot \
+  --output-dir review_data/revised-ground-truth/reviewer-date
+```
+
+`--review-data` is the directory **containing** `state/`, not `state/` itself.
+It must contain the immutable source, the latest saved revision, and that revision's
+evidence document for each workbook's paper and split. A feedback ZIP alone is not
+this snapshot: it does not contain the full current study and evidence. The command
+does not connect to production, change annotations, or publish drafts to the app.
+
+If there are no browser corrections to carry forward, use the matching extraction run
+directories instead. Choose either `--review-data` or `--run-root`, not both:
 
 ```bash
 PYTHONPATH=.:src python -m review_workbench.compile_review_batch \
@@ -194,12 +211,37 @@ PYTHONPATH=.:src python -m review_workbench.compile_review_batch \
   --output-dir review_data/revised-ground-truth/reviewer-date
 ```
 
-The compiler archives each workbook byte-for-byte and writes a provisional rich truth,
-the complete reviewer feedback, and a manifest with source hashes and validation
-findings. It never applies a stale scalar correction automatically. Only a record with
-an affirmative decision and the unqualified note `ok` enters the provisional verified
-subset. Caveats, uncertainty, missing decisions, changed record IDs, and all correction
-proposals remain in `adjudication.json`.
+The compiler archives each workbook byte-for-byte and writes:
+
+- `provisional_ground_truth.json`: the selected run or saved corrected study, not a
+  new model extraction. Browser merges and edits are already applied; events are not
+  replayed a second time.
+- `document.json`: the evidence used to validate that exact study.
+- `adjudication.json`: record assessments, scalar proposals, unmatched IDs, all
+  extracted notes/comments (including notes on unreviewed or unchanged rows), and
+  current browser review status when available. Workbook assessments and browser
+  decisions remain separate; this file does not manufacture agreement between them.
+- `reviewer_workbook.xlsx`: the untouched original, including all comments and formatting.
+- `review_source.json` and `review_revision.json` in saved-review mode: the original
+  source snapshot and full current revision/event history.
+- `manifest.json`: file hashes, source identity, and validation findings.
+
+Only an affirmative decision from a workbook matching the **whole selected study,
+schema, layout, and revision**, with a blank note or `ok`/`ok.`, can be provisionally
+verified. The study must pass source validation, and the record must have no proposed
+scalar correction or qualifying field note/comment. An old approval never verifies a
+new record merely because its ID survived. Even unchanged records in a stale workbook
+are left for reconciliation; this intentionally favors caution over automatic reuse.
+
+Old IDs and paths are retained for human comparison, not automatically remapped after
+a merge or re-extraction. All corrections remain proposals until explicitly applied
+in the workbench. No language model interprets reviewer prose in this command.
+
+Packages live under `<output-dir>/<split>/<paper-id>/<content-hash>/`. Identical reruns
+reuse a package; different workbooks or revisions create another, without replacing
+the previous files. `batch_summary.json` is a replaceable index of the latest command
+invocation, not the archive. These packages contain private reviewer information and
+paper text: keep them outside public Git commits.
 
 This output is an adjudication worklist, not a benchmark. Resolve its queued records in
 the workbench, complete the census and completeness pass, and use the ordinary frozen
