@@ -5,7 +5,7 @@
 and evidence quotations are excluded from record similarity; evidence validity is a
 separate extraction-validation result.
 
-For the scientific protocol and evidence status, read [Evaluation methods](../methods/benchmark.md).
+For an overview of the method, read [Evaluation methods](../methods/benchmark.md).
 For commands using saved expert corrections, read [From corrections to a benchmark](review-to-benchmark.md).
 The [worked example](scoring-example.md) runs without PDFs or an API key.
 
@@ -295,8 +295,7 @@ held-out evaluation and retain it in each report.
 
 The implemented scorer makes no LLM or embedding calls. Experts resolve semantic
 disagreements; the scorer does not infer chemical synonyms or rewrite predictions.
-A future judge-assisted analysis would require a separately validated, versioned
-protocol and must not be mixed with these deterministic scores.
+
 
 ### Diagnostic scores
 
@@ -378,10 +377,3 @@ matched/unmatched paths for each view.
 
 Keep calibration, development, and test manifests separate. Papers used to change
 parsing, prompts, schemas, matching, thresholds, or model selection are not held out.
-
-## Comparing systems
-
-Freeze the same paper roster, source scope, reference and scoring configuration for
-both systems. The aggregator does not enforce a roster or implement a paired A/B
-significance test. The [evaluation protocol](../methods/benchmark.md#comparison-studies)
-distinguishes rich-schema accuracy, historical-database review, and preference.

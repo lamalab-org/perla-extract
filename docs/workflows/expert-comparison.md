@@ -4,12 +4,9 @@ Use the workbench's **Extractor study** for a blinded expert comparison. This is
 evaluation workflow, not a shortcut for creating ground truth: its responses are
 stored separately and never modify reviewed scientific records.
 
-## Question the experiment answers
-
-The primary question is whether an output contains atomic claims that an expert can
-support from the paper. Secondary questions cover omitted facts, extra records, wrong
-links, chemical detail, relationship fidelity, NOMAD usefulness, and active review
-time. Together these are more informative than asking only “which JSON do you like?”
+The app collects source-supported correctness judgments, then ratings of the full
+extractions, then paired preferences. Responses remain separate from scientific
+reference records.
 
 ```mermaid
 flowchart LR
@@ -25,25 +22,12 @@ flowchart LR
     F --> U[Reveal origins and export analysis]
 ```
 
-## Bias controls
+## Assignment and visibility
 
-- Pre-register papers, reviewers, outcomes, exclusions, and analysis before the
-  confirmatory run. Keep a held-out paper set that did not influence either workflow.
-- Give both candidates the same paper, SI, schema, normalization, labels, layout, and
-  PDF tools. The workbench hashes each source and both candidate payloads.
-- Each reviewer initially sees only one candidate for a paper. Assignments are
-  balanced across reviewers and the A/B mapping is randomized per paper. This avoids
-  learning the paper from one output before scoring the other.
-- Preserve `cannot_determine`, ties across aggregate scores, missing records, and
-  “both inadequate” outcomes. Do not force a preference.
-- Mark experts who developed either extractor and report their results separately.
-- Never use comparison responses as ground truth. Adjudicate a separate ground-truth
-  dataset when recall must be measured against a complete reference.
-
-Run a usability pilot first. Fix protocol and interface problems, then freeze the
-design and justify the number and selection of papers for the confirmatory
-study. Assign at least two experts per candidate-paper combination where resources
-allow, and balance candidate exposure within every reviewer.
+Each reviewer initially sees one anonymous candidate per paper. The workbench
+balances assignments across reviewers and randomizes A/B mapping per paper.
+Candidate and source hashes identify the inputs. Final independent responses are
+locked before the paired preference stage becomes available.
 
 ## Prepare a comparison in the app
 
@@ -53,7 +37,7 @@ An administrator opens **Extractor study → Create comparison** and supplies:
 2. the corresponding historical `PerovskiteSolarCells` JSON;
 3. the new rich `StudyExtraction` JSON;
 4. exact reviewer IDs; and
-5. a randomization seed recorded in the pre-registration.
+5. a randomization seed.
 
 The server validates the historical payload directly. It projects the rich payload
 through `to_reduced_with_report`, freezes projection issues, hashes the reviewed PDF
@@ -78,12 +62,7 @@ This workflow scores claims in a shared reduced-schema projection and separately
 collects native-utility and A/B preferences. It is not the rich-schema scorer:
 numeric values and unit fields are separate claims here, whereas the rich scorer
 checks scientific quantities together with their context. Do not compare their
-precision numbers as if they used the same denominator. See [Evaluation methods](
-../methods/benchmark.md#comparison-studies).
-
-This is a protocol and implemented review workflow, not a report of completed
-confirmatory results. Freeze the cohort, sampling rationale, rubrics and analysis
-before collecting confirmatory judgments.
+precision numbers as if they used the same denominator. See the [scoring reference](evaluation.md).
 
 ## Expert task
 
@@ -106,7 +85,7 @@ curation. This second immutable response measures native utility without letting
 richer representation influence the primary accuracy judgments.
 
 After that independent rating is locked, the app shows anonymous candidates A and B
-together. The expert records a separate preference for each pre-registered rubric:
+together. The expert records a separate preference for each stored rubric:
 
 - factual correctness;
 - coverage and completeness;
@@ -148,14 +127,4 @@ supported-claim precision = correct / (correct + incorrect + unsupported)
 
 `cannot_determine` is reported but excluded from that denominator. Omission counts are
 useful diagnostics, not source-relative recall, unless a separate adjudicated ground
-truth establishes the complete denominator. Compare candidates with reviewer- and
-paper-aware uncertainty (for example, a mixed-effects model or a clustered bootstrap),
-not by treating individual fields as independent replicates.
-
-## Pilot interpretation
-
-Use the pilot to learn whether experts understand the labels, can find source evidence,
-and complete the task in reasonable time. Do not use it to tune the extractor on those
-same papers and then report the resulting score as confirmatory evidence. If the new
-workflow wins on rich native utility but loses fields at the reduced projection, report
-both facts; the projection boundary is part of the result, not an error to hide.
+truth establishes the complete denominator. The export does not perform a paired statistical comparison.

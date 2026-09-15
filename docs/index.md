@@ -30,7 +30,7 @@ audit artifacts. Expert review starts from the final result, with those artifact
 available for inspection. [Evidence and validation](concepts/evidence.md) describes
 these boundaries.
 
-For evaluation, start with [Methods and evidence status](methods/benchmark.md) or
+For evaluation, start with [Evaluation method](methods/benchmark.md) or
 [run the synthetic scoring example](workflows/scoring-example.md).
 
 ## Design principles

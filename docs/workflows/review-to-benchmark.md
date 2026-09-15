@@ -1,10 +1,9 @@
 # From corrections to a benchmark
 
 Use this guide to reconcile saved feedback, export an adjudicated revision, and score
-unchanged predictions. It is an operational guide, not a claim that a benchmark has
-already been released.
+unchanged predictions.
 
-- [Evaluation methods](../methods/benchmark.md): source review, scoring scope and study design.
+- [Evaluation methods](../methods/benchmark.md): inputs, source review, scoring and limitations.
 - [Scoring reference](evaluation.md): matching, tolerances, fields and diagnostics.
 - [Run the worked example](scoring-example.md): synthetic corrections and expected scores.
 
@@ -215,6 +214,7 @@ are development papers, not a held-out test set.
 
 Use source-checked development cases to audit credited and rejected matches. Record
 expected pairings, values and attribution independently of the scorer; inspect cases
-where valid chemical descriptions or record groupings differ. Follow the
-[scorer-validation protocol](../methods/benchmark.md#validate-the-scorer).
-Existing full-paper review supplies corrections and omission findings for this work.
+where valid chemical descriptions or record groupings differ. The report retains
+matched and unmatched JSON paths for this inspection. A mismatch may reflect a
+comparison limitation rather than an extraction error; do not change a supported
+reference fact simply to make it match.

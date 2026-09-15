@@ -16,7 +16,7 @@ nav:
   - Overview: index.md
   - Getting started: getting-started.md
   - Evaluation:
-      - Methods and evidence status: methods/benchmark.md
+      - Evaluation method: methods/benchmark.md
       - Worked scoring example: workflows/scoring-example.md
       - From corrections to a benchmark: workflows/review-to-benchmark.md
       - Scoring reference: workflows/evaluation.md

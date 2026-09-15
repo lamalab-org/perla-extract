@@ -48,9 +48,9 @@ Choose a new output directory. This generates invented evidence, saves simulated
 corrections, freezes a reference, and checks four scoring cases against expected
 counts. See the [worked example](docs/workflows/scoring-example.md).
 
-The [evaluation methods](docs/methods/benchmark.md) distinguish implemented behavior,
-software tests and scientific validation still needed. No frozen real-paper benchmark
-release or completed held-out accuracy study is bundled with this checkout.
+The [evaluation method](docs/methods/benchmark.md) explains reference construction,
+matching, scientific credit and limitations. The software does not bundle a
+real-paper reference dataset.
 
 ## Documentation
 

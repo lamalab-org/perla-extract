@@ -372,3 +372,16 @@ surface. This requires a production Clerk instance (`pk_live_` and `sk_live_`) a
 same-device-and-browser protection enabled unless the project explicitly accepts the
 additional risk of cross-device links. Test-instance keys are deliberately not enabled
 on a production workbench and cannot deliver the production email-link experience.
+
+## Publishing reviewed data
+
+Export is a preservation operation, not anonymization. Review every file before
+publication: `review_events.json` can contain identities and free-text comments, and
+source documents may have redistribution restrictions. Preserve original uploads and
+unmodified exports privately. Any redacted public derivative needs a new version
+with consistent content hashes; never redact a frozen artifact in place.
+
+For a data release, include the reference revision, schema and source hashes, reviewed
+scope and abstentions, access instructions, and the code/configuration needed to read
+and score it. Distinguish model-generated seeds from adjudicated records. Keep the
+unchanged predictions and their score reports with the evaluation results.

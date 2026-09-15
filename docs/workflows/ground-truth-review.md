@@ -334,7 +334,7 @@ The administrator can also use **Download PR bundle** in the workbench after
 adjudication. Before publishing, inspect all four files for private reviewer identities,
 comments and source content. The exporter is not an anonymization tool. Preserve the
 originals privately; any public derivative needs a new, internally consistent version
-and hashes. Follow the [release checklist](../methods/benchmark.md#release-and-reproducibility).
+and hashes. Follow the [publication checklist](../deployment/review-workbench.md#publishing-reviewed-data).
 Then review the proposed data diff and run:
 
 ```bash

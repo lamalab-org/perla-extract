@@ -1,32 +1,36 @@
-# Evaluation methods
+# Evaluation method
 
-PERLA evaluates whether an extraction recovers the scientific facts in a
-source-checked reference **and assigns them to the correct experimental context**.
-It does not use citation validity, JSON completeness, or record count as a proxy
-for scientific accuracy.
+PERLA compares an extraction with a source-checked reference. A fact receives credit
+when both its value and its experimental context agree: PCE = 20% on a reverse scan
+does not match the same value assigned to a forward scan.
 
-## Scope and evidence status
+The scorer is deterministic and makes no model calls. Start with the
+[worked example](../workflows/scoring-example.md) to run it without papers or an API
+key. The [scoring reference](../workflows/evaluation.md) documents the exact matching,
+tolerance and reporting rules.
 
-| Component | Available in this repository | What it establishes |
-| --- | --- | --- |
-| Extraction and review workflow | Implementation, tests and operational guides | How predictions and corrections are produced and retained |
-| Deterministic scorer | Versioned rules and regression tests | Behavior on the tested representations and error cases |
-| Worked example | Synthetic source, simulated review, exported reference and expected scores | A reproducible software integration check, not extraction accuracy |
-| Expert reference release | Export tooling and development-cohort manifest; no frozen real-paper labels bundled here | A release must separately identify adjudicated items and permitted access |
-| Expert validation of scoring | Protocol below; no completed agreement study bundled here | Agreement with expert pairing and fact judgments remains to be measured |
-| Held-out model/human comparison | Study requirements below; no completed results bundled here | No claim of superiority or generalization follows from the software tests |
+## Inputs
 
-Read [the worked example](../workflows/scoring-example.md) first to reproduce a result.
-The [scoring reference](../workflows/evaluation.md) defines the implemented rules;
-[the review guide](../workflows/review-to-benchmark.md) gives the operational commands.
+An evaluation uses two `StudyExtraction` documents:
+
+- **Reference:** the source-checked records used as the comparison target.
+- **Prediction:** an unchanged extraction being evaluated.
+
+A frozen reference directory adds schema and content hashes, review provenance and
+record-level uncertainty. A complete prediction directory adds source evidence and
+run accounting. Bare JSON inputs are supported for development, but lack these
+additional checks. No real-paper reference dataset is included with the software;
+the bundled example uses synthetic data.
+
+Reference and prediction must cover the same sources and scientific scope. The
+extraction workflow reads parser-produced text and tables. Figure classification
+is separate; classifying a panel does not create reference labels for its values.
 
 ## Construct the reference
 
 Experts read the main paper and supporting information, correct proposed records,
-and add omitted schema-relevant information. The reference therefore incorporates
-both correction of pre-annotations and a source-wide search for omissions. Report
-the sources and scientific categories actually inspected, rather than inferring
-review coverage from individual record approvals.
+and add omitted information. Corrections and source-wide omission checks are both
+needed: approving the records already present does not establish completeness.
 
 ```mermaid
 flowchart TD
@@ -36,136 +40,90 @@ flowchart TD
     D --> E[Score unchanged predictions]
 ```
 
-Keep families, particular specimens, measurement observations, population summaries,
-and stability tests distinct. For example, reverse and forward scans can describe
-one cell; the mean of 20 cells is a population result, not a second scan of that cell.
-Correct values, units and their associations together. Do not infer a stability
-specimen's identity from an unrelated champion result.
+Families, individual specimens, observations, population summaries and stability
+tests remain separate. Reverse and forward scans can describe one cell; a mean over
+20 cells is a population result. A stability specimen is linked to another measured
+cell only when the source supports that identity.
 
-Declare a source policy before scoring. The extraction workflow uses parser text
-and tables, not page images. Figure classification is a separate image-based workflow.
-An assessment of information lost from figures requires source-checked figure-only
-facts; counts or classifications of panels are not themselves fact-level labels.
-Apply the same inclusion policy to reference and predictions, or report text-accessible
-and figure-only coverage separately.
+The workbench saves corrections, additions, decisions and their evidence. An
+administrator adjudicates the current revision before export. Export checks the
+current decisions, schema and citations; it cannot establish that a source was
+read completely or interpreted correctly. The [review-to-benchmark guide](
+../workflows/review-to-benchmark.md) explains how to reconcile feedback and freeze it.
 
-The administrator adjudicates the current revision. Export checks current record
-decisions and deterministic evidence validity. It cannot automatically establish that
-an expert searched every relevant passage or interpreted it correctly. Review uncertainty
-is retained explicitly; the current scorer masks **whole records**, not individual fields.
-Publish the number and scope of abstentions alongside scores.
+A final `uncertain` decision is an abstention. The scorer excludes the uncertain
+reference record and a remaining prediction matched to it. It reports those
+exclusions explicitly. Uncertainty is currently handled for whole records, not
+individual fields.
 
-Pre-annotation is part of the reference-creation method and must be disclosed. A
-second expert's source-based audit can assess remaining omissions and disagreements.
-Record which audit was actually performed; do not describe a proposed audit as completed.
+## Match records, then compare facts
 
-## Measure extraction quality
+Generated IDs are not scientific identities. PERLA pairs records by content within
+each record type, using established parent links and measurement conditions to
+prefer compatible matches. The assignment is one-to-one: a prediction cannot match
+several reference records.
 
-A scored fact includes its scientific value and its recorded context. For example,
-PCE = 20% must belong to the correct specimen and scan. A value on the wrong scan
-does not earn strict credit. Matching first estimates which records refer to the
-same objects, then one-to-one fact comparison determines credit.
+Within paired records, the scorer compares facts in six groups: performance,
+population statistics, stability, stack, composition and processing. Context
+identifies the relevant cell, scan, layer, constituent, operation or stability
+checkpoint. Explicit layer and operation sequence is meaningful; JSON array order
+is not.
 
-The primary profile covers performance, population statistics, stability, stack,
-composition and processing. Report each group's true, predicted and matched counts,
-precision, recall and F1. A wrong value contributes both an unmatched prediction and
-an unmatched reference fact. Extra predictions reduce precision; missing facts reduce
-recall. Duplicate predictions cannot reuse one reference fact.
+Single unqualified numbers with compatible explicit units are converted before
+comparison. The default relative tolerance is `1e-6`; the absolute tolerance is
+`1e-9` in canonical base units. These accommodate numeric representation, not
+experimental uncertainty. Formulas, ranges and unfamiliar descriptions use
+conservative text comparison. The [scoring reference](../workflows/evaluation.md)
+gives examples and the full matching algorithm.
 
-The group-balanced F1 gives equal weight to populated scientific groups so a long
-processing description does not alone determine the paper's headline. This is an
-explicit weighting choice, not an empirically established measure of scientific
-utility. Retain pooled counts, per-group scores, and paper-level results so readers
-can inspect the effect of weighting. Groups empty on both sides are excluded, not
-awarded perfect scores.
+## Read the results
 
-| Report view | Interpretation |
+| Result | Question answered |
 | --- | --- |
-| Correct value in correct context | Primary scientific agreement |
-| Value only | Diagnose numbers/materials recovered but misattributed |
-| Attribution only | Diagnose context recovered even when values are wrong |
-| Citation validation | Verify source pointers and literal presence, not scientific entailment |
+| Correct value in correct context | Is the scientific fact correctly represented? |
+| Value only | Was the value recovered within the paired record, ignoring nested context? |
+| Attribution only | Is the property in the correct context, regardless of its value? |
+| Citation validation | Do source pointers and literal values resolve? |
 
-The scorer makes no LLM calls. It uses declared numeric tolerances, explicit aliases,
-and conservative comparison of formulas, ranges and text. Scalar measurements with
-explicit units and unambiguous identity have simpler comparison rules than chemical
-synonyms or differently grouped processing steps. This is a distinction in the rules,
-not measured extraction accuracy. Read the [matching and equality contract](
-../workflows/evaluation.md#matching-which-records-refer-to-the-same-thing).
+For each scientific group, the report includes reference, predicted and matched
+fact counts, precision, recall and F1. A wrong value contributes an unmatched
+prediction and an unmatched reference fact. Extra predictions reduce precision;
+missing facts reduce recall. Duplicate predictions cannot reuse one reference fact.
 
-## Validate the scorer
+The group-balanced F1 averages groups populated on either side. Empty groups are
+excluded rather than given perfect scores. Pooled counts and per-group scores are
+also retained: equal group weighting is a reporting choice, not a measure of every
+field's scientific importance.
 
-Validate scientific comparison separately from software correctness. Use source-checked
-development corrections and additions to assemble cases with expected record pairings
-and fact judgments. Preserve the reviewed input paths, source evidence, judgment and
-rationale. Make the expected decisions before inspecting the scorer's proposed credit.
+Dataset aggregation combines paper reports with compatible versions and configuration.
+Its uncertainty intervals resample papers, not individual fields. These are
+single-system intervals, not paired significance tests. The caller supplies the paper
+roster; missing or failed runs must be accounted for separately.
 
-Include missing measurements, extra stack materials, wrong precursor attribution,
-equivalent units, swapped scan directions, repeated steps, and alternative chemical
-representations. Check **false credit and false rejection**, including plausible
-negative pairs. Do not restrict the audit to identical-input checks or obvious errors.
+## Limitations
 
-Run the fixed cases with the default configuration and a predeclared set of alternative
-matching thresholds and tolerances. Compare pairings and credited paths, not just F1.
-The threshold is a heuristic, not a calibrated confidence; tolerances address numeric
-representation, not experimental error bars. Publish changes in decisions and unresolved
-cases. Select any revised rules using development cases, version them, then freeze
-them before held-out evaluation. Do not edit correct expert labels to satisfy the matcher.
+Record matching is an estimate of identity. Similar specimens or differently grouped
+operations can produce incorrect pairings. The report exposes selected pairs,
+unmatched paths and detected ambiguity so these can be inspected against the source.
+No ambiguity warning does not prove that a pairing is correct.
 
-The worked example and regression tests are executable checks supporting this process.
-They do not substitute for expert-established cases. Source-checked corrections and
-additions supply development cases; record their provenance and expected judgments.
+Equivalent chemical names or alternative descriptions may fail conservative equality
+checks. Conversely, literal presence in a citation does not prove that a value belongs
+to the asserted device or property. Citation validity and scientific correctness are
+therefore reported separately.
 
-## Comparison studies
+Precision and recall are relative to the reference's reviewed scope and completeness.
+A perfect score against an incomplete reference does not establish complete extraction
+from the paper. Regression tests and the synthetic example check software behavior;
+they do not measure agreement with experts on arbitrary papers.
 
-These studies answer different questions and must not share an unlabeled headline:
+## Reproduce a score
 
-| Study | Evaluation unit | Primary interpretation |
-| --- | --- | --- |
-| Rich-schema benchmark | Scientific fact with context, against frozen reference | Correctness and completeness within reviewed scope |
-| Historical-database comparison | Claims in a common reduced-schema projection, judged by experts | Supported-claim precision in the shared representation |
-| Blinded preference | Expert rubric response for anonymous A/B candidates | Preference, not reference-relative recall |
+Keep the reference, prediction, evidence, code revision and scoring configuration
+with the result. Reports record input hashes and scorer versions; the example also
+records its environment. Reusing fixed inputs and configuration reproduces the
+deterministic comparison.
 
-The current historical comparison treats numeric values and unit fields as separate
-scalar claims. Its precision is therefore not the rich scorer's quantity-in-context
-precision. Projection loses information; report projection coverage/issues separately.
-See [the historical comparison protocol](../workflows/expert-comparison.md).
-
-For an independent-human-versus-model benchmark, freeze unseen papers, main/SI access,
-figure policy, model/configuration, schema, scorer, time allowance, permitted tools and
-analysis plan. Specify equal-time work or best achievable quality. The human contestant
-must not see the model output or reference. Adjudicate the reference separately; an
-expert's correction session is not an independent-human extraction baseline.
-
-Use identical presentation for paired preference, conceal origin, randomize sides,
-and offer tie/cannot-judge responses. Freeze rubrics and the sampling/analysis plan
-before collecting confirmatory judgments. The implementation's dataset aggregator
-provides single-system paper-bootstrap intervals, **not paired significance tests**.
-
-Papers used to change parsing, extraction, schema or scoring rules remain development
-papers. Retain every assigned paper: a failed run is not silently removed. An empty,
-valid extraction has zero recall where truth has facts; invalid or missing artifacts
-are separately recorded failures. Record the intended roster and reconcile it with
-reported results; the current aggregator does not enforce roster completeness.
-
-## Release and reproducibility
-
-For a scientific release, provide:
-
-1. A fixed code revision, environment specification, scorer versions/configuration,
-   cohort, inclusion/exclusion reasons and development/test assignment.
-2. Adjudicated reference revisions with schema, content and evidence hashes; review
-   scope, uncertainty, provenance of pre-annotations and any independent audit.
-3. Unchanged prediction artifacts, per-paper reports, aggregate counts, failed runs,
-   matching issues and observed cost coverage. Link artifacts supporting numeric claims.
-4. Expert scorer-validation cases/results and the frozen comparison analysis plan.
-5. Access instructions and a privacy/redistribution check for every released file.
-
-Raw review exports can include identities, comments and original uploads. Preserve
-them privately; the exporter is not an anonymization tool. Never redact a frozen
-artifact in place. A public derivative requires its own consistent hashes and version.
-Source access may be controlled even when the scoring example and code are public.
-
-If reference labels change, release a new version and rescore all saved predictions
-against it. A comparison of model A/truth v1 with model B/truth v2 confounds model
-changes with label changes.
+When reference labels change, freeze a new revision and rescore saved predictions
+against that revision. Do not compare scores based on different reference versions
+as if only the extractor had changed.

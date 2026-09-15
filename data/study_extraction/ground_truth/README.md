@@ -9,7 +9,7 @@ Mutable review state and original uploads remain private. Before publishing a da
 PR, inspect every exported file: review events can include reviewer identities and
 comments. The exporter does not anonymize them. Preserve unmodified originals and
 create a separately versioned, hash-consistent public derivative when needed.
-See [release requirements](../../../docs/methods/benchmark.md#release-and-reproducibility).
+See [publication requirements](../../../docs/deployment/review-workbench.md#publishing-reviewed-data).
 
 Each release version has this layout:
 
