@@ -463,6 +463,40 @@ def test_fraction_percent_equivalence_is_symmetric(unit):
     assert evaluate_study(b, a).core_facts.groups["performance"].f1 == 1
 
 
+@pytest.mark.parametrize(
+    "reference,prediction,expected",
+    [
+        (("20%", 20, "%"), ("0.20", 0.2, "dimensionless"), True),
+        (("20%", 20, "%"), ("20.00001%", 20.00001, "%"), True),
+        (("20%", 20, "%"), ("20.0001%", 20.0001, "%"), False),
+        (("20.0%", 20, "%"), ("20.04%", 20.04, "%"), False),
+        (("1 hour", 1, "hour"), ("3600 seconds", 3600, "seconds"), True),
+        (("65 °C", 65, "°C"), ("338.15 K", 338.15, "K"), True),
+        (("20%", 20, "%"), ("20", 20, None), False),
+        ((">20%", 20, "%"), ("20%", 20, "%"), False),
+    ],
+)
+def test_scoring_guide_numeric_examples(reference, prediction, expected):
+    """Keep the public tolerance examples consistent with the comparison rules.
+
+    This checks value equality only. The guide explicitly requires matching property
+    and context before these comparisons can earn scientific credit.
+    """
+
+    config = EvaluationConfig()
+    left, right = value(*reference), value(*prediction)
+    for a, b in ((left, right), (right, left)):
+        assert (
+            equal_value(
+                a,
+                b,
+                config.numeric_relative_tolerance,
+                config.numeric_absolute_tolerance,
+            )
+            is expected
+        )
+
+
 def test_formula_comparison_preserves_chemical_case():
     truth = scientific_study()
     truth.device_families[0].absorbers[0].formula.raw_value = "CoO"

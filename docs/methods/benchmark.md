@@ -16,10 +16,10 @@ An evaluation uses two `StudyExtraction` documents:
 - **Reference:** the source-checked records used as the comparison target.
 - **Prediction:** an unchanged extraction being evaluated.
 
-A frozen reference directory adds schema and content hashes, review provenance and
-record-level uncertainty. A complete prediction directory adds source evidence and
-run accounting. Bare JSON inputs are supported for development, but lack these
-additional checks. No real-paper reference dataset is included with the software;
+A frozen reference directory records the reviewed version, its schema and content
+hashes, and any records the final reviewer marked uncertain. A complete prediction
+directory includes source evidence and saved call, token, cost and timing totals.
+Bare JSON inputs are also accepted, but lack these checks and supporting records. No real-paper reference dataset is included with the software;
 the bundled example uses synthetic data.
 
 Reference and prediction must cover the same sources and scientific scope. The
@@ -46,33 +46,33 @@ tests remain separate. Reverse and forward scans can describe one cell; a mean o
 cell only when the source supports that identity.
 
 The workbench saves corrections, additions, decisions and their evidence. An
-administrator adjudicates the current revision before export. Export checks the
-current decisions, schema and citations; it cannot establish that a source was
-read completely or interpreted correctly. The [review-to-benchmark guide](
+administrator makes the final review decisions before export. The exporter checks
+that every current record has a final decision and that the schema and citations
+pass validation. It cannot tell whether a reviewer read the whole source or
+interpreted it correctly. The [review-to-benchmark guide](
 ../workflows/review-to-benchmark.md) explains how to reconcile feedback and freeze it.
 
-A final `uncertain` decision is an abstention. The scorer excludes the uncertain
-reference record and a remaining prediction matched to it. It reports those
-exclusions explicitly. Uncertainty is currently handled for whole records, not
-individual fields.
+A final `uncertain` decision tells the scorer to leave the record out. It first
+matches predictions to the other reference records, then excludes any remaining
+prediction selected as a match to an uncertain record. The report lists the
+excluded records. You can exclude a whole record this way, not an individual field.
 
 ## Match records, then compare facts
 
-Generated IDs are not scientific identities. PERLA pairs records by content within
-each record type, using established parent links and measurement conditions to
-prefer compatible matches. The assignment is one-to-one: a prediction cannot match
+Two extractions may give the same device different IDs. PERLA therefore pairs
+records by their content, separately for each record type. It uses earlier family
+and device pairings, together with measurement conditions, to help pair related records. The assignment is one-to-one: a prediction cannot match
 several reference records.
 
 Within paired records, the scorer compares facts in six groups: performance,
-population statistics, stability, stack, composition and processing. Context
-identifies the relevant cell, scan, layer, constituent, operation or stability
-checkpoint. Explicit layer and operation sequence is meaningful; JSON array order
+population statistics, stability, stack, composition and processing. The recorded context specifies which cell, scan, layer, constituent, operation or
+stability checkpoint a fact belongs to. Explicit layer and operation sequence is meaningful; JSON array order
 is not.
 
 Single unqualified numbers with compatible explicit units are converted before
 comparison. The default relative tolerance is `1e-6`; the absolute tolerance is
-`1e-9` in canonical base units. These accommodate numeric representation, not
-experimental uncertainty. Formulas, ranges and unfamiliar descriptions use
+`1e-9` in base units, such as seconds and kelvin. These allow small differences
+from conversion and floating-point arithmetic, not experimental uncertainty. Formulas, ranges and unfamiliar descriptions use
 conservative text comparison. The [scoring reference](../workflows/evaluation.md)
 gives examples and the full matching algorithm.
 
@@ -80,35 +80,34 @@ gives examples and the full matching algorithm.
 
 | Result | Question answered |
 | --- | --- |
-| Correct value in correct context | Is the scientific fact correctly represented? |
+| Correct value in correct context | Do the value and its recorded context match the reference? |
 | Value only | Was the value recovered within the paired record, ignoring nested context? |
 | Attribution only | Is the property in the correct context, regardless of its value? |
-| Citation validation | Do source pointers and literal values resolve? |
+| Citation validation | Do the cited passages and raw values occur in the supplied evidence? |
 
 For each scientific group, the report includes reference, predicted and matched
 fact counts, precision, recall and F1. A wrong value contributes an unmatched
 prediction and an unmatched reference fact. Extra predictions reduce precision;
 missing facts reduce recall. Duplicate predictions cannot reuse one reference fact.
 
-The group-balanced F1 averages groups populated on either side. Empty groups are
-excluded rather than given perfect scores. Pooled counts and per-group scores are
+The group-balanced F1 averages the groups that contain facts in either study.
+Groups empty in both studies are left out rather than given perfect scores. Pooled counts and per-group scores are
 also retained: equal group weighting is a reporting choice, not a measure of every
 field's scientific importance.
 
-Dataset aggregation combines paper reports with compatible versions and configuration.
-Its uncertainty intervals resample papers, not individual fields. These are
-single-system intervals, not paired significance tests. The caller supplies the paper
-roster; missing or failed runs must be accounted for separately.
+The dataset command combines paper reports that use compatible versions and scoring
+settings. To estimate uncertainty in average scores, it resamples papers—not
+individual fields. These intervals describe one system, not the difference between
+two systems. You must supply the full paper list and account for missing or failed runs.
 
 ## Limitations
 
 Record matching is an estimate of identity. Similar specimens or differently grouped
-operations can produce incorrect pairings. The report exposes selected pairs,
-unmatched paths and detected ambiguity so these can be inspected against the source.
-No ambiguity warning does not prove that a pairing is correct.
+operations can produce incorrect pairings. The report lists selected pairs,
+unmatched fields and detected ambiguity so you can check them against the source.
+A pairing can be wrong even when the scorer gives no warning.
 
-Equivalent chemical names or alternative descriptions may fail conservative equality
-checks. Conversely, literal presence in a citation does not prove that a value belongs
+The fixed text-comparison rules can reject equivalent chemical names or descriptions. Conversely, literal presence in a citation does not prove that a value belongs
 to the asserted device or property. Citation validity and scientific correctness are
 therefore reported separately.
 

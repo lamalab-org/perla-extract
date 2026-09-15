@@ -1,19 +1,28 @@
 # Scoring reference
 
-`perla-evaluate` compares a rich `extraction.json` with one frozen, adjudicated
-`StudyExtraction`. It is deterministic and never calls an LLM. Run-local record IDs
-and evidence quotations are excluded from record similarity; evidence validity is a
-separate extraction-validation result.
+`perla-evaluate` compares an extraction with a reference using fixed rules. It makes
+no LLM or embedding calls. The result measures agreement with that reference—not
+whether the paper was fully or correctly understood.
 
-For an overview of the method, read [Evaluation methods](../methods/benchmark.md).
-For commands using saved expert corrections, read [From corrections to a benchmark](review-to-benchmark.md).
+This guide uses three terms:
+
+- **Reference:** the records you have reviewed against the paper.
+- **Prediction:** the unchanged extraction you want to evaluate.
+- **Fact:** one scored item, such as a PCE value, a layer material or an annealing
+  temperature, together with the context needed to interpret it.
+
+The scorer first pairs records, then compares their facts. It reports missing and
+extra facts, wrong values and wrong associations separately. Record pairing is an
+estimate: the scorer can pair two records incorrectly.
+
+For the overall method, read [Evaluation method](../methods/benchmark.md).
+For the steps from saved corrections to scores, read
+[From corrections to a benchmark](review-to-benchmark.md).
 The [worked example](scoring-example.md) runs without PDFs or an API key.
 
-The scorer measures agreement with an adjudicated reference within its declared scope.
-It does not certify the completeness of that reference or the correctness of record
-alignment. Source review and scorer validation are separate requirements.
+## Run a comparison
 
-The following paths illustrate a real-study run; they are not bundled benchmark data:
+The paths below are examples; the repository does not include this paper's reference:
 
 ```bash
 perla-evaluate \
@@ -22,200 +31,233 @@ perla-evaluate \
   --output results/10.1126--science.adf0194/evaluation.json
 ```
 
-When `--truth` is a frozen benchmark directory, the command verifies the schema hash
-and canonical `ground_truth.json` content hash before scoring. The resulting report
-also records the paper ID, split, truth hash, source-document hashes, and a fallback
-source-manifest hash. Passing a bare truth JSON is useful for development but does not
-provide those provenance checks.
+A frozen reference directory contains `ground_truth.json` and `manifest.json`.
+The command checks that the schema hash matches the installed schema and that the
+reference's content hash matches its manifest. It records the paper ID, split,
+reference hash, source hashes and source-manifest hash in the report.
 
-Hash checks bind a score to declared content; they do not authenticate expert
-judgments. The evaluator does not repeat the workbench's adjudication gates or
-revalidate the archived reference evidence. Use the normal review/export workflow
-and inspect release provenance, rather than constructing a manifest to certify a seed.
+These checks detect mismatched files. They do not prove that anyone reviewed the
+reference. The scorer does not repeat adjudication or check the reference's
+citations against the paper. Use the [review and export workflow](ground-truth-review.md)
+to create the reference.
 
-Frozen ground-truth formats 2 and 3 are supported. Format 3 additionally requires and
-records the reviewed evidence version and document hash. Evaluation reports now use
-format **4** and matcher **rich-study-hungarian-v4**; regenerate older score reports
-from their saved predictions instead of mixing old and new scores.
-Every report also hashes both parsed study inputs, including IDs and array order,
-so its diagnostic JSON paths can be tied to the inputs that produced it. These
-normalized-content hashes are not hashes of the original file bytes.
+Reference formats 2 and 3 are supported. Format 3 must also declare the reviewed
+evidence-document version and hash. The scorer records them; it does not load that
+archived document to verify the declaration.
 
-Prefer a complete extraction run directory for `--prediction`. The command then
-recomputes evidence and relationship validation from `extraction.json` and
-`document.json` and embeds the result in the score report. It also validates and
-retains measured calls, tokens, reported cost, and elapsed time from `report.json`.
-A bare prediction JSON is accepted for development, but its report marks validation
-and efficiency accounting as unavailable.
+For `--prediction`, prefer a complete run directory containing:
+
+| File | What the scorer does with it |
+| --- | --- |
+| `extraction.json` | Loads the predicted study |
+| `document.json` | Rechecks the prediction's citations and record links |
+| `report.json` | Checks the structure of the saved call, token, cost and timing totals, then copies them into the evaluation |
+
+Citation checks do not determine whether a passage supports a claim scientifically.
+Citation issues do not reduce the fact score automatically; inspect the validation
+result alongside the score.
+Run accounting comes from the saved report; the scorer does not audit provider bills.
+You must also check that prediction and reference cover the same paper, SI and
+scientific scope.
+
+You can pass a bare JSON file for either study. Bare references have no manifest
+checks or stored reviewer uncertainty; bare predictions have no evidence-validation
+or run-accounting results.
+
+Reports use format **4**, matcher **rich-study-hungarian-v4** and fact profile
+**core-scientific-facts-v3**. Regenerate older reports from saved predictions before
+combining scores. Each report hashes both parsed studies, including IDs and array
+order, so you can locate the inputs behind its field paths. These are hashes of
+normalized JSON content, not the original file bytes.
 
 ## What is scored
 
 ### Primary score: correct scientific facts
 
-Use `core_facts`, not the older quantity-presence score, to judge extraction quality.
-The versioned `core-scientific-facts-v3` profile covers:
+Use `core_facts` to assess extraction quality. The scorer counts facts in six groups:
 
-| Group | Scientific fields counted | Context required for credit |
+| Group | What counts | What must agree for a match |
 | --- | --- | --- |
-| Performance | Reported performance metrics, including PCE, Voc, Jsc, FF | Matched device/family, variant, champion status, measurement type and scan direction |
-| Population | Sample size and aggregate metrics | Matched family, statistic type and sample size |
-| Stability | Test conditions, checkpoint times/conditions and outcomes | Matched specimen links; outcomes also require the correct time and test/checkpoint conditions |
-| Composition | Absorber formula, constituents, their roles/amounts, absorber properties | Corresponding absorber/layer and chemical constituent |
-| Stack | Layer materials, roles, physical form, properties and device polarity | Explicit layer sequence and material association; raw stack text is a fallback when structured layers are absent |
-| Processing | Operations, materials, conditions and specimen-specific properties | Correct operation, explicit sequence, target layers, materials and device variant |
+| Performance | Reported metrics, such as PCE, Voc, Jsc and FF | Paired record, device/family links, variant, champion status, selection basis, measurement type and scan direction |
+| Population | Sample size and aggregate metrics | Paired record, family link and statistic type; metric matches also require the same sample size |
+| Stability | Test conditions, checkpoint times, checkpoint conditions and outcomes | Paired record and specimen links; checkpoint facts also depend on the recorded time and conditions, as described below |
+| Composition | Absorber formula and properties; layer and absorber constituents, roles and amounts | Paired family, absorber/layer context and constituent association |
+| Stack | Layer materials, roles, material forms and properties; device polarity | Paired family, recorded sequence and material association |
+| Processing | Operations, materials, conditions and specimen-specific properties | Paired record, operation, recorded sequence, target layers and relevant materials or device variant |
 
-This selects fields by schema structure, not paper-specific keywords. Other property
-names within these groups also score. IDs, citation wording, paper titles, display
-labels, unresolved notes, and empty/`not_reported` scalar placeholders do not earn
-points. Champion flags constrain performance context rather than earning redundant
-points themselves. Extra scientific claims do count against precision.
+These groups select parts of the schema, not a fixed list of paper-specific property
+names. For example, a reported processing condition can count even if its name is
+unfamiliar to the scorer. This is not an assessment of every field in the schema.
 
-A correct match requires the **quantity, value, units and scientific context** to
-agree. A wrong PCE contributes one false positive and one false negative—not a true
-positive merely because both records mention PCE. Repeated identical predictions
-cannot reuse one truth fact. Every credited pair and every unmatched field is listed
-by its original JSON path in `core_facts`.
+Some details affect how facts are counted:
 
-For example, if truth reports PCE = 20% and the prediction reports 21% on the same
-device, the performance score has `truth=1`, `predicted=1`, `matched=0`, and F1 = 0.
-If truth reports annealing at 100 °C followed by 150 °C, reversing those temperatures
-loses both condition matches even though the same two numbers are still present.
+- Structured layers take precedence over the raw stack string. If there are no
+  layers, the scorer counts the raw stack string—or, failing that, architecture—as
+  one fact. It does not split the string into layer facts.
+- A layer material is compared at its recorded sequence. Its role, form and
+  properties also require the material to agree.
+- Processing conditions require the operation, sequence, target layers and material
+  list to agree. Specimen-specific properties use the device's family and variant.
+- Stability checkpoint times require matching test and checkpoint conditions.
+  Checkpoint conditions require matching test conditions and time. Outcomes require
+  matching test conditions, time and checkpoint conditions.
 
-- `core_facts.groups`: precision, recall, F1 and counts for each scientific area.
-- `core_facts.micro`: pooled correct-fact counts and rates.
-- `core_facts.macro_f1`: equal-weight mean F1 over groups with truth or prediction
-  facts. An entirely missing populated group scores zero; a group absent on both
-  sides is undefined and excluded. Always show group counts alongside this headline.
+IDs, citations, titles, notes and display labels do not earn separate fact points.
+Neither do absent, empty or `not_reported` scalar fields. Labels can still influence
+record pairing; when several absorbers lack layer links, absorber labels also help
+distinguish their context. Champion status constrains performance matches rather
+than earning its own point.
+
+For quantities, a match requires the property name, value, units and recorded
+context to agree under the rules below. Non-numeric facts use the corresponding
+text or exact-value rules. A match also requires no detected ambiguity affecting
+that fact. Extra facts reduce precision; missing facts reduce recall.
+
+For example, suppose the reference reports PCE = 20% and the prediction reports 21%
+for the same paired device and scan. The counts are `truth=1`, `predicted=1` and
+`matched=0`. The wrong value counts as both an extra predicted fact and a missing
+reference fact. It does not earn credit for merely mentioning PCE.
+
+One prediction fact cannot match several reference facts. Repeating a correct value
+does not earn more credit. The report lists each matched pair and each unmatched
+fact by its JSON path.
+
+### Read precision, recall and F1
+
+```text
+precision = matched / predicted
+recall    = matched / reference
+F1        = 2 × matched / (predicted + reference)
+```
+
+A rate is `null` when its denominator is zero. For example, an empty prediction
+against a nonempty reference has undefined precision, zero recall and zero F1.
+If both sides are empty, all three rates are undefined.
+
+- `core_facts.groups` gives counts and scores for each of the six groups.
+- `core_facts.micro` pools facts across groups before calculating the scores.
+- `core_facts.macro_f1` averages the F1 scores of groups with facts on either side.
+
+A group with reference facts but no predicted facts scores zero. A group empty on
+both sides is left out of the average. Equal group weighting is a reporting choice,
+not a claim that every group has equal scientific importance. Show the group counts
+alongside the average.
 
 ### Separate value recovery from attribution
 
-Each report now contains three comparisons with the **same denominators**:
+The report compares the same facts in three ways:
 
-| Report location | Question | Use |
-| --- | --- | --- |
-| `core_facts.value_only` | Was this property value recovered within its provisionally paired record, ignoring nested context? | Diagnose value loss; not a correctness headline |
-| `core_facts.attribution` | Is this property present with the correct recorded context, regardless of its value? | Diagnose misplaced or insufficiently described measurements |
-| `core_facts` | Are both the value and its context correct, with no detected attribution ambiguity? | Primary scientific score |
+| Report field | Question |
+| --- | --- |
+| `core_facts.value_only` | Within the paired record and property, does the value match, ignoring its nested context? |
+| `core_facts.attribution` | Does the property have matching context, regardless of its value, with no detected ambiguity? |
+| `core_facts` | Do both value and context match, with no detected ambiguity? |
 
-The three views use independent one-to-one assignments. Do not multiply their F1s
-or intersect their path lists to reconstruct the strict score. A value-only match
-does not establish specimen identity or chemical attribution.
+All three use the same predicted and reference counts, but each finds its own
+one-to-one fact matches. Do not multiply their scores or combine their match lists
+to reconstruct the primary score. A value-only match does not prove that the value
+belongs to the right specimen or chemical.
 
-For example, a stability test with one temperature, two times and two outcomes has
-five facts. If a prediction omits the temperature but retains the other four facts,
-value-only recall is 4/5 and F1 is 8/9. Strict credit can be zero because the outcomes
-and times no longer have the complete test context. This exposes the missing
-condition without suggesting the model failed to read all the numbers.
+Consider a stability test with one temperature, two checkpoint times and two
+outcomes: five facts in total. If the prediction omits the temperature but retains
+the four other values, value-only recall is 4/5 and F1 is 8/9. The primary score can
+be zero because the times and outcomes no longer have matching test conditions.
+The separate views show that the numbers were recovered but their context was not.
 
 ### Ambiguity is visible and can stop a benchmark run
 
-`core_facts.issues` identifies competing record matches and nested objects that
-cannot be distinguished by their recorded identities. Examples include two
-annealing steps without sequence numbers, or two constituents with the same name,
-amount type and scope. Outcome values cannot resolve these nested identities.
+`core_facts.issues` lists detected matching problems. Two kinds are checked:
 
-Affected facts remain in both denominators, but receive no strict or attribution
-credit. The value-only view remains available for diagnosis. Thus an exact duplicate
-observation can earn one value-only match but no strict credit while its pairing
-is unresolved. This is deliberately conservative; it is not a final scientific
-judgment about that duplication. Ambiguous record references also block attribution
-credit for linked child facts.
+- A selected record pair has an equally weighted alternative in its row or column.
+- Two objects inside a record have indistinguishable recorded identities, such as
+  two annealing steps with no sequence numbers and the same targets and materials.
 
-`scoring_status="needs_review"` means inspect these issues before interpreting a
-headline. `"ready"` means **no detected matching ambiguity**, not verified ground
-truth, complete source coverage, or a proven unique scientific pairing. Record
-warnings currently detect equal-scoring alternatives in the selected match's row
-or column, not every possible alternative global assignment. They can be
-conservative; absence of a warning is not proof of identity.
+For these nested objects, the scorer does not use the outcomes being scored to
+decide which object is which. For example, it will not identify an annealing step
+solely by its temperature.
 
-Both CLIs support `--fail-on-scoring-issues`: they write the complete report first,
-then exit nonzero if matching needs review. Do not drop these papers from a dataset
-to obtain a clean score. Resolve reference issues with source evidence and a new
-truth version; retain genuine prediction errors. Never fabricate sequence numbers
-solely to satisfy the scorer.
+Affected facts stay in the counts but receive no primary or attribution credit.
+They can still receive value-only credit. An ambiguous parent record can also
+block credit for facts in linked records. These rules deliberately withhold credit
+when the recorded context does not distinguish a match; a reviewer must decide
+whether the ambiguity reflects an extraction error or a scoring limitation.
+
+`scoring_status="needs_review"` means the report contains such issues.
+`"ready"` means only that these checks found none. The checks do not prove a unique
+scientific pairing and do not find every possible alternative assignment.
+
+Both scoring commands accept `--fail-on-scoring-issues`. They save the report, then
+exit with an error if matching needs review. This option does not enforce a minimum
+F1 or fail on citation issues. Do not omit flagged papers from the final results.
+If the reference is wrong, correct it against the source and freeze a new version.
+Do not invent sequence numbers just to remove a warning.
 
 ### Matching: which records refer to the same thing?
 
-Matching and correctness are different decisions. A prediction with the wrong PCE
-can still describe the right device; pairing those records lets us identify the
-value error rather than calling the entire device missing.
+Pairing records and checking their values are separate steps. A record with a wrong
+PCE can still describe the right device.
 
-The implemented matcher works in two levels:
+The scorer pairs families first, followed by individual devices, performance
+observations, populations and stability tests. It pairs records only within the
+same type. Parent pairings can then guide the child pairings.
 
-1. **Pair whole records**, separately for families, individual devices, performance
-   observations, population statistics and stability tests, in that order.
-2. **Compare facts inside those pairings**, separately for each scientific group
-   and property name. One prediction fact cannot satisfy several reference facts.
-
-For whole records, the content-similarity formula is:
+For each possible pair, it calculates:
 
 ```text
 content similarity = 0.75 × Jaccard(record-content tokens)
-                   + 0.25 × Jaccard(canonical reported-property names)
+                   + 0.25 × Jaccard(normalized property names)
 
 Jaccard(A, B) = number of shared entries / number of distinct entries in either set
 ```
 
-Record-content tokens include descriptions and materials. Eligible numeric claims
-use canonical base-unit values and units, and metric names use the same explicit
-aliases as fact scoring; other claims retain raw values and units. Canonical numbers
-use 12 significant digits for lexical features only, never for the final comparison.
-IDs and citations are excluded; parsed numbers are used only after their consistency
-with the raw value has been checked. Text is
-lowercased and punctuation simplified for this **candidate-matching step only**;
-the later chemical-value comparison preserves case and punctuation. Two empty
-token sets have similarity 1 by convention, not because they establish identity.
+Record-content tokens include materials, descriptions and reported values. The
+scorer excludes record IDs, link IDs and evidence quotations from these tokens.
+For eligible numbers with recognized units, it uses base-unit values and units;
+otherwise it uses raw values and units. It formats canonical numbers to 12 significant
+digits for this pairing step only. Final numeric comparison does not use that rounding.
 
-A candidate must reach `--minimum-record-similarity`, default **0.35**. This is a
-heuristic similarity threshold, not a 35% confidence estimate. A surviving pair
-receives an additional **2** in its assignment weight when its parent relationships
-agree under already established pairings and its protocol fields agree. Protocol
-fields are measurement type, scan direction, statistic type and sample size where
-present. Both-missing parent fields can count as agreement; the bonus does not prove
-that a link was reported. Families have no parent-link bonus.
+For token matching, the scorer lowercases text and simplifies punctuation.
+For scientific value comparison, it preserves chemical case and punctuation.
+Property names use the aliases described below. Two empty token sets have similarity
+1 by convention; that is not evidence that the records describe the same object.
 
-The Hungarian algorithm selects a **maximum-total-weight, one-to-one assignment**
-over all candidates of that record type. It does not choose each row's favourite
-independently, and it does not optimize the number of matched records separately
-from their weights. For example, with these illustrative eligible scores and no
-differing parent bonuses:
+A candidate must reach `--minimum-record-similarity`, which defaults to **0.35**.
+This number is a similarity threshold, not a probability of correctness.
+
+An eligible pair receives **2** extra assignment points if its parent links agree
+under the established pairings and its protocol fields agree. The protocol fields
+are measurement type, scan direction, statistic type and sample size, where present.
+Both-missing links can count as agreement. Families have no parent-link bonus.
+
+The Hungarian algorithm chooses the one-to-one assignment with the largest total
+weight. It does not choose each row's best candidate independently or maximize the
+number of pairs as a separate objective. For example, with these eligible scores
+and no differing parent bonuses:
 
 | | Prediction A | Prediction B |
 | --- | ---: | ---: |
 | Reference 1 | 0.90 | 0.80 |
 | Reference 2 | 0.85 | 0.40 |
 
-Greedily assigning reference 1 to A would leave B for reference 2, totaling 1.30.
-The global assignment instead uses 1→B and 2→A, totaling 1.65. This avoids a common
-order-dependent matching error. Unmatched reference records reduce inventory recall;
-unmatched predictions reduce inventory precision. Reported `matches[].similarity`
-is the **unboosted** content similarity.
+Choosing A for reference 1 leaves B for reference 2, totaling 1.30.
+Choosing 1→B and 2→A totals 1.65, so the scorer selects that assignment.
+The report's `matches[].similarity` shows the content score without the bonus.
 
-After pairing, facts compete only within the same scientific group, paired owner
-and property name. Fact comparisons are binary: they either satisfy the selected
-equality/context rule or they do not. There is no partial credit because two PCEs
-are “fairly close” beyond the numeric tolerance. Layer and processing order comes
-from explicit sequence fields, not JSON array position.
+The scorer then compares facts only within a paired record, scientific group and
+property name. A comparison either passes or fails; there is no partial credit for
+a value that falls outside the numeric tolerance. Layer and operation order comes
+from explicit sequence fields, not array position.
 
-**Limitations to inspect:** values influence whole-record alignment, so this is
-not an outcome-blind identity matcher. Similar specimens can still be confused,
-and a badly paired family can affect its linked records. Equal-weight alternatives
-in a selected pair's row or column are flagged using an internal absolute score
-tolerance of `1e-12`; this does not find every possible alternative global optimum.
-Repeated nested objects with indistinguishable recorded identities are also flagged.
-Inspect `matches`, `core_facts.issues` and the original paths before accepting a
-headline. A deterministic assignment is not proof of scientific identity.
-
-The older `field_agreement.reported_values` diagnostic uses a different quantity
-matcher: 80% canonical property-name agreement plus 20% raw-text token similarity,
-with a 0.5 threshold, followed by a value comparison. It is retained for diagnosis,
-not used to award the primary `core_facts` score.
-
+Values influence record pairing, so this is not a value-independent identity check.
+Similar specimens can be confused, and a wrong family pairing can affect its
+children. Equal-weight alternatives are flagged within `1e-12` absolute difference,
+but the check does not search all alternative global assignments. Inspect the
+reported pairs and field paths when a score is surprising.
 
 ### Numeric tolerances: when are two values equal?
 
-For two eligible scalar `ReportedValue` entries, first convert compatible explicit
-units to canonical base units on both sides, then apply Python's `math.isclose` rule:
+For eligible numeric `ReportedValue` entries, the scorer converts compatible
+explicit units to base units and applies Python's `math.isclose` rule:
 
 ```text
 abs(reference − prediction)
@@ -225,114 +267,122 @@ abs(reference − prediction)
 
 | Setting | Default | Meaning |
 | --- | ---: | --- |
-| `--numeric-relative-tolerance` | `1e-6` | Allow a difference proportional to the larger absolute value |
-| `--numeric-absolute-tolerance` | `1e-9` | Allow a small difference near zero, in canonical base units |
-| `--minimum-record-similarity` | `0.35` | Whole-record candidate threshold; unrelated to numeric accuracy |
+| `--numeric-relative-tolerance` | `1e-6` | Allowed difference relative to the larger absolute value |
+| `--numeric-absolute-tolerance` | `1e-9` | Allowed difference in base units, most relevant near zero |
+| `--minimum-record-similarity` | `0.35` | Record-pairing threshold; not a numeric tolerance |
 
-These tolerances accommodate conversion/floating-point precision. They are **not**
-experimental error bars, significant-figure inference, or permission to round an
-extracted measurement freely. They apply to numeric reported values, including
-numeric test context. Ordinary schema integers such as sample size and sequence
-are compared exactly, not approximately.
+These defaults allow small conversion and floating-point differences. They do not
+represent experimental uncertainty or infer precision from significant figures.
+They apply to numeric reported values in both facts and context. Schema integers,
+such as sample size and sequence, must match exactly.
 
-Examples, assuming the property and scientific context also agree:
+The examples assume that property and context also match:
 
-| Reference | Prediction | Result with defaults |
+| Reference | Prediction | Result |
 | --- | --- | --- |
 | PCE 20% | PCE 0.20, explicitly dimensionless | Equal after conversion |
 | PCE 20% | PCE 20.00001% | Equal within tolerance |
 | PCE 20% | PCE 20.0001% | Different |
-| PCE 20.0% | PCE 20.04% | Different; no automatic rounding-to-reported-precision rule |
+| PCE 20.0% | PCE 20.04% | Different; no automatic rounding |
 | Time 1 hour | Time 3600 seconds | Equal after conversion |
 | Temperature 65 °C | Temperature 338.15 K | Equal after conversion |
-| PCE 20% | PCE 20 with no unit | Different; missing is not an explicit percent unit |
-| PCE >20% | PCE 20% | Different; an inequality is not an exact value |
+| PCE 20% | PCE 20 with no unit | Different |
+| PCE >20% | PCE 20% | Different; a bound is not an exact value |
 
-At PCE 20%, the relative allowance is approximately **0.00002 percentage points**,
-not one percentage point. The absolute allowance is in base units: seconds for
-time, Kelvin for temperature and a dimensionless fraction for percent. This prevents
-the tolerance from changing when the same reference is expressed in another unit,
-including an offset temperature scale. Freeze the scoring version and tolerances;
-version-4 reports must not be mixed with older reference-unit-based scores.
+At 20% PCE, the relative allowance is about **0.00002 percentage points**.
+The absolute allowance uses seconds for time, kelvin for temperature and a
+dimensionless fraction for percentages. Converting first keeps the tolerance in the
+same units whichever representation appears in the reference.
 
-Unordered context lists are compared as multisets with one-to-one matching under
-these same equality rules. This preserves duplicates and handles whitespace/unit
-changes without an artificial disagreement caused by sorting raw text. Explicit
-layer and operation sequence is not treated as unordered.
+Conversion requires both raw values to contain one unqualified number, with either
+no suffix or a suffix matching the stated unit. Each parsed number must agree with
+its raw number within an internal check of `1e-9` relative and `1e-12` absolute
+tolerance. That consistency check is separate from the scoring tolerance.
 
-Unit conversion is attempted only when each raw value is a single, unqualified
-number, with no suffix or a suffix matching its stated unit. The parsed number
-must agree with that raw number within an internal consistency check (`1e-9`
-relative, `1e-12` absolute). That check is distinct from the scoring tolerance.
-If both units are missing, eligible numbers can be compared without conversion;
-the scorer does not infer what the missing unit was. Unrecognized units fall back
-to conservative literal equality, not guessed conversion.
+If both units are missing, eligible numbers can match without conversion. If only
+one unit is missing, they cannot. If a unit is unrecognized, the scorer requires
+equal normalized raw text and identical unit strings rather than guessing a conversion.
+
+Lists of conditions, target layers and processing materials are compared without
+using list order, but repeated entries still count. Each entry must find its own
+match under the equality rules. Explicit layer and operation sequence remains
+meaningful.
 
 ### Chemicals, ranges and free text
 
-Ranges, uncertainties, inequalities and formulas do not become equivalent merely
-because their parsed central number agrees. They fall back to literal comparisons
-of normalized raw text, unit and parsed number. Unicode typography and repeated
-whitespace are normalized; chemical case, punctuation and stoichiometry remain
-significant. Equality of two representations does not itself validate either claim
-against the paper.
+The scorer does not reduce a range, inequality, uncertainty or formula to its parsed
+number. It compares normalized raw text, unit and parsed number instead. It applies
+Unicode NFKC normalization, standardizes the minus sign and collapses whitespace;
+it does not ignore chemical case, other punctuation or stoichiometry.
 
-Consequently, `CoO` is not `COO`, and the scorer does not infer that `MAPbI3` and
-`CH3NH3PbI3` represent the same composition. Equivalent differently written ranges
-or chemical names can produce conservative false disagreements. Inspect these on
-development papers instead of hiding them in a generous universal tolerance.
+For example, `CoO` does not equal `COO`. The scorer does not infer that `MAPbI3`
+and `CH3NH3PbI3` describe the same composition. Equivalent names or differently
+written ranges can therefore disagree. Matching text also does not prove that
+either claim is supported by the paper.
 
-Property names have explicit aliases for PCE, Voc, Jsc and FF. Operation names use
-an explicit, frozen map: by default, `thermal annealing` maps to `annealing`.
-Supply `--operation-aliases aliases.json` to replace the map, or `{}` to disable it.
-This applies to fact comparison, not the lexical whole-record matching formula.
-Other operation paraphrases are not inferred. Changing aliases can affect both
-operation matches and their dependent condition matches; freeze the map before
-held-out evaluation and retain it in each report.
+Property names ignore case, whitespace, hyphens and underscores. Four explicit
+aliases map the full names of power conversion efficiency, open-circuit voltage,
+short-circuit current density and fill factor to PCE, Voc, Jsc and FF.
 
+Operation names ignore case and normalize whitespace. By default, the one operation
+alias maps `thermal annealing` to `annealing`. Use
+`--operation-aliases aliases.json` to replace this map; supply a JSON file containing
+`{}` to disable the aliases. Other paraphrases are not inferred.
+
+Operation aliases affect fact comparison and the context of dependent conditions,
+not whole-record token similarity. Keep the map fixed for an evaluation; the report
+stores it with the other settings.
 
 ### LLM judging
 
-The implemented scorer makes no LLM or embedding calls. Experts resolve semantic
-disagreements; the scorer does not infer chemical synonyms or rewrite predictions.
-
+There is no LLM judge in this scorer. It does not call a model to recognize chemical
+synonyms, resolve ambiguous pairings or rewrite predictions. Experts must resolve
+disagreements that the fixed comparison rules cannot settle.
 
 ### Diagnostic scores
 
-The report keeps distinct questions separate:
+The report also includes:
 
-- inventory precision, recall, and F1 for families, devices, observations,
-  populations, and stability tests;
-- the exact record pairings selected by a global one-to-one matcher;
-- scalar-field agreement on matched records;
-- parent-link agreement on matched records, such as whether an observation points to
-  the matched device;
-- end-to-end atomic `ReportedValue` **presence** precision/recall across scored records and
-  conditional value agreement for matched quantities, including compatible unit
-  conversion; and
-- unmatched truth and prediction record keys for error analysis.
+| Result | What it measures |
+| --- | --- |
+| `inventory` | Precision, recall and F1 for record counts in each of the five record types |
+| `matches` | Selected record pairs, their similarity and detected ties |
+| Scalar-field agreement | Agreement on non-quantity fields within paired records |
+| Parent-link agreement | Whether paired records point to corresponding parents |
+| `field_agreement.reported_values` | Recovery of named quantities, not correctness of their values |
+| `reported_value_accuracy` within `field_agreement` | Value agreement among those paired quantities |
+| Unmatched record keys | Reference and prediction records without a pair |
 
-`field_agreement.reported_values` is retained for diagnosis: it can be perfect while
-the values themselves are wrong. `core_facts` is the stricter correct-in-context
-score. Citation validation is separate and does not prove that the quoted source
-supports the claim scientifically.
+The older quantity diagnostic pairs values within each paired record using 80%
+property-name agreement and 20% raw-text token similarity, with a 0.5 threshold.
+It checks value equality afterward. Its quantity-recovery F1 can be perfect while
+every value is wrong. It does not award the primary `core_facts` score.
 
-Rates with a zero denominator are `null`, not a vacuous perfect score. Always retain
-the predicted, truth, and matched counts when aggregating reports.
+These diagnostics answer narrower questions than scientific correctness. In
+particular, scalar-field comparison simplifies text, and quantity recovery does not
+check all nested associations. Use them to explain a result, not replace the
+correct-value-and-context score.
 
 ## Reviewer uncertainty
 
-A record marked `uncertain` at final adjudication is not a positive or negative label.
-The format-3 ground-truth manifest stores those record keys as an abstention mask and
-binds the truth revision to the evidence-document version used during review.
-Certain truth records are matched first; a remaining prediction that matches an
-uncertain record is excluded from both precision and recall. The report lists every
-masked prediction so abstention cannot silently improve a score.
+If a reviewer marks a record `uncertain` during final adjudication, the scorer leaves
+it out rather than treating it as correct or incorrect. The reference's manifest
+lists these record keys; format 3 also records the evidence-document version and hash.
+
+The scorer first matches predictions to reference records that are not uncertain.
+It then tries to match the remaining predictions to uncertain records of the same
+type. Predictions selected in this second matching step are excluded from precision
+and recall too. Additional unmatched predictions still count. The report lists all
+excluded records in `ignored_truth_record_keys` and `ignored_prediction_record_keys`.
+
+Uncertainty applies to whole records, not individual fields. Excluding a parent does
+not automatically exclude its children: a pairing to the uncertain parent can still
+provide context for scoring a child. Detected ambiguity in that pairing can still
+block the child's attribution credit.
 
 ## Dataset reporting
 
-After inspecting the per-paper pairings, aggregate their immutable reports without
-rerunning matching:
+After inspecting per-paper results, combine their saved reports:
 
 ```bash
 perla-evaluate-dataset \
@@ -341,39 +391,63 @@ perla-evaluate-dataset \
   --output results/model-x.dataset-evaluation.json
 ```
 
-The aggregator refuses reports with different schema hashes, matcher versions, or
-threshold/tolerance/alias configurations. It also refuses to mix provenance-verified and
-development reports, benchmark splits, duplicate paper IDs, or duplicate source
-documents/manifests. It reports micro counts for records, fields, relationships, and
-atomic values; macro paper-level rates; and deterministic 95% paper-bootstrap
-intervals. It also totals how many predictions carried evidence validation, how many
-were verified, how many validation issues remained, and all available run-efficiency
-counts. Undefined paper-level rates are excluded with their contributing paper count
-reported explicitly.
+The command does not rerun matching. It rejects incompatible report formats, schema
+hashes, matcher versions and scoring settings. It also rejects a mix of reports with
+and without reference manifests.
 
-Interval bounds are `null` when bootstrap is disabled, no paper contributes a
-defined rate, or only one paper contributes. `interval_status` distinguishes
-`disabled`, `no_values`, `insufficient_papers` and `available`. The aggregate records
-`bootstrap_samples`, `bootstrap_seed` and `bootstrap_method`; a finite bootstrap
-interval is still an estimate, not a guarantee about unseen papers.
+For reports with reference manifests, it checks that splits agree and rejects
+duplicate paper IDs or overlapping source hashes. If source hashes are absent, it
+uses the source-manifest hash to detect duplicates. Bare-JSON reports lack these
+paper-identity checks.
 
-Dataset `efficiency.cost_usd` is the sum of **observed** costs. Interpret it as a
-complete total only when `cost_tracking_complete` is true. The fields
-`cost_complete_papers`, `cost_incomplete_papers` and `cost_unknown_papers` account
-for every input report; missing run accounting counts as unknown. An unknown price
-is not replaced with an invented estimate or described as a free call.
+The command cannot tell whether you left out a paper. Keep a separate list of all
+intended papers and account for missing and failed runs. It also does not enforce
+one extraction model or configuration across reports; check those run settings yourself.
 
-The dataset's `core_fact_groups_micro` and `core_fact_groups_macro_f1` report each
-scientific area. `core_facts_micro` pools facts; `core_facts_macro_f1` averages each
-paper's group-balanced score and bootstraps **papers**, not individual fields. This
-avoids letting one unusually long supporting-information document dominate the
-headline result. These are single-system intervals, not paired A/B significance tests.
+### Totals and paper averages
 
-`core_value_only_micro`, `core_value_only_macro_f1`, `core_attribution_micro` and
-`core_attribution_macro_f1` retain the two diagnostic views. The aggregate also
-reports `papers_needing_scoring_review` and `scoring_issue_count`; review them before
-interpreting the strict headline. Per-paper reports retain all six groups and exact
-matched/unmatched paths for each view.
+The report keeps both pooled counts and paper averages:
 
-Keep calibration, development, and test manifests separate. Papers used to change
-parsing, prompts, schemas, matching, thresholds, or model selection are not held out.
+- `core_fact_groups_micro` pools fact counts for each scientific group.
+- `core_fact_groups_macro_f1` averages each group's F1 across papers.
+- `core_facts_micro` pools facts across all groups and papers.
+- `core_facts_macro_f1` averages each paper's group-balanced F1.
+
+The last measure gives each paper with a defined score equal weight, rather than
+letting a paper with many fields dominate. Undefined rates are left out, and each
+average records how many papers contributed. Inventory, field and relationship
+diagnostics retain their own counts and paper averages.
+
+The value-only and attribution views remain available as `core_value_only_micro`,
+`core_value_only_macro_f1`, `core_attribution_micro` and
+`core_attribution_macro_f1`. Check `papers_needing_scoring_review` and
+`scoring_issue_count` alongside all scores.
+
+### Intervals
+
+By default, the command draws **2,000** bootstrap samples with seed **0**. Each
+sample resamples the contributing paper scores with replacement and calculates their
+mean. The reported 95% bounds come from the sorted sample means. These are estimates
+of uncertainty in a single system's mean, not a paired significance test of two systems.
+
+Bounds are `null` if no paper has a defined rate, only one paper contributes, or
+bootstrapping is disabled. `interval_status` explains which case applies.
+The report stores `bootstrap_samples`, `bootstrap_seed` and `bootstrap_method`.
+Fixed inputs, report order and settings reproduce the bootstrap results; an interval
+does not guarantee performance on unseen papers.
+
+### Cost and validation coverage
+
+Dataset `efficiency.cost_usd` sums recorded costs. Treat it as a complete total only
+when `cost_tracking_complete` is true. The fields `cost_complete_papers`,
+`cost_incomplete_papers` and `cost_unknown_papers` show coverage; missing accounting
+counts as unknown, not free.
+
+The dataset report also counts papers with prediction-validation results, papers
+that passed those automated checks and remaining validation issues. Passing those
+checks still does not prove scientific correctness.
+
+Keep calibration, development and test results separate. Papers used to change
+parsing, prompts, schemas, matching, thresholds or model selection are not held out.
+When a reference changes, freeze a new version and rescore all compared predictions
+against it.

@@ -70,12 +70,12 @@ perla-scoring-example/
     evaluation.json                   # Full scorer output, including field paths
 ```
 
-The four normal frozen-export files are unchanged; this example additionally ships
-its invented evidence document alongside them. `report.json` reports zero model
+The example uses the normal four-file export and adds its invented evidence
+document alongside it. `report.json` reports zero model
 calls and cost; elapsed time measures local fixture writing, not model latency.
-Review timestamps/hashes vary between invocations. Scientific counts and the scoring
-configuration must not. Independent expected counts/configuration live in
-`examples/scoring/expected.json` and are asserted by the regression suite.
+Review timestamps and hashes vary between runs. The fact counts and scoring settings
+must stay the same. The tests compare them with separately written expectations in
+`examples/scoring/expected.json`.
 
 Re-run the ordinary scorer on the generated seed:
 
