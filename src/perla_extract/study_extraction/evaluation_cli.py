@@ -226,6 +226,16 @@ def _prediction(
 @click.option(
     "--numeric-absolute-tolerance", type=click.FloatRange(min=0), default=1e-9
 )
+@click.option(
+    "--operation-aliases",
+    type=INPUT,
+    help="JSON operation-to-canonical-name mapping; replaces defaults.",
+)
+@click.option(
+    "--fail-on-scoring-issues",
+    is_flag=True,
+    help="Save diagnostics, then fail if scientific attribution is ambiguous.",
+)
 def main(
     truth: Path,
     prediction: Path,
@@ -233,11 +243,26 @@ def main(
     minimum_record_similarity: float,
     numeric_relative_tolerance: float,
     numeric_absolute_tolerance: float,
+    operation_aliases: Path | None,
+    fail_on_scoring_issues: bool,
 ) -> None:
     """Score one extraction without using an LLM or run-local identifiers."""
 
     expected, uncertain, benchmark = _truth(truth)
     actual, prediction_validation, run_efficiency = _prediction(prediction)
+    try:
+        config = EvaluationConfig(
+            minimum_record_similarity=minimum_record_similarity,
+            numeric_relative_tolerance=numeric_relative_tolerance,
+            numeric_absolute_tolerance=numeric_absolute_tolerance,
+            **(
+                {"operation_aliases": _json(operation_aliases)}
+                if operation_aliases
+                else {}
+            ),
+        )
+    except ValidationError as exc:
+        raise click.ClickException(f"invalid scoring configuration: {exc}") from exc
     report = evaluate_study(
         expected,
         actual,
@@ -245,14 +270,14 @@ def main(
         benchmark=benchmark,
         prediction_validation=prediction_validation,
         run_efficiency=run_efficiency,
-        config=EvaluationConfig(
-            minimum_record_similarity=minimum_record_similarity,
-            numeric_relative_tolerance=numeric_relative_tolerance,
-            numeric_absolute_tolerance=numeric_absolute_tolerance,
-        ),
+        config=config,
     )
     write_json_atomic(output, report.model_dump(mode="json"))
     click.echo(str(output))
+    if fail_on_scoring_issues and report.core_facts.issues:
+        raise click.ClickException(
+            f"{len(report.core_facts.issues)} scoring issue(s) require review; diagnostics saved to {output}"
+        )
 
 
 if __name__ == "__main__":

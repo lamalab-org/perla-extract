@@ -5,6 +5,9 @@
 and evidence quotations are excluded from record similarity; evidence validity is a
 separate extraction-validation result.
 
+For the full review-to-score workflow, including reconciling older expert Excel
+comments, start with [From reviewer corrections to a benchmark](review-to-benchmark.md).
+
 ```bash
 perla-evaluate \
   --truth data/study_extraction/ground_truth/v1/dev/10.1126--science.adf0194 \
@@ -20,8 +23,11 @@ provide those provenance checks.
 
 Frozen ground-truth formats 2 and 3 are supported. Format 3 additionally requires and
 records the reviewed evidence version and document hash. Evaluation reports now use
-format **2** and matcher **rich-study-hungarian-v2**; regenerate older score reports
+format **3** and matcher **rich-study-hungarian-v3**; regenerate older score reports
 from their saved predictions instead of mixing old and new scores.
+Every report also hashes both parsed study inputs, including IDs and array order,
+so its diagnostic JSON paths can be tied to the inputs that produced it. These
+normalized-content hashes are not hashes of the original file bytes.
 
 Prefer a complete extraction run directory for `--prediction`. The command then
 recomputes evidence and relationship validation from `extraction.json` and
@@ -35,7 +41,7 @@ and efficiency accounting as unavailable.
 ### Primary score: correct scientific facts
 
 Use `core_facts`, not the older quantity-presence score, to judge extraction quality.
-The versioned `core-scientific-facts-v1` profile covers:
+The versioned `core-scientific-facts-v2` profile covers:
 
 | Group | Scientific fields counted | Context required for credit |
 | --- | --- | --- |
@@ -69,6 +75,53 @@ loses both condition matches even though the same two numbers are still present.
   facts. An entirely missing populated group scores zero; a group absent on both
   sides is undefined and excluded. Always show group counts alongside this headline.
 
+### Separate value recovery from attribution
+
+Each report now contains three comparisons with the **same denominators**:
+
+| Report location | Question | Use |
+| --- | --- | --- |
+| `core_facts.value_only` | Was this property value recovered within its provisionally paired record, ignoring nested context? | Diagnose value loss; not a correctness headline |
+| `core_facts.attribution` | Is this property present with the correct recorded context, regardless of its value? | Diagnose misplaced or insufficiently described measurements |
+| `core_facts` | Are both the value and its context correct, with no detected attribution ambiguity? | Primary scientific score |
+
+The three views use independent one-to-one assignments. Do not multiply their F1s
+or intersect their path lists to reconstruct the strict score. A value-only match
+does not establish specimen identity or chemical attribution.
+
+For example, a stability test with one temperature, two times and two outcomes has
+five facts. If a prediction omits the temperature but retains the other four facts,
+value-only recall is 4/5 and F1 is 8/9. Strict credit can be zero because the outcomes
+and times no longer have the complete test context. This exposes the missing
+condition without suggesting the model failed to read all the numbers.
+
+### Ambiguity is visible and can stop a benchmark run
+
+`core_facts.issues` identifies competing record matches and nested objects that
+cannot be distinguished by their recorded identities. Examples include two
+annealing steps without sequence numbers, or two constituents with the same name,
+amount type and scope. Outcome values cannot resolve these nested identities.
+
+Affected facts remain in both denominators, but receive no strict or attribution
+credit. The value-only view remains available for diagnosis. Thus an exact duplicate
+observation can earn one value-only match but no strict credit while its pairing
+is unresolved. This is deliberately conservative; it is not a final scientific
+judgment about that duplication. Ambiguous record references also block attribution
+credit for linked child facts.
+
+`scoring_status="needs_review"` means inspect these issues before interpreting a
+headline. `"ready"` means **no detected matching ambiguity**, not verified ground
+truth, complete source coverage, or a proven unique scientific pairing. Record
+warnings currently detect equal-scoring alternatives in the selected match's row
+or column, not every possible alternative global assignment. They can be
+conservative; absence of a warning is not proof of identity.
+
+Both CLIs support `--fail-on-scoring-issues`: they write the complete report first,
+then exit nonzero if matching needs review. Do not drop these papers from a dataset
+to obtain a clean score. Resolve reference issues with source evidence and a new
+truth version; retain genuine prediction errors. Never fabricate sequence numbers
+solely to satisfy the scorer.
+
 ### Equality rules and limitations
 
 Single unqualified numbers with explicit compatible units are converted using Pint.
@@ -84,6 +137,15 @@ including their raw qualifier. A normalized central number cannot erase `>`, `~`
 and stoichiometry are preserved. The four standard performance names have explicit
 aliases for PCE, Voc, Jsc and FF. There is **no** LLM judge, inferred chemical synonym
 dictionary, or automatic interpretation of unfamiliar paraphrases.
+
+Operation descriptions use a small, explicit equivalence map. The default maps
+`thermal annealing` to `annealing`; it does not equate arbitrary heating, drying or
+annealing descriptions. `--operation-aliases aliases.json` replaces that map with
+an expert-approved JSON object, for example `{"thermal annealing": "annealing"}`.
+An empty object disables aliases. Keys and values are whitespace/case normalized;
+empty/conflicting entries and alias chains/cycles are rejected. The full map is
+stored in every report and must match across an aggregate. Freeze it on development
+papers before evaluating unseen papers.
 
 Consequently, equivalent free-text operation descriptions, chemical synonyms,
 alternative stack representations, or differently written ranges may score as
@@ -146,7 +208,7 @@ perla-evaluate-dataset \
 ```
 
 The aggregator refuses reports with different schema hashes, matcher versions, or
-threshold/tolerance configurations. It also refuses to mix provenance-verified and
+threshold/tolerance/alias configurations. It also refuses to mix provenance-verified and
 development reports, benchmark splits, duplicate paper IDs, or duplicate source
 documents/manifests. It reports micro counts for records, fields, relationships, and
 atomic values; macro paper-level rates; and deterministic 95% paper-bootstrap
@@ -160,6 +222,12 @@ scientific area. `core_facts_micro` pools facts; `core_facts_macro_f1` averages 
 paper's group-balanced score and bootstraps **papers**, not individual fields. This
 avoids letting one unusually long supporting-information document dominate the
 headline result. These are single-system intervals, not paired A/B significance tests.
+
+`core_value_only_micro`, `core_value_only_macro_f1`, `core_attribution_micro` and
+`core_attribution_macro_f1` retain the two diagnostic views. The aggregate also
+reports `papers_needing_scoring_review` and `scoring_issue_count`; review them before
+interpreting the strict headline. Per-paper reports retain all six groups and exact
+matched/unmatched paths for each view.
 
 Keep calibration, development, and test manifests separate. Papers used to change
 parsing, prompts, schemas, matching, thresholds, or model selection are not held out.

@@ -116,6 +116,11 @@ report. See [Evaluate an extraction](../workflows/evaluation.md).
 Use repeated `--report` options with `perla-evaluate-dataset` to aggregate compatible
 per-paper reports with micro counts, macro rates, and paper-bootstrap intervals.
 
+`--operation-aliases FILE` replaces the scorer's operation equivalence map with a
+frozen JSON object. Both evaluation commands accept `--fail-on-scoring-issues` to
+save diagnostics and then exit nonzero when attribution ambiguity needs inspection.
+This gate concerns matching, not scientific certification or a minimum F1.
+
 ## Cache and logging
 
 | Option | Default | Meaning |

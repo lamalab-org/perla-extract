@@ -6,6 +6,8 @@ from click.testing import CliRunner
 
 from perla_extract.study_extraction.evaluation import (
     BenchmarkProvenance,
+    EvaluationConfig,
+    EvaluationReport,
     _maximum_assignment,
     aggregate_evaluations,
     evaluate_study,
@@ -503,10 +505,11 @@ def test_missing_and_duplicate_measurements_affect_recall_and_precision():
             update={"observation_id": "extra"}
         )
     )
-    assert (
-        evaluate_study(truth, duplicate).core_facts.groups["performance"].precision
-        == 0.5
-    )
+    report = evaluate_study(truth, duplicate)
+    assert report.core_facts.value_only.groups["performance"].precision == 0.5
+    assert report.core_facts.groups["performance"].precision == 0
+    assert report.core_facts.scoring_status == "needs_review"
+    assert report.inventory["performance_observations"].precision == 0.5
 
 
 def test_core_mask_does_not_turn_unknown_parent_into_an_attribution_error():
@@ -531,6 +534,173 @@ def test_core_dataset_report_preserves_counts_and_groups():
     assert result.core_fact_groups_macro_f1["performance"].mean == 0.5
     assert result.core_fact_groups_micro["stability"].f1 is None
     assert result.core_facts_macro_f1.paper_count == 2
+    assert result.core_value_only_micro == result.core_facts_micro
+    assert result.core_attribution_micro.f1 == 1
+    assert result.papers_needing_scoring_review == 0
+    assert result.scoring_issue_count == 0
+
+
+def test_wrong_value_is_separate_from_correct_attribution():
+    score = evaluate_study(study(), study(pce=value("21%", 21))).core_facts
+    assert score.groups["performance"].f1 == 0
+    assert score.value_only.groups["performance"].f1 == 0
+    assert score.attribution.groups["performance"].f1 == 1
+    assert score.scoring_status == "ready"
+
+
+def test_missing_stability_condition_does_not_hide_recovered_values():
+    truth = scientific_study()
+    prediction = truth.model_copy(deep=True)
+    prediction.stability_tests[0].conditions = []
+    score = evaluate_study(truth, prediction).core_facts
+    assert score.groups["stability"].matched == 0
+    assert score.value_only.groups["stability"].matched == 4
+    assert score.value_only.groups["stability"].f1 == pytest.approx(8 / 9)
+    assert (
+        score.groups["stability"].truth
+        == score.value_only.groups["stability"].truth
+        == 5
+    )
+    assert score.scoring_status == "ready"
+
+
+def test_unsequenced_identical_operations_require_attribution_review():
+    truth = scientific_study()
+    for step in truth.device_families[0].processing_steps:
+        step.sequence = None
+    prediction = truth.model_copy(deep=True)
+    first, second = prediction.device_families[0].processing_steps
+    first.conditions, second.conditions = second.conditions, first.conditions
+    report = evaluate_study(truth, prediction)
+    score = report.core_facts
+    assert score.scoring_status == "needs_review"
+    assert score.value_only.groups["processing"].f1 == 1
+    assert score.groups["processing"].matched == 0
+    assert score.groups["processing"].truth == 6
+    assert {i.side for i in score.issues} == {"truth", "prediction"}
+    assert all(i.kind == "ambiguous_scope" for i in score.issues)
+    assert EvaluationReport.model_validate_json(report.model_dump_json()) == report
+
+
+def test_operation_aliases_are_explicit_and_frozen_in_reports():
+    truth = scientific_study()
+    prediction = truth.model_copy(deep=True)
+    for step in prediction.device_families[0].processing_steps:
+        step.operation = "Thermal  annealing"
+    assert evaluate_study(truth, prediction).core_facts.groups["processing"].f1 == 1
+    literal = evaluate_study(
+        truth, prediction, config=EvaluationConfig(operation_aliases={})
+    )
+    assert literal.core_facts.groups["processing"].f1 == 0
+    with pytest.raises(ValueError, match="incompatible"):
+        aggregate_evaluations([literal, evaluate_study(truth, prediction)])
+
+
+@pytest.mark.parametrize(
+    "aliases",
+    [
+        {"": "annealing"},
+        {"a": "b", "b": "c"},
+        {"a": "b", "b": "a"},
+        {"Annealing": "heat", "annealing": "bake"},
+    ],
+)
+def test_ambiguous_or_chained_alias_config_is_rejected(aliases):
+    with pytest.raises(ValueError, match="operation aliases"):
+        EvaluationConfig(operation_aliases=aliases)
+
+
+def test_record_ties_propagate_to_linked_measurements():
+    truth = study()
+    truth.individual_devices.append(
+        truth.individual_devices[0].model_copy(update={"device_id": "other"})
+    )
+    prediction = truth.model_copy(deep=True)
+    report = evaluate_study(truth, prediction)
+    assert any(m.ambiguous for m in report.matches if m.kind == "individual_devices")
+    assert report.core_facts.groups["performance"].matched == 0
+    assert report.core_facts.value_only.groups["performance"].matched == 1
+    assert report.core_facts.scoring_status == "needs_review"
+    prediction.individual_devices.reverse()
+    reordered = evaluate_study(truth, prediction)
+    assert reordered.core_facts.micro == report.core_facts.micro
+
+
+@pytest.mark.parametrize("invalid", [False, True])
+def test_cli_reads_frozen_alias_configuration(tmp_path, invalid):
+    truth, prediction, output, aliases = (
+        tmp_path / name
+        for name in ("truth.json", "prediction.json", "score.json", "aliases.json")
+    )
+    truth.write_text(scientific_study().model_dump_json())
+    prediction.write_text(scientific_study().model_dump_json())
+    aliases.write_text('{"a":"b", "b":"a"}' if invalid else "{}")
+    result = CliRunner().invoke(
+        main,
+        [
+            "--truth",
+            str(truth),
+            "--prediction",
+            str(prediction),
+            "--output",
+            str(output),
+            "--operation-aliases",
+            str(aliases),
+        ],
+    )
+    assert result.exit_code == (1 if invalid else 0)
+    if not invalid:
+        assert json.loads(output.read_text())["config"]["operation_aliases"] == {}
+    else:
+        assert "invalid scoring configuration" in result.output
+        assert not output.exists()
+
+
+def test_cli_and_dataset_gate_write_diagnostics_before_failing(tmp_path):
+    from perla_extract.study_extraction.evaluation_dataset_cli import (
+        main as dataset_main,
+    )
+
+    truth, prediction, output, aggregate = (
+        tmp_path / name
+        for name in ("truth.json", "prediction.json", "score.json", "aggregate.json")
+    )
+    ambiguous = scientific_study()
+    for step in ambiguous.device_families[0].processing_steps:
+        step.sequence = None
+    truth.write_text(ambiguous.model_dump_json())
+    prediction.write_text(ambiguous.model_dump_json())
+    result = CliRunner().invoke(
+        main,
+        [
+            "--truth",
+            str(truth),
+            "--prediction",
+            str(prediction),
+            "--output",
+            str(output),
+            "--fail-on-scoring-issues",
+        ],
+    )
+    assert result.exit_code == 1
+    assert (
+        json.loads(output.read_text())["core_facts"]["scoring_status"] == "needs_review"
+    )
+    result = CliRunner().invoke(
+        dataset_main,
+        [
+            "--report",
+            str(output),
+            "--output",
+            str(aggregate),
+            "--fail-on-scoring-issues",
+        ],
+    )
+    assert result.exit_code == 1
+    payload = json.loads(aggregate.read_text())
+    assert payload["papers_needing_scoring_review"] == 1
+    assert payload["scoring_issue_count"] == 2
+    assert payload["core_value_only_micro"]["f1"] == 1
 
 
 def test_standard_metric_alias_is_not_a_missing_fact():

@@ -66,6 +66,7 @@ def _adjudicate(
     document: dict,
     *,
     decision: str = "verified",
+    correction: MutationRequest | None = None,
 ) -> dict:
     """Create a fully reviewed fixture through the public state transitions."""
 
@@ -77,6 +78,13 @@ def _adjudicate(
         manifest={"model": "frontier"},
         reviewer_id="ada",
     )
+    if correction is not None:
+        bundle = store.mutate(
+            SPLIT,
+            PAPER_ID,
+            correction.model_copy(update={"base_revision": bundle["revision"]}),
+            "ada",
+        )
     bundle = store.inventory_audit(
         SPLIT,
         PAPER_ID,
@@ -114,6 +122,65 @@ def _adjudicate(
             "ada",
         )
     return bundle
+
+
+def test_saved_scientific_correction_changes_the_reference_not_the_seed(
+    tmp_path, empty_study, document_payload
+):
+    """Exercise correction -> adjudication -> immutable export -> meaningful scores."""
+
+    from perla_extract.study_extraction.evaluation import evaluate_study
+
+    store = StudyReviewStore(tmp_path / "review")
+    quote = "The device stack is ITO/perovskite/Ag."
+    document = copy.deepcopy(document_payload)
+    document["blocks"][0]["text"] += " " + quote
+    seed = _study_with_evidence(empty_study, quote)
+    seed["device_families"][0]["full_stack_raw"] = "ITO/solvent/perovskite/Ag"
+    _adjudicate(
+        store,
+        seed,
+        document,
+        correction=MutationRequest(
+            action="replace",
+            path="/device_families/0/full_stack_raw",
+            value="ITO/perovskite/Ag",
+            base_revision=1,
+            evidence=[{"block_id": "main_p1_text_1", "quote": quote}],
+        ),
+    )
+    export = build_ground_truth_export(store, SPLIT, PAPER_ID)
+    assert (
+        export.seed_extraction.device_families[0].full_stack_raw
+        == "ITO/solvent/perovskite/Ag"
+    )
+    assert export.ground_truth.device_families[0].full_stack_raw == "ITO/perovskite/Ag"
+    assert any(
+        event.path == "/device_families/0/full_stack_raw"
+        for event in export.review_events
+    )
+    before = evaluate_study(export.ground_truth, export.seed_extraction)
+    after = evaluate_study(export.ground_truth, export.ground_truth)
+    assert before.core_facts.groups["stack"].f1 == 0
+    assert after.core_facts.groups["stack"].f1 == 1
+    assert before.truth_content_sha256 == after.truth_content_sha256
+    assert before.prediction_content_sha256 != after.prediction_content_sha256
+    target = write_ground_truth_export(export, tmp_path / "frozen")
+    output = tmp_path / "score.json"
+    result = CliRunner().invoke(
+        evaluate,
+        [
+            "--truth",
+            str(target),
+            "--prediction",
+            str(target / "seed_extraction.json"),
+            "--output",
+            str(output),
+            "--fail-on-scoring-issues",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert json.loads(output.read_text())["core_facts"]["groups"]["stack"]["f1"] == 0
 
 
 def _study_with_evidence(study: dict, quote: str) -> dict:

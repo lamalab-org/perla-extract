@@ -36,6 +36,14 @@ METRIC_ALIASES = {
     "shortcircuitcurrentdensity": "jsc",
     "fillfactor": "ff",
 }
+DEFAULT_OPERATION_ALIASES = {"thermal annealing": "annealing"}
+
+
+def operation_name(value: str, aliases: dict[str, str]) -> str:
+    """Use only frozen, explicit equivalences; never infer prose similarity."""
+
+    normalized = scientific_text(value).casefold()
+    return aliases.get(normalized, normalized)
 
 
 def scientific_text(value: str) -> str:
@@ -124,16 +132,36 @@ class ScientificFact:
     context: tuple[object, ...]
 
 
-def facts_equal(
-    left: ScientificFact, right: ScientificFact, relative: float, absolute: float
-) -> bool:
-    return (
-        left.group == right.group
-        and left.owner == right.owner
-        and left.name == right.name
-        and equal_value(left.context, right.context, relative, absolute)
-        and equal_value(left.value, right.value, relative, absolute)
-    )
+@dataclass(frozen=True)
+class ScientificScope:
+    """Identify a nested object without using the very outcomes being evaluated."""
+
+    owner: str
+    kind: str
+    path: str
+    identity: tuple[object, ...]
+
+
+@dataclass
+class FactProjection:
+    facts: list[ScientificFact]
+    scopes: list[ScientificScope]
+
+    def ambiguous_scopes(
+        self, relative: float, absolute: float
+    ) -> list[tuple[str, str]]:
+        """Find indistinguishable containers, e.g. repeated unsequenced annealing steps."""
+
+        buckets: dict[tuple[str, str], list[ScientificScope]] = {}
+        for scope in self.scopes:
+            buckets.setdefault((scope.owner, scope.kind), []).append(scope)
+        return [
+            (left.path, right.path)
+            for scopes in buckets.values()
+            for i, left in enumerate(scopes)
+            for right in scopes[i + 1 :]
+            if equal_value(left.identity, right.identity, relative, absolute)
+        ]
 
 
 def scientific_facts(
@@ -141,7 +169,8 @@ def scientific_facts(
     identities: dict[str, str],
     ignored: set[str],
     side: str,
-) -> list[ScientificFact]:
+    operation_aliases: dict[str, str],
+) -> FactProjection:
     """Select key fields while retaining device, layer, recipe and checkpoint context.
 
     ``identities`` contains only established top-level record pairings. Unmatched
@@ -150,6 +179,7 @@ def scientific_facts(
     """
 
     facts: list[ScientificFact] = []
+    scopes: list[ScientificScope] = []
     devices = {item.device_id: item for item in study.individual_devices}
 
     def reference(collection: str, identifier: str | None) -> str | None:
@@ -201,6 +231,20 @@ def scientific_facts(
     ) -> None:
         for i, constituent in enumerate(constituents):
             base = f"{path}/{i}"
+            scopes.append(
+                ScientificScope(
+                    owner,
+                    "constituent",
+                    base,
+                    (
+                        *context,
+                        constituent.name,
+                        property_name(constituent.amount.name)
+                        if constituent.amount
+                        else None,
+                    ),
+                )
+            )
             add(
                 "composition",
                 f"{base}/name",
@@ -268,6 +312,16 @@ def scientific_facts(
 
                 for i, layer in enumerate(record.layers):
                     base = f"{path}/layers/{i}"
+                    scopes.append(
+                        ScientificScope(
+                            owner,
+                            "layer",
+                            base,
+                            (layer.sequence,)
+                            if layer.sequence is not None
+                            else (layer.material, layer.role),
+                        )
+                    )
                     context = ("layer", layer.sequence)
                     add(
                         "stack",
@@ -303,6 +357,7 @@ def scientific_facts(
                     # Several unlinked absorbers cannot safely share an anonymous scope.
                     if absorber.layer_id is None and len(record.absorbers) > 1:
                         context = (*context, absorber.label)
+                    scopes.append(ScientificScope(owner, "absorber", base, context))
                     add(
                         "composition",
                         f"{base}/formula",
@@ -329,15 +384,26 @@ def scientific_facts(
                         )
                     )
                     context = ("step", step.sequence, targets)
+                    operation = operation_name(step.operation, operation_aliases)
+                    scopes.append(
+                        ScientificScope(
+                            owner,
+                            "step",
+                            base,
+                            (step.sequence,)
+                            if step.sequence is not None
+                            else (operation, targets, tuple(sorted(step.materials))),
+                        )
+                    )
                     add(
                         "processing",
                         f"{base}/operation",
                         owner,
                         "operation",
-                        step.operation,
+                        operation,
                         context,
                     )
-                    context = (*context, step.operation)
+                    context = (*context, operation)
                     for j, material in enumerate(step.materials):
                         add(
                             "processing",
@@ -410,6 +476,14 @@ def scientific_facts(
                 context = (*context, conditions(record.conditions))
                 for i, checkpoint in enumerate(record.checkpoints):
                     base = f"{path}/checkpoints/{i}"
+                    scopes.append(
+                        ScientificScope(
+                            owner,
+                            "checkpoint",
+                            base,
+                            (checkpoint.time, conditions(checkpoint.conditions)),
+                        )
+                    )
                     add(
                         "stability",
                         f"{base}/time",
@@ -432,4 +506,4 @@ def scientific_facts(
                         checkpoint.outcomes,
                         (*context, checkpoint.time, conditions(checkpoint.conditions)),
                     )
-    return facts
+    return FactProjection(facts, scopes)

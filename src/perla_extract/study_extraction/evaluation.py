@@ -7,13 +7,16 @@ identifiers. Evidence is scored by the extraction validator, not as record conte
 
 from __future__ import annotations
 
+import hashlib
+import json
+import math
 import random
 import re
 from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
 from typing import Annotated, Final, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .models import (
     ReportedValue,
@@ -22,16 +25,17 @@ from .models import (
     study_schema_sha256,
 )
 from .scoring_facts import (
+    DEFAULT_OPERATION_ALIASES,
     FACT_GROUPS,
     FactGroup,
     ScientificFact,
     equal_value,
-    facts_equal,
     scientific_facts,
+    scientific_text,
 )
 
-EVALUATION_FORMAT_VERSION: Final[Literal[2]] = 2
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v2"]] = "rich-study-hungarian-v2"
+EVALUATION_FORMAT_VERSION: Final[Literal[3]] = 3
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v3"]] = "rich-study-hungarian-v3"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -70,6 +74,34 @@ class EvaluationConfig(StrictModel):
     minimum_record_similarity: float = Field(default=0.35, ge=0, le=1)
     numeric_relative_tolerance: float = Field(default=1e-6, ge=0)
     numeric_absolute_tolerance: float = Field(default=1e-9, ge=0)
+    operation_aliases: dict[str, str] = Field(
+        default_factory=lambda: dict(DEFAULT_OPERATION_ALIASES)
+    )
+
+    @field_validator("operation_aliases")
+    @classmethod
+    def flat_operation_aliases(cls, values: dict[str, str]) -> dict[str, str]:
+        """Make equivalence rules deterministic and auditable, without alias chains."""
+
+        normalized: dict[str, str] = {}
+        for key, value in values.items():
+            key, value = (
+                scientific_text(key).casefold(),
+                scientific_text(value).casefold(),
+            )
+            if not key or not value or (key in normalized and normalized[key] != value):
+                raise ValueError(
+                    "operation aliases contain empty or conflicting entries"
+                )
+            normalized[key] = value
+        if any(
+            value in normalized and normalized[value] != value
+            for value in normalized.values()
+        ):
+            raise ValueError(
+                "operation aliases must map directly to canonical names, without chains or cycles"
+            )
+        return normalized
 
 
 class PRF(StrictModel):
@@ -90,6 +122,7 @@ class RecordMatch(StrictModel):
     truth_id: str
     predicted_id: str
     similarity: float = Field(ge=0, le=1)
+    ambiguous: bool = False
 
 
 class FieldAgreement(StrictModel):
@@ -160,14 +193,9 @@ class FactMatch(StrictModel):
     predicted_path: str
 
 
-class CoreFactScore(StrictModel):
-    """Score correct claims in context, not just the presence of a named quantity.
+class FactScoreView(StrictModel):
+    """Expose one comparison rule with its complete counts and field-level audit."""
 
-    Group-macro F1 gives each populated scientific area equal weight; the micro
-    counts remain available so large recipes cannot hide poor performance extraction.
-    """
-
-    profile: Literal["core-scientific-facts-v1"] = "core-scientific-facts-v1"
     groups: dict[FactGroup, PRF]
     micro: PRF
     macro_f1: float | None
@@ -176,12 +204,37 @@ class CoreFactScore(StrictModel):
     unmatched_prediction_paths: list[str]
 
 
+class ScoringIssue(StrictModel):
+    """Make unresolved alignment visible without erasing facts from denominators."""
+
+    kind: Literal["ambiguous_record", "ambiguous_scope"]
+    side: Literal["truth", "prediction"]
+    paths: list[str]
+    reason: str
+
+
+class CoreFactScore(FactScoreView):
+    """Score correct claims in context, not just the presence of a named quantity.
+
+    Group-macro F1 gives each populated scientific area equal weight; the micro
+    counts remain available so large recipes cannot hide poor performance extraction.
+    """
+
+    profile: Literal["core-scientific-facts-v2"] = "core-scientific-facts-v2"
+    value_only: FactScoreView
+    attribution: FactScoreView
+    scoring_status: Literal["ready", "needs_review"]
+    issues: list[ScoringIssue]
+
+
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[2] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v2"] = MATCHER_VERSION
+    format_version: Literal[3] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v3"] = MATCHER_VERSION
     study_schema_sha256: str
+    truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     benchmark: BenchmarkProvenance | None = None
     prediction_validation: PredictionValidation | None = None
     run_efficiency: RunEfficiency | None = None
@@ -240,8 +293,8 @@ class DatasetEfficiency(StrictModel):
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[2] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v2"] = MATCHER_VERSION
+    format_version: Literal[3] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v3"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     paper_count: int = Field(ge=1)
@@ -264,6 +317,12 @@ class DatasetEvaluationReport(StrictModel):
     core_fact_groups_macro_f1: dict[FactGroup, MetricSummary]
     core_facts_micro: PRF
     core_facts_macro_f1: MetricSummary
+    core_value_only_micro: PRF
+    core_value_only_macro_f1: MetricSummary
+    core_attribution_micro: PRF
+    core_attribution_macro_f1: MetricSummary
+    papers_needing_scoring_review: int = Field(ge=0)
+    scoring_issue_count: int = Field(ge=0)
 
 
 def _prf(predicted: int, truth: int, matched: int) -> PRF:
@@ -485,7 +544,7 @@ def _record_pairs(
     prediction: Sequence[object],
     identities: list[tuple[RecordKind, str, str]],
     threshold: float,
-) -> list[tuple[int, int, float]]:
+) -> list[tuple[int, int, float, bool]]:
     """Prefer established parent and protocol context over coincidentally equal numbers.
 
     The lexical threshold still applies. A contextual bonus resolves assignments
@@ -521,10 +580,22 @@ def _record_pairs(
         )
         return content + (2 if compatible and protocol else 0)
 
-    return [
-        (i, j, _record_similarity(truth[i], prediction[j]))
-        for i, j, _ in _match(truth, prediction, threshold, score)
-    ]
+    scores = [[score(left, right) for right in prediction] for left in truth]
+    pairs = []
+    for i, j in _maximum_assignment(scores):
+        selected = scores[i][j]
+        if selected <= 0:
+            continue
+        # Conservative local ties, not a claim of globally unique assignment.
+        tied = any(
+            k != j and math.isclose(v, selected, rel_tol=0, abs_tol=1e-12)
+            for k, v in enumerate(scores[i])
+        ) or any(
+            k != i and math.isclose(row[j], selected, rel_tol=0, abs_tol=1e-12)
+            for k, row in enumerate(scores)
+        )
+        pairs.append((i, j, _record_similarity(truth[i], prediction[j]), tied))
+    return pairs
 
 
 def _record_key(kind: RecordKind, record: object) -> str:
@@ -627,6 +698,8 @@ def _core_fact_score(
     ignored_truth: set[str],
     ignored_prediction: set[str],
     config: EvaluationConfig,
+    ambiguous_truth: set[str],
+    ambiguous_prediction: set[str],
 ) -> CoreFactScore:
     """Match facts only within paired scientific owners and property names.
 
@@ -638,10 +711,75 @@ def _core_fact_score(
     prediction_ids = {
         f"{kind}:{right}": f"{kind}:{left}" for kind, left, right in identities
     }
-    expected = scientific_facts(truth, truth_ids, ignored_truth, "truth")
-    actual = scientific_facts(
-        prediction, prediction_ids, ignored_prediction, "prediction"
-    )
+    projections = [
+        scientific_facts(
+            truth, truth_ids, ignored_truth, "truth", config.operation_aliases
+        ),
+        scientific_facts(
+            prediction,
+            prediction_ids,
+            ignored_prediction,
+            "prediction",
+            config.operation_aliases,
+        ),
+    ]
+    issues: list[ScoringIssue] = []
+    ambiguous_prefixes: list[set[str]] = [set(), set()]
+    for i, (side, study, keys, projection) in enumerate(
+        zip(
+            ("truth", "prediction"),
+            (truth, prediction),
+            (ambiguous_truth, ambiguous_prediction),
+            projections,
+        )
+    ):
+        for kind in RECORD_KINDS:
+            for index, record in enumerate(getattr(study, kind)):
+                if _record_key(kind, record) in keys:
+                    path = f"/{kind}/{index}"
+                    ambiguous_prefixes[i].add(path)
+                    issues.append(
+                        ScoringIssue(
+                            kind="ambiguous_record",
+                            side=side,
+                            paths=[path],
+                            reason="An equal-scoring competing candidate makes this record pairing uncertain.",
+                        )
+                    )
+        for paths in projection.ambiguous_scopes(
+            config.numeric_relative_tolerance, config.numeric_absolute_tolerance
+        ):
+            ambiguous_prefixes[i].update(paths)
+            issues.append(
+                ScoringIssue(
+                    kind="ambiguous_scope",
+                    side=side,
+                    paths=list(paths),
+                    reason="These nested objects have indistinguishable identities; outcomes cannot establish their identity.",
+                )
+            )
+    ambiguous_ids = {truth_ids[k] for k in ambiguous_truth if k in truth_ids} | {
+        prediction_ids[k] for k in ambiguous_prediction if k in prediction_ids
+    }
+
+    def unresolved_reference(value: object) -> bool:
+        if isinstance(value, str):
+            return value in ambiguous_ids
+        return isinstance(value, tuple) and any(unresolved_reference(v) for v in value)
+
+    blocked = [
+        {
+            f.path
+            for f in projection.facts
+            if unresolved_reference(f.context)
+            or any(
+                f.path == prefix or f.path.startswith(prefix + "/")
+                for prefix in prefixes
+            )
+        }
+        for projection, prefixes in zip(projections, ambiguous_prefixes)
+    ]
+    expected, actual = (p.facts for p in projections)
     buckets: dict[
         tuple[FactGroup, str, str], tuple[list[ScientificFact], list[ScientificFact]]
     ] = {}
@@ -650,29 +788,63 @@ def _core_fact_score(
             buckets.setdefault((fact.group, fact.owner, fact.name), ([], []))[
                 side
             ].append(fact)
-    matches = []
+    strict_matches: list[FactMatch] = []
+    value_matches: list[FactMatch] = []
+    attribution_matches: list[FactMatch] = []
     for left, right in buckets.values():
-        pairs = _match(
-            left,
-            right,
-            1,
-            lambda a, b: float(
-                facts_equal(
-                    a,
-                    b,
+
+        def compare(a: ScientificFact, b: ScientificFact, mode: str) -> float:
+            value_equal = equal_value(
+                a.value,
+                b.value,
+                config.numeric_relative_tolerance,
+                config.numeric_absolute_tolerance,
+            )
+            if mode == "value":
+                return float(value_equal)
+            context_equal = (
+                a.path not in blocked[0]
+                and b.path not in blocked[1]
+                and equal_value(
+                    a.context,
+                    b.context,
                     config.numeric_relative_tolerance,
                     config.numeric_absolute_tolerance,
                 )
-            ),
-        )
-        matches.extend(
-            FactMatch(
-                group=left[i].group,
-                truth_path=left[i].path,
-                predicted_path=right[j].path,
             )
-            for i, j, _ in pairs
-        )
+            return float(context_equal and (mode == "attribution" or value_equal))
+
+        for mode, matches in (
+            ("strict", strict_matches),
+            ("value", value_matches),
+            ("attribution", attribution_matches),
+        ):
+            pairs = _match(left, right, 1, lambda a, b: compare(a, b, mode))
+            matches.extend(
+                FactMatch(
+                    group=left[i].group,
+                    truth_path=left[i].path,
+                    predicted_path=right[j].path,
+                )
+                for i, j, _ in pairs
+            )
+    strict = _fact_score_view(expected, actual, strict_matches)
+    return CoreFactScore(
+        **strict.model_dump(),
+        value_only=_fact_score_view(expected, actual, value_matches),
+        attribution=_fact_score_view(expected, actual, attribution_matches),
+        scoring_status="needs_review" if issues else "ready",
+        issues=issues,
+    )
+
+
+def _fact_score_view(
+    expected: list[ScientificFact],
+    actual: list[ScientificFact],
+    matches: list[FactMatch],
+) -> FactScoreView:
+    """Keep identical denominators across value, attribution and strict comparisons."""
+
     groups = {
         group: _prf(
             sum(f.group == group for f in actual),
@@ -684,7 +856,7 @@ def _core_fact_score(
     rates = [score.f1 for score in groups.values() if score.f1 is not None]
     matched_left = {m.truth_path for m in matches}
     matched_right = {m.predicted_path for m in matches}
-    return CoreFactScore(
+    return FactScoreView(
         groups=groups,
         micro=_prf(len(actual), len(expected), len(matches)),
         macro_f1=sum(rates) / len(rates) if rates else None,
@@ -743,6 +915,8 @@ def evaluate_study(
     ignored_predictions: list[str] = []
     matched_records: list[tuple[RecordKind, object, object]] = []
     identity_pairs: list[tuple[RecordKind, str, str]] = []
+    ambiguous_truth: set[str] = set()
+    ambiguous_prediction: set[str] = set()
     total_truth_values = 0
     total_prediction_values = 0
 
@@ -762,7 +936,7 @@ def evaluate_study(
             identity_pairs,
             config.minimum_record_similarity,
         )
-        used_prediction = {right for _, right, _ in certain_pairs}
+        used_prediction = {right for _, right, _, _ in certain_pairs}
         remaining_prediction_indexes = [
             index
             for index in range(len(prediction_records))
@@ -776,8 +950,16 @@ def evaluate_study(
             config.minimum_record_similarity,
         )
         ignored_local = {
-            remaining_prediction_indexes[right] for _, right, _ in uncertain_pairs
+            remaining_prediction_indexes[right] for _, right, _, _ in uncertain_pairs
         }
+        for left, right, _, ambiguous in uncertain_pairs:
+            if ambiguous:
+                ambiguous_truth.add(_record_key(kind, uncertain[left]))
+                ambiguous_prediction.add(
+                    _record_key(
+                        kind, prediction_records[remaining_prediction_indexes[right]]
+                    )
+                )
         identity_pairs.extend(
             (
                 kind,
@@ -786,7 +968,7 @@ def evaluate_study(
                     kind, prediction_records[remaining_prediction_indexes[right]]
                 ),
             )
-            for left, right, _ in uncertain_pairs
+            for left, right, _, _ in uncertain_pairs
         )
         total_truth_values += sum(len(_reported_values(record)) for record in certain)
         total_prediction_values += sum(
@@ -798,8 +980,8 @@ def evaluate_study(
             ignored_predictions.append(_record_key(kind, prediction_records[index]))
         scored_prediction = len(prediction_records) - len(ignored_local)
         inventory[kind] = _prf(scored_prediction, len(certain), len(certain_pairs))
-        matched_truth = {left for left, _, _ in certain_pairs}
-        matched_prediction = {right for _, right, _ in certain_pairs}
+        matched_truth = {left for left, _, _, _ in certain_pairs}
+        matched_prediction = {right for _, right, _, _ in certain_pairs}
         unmatched_truth.extend(
             _record_key(kind, record)
             for index, record in enumerate(certain)
@@ -810,9 +992,12 @@ def evaluate_study(
             for index, record in enumerate(prediction_records)
             if index not in matched_prediction and index not in ignored_local
         )
-        for left, right, similarity in certain_pairs:
+        for left, right, similarity, ambiguous in certain_pairs:
             truth_record = certain[left]
             predicted_record = prediction_records[right]
+            if ambiguous:
+                ambiguous_truth.add(_record_key(kind, truth_record))
+                ambiguous_prediction.add(_record_key(kind, predicted_record))
             matched_records.append((kind, truth_record, predicted_record))
             identity_pairs.append(
                 (
@@ -827,6 +1012,7 @@ def evaluate_study(
                     truth_id=_record_id(kind, truth_record),
                     predicted_id=_record_id(kind, predicted_record),
                     similarity=similarity,
+                    ambiguous=ambiguous,
                 )
             )
 
@@ -872,12 +1058,21 @@ def evaluate_study(
     )
     return EvaluationReport(
         study_schema_sha256=study_schema_sha256(),
+        truth_content_sha256=_study_digest(truth),
+        prediction_content_sha256=_study_digest(prediction),
         benchmark=benchmark,
         prediction_validation=prediction_validation,
         run_efficiency=run_efficiency,
         config=config,
         core_facts=_core_fact_score(
-            truth, prediction, identity_pairs, ignored, set(ignored_predictions), config
+            truth,
+            prediction,
+            identity_pairs,
+            ignored,
+            set(ignored_predictions),
+            config,
+            ambiguous_truth,
+            ambiguous_prediction,
         ),
         ignored_truth_record_keys=sorted(ignored),
         ignored_prediction_record_keys=sorted(ignored_predictions),
@@ -906,6 +1101,18 @@ def evaluate_study(
         unmatched_truth_record_keys=sorted(unmatched_truth),
         unmatched_prediction_record_keys=sorted(unmatched_prediction),
     )
+
+
+def _study_digest(study: StudyExtraction) -> str:
+    """Bind diagnostic paths to the exact parsed input, including IDs and list order."""
+
+    content = json.dumps(
+        study.model_dump(mode="json"),
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
 def _metric_summary(
@@ -1158,4 +1365,28 @@ def aggregate_evaluations(
             bootstrap_samples=bootstrap_samples,
             seed=seed + 300,
         ),
+        core_value_only_micro=_prf(
+            sum(r.core_facts.value_only.micro.predicted for r in reports),
+            sum(r.core_facts.value_only.micro.truth for r in reports),
+            sum(r.core_facts.value_only.micro.matched for r in reports),
+        ),
+        core_value_only_macro_f1=_metric_summary(
+            (r.core_facts.value_only.macro_f1 for r in reports),
+            bootstrap_samples=bootstrap_samples,
+            seed=seed + 301,
+        ),
+        core_attribution_micro=_prf(
+            sum(r.core_facts.attribution.micro.predicted for r in reports),
+            sum(r.core_facts.attribution.micro.truth for r in reports),
+            sum(r.core_facts.attribution.micro.matched for r in reports),
+        ),
+        core_attribution_macro_f1=_metric_summary(
+            (r.core_facts.attribution.macro_f1 for r in reports),
+            bootstrap_samples=bootstrap_samples,
+            seed=seed + 302,
+        ),
+        papers_needing_scoring_review=sum(
+            r.core_facts.scoring_status == "needs_review" for r in reports
+        ),
+        scoring_issue_count=sum(len(r.core_facts.issues) for r in reports),
     )
