@@ -1,11 +1,11 @@
 {
-  "format_version": 4,
-  "matcher_version": "rich-study-hungarian-v4",
+  "format_version": 5,
+  "matcher_version": "rich-study-hungarian-v5",
   "profile": "core-scientific-facts-v3",
   "config": {
     "minimum_record_similarity": 0.35,
     "numeric_relative_tolerance": 1e-6,
-    "numeric_absolute_tolerance": 1e-9,
+    "numeric_absolute_tolerance": 0.0,
     "operation_aliases": {"thermal annealing": "annealing"}
   },
   "cases": {

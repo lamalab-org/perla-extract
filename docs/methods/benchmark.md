@@ -17,7 +17,7 @@ An evaluation uses two `StudyExtraction` documents:
 - **Prediction:** an unchanged extraction being evaluated.
 
 A frozen reference directory records the reviewed version, its schema and content
-hashes, and any records the final reviewer marked uncertain. A complete prediction
+hashes and the final review decisions. A complete prediction
 directory includes source evidence and saved call, token, cost and timing totals.
 Bare JSON inputs are also accepted, but lack these checks and supporting records. No real-paper reference dataset is included with the software;
 the bundled example uses synthetic data.
@@ -52,10 +52,15 @@ pass validation. It cannot tell whether a reviewer read the whole source or
 interpreted it correctly. The [review-to-benchmark guide](
 ../workflows/review-to-benchmark.md) explains how to reconcile feedback and freeze it.
 
-A final `uncertain` decision tells the scorer to leave the record out. It first
-matches predictions to the other reference records, then excludes any remaining
-prediction selected as a match to an uncertain record. The report lists the
-excluded records. You can exclude a whole record this way, not an individual field.
+Reviewers can leave records uncertain while working, but final adjudication and
+export require verified decisions for every current record. The scorer rejects
+references that still declare uncertain records. Every system is compared with the
+same fixed reference; no predictions are excluded to accommodate reviewer uncertainty.
+
+Verification means the record faithfully represents the source. A source-reported
+range or an unknown specimen link can be a verified fact. If the source cannot
+resolve a disputed claim, keep the paper pending rather than inventing certainty.
+Report pending papers separately from the finalized benchmark.
 
 ## Match records, then compare facts
 
@@ -70,9 +75,9 @@ stability checkpoint a fact belongs to. Explicit layer and operation sequence is
 is not.
 
 Single unqualified numbers with compatible explicit units are converted before
-comparison. The default relative tolerance is `1e-6`; the absolute tolerance is
-`1e-9` in base units, such as seconds and kelvin. These allow small differences
-from conversion and floating-point arithmetic, not experimental uncertainty. Formulas, ranges and unfamiliar descriptions use
+comparison. The default relative tolerance is `1e-6`, with no absolute allowance. This permits
+small relative numerical differences without treating distinct nanometre-scale
+thicknesses as equal. It does not represent experimental uncertainty. Formulas, ranges and unfamiliar descriptions use
 conservative text comparison. The [scoring reference](../workflows/evaluation.md)
 gives examples and the full matching algorithm.
 

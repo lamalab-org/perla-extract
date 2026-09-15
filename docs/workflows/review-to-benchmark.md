@@ -25,7 +25,7 @@ flowchart TD
     E --> F
     F --> G{Correct and complete within the declared scope?}
     G -->|Not yet| F
-    G -->|Yes; uncertain records marked| H[Administrator makes final decisions]
+    G -->|Yes; all records verified| H[Administrator makes final decisions]
     H --> I[Export a fixed reference version]
 ```
 
@@ -117,13 +117,15 @@ python review_workbench/export_ground_truth.py \
 ```
 
 The exporter checks that adjudication is the latest event, that the adjudicator has
-saved a final decision for every current record, and that schema/evidence validation succeeds. A later
+saved a verified decision for every current record, and that schema/evidence validation succeeds. A later
 edit requires adjudication again. The frozen directory contains `ground_truth.json`,
 the original `seed_extraction.json`, `review_events.json` and `manifest.json`.
 Conflicting overwrites are refused. Publish a new version for later label changes.
 
-The scorer leaves out records marked `uncertain` in the final review. It does not
-exclude individual fields within a record. Keep the exact evidence document used
+Uncertain decisions can be saved during review, but block final adjudication and
+export. The scorer also rejects legacy references with unresolved decisions; it
+never selects predictions to exclude. Keep unresolved papers pending and report
+them outside the finalized benchmark. Keep the exact evidence document used
 during review in the private source archive. The manifest records its version and
 hash, but the four-file export includes neither the PDF nor the evidence document.
 
@@ -164,7 +166,7 @@ Inspect these fields in order:
 1. `benchmark`, input content hashes and `config`: are these the intended versions?
 2. `prediction_validation`: do citations and references validate? This does not
    prove that a quote scientifically supports a claim.
-3. `core_facts.issues`, `matches` and excluded records: did the scorer pair the right records, and what did it leave out?
+3. `core_facts.issues` and `matches`: did the scorer pair the right records?
 4. `core_facts.groups`: where are precision and recall weak, and with how many facts?
 5. `core_facts.value_only` and `core_facts.attribution`: are failures due to values,
    missing context, wrong associations or uncertain alignment?
@@ -196,7 +198,7 @@ perla-evaluate-dataset \
 ```
 
 Report all six group scores and their counts, the average across papers, its
-bootstrap interval, matching issues, excluded records and run failures. Include
+bootstrap interval, matching issues, pending reference papers and run failures. Include
 cost and latency only where measured. State how many papers contribute to each
 average so missing or failed extractions remain visible.
 

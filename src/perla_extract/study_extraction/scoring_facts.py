@@ -194,7 +194,6 @@ class FactProjection:
 def scientific_facts(
     study: StudyExtraction,
     identities: dict[str, str],
-    ignored: set[str],
     side: str,
     operation_aliases: dict[str, str],
 ) -> FactProjection:
@@ -306,8 +305,6 @@ def scientific_facts(
     for collection, id_field in identifiers.items():
         for index, record in enumerate(getattr(study, collection)):
             key = f"{collection}:{getattr(record, id_field)}"
-            if key in ignored:
-                continue
             owner = identities.get(key, f"{side}:unmatched:{key}")
             path = f"/{collection}/{index}"
             if collection == "device_families":

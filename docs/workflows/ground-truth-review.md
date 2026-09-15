@@ -255,14 +255,17 @@ The command writes an atomic, immutable directory under
 The exporter uses the exact evidence-document version bound to the frozen revision so
 regenerated citations are never checked against an older parse. It does not commit the
 parser document or copyrighted PDFs. It refuses export unless the latest
-event is adjudication, every current record has an adjudicator decision, the complete
+event is adjudication, every current record has a verified adjudicator decision, the complete
 Pydantic schema is valid, and deterministic evidence validation reports no issue.
 Repeated export of identical content is a no-op; a differing existing item is never
 overwritten implicitly.
 
-The manifest also records the generated study-schema hash and any final
-`uncertain` record decisions. Those keys are an evaluation abstention mask: the
-evaluator does not silently treat reviewer uncertainty as exact truth.
+The format-4 manifest records the schema hash and final review history. An uncertain
+decision can be saved during review, but blocks final adjudication and export.
+Resolve the record against the source or keep the paper pending. A reported range
+or an explicitly unknown relationship can be verified as such; do not invent detail.
+The scorer uses every record in the frozen reference and never excludes predictions
+because of reviewer uncertainty.
 
 The administrator can also use **Download PR bundle** in the workbench after
 adjudication. Before publishing, inspect all four files for private reviewer identities,

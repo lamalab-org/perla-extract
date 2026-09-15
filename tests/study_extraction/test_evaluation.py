@@ -176,23 +176,17 @@ def test_relative_tolerance_does_not_become_one_absolute_unit_below_one():
     assert report.field_agreement.reported_value_accuracy == 0
 
 
-def test_uncertain_truth_masks_its_matching_prediction():
-    """Reviewer abstention must not become either a false positive or false negative."""
+def test_reference_exclusions_are_rejected_before_scoring():
+    """Every system must face the same complete reference, not its own exclusions."""
 
-    truth = study()
-    prediction = study(prefix="prediction")
-    report = evaluate_study(
-        truth,
-        prediction,
-        ignored_truth_record_keys=["device_families:truth-family"],
-    )
-
-    assert report.inventory["device_families"].predicted == 0
-    assert report.inventory["device_families"].truth == 0
-    assert report.inventory["device_families"].f1 is None
-    assert report.ignored_prediction_record_keys == [
-        "device_families:prediction-family"
-    ]
+    with pytest.raises(
+        ValueError, match="reference exclusions are no longer supported"
+    ):
+        evaluate_study(
+            study(),
+            study(prefix="prediction"),
+            ignored_truth_record_keys=["device_families:truth-family"],
+        )
 
 
 def test_parent_relationships_are_scored_separately_from_record_content():
@@ -246,7 +240,9 @@ def test_reordering_schema_lists_does_not_change_scalar_agreement():
 
 
 def test_unknown_uncertainty_mask_key_is_rejected():
-    with pytest.raises(ValueError, match="unknown truth records"):
+    with pytest.raises(
+        ValueError, match="reference exclusions are no longer supported"
+    ):
         evaluate_study(
             study(),
             study(prefix="prediction"),
@@ -548,14 +544,13 @@ def test_missing_and_duplicate_measurements_affect_recall_and_precision():
     assert report.inventory["performance_observations"].precision == 0.5
 
 
-def test_core_mask_does_not_turn_unknown_parent_into_an_attribution_error():
-    report = evaluate_study(
-        study(),
-        study(prefix="prediction"),
-        ignored_truth_record_keys=["device_families:truth-family"],
-    )
-    assert report.core_facts.groups["stack"].f1 is None
+def test_fixed_reference_keeps_every_record_in_the_score():
+    report = evaluate_study(study(), study(prefix="prediction"))
+    assert report.reference_policy == "fixed-no-exclusions"
+    assert report.inventory["device_families"].truth == 1
+    assert report.core_facts.groups["stack"].f1 == 1
     assert report.core_facts.groups["performance"].f1 == 1
+    assert "ignored_prediction_record_keys" not in report.model_dump()
 
 
 def test_core_dataset_report_preserves_counts_and_groups():
@@ -872,8 +867,8 @@ def test_global_assignment_avoids_greedy_order_errors():
     assert sorted(_maximum_assignment(scores)) == [(0, 1), (1, 0)]
 
 
-@pytest.mark.parametrize("artifact_version", [2, 3])
-def test_cli_verifies_frozen_truth_manifest(tmp_path, artifact_version):
+def _write_frozen_truth_inputs(tmp_path, artifact_version):
+    """Build the same frozen-input contract for acceptance and rejection tests."""
     payload = study().model_dump(mode="json")
     encoded = (
         json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -902,6 +897,12 @@ def test_cli_verifies_frozen_truth_manifest(tmp_path, artifact_version):
     prediction.write_text(
         study(prefix="prediction").model_dump_json(), encoding="utf-8"
     )
+    return truth, prediction
+
+
+@pytest.mark.parametrize("artifact_version", [2, 3, 4])
+def test_cli_verifies_frozen_truth_manifest(tmp_path, artifact_version):
+    truth, prediction = _write_frozen_truth_inputs(tmp_path, artifact_version)
     output = tmp_path / "evaluation.json"
 
     result = CliRunner().invoke(
@@ -920,6 +921,56 @@ def test_cli_verifies_frozen_truth_manifest(tmp_path, artifact_version):
     result_payload = json.loads(output.read_text())
     assert result_payload["micro_inventory"]["f1"] == 1
     assert result_payload["benchmark"]["paper_id"] == "paper-a"
+
+
+@pytest.mark.parametrize("artifact_version", [2, 3, 4])
+def test_cli_rejects_unresolved_reference_without_writing_scores(
+    tmp_path, artifact_version
+):
+    # Start with a valid legacy/current manifest, then expose an unresolved decision.
+    _write_frozen_truth_inputs(tmp_path, artifact_version)
+    manifest_path = tmp_path / "truth" / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["review"]["uncertain_record_keys"] = ["device_families:truth-family"]
+    manifest_path.write_text(json.dumps(manifest))
+    output = tmp_path / "must-not-exist.json"
+    result = CliRunner().invoke(
+        main,
+        [
+            "--truth",
+            str(tmp_path / "truth"),
+            "--prediction",
+            str(tmp_path / "prediction.json"),
+            "--output",
+            str(output),
+        ],
+    )
+    assert result.exit_code != 0
+    assert "reference contains unresolved records" in result.output
+    assert not output.exists()
+
+
+@pytest.mark.parametrize(
+    "a,b,unit,expected",
+    [
+        (0, 1, "nm", False),
+        (1, 2, "nm", False),
+        (0, 1e-10, "V", False),
+        (1, 1.0000001, "nm", True),
+    ],
+)
+def test_default_tolerance_has_no_absolute_floor(a, b, unit, expected):
+    config = EvaluationConfig()
+    assert config.numeric_absolute_tolerance == 0
+    assert (
+        equal_value(
+            quantity("value", a, unit),
+            quantity("value", b, unit),
+            config.numeric_relative_tolerance,
+            config.numeric_absolute_tolerance,
+        )
+        is expected
+    )
 
 
 def test_cli_attaches_evidence_validation_for_complete_prediction_run(tmp_path):
@@ -1207,8 +1258,8 @@ def test_old_scoring_report_is_not_silently_loaded_as_current():
     from pydantic import ValidationError
 
     payload = evaluate_study(study(), study()).model_dump()
-    assert payload["format_version"] == 4
+    assert payload["format_version"] == 5
     assert payload["core_facts"]["profile"] == "core-scientific-facts-v3"
-    payload["format_version"] = 3
+    payload["format_version"] = 4
     with pytest.raises(ValidationError):
         EvaluationReport.model_validate(payload)

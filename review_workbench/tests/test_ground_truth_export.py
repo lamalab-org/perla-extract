@@ -258,7 +258,7 @@ def test_export_is_deterministic_and_refuses_conflicting_overwrites(
     assert first == second
     assert first.manifest.revision == bundle["revision"]
     assert first.manifest.frozen_at == bundle["events"][-1]["timestamp"]
-    assert first.manifest.artifact_format_version == 3
+    assert first.manifest.artifact_format_version == 4
     assert first.manifest.evidence_version == 1
     assert len(first.manifest.evidence_document_sha256) == 64
     assert first.manifest.study_schema_version == STUDY_SCHEMA_VERSION
@@ -298,17 +298,68 @@ def test_browser_archive_contains_the_same_four_stable_files(
         )
 
 
-def test_export_preserves_adjudicator_abstentions(
+def test_uncertain_review_is_saved_but_cannot_be_finalized(
     tmp_path, empty_study, document_payload
 ):
-    """An uncertain record must be masked instead of becoming a benchmark label."""
+    store = StudyReviewStore(tmp_path / "review")
+    study = _study_with_evidence(empty_study, "champion device")
+    with pytest.raises(ValueError, match="resolve every current record"):
+        _adjudicate(store, study, document_payload, decision="uncertain")
+    revision = store.storage.load_revision(SPLIT, PAPER_ID)
+    summary = store.summary(revision.ground_truth, revision.events)
+    assert (
+        summary["record_decisions"]["ada"]["device_families:family-control"]
+        == "uncertain"
+    )
+    with pytest.raises(
+        ValueError, match="latest review revision must complete adjudication"
+    ):
+        build_ground_truth_export(store, SPLIT, PAPER_ID)
+    bundle = store.decide_record(
+        SPLIT,
+        PAPER_ID,
+        RecordDecisionRequest(
+            collection="device_families",
+            record_id="family-control",
+            decision="verified",
+            base_revision=revision.revision,
+        ),
+        "ada",
+    )
+    for stage in ("fields", "completeness", "adjudication"):
+        if "ada" not in bundle["summary"]["completed_stages"].get(stage, []):
+            bundle = store.complete_stage(
+                SPLIT,
+                PAPER_ID,
+                StageRequest(stage=stage, base_revision=bundle["revision"]),
+                "ada",
+            )
+    export = build_ground_truth_export(store, SPLIT, PAPER_ID)
+    assert export.manifest.review.uncertain_record_keys == []
+    assert any(
+        event.details.get("decision") == "uncertain" for event in export.review_events
+    )
+
+
+def test_export_rejects_legacy_finalized_uncertainty(
+    tmp_path, empty_study, document_payload, monkeypatch
+):
+    """Older review histories remain readable but cannot bypass the new export rule."""
 
     store = StudyReviewStore(tmp_path / "review")
     study = _study_with_evidence(empty_study, "champion device")
-    _adjudicate(store, study, document_payload, decision="uncertain")
+    _adjudicate(store, study, document_payload)
+    summary_method = store.summary
 
-    export = build_ground_truth_export(store, SPLIT, PAPER_ID)
+    def legacy_summary(truth, events):
+        summary = summary_method(truth, events)
+        summary["record_decisions"]["ada"]["device_families:family-control"] = (
+            "uncertain"
+        )
+        return summary
 
-    assert export.manifest.review.uncertain_record_keys == [
-        "device_families:family-control"
-    ]
+    monkeypatch.setattr(store, "summary", legacy_summary)
+    with pytest.raises(
+        ValueError, match="cannot freeze ground truth with unresolved records"
+    ):
+        build_ground_truth_export(store, SPLIT, PAPER_ID)

@@ -41,7 +41,9 @@ reference. The scorer does not repeat adjudication or check the reference's
 citations against the paper. Use the [review and export workflow](ground-truth-review.md)
 to create the reference.
 
-Reference formats 2 and 3 are supported. Format 3 must also declare the reviewed
+New references use format 4 and require a final verified decision for every record.
+Older formats 2 and 3 are accepted only if their unresolved-record list is empty.
+Formats 3 and 4 must also declare the reviewed
 evidence-document version and hash. The scorer records them; it does not load that
 archived document to verify the declaration.
 
@@ -61,10 +63,10 @@ You must also check that prediction and reference cover the same paper, SI and
 scientific scope.
 
 You can pass a bare JSON file for either study. Bare references have no manifest
-checks or stored reviewer uncertainty; bare predictions have no evidence-validation
+checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results.
 
-Reports use format **4**, matcher **rich-study-hungarian-v4** and fact profile
+Reports use format **5**, matcher **rich-study-hungarian-v5** and fact profile
 **core-scientific-facts-v3**. Regenerate older reports from saved predictions before
 combining scores. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
@@ -268,10 +270,10 @@ abs(reference − prediction)
 | Setting | Default | Meaning |
 | --- | ---: | --- |
 | `--numeric-relative-tolerance` | `1e-6` | Allowed difference relative to the larger absolute value |
-| `--numeric-absolute-tolerance` | `1e-9` | Allowed difference in base units, most relevant near zero |
+| `--numeric-absolute-tolerance` | `0` | No absolute allowance by default |
 | `--minimum-record-similarity` | `0.35` | Record-pairing threshold; not a numeric tolerance |
 
-These defaults allow small conversion and floating-point differences. They do not
+The relative tolerance allows small conversion and floating-point differences. It does not
 represent experimental uncertainty or infer precision from significant figures.
 They apply to numeric reported values in both facts and context. Schema integers,
 such as sample size and sequence, must match exactly.
@@ -290,9 +292,11 @@ The examples assume that property and context also match:
 | PCE >20% | PCE 20% | Different; a bound is not an exact value |
 
 At 20% PCE, the relative allowance is about **0.00002 percentage points**.
-The absolute allowance uses seconds for time, kelvin for temperature and a
-dimensionless fraction for percentages. Converting first keeps the tolerance in the
-same units whichever representation appears in the reference.
+The default absolute tolerance is zero: 1 nm and 2 nm must not match merely because
+both are small in metres. An explicit absolute tolerance is still available, in base
+units, but should only be used for a declared scope where that allowance is justified.
+For example, `1e-9` would allow a whole nanometre of difference for thickness.
+Converting first keeps the comparison consistent across unit representations.
 
 Conversion requires both raw values to contain one unqualified number, with either
 no suffix or a suffix matching the stated unit. Each parsed number must agree with
@@ -363,22 +367,36 @@ particular, scalar-field comparison simplifies text, and quantity recovery does 
 check all nested associations. Use them to explain a result, not replace the
 correct-value-and-context score.
 
-## Reviewer uncertainty
+<span id="reviewer-uncertainty"></span>
 
-If a reviewer marks a record `uncertain` during final adjudication, the scorer leaves
-it out rather than treating it as correct or incorrect. The reference's manifest
-lists these record keys; format 3 also records the evidence-document version and hash.
+## Finalize the reference before scoring
 
-The scorer first matches predictions to reference records that are not uncertain.
-It then tries to match the remaining predictions to uncertain records of the same
-type. Predictions selected in this second matching step are excluded from precision
-and recall too. Additional unmatched predictions still count. The report lists all
-excluded records in `ignored_truth_record_keys` and `ignored_prediction_record_keys`.
+The benchmark uses one fixed reference for every compared system. The scorer does
+not exclude reference records or search for predictions to ignore.
 
-Uncertainty applies to whole records, not individual fields. Excluding a parent does
-not automatically exclude its children: a pairing to the uncertain parent can still
-provide context for scoring a child. Detected ambiguity in that pairing can still
-block the child's attribution credit.
+Reviewers can save `uncertain` decisions while working. Before final adjudication,
+an administrator must resolve every current record and mark it verified. Export
+refuses unresolved records, and scoring also refuses older manifests that contain
+them. Saved review history is not deleted or automatically reclassified.
+
+Resolve a wrong value by correcting it against the paper. Remove an unsupported
+claim rather than approving it. A reported bound, range or explicitly unknown
+relationship can itself be verified when that is what the source says; verification
+does not require inventing an exact value or device link.
+
+If the source cannot support a decision within the intended review scope, keep
+that paper pending and report it outside the finalized benchmark. Do not delete
+difficult facts just to pass the export check. Record scope and coverage before
+comparing systems.
+
+The report records `reference_policy="fixed-no-exclusions"`. Bare JSON inputs and
+direct Python calls remain useful for development, but cannot prove that review
+took place. The legacy Python `ignored_truth_record_keys` argument now rejects any
+nonempty list.
+
+Matching problems are a separate issue: `core_facts.issues` reports them without
+changing which reference facts are counted. A finalized reference can still expose
+a limitation in the matcher.
 
 ## Dataset reporting
 

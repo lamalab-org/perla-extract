@@ -23,7 +23,7 @@ from .validation import validate_study
 
 INPUT = click.Path(path_type=Path, exists=True, readable=True, resolve_path=True)
 OUTPUT = click.Path(path_type=Path, dir_okay=False, resolve_path=True)
-SUPPORTED_GROUND_TRUTH_FORMAT_VERSIONS = {2, 3}
+SUPPORTED_GROUND_TRUTH_FORMAT_VERSIONS = {2, 3, 4}
 
 
 def _json(path: Path) -> object:
@@ -61,7 +61,7 @@ def _study(payload: object, path: Path) -> StudyExtraction:
 
 def _truth(
     path: Path,
-) -> tuple[StudyExtraction, list[str], BenchmarkProvenance | None]:
+) -> tuple[StudyExtraction, BenchmarkProvenance | None]:
     """Load truth and verify the schema/content identifiers needed for scoring.
 
     This gate binds results to declared inputs; it does not authenticate expert
@@ -70,7 +70,7 @@ def _truth(
     """
 
     if path.is_file():
-        return _study(_json(path), path), [], None
+        return _study(_json(path), path), None
     truth_path = path / "ground_truth.json"
     manifest_path = path / "manifest.json"
     if not truth_path.is_file() or not manifest_path.is_file():
@@ -90,7 +90,7 @@ def _truth(
         )
     evidence_version = None
     evidence_digest = None
-    if manifest["artifact_format_version"] == 3:
+    if manifest["artifact_format_version"] >= 3:
         evidence_version = manifest.get("evidence_version")
         evidence_digest = manifest.get("evidence_document_sha256")
         if (
@@ -100,7 +100,7 @@ def _truth(
             or not re.fullmatch(r"[0-9a-f]{64}", evidence_digest)
         ):
             raise click.ClickException(
-                "format-3 ground truth requires an evidence version and document hash"
+                "ground truth format 3 or later requires an evidence version and document hash"
             )
     expected_schema = manifest.get("study_schema_sha256")
     if expected_schema != study_schema_sha256():
@@ -118,7 +118,14 @@ def _truth(
     if not isinstance(uncertain, list) or not all(
         isinstance(item, str) for item in uncertain
     ):
-        raise click.ClickException("manifest uncertainty mask is invalid")
+        raise click.ClickException(
+            "manifest uncertain_record_keys must be a string list"
+        )
+    if uncertain:
+        raise click.ClickException(
+            "reference contains unresolved records; complete adjudication and export "
+            "a finalized reference before scoring"
+        )
     paper_id = manifest.get("paper_id")
     split = manifest.get("split")
     source_manifest = manifest.get("source_manifest")
@@ -135,7 +142,6 @@ def _truth(
         )
     return (
         _study(payload, truth_path),
-        uncertain,
         BenchmarkProvenance(
             paper_id=paper_id,
             split=split,
@@ -231,8 +237,8 @@ def _prediction(
 @click.option(
     "--numeric-absolute-tolerance",
     type=click.FloatRange(min=0),
-    default=1e-9,
-    help="Near-zero tolerance in canonical base units (e.g. seconds, Kelvin, fractions).",
+    default=0.0,
+    help="Absolute allowance in base units; disabled by default because scales differ.",
 )
 @click.option(
     "--operation-aliases",
@@ -256,7 +262,7 @@ def main(
 ) -> None:
     """Score one extraction without using an LLM or run-local identifiers."""
 
-    expected, uncertain, benchmark = _truth(truth)
+    expected, benchmark = _truth(truth)
     actual, prediction_validation, run_efficiency = _prediction(prediction)
     try:
         config = EvaluationConfig(
@@ -274,7 +280,6 @@ def main(
     report = evaluate_study(
         expected,
         actual,
-        ignored_truth_record_keys=uncertain,
         benchmark=benchmark,
         prediction_validation=prediction_validation,
         run_efficiency=run_efficiency,

@@ -39,8 +39,8 @@ from .scoring_facts import (
 )
 from .units import canonical_reported_quantity
 
-EVALUATION_FORMAT_VERSION: Final[Literal[4]] = 4
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v4"]] = "rich-study-hungarian-v4"
+EVALUATION_FORMAT_VERSION: Final[Literal[5]] = 5
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v5"]] = "rich-study-hungarian-v5"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -78,7 +78,7 @@ class EvaluationConfig(StrictModel):
 
     minimum_record_similarity: float = Field(default=0.35, ge=0, le=1)
     numeric_relative_tolerance: float = Field(default=1e-6, ge=0)
-    numeric_absolute_tolerance: float = Field(default=1e-9, ge=0)
+    numeric_absolute_tolerance: float = Field(default=0.0, ge=0)
     operation_aliases: dict[str, str] = Field(
         default_factory=lambda: dict(DEFAULT_OPERATION_ALIASES)
     )
@@ -235,8 +235,8 @@ class CoreFactScore(FactScoreView):
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[4] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v4"] = MATCHER_VERSION
+    format_version: Literal[5] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v5"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -244,8 +244,7 @@ class EvaluationReport(StrictModel):
     prediction_validation: PredictionValidation | None = None
     run_efficiency: RunEfficiency | None = None
     config: EvaluationConfig
-    ignored_truth_record_keys: list[str]
-    ignored_prediction_record_keys: list[str]
+    reference_policy: Literal["fixed-no-exclusions"] = "fixed-no-exclusions"
     inventory: dict[RecordKind, PRF]
     micro_inventory: PRF
     field_agreement: FieldAgreement
@@ -305,8 +304,8 @@ class DatasetEfficiency(StrictModel):
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[4] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v4"] = MATCHER_VERSION
+    format_version: Literal[5] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v5"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -719,8 +718,6 @@ def _core_fact_score(
     truth: StudyExtraction,
     prediction: StudyExtraction,
     identities: list[tuple[RecordKind, str, str]],
-    ignored_truth: set[str],
-    ignored_prediction: set[str],
     config: EvaluationConfig,
     ambiguous_truth: set[str],
     ambiguous_prediction: set[str],
@@ -736,13 +733,10 @@ def _core_fact_score(
         f"{kind}:{right}": f"{kind}:{left}" for kind, left, right in identities
     }
     projections = [
-        scientific_facts(
-            truth, truth_ids, ignored_truth, "truth", config.operation_aliases
-        ),
+        scientific_facts(truth, truth_ids, "truth", config.operation_aliases),
         scientific_facts(
             prediction,
             prediction_ids,
-            ignored_prediction,
             "prediction",
             config.operation_aliases,
         ),
@@ -916,30 +910,23 @@ def evaluate_study(
     run_efficiency: RunEfficiency | None = None,
     config: EvaluationConfig | None = None,
 ) -> EvaluationReport:
-    """Score one prediction while masking explicitly uncertain adjudications.
+    """Compare every reference record without prediction-dependent exclusions.
 
-    Certain truth records are matched first. Remaining predictions that match an
-    uncertain truth record are excluded rather than counted as false positives. This
-    prevents reviewer abstentions from becoming either positive or negative labels.
+    Reviewer uncertainty must be resolved before benchmark export. The legacy
+    exclusion argument is accepted only when empty so older callers fail explicitly
+    instead of silently changing which facts contribute to a score.
     """
 
     config = config or EvaluationConfig()
-    ignored = set(ignored_truth_record_keys)
-    known_truth_keys = {
-        _record_key(kind, record)
-        for kind in RECORD_KINDS
-        for record in getattr(truth, kind)
-    }
-    unknown_ignored = sorted(ignored - known_truth_keys)
-    if unknown_ignored:
+    if tuple(ignored_truth_record_keys):
         raise ValueError(
-            f"uncertainty mask references unknown truth records: {unknown_ignored}"
+            "reference exclusions are no longer supported; resolve uncertain records "
+            "and export a finalized reference before scoring"
         )
     inventory: dict[RecordKind, PRF] = {}
     matches: list[RecordMatch] = []
     unmatched_truth: list[str] = []
     unmatched_prediction: list[str] = []
-    ignored_predictions: list[str] = []
     matched_records: list[tuple[RecordKind, object, object]] = []
     identity_pairs: list[tuple[RecordKind, str, str]] = []
     ambiguous_truth: set[str] = set()
@@ -950,77 +937,34 @@ def evaluate_study(
     for kind in RECORD_KINDS:
         truth_records = list(getattr(truth, kind))
         prediction_records = list(getattr(prediction, kind))
-        certain = [
-            item for item in truth_records if _record_key(kind, item) not in ignored
-        ]
-        uncertain = [
-            item for item in truth_records if _record_key(kind, item) in ignored
-        ]
-        certain_pairs = _record_pairs(
+        pairs = _record_pairs(
             kind,
-            certain,
+            truth_records,
             prediction_records,
             identity_pairs,
             config.minimum_record_similarity,
         )
-        used_prediction = {right for _, right, _, _ in certain_pairs}
-        remaining_prediction_indexes = [
-            index
-            for index in range(len(prediction_records))
-            if index not in used_prediction
-        ]
-        uncertain_pairs = _record_pairs(
-            kind,
-            uncertain,
-            [prediction_records[index] for index in remaining_prediction_indexes],
-            identity_pairs,
-            config.minimum_record_similarity,
+        total_truth_values += sum(
+            len(_reported_values(record)) for record in truth_records
         )
-        ignored_local = {
-            remaining_prediction_indexes[right] for _, right, _, _ in uncertain_pairs
-        }
-        for left, right, _, ambiguous in uncertain_pairs:
-            if ambiguous:
-                ambiguous_truth.add(_record_key(kind, uncertain[left]))
-                ambiguous_prediction.add(
-                    _record_key(
-                        kind, prediction_records[remaining_prediction_indexes[right]]
-                    )
-                )
-        identity_pairs.extend(
-            (
-                kind,
-                _record_id(kind, uncertain[left]),
-                _record_id(
-                    kind, prediction_records[remaining_prediction_indexes[right]]
-                ),
-            )
-            for left, right, _, _ in uncertain_pairs
-        )
-        total_truth_values += sum(len(_reported_values(record)) for record in certain)
         total_prediction_values += sum(
-            len(_reported_values(record))
-            for index, record in enumerate(prediction_records)
-            if index not in ignored_local
+            len(_reported_values(record)) for record in prediction_records
         )
-        for index in sorted(ignored_local):
-            ignored_predictions.append(_record_key(kind, prediction_records[index]))
-        scored_prediction = len(prediction_records) - len(ignored_local)
-        inventory[kind] = _prf(scored_prediction, len(certain), len(certain_pairs))
-        matched_truth = {left for left, _, _, _ in certain_pairs}
-        matched_prediction = {right for _, right, _, _ in certain_pairs}
+        inventory[kind] = _prf(len(prediction_records), len(truth_records), len(pairs))
+        matched_truth = {left for left, _, _, _ in pairs}
+        matched_prediction = {right for _, right, _, _ in pairs}
         unmatched_truth.extend(
             _record_key(kind, record)
-            for index, record in enumerate(certain)
+            for index, record in enumerate(truth_records)
             if index not in matched_truth
         )
         unmatched_prediction.extend(
             _record_key(kind, record)
             for index, record in enumerate(prediction_records)
-            if index not in matched_prediction and index not in ignored_local
+            if index not in matched_prediction
         )
-        for left, right, similarity, ambiguous in certain_pairs:
-            truth_record = certain[left]
+        for left, right, similarity, ambiguous in pairs:
+            truth_record = truth_records[left]
             predicted_record = prediction_records[right]
             if ambiguous:
                 ambiguous_truth.add(_record_key(kind, truth_record))
@@ -1095,14 +1039,10 @@ def evaluate_study(
             truth,
             prediction,
             identity_pairs,
-            ignored,
-            set(ignored_predictions),
             config,
             ambiguous_truth,
             ambiguous_prediction,
         ),
-        ignored_truth_record_keys=sorted(ignored),
-        ignored_prediction_record_keys=sorted(ignored_predictions),
         inventory=inventory,
         micro_inventory=_prf(micro_predicted, micro_truth, micro_matched),
         field_agreement=FieldAgreement(

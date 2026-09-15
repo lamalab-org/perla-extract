@@ -379,6 +379,6 @@ unmodified exports privately. Any redacted public derivative needs a new version
 with consistent content hashes; never redact a frozen artifact in place.
 
 For a data release, include the reference revision, schema and source hashes, reviewed
-scope and abstentions, access instructions, and the code/configuration needed to read
+scope and any papers left pending, access instructions, and the code/configuration needed to read
 and score it. Distinguish model-generated seeds from adjudicated records. Keep the
 unchanged predictions and their score reports with the evaluation results.

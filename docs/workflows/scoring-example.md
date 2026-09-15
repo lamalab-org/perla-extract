@@ -32,7 +32,7 @@ and a discarded estimate of 21%. The seed incorrectly puts DMF in the stack, use
 21% as the final PCE and omits FF.
 
 The script saves three corrections through the normal review store, completes the
-simulated review stages, and exports a format-3 reference. It then scores four
+simulated review stages, and exports a format-4 reference. It then scores four
 unchanged candidates against that reference:
 
 | Candidate | Correct stack facts / predicted / reference | Correct performance facts / predicted / reference |
