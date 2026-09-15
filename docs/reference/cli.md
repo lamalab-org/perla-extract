@@ -46,7 +46,7 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | `--repair-model TEXT` | refinement or extraction model | Model for the evidence-local repair call |
 | `--repair-max-output-tokens INTEGER` | `30000` | Completion limit for the bounded repair response |
 
-Docling is the reproducible quality-first default. PyMuPDF is an explicit lightweight
+Docling is the default parser. PyMuPDF is an explicit lightweight
 alternative; parser failures never silently change backends. Complete parser results
 are cached using the source, backend and dependency version, block schema, and parser
 implementation. Only parser-labelled references and document furniture are withheld
@@ -75,11 +75,17 @@ The model prefix selects a LiteLLM backend. For example, `openai/...` uses
 logic. All requests set seed `0`;
 reproducibility still depends on the selected provider and model version.
 
-Refinement is enabled in the quality-first default. It adds one detailed model call
-while leaving claim collection and enrichment unchanged. The draft uses a shared citation
-catalog in this request, so repeated source quotations do not dominate its input. For
-cost experiments, compare `--no-refinement` and cheaper `--refinement-model` settings
-against frozen ground truth rather than treating lower spend as equivalent quality.
+Refinement is enabled by default and adds a global reconciliation call. Use
+`--no-refinement` to disable it or `--refinement-model` to choose its model.
+The request uses a shared citation catalog to avoid repeating source quotations.
+
+OpenRouter can also route an eligible model through a provider key stored in its BYOK
+settings. The local process still receives only `OPENROUTER_API_KEY`; do not place the
+upstream OpenAI key in a project environment file as well. Pin the BYOK credential if
+shared OpenRouter capacity must never be used, then verify `is_byok` in OpenRouter's
+generation record with a small run before starting a costly cohort. BYOK configuration
+and fallback behavior are documented by
+[OpenRouter](https://openrouter.ai/docs/guides/overview/auth/byok).
 
 The command reports prompt tokens, completion tokens, cache hits, and provider-reported
 cost for each call. Use `--max-model-calls` for a hard request limit and
@@ -154,8 +160,8 @@ behavior. RSS discovery and the policy's OpenAlex topics are enabled by default.
 `--request-retries` controls bounded retries for GET rate limits and transient server
 errors.
 `--zotero-group-id` adds a Zotero group as a discovery source, and
-`--zotero-collection-key` limits it to one collection using Zotero's API key for that
-collection, not its display name. `--zotero-curated` makes that collection a
+`--zotero-collection-key` limits it to one collection using its collection identifier, not its display name
+or the API credential. `--zotero-curated` makes that collection a
 human-approved extraction queue. Zotero access is read-only; `ZOTERO_API_KEY` is
 needed only when the selected group library is not publicly readable. The key is never
 written to bot artifacts.

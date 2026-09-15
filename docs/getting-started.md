@@ -3,7 +3,7 @@
 
 ## Install
 
-The standard installation includes the quality-first Docling parser and the explicit
+The standard installation includes the Docling parser and the explicit
 PyMuPDF alternative:
 
 ```bash
@@ -54,40 +54,18 @@ with `OPENAI_API_KEY`. Choose another backend with its provider-prefixed model n
 standard credential, such as `openrouter/...` with `OPENROUTER_API_KEY` or
 `anthropic/...` with `ANTHROPIC_API_KEY`.
 
-OpenRouter can also route an eligible model through a provider key stored in its BYOK
-settings. The local process still receives only `OPENROUTER_API_KEY`; do not place the
-upstream OpenAI key in a project environment file as well. Pin the BYOK credential if
-shared OpenRouter capacity must never be used, then verify `is_byok` in OpenRouter's
-generation record with a small run before starting a costly cohort. BYOK configuration
-and fallback behavior are documented by
-[OpenRouter](https://openrouter.ai/docs/guides/overview/auth/byok).
-
 ## Read the result
 
-| Artifact | Purpose |
+| Artifact | Start here to… |
 | --- | --- |
-| `extraction.json` | Final rich study result after audited source-grounding safeguards |
-| `grounded_values.json` | Conservative subset of reported values that passed local source checks |
-| `validation.json` | Evidence, identifier, and relationship findings |
-| `claim_ledger.json` | Experimental objects and atomic source claims collected before record construction |
-| `claim_grounding.json` | Ledger entries admitted to or rejected from assembly guidance |
-| `claim_window_plan.json` | Single-call or section-aware claim-reading plan |
-| `claim_coverage_audit.json` | Covered, possible, unmatched, context, and unsupported-record findings |
-| `targeted_repair.json` | Evidence-local repair worklist, proposed-record counts, quality gates, and decision |
-| `citation_repairs.json` | Audited non-contiguous-quote and unique-pointer repairs |
-| `conservative_finalization.json` | Exact unsupported optional claims removed after repair, with paths and reasons |
-| `pre_conservative_extraction.json` | Complete pre-finalization candidate, written only when a claim was removed |
-| `document.json` | Model-facing scientific evidence blocks with source and page locations |
-| `report.json` | Status, counts, usage, cost, cache information, and failures |
-| `run_configuration.json` | Non-secret configuration and source fingerprints |
-| `nomad/*.archive.json` | One standalone NOMAD archive per atomic extracted record |
-| `nomad/manifest.json` | NOMAD target pin, record mappings, and conversion issues |
-| `composition_projection.json` | Formula/site-ion normalization review queue |
-| `enrichment.json` | Absorber-scoped composition and processing proposals with deterministic decisions |
-| `draft_extraction.json` | First complete-study result retained before the default quality pass |
-| `refinement_audit.json` | Record IDs added, removed, or changed by the complete-study quality pass |
-| `quality_comparison.json` | Draft-versus-final validation and semantic claim-coverage counts |
-| `reduced.json` | Optional historical export when `--reduced-export` is passed |
+| `extraction.json` | Inspect device records, measurements and their citations |
+| `document.json` | Read the parsed source text and page locations |
+| `validation.json` | Find citation, value and relationship issues |
+| `report.json` | Check completion status, calls, tokens and reported cost |
+| `run_configuration.json` | Identify the settings and source fingerprints |
+
+Additional audits and exports are listed in the
+[artifact reference](workflows/extraction.md#artifact-reference).
 
 When claim collection is windowed, every window still contributes to one combined
 `claim_ledger.json`; final study assembly remains global. Requests and preserved
@@ -120,8 +98,6 @@ compatibility breaks and automatically computed SHA-256 fingerprints for the gen
 Pydantic schema, all model prompts, and the exact deterministic evidence-span catalog.
 A schema, prompt, or citable-evidence change therefore changes provenance and cache
 identity without relying on a date string or a manual patch bump.
-Version 6 adds finite-number, champion, and stability-link invariants and strengthens
-nested relationship validation. Earlier rich JSON may remain structurally readable,
-but it is not benchmark-equivalent until it passes the current schema, relationship,
-and evidence gates. Regenerate model seeds rather than silently relabelling an older
-artifact as version 6.
+Older outputs may remain readable after a schema change without containing all the
+fields supported by the new schema. Preserve their original provenance when importing
+or evaluating them.

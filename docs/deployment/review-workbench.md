@@ -6,7 +6,7 @@ extractions into versioned ground truth. It reviews composition, layers, process
 performance, population statistics, stability, and record relationships without
 modifying the immutable model seed.
 
-For the scientific protocol, start with [Build ground truth](../workflows/ground-truth-review.md).
+For reviewer instructions, start with [Build ground truth](../workflows/ground-truth-review.md).
 The separate [blinded extractor comparison](../workflows/expert-comparison.md) uses
 the same authentication and PDFs but writes an independent immutable experiment log;
 comparison answers never alter ground truth.
@@ -35,7 +35,7 @@ their acceptance status and issues. These files remain provenance aids. The Reco
 tab is available immediately, while the Census tab records corrected paper-level
 totals and the main-text figure gap. After the census is saved, the interface
 highlights count differences and the record groups changed by refinement
-so reviewers can focus their attention without treating any model artifact as truth.
+as navigation aids. These indicators are not human-review decisions.
 The app stores immutable seeds, compiled truth, event history, evidence blocks, and
 manifests under the ground-truth directory.
 
@@ -109,9 +109,8 @@ queue rather than one long list. A family is followed by its population records,
 and stability tests so shared architecture, stack, absorber, and composition remain in
 view. Reviewers may inspect and correct records while compiling the census. The final
 Completeness tab remains locked until the census is saved. The first cited source block
-opens in the paper automatically. This is a model-assisted correction workflow, not a
-blind recall measurement; the separate figure census measures the specific text-only
-loss the benchmark is intended to quantify.
+opens in the paper automatically. Records are visible during the census. Figure-only information is counted separately
+from the record review.
 
 The selected record is the primary review surface; related device context appears
 after it as collapsible supporting information. For stability tests, the workbench
@@ -223,8 +222,8 @@ byte-for-byte under `uploaded_workbooks/` before validation begins. This include
 accepted, rejected, stale, comment-only, and no-op files. `feedback.json` contains an
 immutable receipt with its filename, paper, reviewer, timestamp, size, and SHA-256,
 plus a separate accepted or rejected validation outcome. If archival fails, the app
-does not process the review. Earlier uploads cannot be reconstructed as identical
-files because the previous deployment did not retain their bytes.
+does not process the review. Only archived original uploads can be downloaded byte-for-byte; a workbook regenerated
+from saved field values does not reconstruct the original file or its comments.
 
 Excel cell comments and standalone text in a **Reviewer note** cell are review
 feedback too. A comment-only workbook is accepted, archived, and represented in the
@@ -260,7 +259,7 @@ bundle.
 ```bash
 python review_workbench/prepare.py
 vercel link --cwd review_workbench/.vercel-build --yes \
-  --project perla-ground-truth-review
+  --project YOUR_VERCEL_PROJECT
 vercel pull --cwd review_workbench/.vercel-build --yes --environment production
 vercel build --cwd review_workbench/.vercel-build --yes --prod
 vercel deploy --cwd review_workbench/.vercel-build --prebuilt --prod
@@ -322,10 +321,8 @@ comparison request to that hostname's `/` route would only reload the comparison
 create a sign-in loop. A project-password session established on one hostname does not
 silently authenticate the other.
 
-For the hosted PERLA workbench, the intended split is:
-
-- `perla-ground-truth-review.vercel.app` — ground-truth correction;
-- `perla-extractor-comparison.vercel.app` — blinded extractor comparison.
+For example, `review.example.org` can serve ground-truth correction and
+`compare.example.org` the blinded comparison. Configure hostnames owned by your deployment.
 
 Vercel's `all_except_custom_domains` SSO setting still protects an additional
 `vercel.app` alias, even when it points at the production deployment. For this setup,

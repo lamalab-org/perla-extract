@@ -37,7 +37,7 @@ correctness; expert review checks values, attribution and missing information.
 
 ## Reproduce the scorer without an API key
 
-From a checkout of the revision under review:
+From a repository checkout:
 
 ```bash
 python -m pip install -e '.[dev]'

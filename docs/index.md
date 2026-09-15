@@ -46,8 +46,7 @@ For evaluation, start with [Evaluation method](methods/benchmark.md) or
   populations, and measurements remain distinct before any are mapped to records.
 - **Use generic reported values.** Layers and processing steps contain `ReportedValue`
   records. Every value denotes one scientific quantity, while shared citation IDs avoid
-  repeating the same evidence. Property-specific regular expressions do not decide
-  what can be extracted.
+  repeating the same evidence.
 - **Make uncertainty inspectable.** The full output, conservative grounded subset,
   failed responses, configuration, and conversion losses are separate artifacts.
 
@@ -59,7 +58,7 @@ For evaluation, start with [Evaluation method](methods/benchmark.md) or
 - [Understand evidence validation](concepts/evidence.md)
 - [Review and curate ground truth](workflows/ground-truth-review.md)
 - [Score rich extractions deterministically](workflows/evaluation.md)
-- [Create quality-first review seeds, then reduce cost](workflows/quality-first-ground-truth.md)
+- [Extract a batch for review](workflows/quality-first-ground-truth.md)
 - [Interpret composition and processing](workflows/enrichment.md)
 - [Export directly to NOMAD](workflows/nomad-export.md)
 - [Export to the historical reduced PERLA schema](compatibility/reduced-schema.md)
