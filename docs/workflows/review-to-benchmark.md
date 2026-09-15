@@ -4,6 +4,13 @@ The objective is not to score against our latest model output. It is to build a
 source-checked reference that experts have corrected, freeze it, then measure
 unchanged human and model extractions against the same reference.
 
+Our reference-building workflow includes an expert reading the papers to find
+**missing information**, as well as correcting the extracted records. It is not
+limited to accepting or rejecting what the model already produced. This supplies
+both a correctness check and a source-based completeness check within the declared
+review scope. Starting from pre-annotation does not invalidate that work or require
+re-extracting every paper from scratch.
+
 There are three different artifacts: **feedback**, a **reviewed draft**, and
 **adjudicated ground truth**. Keeping these distinct prevents an old spreadsheet
 approval or an unexamined model claim from becoming a benchmark label.
@@ -48,6 +55,13 @@ one issue at a time:
 | Missing population or stability data | Check main text and SI, add supported records, and establish only justified specimen links | Infer a population from one device, or link every stability test to the champion |
 | “This is wrong” without a replacement | Consult the paper, request clarification, or abstain | Treat the prose comment as a corrected label |
 | An older workbook decision refers to a removed ID | Reconcile the scientific content manually against the current record structure | Reapply it by array position or fuzzy ID matching |
+
+Preserve additions discovered while reading the paper just as carefully as edits
+to existing records. Record which sources and scientific categories were checked
+for omissions, and any remaining uncertainty. If the expert has already completed
+that search, reconcile and retain its results; do not treat missing app checkmarks
+as evidence that the scientific review never happened. Conversely, a saved approval
+on one record does not document a paper-wide completeness check.
 
 Before final adjudication, compare the census/completeness notes with the actual
 records. A set of individually approved records can still be incomplete. If a census
@@ -117,6 +131,31 @@ Retain the exact reviewed evidence document with the release's private source
 archive; the manifest binds it by version and hash, but the four-file truth export
 does not embed the PDF or evidence document.
 
+### Validate the scorer without restarting the scientific review
+
+Reference quality and scoring quality are separate questions. Use source-checked
+corrections and additions from the development papers to build a small, explicit
+set of expected scoring outcomes:
+
+| Expert-established case | Expected scoring behavior |
+| --- | --- |
+| A supported measurement was missing from the seed and added during review | The unchanged seed loses recall for that measurement |
+| A solvent was removed from the finished stack | The unchanged seed loses stack precision |
+| A concentration was assigned to the wrong precursor | The value may be recovered, but correct-in-context credit is lost |
+| The same supported value is written in equivalent units | No loss solely because of the unit representation |
+| Two records or operations are scientifically equivalent but grouped or described differently | Inspect the pairing; do not automatically label the discrepancy an extraction error |
+
+Check both credited and rejected matches, not only the total score. Add generic
+regression cases for confirmed scoring defects, freeze the revised scoring rules,
+and rescore all saved predictions together. Do not change the expert reference just
+to make the scorer accept it. Papers used to revise extraction or scoring rules
+remain development papers.
+
+A second expert's source-based audit of a sample can estimate residual omissions,
+disagreements and possible pre-annotation influence. It strengthens the reference;
+it is not a reason to discard completed full-paper review. Report how the reference
+was built, its scope, abstentions and any independent audit actually performed.
+
 ### Public release boundary
 
 The documentation and example paths on this page are public-facing. Actual review
@@ -181,13 +220,17 @@ For whole records, the content-similarity formula is:
 
 ```text
 content similarity = 0.75 × Jaccard(record-content tokens)
-                   + 0.25 × Jaccard(reported-property-name tokens)
+                   + 0.25 × Jaccard(canonical reported-property names)
 
-Jaccard(A, B) = number of shared tokens / number of distinct tokens in either set
+Jaccard(A, B) = number of shared entries / number of distinct entries in either set
 ```
 
-Record-content tokens include descriptions, materials, raw values and units. IDs,
-citations and the separately parsed `value_number` field are excluded. Text is
+Record-content tokens include descriptions and materials. Eligible numeric claims
+use canonical base-unit values and units, and metric names use the same explicit
+aliases as fact scoring; other claims retain raw values and units. Canonical numbers
+use 12 significant digits for lexical features only, never for the final comparison.
+IDs and citations are excluded; parsed numbers are used only after their consistency
+with the raw value has been checked. Text is
 lowercased and punctuation simplified for this **candidate-matching step only**;
 the later chemical-value comparison preserves case and punctuation. Two empty
 token sets have similarity 1 by convention, not because they establish identity.
@@ -223,7 +266,7 @@ equality/context rule or they do not. There is no partial credit because two PCE
 are “fairly close” beyond the numeric tolerance. Layer and processing order comes
 from explicit sequence fields, not JSON array position.
 
-**Limitations to inspect:** raw values influence whole-record alignment, so this is
+**Limitations to inspect:** values influence whole-record alignment, so this is
 not an outcome-blind identity matcher. Similar specimens can still be confused,
 and a badly paired family can affect its linked records. Equal-weight alternatives
 in a selected pair's row or column are flagged using an internal absolute score
@@ -233,14 +276,14 @@ Inspect `matches`, `core_facts.issues` and the original paths before accepting a
 headline. A deterministic assignment is not proof of scientific identity.
 
 The older `field_agreement.reported_values` diagnostic uses a different quantity
-matcher: 80% property-name token similarity plus 20% raw-text token similarity,
+matcher: 80% canonical property-name agreement plus 20% raw-text token similarity,
 with a 0.5 threshold, followed by a value comparison. It is retained for diagnosis,
 not used to award the primary `core_facts` score.
 
 ### Numeric tolerances: when are two values equal?
 
 For two eligible scalar `ReportedValue` entries, first convert compatible explicit
-units to the reference's unit, then apply Python's `math.isclose` rule:
+units to canonical base units on both sides, then apply Python's `math.isclose` rule:
 
 ```text
 abs(reference − prediction)
@@ -251,7 +294,7 @@ abs(reference − prediction)
 | Setting | Default | Meaning |
 | --- | ---: | --- |
 | `--numeric-relative-tolerance` | `1e-6` | Allow a difference proportional to the larger absolute value |
-| `--numeric-absolute-tolerance` | `1e-9` | Allow a small difference near zero, in the reference's unit |
+| `--numeric-absolute-tolerance` | `1e-9` | Allow a small difference near zero, in canonical base units |
 | `--minimum-record-similarity` | `0.35` | Whole-record candidate threshold; unrelated to numeric accuracy |
 
 These tolerances accommodate conversion/floating-point precision. They are **not**
@@ -274,9 +317,16 @@ Examples, assuming the property and scientific context also agree:
 | PCE >20% | PCE 20% | Different; an inequality is not an exact value |
 
 At PCE 20%, the relative allowance is approximately **0.00002 percentage points**,
-not one percentage point. The absolute allowance is expressed in the reference's
-unit, so changing that unit can affect comparisons very close to zero. Freeze
-reference representation and tolerances for the benchmark.
+not one percentage point. The absolute allowance is in base units: seconds for
+time, Kelvin for temperature and a dimensionless fraction for percent. This prevents
+the tolerance from changing when the same reference is expressed in another unit,
+including an offset temperature scale. Freeze the scoring version and tolerances;
+version-4 reports must not be mixed with older reference-unit-based scores.
+
+Unordered context lists are compared as multisets with one-to-one matching under
+these same equality rules. This preserves duplicates and handles whitespace/unit
+changes without an artificial disagreement caused by sorting raw text. Explicit
+layer and operation sequence is not treated as unordered.
 
 Unit conversion is attempted only when each raw value is a single, unqualified
 number, with no suffix or a suffix matching its stated unit. The parsed number
@@ -444,10 +494,18 @@ are development papers, not a held-out test set.
 
 ## 5. Then compare with a human extractor
 
-Use unseen papers and an independently adjudicated reference. The human contestant
+Use unseen papers and a source-checked reference adjudicated separately from the
+contestant outputs. The expert-curated development reference remains useful for
+scorer calibration; it is not an unseen test set. The human contestant
 must not see the model's extraction or the reference during extraction. Both sources
 must use the same input scope, schema and frozen scorer. Declare whether you compare
 equal-time work or best achievable quality.
+
+Correcting a model draft and extracting independently are different tasks. Do not
+present the expert's correction session as the independent-human contestant, or
+treat that contestant's own output as the sole reference. Pre-annotation may assist
+reference creation if its origin and the source-wide omission check are disclosed;
+it must not be visible to the blinded human contestant.
 
 For the preference study, render A and B in the same layout, randomize their sides,
 hide origin and collect correctness, completeness, attribution, chemical detail and

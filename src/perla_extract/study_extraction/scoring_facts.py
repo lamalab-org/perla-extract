@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .models import MaterialConstituent, ReportedValue, StudyExtraction
-from .units import convert_reported_value
+from .units import canonical_reported_quantity
 
 FactGroup = Literal[
     "performance", "population", "stability", "composition", "stack", "processing"
@@ -57,7 +57,7 @@ def property_name(name: str) -> str:
     return METRIC_ALIASES.get(key, key)
 
 
-def _plain_number(value: ReportedValue) -> bool:
+def is_plain_number(value: ReportedValue) -> bool:
     """Allow unit conversion only for a single unqualified, internally consistent number.
 
     Ranges, inequalities, uncertainties and chemical formulas fall back to literal
@@ -77,36 +77,38 @@ def _plain_number(value: ReportedValue) -> bool:
     )
 
 
+@dataclass(frozen=True)
+class UnorderedContext:
+    """Mark context where order is irrelevant but duplicate entries still matter."""
+
+    items: tuple[object, ...]
+
+
 def equal_value(left: object, right: object, relative: float, absolute: float) -> bool:
     """Compare claims conservatively; missing units are not assumed dimensionless."""
 
     if isinstance(left, ReportedValue) and isinstance(right, ReportedValue):
-        if _plain_number(left) and _plain_number(right):
+        if is_plain_number(left) and is_plain_number(right):
+            assert left.value_number is not None and right.value_number is not None
             if (left.unit is None) != (right.unit is None):
                 return False
-            number = right.value_number
+            left_number, right_number = left.value_number, right.value_number
             if left.unit is not None:
-                # Use a symmetric unit target; export-specific percent restrictions
-                # should not make A-versus-B differ from B-versus-A.
-                target = "%" if left.unit in {"percent", "percentage"} else left.unit
-                normalized_left = left.model_copy(update={"unit": target})
-                normalized_right = right.model_copy(
-                    update={
-                        "unit": "%"
-                        if right.unit in {"percent", "percentage"}
-                        else right.unit
-                    }
+                a, b = (
+                    canonical_reported_quantity(left),
+                    canonical_reported_quantity(right),
                 )
-                # Convert both to check that even an identical unit is recognized.
-                if convert_reported_value(normalized_left, target) is None:
+                if a is None or b is None:
                     return (
                         scientific_text(left.raw_value)
                         == scientific_text(right.raw_value)
                         and left.unit == right.unit
                     )
-                number = convert_reported_value(normalized_right, target)
-            return number is not None and math.isclose(
-                left.value_number, number, rel_tol=relative, abs_tol=absolute
+                if a[1] != b[1]:
+                    return False
+                left_number, right_number = a[0], b[0]
+            return math.isclose(
+                left_number, right_number, rel_tol=relative, abs_tol=absolute
             )
         return (
             scientific_text(left.raw_value) == scientific_text(right.raw_value)
@@ -115,6 +117,31 @@ def equal_value(left: object, right: object, relative: float, absolute: float) -
         )
     if isinstance(left, str) and isinstance(right, str):
         return scientific_text(left) == scientific_text(right)
+    if isinstance(left, UnorderedContext) and isinstance(right, UnorderedContext):
+        if len(left.items) != len(right.items):
+            return False
+        # Augmenting paths avoid greedy errors when tolerance neighborhoods overlap.
+        edges = [
+            [
+                j
+                for j, b in enumerate(right.items)
+                if equal_value(a, b, relative, absolute)
+            ]
+            for a in left.items
+        ]
+        assigned: dict[int, int] = {}
+
+        def assign(i: int, visited: set[int]) -> bool:
+            for j in edges[i]:
+                if j in visited:
+                    continue
+                visited.add(j)
+                if j not in assigned or assign(assigned[j], visited):
+                    assigned[j] = i
+                    return True
+            return False
+
+        return all(assign(i, set()) for i in range(len(left.items)))
     if isinstance(left, tuple) and isinstance(right, tuple):
         return len(left) == len(right) and all(
             equal_value(a, b, relative, absolute) for a, b in zip(left, right)
@@ -189,7 +216,7 @@ def scientific_facts(
         return identities.get(key, f"{side}:unmatched:{key}")
 
     def device_context(identifier: str | None) -> tuple[object, ...]:
-        device = devices.get(identifier)
+        device = devices.get(identifier) if identifier is not None else None
         return (
             reference("individual_devices", identifier),
             reference("device_families", device.family_id) if device else None,
@@ -219,12 +246,8 @@ def scientific_facts(
         for i, value in enumerate(values):
             add(group, f"{path}/{i}", owner, property_name(value.name), value, context)
 
-    def conditions(values: list[ReportedValue]) -> tuple:
-        # Preserve multiplicity; sorting by property and raw spelling is deterministic.
-        return tuple(
-            (property_name(v.name), v)
-            for v in sorted(values, key=lambda v: (property_name(v.name), v.raw_value))
-        )
+    def conditions(values: list[ReportedValue]) -> UnorderedContext:
+        return UnorderedContext(tuple((property_name(v.name), v) for v in values))
 
     def chemicals(
         path: str, owner: str, constituents: list[MaterialConstituent], context: tuple
@@ -322,7 +345,7 @@ def scientific_facts(
                             else (layer.material, layer.role),
                         )
                     )
-                    context = ("layer", layer.sequence)
+                    context: tuple[object, ...] = ("layer", layer.sequence)
                     add(
                         "stack",
                         f"{base}/material",
@@ -378,10 +401,8 @@ def scientific_facts(
                     )
                 for i, step in enumerate(record.processing_steps):
                     base = f"{path}/processing_steps/{i}"
-                    targets = tuple(
-                        sorted(
-                            (layer_reference(t) for t in step.target_layer_ids), key=str
-                        )
+                    targets = UnorderedContext(
+                        tuple(layer_reference(t) for t in step.target_layer_ids)
                     )
                     context = ("step", step.sequence, targets)
                     operation = operation_name(step.operation, operation_aliases)
@@ -392,7 +413,11 @@ def scientific_facts(
                             base,
                             (step.sequence,)
                             if step.sequence is not None
-                            else (operation, targets, tuple(sorted(step.materials))),
+                            else (
+                                operation,
+                                targets,
+                                UnorderedContext(tuple(step.materials)),
+                            ),
                         )
                     )
                     add(
@@ -418,7 +443,7 @@ def scientific_facts(
                         f"{base}/conditions",
                         owner,
                         step.conditions,
-                        (*context, tuple(sorted(step.materials))),
+                        (*context, UnorderedContext(tuple(step.materials))),
                     )
             elif collection == "individual_devices":
                 context = (

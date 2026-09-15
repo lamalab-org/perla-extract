@@ -8,6 +8,7 @@ from perla_extract.study_extraction.evaluation import (
     BenchmarkProvenance,
     EvaluationConfig,
     EvaluationReport,
+    RunEfficiency,
     _maximum_assignment,
     aggregate_evaluations,
     evaluate_study,
@@ -30,6 +31,7 @@ from perla_extract.study_extraction.models import (
     StudyExtraction,
     study_schema_sha256,
 )
+from perla_extract.study_extraction.scoring_facts import UnorderedContext, equal_value
 
 EVIDENCE = [EvidenceCitation(block_id="b", quote="reported")]
 
@@ -1012,3 +1014,167 @@ def test_dataset_aggregation_rejects_mixed_provenance_status():
 
     with pytest.raises(ValueError, match="cannot mix provenance"):
         aggregate_evaluations([verified, development])
+
+
+def test_combined_metric_aliases_and_units_preserve_record_pairing():
+    """Equivalent metrics must reach fact scoring, not fail its lexical prefilter."""
+
+    truth, prediction = study(), study(prefix="prediction")
+    truth.performance_observations[0].metrics = [
+        quantity(n, v, u)
+        for n, v, u in [
+            ("PCE", 20, "%"),
+            ("Voc", 1, "V"),
+            ("Jsc", 20, "mA/cm2"),
+            ("FF", 80, "%"),
+        ]
+    ]
+    prediction.performance_observations[0].metrics = [
+        quantity(n, v, u)
+        for n, v, u in [
+            ("power conversion efficiency", 0.2, "dimensionless"),
+            ("open circuit voltage", 1000, "mV"),
+            ("short circuit current density", 200, "A/m2"),
+            ("fill factor", 0.8, "dimensionless"),
+        ]
+    ]
+    for left, right in [(truth, prediction), (prediction, truth)]:
+        report = evaluate_study(left, right)
+        assert report.core_facts.groups["performance"].matched == 4
+        assert report.field_agreement.reported_value_accuracy == 1
+        assert report.core_facts.scoring_status == "ready"
+    prediction.performance_observations[0].metrics[0] = quantity(
+        "power conversion efficiency", 0.3, "dimensionless"
+    )
+    assert (
+        evaluate_study(truth, prediction).core_facts.groups["performance"].matched == 3
+    )
+    prediction.performance_observations[0].scan_direction = "forward"
+    assert (
+        evaluate_study(truth, prediction).core_facts.groups["performance"].matched == 0
+    )
+
+
+def test_material_whitespace_preserves_processing_attribution():
+    truth = scientific_study()
+    truth.device_families[0].processing_steps[0].materials = ["MAI", "PbI2"]
+    prediction = truth.model_copy(deep=True)
+    prediction.device_families[0].processing_steps[0].materials = ["MAI", " PbI2"]
+    assert evaluate_study(truth, prediction).core_facts.groups["processing"].f1 == 1
+
+
+def test_equivalent_condition_multiset_preserves_checkpoint_attribution():
+    truth = scientific_study()
+    truth.stability_tests[0].conditions = [
+        quantity("illumination", 1, "sun"),
+        quantity("illumination", 500, "W/m2"),
+    ]
+    prediction = truth.model_copy(deep=True)
+    prediction.stability_tests[0].conditions = [
+        quantity("illumination", 1000, "W/m2"),
+        quantity("illumination", 0.5, "sun"),
+    ]
+    assert evaluate_study(truth, prediction).core_facts.groups["stability"].f1 == 1
+    prediction.stability_tests[0].conditions[1] = quantity("illumination", 1, "sun")
+    assert evaluate_study(truth, prediction).core_facts.groups["stability"].f1 < 1
+
+
+def test_unordered_context_uses_one_to_one_assignment_not_greedy_or_set_equality():
+    left = UnorderedContext(tuple(quantity("time", n, None) for n in [0, 0.2]))
+    right = UnorderedContext(tuple(quantity("time", n, None) for n in [0.1, -0.1]))
+    assert equal_value(left, right, 0, 0.11)
+    assert equal_value(right, left, 0, 0.11)
+    assert not equal_value(
+        UnorderedContext(("MAI", "MAI")), UnorderedContext(("MAI", "PbI2")), 0, 0
+    )
+    assert not equal_value(
+        UnorderedContext(("MAI", "MAI")), UnorderedContext(("MAI",)), 0, 0
+    )
+    assert equal_value(UnorderedContext(()), UnorderedContext(()), 0, 0)
+    # Explicit sequence is ordered context, not an unordered collection.
+    assert not equal_value((1, 2), (2, 1), 0, 0)
+
+
+@pytest.mark.parametrize("prediction_k,expected", [(273.1501, True), (273.151, False)])
+def test_temperature_tolerance_is_reference_representation_invariant(
+    prediction_k, expected
+):
+    prediction = quantity("temperature", prediction_k, "K")
+    for reference in [
+        quantity("temperature", 0, "°C"),
+        quantity("temperature", 273.15, "K"),
+    ]:
+        assert equal_value(reference, prediction, 1e-6, 1e-9) is expected
+        assert equal_value(prediction, reference, 1e-6, 1e-9) is expected
+
+
+def test_absolute_tolerance_is_in_canonical_units():
+    reference = quantity("Voc", 1, "V")
+    prediction = quantity("Voc", 1000.0005, "mV")
+    assert equal_value(reference, prediction, 0, 1e-6)
+    assert equal_value(prediction, reference, 0, 1e-6)
+    assert not equal_value(reference, prediction, 0, 1e-8)
+
+
+def test_bootstrap_unavailable_intervals_and_configuration_are_explicit():
+    perfect = evaluate_study(study(), study())
+    wrong = evaluate_study(study(), study(pce=value("21%", 21)))
+    disabled = aggregate_evaluations([perfect, wrong], bootstrap_samples=0, seed=42)
+    assert disabled.core_facts_macro_f1.interval_status == "disabled"
+    assert disabled.core_facts_macro_f1.ci95_lower is None
+    assert disabled.core_facts_macro_f1.ci95_upper is None
+    assert disabled.bootstrap_samples == 0
+    assert disabled.bootstrap_seed == 42
+    assert disabled.bootstrap_method == "paper-percentile-95"
+    one = aggregate_evaluations([perfect])
+    assert one.core_facts_macro_f1.interval_status == "insufficient_papers"
+    assert one.core_facts_macro_f1.ci95_lower is None
+    assert one.core_fact_groups_macro_f1["stability"].interval_status == "no_values"
+    sampled = aggregate_evaluations([perfect, wrong], bootstrap_samples=100, seed=42)
+    assert sampled.core_facts_macro_f1.interval_status == "available"
+    assert sampled == aggregate_evaluations(
+        [perfect, wrong], bootstrap_samples=100, seed=42
+    )
+
+
+def test_dataset_cost_preserves_complete_incomplete_and_unknown_coverage():
+    efficiency = RunEfficiency(
+        status="partial",
+        live_calls=1,
+        cache_hits=0,
+        prompt_tokens=1,
+        completion_tokens=1,
+        total_tokens=2,
+        cost_usd=0.1,
+        cost_tracking_complete=False,
+        elapsed_seconds=1.0,
+    )
+    reports = [
+        evaluate_study(
+            study(),
+            study(),
+            run_efficiency=efficiency.model_copy(
+                update={"cost_tracking_complete": status}
+            ),
+        )
+        for status in [True, False, None]
+    ]
+    reports.append(evaluate_study(study(), study()))
+    aggregate = aggregate_evaluations(reports).efficiency
+    assert aggregate.cost_usd == pytest.approx(0.3)
+    assert aggregate.cost_tracking_complete is False
+    assert aggregate.cost_complete_papers == 1
+    assert aggregate.cost_incomplete_papers == 1
+    assert aggregate.cost_unknown_papers == 2
+    assert aggregate_evaluations(reports[:1]).efficiency.cost_tracking_complete is True
+
+
+def test_old_scoring_report_is_not_silently_loaded_as_current():
+    from pydantic import ValidationError
+
+    payload = evaluate_study(study(), study()).model_dump()
+    assert payload["format_version"] == 4
+    assert payload["core_facts"]["profile"] == "core-scientific-facts-v3"
+    payload["format_version"] = 3
+    with pytest.raises(ValidationError):
+        EvaluationReport.model_validate(payload)

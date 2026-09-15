@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 from functools import lru_cache
 from tokenize import TokenError
@@ -36,7 +37,9 @@ def _pint_unit(unit: str) -> str:
     """
 
     superscript = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺", "0123456789-+")
-    printable_unit = "".join(" " if ord(character) < 32 else character for character in unit)
+    printable_unit = "".join(
+        " " if ord(character) < 32 else character for character in unit
+    )
     value = (
         printable_unit.strip()
         .replace("℃", "degree_Celsius")
@@ -78,6 +81,33 @@ def convert_reported_value(value: ReportedValue, target_unit: str) -> float | No
         quantity = _unit_registry().Quantity(value.value_number, _pint_unit(unit))
         return float(quantity.to(_pint_unit(target_unit)).magnitude)
     except (PintError, TokenError, TypeError, ValueError):
+        return None
+
+
+def canonical_reported_quantity(value: ReportedValue) -> tuple[float, str] | None:
+    """Put explicit quantities in base units for representation-independent scoring.
+
+    Unlike export conversion this has no destination-field conventions: percentages
+    become fractions and absolute temperatures become Kelvin. The caller must first
+    check that the raw claim is a plain number, not a range or qualified value.
+    """
+
+    from pint.errors import PintError
+
+    if value.value_number is None or value.unit is None:
+        return None
+    unit = value.unit.strip()
+    if unit.casefold() in {"percent", "percentage"}:
+        unit = "%"
+    try:
+        quantity = (
+            _unit_registry()
+            .Quantity(value.value_number, _pint_unit(unit))
+            .to_base_units()
+        )
+        magnitude = float(quantity.magnitude)
+        return (magnitude, str(quantity.units)) if math.isfinite(magnitude) else None
+    except (PintError, TokenError, TypeError, ValueError, OverflowError):
         return None
 
 

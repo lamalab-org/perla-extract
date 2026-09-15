@@ -224,7 +224,10 @@ def _prediction(
     "--numeric-relative-tolerance", type=click.FloatRange(min=0), default=1e-6
 )
 @click.option(
-    "--numeric-absolute-tolerance", type=click.FloatRange(min=0), default=1e-9
+    "--numeric-absolute-tolerance",
+    type=click.FloatRange(min=0),
+    default=1e-9,
+    help="Near-zero tolerance in canonical base units (e.g. seconds, Kelvin, fractions).",
 )
 @click.option(
     "--operation-aliases",

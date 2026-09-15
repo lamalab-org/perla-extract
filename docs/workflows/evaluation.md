@@ -8,6 +8,14 @@ separate extraction-validation result.
 For the full review-to-score workflow, including reconciling older expert Excel
 comments, start with [From reviewer corrections to a benchmark](review-to-benchmark.md).
 
+The reference workflow includes expert reading of the source papers for omissions,
+not only correction of model-proposed records. Once reconciled and adjudicated,
+those additions support recall evaluation as well as correctness evaluation within
+the reviewed scope. Validate the scorer separately against expert-established
+matches, errors and equivalent representations; a low score can also reveal an
+alignment or comparison defect. See [scorer calibration from reviewed corrections](
+review-to-benchmark.md#validate-the-scorer-without-restarting-the-scientific-review).
+
 ```bash
 perla-evaluate \
   --truth data/study_extraction/ground_truth/v1/dev/10.1126--science.adf0194 \
@@ -23,7 +31,7 @@ provide those provenance checks.
 
 Frozen ground-truth formats 2 and 3 are supported. Format 3 additionally requires and
 records the reviewed evidence version and document hash. Evaluation reports now use
-format **3** and matcher **rich-study-hungarian-v3**; regenerate older score reports
+format **4** and matcher **rich-study-hungarian-v4**; regenerate older score reports
 from their saved predictions instead of mixing old and new scores.
 Every report also hashes both parsed study inputs, including IDs and array order,
 so its diagnostic JSON paths can be tied to the inputs that produced it. These
@@ -41,7 +49,7 @@ and efficiency accounting as unavailable.
 ### Primary score: correct scientific facts
 
 Use `core_facts`, not the older quantity-presence score, to judge extraction quality.
-The versioned `core-scientific-facts-v2` profile covers:
+The versioned `core-scientific-facts-v3` profile covers:
 
 | Group | Scientific fields counted | Context required for credit |
 | --- | --- | --- |
@@ -125,11 +133,15 @@ solely to satisfy the scorer.
 ### Equality rules and limitations
 
 Single unqualified numbers with explicit compatible units are converted using Pint.
-The default relative tolerance is `1e-6` and absolute tolerance `1e-9` in the truth's
-unit—intended for conversion precision, not experimental uncertainty. These are
+The default relative tolerance is `1e-6` and absolute tolerance `1e-9` in canonical
+base units—intended for conversion precision, not experimental uncertainty. These are
 recorded in the report and configurable at the CLI. Missing units are not silently
 treated as dimensionless. Explicit fractions and percentages are comparable in
 both directions, as are Celsius and Kelvin.
+Both values are compared in the same base unit: temperature in Kelvin, time in
+seconds and percentages as dimensionless fractions. Thus changing the reference's
+unit does not change the tolerance. If both units are absent, the absolute tolerance
+applies to the unconverted numbers; missing units are still not inferred.
 
 Inequalities, ranges, uncertainties and formulas use conservative literal comparison,
 including their raw qualifier. A normalized central number cannot erase `>`, `~`, or
@@ -154,6 +166,14 @@ tune aliases or tolerances against the held-out test results. Layer/step order c
 from explicit sequence fields, not JSON array position; unspecified ordering cannot
 be reconstructed by the scorer. Record alignment remains an algorithmic estimate,
 not proof of specimen identity.
+
+Candidate matching uses the same metric-name aliases and canonical base units as
+fact scoring. Canonical numbers are formatted to 12 significant digits for lexical
+features only; this does not round the values used to award scientific credit.
+Unknown units and qualified claims retain their raw representations. Unordered
+materials, target layers and condition lists use one-to-one multiset comparison,
+preserving duplicates without depending on raw spelling or array order. Explicit
+layer/operation sequence remains ordered scientific context.
 
 ### Diagnostic scores
 
@@ -216,6 +236,18 @@ intervals. It also totals how many predictions carried evidence validation, how 
 were verified, how many validation issues remained, and all available run-efficiency
 counts. Undefined paper-level rates are excluded with their contributing paper count
 reported explicitly.
+
+Interval bounds are `null` when bootstrap is disabled, no paper contributes a
+defined rate, or only one paper contributes. `interval_status` distinguishes
+`disabled`, `no_values`, `insufficient_papers` and `available`. The aggregate records
+`bootstrap_samples`, `bootstrap_seed` and `bootstrap_method`; a finite bootstrap
+interval is still an estimate, not a guarantee about unseen papers.
+
+Dataset `efficiency.cost_usd` is the sum of **observed** costs. Interpret it as a
+complete total only when `cost_tracking_complete` is true. The fields
+`cost_complete_papers`, `cost_incomplete_papers` and `cost_unknown_papers` account
+for every input report; missing run accounting counts as unknown. An unknown price
+is not replaced with an invented estimate or described as a free call.
 
 The dataset's `core_fact_groups_micro` and `core_fact_groups_macro_f1` report each
 scientific area. `core_facts_micro` pools facts; `core_facts_macro_f1` averages each

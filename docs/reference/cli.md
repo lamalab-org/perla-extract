@@ -115,6 +115,9 @@ threshold and numeric tolerances are explicit options and are written into the o
 report. See [Evaluate an extraction](../workflows/evaluation.md).
 Use repeated `--report` options with `perla-evaluate-dataset` to aggregate compatible
 per-paper reports with micro counts, macro rates, and paper-bootstrap intervals.
+Numeric absolute tolerance is in canonical base units, not the reference's display
+unit. Dataset reports retain `--bootstrap-samples` and `--seed`, explain unavailable
+intervals, and distinguish complete from partial or unknown cost accounting.
 
 `--operation-aliases FILE` replaces the scorer's operation equivalence map with a
 frozen JSON object. Both evaluation commands accept `--fail-on-scoring-issues` to

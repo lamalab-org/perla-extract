@@ -2,8 +2,10 @@
 # Build ground truth
 
 Ground truth is a reviewed scientific dataset, not an edited model response. The
-extraction is useful pre-annotation; the review protocol supplies an independent recall
-check, source requirements, and adjudication.
+extraction is useful pre-annotation; the expert also reads the paper to find missing
+information. This source-based completeness check goes beyond verifying the model's
+existing records. It is not the same as blinded extraction without pre-annotation.
+The protocol records source coverage, corrections, additions and final adjudication.
 
 Use the [quality-first seed workflow](quality-first-ground-truth.md) to generate the
 pre-annotation and preserve its cost and model provenance. A seed may be exceptionally
@@ -54,8 +56,10 @@ stateDiagram-v2
    is wrong or missing.
 3. **Evidence.** Additions and replacements require an exact quote from an imported
    evidence block. Removals require a counterevidence explanation.
-4. **Completeness.** Repeat a paper-wide search for missing records and finish every
-   quality gate.
+4. **Completeness.** Reconcile the paper-wide search for missing records with the
+   corrected study and finish every quality gate. Preserve omissions already found
+   during the expert's source reading; check unresolved areas rather than discarding
+   that work and restarting. Record the reviewed scope and any remaining uncertainty.
 5. **Adjudication.** An administrator resolves reviewer disagreement before freezing
    the ground-truth revision.
 

@@ -29,13 +29,17 @@ from .scoring_facts import (
     FACT_GROUPS,
     FactGroup,
     ScientificFact,
+    UnorderedContext,
     equal_value,
+    is_plain_number,
+    property_name,
     scientific_facts,
     scientific_text,
 )
+from .units import canonical_reported_quantity
 
-EVALUATION_FORMAT_VERSION: Final[Literal[3]] = 3
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v3"]] = "rich-study-hungarian-v3"
+EVALUATION_FORMAT_VERSION: Final[Literal[4]] = 4
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v4"]] = "rich-study-hungarian-v4"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -220,7 +224,7 @@ class CoreFactScore(FactScoreView):
     counts remain available so large recipes cannot hide poor performance extraction.
     """
 
-    profile: Literal["core-scientific-facts-v2"] = "core-scientific-facts-v2"
+    profile: Literal["core-scientific-facts-v3"] = "core-scientific-facts-v3"
     value_only: FactScoreView
     attribution: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
@@ -230,8 +234,8 @@ class CoreFactScore(FactScoreView):
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[3] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v3"] = MATCHER_VERSION
+    format_version: Literal[4] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v4"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -265,6 +269,9 @@ class MetricSummary(StrictModel):
     mean: float | None = Field(ge=0, le=1)
     ci95_lower: float | None = Field(ge=0, le=1)
     ci95_upper: float | None = Field(ge=0, le=1)
+    interval_status: Literal[
+        "available", "no_values", "disabled", "insufficient_papers"
+    ]
 
 
 class DatasetPredictionValidation(StrictModel):
@@ -285,6 +292,10 @@ class DatasetEfficiency(StrictModel):
     completion_tokens: int = Field(ge=0)
     total_tokens: int = Field(ge=0)
     cost_usd: float = Field(ge=0)
+    cost_tracking_complete: bool
+    cost_complete_papers: int = Field(ge=0)
+    cost_incomplete_papers: int = Field(ge=0)
+    cost_unknown_papers: int = Field(ge=0)
     provider_request_papers: int = Field(ge=0)
     provider_requests: int = Field(ge=0)
     elapsed_seconds: float = Field(ge=0)
@@ -293,10 +304,13 @@ class DatasetEfficiency(StrictModel):
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[3] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v3"] = MATCHER_VERSION
+    format_version: Literal[4] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v4"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
+    bootstrap_samples: int = Field(ge=0)
+    bootstrap_seed: int
+    bootstrap_method: Literal["paper-percentile-95"] = "paper-percentile-95"
     paper_count: int = Field(ge=1)
     split: str | None
     paper_ids: list[str]
@@ -420,7 +434,16 @@ def _record_features(record: object) -> set[str]:
         if field in ignored or item is None:
             return
         if isinstance(item, ReportedValue):
-            values.extend((item.name, item.raw_value, item.unit))
+            # Candidate matching must recognize the same representations as scoring.
+            # Rounding here only stabilizes lexical features, never numeric credit.
+            canonical = (
+                canonical_reported_quantity(item) if is_plain_number(item) else None
+            )
+            values.append(property_name(item.name))
+            if canonical is not None:
+                values.extend((format(canonical[0], ".12g"), canonical[1]))
+            else:
+                values.extend((item.raw_value, item.unit))
         elif isinstance(item, BaseModel):
             for name in item.__class__.model_fields:
                 walk(getattr(item, name), name)
@@ -441,8 +464,8 @@ def _record_similarity(left: object, right: object) -> float:
     left_values = _reported_values(left)
     right_values = _reported_values(right)
     value_names = _jaccard(
-        _tokens(value.name for value in left_values),
-        _tokens(value.name for value in right_values),
+        {property_name(value.name) for value in left_values},
+        {property_name(value.name) for value in right_values},
     )
     return 0.75 * lexical + 0.25 * value_names
 
@@ -765,6 +788,8 @@ def _core_fact_score(
     def unresolved_reference(value: object) -> bool:
         if isinstance(value, str):
             return value in ambiguous_ids
+        if isinstance(value, UnorderedContext):
+            return any(unresolved_reference(v) for v in value.items)
         return isinstance(value, tuple) and any(unresolved_reference(v) for v in value)
 
     blocked = [
@@ -783,17 +808,18 @@ def _core_fact_score(
     buckets: dict[
         tuple[FactGroup, str, str], tuple[list[ScientificFact], list[ScientificFact]]
     ] = {}
-    for side, facts in enumerate((expected, actual)):
+    for side_index, facts in enumerate((expected, actual)):
         for fact in facts:
             buckets.setdefault((fact.group, fact.owner, fact.name), ([], []))[
-                side
+                side_index
             ].append(fact)
     strict_matches: list[FactMatch] = []
     value_matches: list[FactMatch] = []
     attribution_matches: list[FactMatch] = []
     for left, right in buckets.values():
 
-        def compare(a: ScientificFact, b: ScientificFact, mode: str) -> float:
+        def compare(a: object, b: object, mode: str) -> float:
+            assert isinstance(a, ScientificFact) and isinstance(b, ScientificFact)
             value_equal = equal_value(
                 a.value,
                 b.value,
@@ -874,7 +900,7 @@ def _value_similarity(left: object, right: object) -> float:
     """Match atomic quantities primarily by their source-reported semantic names."""
 
     assert isinstance(left, ReportedValue) and isinstance(right, ReportedValue)
-    name = _jaccard(_tokens([left.name]), _tokens([right.name]))
+    name = _jaccard({property_name(left.name)}, {property_name(right.name)})
     raw = _jaccard(_tokens([left.raw_value]), _tokens([right.raw_value]))
     return 0.8 * name + 0.2 * raw
 
@@ -1122,14 +1148,23 @@ def _metric_summary(
 
     defined = [value for value in values if value is not None]
     if not defined:
-        return MetricSummary(paper_count=0, mean=None, ci95_lower=None, ci95_upper=None)
+        return MetricSummary(
+            paper_count=0,
+            mean=None,
+            ci95_lower=None,
+            ci95_upper=None,
+            interval_status="no_values",
+        )
     mean = sum(defined) / len(defined)
     if len(defined) == 1 or bootstrap_samples == 0:
         return MetricSummary(
             paper_count=len(defined),
             mean=mean,
-            ci95_lower=mean,
-            ci95_upper=mean,
+            ci95_lower=None,
+            ci95_upper=None,
+            interval_status="disabled"
+            if bootstrap_samples == 0
+            else "insufficient_papers",
         )
     generator = random.Random(seed)
     samples = sorted(
@@ -1143,6 +1178,7 @@ def _metric_summary(
         mean=mean,
         ci95_lower=lower,
         ci95_upper=upper,
+        interval_status="available",
     )
 
 
@@ -1220,6 +1256,8 @@ def aggregate_evaluations(
     return DatasetEvaluationReport(
         study_schema_sha256=first.study_schema_sha256,
         config=first.config,
+        bootstrap_samples=bootstrap_samples,
+        bootstrap_seed=seed,
         paper_count=len(reports),
         split=split,
         paper_ids=paper_ids,
@@ -1239,6 +1277,26 @@ def aggregate_evaluations(
             ),
         ),
         efficiency=DatasetEfficiency(
+            cost_tracking_complete=all(
+                r.run_efficiency is not None
+                and r.run_efficiency.cost_tracking_complete is True
+                for r in reports
+            ),
+            cost_complete_papers=sum(
+                r.run_efficiency is not None
+                and r.run_efficiency.cost_tracking_complete is True
+                for r in reports
+            ),
+            cost_incomplete_papers=sum(
+                r.run_efficiency is not None
+                and r.run_efficiency.cost_tracking_complete is False
+                for r in reports
+            ),
+            cost_unknown_papers=sum(
+                r.run_efficiency is None
+                or r.run_efficiency.cost_tracking_complete is None
+                for r in reports
+            ),
             paper_count=sum(report.run_efficiency is not None for report in reports),
             live_calls=sum(
                 report.run_efficiency.live_calls
