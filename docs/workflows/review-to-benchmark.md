@@ -164,6 +164,181 @@ or a precursor concentration. Its **context** identifies where it belongs: devic
 scan direction, layer, constituent, processing step or stability checkpoint. The
 scorer never rewards merely having a nonempty JSON field.
 
+### Matching: which records refer to the same thing?
+
+Matching and correctness are different decisions. A prediction with the wrong PCE
+can still describe the right device; pairing those records lets us identify the
+value error rather than calling the entire device missing.
+
+The implemented matcher works in two levels:
+
+1. **Pair whole records**, separately for families, individual devices, performance
+   observations, population statistics and stability tests, in that order.
+2. **Compare facts inside those pairings**, separately for each scientific group
+   and property name. One prediction fact cannot satisfy several reference facts.
+
+For whole records, the content-similarity formula is:
+
+```text
+content similarity = 0.75 × Jaccard(record-content tokens)
+                   + 0.25 × Jaccard(reported-property-name tokens)
+
+Jaccard(A, B) = number of shared tokens / number of distinct tokens in either set
+```
+
+Record-content tokens include descriptions, materials, raw values and units. IDs,
+citations and the separately parsed `value_number` field are excluded. Text is
+lowercased and punctuation simplified for this **candidate-matching step only**;
+the later chemical-value comparison preserves case and punctuation. Two empty
+token sets have similarity 1 by convention, not because they establish identity.
+
+A candidate must reach `--minimum-record-similarity`, default **0.35**. This is a
+heuristic similarity threshold, not a 35% confidence estimate. A surviving pair
+receives an additional **2** in its assignment weight when its parent relationships
+agree under already established pairings and its protocol fields agree. Protocol
+fields are measurement type, scan direction, statistic type and sample size where
+present. Both-missing parent fields can count as agreement; the bonus does not prove
+that a link was reported. Families have no parent-link bonus.
+
+The Hungarian algorithm selects a **maximum-total-weight, one-to-one assignment**
+over all candidates of that record type. It does not choose each row's favourite
+independently, and it does not optimize the number of matched records separately
+from their weights. For example, with these illustrative eligible scores and no
+differing parent bonuses:
+
+| | Prediction A | Prediction B |
+| --- | ---: | ---: |
+| Reference 1 | 0.90 | 0.80 |
+| Reference 2 | 0.85 | 0.40 |
+
+Greedily assigning reference 1 to A would leave B for reference 2, totaling 1.30.
+The global assignment instead uses 1→B and 2→A, totaling 1.65. This avoids a common
+order-dependent matching error. Unmatched reference records reduce inventory recall;
+unmatched predictions reduce inventory precision. Reported `matches[].similarity`
+is the **unboosted** content similarity.
+
+After pairing, facts compete only within the same scientific group, paired owner
+and property name. Fact comparisons are binary: they either satisfy the selected
+equality/context rule or they do not. There is no partial credit because two PCEs
+are “fairly close” beyond the numeric tolerance. Layer and processing order comes
+from explicit sequence fields, not JSON array position.
+
+**Limitations to inspect:** raw values influence whole-record alignment, so this is
+not an outcome-blind identity matcher. Similar specimens can still be confused,
+and a badly paired family can affect its linked records. Equal-weight alternatives
+in a selected pair's row or column are flagged using an internal absolute score
+tolerance of `1e-12`; this does not find every possible alternative global optimum.
+Repeated nested objects with indistinguishable recorded identities are also flagged.
+Inspect `matches`, `core_facts.issues` and the original paths before accepting a
+headline. A deterministic assignment is not proof of scientific identity.
+
+The older `field_agreement.reported_values` diagnostic uses a different quantity
+matcher: 80% property-name token similarity plus 20% raw-text token similarity,
+with a 0.5 threshold, followed by a value comparison. It is retained for diagnosis,
+not used to award the primary `core_facts` score.
+
+### Numeric tolerances: when are two values equal?
+
+For two eligible scalar `ReportedValue` entries, first convert compatible explicit
+units to the reference's unit, then apply Python's `math.isclose` rule:
+
+```text
+abs(reference − prediction)
+    <= max(relative_tolerance × max(abs(reference), abs(prediction)),
+           absolute_tolerance)
+```
+
+| Setting | Default | Meaning |
+| --- | ---: | --- |
+| `--numeric-relative-tolerance` | `1e-6` | Allow a difference proportional to the larger absolute value |
+| `--numeric-absolute-tolerance` | `1e-9` | Allow a small difference near zero, in the reference's unit |
+| `--minimum-record-similarity` | `0.35` | Whole-record candidate threshold; unrelated to numeric accuracy |
+
+These tolerances accommodate conversion/floating-point precision. They are **not**
+experimental error bars, significant-figure inference, or permission to round an
+extracted measurement freely. They apply to numeric reported values, including
+numeric test context. Ordinary schema integers such as sample size and sequence
+are compared exactly, not approximately.
+
+Examples, assuming the property and scientific context also agree:
+
+| Reference | Prediction | Result with defaults |
+| --- | --- | --- |
+| PCE 20% | PCE 0.20, explicitly dimensionless | Equal after conversion |
+| PCE 20% | PCE 20.00001% | Equal within tolerance |
+| PCE 20% | PCE 20.0001% | Different |
+| PCE 20.0% | PCE 20.04% | Different; no automatic rounding-to-reported-precision rule |
+| Time 1 hour | Time 3600 seconds | Equal after conversion |
+| Temperature 65 °C | Temperature 338.15 K | Equal after conversion |
+| PCE 20% | PCE 20 with no unit | Different; missing is not an explicit percent unit |
+| PCE >20% | PCE 20% | Different; an inequality is not an exact value |
+
+At PCE 20%, the relative allowance is approximately **0.00002 percentage points**,
+not one percentage point. The absolute allowance is expressed in the reference's
+unit, so changing that unit can affect comparisons very close to zero. Freeze
+reference representation and tolerances for the benchmark.
+
+Unit conversion is attempted only when each raw value is a single, unqualified
+number, with no suffix or a suffix matching its stated unit. The parsed number
+must agree with that raw number within an internal consistency check (`1e-9`
+relative, `1e-12` absolute). That check is distinct from the scoring tolerance.
+If both units are missing, eligible numbers can be compared without conversion;
+the scorer does not infer what the missing unit was. Unrecognized units fall back
+to conservative literal equality, not guessed conversion.
+
+### Chemicals, ranges and free text
+
+Ranges, uncertainties, inequalities and formulas do not become equivalent merely
+because their parsed central number agrees. They fall back to literal comparisons
+of normalized raw text, unit and parsed number. Unicode typography and repeated
+whitespace are normalized; chemical case, punctuation and stoichiometry remain
+significant. Equality of two representations does not itself validate either claim
+against the paper.
+
+Consequently, `CoO` is not `COO`, and the scorer does not infer that `MAPbI3` and
+`CH3NH3PbI3` represent the same composition. Equivalent differently written ranges
+or chemical names can produce conservative false disagreements. Inspect these on
+development papers instead of hiding them in a generous universal tolerance.
+
+Property names have explicit aliases for PCE, Voc, Jsc and FF. Operation names use
+an explicit, frozen map: by default, `thermal annealing` maps to `annealing`.
+Supply `--operation-aliases aliases.json` to replace the map, or `{}` to disable it.
+This applies to fact comparison, not the lexical whole-record matching formula.
+Other operation paraphrases are not inferred. Changing aliases can affect both
+operation matches and their dependent condition matches; freeze the map before
+held-out evaluation and retain it in each report.
+
+### Is an LLM used as a judge?
+
+**No. The implemented scorer makes no LLM or embedding calls.** It performs no
+automatic semantic adjudication, source interpretation, or prediction repair.
+The models used to generate extractions or figure classifications are separate
+from this evaluation code.
+
+This makes scores reproducible for fixed inputs, scorer version and configuration,
+but limits semantic coverage. A future LLM-assisted review could help identify
+equivalent operation descriptions, alternative chemical representations or disputed
+record pairings. It should not decide basic arithmetic or silently change reference
+labels. The following is a **proposed extension, not an implemented feature**:
+
+1. Run the deterministic scorer and select unresolved semantic disagreements.
+2. Give a judge the two claims, their surrounding device/measurement context and
+   relevant source evidence. Hide system identity and allow `equivalent`,
+   `different` and `cannot determine` with a source-grounded explanation.
+3. Freeze the rubric, model/version and decoding settings; preserve requests,
+   responses, input hashes, cost and cached decisions. A low temperature alone is
+   not a guarantee of repeatability.
+4. Measure judge agreement and failure modes against independently adjudicated
+   expert decisions, including hard negatives and swapped A/B presentation.
+5. Keep judge-assisted results separate from deterministic results. Human-confirmed
+   reference corrections require a new truth version; general equivalence rules
+   require a new scoring version. Rescore all contestants consistently.
+
+An LLM judge can share the extractor's errors, prefer particular writing styles or
+overlook a wrong specimen association. It is therefore an aid to adjudication, not
+an independent ground truth by default. For the current workflow, experts resolve
+semantic disagreements and the scorer retains its explicit comparison rules.
+
 ### Three views of the same extraction
 
 | Example | Values recovered? | Context correct? | Strict result |
