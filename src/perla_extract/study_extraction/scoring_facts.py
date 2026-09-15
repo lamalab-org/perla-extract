@@ -1,0 +1,435 @@
+"""Project the scientific schema into contextual facts for deterministic scoring.
+
+This is a scoring contract, not extraction logic. It selects scientific fields and
+retains their owners; labels, evidence wording, generated IDs and empty placeholders
+do not earn points. No chemical identities or missing relationships are inferred.
+"""
+
+from __future__ import annotations
+
+import math
+import re
+import unicodedata
+from dataclasses import dataclass
+from typing import Literal
+
+from .models import MaterialConstituent, ReportedValue, StudyExtraction
+from .units import convert_reported_value
+
+FactGroup = Literal[
+    "performance", "population", "stability", "composition", "stack", "processing"
+]
+FACT_GROUPS: tuple[FactGroup, ...] = (
+    "performance",
+    "population",
+    "stability",
+    "composition",
+    "stack",
+    "processing",
+)
+
+# Only standard metric spellings are aliases. Unfamiliar properties still score,
+# but arbitrary semantic paraphrases and chemical synonyms require adjudication.
+METRIC_ALIASES = {
+    "powerconversionefficiency": "pce",
+    "opencircuitvoltage": "voc",
+    "shortcircuitcurrentdensity": "jsc",
+    "fillfactor": "ff",
+}
+
+
+def scientific_text(value: str) -> str:
+    """Ignore Unicode typography and spacing, never chemical case or punctuation."""
+
+    return " ".join(unicodedata.normalize("NFKC", value).replace("−", "-").split())
+
+
+def property_name(name: str) -> str:
+    key = re.sub(r"[\s_-]+", "", scientific_text(name).casefold())
+    return METRIC_ALIASES.get(key, key)
+
+
+def _plain_number(value: ReportedValue) -> bool:
+    """Allow unit conversion only for a single unqualified, internally consistent number.
+
+    Ranges, inequalities, uncertainties and chemical formulas fall back to literal
+    comparison. Their central numeric value alone does not represent the claim.
+    """
+
+    raw = scientific_text(value.raw_value)
+    match = re.fullmatch(r"([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*(.*)", raw)
+    return bool(
+        match
+        and value.value_number is not None
+        and math.isfinite(value.value_number)
+        and math.isclose(
+            float(match[1]), value.value_number, rel_tol=1e-9, abs_tol=1e-12
+        )
+        and scientific_text(match[2]) in {"", scientific_text(value.unit or "")}
+    )
+
+
+def equal_value(left: object, right: object, relative: float, absolute: float) -> bool:
+    """Compare claims conservatively; missing units are not assumed dimensionless."""
+
+    if isinstance(left, ReportedValue) and isinstance(right, ReportedValue):
+        if _plain_number(left) and _plain_number(right):
+            if (left.unit is None) != (right.unit is None):
+                return False
+            number = right.value_number
+            if left.unit is not None:
+                # Use a symmetric unit target; export-specific percent restrictions
+                # should not make A-versus-B differ from B-versus-A.
+                target = "%" if left.unit in {"percent", "percentage"} else left.unit
+                normalized_left = left.model_copy(update={"unit": target})
+                normalized_right = right.model_copy(
+                    update={
+                        "unit": "%"
+                        if right.unit in {"percent", "percentage"}
+                        else right.unit
+                    }
+                )
+                # Convert both to check that even an identical unit is recognized.
+                if convert_reported_value(normalized_left, target) is None:
+                    return (
+                        scientific_text(left.raw_value)
+                        == scientific_text(right.raw_value)
+                        and left.unit == right.unit
+                    )
+                number = convert_reported_value(normalized_right, target)
+            return number is not None and math.isclose(
+                left.value_number, number, rel_tol=relative, abs_tol=absolute
+            )
+        return (
+            scientific_text(left.raw_value) == scientific_text(right.raw_value)
+            and scientific_text(left.unit or "") == scientific_text(right.unit or "")
+            and left.value_number == right.value_number
+        )
+    if isinstance(left, str) and isinstance(right, str):
+        return scientific_text(left) == scientific_text(right)
+    if isinstance(left, tuple) and isinstance(right, tuple):
+        return len(left) == len(right) and all(
+            equal_value(a, b, relative, absolute) for a, b in zip(left, right)
+        )
+    return type(left) is type(right) and left == right
+
+
+@dataclass(frozen=True)
+class ScientificFact:
+    group: FactGroup
+    path: str
+    owner: str
+    name: str
+    value: object
+    context: tuple[object, ...]
+
+
+def facts_equal(
+    left: ScientificFact, right: ScientificFact, relative: float, absolute: float
+) -> bool:
+    return (
+        left.group == right.group
+        and left.owner == right.owner
+        and left.name == right.name
+        and equal_value(left.context, right.context, relative, absolute)
+        and equal_value(left.value, right.value, relative, absolute)
+    )
+
+
+def scientific_facts(
+    study: StudyExtraction,
+    identities: dict[str, str],
+    ignored: set[str],
+    side: str,
+) -> list[ScientificFact]:
+    """Select key fields while retaining device, layer, recipe and checkpoint context.
+
+    ``identities`` contains only established top-level record pairings. Unmatched
+    references stay side-specific so two broken links cannot accidentally agree.
+    Paths refer to the original JSON, making every missed or extra fact inspectable.
+    """
+
+    facts: list[ScientificFact] = []
+    devices = {item.device_id: item for item in study.individual_devices}
+
+    def reference(collection: str, identifier: str | None) -> str | None:
+        if identifier is None:
+            return None
+        key = f"{collection}:{identifier}"
+        return identities.get(key, f"{side}:unmatched:{key}")
+
+    def device_context(identifier: str | None) -> tuple[object, ...]:
+        device = devices.get(identifier)
+        return (
+            reference("individual_devices", identifier),
+            reference("device_families", device.family_id) if device else None,
+            device.variant if device else None,
+            device.champion_status if device else None,
+            device.selection_basis if device else None,
+        )
+
+    def add(
+        group: FactGroup,
+        path: str,
+        owner: str,
+        name: str,
+        value: object,
+        context: tuple = (),
+    ) -> None:
+        if value is not None and value != "not_reported" and value != "":
+            facts.append(ScientificFact(group, path, owner, name, value, context))
+
+    def quantities(
+        group: FactGroup,
+        path: str,
+        owner: str,
+        values: list[ReportedValue],
+        context: tuple = (),
+    ) -> None:
+        for i, value in enumerate(values):
+            add(group, f"{path}/{i}", owner, property_name(value.name), value, context)
+
+    def conditions(values: list[ReportedValue]) -> tuple:
+        # Preserve multiplicity; sorting by property and raw spelling is deterministic.
+        return tuple(
+            (property_name(v.name), v)
+            for v in sorted(values, key=lambda v: (property_name(v.name), v.raw_value))
+        )
+
+    def chemicals(
+        path: str, owner: str, constituents: list[MaterialConstituent], context: tuple
+    ) -> None:
+        for i, constituent in enumerate(constituents):
+            base = f"{path}/{i}"
+            add(
+                "composition",
+                f"{base}/name",
+                owner,
+                "constituent",
+                constituent.name,
+                context,
+            )
+            chemical_context = (*context, constituent.name)
+            add(
+                "composition",
+                f"{base}/role",
+                owner,
+                "constituent_role",
+                constituent.role,
+                chemical_context,
+            )
+            add(
+                "composition",
+                f"{base}/amount",
+                owner,
+                "constituent_amount:" + property_name(constituent.amount.name)
+                if constituent.amount
+                else "constituent_amount",
+                constituent.amount,
+                chemical_context,
+            )
+
+    identifiers = {
+        "device_families": "family_id",
+        "individual_devices": "device_id",
+        "performance_observations": "observation_id",
+        "population_statistics": "population_id",
+        "stability_tests": "test_id",
+    }
+    for collection, id_field in identifiers.items():
+        for index, record in enumerate(getattr(study, collection)):
+            key = f"{collection}:{getattr(record, id_field)}"
+            if key in ignored:
+                continue
+            owner = identities.get(key, f"{side}:unmatched:{key}")
+            path = f"/{collection}/{index}"
+            if collection == "device_families":
+                add("stack", f"{path}/polarity", owner, "polarity", record.polarity)
+                # Raw stack prose is a fallback only; do not reward duplicate representations.
+                if not record.layers:
+                    add(
+                        "stack",
+                        f"{path}/full_stack_raw",
+                        owner,
+                        "stack",
+                        record.full_stack_raw or record.architecture,
+                    )
+                layers = {
+                    layer.layer_id: (layer.sequence, layer.material)
+                    for layer in record.layers
+                }
+
+                def layer_reference(identifier: str | None) -> object:
+                    return (
+                        layers.get(identifier, f"{side}:unmatched_layer:{identifier}")
+                        if identifier
+                        else None
+                    )
+
+                for i, layer in enumerate(record.layers):
+                    base = f"{path}/layers/{i}"
+                    context = ("layer", layer.sequence)
+                    add(
+                        "stack",
+                        f"{base}/material",
+                        owner,
+                        "material",
+                        layer.material,
+                        context,
+                    )
+                    context = (*context, layer.material)
+                    add("stack", f"{base}/role", owner, "role", layer.role, context)
+                    add(
+                        "stack",
+                        f"{base}/material_form",
+                        owner,
+                        "material_form",
+                        layer.material_form,
+                        context,
+                    )
+                    quantities(
+                        "stack",
+                        f"{base}/reported_properties",
+                        owner,
+                        layer.reported_properties,
+                        context,
+                    )
+                    chemicals(
+                        f"{base}/constituents", owner, layer.constituents, context
+                    )
+                for i, absorber in enumerate(record.absorbers):
+                    base = f"{path}/absorbers/{i}"
+                    context = ("absorber", layer_reference(absorber.layer_id))
+                    # Several unlinked absorbers cannot safely share an anonymous scope.
+                    if absorber.layer_id is None and len(record.absorbers) > 1:
+                        context = (*context, absorber.label)
+                    add(
+                        "composition",
+                        f"{base}/formula",
+                        owner,
+                        "formula",
+                        absorber.formula,
+                        context,
+                    )
+                    quantities(
+                        "composition",
+                        f"{base}/properties",
+                        owner,
+                        absorber.properties,
+                        context,
+                    )
+                    chemicals(
+                        f"{base}/constituents", owner, absorber.constituents, context
+                    )
+                for i, step in enumerate(record.processing_steps):
+                    base = f"{path}/processing_steps/{i}"
+                    targets = tuple(
+                        sorted(
+                            (layer_reference(t) for t in step.target_layer_ids), key=str
+                        )
+                    )
+                    context = ("step", step.sequence, targets)
+                    add(
+                        "processing",
+                        f"{base}/operation",
+                        owner,
+                        "operation",
+                        step.operation,
+                        context,
+                    )
+                    context = (*context, step.operation)
+                    for j, material in enumerate(step.materials):
+                        add(
+                            "processing",
+                            f"{base}/materials/{j}",
+                            owner,
+                            "material",
+                            material,
+                            context,
+                        )
+                    quantities(
+                        "processing",
+                        f"{base}/conditions",
+                        owner,
+                        step.conditions,
+                        (*context, tuple(sorted(step.materials))),
+                    )
+            elif collection == "individual_devices":
+                context = (
+                    reference("device_families", record.family_id),
+                    record.variant,
+                )
+                quantities(
+                    "processing",
+                    f"{path}/reported_properties",
+                    owner,
+                    record.reported_properties,
+                    context,
+                )
+            elif collection == "performance_observations":
+                quantities(
+                    "performance",
+                    f"{path}/metrics",
+                    owner,
+                    record.metrics,
+                    (
+                        *device_context(record.device_id),
+                        record.measurement_type,
+                        record.scan_direction,
+                    ),
+                )
+            elif collection == "population_statistics":
+                context = (
+                    reference("device_families", record.family_id),
+                    record.statistic_type,
+                )
+                add(
+                    "population",
+                    f"{path}/sample_size",
+                    owner,
+                    "sample_size",
+                    record.sample_size,
+                    context,
+                )
+                quantities(
+                    "population",
+                    f"{path}/metrics",
+                    owner,
+                    record.metrics,
+                    (*context, record.sample_size),
+                )
+            elif collection == "stability_tests":
+                context = (
+                    reference("device_families", record.family_id),
+                    device_context(record.device_id),
+                    record.link_status,
+                )
+                quantities(
+                    "stability", f"{path}/conditions", owner, record.conditions, context
+                )
+                context = (*context, conditions(record.conditions))
+                for i, checkpoint in enumerate(record.checkpoints):
+                    base = f"{path}/checkpoints/{i}"
+                    add(
+                        "stability",
+                        f"{base}/time",
+                        owner,
+                        "time",
+                        checkpoint.time,
+                        (*context, conditions(checkpoint.conditions)),
+                    )
+                    quantities(
+                        "stability",
+                        f"{base}/conditions",
+                        owner,
+                        checkpoint.conditions,
+                        (*context, checkpoint.time),
+                    )
+                    quantities(
+                        "stability",
+                        f"{base}/outcomes",
+                        owner,
+                        checkpoint.outcomes,
+                        (*context, checkpoint.time, conditions(checkpoint.conditions)),
+                    )
+    return facts

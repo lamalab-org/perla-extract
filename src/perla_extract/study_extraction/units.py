@@ -54,6 +54,8 @@ def _pint_unit(unit: str) -> str:
     )
     value = value.replace("^", "**")
     value = re.sub(r"([+-])\s+(?=\d)", r"\1", value)
+    # Plain-text exports often lose superscripting: cm2 and mm3 are unit powers.
+    value = re.sub(r"([A-Za-z]+)(\d+)(?=\s|$|[/)*])", r"\1**\2", value)
     value = re.sub(r"(?<=[A-Za-z])([+-]\d+)(?=\s|$|[/)*])", r"**\1", value)
     return re.sub(r"(?<=[A-Za-z])\s+([+-]?\d+)(?=\s|$|[/)*])", r"**\1", value)
 
@@ -74,7 +76,7 @@ def convert_reported_value(value: ReportedValue, target_unit: str) -> float | No
         )
     try:
         quantity = _unit_registry().Quantity(value.value_number, _pint_unit(unit))
-        return float(quantity.to(target_unit).magnitude)
+        return float(quantity.to(_pint_unit(target_unit)).magnitude)
     except (PintError, TokenError, TypeError, ValueError):
         return None
 

@@ -6,7 +6,9 @@ import json
 import zipfile
 
 import pytest
+from click.testing import CliRunner
 
+from perla_extract.study_extraction.evaluation_cli import main as evaluate
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
     study_schema_sha256,
@@ -28,6 +30,34 @@ from review_workbench.study_review import (
 
 SPLIT = "calibration"
 PAPER_ID = "10.0000--example"
+
+
+def test_adjudicated_app_export_can_be_scored(tmp_path, empty_study, document_payload):
+    store = StudyReviewStore(tmp_path / "review")
+    study = _study_with_evidence(empty_study, "champion device")
+    study["device_families"][0]["full_stack_raw"] = "ITO/perovskite/Ag"
+    _adjudicate(store, study, document_payload)
+    export = build_ground_truth_export(store, SPLIT, PAPER_ID)
+    target = write_ground_truth_export(export, tmp_path / "frozen")
+    output = tmp_path / "evaluation.json"
+    result = CliRunner().invoke(
+        evaluate,
+        [
+            "--truth",
+            str(target),
+            "--prediction",
+            str(target / "ground_truth.json"),
+            "--output",
+            str(output),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    report = json.loads(output.read_text())
+    assert report["core_facts"]["micro"]["f1"] == 1
+    assert (
+        report["benchmark"]["evidence_document_sha256"]
+        == export.manifest.evidence_document_sha256
+    )
 
 
 def _adjudicate(

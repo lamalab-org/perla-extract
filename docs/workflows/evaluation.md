@@ -18,6 +18,11 @@ also records the paper ID, split, truth hash, source-document hashes, and a fall
 source-manifest hash. Passing a bare truth JSON is useful for development but does not
 provide those provenance checks.
 
+Frozen ground-truth formats 2 and 3 are supported. Format 3 additionally requires and
+records the reviewed evidence version and document hash. Evaluation reports now use
+format **2** and matcher **rich-study-hungarian-v2**; regenerate older score reports
+from their saved predictions instead of mixing old and new scores.
+
 Prefer a complete extraction run directory for `--prediction`. The command then
 recomputes evidence and relationship validation from `extraction.json` and
 `document.json` and embeds the result in the score report. It also validates and
@@ -27,6 +32,69 @@ and efficiency accounting as unavailable.
 
 ## What is scored
 
+### Primary score: correct scientific facts
+
+Use `core_facts`, not the older quantity-presence score, to judge extraction quality.
+The versioned `core-scientific-facts-v1` profile covers:
+
+| Group | Scientific fields counted | Context required for credit |
+| --- | --- | --- |
+| Performance | Reported performance metrics, including PCE, Voc, Jsc, FF | Matched device/family, variant, champion status, measurement type and scan direction |
+| Population | Sample size and aggregate metrics | Matched family, statistic type and sample size |
+| Stability | Test conditions, checkpoint times/conditions and outcomes | Matched specimen links; outcomes also require the correct time and test/checkpoint conditions |
+| Composition | Absorber formula, constituents, their roles/amounts, absorber properties | Corresponding absorber/layer and chemical constituent |
+| Stack | Layer materials, roles, physical form, properties and device polarity | Explicit layer sequence and material association; raw stack text is a fallback when structured layers are absent |
+| Processing | Operations, materials, conditions and specimen-specific properties | Correct operation, explicit sequence, target layers, materials and device variant |
+
+This selects fields by schema structure, not paper-specific keywords. Other property
+names within these groups also score. IDs, citation wording, paper titles, display
+labels, unresolved notes, and empty/`not_reported` scalar placeholders do not earn
+points. Champion flags constrain performance context rather than earning redundant
+points themselves. Extra scientific claims do count against precision.
+
+A correct match requires the **quantity, value, units and scientific context** to
+agree. A wrong PCE contributes one false positive and one false negative—not a true
+positive merely because both records mention PCE. Repeated identical predictions
+cannot reuse one truth fact. Every credited pair and every unmatched field is listed
+by its original JSON path in `core_facts`.
+
+For example, if truth reports PCE = 20% and the prediction reports 21% on the same
+device, the performance score has `truth=1`, `predicted=1`, `matched=0`, and F1 = 0.
+If truth reports annealing at 100 °C followed by 150 °C, reversing those temperatures
+loses both condition matches even though the same two numbers are still present.
+
+- `core_facts.groups`: precision, recall, F1 and counts for each scientific area.
+- `core_facts.micro`: pooled correct-fact counts and rates.
+- `core_facts.macro_f1`: equal-weight mean F1 over groups with truth or prediction
+  facts. An entirely missing populated group scores zero; a group absent on both
+  sides is undefined and excluded. Always show group counts alongside this headline.
+
+### Equality rules and limitations
+
+Single unqualified numbers with explicit compatible units are converted using Pint.
+The default relative tolerance is `1e-6` and absolute tolerance `1e-9` in the truth's
+unit—intended for conversion precision, not experimental uncertainty. These are
+recorded in the report and configurable at the CLI. Missing units are not silently
+treated as dimensionless. Explicit fractions and percentages are comparable in
+both directions, as are Celsius and Kelvin.
+
+Inequalities, ranges, uncertainties and formulas use conservative literal comparison,
+including their raw qualifier. A normalized central number cannot erase `>`, `~`, or
+`±`. Unicode typography and whitespace are normalized; chemical case, punctuation
+and stoichiometry are preserved. The four standard performance names have explicit
+aliases for PCE, Voc, Jsc and FF. There is **no** LLM judge, inferred chemical synonym
+dictionary, or automatic interpretation of unfamiliar paraphrases.
+
+Consequently, equivalent free-text operation descriptions, chemical synonyms,
+alternative stack representations, or differently written ranges may score as
+disagreements. Inspect such cases before freezing the benchmark protocol. Do not
+tune aliases or tolerances against the held-out test results. Layer/step order comes
+from explicit sequence fields, not JSON array position; unspecified ordering cannot
+be reconstructed by the scorer. Record alignment remains an algorithmic estimate,
+not proof of specimen identity.
+
+### Diagnostic scores
+
 The report keeps distinct questions separate:
 
 - inventory precision, recall, and F1 for families, devices, observations,
@@ -35,15 +103,23 @@ The report keeps distinct questions separate:
 - scalar-field agreement on matched records;
 - parent-link agreement on matched records, such as whether an observation points to
   the matched device;
-- end-to-end atomic `ReportedValue` precision/recall across scored records and
+- end-to-end atomic `ReportedValue` **presence** precision/recall across scored records and
   conditional value agreement for matched quantities, including compatible unit
   conversion; and
 - unmatched truth and prediction record keys for error analysis.
 
 The matcher uses a versioned, transparent lexical/content similarity and a Hungarian
-assignment. It does not greedily match records in file order. The threshold and
+assignment. Previously matched parent links and compatible protocol fields receive
+an assignment preference, preventing equal numbers on different devices from being
+paired purely by array order. The lexical threshold still applies; returned pair
+similarities are the unboosted content scores. It does not greedily match records in file order. The threshold and
 numeric tolerances are stored in every report. Do not tune them on the held-out test
 split.
+
+`field_agreement.reported_values` is retained for diagnosis: it can be perfect while
+the values themselves are wrong. `core_facts` is the stricter correct-in-context
+score. Citation validation is separate and does not prove that the quoted source
+supports the claim scientifically.
 
 Rates with a zero denominator are `null`, not a vacuous perfect score. Always retain
 the predicted, truth, and matched counts when aggregating reports.
@@ -79,5 +155,40 @@ were verified, how many validation issues remained, and all available run-effici
 counts. Undefined paper-level rates are excluded with their contributing paper count
 reported explicitly.
 
+The dataset's `core_fact_groups_micro` and `core_fact_groups_macro_f1` report each
+scientific area. `core_facts_micro` pools facts; `core_facts_macro_f1` averages each
+paper's group-balanced score and bootstraps **papers**, not individual fields. This
+avoids letting one unusually long supporting-information document dominate the
+headline result. These are single-system intervals, not paired A/B significance tests.
+
 Keep calibration, development, and test manifests separate. Papers used to change
 parsing, prompts, schemas, matching, thresholds, or model selection are not held out.
+
+## Preparing a human-versus-pipeline A/B study
+
+The scorer is source-blind: human and model outputs use the same `StudyExtraction`
+schema, frozen truth, field selection and equality rules. Keep the two questions
+separate: objective extraction accuracy against independent adjudicated truth, and
+experts' blinded preference for the presented results.
+
+Before collecting the comparison:
+
+1. Freeze unseen paper assignments, main/SI access, figure policy, scoring version,
+   tolerances and human time/tool allowance. Explicitly choose whether the question
+   is equal-time performance or best achievable quality.
+2. Have humans extract without seeing the model output or the reference labels.
+   Do not use that same person's extraction as the only ground truth for its own score.
+3. Independently adjudicate correctness and completeness. Treat figure-only facts
+   under a declared shared scope; figure classifications alone are not field-level
+   ground-truth labels.
+4. Score both outputs unchanged. Retain failed papers: an empty valid extraction
+   scores zero recall where truth contains facts; invalid or missing artifacts are
+   explicit run failures, not papers silently dropped by the evaluator.
+5. Present A/B results in the same layout, randomize sides, hide their origin, and
+   ask separately about factual correctness, completeness, device/measurement
+   attribution, chemical detail and correction effort. Include tie and cannot-judge
+   responses.
+6. Compare paired paper-level scores and review effort. The existing aggregator is
+   not a paired-comparison analysis; add that analysis when the A/B assignments are
+   fixed. Preserve both truth and prediction versions so later label corrections
+   cannot masquerade as model improvements.

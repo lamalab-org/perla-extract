@@ -12,14 +12,19 @@ from perla_extract.study_extraction.evaluation import (
 )
 from perla_extract.study_extraction.evaluation_cli import main
 from perla_extract.study_extraction.models import (
+    AbsorberComponent,
     DeviceFamily,
     EvidenceCitation,
     IndividualDevice,
     Layer,
+    MaterialConstituent,
     PaperMetadata,
     PerformanceObservation,
     PopulationStatistic,
+    ProcessingStep,
     ReportedValue,
+    StabilityCheckpoint,
+    StabilityTest,
     StudyExtraction,
     study_schema_sha256,
 )
@@ -245,13 +250,424 @@ def test_unknown_uncertainty_mask_key_is_rejected():
         )
 
 
+def quantity(name, number, unit):
+    return ReportedValue(
+        name=name,
+        raw_value=str(number),
+        value_number=number,
+        unit=unit,
+        evidence=EVIDENCE,
+    )
+
+
+def scientific_study():
+    """Independent scientific scopes with deliberately repeated property names."""
+
+    result = study()
+    family = result.device_families[0]
+    family.layers = [
+        Layer(
+            layer_id="layer",
+            sequence=1,
+            role="absorber",
+            material="MAPbI3",
+            reported_properties=[],
+            evidence=EVIDENCE,
+        )
+    ]
+    family.absorbers = [
+        AbsorberComponent(
+            absorber_id="absorber",
+            layer_id="layer",
+            label="absorber",
+            formula=ReportedValue(
+                name="formula",
+                raw_value="MAPbI3",
+                value_number=None,
+                unit=None,
+                evidence=EVIDENCE,
+            ),
+            properties=[],
+            constituents=[
+                MaterialConstituent(
+                    name=name,
+                    role="precursor",
+                    amount=quantity("concentration", n, "mol/liter"),
+                    evidence=EVIDENCE,
+                )
+                for name, n in [("MAI", 0.5), ("PbI2", 1.0)]
+            ],
+            evidence=EVIDENCE,
+        )
+    ]
+    family.processing_steps = [
+        ProcessingStep(
+            step_id=f"step-{i}",
+            sequence=i,
+            operation="annealing",
+            target_layer_ids=["layer"],
+            materials=["MAPbI3"],
+            conditions=[quantity("temperature", t, "°C")],
+            evidence=EVIDENCE,
+        )
+        for i, t in [(1, 100), (2, 150)]
+    ]
+    result.stability_tests = [
+        StabilityTest(
+            test_id="stability",
+            family_id=family.family_id,
+            device_id=None,
+            specimen_label="test specimen",
+            link_status="explicit_family_link",
+            conditions=[quantity("temperature", 65, "°C")],
+            checkpoints=[
+                StabilityCheckpoint(
+                    checkpoint_id=f"time-{t}",
+                    time=quantity("time", t, "hour"),
+                    conditions=[],
+                    outcomes=[quantity("retained PCE", pce, "%")],
+                    evidence=EVIDENCE,
+                )
+                for t, pce in [(100, 95), (500, 80)]
+            ],
+            evidence=EVIDENCE,
+        )
+    ]
+    return result
+
+
+def test_core_scores_identical_science_with_reordered_nested_lists():
+    truth = scientific_study()
+    prediction = truth.model_copy(deep=True)
+    prediction.device_families[0].processing_steps.reverse()
+    prediction.device_families[0].absorbers[0].constituents.reverse()
+    prediction.stability_tests[0].checkpoints.reverse()
+    report = evaluate_study(truth, prediction)
+    assert report.core_facts.micro.f1 == 1
+    assert report.core_facts.macro_f1 == 1
+    assert not report.core_facts.unmatched_truth_paths
+
+
+def test_core_wrong_value_is_both_false_positive_and_false_negative():
+    report = evaluate_study(
+        study(), study(prefix="prediction", pce=value("21%", 21, "%"))
+    )
+    assert (
+        report.field_agreement.reported_values.f1 == 1
+    )  # Diagnostic presence, not correctness.
+    assert report.core_facts.groups["performance"].model_dump() == {
+        "predicted": 1,
+        "truth": 1,
+        "matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+    }
+    assert (
+        "/performance_observations/0/metrics/0"
+        in report.core_facts.unmatched_prediction_paths
+    )
+
+
+@pytest.mark.parametrize(
+    "kind", ["step_temperature", "precursor_concentration", "stability_outcome"]
+)
+def test_swapping_equal_named_values_between_contexts_loses_credit(kind):
+    truth = scientific_study()
+    prediction = truth.model_copy(deep=True)
+    if kind == "step_temperature":
+        a, b = prediction.device_families[0].processing_steps
+        a.conditions, b.conditions = b.conditions, a.conditions
+        expected_paths = [
+            f"/device_families/0/processing_steps/{i}/conditions/0" for i in range(2)
+        ]
+    elif kind == "precursor_concentration":
+        a, b = prediction.device_families[0].absorbers[0].constituents
+        a.amount, b.amount = b.amount, a.amount
+        expected_paths = [
+            f"/device_families/0/absorbers/0/constituents/{i}/amount" for i in range(2)
+        ]
+    else:
+        a, b = prediction.stability_tests[0].checkpoints
+        a.outcomes, b.outcomes = b.outcomes, a.outcomes
+        expected_paths = [
+            f"/stability_tests/0/checkpoints/{i}/outcomes/0" for i in range(2)
+        ]
+    report = evaluate_study(truth, prediction)
+    assert set(expected_paths) <= set(report.core_facts.unmatched_truth_paths)
+    assert report.core_facts.micro.f1 < 1
+
+
+@pytest.mark.parametrize("change", ["scan", "champion", "device", "family"])
+def test_correct_performance_requires_correct_protocol_and_device_context(change):
+    truth = study()
+    prediction = study(prefix="prediction")
+    if change == "scan":
+        prediction.performance_observations[0].scan_direction = "forward"
+    elif change == "champion":
+        prediction.individual_devices[0].champion_status = "no"
+        prediction.individual_devices[0].selection_basis = "representative"
+    elif change == "device":
+        prediction.performance_observations[0].device_id = "unmatched"
+    else:
+        prediction.individual_devices[0].family_id = None
+    report = evaluate_study(truth, prediction)
+    assert report.core_facts.groups["performance"].matched == 0
+
+
+def test_population_mean_and_maximum_cannot_share_metric_credit():
+    truth = study()
+    truth.population_statistics = [
+        PopulationStatistic(
+            population_id="population",
+            family_id=truth.device_families[0].family_id,
+            label="cohort",
+            statistic_type="mean",
+            sample_size=20,
+            metrics=[value()],
+            evidence=EVIDENCE,
+        )
+    ]
+    prediction = truth.model_copy(deep=True)
+    prediction.population_statistics[0].statistic_type = "maximum"
+    assert (
+        evaluate_study(truth, prediction).core_facts.groups["population"].matched == 0
+    )
+
+
+@pytest.mark.parametrize(
+    "raw,number,unit",
+    [
+        (">20%", 20, "%"),
+        ("~20%", 20, "%"),
+        ("20 ± 2%", 20, "%"),
+        ("20–22%", 20, "%"),
+        ("20", 20, None),
+        ("20 V", 20, "V"),
+    ],
+)
+def test_qualifiers_and_units_are_not_erased(raw, number, unit):
+    report = evaluate_study(study(), study(pce=value(raw, number, unit)))
+    assert report.core_facts.groups["performance"].matched == 0
+
+
+@pytest.mark.parametrize("unit", ["percent", "%", "percentage"])
+def test_fraction_percent_equivalence_is_symmetric(unit):
+    a = study(pce=value("0.20", 0.2, "dimensionless"))
+    b = study(pce=value("20", 20, unit))
+    assert evaluate_study(a, b).core_facts.groups["performance"].f1 == 1
+    assert evaluate_study(b, a).core_facts.groups["performance"].f1 == 1
+
+
+def test_formula_comparison_preserves_chemical_case():
+    truth = scientific_study()
+    truth.device_families[0].absorbers[0].formula.raw_value = "CoO"
+    prediction = truth.model_copy(deep=True)
+    prediction.device_families[0].absorbers[0].formula.raw_value = "COO"
+    report = evaluate_study(truth, prediction)
+    assert (
+        "/device_families/0/absorbers/0/formula"
+        in report.core_facts.unmatched_truth_paths
+    )
+
+
+def test_layer_material_role_pairing_is_not_a_bag_of_words():
+    truth = scientific_study()
+    truth.device_families[0].layers.append(
+        Layer(
+            layer_id="second",
+            sequence=2,
+            material="C60",
+            role="electron_transport_layer",
+            reported_properties=[],
+            evidence=EVIDENCE,
+        )
+    )
+    prediction = truth.model_copy(deep=True)
+    a, b = prediction.device_families[0].layers
+    a.role, b.role = b.role, a.role
+    report = evaluate_study(truth, prediction)
+    assert {f"/device_families/0/layers/{i}/role" for i in range(2)} <= set(
+        report.core_facts.unmatched_truth_paths
+    )
+
+
+def test_missing_and_duplicate_measurements_affect_recall_and_precision():
+    truth = study()
+    missing = study(prefix="prediction")
+    missing.performance_observations = []
+    assert evaluate_study(truth, missing).core_facts.groups["performance"].recall == 0
+    duplicate = study(prefix="prediction")
+    duplicate.performance_observations.append(
+        duplicate.performance_observations[0].model_copy(
+            update={"observation_id": "extra"}
+        )
+    )
+    assert (
+        evaluate_study(truth, duplicate).core_facts.groups["performance"].precision
+        == 0.5
+    )
+
+
+def test_core_mask_does_not_turn_unknown_parent_into_an_attribution_error():
+    report = evaluate_study(
+        study(),
+        study(prefix="prediction"),
+        ignored_truth_record_keys=["device_families:truth-family"],
+    )
+    assert report.core_facts.groups["stack"].f1 is None
+    assert report.core_facts.groups["performance"].f1 == 1
+
+
+def test_core_dataset_report_preserves_counts_and_groups():
+    reports = [
+        evaluate_study(study(), study(), benchmark=provenance("a")),
+        evaluate_study(
+            study(), study(pce=value("25%", 25, "%")), benchmark=provenance("b")
+        ),
+    ]
+    result = aggregate_evaluations(reports, bootstrap_samples=50)
+    assert result.core_fact_groups_micro["performance"].precision == 0.5
+    assert result.core_fact_groups_macro_f1["performance"].mean == 0.5
+    assert result.core_fact_groups_micro["stability"].f1 is None
+    assert result.core_facts_macro_f1.paper_count == 2
+
+
+def test_standard_metric_alias_is_not_a_missing_fact():
+    prediction = study(prefix="prediction")
+    prediction.performance_observations[0].metrics[
+        0
+    ].name = "Power conversion efficiency"
+    assert evaluate_study(study(), prediction).core_facts.groups["performance"].f1 == 1
+
+
+@pytest.mark.parametrize("unit", ["mA/cm2", "mA/cm^2", "mA cm⁻²", "mA cm-2"])
+def test_current_density_unit_spellings_are_equivalent(unit):
+    a = study(pce=quantity("Jsc", 20, unit))
+    b = study(pce=quantity("Jsc", 200, "A/m2"))
+    assert evaluate_study(a, b).core_facts.groups["performance"].f1 == 1
+    assert evaluate_study(b, a).core_facts.groups["performance"].f1 == 1
+
+
+def test_identical_observations_on_different_devices_are_matched_by_parent():
+    truth = study()
+    truth.individual_devices.append(
+        truth.individual_devices[0].model_copy(
+            update={
+                "device_id": "second",
+                "label": "treated device",
+                "variant": "treated",
+            }
+        )
+    )
+    truth.performance_observations.append(
+        truth.performance_observations[0].model_copy(
+            update={
+                "observation_id": "second-observation",
+                "device_id": "second",
+            }
+        )
+    )
+    prediction = truth.model_copy(deep=True)
+    prediction.performance_observations.reverse()
+    assert evaluate_study(truth, prediction).core_facts.groups["performance"].f1 == 1
+    # Change both reported values, keeping the same bag of numbers, on valid devices.
+    truth.performance_observations[1].metrics = [value("25%", 25, "%")]
+    prediction.performance_observations[1].metrics = [value("25%", 25, "%")]
+    assert (
+        evaluate_study(truth, prediction).core_facts.groups["performance"].matched == 0
+    )
+
+
+def test_solvent_as_an_extra_layer_reduces_stack_precision():
+    truth = scientific_study()
+    prediction = truth.model_copy(deep=True)
+    prediction.device_families[0].layers.append(
+        Layer(
+            layer_id="solvent",
+            sequence=2,
+            role="other",
+            material="DMF",
+            reported_properties=[],
+            evidence=EVIDENCE,
+        )
+    )
+    score = evaluate_study(truth, prediction).core_facts.groups["stack"]
+    assert score.precision < 1
+    assert score.recall == 1
+
+
+def test_missing_parent_does_not_earn_relationship_credit():
+    truth = study()
+    prediction = study(prefix="prediction")
+    prediction.device_families = []
+    prediction.individual_devices[0].family_id = None
+    report = evaluate_study(truth, prediction)
+    assert (
+        report.field_agreement.relationships_agreed
+        < report.field_agreement.relationships_compared
+    )
+    assert report.core_facts.groups["performance"].matched == 0
+
+
+def test_kelvin_and_celsius_are_equivalent_processing_conditions():
+    truth = scientific_study()
+    prediction = truth.model_copy(deep=True)
+    prediction.device_families[0].processing_steps[0].conditions = [
+        quantity("temperature", 373.15, "K")
+    ]
+    assert evaluate_study(truth, prediction).core_facts.groups["processing"].f1 == 1
+
+
+def test_empty_prediction_has_zero_recall_not_a_perfect_score():
+    truth = scientific_study()
+    prediction = StudyExtraction(
+        paper=truth.paper,
+        device_families=[],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+    report = evaluate_study(truth, prediction)
+    assert report.core_facts.micro.recall == 0
+    assert report.core_facts.micro.precision is None
+    assert report.core_facts.macro_f1 == 0
+
+
+def test_administrative_text_does_not_create_extra_scoring_facts():
+    prediction = scientific_study()
+    prediction.unresolved_notes = ["A very long administrative note" * 20]
+    prediction.paper.title = "Different title spelling"
+    report = evaluate_study(scientific_study(), prediction)
+    assert report.core_facts.micro.f1 == 1
+
+
+def test_equal_constituent_amounts_with_different_meanings_are_not_equivalent():
+    truth = scientific_study()
+    amount = truth.device_families[0].absorbers[0].constituents[0].amount
+    amount.name = "mole fraction"
+    amount.unit = "dimensionless"
+    prediction = truth.model_copy(deep=True)
+    prediction.device_families[0].absorbers[0].constituents[
+        0
+    ].amount.name = "mass fraction"
+    report = evaluate_study(truth, prediction)
+    assert (
+        "/device_families/0/absorbers/0/constituents/0/amount"
+        in report.core_facts.unmatched_truth_paths
+    )
+
+
 def test_global_assignment_avoids_greedy_order_errors():
     scores = [[0.9, 0.8], [0.85, 0.1]]
 
     assert sorted(_maximum_assignment(scores)) == [(0, 1), (1, 0)]
 
 
-def test_cli_verifies_frozen_truth_manifest(tmp_path):
+@pytest.mark.parametrize("artifact_version", [2, 3])
+def test_cli_verifies_frozen_truth_manifest(tmp_path, artifact_version):
     payload = study().model_dump(mode="json")
     encoded = (
         json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -263,7 +679,9 @@ def test_cli_verifies_frozen_truth_manifest(tmp_path):
     (truth / "manifest.json").write_text(
         json.dumps(
             {
-                "artifact_format_version": 2,
+                "artifact_format_version": artifact_version,
+                "evidence_version": 1,
+                "evidence_document_sha256": "a" * 64,
                 "study_schema_sha256": study_schema_sha256(),
                 "paper_id": "paper-a",
                 "split": "test",

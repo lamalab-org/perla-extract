@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 
 import click
@@ -22,7 +23,7 @@ from .validation import validate_study
 
 INPUT = click.Path(path_type=Path, exists=True, readable=True, resolve_path=True)
 OUTPUT = click.Path(path_type=Path, dir_okay=False, resolve_path=True)
-SUPPORTED_GROUND_TRUTH_FORMAT_VERSION = 2
+SUPPORTED_GROUND_TRUTH_FORMAT_VERSIONS = {2, 3}
 
 
 def _json(path: Path) -> object:
@@ -75,10 +76,27 @@ def _truth(
     manifest = _json(manifest_path)
     if not isinstance(manifest, dict):
         raise click.ClickException(f"{manifest_path} is not a JSON object")
-    if manifest.get("artifact_format_version") != SUPPORTED_GROUND_TRUTH_FORMAT_VERSION:
+    if (
+        manifest.get("artifact_format_version")
+        not in SUPPORTED_GROUND_TRUTH_FORMAT_VERSIONS
+    ):
         raise click.ClickException(
             "ground-truth artifact format is unsupported; regenerate or migrate it"
         )
+    evidence_version = None
+    evidence_digest = None
+    if manifest["artifact_format_version"] == 3:
+        evidence_version = manifest.get("evidence_version")
+        evidence_digest = manifest.get("evidence_document_sha256")
+        if (
+            type(evidence_version) is not int
+            or evidence_version < 1
+            or not isinstance(evidence_digest, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", evidence_digest)
+        ):
+            raise click.ClickException(
+                "format-3 ground truth requires an evidence version and document hash"
+            )
     expected_schema = manifest.get("study_schema_sha256")
     if expected_schema != study_schema_sha256():
         raise click.ClickException(
@@ -119,6 +137,8 @@ def _truth(
             ground_truth_sha256=expected_truth,
             source_manifest_sha256=_canonical_digest(source_manifest),
             source_sha256=source_hashes,
+            evidence_version=evidence_version,
+            evidence_document_sha256=evidence_digest,
         ),
     )
 
@@ -201,7 +221,7 @@ def _prediction(
 @click.option("--output", type=OUTPUT, default="evaluation.json")
 @click.option("--minimum-record-similarity", type=click.FloatRange(0, 1), default=0.35)
 @click.option(
-    "--numeric-relative-tolerance", type=click.FloatRange(min=0), default=0.01
+    "--numeric-relative-tolerance", type=click.FloatRange(min=0), default=1e-6
 )
 @click.option(
     "--numeric-absolute-tolerance", type=click.FloatRange(min=0), default=1e-9
