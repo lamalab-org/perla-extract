@@ -18,7 +18,7 @@ flowchart LR
     I --> J["Cheapest configuration meeting quality targets"]
 ```
 
-## 1. Generate the strongest practical seed
+## 1. Generate a review seed with recall passes
 
 Use the quality-first defaults on the complete main paper and Supporting Information:
 
@@ -187,14 +187,13 @@ Use `perla-evaluate` for immutable paper reports and `perla-evaluate-dataset` fo
 compatible micro/macro aggregation; do not implement separate matching logic in an
 experiment notebook.
 
-## Measured calibration example
+## Reporting cost and quality
 
-On one 6-page Science paper with a 35-page supplement, citation-catalog compaction
-reduced the refinement input from 174,116 to 84,778 tokens and the refinement charge
-from about $2.20 to $0.79. A fresh claim ledger, primary draft, and compact refinement
-would cost approximately $1.57 before optional enrichment for the higher-recall run.
+Publish cost examples only with a linked, versioned run artifact recording the model,
+provider, request configuration, measured usage and cost coverage. Include the code
+revision and input scope. Validation counts are not adjudicated recall, and observed
+costs are not current price estimates. Historical unbundled calibration runs are not
+presented here as reproducible benchmark results.
 
-This is a calibration observation, not a universal price estimate or quality result.
-Model outputs varied from 252 to 388 source-verified atomic values despite complete
-source grounding, demonstrating why adjudicated field-level recall—not validation
-status or record count—must govern later cost decisions.
+Use [the evaluation protocol](../methods/benchmark.md) for reference construction,
+scorer validation, release status and comparisons.

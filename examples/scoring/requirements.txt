@@ -1,0 +1,14 @@
+# Reference environment for the synthetic example (Python 3.12, Linux/macOS).
+# Deliberately excludes PDF parsers and model-provider SDKs.
+annotated-types==0.8.0
+click==8.5.0
+et-xmlfile==2.0.0
+flexcache==0.3
+flexparser==0.4
+openpyxl==3.1.5
+pint==0.26.1
+platformdirs==4.11.8
+pydantic==2.13.5
+pydantic-core==2.46.5
+typing-extensions==4.16.0
+typing-inspection==0.4.4

@@ -1,8 +1,9 @@
 """Deterministically score rich study extractions against adjudicated truth.
 
-The evaluator keeps inventory, record matching, and atomic-value agreement separate.
-IDs are not compared because independent extraction runs legitimately assign different
-identifiers. Evidence is scored by the extraction validator, not as record content.
+The primary score requires correct scientific values in their recorded context.
+Inventory, value recovery, and attribution diagnostics explain why credit was lost.
+IDs are not compared because independent extractions assign different identifiers.
+Citation validity is reported separately and does not establish scientific support.
 """
 
 from __future__ import annotations

@@ -25,20 +25,36 @@ standard credential—for example, `openai/...` with `OPENAI_API_KEY`,
 `ANTHROPIC_API_KEY`. The default calls OpenAI directly; the extraction workflow itself
 remains provider-neutral.
 
-The extraction directory contains the refined rich result, its retained first draft,
-a source-grounded ledger of experimental objects and atomic claims, a claim-coverage
-audit, a bounded repair pass for audit-visible gaps, local evidence checks, and audited
-conservative finalization of unsupported optional claims, and audited
-composition/processing enrichment. Every finalization preserves the complete candidate
-and exact removed content. Accepted interpretations feed atomic archives for
-the pinned NOMAD schema without rewriting reported facts in `extraction.json`. Use
-`--dry-run` to parse the documents and estimate call size without calling a model.
-Every model request contains parser-produced text and tables only; the workflow does
-not send rendered pages to a vision model.
+The output includes `extraction.json`, its source evidence and retained drafts.
+Repair and enrichment are audited. If conservative finalization removes an unsupported
+optional claim, the original candidate and removed content remain available.
+NOMAD export uses reported facts and accepted interpretations without rewriting the
+extraction. Use `--dry-run` to parse inputs without calling a model.
+
+Extraction requests contain parser-produced text and tables, not rendered pages.
+Figure classification is a separate workflow. Valid quotations do not prove scientific
+correctness; expert review checks values, attribution and missing information.
+
+## Reproduce the scorer without an API key
+
+From a checkout of the revision under review:
+
+```bash
+python -m pip install -e '.[dev]'
+PYTHONPATH=.:src python -m examples.scoring.run --output /tmp/perla-scoring-example
+```
+
+Choose a new output directory. This generates invented evidence, saves simulated
+corrections, freezes a reference, and checks four scoring cases against expected
+counts. See the [worked example](docs/workflows/scoring-example.md).
+
+The [evaluation methods](docs/methods/benchmark.md) distinguish implemented behavior,
+software tests and scientific validation still needed. No frozen real-paper benchmark
+release or completed held-out accuracy study is bundled with this checkout.
 
 ## Documentation
 
-The [documentation site](docs/index.md) explains:
+The [documentation](docs/index.md), rendered with MkDocs, explains:
 
 - [the study and evidence model](docs/concepts/study-model.md);
 - [single-call and long-supplement extraction](docs/workflows/extraction.md);
@@ -87,4 +103,6 @@ bot.
 - Kevin Jablonka — mail@kjablonka.com
 - Sharat Patil — sharat.patil@physik.hu-berlin.de
 
-Citation information will be added with the first public release of this workflow.
+When citing this software, identify the repository and exact release or commit used.
+A software version alone does not identify the reference data or scoring configuration;
+include their versions and hashes with evaluation results.

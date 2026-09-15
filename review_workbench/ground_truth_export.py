@@ -103,7 +103,11 @@ class GroundTruthExport(BaseModel):
     manifest: GroundTruthManifest
 
     def files(self) -> dict[str, object]:
-        """Return stable public filenames without leaking mutable workbench storage."""
+        """Return release filenames, retaining reviewer identities and comments.
+
+        Export preserves the audit trail; it is not anonymization or permission
+        to publish these artifacts. Public release requires a separate review.
+        """
 
         return {
             "ground_truth.json": self.ground_truth.model_dump(mode="json"),

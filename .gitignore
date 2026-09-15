@@ -185,6 +185,7 @@ celerybeat.pid
 .env
 .env.local
 .venv
+.venv-scoring/
 env/
 venv/
 ENV/

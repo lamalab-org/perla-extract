@@ -62,7 +62,12 @@ def _study(payload: object, path: Path) -> StudyExtraction:
 def _truth(
     path: Path,
 ) -> tuple[StudyExtraction, list[str], BenchmarkProvenance | None]:
-    """Load a truth file or verify a complete frozen benchmark directory."""
+    """Load truth and verify the schema/content identifiers needed for scoring.
+
+    This gate binds results to declared inputs; it does not authenticate expert
+    judgments or revalidate the archived reference evidence. Those checks belong
+    to adjudication and export. Bare JSON deliberately has no release provenance.
+    """
 
     if path.is_file():
         return _study(_json(path), path), [], None

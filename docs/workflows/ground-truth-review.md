@@ -57,9 +57,8 @@ stateDiagram-v2
 3. **Evidence.** Additions and replacements require an exact quote from an imported
    evidence block. Removals require a counterevidence explanation.
 4. **Completeness.** Reconcile the paper-wide search for missing records with the
-   corrected study and finish every quality gate. Preserve omissions already found
-   during the expert's source reading; check unresolved areas rather than discarding
-   that work and restarting. Record the reviewed scope and any remaining uncertainty.
+   corrected study and finish every quality gate. Record omissions found during
+   source reading, their resolution, the reviewed scope and remaining uncertainty.
 5. **Adjudication.** An administrator resolves reviewer disagreement before freezing
    the ground-truth revision.
 
@@ -332,8 +331,11 @@ The manifest also records the generated study-schema hash and any final
 evaluator does not silently treat reviewer uncertainty as exact truth.
 
 The administrator can also use **Download PR bundle** in the workbench after
-adjudication. Unzip its four files into the same version/split/paper directory. Before
-opening the data PR, review the diff and run:
+adjudication. Before publishing, inspect all four files for private reviewer identities,
+comments and source content. The exporter is not an anonymization tool. Preserve the
+originals privately; any public derivative needs a new, internally consistent version
+and hashes. Follow the [release checklist](../methods/benchmark.md#release-and-reproducibility).
+Then review the proposed data diff and run:
 
 ```bash
 python -m pytest -q review_workbench/tests

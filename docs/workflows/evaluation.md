@@ -1,20 +1,19 @@
-# Evaluate an extraction
+# Scoring reference
 
 `perla-evaluate` compares a rich `extraction.json` with one frozen, adjudicated
 `StudyExtraction`. It is deterministic and never calls an LLM. Run-local record IDs
 and evidence quotations are excluded from record similarity; evidence validity is a
 separate extraction-validation result.
 
-For the full review-to-score workflow, including reconciling older expert Excel
-comments, start with [From reviewer corrections to a benchmark](review-to-benchmark.md).
+For the scientific protocol and evidence status, read [Evaluation methods](../methods/benchmark.md).
+For commands using saved expert corrections, read [From corrections to a benchmark](review-to-benchmark.md).
+The [worked example](scoring-example.md) runs without PDFs or an API key.
 
-The reference workflow includes expert reading of the source papers for omissions,
-not only correction of model-proposed records. Once reconciled and adjudicated,
-those additions support recall evaluation as well as correctness evaluation within
-the reviewed scope. Validate the scorer separately against expert-established
-matches, errors and equivalent representations; a low score can also reveal an
-alignment or comparison defect. See [scorer calibration from reviewed corrections](
-review-to-benchmark.md#validate-the-scorer-without-restarting-the-scientific-review).
+The scorer measures agreement with an adjudicated reference within its declared scope.
+It does not certify the completeness of that reference or the correctness of record
+alignment. Source review and scorer validation are separate requirements.
+
+The following paths illustrate a real-study run; they are not bundled benchmark data:
 
 ```bash
 perla-evaluate \
@@ -28,6 +27,11 @@ and canonical `ground_truth.json` content hash before scoring. The resulting rep
 also records the paper ID, split, truth hash, source-document hashes, and a fallback
 source-manifest hash. Passing a bare truth JSON is useful for development but does not
 provide those provenance checks.
+
+Hash checks bind a score to declared content; they do not authenticate expert
+judgments. The evaluator does not repeat the workbench's adjudication gates or
+revalidate the archived reference evidence. Use the normal review/export workflow
+and inspect release provenance, rather than constructing a manifest to certify a seed.
 
 Frozen ground-truth formats 2 and 3 are supported. Format 3 additionally requires and
 records the reviewed evidence version and document hash. Evaluation reports now use
@@ -130,50 +134,169 @@ to obtain a clean score. Resolve reference issues with source evidence and a new
 truth version; retain genuine prediction errors. Never fabricate sequence numbers
 solely to satisfy the scorer.
 
-### Equality rules and limitations
+### Matching: which records refer to the same thing?
 
-Single unqualified numbers with explicit compatible units are converted using Pint.
-The default relative tolerance is `1e-6` and absolute tolerance `1e-9` in canonical
-base units—intended for conversion precision, not experimental uncertainty. These are
-recorded in the report and configurable at the CLI. Missing units are not silently
-treated as dimensionless. Explicit fractions and percentages are comparable in
-both directions, as are Celsius and Kelvin.
-Both values are compared in the same base unit: temperature in Kelvin, time in
-seconds and percentages as dimensionless fractions. Thus changing the reference's
-unit does not change the tolerance. If both units are absent, the absolute tolerance
-applies to the unconverted numbers; missing units are still not inferred.
+Matching and correctness are different decisions. A prediction with the wrong PCE
+can still describe the right device; pairing those records lets us identify the
+value error rather than calling the entire device missing.
 
-Inequalities, ranges, uncertainties and formulas use conservative literal comparison,
-including their raw qualifier. A normalized central number cannot erase `>`, `~`, or
-`±`. Unicode typography and whitespace are normalized; chemical case, punctuation
-and stoichiometry are preserved. The four standard performance names have explicit
-aliases for PCE, Voc, Jsc and FF. There is **no** LLM judge, inferred chemical synonym
-dictionary, or automatic interpretation of unfamiliar paraphrases.
+The implemented matcher works in two levels:
 
-Operation descriptions use a small, explicit equivalence map. The default maps
-`thermal annealing` to `annealing`; it does not equate arbitrary heating, drying or
-annealing descriptions. `--operation-aliases aliases.json` replaces that map with
-an expert-approved JSON object, for example `{"thermal annealing": "annealing"}`.
-An empty object disables aliases. Keys and values are whitespace/case normalized;
-empty/conflicting entries and alias chains/cycles are rejected. The full map is
-stored in every report and must match across an aggregate. Freeze it on development
-papers before evaluating unseen papers.
+1. **Pair whole records**, separately for families, individual devices, performance
+   observations, population statistics and stability tests, in that order.
+2. **Compare facts inside those pairings**, separately for each scientific group
+   and property name. One prediction fact cannot satisfy several reference facts.
 
-Consequently, equivalent free-text operation descriptions, chemical synonyms,
-alternative stack representations, or differently written ranges may score as
-disagreements. Inspect such cases before freezing the benchmark protocol. Do not
-tune aliases or tolerances against the held-out test results. Layer/step order comes
-from explicit sequence fields, not JSON array position; unspecified ordering cannot
-be reconstructed by the scorer. Record alignment remains an algorithmic estimate,
-not proof of specimen identity.
+For whole records, the content-similarity formula is:
 
-Candidate matching uses the same metric-name aliases and canonical base units as
-fact scoring. Canonical numbers are formatted to 12 significant digits for lexical
-features only; this does not round the values used to award scientific credit.
-Unknown units and qualified claims retain their raw representations. Unordered
-materials, target layers and condition lists use one-to-one multiset comparison,
-preserving duplicates without depending on raw spelling or array order. Explicit
-layer/operation sequence remains ordered scientific context.
+```text
+content similarity = 0.75 × Jaccard(record-content tokens)
+                   + 0.25 × Jaccard(canonical reported-property names)
+
+Jaccard(A, B) = number of shared entries / number of distinct entries in either set
+```
+
+Record-content tokens include descriptions and materials. Eligible numeric claims
+use canonical base-unit values and units, and metric names use the same explicit
+aliases as fact scoring; other claims retain raw values and units. Canonical numbers
+use 12 significant digits for lexical features only, never for the final comparison.
+IDs and citations are excluded; parsed numbers are used only after their consistency
+with the raw value has been checked. Text is
+lowercased and punctuation simplified for this **candidate-matching step only**;
+the later chemical-value comparison preserves case and punctuation. Two empty
+token sets have similarity 1 by convention, not because they establish identity.
+
+A candidate must reach `--minimum-record-similarity`, default **0.35**. This is a
+heuristic similarity threshold, not a 35% confidence estimate. A surviving pair
+receives an additional **2** in its assignment weight when its parent relationships
+agree under already established pairings and its protocol fields agree. Protocol
+fields are measurement type, scan direction, statistic type and sample size where
+present. Both-missing parent fields can count as agreement; the bonus does not prove
+that a link was reported. Families have no parent-link bonus.
+
+The Hungarian algorithm selects a **maximum-total-weight, one-to-one assignment**
+over all candidates of that record type. It does not choose each row's favourite
+independently, and it does not optimize the number of matched records separately
+from their weights. For example, with these illustrative eligible scores and no
+differing parent bonuses:
+
+| | Prediction A | Prediction B |
+| --- | ---: | ---: |
+| Reference 1 | 0.90 | 0.80 |
+| Reference 2 | 0.85 | 0.40 |
+
+Greedily assigning reference 1 to A would leave B for reference 2, totaling 1.30.
+The global assignment instead uses 1→B and 2→A, totaling 1.65. This avoids a common
+order-dependent matching error. Unmatched reference records reduce inventory recall;
+unmatched predictions reduce inventory precision. Reported `matches[].similarity`
+is the **unboosted** content similarity.
+
+After pairing, facts compete only within the same scientific group, paired owner
+and property name. Fact comparisons are binary: they either satisfy the selected
+equality/context rule or they do not. There is no partial credit because two PCEs
+are “fairly close” beyond the numeric tolerance. Layer and processing order comes
+from explicit sequence fields, not JSON array position.
+
+**Limitations to inspect:** values influence whole-record alignment, so this is
+not an outcome-blind identity matcher. Similar specimens can still be confused,
+and a badly paired family can affect its linked records. Equal-weight alternatives
+in a selected pair's row or column are flagged using an internal absolute score
+tolerance of `1e-12`; this does not find every possible alternative global optimum.
+Repeated nested objects with indistinguishable recorded identities are also flagged.
+Inspect `matches`, `core_facts.issues` and the original paths before accepting a
+headline. A deterministic assignment is not proof of scientific identity.
+
+The older `field_agreement.reported_values` diagnostic uses a different quantity
+matcher: 80% canonical property-name agreement plus 20% raw-text token similarity,
+with a 0.5 threshold, followed by a value comparison. It is retained for diagnosis,
+not used to award the primary `core_facts` score.
+
+
+### Numeric tolerances: when are two values equal?
+
+For two eligible scalar `ReportedValue` entries, first convert compatible explicit
+units to canonical base units on both sides, then apply Python's `math.isclose` rule:
+
+```text
+abs(reference − prediction)
+    <= max(relative_tolerance × max(abs(reference), abs(prediction)),
+           absolute_tolerance)
+```
+
+| Setting | Default | Meaning |
+| --- | ---: | --- |
+| `--numeric-relative-tolerance` | `1e-6` | Allow a difference proportional to the larger absolute value |
+| `--numeric-absolute-tolerance` | `1e-9` | Allow a small difference near zero, in canonical base units |
+| `--minimum-record-similarity` | `0.35` | Whole-record candidate threshold; unrelated to numeric accuracy |
+
+These tolerances accommodate conversion/floating-point precision. They are **not**
+experimental error bars, significant-figure inference, or permission to round an
+extracted measurement freely. They apply to numeric reported values, including
+numeric test context. Ordinary schema integers such as sample size and sequence
+are compared exactly, not approximately.
+
+Examples, assuming the property and scientific context also agree:
+
+| Reference | Prediction | Result with defaults |
+| --- | --- | --- |
+| PCE 20% | PCE 0.20, explicitly dimensionless | Equal after conversion |
+| PCE 20% | PCE 20.00001% | Equal within tolerance |
+| PCE 20% | PCE 20.0001% | Different |
+| PCE 20.0% | PCE 20.04% | Different; no automatic rounding-to-reported-precision rule |
+| Time 1 hour | Time 3600 seconds | Equal after conversion |
+| Temperature 65 °C | Temperature 338.15 K | Equal after conversion |
+| PCE 20% | PCE 20 with no unit | Different; missing is not an explicit percent unit |
+| PCE >20% | PCE 20% | Different; an inequality is not an exact value |
+
+At PCE 20%, the relative allowance is approximately **0.00002 percentage points**,
+not one percentage point. The absolute allowance is in base units: seconds for
+time, Kelvin for temperature and a dimensionless fraction for percent. This prevents
+the tolerance from changing when the same reference is expressed in another unit,
+including an offset temperature scale. Freeze the scoring version and tolerances;
+version-4 reports must not be mixed with older reference-unit-based scores.
+
+Unordered context lists are compared as multisets with one-to-one matching under
+these same equality rules. This preserves duplicates and handles whitespace/unit
+changes without an artificial disagreement caused by sorting raw text. Explicit
+layer and operation sequence is not treated as unordered.
+
+Unit conversion is attempted only when each raw value is a single, unqualified
+number, with no suffix or a suffix matching its stated unit. The parsed number
+must agree with that raw number within an internal consistency check (`1e-9`
+relative, `1e-12` absolute). That check is distinct from the scoring tolerance.
+If both units are missing, eligible numbers can be compared without conversion;
+the scorer does not infer what the missing unit was. Unrecognized units fall back
+to conservative literal equality, not guessed conversion.
+
+### Chemicals, ranges and free text
+
+Ranges, uncertainties, inequalities and formulas do not become equivalent merely
+because their parsed central number agrees. They fall back to literal comparisons
+of normalized raw text, unit and parsed number. Unicode typography and repeated
+whitespace are normalized; chemical case, punctuation and stoichiometry remain
+significant. Equality of two representations does not itself validate either claim
+against the paper.
+
+Consequently, `CoO` is not `COO`, and the scorer does not infer that `MAPbI3` and
+`CH3NH3PbI3` represent the same composition. Equivalent differently written ranges
+or chemical names can produce conservative false disagreements. Inspect these on
+development papers instead of hiding them in a generous universal tolerance.
+
+Property names have explicit aliases for PCE, Voc, Jsc and FF. Operation names use
+an explicit, frozen map: by default, `thermal annealing` maps to `annealing`.
+Supply `--operation-aliases aliases.json` to replace the map, or `{}` to disable it.
+This applies to fact comparison, not the lexical whole-record matching formula.
+Other operation paraphrases are not inferred. Changing aliases can affect both
+operation matches and their dependent condition matches; freeze the map before
+held-out evaluation and retain it in each report.
+
+
+### LLM judging
+
+The implemented scorer makes no LLM or embedding calls. Experts resolve semantic
+disagreements; the scorer does not infer chemical synonyms or rewrite predictions.
+A future judge-assisted analysis would require a separately validated, versioned
+protocol and must not be mixed with these deterministic scores.
 
 ### Diagnostic scores
 
@@ -189,14 +312,6 @@ The report keeps distinct questions separate:
   conditional value agreement for matched quantities, including compatible unit
   conversion; and
 - unmatched truth and prediction record keys for error analysis.
-
-The matcher uses a versioned, transparent lexical/content similarity and a Hungarian
-assignment. Previously matched parent links and compatible protocol fields receive
-an assignment preference, preventing equal numbers on different devices from being
-paired purely by array order. The lexical threshold still applies; returned pair
-similarities are the unboosted content scores. It does not greedily match records in file order. The threshold and
-numeric tolerances are stored in every report. Do not tune them on the held-out test
-split.
 
 `field_agreement.reported_values` is retained for diagnosis: it can be perfect while
 the values themselves are wrong. `core_facts` is the stricter correct-in-context
@@ -264,31 +379,9 @@ matched/unmatched paths for each view.
 Keep calibration, development, and test manifests separate. Papers used to change
 parsing, prompts, schemas, matching, thresholds, or model selection are not held out.
 
-## Preparing a human-versus-pipeline A/B study
+## Comparing systems
 
-The scorer is source-blind: human and model outputs use the same `StudyExtraction`
-schema, frozen truth, field selection and equality rules. Keep the two questions
-separate: objective extraction accuracy against independent adjudicated truth, and
-experts' blinded preference for the presented results.
-
-Before collecting the comparison:
-
-1. Freeze unseen paper assignments, main/SI access, figure policy, scoring version,
-   tolerances and human time/tool allowance. Explicitly choose whether the question
-   is equal-time performance or best achievable quality.
-2. Have humans extract without seeing the model output or the reference labels.
-   Do not use that same person's extraction as the only ground truth for its own score.
-3. Independently adjudicate correctness and completeness. Treat figure-only facts
-   under a declared shared scope; figure classifications alone are not field-level
-   ground-truth labels.
-4. Score both outputs unchanged. Retain failed papers: an empty valid extraction
-   scores zero recall where truth contains facts; invalid or missing artifacts are
-   explicit run failures, not papers silently dropped by the evaluator.
-5. Present A/B results in the same layout, randomize sides, hide their origin, and
-   ask separately about factual correctness, completeness, device/measurement
-   attribution, chemical detail and correction effort. Include tie and cannot-judge
-   responses.
-6. Compare paired paper-level scores and review effort. The existing aggregator is
-   not a paired-comparison analysis; add that analysis when the A/B assignments are
-   fixed. Preserve both truth and prediction versions so later label corrections
-   cannot masquerade as model improvements.
+Freeze the same paper roster, source scope, reference and scoring configuration for
+both systems. The aggregator does not enforce a roster or implement a paired A/B
+significance test. The [evaluation protocol](../methods/benchmark.md#comparison-studies)
+distinguishes rich-schema accuracy, historical-database review, and preference.

@@ -40,8 +40,8 @@ flowchart LR
 - Never use comparison responses as ground truth. Adjudicate a separate ground-truth
   dataset when recall must be measured against a complete reference.
 
-Run a 6–8 paper usability pilot first. Fix only protocol and interface problems, then
-freeze the design and use roughly 24–30 representative papers for the confirmatory
+Run a usability pilot first. Fix protocol and interface problems, then freeze the
+design and justify the number and selection of papers for the confirmatory
 study. Assign at least two experts per candidate-paper combination where resources
 allow, and balance candidate exposure within every reviewer.
 
@@ -71,6 +71,19 @@ native payload. Identical path/value claims repeated across flat rows are shown 
 experts count duplicate rows and wrong relationships separately. This prevents
 provenance bookkeeping and repeated stack descriptions from dominating the accuracy
 score or revealing which workflow produced an output.
+
+## Relationship to the rich-schema benchmark
+
+This workflow scores claims in a shared reduced-schema projection and separately
+collects native-utility and A/B preferences. It is not the rich-schema scorer:
+numeric values and unit fields are separate claims here, whereas the rich scorer
+checks scientific quantities together with their context. Do not compare their
+precision numbers as if they used the same denominator. See [Evaluation methods](
+../methods/benchmark.md#comparison-studies).
+
+This is a protocol and implemented review workflow, not a report of completed
+confirmatory results. Freeze the cohort, sampling rationale, rubrics and analysis
+before collecting confirmatory judgments.
 
 ## Expert task
 
@@ -129,10 +142,9 @@ projection issues, active time, structural-error counts, rating means,
 curation-suitability counts, rubric-level preference counts, and supported atomic
 precision:
 
-\[
-\text{precision} = \frac{\text{correct}}
-{\text{correct} + \text{incorrect} + \text{unsupported}}
-\]
+```text
+supported-claim precision = correct / (correct + incorrect + unsupported)
+```
 
 `cannot_determine` is reported but excluded from that denominator. Omission counts are
 useful diagnostics, not source-relative recall, unless a separate adjudicated ground
