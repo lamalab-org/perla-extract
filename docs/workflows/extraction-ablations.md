@@ -2,7 +2,8 @@
 
 These are small, paired experiments, not changes to production defaults. They ask
 which paid stages earn their cost. No result or saving is assumed in advance.
-The studies test repeated reading, global refinement and the claim ledger separately.
+The studies test repeated reading, global refinement, the claim ledger and the
+reader model separately. Run studies 1–3 first; study 4 tests a different cost lever.
 
 ## Freeze the comparison before running
 
@@ -103,6 +104,43 @@ Any future direct-window implementation would be a different experiment.
 Inspect missed devices, erroneous family splits, champion/average conflation and
 precursor-to-concentration associations. Lower call count does not guarantee lower
 cost: direct evidence can make assembly/refinement inputs much larger.
+
+## Study 4: can a cheaper model read claims for the strong assembler?
+
+Configuration: `examples/ablations/04-cheaper-reader.json`. Add an explicit
+`--reader-model PROVIDER/CHEAPER_MODEL` to the preparation command. The planner
+refuses a missing reader or the same model string as the main model.
+
+| Arm | Claim-reading model | Assembly, refinement, repair and enrichment |
+| --- | --- | --- |
+| Control | Main model | Main model |
+| Treatment | Prespecified cheaper model | Same main model |
+
+Both arms read each document/window twice. Do not also reduce recall passes. Choose
+one candidate before scoring: verify its provider ID, supported context, strict
+schema support, output limits, and current prices. An open-weight candidate is
+welcome; model availability or lower token prices are not evidence of lower
+per-paper cost. Keep the provider/model fixed, record defaults and fallbacks, and
+count all failed or repaired responses. If its context/output limits cannot support
+the shared settings, do not silently use smaller windows in only that arm. That
+requires a separately declared configuration comparison.
+
+Hypothesis: claim reading can be cheaper while retaining the facts a strong model
+needs to assemble scientifically correct records. The main danger is unrecoverable
+omission: the assembler normally sees ledger-selected evidence, not all uncited
+source passages. A claim-free fallback can also make a superficially successful
+run cease to represent the intended hybrid. Report such fallbacks explicitly.
+
+Inspect ledger and final-output errors separately: missing concentrations, damaged
+formulas, wrong object scope, lost statistical qualifiers and unsupported claims.
+The source-grounding audit is not a precision score. Do not conclude that an open
+model only loses recall; wrong relationships and plausible but wrong values also
+matter. Keep the common per-group precision/recall criteria.
+
+No reader-model leaderboard is implied. Trying another reader is another
+preregistered candidate on development papers; it must not reuse held-out results
+to choose the model. Only test a combined one-reading/hybrid workflow after this
+factor's effect is measured separately.
 
 ## Prepare commands without paid calls
 

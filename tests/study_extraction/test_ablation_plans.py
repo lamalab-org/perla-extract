@@ -168,3 +168,10 @@ def test_generated_scoring_commands_accept_review_export_and_aggregate(tmp_path)
     for command in plan["aggregates"]:
         result = CliRunner().invoke(aggregate, command[3:])
         assert result.exit_code == 0, result.output
+
+
+@pytest.mark.parametrize("reader", [None, "provider/strong"])
+def test_hybrid_requires_explicit_distinct_model(cohort, tmp_path, reader):
+    path = ROOT / "examples/ablations/04-cheaper-reader.json"
+    with pytest.raises(ValueError, match="explicit, distinct"):
+        prepare(path, cohort, tmp_path / "plan", "provider/strong", reader, 5, 1, 0)
