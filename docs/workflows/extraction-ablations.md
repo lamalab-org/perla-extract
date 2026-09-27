@@ -202,6 +202,34 @@ prespecified retry rule for both arms before claiming comparable whole-roster F1
 
 ## Report quality and cost together
 
+After scoring, produce a paired report without more model calls:
+
+```bash
+PYTHONPATH=.:src python -m examples.ablations.report \
+  /absolute/path/to/private/study-01/plan.json \
+  --output /absolute/path/to/private/study-01/comparison.json
+```
+
+The report lists every planned run, each paper's treatment-minus-control F1, and
+each group's counts, precision and recall for each repetition. It checks reference
+identity across arms and repetitions and requires matching scorer settings. Repeats
+are averaged within each paper before the paper-level differences are averaged.
+Missing, malformed, or incompatible scores prevent a whole-roster quality summary;
+the command still writes diagnostics and exits unsuccessfully. It refuses to
+overwrite an existing output. Choose a new filename after resolving problems.
+
+`accounting` distinguishes the recorded spend in readable score reports from the
+total for all planned runs. Total cost and savings remain `null` if any run lacks
+complete accounting. Inspect the original run logs for unscored attempts: this
+summary does not recover their spend from provider billing. Run status, cache hits
+and prediction-validation results remain visible. A successful summary is not a
+claim that every extraction succeeded or passed validation.
+
+This command summarizes saved scores; it does not rerun extraction, verify that a
+provider honored the plan, or select a production default. Keep the plan, run logs,
+score reports and their recorded hashes together. It provides no confidence interval
+or automatic equivalence claim. Apply the screening rule below and inspect repeats.
+
 Primary outcome: paired per-paper difference in `core_facts.macro_f1`. Also show
 micro counts, precision and recall separately for performance, population,
 stability, composition, stack and processing. Show each paper, not just averages.
