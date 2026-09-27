@@ -2,7 +2,7 @@
 
 These are small, paired experiments, not changes to production defaults. They ask
 which paid stages earn their cost. No result or saving is assumed in advance.
-The first two studies test repeated reading and global refinement separately.
+The studies test repeated reading, global refinement and the claim ledger separately.
 
 ## Freeze the comparison before running
 
@@ -71,6 +71,38 @@ Count changes in downstream repair calls and total spend: repair is allowed to
 respond to the different drafts, so saved rewrite tokens are not necessarily the
 net saving. This is the effect of removing the stage from the deployed workflow,
 not a claim that the remaining downstream calls are identical.
+
+## Study 3: is the claim ledger better than direct extraction?
+
+Configuration: `examples/ablations/03-direct-extraction.json`.
+
+| Arm | Evidence passed to study assembly | Global refinement |
+| --- | --- | --- |
+| Control | Grounded claim ledger plus cited passages | Enabled |
+| Treatment | Complete parsed scientific evidence, no ledger calls | Enabled |
+
+Hypothesis: a strong model can construct the study directly without losing important
+facts, while avoiding the ledger's output cost and its potential omission bottleneck.
+Keep refinement, enrichment, repair settings and budgets unchanged. This is **not**
+a one-call pipeline: only `--claims` changes. A later combined test can remove both
+claims and refinement if the individual studies support that combination.
+
+The intervention also changes available audit information: without a claim ledger,
+claim-coverage repair cannot identify the same missing claims. This is a total-system
+comparison of using a ledger, not an isolated test of JSON formatting. Local checks
+still run, but source occurrence does not establish scientific correctness.
+
+Report results separately for short and long SI. The existing no-claims path uses
+global source evidence; it does **not** implement direct-extraction windows. A paper
+that exceeds the assembly input limit must remain a visible failure. Do not truncate
+the SI or quietly omit that paper. Confirm context support with `--dry-run` before
+paid runs; if comparing only the context-feasible subset as a secondary analysis,
+define it before inspecting any model output and retain whole-roster failure counts.
+Any future direct-window implementation would be a different experiment.
+
+Inspect missed devices, erroneous family splits, champion/average conflation and
+precursor-to-concentration associations. Lower call count does not guarantee lower
+cost: direct evidence can make assembly/refinement inputs much larger.
 
 ## Prepare commands without paid calls
 
