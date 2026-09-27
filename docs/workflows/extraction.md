@@ -99,12 +99,23 @@ It reports:
 - top-level records that no target object supports; and
 - shared quantities whose named targets did not each receive an atomic value.
 
-A numerical claim is covered only when a linked record contains the claim's raw value
-in an atomic `ReportedValue` cited to the same local evidence. Sharing a citation with
-some other value is only a possible match.
+A claim with a raw value is covered only when a linked record contains that value
+in a `ReportedValue` cited to the same local evidence. This rule applies regardless
+of whether the model labels the claim as performance, processing, stability, or
+another kind. Sharing a citation with some other value is only a possible match.
+The check accepts a unit stored separately from the raw number, but does not infer
+missing units or convert between units.
 
-The audit is a review queue, not an accuracy score. A model can still misunderstand
-scope, so final quality must be measured against reviewed ground truth.
+The extraction instructions also distinguish shared quantities from paired values
+reported “respectively.” Each value must stay with its subject. Ratios retain their
+component order and basis; their terms are not independent concentrations. Separate
+scans may share a device only when the source supports that link. A common recipe or
+an equal PCE does not establish specimen identity, and a short measurement is not
+automatically a stability test.
+
+The audit is a review queue, not an accuracy score. It cannot recover a fact omitted
+from the ledger itself, and a model can still misunderstand scope. Measure final
+quality against reviewed ground truth.
 
 When the audit or local validation exposes a resolvable problem, one targeted repair
 call receives only the affected records and implicated passages. It may add or replace
