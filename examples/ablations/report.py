@@ -13,7 +13,7 @@ from statistics import mean
 
 import click
 
-from perla_extract.study_extraction.artifacts import write_json_atomic
+from perla_extract.study_extraction.artifacts import write_json_exclusive
 from perla_extract.study_extraction.evaluation import (
     EvaluationReport,
     aggregate_evaluations,
@@ -211,9 +211,9 @@ def main(plan: Path, output: Path) -> None:
                 "Choose a new output path; existing artifacts are not overwritten"
             )
         result = summarize(plan)
+        write_json_exclusive(output, result)
     except (OSError, ValueError, KeyError, TypeError, IndexError) as error:
         raise click.ClickException(str(error)) from error
-    write_json_atomic(output, result)
     click.echo(
         f"Wrote {output}: {result['quality_status']}; {result['paper_count']} papers"
     )
