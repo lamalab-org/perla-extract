@@ -1,0 +1,8 @@
+{
+  "name": "cheaper-reader",
+  "factor": "claim_model",
+  "arms": {
+    "control": {"claim_model": "main"},
+    "treatment": {"claim_model": "reader"}
+  }
+}
