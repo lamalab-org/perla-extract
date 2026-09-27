@@ -2,7 +2,7 @@
 
 These are small, paired experiments, not changes to production defaults. They ask
 which paid stages earn their cost. No result or saving is assumed in advance.
-The first study tests **one versus two independent source readings**.
+The first two studies test repeated reading and global refinement separately.
 
 ## Freeze the comparison before running
 
@@ -44,6 +44,33 @@ most correctly attributed facts. Risk: a claim omitted by the reader never reach
 the assembler. Inspect missing concentrations, population metrics and stability
 conditions, not merely overall F1. Compare the ledger and final extraction to see
 whether a recovered claim survived assembly. Claim count is not accuracy.
+
+## Study 2: does global refinement improve the final result?
+
+Configuration: `examples/ablations/02-global-refinement.json`. Substitute this file
+in the preparation command below and choose a new output directory.
+
+| Arm | Global study rewrite | Source readings | Targeted repair |
+| --- | --- | ---: | --- |
+| Control | Enabled | 2 | Enabled |
+| Treatment | Disabled | 2 | Enabled |
+
+Hypothesis: local repair recovers enough errors that generating a second complete
+study adds little final quality. This comparison does **not** also remove the
+second reading. Keep all other settings at the common control, even if study 1
+looks favorable. That isolates refinement rather than measuring two changes at once.
+
+Inspect `draft_extraction.json`, `refinement_extraction.json` when present,
+`refinement_selection.json`, repair audits and final `extraction.json`. A refinement
+candidate rejected by local checks is still a paid call. Score the final outputs;
+use intermediate drafts only to explain changes, never to select the better answer
+with reference access. Check whether refinement repairs family/specimen boundaries
+or incorrectly changes supported concentrations and chemical associations.
+
+Count changes in downstream repair calls and total spend: repair is allowed to
+respond to the different drafts, so saved rewrite tokens are not necessarily the
+net saving. This is the effect of removing the stage from the deployed workflow,
+not a claim that the remaining downstream calls are identical.
 
 ## Prepare commands without paid calls
 
