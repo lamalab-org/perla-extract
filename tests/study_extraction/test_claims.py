@@ -1,3 +1,5 @@
+import pytest
+
 from perla_extract.study_extraction.claims import (
     ClaimLedger,
     ExperimentalObject,
@@ -277,8 +279,14 @@ def test_shared_quantity_requires_one_atomic_value_per_named_target():
     assert audit["status"] == "needs_review"
 
 
-def test_atomic_claim_requires_its_value_not_only_a_shared_citation():
-    evidence = citation("recipe", "the precursor concentration was 11.4 M")
+@pytest.mark.parametrize(
+    "kind",
+    ["reported_quantity", "performance", "population", "stability", "processing"],
+)
+def test_atomic_claim_requires_its_value_not_only_a_shared_citation(kind):
+    evidence = citation(
+        "recipe", "The stock was 11.4 M; the diluted precursor concentration was 1.4 M."
+    )
     ledger = ClaimLedger(
         objects=[
             ExperimentalObject(
@@ -292,7 +300,7 @@ def test_atomic_claim_requires_its_value_not_only_a_shared_citation():
         claims=[
             SourceClaim(
                 claim_id="concentration",
-                kind="reported_quantity",
+                kind=kind,
                 label="precursor concentration",
                 subject_object_ids=["solar-cell-design"],
                 scope="target",
@@ -336,6 +344,24 @@ def test_atomic_claim_requires_its_value_not_only_a_shared_citation():
     claim = next(item for item in audit["items"] if item.get("claim_id"))
     assert claim["status"] == "possible_match"
     assert audit["issue_count"] == 1
+
+    # The existing repair path must see the gap, regardless of the model's kind tag.
+    from perla_extract.study_extraction.repair import build_repair_worklist
+
+    worklist = build_repair_worklist(
+        extraction(family_with_different_value), audit, {"issues": []}
+    )
+    assert any(item.reason == "claim_possible_match" for item in worklist.items)
+
+    amount = family_with_different_value.absorbers[0].constituents[0].amount
+    assert amount is not None
+    amount.raw_value = "1.4 M"
+    amount.value_number = 1.4
+    repaired = audit_claim_coverage(ledger, extraction(family_with_different_value))
+    assert (
+        next(item for item in repaired["items"] if item.get("claim_id"))["status"]
+        == "covered"
+    )
 
 
 def test_only_source_grounded_objects_and_claims_can_guide_assembly():

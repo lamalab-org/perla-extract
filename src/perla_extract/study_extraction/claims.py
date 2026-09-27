@@ -582,17 +582,10 @@ def audit_claim_coverage(
         source_blocks = {item.block_id for item in claim.evidence}
         for _, record_id, record, block_ids, quotes in candidate_entries:
             match = _matches_evidence(claim.evidence, block_ids, quotes)
-            requires_atomic_value = claim.kind == "reported_quantity" or bool(
-                claim.shared_targets
-            )
-            value_supported = (
-                not requires_atomic_value
-                or claim.raw_value is None
-                or any(
-                    bool(source_blocks & value_blocks)
-                    and _contains_raw_value(claim.raw_value, value_raw)
-                    for _, value_raw, value_blocks in _reported_values(record)
-                )
+            value_supported = claim.raw_value is None or any(
+                bool(source_blocks & value_blocks)
+                and _contains_raw_value(claim.raw_value, value_raw)
+                for _, value_raw, value_blocks in _reported_values(record)
             )
             if match == "covered" and value_supported:
                 exact_claims.append(record_id)
