@@ -6,7 +6,9 @@ import json
 import zipfile
 
 import pytest
+from click.testing import CliRunner
 
+from perla_extract.study_extraction.evaluation_cli import main as evaluate
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
     study_schema_sha256,
@@ -30,12 +32,41 @@ SPLIT = "calibration"
 PAPER_ID = "10.0000--example"
 
 
+def test_adjudicated_app_export_can_be_scored(tmp_path, empty_study, document_payload):
+    store = StudyReviewStore(tmp_path / "review")
+    study = _study_with_evidence(empty_study, "champion device")
+    study["device_families"][0]["full_stack_raw"] = "ITO/perovskite/Ag"
+    _adjudicate(store, study, document_payload)
+    export = build_ground_truth_export(store, SPLIT, PAPER_ID)
+    target = write_ground_truth_export(export, tmp_path / "frozen")
+    output = tmp_path / "evaluation.json"
+    result = CliRunner().invoke(
+        evaluate,
+        [
+            "--truth",
+            str(target),
+            "--prediction",
+            str(target / "ground_truth.json"),
+            "--output",
+            str(output),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    report = json.loads(output.read_text())
+    assert report["core_facts"]["micro"]["f1"] == 1
+    assert (
+        report["benchmark"]["evidence_document_sha256"]
+        == export.manifest.evidence_document_sha256
+    )
+
+
 def _adjudicate(
     store: StudyReviewStore,
     study: dict,
     document: dict,
     *,
     decision: str = "verified",
+    correction: MutationRequest | None = None,
 ) -> dict:
     """Create a fully reviewed fixture through the public state transitions."""
 
@@ -47,6 +78,13 @@ def _adjudicate(
         manifest={"model": "frontier"},
         reviewer_id="ada",
     )
+    if correction is not None:
+        bundle = store.mutate(
+            SPLIT,
+            PAPER_ID,
+            correction.model_copy(update={"base_revision": bundle["revision"]}),
+            "ada",
+        )
     bundle = store.inventory_audit(
         SPLIT,
         PAPER_ID,
@@ -84,6 +122,65 @@ def _adjudicate(
             "ada",
         )
     return bundle
+
+
+def test_saved_scientific_correction_changes_the_reference_not_the_seed(
+    tmp_path, empty_study, document_payload
+):
+    """Exercise correction -> adjudication -> immutable export -> meaningful scores."""
+
+    from perla_extract.study_extraction.evaluation import evaluate_study
+
+    store = StudyReviewStore(tmp_path / "review")
+    quote = "The device stack is ITO/perovskite/Ag."
+    document = copy.deepcopy(document_payload)
+    document["blocks"][0]["text"] += " " + quote
+    seed = _study_with_evidence(empty_study, quote)
+    seed["device_families"][0]["full_stack_raw"] = "ITO/solvent/perovskite/Ag"
+    _adjudicate(
+        store,
+        seed,
+        document,
+        correction=MutationRequest(
+            action="replace",
+            path="/device_families/0/full_stack_raw",
+            value="ITO/perovskite/Ag",
+            base_revision=1,
+            evidence=[{"block_id": "main_p1_text_1", "quote": quote}],
+        ),
+    )
+    export = build_ground_truth_export(store, SPLIT, PAPER_ID)
+    assert (
+        export.seed_extraction.device_families[0].full_stack_raw
+        == "ITO/solvent/perovskite/Ag"
+    )
+    assert export.ground_truth.device_families[0].full_stack_raw == "ITO/perovskite/Ag"
+    assert any(
+        event.path == "/device_families/0/full_stack_raw"
+        for event in export.review_events
+    )
+    before = evaluate_study(export.ground_truth, export.seed_extraction)
+    after = evaluate_study(export.ground_truth, export.ground_truth)
+    assert before.core_facts.groups["stack"].f1 == 0
+    assert after.core_facts.groups["stack"].f1 == 1
+    assert before.truth_content_sha256 == after.truth_content_sha256
+    assert before.prediction_content_sha256 != after.prediction_content_sha256
+    target = write_ground_truth_export(export, tmp_path / "frozen")
+    output = tmp_path / "score.json"
+    result = CliRunner().invoke(
+        evaluate,
+        [
+            "--truth",
+            str(target),
+            "--prediction",
+            str(target / "seed_extraction.json"),
+            "--output",
+            str(output),
+            "--fail-on-scoring-issues",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert json.loads(output.read_text())["core_facts"]["groups"]["stack"]["f1"] == 0
 
 
 def _study_with_evidence(study: dict, quote: str) -> dict:
@@ -161,7 +258,7 @@ def test_export_is_deterministic_and_refuses_conflicting_overwrites(
     assert first == second
     assert first.manifest.revision == bundle["revision"]
     assert first.manifest.frozen_at == bundle["events"][-1]["timestamp"]
-    assert first.manifest.artifact_format_version == 3
+    assert first.manifest.artifact_format_version == 4
     assert first.manifest.evidence_version == 1
     assert len(first.manifest.evidence_document_sha256) == 64
     assert first.manifest.study_schema_version == STUDY_SCHEMA_VERSION
@@ -201,17 +298,68 @@ def test_browser_archive_contains_the_same_four_stable_files(
         )
 
 
-def test_export_preserves_adjudicator_abstentions(
+def test_uncertain_review_is_saved_but_cannot_be_finalized(
     tmp_path, empty_study, document_payload
 ):
-    """An uncertain record must be masked instead of becoming a benchmark label."""
+    store = StudyReviewStore(tmp_path / "review")
+    study = _study_with_evidence(empty_study, "champion device")
+    with pytest.raises(ValueError, match="resolve every current record"):
+        _adjudicate(store, study, document_payload, decision="uncertain")
+    revision = store.storage.load_revision(SPLIT, PAPER_ID)
+    summary = store.summary(revision.ground_truth, revision.events)
+    assert (
+        summary["record_decisions"]["ada"]["device_families:family-control"]
+        == "uncertain"
+    )
+    with pytest.raises(
+        ValueError, match="latest review revision must complete adjudication"
+    ):
+        build_ground_truth_export(store, SPLIT, PAPER_ID)
+    bundle = store.decide_record(
+        SPLIT,
+        PAPER_ID,
+        RecordDecisionRequest(
+            collection="device_families",
+            record_id="family-control",
+            decision="verified",
+            base_revision=revision.revision,
+        ),
+        "ada",
+    )
+    for stage in ("fields", "completeness", "adjudication"):
+        if "ada" not in bundle["summary"]["completed_stages"].get(stage, []):
+            bundle = store.complete_stage(
+                SPLIT,
+                PAPER_ID,
+                StageRequest(stage=stage, base_revision=bundle["revision"]),
+                "ada",
+            )
+    export = build_ground_truth_export(store, SPLIT, PAPER_ID)
+    assert export.manifest.review.uncertain_record_keys == []
+    assert any(
+        event.details.get("decision") == "uncertain" for event in export.review_events
+    )
+
+
+def test_export_rejects_legacy_finalized_uncertainty(
+    tmp_path, empty_study, document_payload, monkeypatch
+):
+    """Older review histories remain readable but cannot bypass the new export rule."""
 
     store = StudyReviewStore(tmp_path / "review")
     study = _study_with_evidence(empty_study, "champion device")
-    _adjudicate(store, study, document_payload, decision="uncertain")
+    _adjudicate(store, study, document_payload)
+    summary_method = store.summary
 
-    export = build_ground_truth_export(store, SPLIT, PAPER_ID)
+    def legacy_summary(truth, events):
+        summary = summary_method(truth, events)
+        summary["record_decisions"]["ada"]["device_families:family-control"] = (
+            "uncertain"
+        )
+        return summary
 
-    assert export.manifest.review.uncertain_record_keys == [
-        "device_families:family-control"
-    ]
+    monkeypatch.setattr(store, "summary", legacy_summary)
+    with pytest.raises(
+        ValueError, match="cannot freeze ground truth with unresolved records"
+    ):
+        build_ground_truth_export(store, SPLIT, PAPER_ID)

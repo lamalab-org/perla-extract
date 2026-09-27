@@ -1,200 +1,109 @@
-# Quality-first seeds, reviewed truth, and cost reduction
+# Extract a batch for review
 
-Optimize extraction quality and inference cost in that order. The first objective is a
-high-recall, evidence-backed pre-annotation that makes human review efficient. The
-second is adjudicated ground truth. Only then is there enough information to decide
-which model calls can be made cheaper or removed.
+`perla-extract-cohort` applies one configuration to a list of papers and records each
+run's outcome. Use it to generate review drafts with consistent settings. A draft
+becomes a reference only after source review and adjudication.
 
-```mermaid
-flowchart LR
-    A["Paper + complete SI"] --> B["Quality-first extraction"]
-    B --> C["Immutable model seed"]
-    C --> D["Record and figure census"]
-    D --> E["Correction and record decisions"]
-    E --> F["Completeness check"]
-    F --> G["Adjudication"]
-    G --> H["Frozen ground truth"]
-    H --> I["Cost and model ablations"]
-    I --> J["Cheapest configuration meeting quality targets"]
+## Define the batch
+
+Create `cohort.json`:
+
+```json
+{
+  "format_version": 1,
+  "name": "solar-cell-review",
+  "purpose": "Generate drafts for source-based expert review",
+  "split": "dev",
+  "model": "openai/gpt-5.2",
+  "parser": "docling",
+  "claim_recall_passes": 2,
+  "max_model_calls_per_paper": 14,
+  "max_cost_usd_per_paper": 2.0,
+  "papers": [{"paper_id": "10.0000--example"}],
+  "exclusions": []
+}
 ```
 
-## 1. Generate the strongest practical seed
+Replace the example paper ID and model with your inputs. Main PDFs must be named
+`<paper_id>.pdf`. Supplements are resolved as `<paper_id>-SI.pdf` or
+`<paper_id>.supplement.pdf`, in that order. If neither exists, the paper is processed
+without a supplement. Inspect the source list before review.
 
-Use the quality-first defaults on the complete main paper and Supporting Information:
+The split is `calibration`, `dev` or `test`; it labels the batch and does not establish
+that papers are independent of development. `exclusions` can retain considered
+papers as objects containing `paper_id` and `reason`. Duplicate IDs and overlap
+between included and excluded papers are rejected.
 
-```bash
-perla-extract \
-  --pdf paper.pdf \
-  --supplement paper_si.pdf \
-  --output-dir results/paper
-```
+The repository's `data/study_extraction/cohorts/review-v1.json` is an existing
+development cohort, not a required input list or a held-out benchmark.
 
-This profile combines five complementary safeguards:
-
-1. Docling preserves document structure in parser-independent evidence blocks.
-2. A neutral, source-grounded ledger separates experimental objects and atomic claims
-   from final database records. Long papers use windows only to collect this ledger.
-3. The frontier extraction model globally assembles one complete draft from the
-   combined ledger and cited passages, followed by an evidence-complete reconciliation
-   pass over the same sources. The alternate remains available for audit.
-4. Deterministic validation checks exact evidence, atomic values, identifiers, and
-   links.
-5. One bounded repair call revisits only audit-visible gaps or exact unsupported
-   records using implicated text/table blocks; separate enrichment calls propose
-   composition and processing interpretations.
-
-Refinement and repair are checked against the immutable draft before the seed is
-written. A candidate may not increase validation or semantic claim-coverage issues.
-The gate deliberately does not demand at least as many records or values: an
-unsupported extra family is an error, and removing it must be allowed. No weighted
-score trades evidence correctness for a larger output.
-
-No stage sends rendered pages to a vision model. Parser failures in chemical notation
-remain visible for review instead of being silently reconstructed from an image.
-
-All extraction and refinement requests cite deterministic source-span IDs. Python
-restores exact quotations afterward, so the public `StudyExtraction` still contains
-ordinary nested citations without asking a model to reproduce source text.
-
-Do not select a seed merely because it has more records or because validation passes.
-Source verification proves that text exists, not that it has the correct semantic role.
-If multiple candidates are available, preserve their reports and use their disagreements
-as reviewer attention cues. Never merge records by identifier alone because independent
-runs may name the same scientific entity differently.
-
-## 2. Admit a seed to review
-
-For a versioned cohort, run every paper through one frozen configuration rather than
-assembling an undocumented shell loop:
+## Run and resume
 
 ```bash
 perla-extract-cohort \
-  --manifest data/study_extraction/cohorts/review-v1.json \
+  --manifest cohort.json \
   --pdf-dir /path/to/main-papers \
   --supplement-dir /path/to/supporting-information \
-  --output-dir results/review-v1 \
+  --output-dir results/review-batch \
   --env-file /path/to/provider.env
 ```
 
-The command resumes only seeds whose model, parser, schema hash, prompt hash, and
-claim-recall setting still match. It writes `cohort_run.json` after every paper so an
-interrupted batch remains auditable. The tracked `review-v1` cohort is development
-data because its papers have already informed extractor design. A final test cohort
-must be sampled later from genuinely unseen Zotero submissions and frozen before its
-outputs are inspected.
+Use `--limit 1` to check a first paper. The default extraction includes repeated
+claim reading, reconciliation, targeted repair and enrichment; see
+[Extract a study](extraction.md) for their behavior.
 
-Independent workers may share the batch without duplicating papers by supplying the
-same `--shard-count` and a different zero-based `--shard-index`. Each worker writes a
-separate audit file; document and model caches remain content-addressed.
+The monetary limit is checked between calls; one response can cross it. A configured
+limit stops further requests if the provider does not return usable cost information.
+See [request budgets](../reference/cli.md#model-request).
 
-Before admission, `perla-extract-revalidate --runs-dir results/review-v1` reapplies
-the current local evidence policy to cached model outputs. This is intentionally not a
-new extraction: model responses and scientific records do not change, and refreshed
-validation artifacts remain derived from the immutable extraction and evidence files.
+The batch writes `cohort_run.json` after each paper. Completed runs are reused when
+their recorded model, parser, reasoning, budgets, claim-reading count, schema and
+prompt fingerprints match the requested configuration. `--rerun` regenerates matching
+runs. Keep new extraction runs separate from saved human-review state.
 
-Before import, require:
+To divide a batch among workers, give each the same `--shard-count` and a distinct
+zero-based `--shard-index`. Each worker writes a separate batch report.
 
-- a schema-valid `extraction.json`;
-- `validation.json` with no unresolved evidence issue;
-- `document.json`, `run_configuration.json`, and `report.json`;
-- `claim_ledger.json`, `claim_coverage_audit.json`, and `refinement_audit.json`;
-- `targeted_repair.json`, including its worklist and acceptance decision; and
-- the exact main-paper and supplement hashes.
+## Check results before import
 
-Keep enrichment decisions in `enrichment.json`. The machine-readable status `accepted`
-means only that a deterministic proposal passed automated consistency checks. It may
-support NOMAD export, but it is not a human verification and does not rewrite the
-source-reported ground truth. The workbench therefore displays this state as **Passed
-automated checks**.
+Inspect per-paper `report.json` and the batch report for failures. Reapply the current
+evidence checks without model calls if needed:
 
-Imported seeds are immutable. If a better extraction is produced before review begins,
-create a new review item or explicitly archive the unused seed; do not silently replace
-its provenance. Once any human decision exists, a new model output is a proposal, never
-a replacement for the reviewed revision.
+```bash
+perla-extract-revalidate --runs-dir results/review-batch
+```
 
-When replacing a historical dataset generation, preserve its mutable state under a
-versioned, read-only legacy path, retain its source documents, and import current seeds
-into a separate split or dataset namespace. Schema readability is not evidence that
-two generations are comparable, and a legacy flat-schema draft must never be rewritten
-in place as if it had been produced by the current rich extractor.
+Revalidation updates `validation.json`, `grounded_values.json` and validation-related
+fields in `report.json`, not extracted records, requests or cost history.
+Import needs a schema-valid extraction and its matching evidence
+document; unresolved evidence issues must be addressed first.
 
-The workbench compares each seed's recorded schema version and schema hash with the
-running extractor. A readable older seed remains available for review, but a visible
-warning marks it as non-identical: default-valued migration cannot recover fields the
-older extraction never attempted to produce. Regenerate an untouched seed, or review
-the newly added fields explicitly; never treat schema readability as evaluation
-comparability.
+Keep the main paper, supplement, `extraction.json`, `document.json`,
+`run_configuration.json` and `report.json` together. Retain optional claim, repair,
+refinement and enrichment audits as context for reviewers. A status of `accepted`
+in an enrichment audit means it passed automated checks, not human verification.
 
-## 3. Review records and measure completeness
+## Import into the workbench
 
-The reviewer may inspect the extracted records immediately and correct them beside the
-paper. The Census tab records the corrected paper-wide totals and separately counts
-main-text figures, schema-relevant figures, and schema records or atomic values that
-occur only in those figures. The record totals are therefore model-assisted and must
-not be reported as a blind recall estimate. The figure counts measure the narrower loss
-from text-only extraction without conflating it with whether the reviewer searched the
-main paper or SI. Review then proceeds through:
+From the repository root:
 
-1. entity identity and reporting level;
-2. composition, layers, and processing;
-3. performance, population statistics, and stability;
-4. exact evidence and atomic-value checks; and
-5. a final search for omissions.
+```bash
+python review_workbench/import_runs.py \
+  --runs-dir results/review-batch \
+  --pdf-dir /path/to/review-pdfs \
+  --review-data review_data/current \
+  --split dev
+```
 
-Every current record receives a decision. Corrections require source evidence; an
-uncertain relationship remains unresolved instead of being guessed. An administrator
-adjudicates disagreements and freezes the final revision using the procedure in
-[Build ground truth](ground-truth-review.md).
+The importer first uses the PDF paths recorded in `run_configuration.json`. If the
+batch moved to another machine, place the main PDFs and supplements in `--pdf-dir`
+using their original filenames, or `<paper_id>.pdf` and `<paper_id>.supplement.pdf`.
 
-## 4. Protect evaluation splits
+The importer rejects incomplete or evidence-invalid runs and does not replace an
+existing immutable seed. The [deployment guide](../deployment/review-workbench.md)
+documents hosted imports and explicit refreshes. An audited refresh appends a revision
+and preserves earlier evidence, seeds and human history; it is not an in-place overwrite.
 
-Prompt development, parser changes, schema design, model selection, and manual error
-inspection all expose a paper. Such papers belong to calibration or development, even
-if an older folder called them `test`. Reserve a newly sampled, independently reviewed
-set for final evaluation after the workflow is frozen.
-
-Sample across publisher, architecture, chemistry, table density, SI length, stability
-reporting, and parser difficulty. Record exclusions such as reviews, news, views, and
-perspectives before extraction.
-
-## 5. Reduce cost against frozen truth
-
-Run controlled ablations with identical sources, parser output, schema, scoring code,
-and cache policy. Change one component at a time:
-
-1. refinement model or `--no-refinement`;
-2. claim-collection model or `--no-claims`;
-3. `--claim-recall-passes 1` versus the quality-first default of two;
-4. enrichment model or `--no-enrichment`;
-5. primary extraction model; and
-6. parser backend or claim-reading window budget.
-
-Measure at least:
-
-- precision and recall for families, devices, observations, populations, and stability
-  tests;
-- field agreement for correctly matched records;
-- composition and processing agreement;
-- evidence-link validity and atomic-value violations;
-- NOMAD projection coverage and conversion issues; and
-- prompt tokens, completion tokens, latency, and cost per paper.
-
-Do not optimize a single aggregate score. In particular, lower cost is not acceptable
-when it systematically removes devices, chemical detail, or uncommon stability
-conditions. Select the cheapest configuration whose per-category quality bounds remain
-acceptable on development data, then evaluate it once on the held-out test set.
-Use `perla-evaluate` for immutable paper reports and `perla-evaluate-dataset` for
-compatible micro/macro aggregation; do not implement separate matching logic in an
-experiment notebook.
-
-## Measured calibration example
-
-On one 6-page Science paper with a 35-page supplement, citation-catalog compaction
-reduced the refinement input from 174,116 to 84,778 tokens and the refinement charge
-from about $2.20 to $0.79. A fresh claim ledger, primary draft, and compact refinement
-would cost approximately $1.57 before optional enrichment for the higher-recall run.
-
-This is a calibration observation, not a universal price estimate or quality result.
-Model outputs varied from 252 to 388 source-verified atomic values despite complete
-source grounding, demonstrating why adjudicated field-level recall—not validation
-status or record count—must govern later cost decisions.
+Reviewers check records against the source, correct errors and add omissions.
+[Build ground truth](ground-truth-review.md) describes those actions;
+[From corrections to a benchmark](review-to-benchmark.md) covers adjudication and export.

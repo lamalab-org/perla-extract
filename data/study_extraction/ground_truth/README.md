@@ -1,10 +1,17 @@
 # Study-extraction ground truth
 
-This directory contains frozen, human-adjudicated benchmark items. Mutable review
-state, PDFs, and parser documents stay outside Git; only the compact scientific result,
-its model seed, audit trail, and provenance manifest enter data PRs.
+This directory defines the layout for frozen, human-adjudicated benchmark releases.
+No real-paper benchmark items are currently tracked here. A cohort manifest or model
+seed is not an adjudicated reference. The executable synthetic example is under
+`examples/scoring/` and must not be included in scientific benchmark aggregates.
 
-Each format version has this layout:
+Mutable review state and original uploads remain private. Before publishing a data
+PR, inspect every exported file: review events can include reviewer identities and
+comments. The exporter does not anonymize them. Preserve unmodified originals and
+create a separately versioned, hash-consistent public derivative when needed.
+See [publication requirements](../../../docs/deployment/review-workbench.md#publishing-reviewed-data).
+
+Each release version has this layout:
 
 ```text
 v1/<split>/<paper_id>/
@@ -21,7 +28,7 @@ directory. It never overwrites a different existing item.
 
 An extractor output or imported review seed is not ground truth and must not be added
 here directly, even when every quotation passes deterministic validation. Keep such
-outputs in the review system until the independent census, record decisions, completeness
+outputs in the review system until the source census, record decisions, completeness
 check, and administrator adjudication are complete.
 
 `ground_truth.json` is the sole curated truth. Generate reduced or tabular forms with

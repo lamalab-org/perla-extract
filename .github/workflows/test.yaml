@@ -7,6 +7,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  scoring-example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install pinned example environment
+        run: python -m pip install -r examples/scoring/requirements.txt
+      - name: Reproduce review-to-score example without provider SDKs
+        env:
+          PYTHONPATH: .:src
+        run: python -m examples.scoring.run --output "${{ runner.temp }}/perla-scoring-example"
+
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -29,7 +43,7 @@ jobs:
       - name: Install package and development tools
         run: python -m pip install ".[dev]"
       - name: Lint
-        run: python -m ruff check src tests review_workbench
+        run: python -m ruff check src tests review_workbench examples
       - name: Type-check extraction contracts
         run: python -m mypy src/perla_extract/study_extraction
 

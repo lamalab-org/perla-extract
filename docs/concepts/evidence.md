@@ -103,20 +103,19 @@ flowchart LR
     A --> G["pre_conservative_extraction.json"]
 ```
 
-`grounded_values.json` is a conservative value-level subset. It is useful when precision
-matters more than recall, but it is not a replacement for `extraction.json`: local text
-matching cannot prove that a supported value was attached to the correct scientific
+`grounded_values.json` is a conservative value-level subset. It includes only values passing those checks, but does not establish scientific
+precision. It is not a replacement for `extraction.json`: local text matching cannot prove that a supported value was attached to the correct scientific
 entity or that no device was missed.
 
 If finalization removes an unsupported optional claim, the exact original object is
 available in `pre_conservative_extraction.json` and its decision is recorded in
-`conservative_finalization.json`. This turns an otherwise invalid study into a safer
-review seed without erasing evidence of what the model attempted.
+`conservative_finalization.json`. The remaining study can pass local validation while the removed claims remain
+available for review.
 
 ## What still requires review
 
-A passing source check proves textual support and valid links, not scientific
-completeness. It cannot independently determine whether:
+A passing source check establishes literal text presence and valid links, not
+scientific support or completeness. It cannot independently determine whether:
 
 - all devices and variants were found;
 - two differently named candidates are the same physical device;

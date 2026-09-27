@@ -29,8 +29,17 @@ OUTPUT = click.Path(path_type=Path, dir_okay=False, resolve_path=True)
 @click.option("--output", type=OUTPUT, default="dataset_evaluation.json")
 @click.option("--bootstrap-samples", type=click.IntRange(min=0), default=2_000)
 @click.option("--seed", type=int, default=0)
+@click.option(
+    "--fail-on-scoring-issues",
+    is_flag=True,
+    help="Save the aggregate, then fail if any paper needs matching review.",
+)
 def main(
-    reports: tuple[Path, ...], output: Path, bootstrap_samples: int, seed: int
+    reports: tuple[Path, ...],
+    output: Path,
+    bootstrap_samples: int,
+    seed: int,
+    fail_on_scoring_issues: bool,
 ) -> None:
     """Aggregate compatible reports with micro counts and paper bootstrap intervals."""
 
@@ -51,6 +60,10 @@ def main(
         raise click.ClickException(str(exc)) from exc
     write_json_atomic(output, aggregate.model_dump(mode="json"))
     click.echo(str(output))
+    if fail_on_scoring_issues and aggregate.papers_needing_scoring_review:
+        raise click.ClickException(
+            f"{aggregate.papers_needing_scoring_review} paper(s) need scoring review; diagnostics saved to {output}"
+        )
 
 
 if __name__ == "__main__":

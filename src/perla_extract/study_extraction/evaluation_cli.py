@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 
 import click
@@ -22,7 +23,7 @@ from .validation import validate_study
 
 INPUT = click.Path(path_type=Path, exists=True, readable=True, resolve_path=True)
 OUTPUT = click.Path(path_type=Path, dir_okay=False, resolve_path=True)
-SUPPORTED_GROUND_TRUTH_FORMAT_VERSION = 2
+SUPPORTED_GROUND_TRUTH_FORMAT_VERSIONS = {2, 3, 4}
 
 
 def _json(path: Path) -> object:
@@ -60,11 +61,16 @@ def _study(payload: object, path: Path) -> StudyExtraction:
 
 def _truth(
     path: Path,
-) -> tuple[StudyExtraction, list[str], BenchmarkProvenance | None]:
-    """Load a truth file or verify a complete frozen benchmark directory."""
+) -> tuple[StudyExtraction, BenchmarkProvenance | None]:
+    """Load truth and verify the schema/content identifiers needed for scoring.
+
+    This gate binds results to declared inputs; it does not authenticate expert
+    judgments or revalidate the archived reference evidence. Those checks belong
+    to adjudication and export. Bare JSON deliberately has no release provenance.
+    """
 
     if path.is_file():
-        return _study(_json(path), path), [], None
+        return _study(_json(path), path), None
     truth_path = path / "ground_truth.json"
     manifest_path = path / "manifest.json"
     if not truth_path.is_file() or not manifest_path.is_file():
@@ -75,10 +81,27 @@ def _truth(
     manifest = _json(manifest_path)
     if not isinstance(manifest, dict):
         raise click.ClickException(f"{manifest_path} is not a JSON object")
-    if manifest.get("artifact_format_version") != SUPPORTED_GROUND_TRUTH_FORMAT_VERSION:
+    if (
+        manifest.get("artifact_format_version")
+        not in SUPPORTED_GROUND_TRUTH_FORMAT_VERSIONS
+    ):
         raise click.ClickException(
             "ground-truth artifact format is unsupported; regenerate or migrate it"
         )
+    evidence_version = None
+    evidence_digest = None
+    if manifest["artifact_format_version"] >= 3:
+        evidence_version = manifest.get("evidence_version")
+        evidence_digest = manifest.get("evidence_document_sha256")
+        if (
+            type(evidence_version) is not int
+            or evidence_version < 1
+            or not isinstance(evidence_digest, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", evidence_digest)
+        ):
+            raise click.ClickException(
+                "ground truth format 3 or later requires an evidence version and document hash"
+            )
     expected_schema = manifest.get("study_schema_sha256")
     if expected_schema != study_schema_sha256():
         raise click.ClickException(
@@ -95,7 +118,14 @@ def _truth(
     if not isinstance(uncertain, list) or not all(
         isinstance(item, str) for item in uncertain
     ):
-        raise click.ClickException("manifest uncertainty mask is invalid")
+        raise click.ClickException(
+            "manifest uncertain_record_keys must be a string list"
+        )
+    if uncertain:
+        raise click.ClickException(
+            "reference contains unresolved records; complete adjudication and export "
+            "a finalized reference before scoring"
+        )
     paper_id = manifest.get("paper_id")
     split = manifest.get("split")
     source_manifest = manifest.get("source_manifest")
@@ -112,13 +142,14 @@ def _truth(
         )
     return (
         _study(payload, truth_path),
-        uncertain,
         BenchmarkProvenance(
             paper_id=paper_id,
             split=split,
             ground_truth_sha256=expected_truth,
             source_manifest_sha256=_canonical_digest(source_manifest),
             source_sha256=source_hashes,
+            evidence_version=evidence_version,
+            evidence_document_sha256=evidence_digest,
         ),
     )
 
@@ -201,10 +232,23 @@ def _prediction(
 @click.option("--output", type=OUTPUT, default="evaluation.json")
 @click.option("--minimum-record-similarity", type=click.FloatRange(0, 1), default=0.35)
 @click.option(
-    "--numeric-relative-tolerance", type=click.FloatRange(min=0), default=0.01
+    "--numeric-relative-tolerance", type=click.FloatRange(min=0), default=1e-6
 )
 @click.option(
-    "--numeric-absolute-tolerance", type=click.FloatRange(min=0), default=1e-9
+    "--numeric-absolute-tolerance",
+    type=click.FloatRange(min=0),
+    default=0.0,
+    help="Absolute allowance in base units; disabled by default because scales differ.",
+)
+@click.option(
+    "--operation-aliases",
+    type=INPUT,
+    help="JSON operation-to-canonical-name mapping; replaces defaults.",
+)
+@click.option(
+    "--fail-on-scoring-issues",
+    is_flag=True,
+    help="Save diagnostics, then fail if scientific attribution is ambiguous.",
 )
 def main(
     truth: Path,
@@ -213,26 +257,40 @@ def main(
     minimum_record_similarity: float,
     numeric_relative_tolerance: float,
     numeric_absolute_tolerance: float,
+    operation_aliases: Path | None,
+    fail_on_scoring_issues: bool,
 ) -> None:
     """Score one extraction without using an LLM or run-local identifiers."""
 
-    expected, uncertain, benchmark = _truth(truth)
+    expected, benchmark = _truth(truth)
     actual, prediction_validation, run_efficiency = _prediction(prediction)
-    report = evaluate_study(
-        expected,
-        actual,
-        ignored_truth_record_keys=uncertain,
-        benchmark=benchmark,
-        prediction_validation=prediction_validation,
-        run_efficiency=run_efficiency,
-        config=EvaluationConfig(
+    try:
+        config = EvaluationConfig(
             minimum_record_similarity=minimum_record_similarity,
             numeric_relative_tolerance=numeric_relative_tolerance,
             numeric_absolute_tolerance=numeric_absolute_tolerance,
-        ),
+            **(
+                {"operation_aliases": _json(operation_aliases)}
+                if operation_aliases
+                else {}
+            ),
+        )
+    except ValidationError as exc:
+        raise click.ClickException(f"invalid scoring configuration: {exc}") from exc
+    report = evaluate_study(
+        expected,
+        actual,
+        benchmark=benchmark,
+        prediction_validation=prediction_validation,
+        run_efficiency=run_efficiency,
+        config=config,
     )
     write_json_atomic(output, report.model_dump(mode="json"))
     click.echo(str(output))
+    if fail_on_scoring_issues and report.core_facts.issues:
+        raise click.ClickException(
+            f"{len(report.core_facts.issues)} scoring issue(s) require review; diagnostics saved to {output}"
+        )
 
 
 if __name__ == "__main__":

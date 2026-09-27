@@ -1,9 +1,10 @@
 <!-- generated-by: gsd-doc-writer -->
 # Export to NOMAD
 
-`StudyExtraction` is the evidence-faithful ground truth. The default workflow projects
-it directly into the pinned NOMAD LLM extraction schema; it does not pass through the
-historical reduced PERLA schema.
+The default workflow projects `StudyExtraction` directly into the pinned NOMAD LLM
+extraction schema, without passing through the historical reduced PERLA schema.
+The input can be a model output or an adjudicated reference; conversion does not
+confer human-review status.
 
 ```mermaid
 flowchart LR
@@ -15,7 +16,7 @@ flowchart LR
     F --> G["Classic NOMAD perovskite schema"]
 ```
 
-## Atomic archive boundary
+## One archive per source record
 
 Performance observations, population statistics, and stability tests become separate
 archives. They are never combined just because they refer to the same family. An
