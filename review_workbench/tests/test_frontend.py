@@ -646,7 +646,7 @@ def test_only_admins_can_download_an_adjudicated_pr_bundle():
 def test_final_review_controls_require_verified_records():
     """Draft uncertainty stays usable, but cannot enable finalization or export."""
 
-    source = (APP / "app.js").read_text()
+    source = (APP / "app.js").read_text(encoding="utf-8")
     function = source[
         source.index("function renderStageControls()") : source.index(
             "function renderHistory()"
