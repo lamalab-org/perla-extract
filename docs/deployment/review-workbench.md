@@ -217,6 +217,18 @@ the complete deployment rather than requiring a paper-by-paper download:
 - `README.txt` explains the files and how resets, drafts, and superseded answers are
   represented.
 
+Format-2 exports also put a `review_snapshot` in each paper entry: the complete saved
+`study`, its `document`, `evidence_version`, and SHA-256 hashes. Start a revised
+reference from that study; **do not replay the event history onto it**. The snapshot
+is not final ground truth until adjudicated. Each paper's study and evidence come
+from one immutable revision, although papers can be exported at different times.
+Format-1 archives lack these snapshots and may need the original saved revision to
+recover unchanged records. The archive README specifies the JSON hash encoding.
+
+The export contains parsed paper text and private reviewer information. Store it
+with access controls; do not publish it in a code PR. A missing evidence document
+remains `null`, not a guessed or newer document.
+
 Every authenticated Excel submission within the documented 15 MiB limit is retained
 byte-for-byte under `uploaded_workbooks/` before validation begins. This includes
 accepted, rejected, stale, comment-only, and no-op files. `feedback.json` contains an
