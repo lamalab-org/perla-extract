@@ -382,7 +382,12 @@ def _matches_evidence(
 
 
 def _reported_values(record: object) -> list[tuple[str, str, set[str]]]:
-    """Return atomic value names, raw text, and citation blocks from a record."""
+    """Return cited atomic values, allowing units to occupy their schema field.
+
+    Compare both raw text alone and raw text plus its reported unit. This does not
+    convert units or infer missing ones; it avoids flagging a value just because
+    the assembler correctly stored the unit separately from the number.
+    """
 
     found: list[tuple[str, str, set[str]]] = []
 
@@ -398,6 +403,14 @@ def _reported_values(record: object) -> list[tuple[str, str, set[str]]]:
                     if isinstance(item, dict) and item.get("block_id")
                 }
                 found.append((" ".join(local_context), value["raw_value"], blocks))
+                if isinstance(value.get("unit"), str) and value["unit"].strip():
+                    found.append(
+                        (
+                            " ".join(local_context),
+                            f"{value['raw_value']} {value['unit']}",
+                            blocks,
+                        )
+                    )
             for key, child in value.items():
                 if key != "evidence":
                     walk(child, local_context)

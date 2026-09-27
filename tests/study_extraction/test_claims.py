@@ -283,7 +283,10 @@ def test_shared_quantity_requires_one_atomic_value_per_named_target():
     "kind",
     ["reported_quantity", "performance", "population", "stability", "processing"],
 )
-def test_atomic_claim_requires_its_value_not_only_a_shared_citation(kind):
+@pytest.mark.parametrize("separate_unit", [False, True])
+def test_atomic_claim_requires_its_value_not_only_a_shared_citation(
+    kind, separate_unit
+):
     evidence = citation(
         "recipe", "The stock was 11.4 M; the diluted precursor concentration was 1.4 M."
     )
@@ -324,7 +327,7 @@ def test_atomic_claim_requires_its_value_not_only_a_shared_citation(kind):
                             role="precursor",
                             amount=ReportedValue(
                                 name="precursor concentration",
-                                raw_value="11.4 M",
+                                raw_value="11.4" if separate_unit else "11.4 M",
                                 value_number=11.4,
                                 unit="M",
                                 evidence=[evidence],
@@ -355,13 +358,22 @@ def test_atomic_claim_requires_its_value_not_only_a_shared_citation(kind):
 
     amount = family_with_different_value.absorbers[0].constituents[0].amount
     assert amount is not None
-    amount.raw_value = "1.4 M"
+    amount.raw_value = "1.4" if separate_unit else "1.4 M"
     amount.value_number = 1.4
     repaired = audit_claim_coverage(ledger, extraction(family_with_different_value))
     assert (
         next(item for item in repaired["items"] if item.get("claim_id"))["status"]
         == "covered"
     )
+    if separate_unit:
+        for wrong_unit in (None, "mM"):
+            amount.unit = wrong_unit
+            assert (
+                audit_claim_coverage(ledger, extraction(family_with_different_value))[
+                    "issue_count"
+                ]
+                == 1
+            )
 
 
 def test_only_source_grounded_objects_and_claims_can_guide_assembly():

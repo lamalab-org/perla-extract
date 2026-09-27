@@ -103,6 +103,8 @@ A claim with a raw value is covered only when a linked record contains that valu
 in a `ReportedValue` cited to the same local evidence. This rule applies regardless
 of whether the model labels the claim as performance, processing, stability, or
 another kind. Sharing a citation with some other value is only a possible match.
+The check accepts a unit stored separately from the raw number, but does not infer
+missing units or convert between units.
 
 The extraction instructions also distinguish shared quantities from paired values
 reported “respectively.” Each value must stay with its subject. Ratios retain their
