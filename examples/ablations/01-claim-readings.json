@@ -1,0 +1,8 @@
+{
+  "name": "claim-readings",
+  "factor": "claim_recall_passes",
+  "arms": {
+    "control": {"claim_recall_passes": 2},
+    "treatment": {"claim_recall_passes": 1}
+  }
+}

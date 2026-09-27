@@ -20,6 +20,7 @@ nav:
       - Worked scoring example: workflows/scoring-example.md
       - From corrections to a benchmark: workflows/review-to-benchmark.md
       - Scoring reference: workflows/evaluation.md
+      - Extraction ablation studies: workflows/extraction-ablations.md
       - Historical comparison and preference: workflows/expert-comparison.md
   - Concepts:
       - Study model: concepts/study-model.md
