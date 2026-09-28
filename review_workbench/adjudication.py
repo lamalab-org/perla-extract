@@ -363,7 +363,7 @@ class AdjudicationQueue:
             for identifier in event["details"].get("supersedes", [])
         }
         cases = []
-        feedback_by_record: dict[str, list[dict]] = {}
+        feedback_by_record: dict[str, list[str]] = {}
         feedback_inventory = []
         for event in events:
             if event["kind"] == "adjudication_plan":
@@ -376,7 +376,7 @@ class AdjudicationQueue:
                             {**entry, "case_id": f"proposal:{proposal['id']}"}
                         )
                         for key in entry["current_record_keys"]:
-                            feedback_by_record.setdefault(key, []).append(entry)
+                            feedback_by_record.setdefault(key, []).append(entry["id"])
                     current_changes = [
                         {
                             **change,
@@ -389,6 +389,7 @@ class AdjudicationQueue:
                     cases.append(
                         {
                             **proposal,
+                            "feedback": [entry["id"] for entry in entries],
                             "current_changes": current_changes,
                             "stale": any(
                                 c["before"] != c["current"] for c in current_changes

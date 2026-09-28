@@ -129,9 +129,13 @@ export function createFinalizationQueue({ request, context, download, openRecord
   function workbookFeedback(entries) {
     const group = node("section", null, "finalization-feedback");
     group.append(node("h5", "Original workbook review"));
-    for (const entry of entries) {
+    for (const value of entries) {
+      const entry = typeof value === "string" ? queue.workbook_feedback.find(item => item.id === value) : value;
       const item = node("details");
       item.append(node("summary", `${entry.old_record_key.split(":").at(-1)} · ${entry.review_outcome || "Comment only"}`));
+      item.addEventListener("toggle", () => {
+      if (!item.open || item.dataset.loaded) return;
+      item.dataset.loaded = "true";
       item.append(node("blockquote", entry.text));
       item.append(node("p", `${entry.filename} · ${entry.sheet}!${entry.cell}`, "finalization-summary"));
       item.append(details("Fields in the reviewed workbook", entry.reviewed_fields));
@@ -143,6 +147,7 @@ export function createFinalizationQueue({ request, context, download, openRecord
         } else item.append(node("p", `${key}: removed since this correspondence was prepared.`, "error"));
       }
       item.append(details("Original file SHA-256", entry.workbook_sha256));
+      });
       group.append(item);
     }
     return group;
@@ -181,7 +186,7 @@ export function createFinalizationQueue({ request, context, download, openRecord
     card.append(node("span", `Decision ${index + 1} of ${queue.cases.length}`, "eyebrow"), node("h4", item.title), node("p", item.reason, "finalization-reason"));
     if (item.feedback?.length) {
       card.append(workbookFeedback(item.feedback));
-      const linked = new Set(item.feedback.flatMap(entry => entry.current_record_keys));
+      const linked = new Set(queue.workbook_feedback.filter(entry => item.feedback.includes(entry.id)).flatMap(entry => entry.current_record_keys));
       const records = queue.cases.filter(entry => entry.record_key && linked.has(entry.record_key));
       if (records.length) card.append(button(`Check these ${records.length} linked records together`, () => renderBatch(records)));
     }
