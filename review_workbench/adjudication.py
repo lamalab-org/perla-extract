@@ -360,6 +360,7 @@ class AdjudicationQueue:
             "revision": current.revision,
             "study_sha256": _digest(truth),
             "title": truth["paper"].get("title") or paper,
+            "source_notes": truth.get("unresolved_notes", []),
             "record_count": len(catalog),
             "inherited_count": len(inherited),
             "own_approved_count": sum(own.get(k) == "verified" for k in catalog),

@@ -17,6 +17,28 @@ function differences(before, after, path = "") {
   return [[path || "Record", pretty(before), pretty(after)]];
 }
 
+// Keep the complete record inspectable without making long recipes bury the actions.
+function recordFields(record) {
+  const wrapper = node("div");
+  const populated = value => value != null && value !== "" && value !== "not_reported";
+  const table = value => {
+    const el = node("table", null, "finalization-changes");
+    for (const [path, , text] of differences(null, value)) {
+      if (text === "—" || text === "not_reported" || text === "") continue;
+      const row = node("tr"); row.append(node("td", path.replaceAll("_", " ")), node("td", text)); el.append(row);
+    }
+    return el;
+  };
+  wrapper.append(table(Object.fromEntries(Object.entries(record).filter(([, value]) => populated(value) && typeof value !== "object"))));
+  for (const [key, value] of Object.entries(record)) {
+    if (key === "evidence" || !value || typeof value !== "object" || !Object.keys(value).length) continue;
+    const group = node("details");
+    group.append(node("summary", `${key.replaceAll("_", " ")} (${Array.isArray(value) ? value.length : "details"})`), table(value));
+    wrapper.append(group);
+  }
+  return wrapper;
+}
+
 export function createFinalizationQueue({ request, context, download, openRecord, showCitation }) {
   const dialog = node("dialog", null, "finalization-dialog");
   dialog.setAttribute("aria-labelledby", "finalization-heading");
@@ -42,7 +64,7 @@ export function createFinalizationQueue({ request, context, download, openRecord
   async function perform(action) {
     if (busy) return;
     busy = true; dialog.querySelectorAll("button,input,textarea").forEach(el => el.disabled = true);
-    message("Saving…");
+    message("Working…");
     try { await action(); }
     catch (error) { message(error.message, true); }
     finally { busy = false; dialog.querySelectorAll("button,input,textarea").forEach(el => el.disabled = false); }
@@ -111,12 +133,7 @@ export function createFinalizationQueue({ request, context, download, openRecord
     }
     if (item.changes?.length) card.append(node("p", "Your decision approves the complete affected records, not only the differences shown above.", "finalization-summary"));
     if (item.record) {
-      const fields = node("table", null, "finalization-changes");
-      const rows = differences(null, item.record);
-      rows.forEach(([path, , value]) => {
-        const tr = node("tr"); tr.append(node("td", path.replaceAll("_", " ")), node("td", value)); fields.append(tr);
-      });
-      card.append(fields, details("Full record JSON", item.record));
+      card.append(recordFields(item.record), details("Full record JSON, including empty fields", item.record));
     }
     for (const citation of item.evidence || []) {
       card.append(node("blockquote", citation.quote), button("Show source in paper", async () => { await showCitation(paper, citation); dialog.close(); }));
@@ -146,11 +163,7 @@ export function createFinalizationQueue({ request, context, download, openRecord
       inputs.push({ input, key: item.record_key });
       const label = node("label", null, "finalization-check"); label.append(input, node("strong", item.title));
       card.append(label, node("p", item.record_key));
-      const fields = node("table", null, "finalization-changes");
-      for (const [path, , value] of differences(null, item.record)) {
-        const row = node("tr"); row.append(node("td", path.replaceAll("_", " ")), node("td", value)); fields.append(row);
-      }
-      const full = node("details"); full.append(node("summary", "Inspect current fields and source"), fields);
+      const full = node("details"); full.append(node("summary", "Inspect current fields and source"), recordFields(item.record), details("Full record JSON", item.record));
       for (const citation of item.evidence || []) full.append(node("blockquote", citation.quote));
       card.append(full); content.append(card);
     }
@@ -172,6 +185,11 @@ export function createFinalizationQueue({ request, context, download, openRecord
       card.append(button("Download final ground truth", async () => { await download(`/api/ground-truth-export/${split}/${encodeURIComponent(paper)}`, `${paper}.ground-truth.zip`); message("Downloaded final reference."); }, true));
     } else {
       card.append(node("p", `You are approving ${queue.record_count} records, including ${queue.inherited_count} unchanged records already approved by reviewers. Their original decisions remain in the history.`));
+      if (queue.source_notes?.length) {
+        card.append(node("h5", "Source limitations retained in this reference"));
+        const notes = node("ul"); queue.source_notes.forEach(text => notes.append(node("li", text))); card.append(notes);
+        card.append(node("p", "If any note describes an unresolved extraction error rather than a limitation of the paper, correct it in review before signing off."));
+      }
       const check = node("input"); check.type = "checkbox";
       const label = node("label", null, "finalization-check"); label.append(check, node("span", "I accept these reviewed records and have checked the main paper and available SI for missing records.")); card.append(label);
       card.append(button("Finalize & download", async () => {
