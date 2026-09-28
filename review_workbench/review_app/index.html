@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PERLA study ground truth</title>
   <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/adjudication.css" />
 </head>
 <body>
   <section id="auth-gate" class="auth-gate" hidden>
@@ -31,6 +32,7 @@
       <button id="toggle-paper-list" type="button" aria-controls="paper-rail" aria-expanded="true" aria-label="Hide paper list" title="Hide paper list">Papers</button>
       <label class="dataset-picker"><span>Dataset</span><select id="split"><option value="dev">Current review — refreshed extraction</option><option value="calibration">Legacy calibration — deprecated</option><option value="test">Held-out test</option></select></label>
       <button id="open-annotations">My work &amp; undo</button>
+      <button id="open-finalization" type="button" hidden>Finalize ground truth</button>
       <span id="reviewer" class="pill">Loading reviewer…</span>
       <div id="clerk-user-button"></div>
       <details class="global-menu">

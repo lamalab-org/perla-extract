@@ -1,3 +1,5 @@
+import { createFinalizationQueue } from "/adjudication.js";
+
 const $ = (id) => document.getElementById(id);
 const REVIEW_TOKEN_KEY = "review-token";
 const COLLECTIONS = {
@@ -375,6 +377,7 @@ async function loadSession() {
   state.user = payload.user;
   $("reviewer").textContent = payload.user.name;
   $("download-all-feedback").hidden = payload.user.role !== "admin";
+  $("open-finalization").hidden = payload.user.role !== "admin";
 }
 
 function loadScript(src, attributes = {}) {
@@ -3171,6 +3174,21 @@ $("download-supplement-pdf").addEventListener("click", (event) => runDownload(
   () => downloadPaper("supplement"),
 ));
 $("open-annotations").addEventListener("click", openReviewerProgress);
+const finalization = createFinalizationQueue({
+  request,
+  context: () => ({ split: state.split, paperId: state.paperId, papers: state.papers }),
+  download: downloadResponse,
+  openRecord: async (paperId, key) => {
+    await selectPaper(paperId);
+    state.queueKey = key || null;
+    $("record-status-filter").value = "all";
+    $("record-kind-filter").value = "all";
+    setTab("records");
+  },
+  showCitation: async (paperId, citation) => { await selectPaper(paperId); await focusCitation(citation); },
+});
+$("open-finalization").addEventListener("click", () => finalization.open());
+
 $("download-all-feedback").addEventListener("click", (event) => runDownload(
   event.currentTarget,
   "Preparing all reviewer feedback…",
@@ -3264,6 +3282,7 @@ $("internal-sign-in").addEventListener("submit", async (event) => {
     state.user = payload.user;
     $("reviewer").textContent = payload.user.name;
     $("download-all-feedback").hidden = payload.user.role !== "admin";
+    $("open-finalization").hidden = payload.user.role !== "admin";
     $("login-password").value = "";
     showWorkbench();
     await startApp();

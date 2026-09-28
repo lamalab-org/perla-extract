@@ -52,6 +52,7 @@ def prepare(output: Path) -> Path:
     for relative_file in (
         "review_workbench/__init__.py",
         "review_workbench/auth.py",
+        "review_workbench/adjudication.py",
         "review_workbench/ground_truth_export.py",
         "review_workbench/expert_comparison.py",
         "review_workbench/feedback_export.py",
