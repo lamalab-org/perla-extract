@@ -140,6 +140,102 @@ def test_adopt_unchanged_expert_review_and_export(queue):
     assert export.manifest.review.uncertain_record_keys == []
 
 
+def workbook_plan(queue):
+    request = plan(queue)
+    payload = request.model_dump()
+    payload["proposals"][0].update(
+        changes=[],
+        feedback=[
+            {
+                "id": "original-B2",
+                "workbook_sha256": "a" * 64,
+                "filename": "review.xlsx",
+                "sheet": "Record review",
+                "cell": "B2",
+                "text": "Check the electrode.",
+                "old_record_key": "device_families:old-id",
+                "review_outcome": "Correct fields",
+                "reviewed_fields": {
+                    "/label": {"extracted": "Old", "reviewed": "Control"}
+                },
+                "current_record_keys": ["device_families:family-control"],
+            }
+        ],
+    )
+    payload["feedback_counts"] = {"a" * 64: 1}
+    return PlanRequest.model_validate(payload)
+
+
+def test_workbook_comments_remain_pending_despite_current_record_approval(queue):
+    request = workbook_plan(queue)
+    view = queue.import_plan("dev", PAPER, request, "admin")
+    assert view["inherited_count"] == 1
+    assert len(view["cases"]) == 1
+    assert len(view["workbook_feedback"]) == 1
+    assert (
+        view["workbook_current_records"]["device_families:family-control"]["label"]
+        == "Control"
+    )
+    with pytest.raises(ValueError, match="remaining items"):
+        finalize(queue)
+    view = decide(queue, "keep")
+    assert view["cases"] == []
+    # Resolving a comment is not approval of an entire linked record.
+    assert view["own_approved_count"] == 0
+    assert view["last_decision"]["details"]["decisions"] == []
+    assert len(view["workbook_feedback"]) == 1
+    finalize(queue)
+    export = build_ground_truth_export(queue.store, "dev", PAPER)
+    event = next(e for e in export.review_events if e.kind == "adjudication_plan")
+    assert (
+        event.details["proposals"][0]["feedback"][0]["text"] == "Check the electrode."
+    )
+
+
+@pytest.mark.parametrize(
+    "failure", ["missing-count", "duplicate", "unknown-record", "duplicate-link"]
+)
+def test_incomplete_or_ambiguous_workbook_accounting_is_rejected(queue, failure):
+    payload = workbook_plan(queue).model_dump()
+    entries = payload["proposals"][0]["feedback"]
+    if failure == "missing-count":
+        payload["feedback_counts"] = {}
+    elif failure == "duplicate":
+        entries.append(entries[0])
+        payload["feedback_counts"] = {"a" * 64: 2}
+    elif failure == "unknown-record":
+        entries[0]["current_record_keys"] = ["device_families:missing"]
+    else:
+        entries[0]["current_record_keys"] *= 2
+    with pytest.raises(ValueError):
+        queue.import_plan("dev", PAPER, PlanRequest.model_validate(payload), "admin")
+    assert queue.load("dev", PAPER, "admin")["revision"] == 2
+
+
+def test_replacing_correspondence_requires_supersession_and_preserves_history(queue):
+    request = workbook_plan(queue)
+    queue.import_plan("dev", PAPER, request, "admin")
+    payload = request.model_dump()
+    payload["base_revision"] = 3
+    payload["proposals"][0]["id"] = "replacement"
+    with pytest.raises(ValueError, match="Supersede"):
+        queue.import_plan("dev", PAPER, PlanRequest.model_validate(payload), "admin")
+    payload["supersedes"] = [request.proposals[0].id]
+    view = queue.import_plan("dev", PAPER, PlanRequest.model_validate(payload), "admin")
+    assert len(view["workbook_feedback"]) == 1
+    assert view["workbook_feedback"][0]["case_id"] == "proposal:replacement"
+    assert (
+        len(
+            [
+                e
+                for e in queue.store.events("dev", PAPER)
+                if e["kind"] == "adjudication_plan"
+            ]
+        )
+        == 2
+    )
+
+
 def test_accept_is_atomic_approved_undoable_and_retains_original(queue):
     queue.import_plan("dev", PAPER, plan(queue), "admin")
     view = decide(queue)

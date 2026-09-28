@@ -55,6 +55,27 @@ does not approve its records or apply any correction. New proposal IDs must be u
 A count mismatch asks for investigation; it never deletes
 records automatically. Finalization exports one paper at a time.
 
+### Account for earlier Excel reviews
+
+A prepared plan can connect original workbook comments to today's records. Open
+**Original workbook review** to see the comment, its sheet and cell, the values
+the reviewer saw, and the corresponding current records. The original file's
+SHA-256 identifies the preserved upload. A record that disappeared is shown as
+having no current counterpart; disappearance does not mean the concern was fixed.
+
+The administrator preparing the plan must check these correspondences. They are
+not automatic record matches or transferred approvals. The import checks that
+every supplied comment occurs once, the per-workbook counts match the supplied
+inventory, and all proposed record links exist. It cannot establish that the
+inventory includes every comment in an external workbook; compare that inventory
+with the original upload when preparing the plan.
+
+Related comments are grouped into specific decisions. Confirming how a comment
+was handled does **not** approve all fields of its linked record. Record approvals
+remain separate and bound to the current content. Both the original comments and
+the admin's decisions are included in the exported review history. Changing the
+study after a comment decision reopens that decision for checking.
+
 ## Review sequence
 
 ```mermaid

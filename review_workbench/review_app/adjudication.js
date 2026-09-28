@@ -115,7 +115,7 @@ export function createFinalizationQueue({ request, context, download, openRecord
       try {
         message(`Loading suggestions: ${saved + failed.length + 1} of ${plan.papers.length}…`);
         const current = await request(url);
-        await request(`${url}/plan`, { method: "POST", body: JSON.stringify({ base_revision: current.revision, study_sha256: item.study_sha256, proposals: item.proposals, supersedes: item.supersedes || [] }) });
+        await request(`${url}/plan`, { method: "POST", body: JSON.stringify({ base_revision: current.revision, study_sha256: item.study_sha256, proposals: item.proposals, supersedes: item.supersedes || [], feedback_counts: item.feedback_counts || {} }) });
         saved++;
       } catch (error) { failed.push(`${item.paper_id}: ${error.message}`); }
     }
@@ -126,6 +126,27 @@ export function createFinalizationQueue({ request, context, download, openRecord
   function details(label, value) {
     const el = node("details"); el.append(node("summary", label), node("pre", pretty(value))); return el;
   }
+  function workbookFeedback(entries) {
+    const group = node("section", null, "finalization-feedback");
+    group.append(node("h5", "Original workbook review"));
+    for (const entry of entries) {
+      const item = node("details");
+      item.append(node("summary", `${entry.old_record_key.split(":").at(-1)} · ${entry.review_outcome || "Comment only"}`));
+      item.append(node("blockquote", entry.text));
+      item.append(node("p", `${entry.filename} · ${entry.sheet}!${entry.cell}`, "finalization-summary"));
+      item.append(details("Fields in the reviewed workbook", entry.reviewed_fields));
+      item.append(details("Corresponding current records", entry.current_record_keys.length ? entry.current_record_keys : "No current counterpart. This is not proof that the record should be removed."));
+      for (const key of entry.current_record_keys) {
+        const record = queue.workbook_current_records?.[key];
+        if (record) {
+          const current = node("details"); current.append(node("summary", `Current: ${key.split(":").at(-1)}`), recordFields(record)); item.append(current);
+        } else item.append(node("p", `${key}: removed since this correspondence was prepared.`, "error"));
+      }
+      item.append(details("Original file SHA-256", entry.workbook_sha256));
+      group.append(item);
+    }
+    return group;
+  }
   function render() {
     if (!queue) return;
     index = Math.min(index, Math.max(0, queue.cases.length - 1));
@@ -133,6 +154,12 @@ export function createFinalizationQueue({ request, context, download, openRecord
     if (queue.last_decision) content.append(button("Undo last admin decision", async () => {
       queue = await request(`${base()}/undo`, { method: "POST", body: JSON.stringify({ base_revision: queue.revision, event_id: queue.last_decision.event_id }) }); render(); message("Decision undone. The original remains in history.");
     }));
+    if (queue.workbook_feedback?.length) {
+      const ledger = node("details");
+      ledger.append(node("summary", `${queue.workbook_feedback.length} original workbook comments accounted for`));
+      ledger.append(node("p", "Every comment is preserved below and linked to a prepared decision. Accounting for a comment is not an approval of the current data."));
+      ledger.append(workbookFeedback(queue.workbook_feedback)); content.append(ledger);
+    }
     if (!queue.cases.length) { renderFinish(); return; }
     const guidance = queue.cases.filter(item => item.id.startsWith("proposal:") && !item.changes.length);
     if (guidance.length) {
@@ -152,6 +179,13 @@ export function createFinalizationQueue({ request, context, download, openRecord
     const item = queue.cases[index];
     const card = node("article", null, "finalization-card");
     card.append(node("span", `Decision ${index + 1} of ${queue.cases.length}`, "eyebrow"), node("h4", item.title), node("p", item.reason, "finalization-reason"));
+    if (item.feedback?.length) {
+      card.append(workbookFeedback(item.feedback));
+      const linked = new Set(item.feedback.flatMap(entry => entry.current_record_keys));
+      const records = queue.cases.filter(entry => entry.record_key && linked.has(entry.record_key));
+      if (records.length) card.append(button(`Check these ${records.length} linked records together`, () => renderBatch(records)));
+    }
+    if (item.workbook_feedback?.length) card.append(workbookFeedback(item.workbook_feedback));
     if (item.counts) card.append(details("Reviewer count and current records", item.counts));
     if (item.stale) card.append(node("p", "The saved records changed after this suggestion was prepared. Current values are shown below. Check them or edit in review; the old suggestion cannot be applied.", "error"));
     for (const change of item.current_changes || item.changes || []) {
@@ -206,6 +240,7 @@ export function createFinalizationQueue({ request, context, download, openRecord
       inputs.push({ input, key: item.record_key });
       const label = node("label", null, "finalization-check"); label.append(input, node("strong", item.title));
       card.append(label, node("p", item.record_key));
+      if (item.workbook_feedback?.length) card.append(workbookFeedback(item.workbook_feedback));
       const full = node("details"); full.append(node("summary", "Inspect current fields and source"), recordFields(item.record), details("Full record JSON", item.record));
       for (const citation of item.evidence || []) full.append(node("blockquote", citation.quote));
       card.append(full); content.append(card);

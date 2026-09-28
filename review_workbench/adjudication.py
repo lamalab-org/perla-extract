@@ -48,6 +48,28 @@ class Proposal(BaseModel):
     reason: str = Field(min_length=1, max_length=12000)
     changes: list[RecordChange] = Field(default_factory=list, max_length=100)
     evidence: list[Citation] = Field(default_factory=list, max_length=30)
+    feedback: list["WorkbookFeedback"] = Field(default_factory=list, max_length=500)
+
+
+class WorkbookFeedback(BaseModel):
+    """Preserve a workbook comment and the fields its reviewer actually saw.
+
+    A link to a replacement record is an admin-prepared correspondence, not an
+    inherited approval. The old values remain inspectable even after that record
+    is edited or removed. Workbook hashes identify the preserved original file.
+    """
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+    id: str = Field(min_length=1, max_length=200)
+    workbook_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    filename: str = Field(min_length=1, max_length=500)
+    sheet: str = Field(min_length=1, max_length=100)
+    cell: str = Field(min_length=1, max_length=30)
+    text: str = Field(min_length=1, max_length=12000)
+    old_record_key: str = Field(min_length=1, max_length=400)
+    review_outcome: str = Field(max_length=200)
+    reviewed_fields: dict[str, Any]
+    current_record_keys: list[str] = Field(default_factory=list, max_length=100)
 
 
 class PlanRequest(BaseModel):
@@ -58,6 +80,7 @@ class PlanRequest(BaseModel):
     study_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     proposals: list[Proposal] = Field(min_length=1, max_length=100)
     supersedes: list[str] = Field(default_factory=list, max_length=100)
+    feedback_counts: dict[str, int] = Field(default_factory=dict)
 
 
 class DecisionRequest(BaseModel):
@@ -186,6 +209,41 @@ class AdjudicationQueue:
         ids = [proposal.id for proposal in request.proposals]
         if len(set(ids)) != len(ids):
             raise ValueError("Proposal identifiers must be distinct")
+        feedback = [entry for p in request.proposals for entry in p.feedback]
+        if len({entry.id for entry in feedback}) != len(feedback):
+            raise ValueError("Each workbook comment must occur exactly once in a plan")
+        counts: dict[str, int] = {}
+        records = _records(current.ground_truth)
+        for entry in feedback:
+            counts[entry.workbook_sha256] = counts.get(entry.workbook_sha256, 0) + 1
+            if len(set(entry.current_record_keys)) != len(
+                entry.current_record_keys
+            ) or not set(entry.current_record_keys).issubset(records):
+                raise ValueError(
+                    "Workbook feedback must link to distinct current records"
+                )
+        if counts != request.feedback_counts:
+            raise ValueError(
+                "Workbook comment counts do not match the supplied inventory"
+            )
+        superseded = set(request.supersedes) | {
+            identifier
+            for event in current.events
+            if event["kind"] == "adjudication_plan"
+            for identifier in event["details"].get("supersedes", [])
+        }
+        active_feedback = {
+            entry["id"]
+            for event in current.events
+            if event["kind"] == "adjudication_plan"
+            for proposal in event["details"]["proposals"]
+            if proposal["id"] not in superseded
+            for entry in proposal.get("feedback", [])
+        }
+        if active_feedback.intersection(entry.id for entry in feedback):
+            raise ValueError(
+                "Supersede the previous feedback group before replacing its correspondence"
+            )
         existing = {
             p["id"]
             for event in current.events
@@ -216,6 +274,7 @@ class AdjudicationQueue:
                 "proposals": [p.model_dump(mode="json") for p in request.proposals],
                 "study_sha256": request.study_sha256,
                 "supersedes": request.supersedes,
+                "feedback_counts": request.feedback_counts,
             },
         )
 
@@ -304,11 +363,20 @@ class AdjudicationQueue:
             for identifier in event["details"].get("supersedes", [])
         }
         cases = []
+        feedback_by_record: dict[str, list[dict]] = {}
+        feedback_inventory = []
         for event in events:
             if event["kind"] == "adjudication_plan":
                 for proposal in event["details"]["proposals"]:
                     if proposal["id"] in superseded:
                         continue
+                    entries = proposal.get("feedback", [])
+                    for entry in entries:
+                        feedback_inventory.append(
+                            {**entry, "case_id": f"proposal:{proposal['id']}"}
+                        )
+                        for key in entry["current_record_keys"]:
+                            feedback_by_record.setdefault(key, []).append(entry)
                     current_changes = [
                         {
                             **change,
@@ -372,6 +440,8 @@ class AdjudicationQueue:
                 continue
             case["binding"] = _binding(truth, case["keys"])
             pending.append(case)
+        for case in record_cases:
+            case["workbook_feedback"] = feedback_by_record.get(case["record_key"], [])
         last = events[-1]
         return {
             "paper_id": paper,
@@ -384,6 +454,10 @@ class AdjudicationQueue:
             "inherited_count": len(inherited),
             "own_approved_count": sum(own.get(k) == "verified" for k in catalog),
             "inherited": inherited,
+            "workbook_feedback": feedback_inventory,
+            "workbook_current_records": {
+                key: records[key] for key in feedback_by_record if key in records
+            },
             "cases": [c for c in pending if c["changes"]]
             + record_cases
             + [c for c in pending if not c["changes"]],
