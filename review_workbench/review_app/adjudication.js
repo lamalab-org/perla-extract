@@ -146,7 +146,11 @@ export function createFinalizationQueue({ request, context, download, openRecord
     const actions = node("div", null, "finalization-actions");
     if (item.changes?.length && !item.stale) actions.append(button("Accept correction & approve", () => save("accept"), true));
     actions.append(button(item.changes?.length ? "Keep current version" : "Confirm current records", () => save("keep"), !item.changes?.length));
-    actions.append(button("Edit in review", async () => { await openRecord(paper, item.record_key || item.keys?.[0]); dialog.close(); }));
+    actions.append(button("Edit in review", async () => {
+      const existing = (item.current_changes || item.changes || []).find(change => Object.hasOwn(change, "current") ? change.current : change.before);
+      const key = item.record_key || (existing ? `${existing.collection}:${existing.record_id}` : null);
+      await openRecord(paper, key); dialog.close();
+    }));
     actions.append(button("Later →", () => { index = (index + 1) % queue.cases.length; render(); message("Left unresolved. Nothing was approved."); }));
     card.append(actions); content.append(card);
   }
