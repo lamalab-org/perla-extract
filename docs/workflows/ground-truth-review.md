@@ -16,6 +16,39 @@ or Supporting Information. Do not digitize plot traces, interpolate, infer unrep
 identities, or copy values from cited background literature. Record unresolved source
 ambiguity in `unresolved_notes`.
 
+## Finish an existing expert review
+
+Administrators can open **Finalize ground truth** from the app header. This is a
+shorter route for papers that experts have already reviewed; it does not repeat
+the full review sequence below.
+
+1. Choose a paper. The queue shows proposed corrections first, then records without
+   a current approval, then unresolved completeness notes. Unchanged records with
+   only positive reviewer decisions do not need another individual click.
+2. Compare **Current** and **Proposed**, read the supporting passage, and use
+   **Show source in paper** when needed. **Accept correction & approve** saves the
+   corrected records. **Keep current version** approves the current records instead.
+   Both decisions apply to each complete affected record; expand its full JSON if
+   the difference alone is not enough. **Later** leaves the question open.
+3. Use **Edit in review** for a different correction, then reopen finalization.
+   **Undo last admin decision** reverses your saved decision without erasing history.
+   An old suggestion cannot overwrite records that changed after it was prepared.
+4. For records checked together against a paper or earlier workbook, use
+   **Check records together**, select only those you have checked, and state the
+   review basis. Historical workbook comments alone do not count as current approvals.
+5. When no questions remain, confirm that you accept the reviewed records and have
+   checked the main paper and available SI for omissions. **Finalize & download**
+   produces the frozen-reference ZIP used by the scorer, including `ground_truth.json`,
+   its manifest, evidence document, and review history. The app validates the source
+   citations before finalization. Passing these checks does not establish scientific
+   correctness; the administrator remains responsible for that judgment.
+
+**Load prepared suggestions** imports a private finalization-plan JSON file, not
+an extraction file. Importing saves proposals without applying or approving them.
+The plan must match the current study content. Existing proposals and reviewer
+uploads are not replaced. A count mismatch asks for investigation; it never deletes
+records automatically. Finalization exports one paper at a time.
+
 ## Review sequence
 
 ```mermaid
