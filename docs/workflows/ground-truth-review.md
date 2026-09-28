@@ -25,11 +25,14 @@ the full review sequence below.
 1. Choose a paper. The queue shows proposed corrections first, then records without
    a current approval, then unresolved completeness notes. Unchanged records with
    only positive reviewer decisions do not need another individual click.
+   **What changed and what still needs checking** summarizes prepared review guidance.
+   Use **Jump to a review decision** to go straight to a correction or record.
 2. Compare **Current** and **Proposed**, read the supporting passage, and use
    **Show source in paper** when needed. **Accept correction & approve** saves the
    corrected records. **Keep current version** approves the current records instead.
    Both decisions apply to each complete affected record; expand its full JSON if
-   the difference alone is not enough. **Later** leaves the question open.
+   the difference alone is not enough. Long changes and quotations are collapsed;
+   expand them to inspect every field. **Later** leaves the question open.
 3. Use **Edit in review** for a different correction, then reopen finalization.
    **Undo last admin decision** reverses your saved decision without erasing history.
    An old suggestion cannot overwrite records that changed after it was prepared.
@@ -45,8 +48,11 @@ the full review sequence below.
 
 **Load prepared suggestions** imports a private finalization-plan JSON file, not
 an extraction file. Importing saves proposals without applying or approving them.
-The plan must match the current study content. Existing proposals and reviewer
-uploads are not replaced. A count mismatch asks for investigation; it never deletes
+The plan must match the current study content. A refined plan can list earlier
+proposal IDs in `supersedes` to retire a broad checklist from the active queue.
+The original proposals and reviewer uploads remain in history; retiring a checklist
+does not approve its records or apply any correction. New proposal IDs must be unique.
+A count mismatch asks for investigation; it never deletes
 records automatically. Finalization exports one paper at a time.
 
 ## Review sequence

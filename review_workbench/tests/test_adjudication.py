@@ -1,5 +1,10 @@
 """Exercise admin adoption, guarded corrections, undo, and a scoreable final export."""
 
+import json
+import shutil
+import subprocess
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -20,6 +25,26 @@ from review_workbench.study_review import (
 from review_workbench.tests.test_ground_truth_export import _study_with_evidence
 
 PAPER = "10.0000--example"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node is required")
+def test_diff_matches_stable_ids_and_still_shows_reordering():
+    source = Path(__file__).parents[1] / "review_app/adjudication.js"
+    script = f"""
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+(async () => {{
+  const code = fs.readFileSync({json.dumps(str(source))}, 'utf8');
+  const {{ differences }} = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
+  const a = {{checkpoint_id:'a', value:1}}, b = {{checkpoint_id:'b', value:2}}, c = {{checkpoint_id:'c', value:3}};
+  const added = differences([a,c], [a,b,c]);
+  assert(added.length > 0 && added.every(row => row[0].startsWith('/b/')));
+  assert.deepEqual(differences([a,b], [b,a]), [['/order','a → b','b → a']]);
+  assert.deepEqual(differences([a,b], [a,{{...b,value:4}}]), [['/b/value','2','4']]);
+  assert(differences([{{name:'x',value:1}},{{name:'x',value:2}}], [{{name:'x',value:3}}]).some(row => row[0] === '/0/value'));
+}})().catch(error => {{ console.error(error); process.exit(1); }});
+"""
+    subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
 
 
 @pytest.fixture
@@ -148,6 +173,37 @@ def test_keep_current_records_is_audited_and_does_not_apply_proposal(queue):
     )
     finalize(queue)
     assert build_ground_truth_export(queue.store, "dev", PAPER)
+
+
+def test_refined_plan_retires_checklist_without_erasing_or_approving(queue):
+    first = plan(queue)
+    queue.import_plan("dev", PAPER, first, "admin")
+    replacement = plan(queue)
+    replacement.proposals[0].id = "source-backed-label"
+    replacement.supersedes = [first.proposals[0].id]
+    result = queue.import_plan("dev", PAPER, replacement, "admin")
+    assert [case["id"] for case in result["cases"]] == ["proposal:source-backed-label"]
+    assert result["own_approved_count"] == 0
+    assert (
+        queue.store.load_truth("dev", PAPER)["device_families"][0]["label"] == "Control"
+    )
+    events = queue.store.events("dev", PAPER)
+    assert len([e for e in events if e["kind"] == "adjudication_plan"]) == 2
+    with pytest.raises(ValueError, match="remaining"):
+        finalize(queue)
+    decided = decide(queue)
+    assert decided["cases"] == []
+
+
+@pytest.mark.parametrize(
+    "supersedes", [["not-saved"], ["correct-label", "correct-label"]]
+)
+def test_supersession_requires_known_distinct_proposals(queue, supersedes):
+    request = plan(queue)
+    request.supersedes = supersedes
+    with pytest.raises(ValueError, match="distinct saved"):
+        queue.import_plan("dev", PAPER, request, "admin")
+    assert queue.load("dev", PAPER, "admin")["revision"] == 2
 
 
 def test_conflicting_decision_requires_explicit_admin_resolution(queue):

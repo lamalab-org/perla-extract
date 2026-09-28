@@ -30,5 +30,6 @@
 .finalization-check input { width: auto; margin-top: 5px; }
 .finalization-header button { flex-shrink: 0; }
 .finalization-content textarea { width: 100%; min-height: 65px; box-sizing: border-box; }
+.finalization-content > select { width: 100%; min-width: 0; margin: 12px 0; }
 .finalization-content [hidden] { display: none !important; }
 @media(max-width: 760px) { .finalization-layout { grid-template-columns: 1fr; grid-template-rows: 110px 1fr; } .finalization-papers { display: flex; gap: 8px; border-right: 0; border-bottom: 1px solid #dce5e1; } .finalization-papers button { flex: 0 0 170px; } .finalization-content { padding: 14px; } .finalization-card { padding: 14px; } .finalization-header { padding: 14px; } }

@@ -7,8 +7,24 @@ const node = (tag, text, className) => {
 };
 const pretty = (value) => value == null ? "—" : typeof value === "object" ? JSON.stringify(value, null, 2) : String(value);
 
-function differences(before, after, path = "") {
+export function differences(before, after, path = "") {
   if (JSON.stringify(before) === JSON.stringify(after)) return [];
+  // A new checkpoint should appear as an addition, not shift every later row.
+  if (Array.isArray(before) && Array.isArray(after)) {
+    const entries = [...before, ...after];
+    const keys = entries.length && entries.every(value => value && typeof value === "object" && !Array.isArray(value))
+      ? Object.keys(entries[0]).filter(key => key.endsWith("_id") || key === "name") : [];
+    const identity = keys.find(key => [before, after].every(values => values.every(value => typeof value[key] === "string") && new Set(values.map(value => value[key])).size === values.length));
+    if (identity) {
+      const old = Object.fromEntries(before.map(value => [value[identity], value]));
+      const next = Object.fromEntries(after.map(value => [value[identity], value]));
+      const oldOrder = before.map(value => value[identity]).filter(key => Object.hasOwn(next, key));
+      const newOrder = after.map(value => value[identity]).filter(key => Object.hasOwn(old, key));
+      const reordered = JSON.stringify(oldOrder) !== JSON.stringify(newOrder)
+        ? [[`${path}/order`, oldOrder.join(" → "), newOrder.join(" → ")]] : [];
+      return [...reordered, ...differences(old, next, path)];
+    }
+  }
   if ((before == null || typeof before === "object") && (after == null || typeof after === "object") && (before || after)) {
     return [...new Set([...Object.keys(before || {}), ...Object.keys(after || {})])]
       .filter(key => key !== "evidence")
@@ -63,11 +79,11 @@ export function createFinalizationQueue({ request, context, download, openRecord
   };
   async function perform(action) {
     if (busy) return;
-    busy = true; dialog.querySelectorAll("button,input,textarea").forEach(el => el.disabled = true);
+    busy = true; dialog.querySelectorAll("button,input,textarea,select").forEach(el => el.disabled = true);
     message("Working…");
     try { await action(); }
     catch (error) { message(error.message, true); }
-    finally { busy = false; dialog.querySelectorAll("button,input,textarea").forEach(el => el.disabled = false); }
+    finally { busy = false; dialog.querySelectorAll("button,input,textarea,select").forEach(el => el.disabled = false); }
   }
   async function load(id) {
     const previousCase = id === paper ? queue?.cases[index]?.id : null;
@@ -99,7 +115,7 @@ export function createFinalizationQueue({ request, context, download, openRecord
       try {
         message(`Loading suggestions: ${saved + failed.length + 1} of ${plan.papers.length}…`);
         const current = await request(url);
-        await request(`${url}/plan`, { method: "POST", body: JSON.stringify({ base_revision: current.revision, study_sha256: item.study_sha256, proposals: item.proposals }) });
+        await request(`${url}/plan`, { method: "POST", body: JSON.stringify({ base_revision: current.revision, study_sha256: item.study_sha256, proposals: item.proposals, supersedes: item.supersedes || [] }) });
         saved++;
       } catch (error) { failed.push(`${item.paper_id}: ${error.message}`); }
     }
@@ -118,6 +134,19 @@ export function createFinalizationQueue({ request, context, download, openRecord
       queue = await request(`${base()}/undo`, { method: "POST", body: JSON.stringify({ base_revision: queue.revision, event_id: queue.last_decision.event_id }) }); render(); message("Decision undone. The original remains in history.");
     }));
     if (!queue.cases.length) { renderFinish(); return; }
+    const guidance = queue.cases.filter(item => item.id.startsWith("proposal:") && !item.changes.length);
+    if (guidance.length) {
+      const summary = node("details"); summary.append(node("summary", "What changed and what still needs checking"));
+      guidance.forEach(item => summary.append(node("h4", item.title), node("p", item.reason, "finalization-reason")));
+      content.append(summary);
+    }
+    const jump = node("select"); jump.setAttribute("aria-label", "Jump to a review decision");
+    queue.cases.forEach((item, i) => {
+      const option = node("option", `${i + 1}. ${item.changes.length ? "Correction" : item.record_key ? "Record" : "Review decision"}: ${item.title}`);
+      option.value = String(i); jump.append(option);
+    });
+    jump.value = String(index); jump.onchange = () => { index = Number(jump.value); render(); message("Nothing approved. Showing the selected decision."); };
+    content.append(jump);
     const unapproved = queue.cases.filter(item => item.record_key);
     if (unapproved.length > 1) content.append(button(`Check ${unapproved.length} records together`, () => renderBatch(unapproved)));
     const item = queue.cases[index];
@@ -129,17 +158,24 @@ export function createFinalizationQueue({ request, context, download, openRecord
       card.append(node("h5", `${change.collection.replaceAll("_", " ")} · ${change.record_id}`));
       const table = node("table", null, "finalization-changes");
       const head = node("tr"); ["Field", "Current", "Proposed"].forEach(label => head.append(node("th", label))); table.append(head);
-      for (const row of differences(Object.hasOwn(change, "current") ? change.current : change.before, change.after)) {
+      const rows = differences(Object.hasOwn(change, "current") ? change.current : change.before, change.after);
+      for (const row of rows) {
         const tr = node("tr"); row.forEach(value => tr.append(node("td", value))); table.append(tr);
       }
-      card.append(table, details("Inspect the complete proposed record", change.after), details("Inspect the complete current record", Object.hasOwn(change, "current") ? change.current : change.before));
+      if (rows.length > 14) {
+        const group = node("details"); group.append(node("summary", `Inspect ${rows.length} changed fields`), table); card.append(group);
+      } else card.append(table);
+      card.append(details("Inspect the complete proposed record", change.after), details("Inspect the complete current record", Object.hasOwn(change, "current") ? change.current : change.before));
     }
     if (item.changes?.length) card.append(node("p", "Your decision approves the complete affected records, not only the differences shown above.", "finalization-summary"));
     if (item.record) {
       card.append(recordFields(item.record), details("Full record JSON, including empty fields", item.record));
     }
     for (const citation of item.evidence || []) {
-      card.append(node("blockquote", citation.quote), button("Show source in paper", async () => { await showCitation(paper, citation); dialog.close(); }));
+      if (citation.quote.length > 500) {
+        const source = node("details"); source.append(node("summary", "Read quoted source evidence"), node("blockquote", citation.quote)); card.append(source);
+      } else card.append(node("blockquote", citation.quote));
+      card.append(button("Show source in paper", async () => { await showCitation(paper, citation); dialog.close(); }));
     }
     const note = node("textarea"); note.placeholder = "Optional explanation for this decision"; note.setAttribute("aria-label", "Decision note"); card.append(note);
     const save = async (action) => {
@@ -148,7 +184,7 @@ export function createFinalizationQueue({ request, context, download, openRecord
     };
     const actions = node("div", null, "finalization-actions");
     if (item.changes?.length && !item.stale) actions.append(button("Accept correction & approve", () => save("accept"), true));
-    actions.append(button(item.changes?.length ? "Keep current version" : "Confirm current records", () => save("keep"), !item.changes?.length));
+    actions.append(button(item.changes?.length ? "Keep current version" : item.record ? "Approve this record" : "Confirm this review decision", () => save("keep"), !item.changes?.length));
     actions.append(button("Edit in review", async () => {
       const existing = (item.current_changes || item.changes || []).find(change => Object.hasOwn(change, "current") ? change.current : change.before);
       const key = item.record_key || (existing ? `${existing.collection}:${existing.record_id}` : null);

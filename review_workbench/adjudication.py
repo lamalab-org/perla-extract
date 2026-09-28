@@ -57,6 +57,7 @@ class PlanRequest(BaseModel):
     base_revision: int = Field(ge=1)
     study_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     proposals: list[Proposal] = Field(min_length=1, max_length=100)
+    supersedes: list[str] = Field(default_factory=list, max_length=100)
 
 
 class DecisionRequest(BaseModel):
@@ -195,6 +196,10 @@ class AdjudicationQueue:
             raise ValueError(
                 "This proposal is already saved; existing proposals are never replaced"
             )
+        if len(set(request.supersedes)) != len(request.supersedes) or not set(
+            request.supersedes
+        ).issubset(existing):
+            raise ValueError("Superseded proposals must be distinct saved proposal IDs")
         for proposal in request.proposals:
             self.store._validate_citations(split, paper, proposal.evidence)
             if proposal.changes:
@@ -210,6 +215,7 @@ class AdjudicationQueue:
             {
                 "proposals": [p.model_dump(mode="json") for p in request.proposals],
                 "study_sha256": request.study_sha256,
+                "supersedes": request.supersedes,
             },
         )
 
@@ -286,10 +292,20 @@ class AdjudicationQueue:
                     "keys": [key],
                 }
             )
+        # A more specific plan may retire an earlier checklist, but never erase
+        # its event or approve its records. The replacement still needs a decision.
+        superseded = {
+            identifier
+            for event in events
+            if event["kind"] == "adjudication_plan"
+            for identifier in event["details"].get("supersedes", [])
+        }
         cases = []
         for event in events:
             if event["kind"] == "adjudication_plan":
                 for proposal in event["details"]["proposals"]:
+                    if proposal["id"] in superseded:
+                        continue
                     current_changes = [
                         {
                             **change,
