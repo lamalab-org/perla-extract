@@ -70,11 +70,14 @@ export function createFinalizationQueue({ request, context, download, openRecord
     finally { busy = false; dialog.querySelectorAll("button,input,textarea").forEach(el => el.disabled = false); }
   }
   async function load(id) {
+    const previousCase = id === paper ? queue?.cases[index]?.id : null;
     const ticket = ++generation; paper = id; index = 0; queue = null;
     content.replaceChildren(node("p", "Loading saved review…"));
     const result = await request(base());
     if (ticket !== generation) return;
-    queue = result; renderRail(); render(); message("All decisions are saved to the review history.");
+    queue = result;
+    if (previousCase) index = Math.max(0, queue.cases.findIndex(item => item.id === previousCase));
+    renderRail(); render(); message("All decisions are saved to the review history.");
   }
   function renderRail() {
     rail.replaceChildren();
