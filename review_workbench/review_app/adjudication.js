@@ -163,7 +163,7 @@ export function createFinalizationQueue({ request, context, download, openRecord
         const tr = node("tr"); row.forEach(value => tr.append(node("td", value))); table.append(tr);
       }
       if (rows.length > 14) {
-        const group = node("details"); group.append(node("summary", `Inspect ${rows.length} changed fields`), table); card.append(group);
+        const group = node("details"); group.append(node("summary", "Inspect all proposed field changes"), table); card.append(group);
       } else card.append(table);
       card.append(details("Inspect the complete proposed record", change.after), details("Inspect the complete current record", Object.hasOwn(change, "current") ? change.current : change.before));
     }

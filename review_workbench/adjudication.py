@@ -279,8 +279,11 @@ class AdjudicationQueue:
                 {
                     "id": f"record:{key}",
                     "title": record.get("label")
-                    or record.get("measurement_type")
-                    or key.split(":")[0].replace("_", " "),
+                    or record.get("specimen_label")
+                    or (
+                        f"{record.get('measurement_type', key.split(':')[0]).replace('_', ' ')}"
+                        f" · {key.split(':', 1)[1]}"
+                    ),
                     "reason": "Reviewers disagree or left this record unresolved."
                     if decisions
                     else "No approval matches the current record. Historical Excel feedback may still apply.",
