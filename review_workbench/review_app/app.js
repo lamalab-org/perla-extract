@@ -377,7 +377,7 @@ async function loadSession() {
   state.user = payload.user;
   $("reviewer").textContent = payload.user.name;
   $("download-all-feedback").hidden = payload.user.role !== "admin";
-  $("open-finalization").hidden = payload.user.role !== "admin";
+  $("open-finalization").hidden = !payload.user.can_finalize;
 }
 
 function loadScript(src, attributes = {}) {
@@ -1728,14 +1728,14 @@ function renderStageControls() {
     if (button.dataset.stage === "fields" && remaining > 0 && !mine("fields")) button.textContent = `Review ${remaining} remaining record${remaining === 1 ? "" : "s"}`;
     if (button.dataset.stage === "adjudication" && unresolved > 0) button.textContent = `Resolve ${unresolved} record${unresolved === 1 ? "" : "s"} before finalizing`;
   });
-  $("complete-adjudication").hidden = state.user.role !== "admin";
+  $("complete-adjudication").hidden = !state.user.can_finalize;
   const finalEvent = state.bundle.events.at(-1);
   const finalDecisions = state.bundle.summary.record_decisions?.[finalEvent?.reviewer_id] || {};
   const finalVerified = Object.values(finalDecisions).filter((decision) => decision === "verified").length;
-  const canExport = state.user.role === "admin" && finalEvent?.kind === "stage_complete" && finalEvent?.details?.stage === "adjudication" && finalVerified === state.bundle.summary.record_count;
-  $("download-truth").hidden = state.user.role !== "admin";
+  const canExport = state.user.can_finalize && finalEvent?.kind === "stage_complete" && finalEvent?.details?.stage === "adjudication" && finalVerified === state.bundle.summary.record_count;
+  $("download-truth").hidden = !state.user.can_finalize;
   $("download-truth").disabled = !canExport;
-  $("final-export-help").hidden = state.user.role !== "admin" || canExport;
+  $("final-export-help").hidden = !state.user.can_finalize || canExport;
   $("add-record").disabled = false;
   $("new-record-kind").disabled = false;
   const recordsTab = document.querySelector('[data-tab="records"]');
@@ -3176,7 +3176,7 @@ $("download-supplement-pdf").addEventListener("click", (event) => runDownload(
 $("open-annotations").addEventListener("click", openReviewerProgress);
 const finalization = createFinalizationQueue({
   request,
-  context: () => ({ split: state.split, paperId: state.paperId, papers: state.papers }),
+  context: () => ({ split: state.split, paperId: state.paperId, papers: state.papers, canImportPlan: state.user.role === "admin" }),
   download: downloadResponse,
   openRecord: async (paperId, key) => {
     await selectPaper(paperId);
@@ -3282,7 +3282,7 @@ $("internal-sign-in").addEventListener("submit", async (event) => {
     state.user = payload.user;
     $("reviewer").textContent = payload.user.name;
     $("download-all-feedback").hidden = payload.user.role !== "admin";
-    $("open-finalization").hidden = payload.user.role !== "admin";
+    $("open-finalization").hidden = !payload.user.can_finalize;
     $("login-password").value = "";
     showWorkbench();
     await startApp();

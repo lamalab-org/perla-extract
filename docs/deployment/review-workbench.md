@@ -306,6 +306,23 @@ changing reviewer identities or saved annotations.
 
 An account role is `reviewer` unless it is explicitly `admin`.
 
+### Let reviewers finalize references
+
+Set `REVIEW_ALLOW_REVIEWER_FINALIZATION=true` and redeploy to let all authenticated
+reviewers resolve finalization questions, freeze reviewed references, and download
+their reference ZIPs. Reviewers should reload the app to see **Finalize ground truth**.
+Without this setting, only administrators can finalize. This setting works with both
+authentication modes; it does not let new people sign in or create accounts.
+
+Finalizers share progress: a saved decision removes that question from everyone's
+queue. Each decision keeps its author and history, and people can undo only their own
+finalization decisions. Editing an approved record invalidates its old approval.
+Simultaneous edits require the second person to reload the latest version.
+
+Account management, importing prepared finalization plans, and downloading all
+reviewers' feedback remain administrator-only. Turning the setting off removes
+reviewer finalization access without deleting any decisions or review data.
+
 ### Dedicated comparison hostname
 
 The blinded extractor study can use a separate hostname without a second backend.

@@ -322,6 +322,21 @@ class AdjudicationQueue:
         catalog = _record_catalog(truth)
         records = _records(truth)
         own = summary["record_decisions"].get(reviewer, {})
+        undone = {e["details"].get("undoes_event_id") for e in events}
+        # Finalizers share decisions, but an approval covers only the record that
+        # was actually checked. Changed records and undone decisions reopen review.
+        adjudicated = {}
+        for event in events:
+            if event["kind"] != "adjudication_decision" or event["event_id"] in undone:
+                continue
+            for decision in event["details"].get("decisions", []):
+                key = decision["record_key"]
+                if (
+                    decision.get("decision") == "verified"
+                    and key in catalog
+                    and decision.get("record_digest") == catalog[key]
+                ):
+                    adjudicated[key] = {event["reviewer_id"]: "verified"}
         inherited, record_cases = {}, []
         for key, record in records.items():
             decisions = {
@@ -330,6 +345,9 @@ class AdjudicationQueue:
                 if key in values
             }
             if own.get(key) == "verified":
+                continue
+            if key in adjudicated:
+                inherited[key] = adjudicated[key]
                 continue
             if decisions and set(decisions.values()) == {"verified"}:
                 inherited[key] = decisions
@@ -424,13 +442,10 @@ class AdjudicationQueue:
                         "keys": [],
                     }
                 )
-        undone = {e["details"].get("undoes_event_id") for e in events}
         resolutions = {
             e["details"].get("case_id"): e
             for e in events
-            if e["kind"] == "adjudication_decision"
-            and e["reviewer_id"] == reviewer
-            and e["event_id"] not in undone
+            if e["kind"] == "adjudication_decision" and e["event_id"] not in undone
         }
         pending = []
         for case in cases:
@@ -540,7 +555,7 @@ class AdjudicationQueue:
             or event["kind"] != "adjudication_decision"
             or event["reviewer_id"] != reviewer
         ):
-            raise ValueError("Choose one of your saved admin decisions")
+            raise ValueError("Choose one of your saved finalization decisions")
         if any(e["details"].get("undoes_event_id") == event_id for e in current.events):
             raise ValueError("This decision has already been undone")
         truth = copy.deepcopy(current.ground_truth)
@@ -563,7 +578,7 @@ class AdjudicationQueue:
                 "collection_replacements": [],
             },
             truth=truth,
-            note="Undid an admin decision; original history preserved.",
+            note="Undid a finalization decision; original history preserved.",
         )
 
     def finalize(

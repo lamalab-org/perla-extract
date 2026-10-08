@@ -18,7 +18,8 @@ ambiguity in `unresolved_notes`.
 
 ## Finish an existing expert review
 
-Administrators can open **Finalize ground truth** from the app header. This is a
+Administrators, and reviewers when enabled by the deployment, can open
+**Finalize ground truth** from the app header. This is a
 shorter route for papers that experts have already reviewed; it does not repeat
 the full review sequence below.
 
@@ -34,7 +35,7 @@ the full review sequence below.
    the difference alone is not enough. Long changes and quotations are collapsed;
    expand them to inspect every field. **Later** leaves the question open.
 3. Use **Edit in review** for a different correction, then reopen finalization.
-   **Undo last admin decision** reverses your saved decision without erasing history.
+   **Undo my last decision** reverses your saved decision without erasing history.
    An old suggestion cannot overwrite records that changed after it was prepared.
 4. For records checked together against a paper or earlier workbook, use
    **Check records together**, select only those you have checked, and state the
@@ -44,9 +45,15 @@ the full review sequence below.
    produces the frozen-reference ZIP used by the scorer, including `ground_truth.json`,
    its manifest, evidence document, and review history. The app validates the source
    citations before finalization. Passing these checks does not establish scientific
-   correctness; the administrator remains responsible for that judgment.
+   correctness; the person finalizing remains responsible for that judgment.
 
-**Load prepared suggestions** imports a private finalization-plan JSON file, not
+Progress is shared. A question resolved by one finalizer does not need to be resolved
+again by another. The history records who made each decision. Coordinate which papers
+you work on; if someone saves a change while you are reviewing, reload before saving.
+See [deployment permissions](../deployment/review-workbench.md#let-reviewers-finalize-references)
+to enable this for existing reviewers.
+
+Administrators can use **Load prepared suggestions** to import a private finalization-plan JSON file, not
 an extraction file. Importing saves proposals without applying or approving them.
 The plan must match the current study content. A refined plan can list earlier
 proposal IDs in `supersedes` to retire a broad checklist from the active queue.

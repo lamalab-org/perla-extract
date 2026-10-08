@@ -1100,9 +1100,11 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     result[raw_name] = value if part.get_filename() else value.decode()
             return result
 
-        def current_user(self, require_admin: bool = False) -> dict[str, str]:
+        def current_user(
+            self, require_admin: bool = False, require_finalizer: bool = False
+        ) -> dict[str, Any]:
             if authenticator is None:
-                return {
+                self._review_user = {
                     "id": "local-reviewer",
                     "name": "Local reviewer",
                     "email": "",
@@ -1113,6 +1115,13 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 application.ensure_authenticated_user(self._review_user)
             if require_admin and self._review_user.get("role") != "admin":
                 raise PermissionError("administrator access is required")
+            self._review_user["can_finalize"] = (
+                self._review_user.get("role") == "admin"
+                or os.environ.get("REVIEW_ALLOW_REVIEWER_FINALIZATION", "").lower()
+                == "true"
+            )
+            if require_finalizer and not self._review_user["can_finalize"]:
+                raise PermissionError("reference finalization access is required")
             return self._review_user
 
         @staticmethod
@@ -1157,7 +1166,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     return
                 parts = self.route_parts(parsed.path)
                 if parts[:2] == ["api", "adjudication"] and len(parts) == 4:
-                    user = self.current_user(require_admin=True)
+                    user = self.current_user(require_finalizer=True)
                     self.send_json(
                         AdjudicationQueue(application.store).load(
                             parts[2], parts[3], user["id"]
@@ -1237,7 +1246,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     )
                     return
                 if parts[:2] == ["api", "ground-truth-export"] and len(parts) == 4:
-                    self.current_user(require_admin=True)
+                    self.current_user(require_finalizer=True)
                     paper_id = parts[3]
                     self.send_bytes(
                         application.ground_truth_archive(parts[2], paper_id),
@@ -1373,11 +1382,14 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         str(payload.get("email", "")), str(payload.get("password", ""))
                     )
                     application.ensure_authenticated_user(user)
-                    self.send_json({"token": token, "user": user})
+                    self._review_user = user
+                    self.send_json({"token": token, "user": self.current_user()})
                     return
                 user = self.current_user()
                 if parts[:2] == ["api", "adjudication"] and len(parts) == 5:
-                    self.current_user(require_admin=True)
+                    self.current_user(
+                        require_admin=parts[4] == "plan", require_finalizer=True
+                    )
                     payload = self.read_json()
                     queue = AdjudicationQueue(application.store)
                     action = parts[4]
@@ -1575,7 +1587,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         isinstance(payload, dict)
                         and payload.get("stage") == "adjudication"
                     ):
-                        self.current_user(require_admin=True)
+                        self.current_user(require_finalizer=True)
                     self.send_json(
                         application.complete_stage(
                             parts[2], parts[3], payload, user["id"]

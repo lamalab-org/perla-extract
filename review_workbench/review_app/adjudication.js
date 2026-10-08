@@ -1,4 +1,4 @@
-// A focused admin workflow, using the workbench's existing authenticated requests.
+// Shared reference finalization, using the workbench's authenticated requests.
 const node = (tag, text, className) => {
   const el = document.createElement(tag);
   if (text != null) el.textContent = text;
@@ -101,6 +101,7 @@ export function createFinalizationQueue({ request, context, download, openRecord
       const entry = button(item.id, () => load(item.id));
       entry.setAttribute("aria-current", String(item.id === paper)); rail.append(entry);
     }
+    if (!context().canImportPlan) return;
     const label = node("label", "Load prepared suggestions");
     const upload = node("input"); upload.type = "file"; upload.accept = ".json,application/json";
     upload.onchange = () => { if (upload.files[0]) perform(() => importPlan(upload.files[0])); };
@@ -156,7 +157,7 @@ export function createFinalizationQueue({ request, context, download, openRecord
     if (!queue) return;
     index = Math.min(index, Math.max(0, queue.cases.length - 1));
     content.replaceChildren(node("h3", queue.title), node("p", `${queue.own_approved_count} approved by you · ${queue.inherited_count} current reviewer approvals · ${queue.cases.length} decisions left`, "finalization-summary"));
-    if (queue.last_decision) content.append(button("Undo last admin decision", async () => {
+    if (queue.last_decision) content.append(button("Undo my last decision", async () => {
       queue = await request(`${base()}/undo`, { method: "POST", body: JSON.stringify({ base_revision: queue.revision, event_id: queue.last_decision.event_id }) }); render(); message("Decision undone. The original remains in history.");
     }));
     if (queue.workbook_feedback?.length) {

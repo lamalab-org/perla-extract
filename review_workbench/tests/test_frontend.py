@@ -633,12 +633,12 @@ def test_ui_builds_untrusted_content_with_dom_nodes():
     assert "replaceChildren" in source
 
 
-def test_only_admins_can_download_an_adjudicated_pr_bundle():
+def test_only_finalizers_can_download_an_adjudicated_pr_bundle():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
     assert "Download adjudicated PR bundle" in html
     assert "ground-truth-export" in source
-    assert 'state.user.role === "admin"' in source
+    assert "const canExport = state.user.can_finalize" in source
     assert 'finalEvent?.details?.stage === "adjudication"' in source
 
 
@@ -663,7 +663,7 @@ const document = {
   querySelector: (key) => $(key),
 };
 const hasAudit = () => true;
-const state = {user: {id: 'admin', role: 'admin'}, bundle: {
+const state = {user: {id: 'admin', role: 'admin', can_finalize: true}, bundle: {
   summary: {record_count: 1, record_decisions: {admin: {record: 'uncertain'}},
     completed_stages: {inventory: ['admin'], fields: ['admin'], completeness: ['admin']}},
   events: [{kind: 'stage_complete', reviewer_id: 'admin', details: {stage: 'adjudication'}}],
@@ -679,10 +679,10 @@ state.bundle.summary.record_decisions.admin.record = 'verified';
 renderStageControls();
 assert.equal(buttons[3].disabled, false);
 assert.equal($('download-truth').disabled, false);
-state.user = {id: 'other-admin', role: 'admin'};
+state.user = {id: 'collaborator', role: 'reviewer', can_finalize: true};
 renderStageControls();
 assert.equal($('download-truth').disabled, false); // Final review belongs to admin.
-state.user.role = 'reviewer';
+state.user.can_finalize = false;
 renderStageControls();
 assert.equal($('download-truth').disabled, true);
 """

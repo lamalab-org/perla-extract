@@ -458,7 +458,8 @@ def test_finalization_queue_export_is_accepted_by_scorer(queue, tmp_path):
         ("POST", "/finalize"),
     ],
 )
-def test_http_queue_is_admin_only(queue, method, action):
+def test_http_queue_denies_reviewers_by_default(queue, method, action, monkeypatch):
+    monkeypatch.delenv("REVIEW_ALLOW_REVIEWER_FINALIZATION", raising=False)
     from types import SimpleNamespace
 
     from review_workbench.server import make_handler
@@ -476,6 +477,93 @@ def test_http_queue_is_admin_only(queue, method, action):
     getattr(handler, f"do_{method}")()
     assert int(responses[0][0]) == 403
     assert queue.store.revision("dev", PAPER) == 2
+
+
+def test_finalizers_share_resolutions_and_keep_undo_ownership(queue):
+    queue.import_plan("dev", PAPER, workbook_plan(queue), "admin")
+    result = decide(queue, "keep")
+    other = queue.load("dev", PAPER, "collaborator")
+    assert other["cases"] == []
+    assert other["last_decision"] is None
+    event = result["last_decision"]
+    with pytest.raises(ValueError, match="your saved"):
+        queue.undo("dev", PAPER, result["revision"], event["event_id"], "collaborator")
+    queue.undo("dev", PAPER, result["revision"], event["event_id"], "admin")
+    assert queue.load("dev", PAPER, "collaborator")["cases"]
+
+
+def test_shared_adjudication_resolves_conflict_and_allows_another_finalizer(queue):
+    queue.store.decide_record(
+        "dev",
+        PAPER,
+        RecordDecisionRequest(
+            collection="device_families",
+            record_id="family-control",
+            decision="uncertain",
+            base_revision=2,
+        ),
+        "second-expert",
+    )
+    decide(queue, "keep")
+    view = queue.load("dev", PAPER, "collaborator")
+    assert view["cases"] == []
+    assert view["inherited"] == {
+        "device_families:family-control": {"admin": "verified"}
+    }
+    result = queue.finalize(
+        "dev",
+        PAPER,
+        FinalizeRequest(
+            base_revision=view["revision"],
+            adopt_current_reviews=True,
+            completeness_checked=True,
+        ),
+        "collaborator",
+    )
+    assert result["finalized"]
+    assert build_ground_truth_export(
+        queue.store, "dev", PAPER
+    ).manifest.review.adjudicators == ["collaborator"]
+
+
+@pytest.mark.parametrize(
+    "path,method,status",
+    [
+        (f"/api/adjudication/dev/{PAPER}", "GET", 200),
+        (f"/api/adjudication/dev/{PAPER}/finalize", "POST", 201),
+        (f"/api/adjudication/dev/{PAPER}/plan", "POST", 403),
+        ("/api/users", "POST", 403),
+        ("/api/reviewer-feedback-export", "GET", 403),
+        ("/api/session", "GET", 200),
+    ],
+)
+def test_reviewer_finalization_permission_is_narrow(
+    queue, monkeypatch, path, method, status
+):
+    from types import SimpleNamespace
+
+    from review_workbench.server import make_handler
+
+    monkeypatch.setenv("REVIEW_ALLOW_REVIEWER_FINALIZATION", "true")
+    handler = object.__new__(
+        make_handler(SimpleNamespace(store=queue.store), authenticator=object())
+    )
+    handler.path = path
+    handler._review_user = {"id": "collaborator", "role": "reviewer"}
+    handler.read_json = lambda: {
+        "base_revision": 2,
+        "adopt_current_reviews": True,
+        "completeness_checked": True,
+    }
+    responses = []
+    handler.send_json = lambda payload, status=200, **kwargs: responses.append(
+        (status, payload)
+    )
+    getattr(handler, f"do_{method}")()
+    assert int(responses[0][0]) == status
+    if path == "/api/session":
+        assert responses[0][1]["user"]["can_finalize"] is True
+        assert responses[0][1]["user"]["role"] == "reviewer"
 
 
 def test_completeness_resolution_reopens_after_a_scientific_change(queue):
@@ -499,6 +587,7 @@ def test_completeness_resolution_reopens_after_a_scientific_change(queue):
         "expert",
     )
     assert len(queue.load("dev", PAPER, "admin")["cases"]) == 2
+    assert len(queue.load("dev", PAPER, "collaborator")["cases"]) == 2
 
 
 def test_undo_cannot_change_another_admins_decision(queue):
