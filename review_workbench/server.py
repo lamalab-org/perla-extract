@@ -289,7 +289,7 @@ class ReviewApplication:
         }
 
     def reviewer_feedback_archive(self) -> bytes:
-        """Package all user feedback for an authenticated administrator."""
+        """Package team feedback without exposing it to signed-out visitors."""
 
         proposal_path = self.static_dir / "figure-census-proposals.json"
         proposals = (
@@ -1202,7 +1202,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     self.send_json(application.reviewer_progress(parts[2], user["id"]))
                     return
                 if parsed.path == "/api/reviewer-feedback-export":
-                    self.current_user(require_admin=True)
+                    self.current_user()
                     self.send_bytes(
                         application.reviewer_feedback_archive(),
                         "application/zip",

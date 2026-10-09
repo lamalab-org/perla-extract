@@ -1,4 +1,4 @@
-"""Build an administrator download of reviewer-authored feedback.
+"""Build an authenticated download of reviewer-authored feedback.
 
 The review state already keeps an immutable event stream.  This module packages that
 stream together with its derived current state, rather than inventing another mutable

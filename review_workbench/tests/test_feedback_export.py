@@ -3,7 +3,10 @@ from __future__ import annotations
 import csv
 import json
 from io import BytesIO, StringIO
+from types import SimpleNamespace
 from zipfile import ZipFile
+
+import pytest
 
 from review_workbench.expert_comparison import (
     ComparisonService,
@@ -17,6 +20,51 @@ from review_workbench.study_review import (
     MutationRequest,
     StudyReviewStore,
 )
+
+
+@pytest.mark.parametrize("role", ["reviewer", "admin", None])
+def test_bulk_feedback_requires_sign_in_not_admin(role, monkeypatch):
+    from review_workbench.server import make_handler
+
+    monkeypatch.delenv("REVIEW_ALLOW_REVIEWER_FINALIZATION", raising=False)
+    downloads = []
+
+    def archive():
+        downloads.append(True)
+        return b"complete feedback archive"
+
+    class SignedOut:
+        def authenticate(self, headers):
+            raise PermissionError("Sign in is required")
+
+    handler = object.__new__(
+        make_handler(
+            SimpleNamespace(reviewer_feedback_archive=archive),
+            authenticator=SignedOut(),
+        )
+    )
+    handler.path = "/api/reviewer-feedback-export"
+    handler.headers = {}
+    if role:
+        handler._review_user = {"id": "test-user", "role": role}
+    errors, responses = [], []
+    handler.send_json = lambda payload, status=200, **kwargs: errors.append(
+        (status, payload)
+    )
+    handler.send_bytes = lambda body, mime, headers: responses.append(
+        (body, mime, headers)
+    )
+    handler.do_GET()
+    if role:
+        assert errors == []
+        assert responses[0][0] == b"complete feedback archive"
+        assert responses[0][1] == "application/zip"
+        assert "perla-reviewer-feedback.zip" in responses[0][2]["Content-Disposition"]
+        assert downloads == [True]
+    else:
+        assert errors[0][0] == 403
+        assert responses == []
+        assert downloads == []
 
 
 def test_feedback_download_preserves_history_and_is_easy_to_inspect(

@@ -202,7 +202,7 @@ annotations** saves the same reviewer-scoped ledger as readable JSON, including 
 before/after values and revision timestamps. It is a personal progress export and is
 deliberately separate from adjudicated ground truth.
 
-Administrators also see **Download feedback** in the header. It produces one ZIP for
+All signed-in reviewers see **Download feedback** in the header. It produces one ZIP for
 the complete deployment rather than requiring a paper-by-paper download:
 
 - `feedback.json` is the lossless snapshot, with immutable event history and the
@@ -319,8 +319,11 @@ queue. Each decision keeps its author and history, and people can undo only thei
 finalization decisions. Editing an approved record invalidates its old approval.
 Simultaneous edits require the second person to reload the latest version.
 
-Account management, importing prepared finalization plans, and downloading all
-reviewers' feedback remain administrator-only. Turning the setting off removes
+Account management and importing prepared finalization plans remain administrator-only.
+All signed-in reviewers can use **Download feedback**, independently of this setting.
+This download includes other reviewers' comments, review history, and original uploaded
+workbooks; share it only with the research team. It is not a public download.
+Turning the setting off removes
 reviewer finalization access without deleting any decisions or review data.
 
 ### Dedicated comparison hostname

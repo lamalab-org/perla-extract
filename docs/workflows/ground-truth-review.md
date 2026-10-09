@@ -43,7 +43,8 @@ the full review sequence below.
 5. When no questions remain, confirm that you accept the reviewed records and have
    checked the main paper and available SI for omissions. **Finalize & download**
    produces the frozen-reference ZIP used by the scorer, including `ground_truth.json`,
-   its manifest, evidence document, and review history. The app validates the source
+   the original extraction, its manifest, and review history. The ZIP does not contain
+   PDFs or the parsed evidence document; retain the exact document separately. The app validates the source
    citations before finalization. Passing these checks does not establish scientific
    correctness; the person finalizing remains responsible for that judgment.
 
@@ -334,7 +335,7 @@ or an explicitly unknown relationship can be verified as such; do not invent det
 The scorer uses every record in the frozen reference and never excludes predictions
 because of reviewer uncertainty.
 
-The administrator can also use **Download PR bundle** in the workbench after
+Any authorized finalizer can also use **Download PR bundle** in the workbench after
 adjudication. Before publishing, inspect all four files for private reviewer identities,
 comments and source content. The exporter is not an anonymization tool. Preserve the
 originals privately; any public derivative needs a new, internally consistent version

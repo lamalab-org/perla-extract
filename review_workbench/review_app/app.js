@@ -376,7 +376,7 @@ async function loadSession() {
   const payload = await request("/api/session");
   state.user = payload.user;
   $("reviewer").textContent = payload.user.name;
-  $("download-all-feedback").hidden = payload.user.role !== "admin";
+  $("download-all-feedback").hidden = false;
   $("open-finalization").hidden = !payload.user.can_finalize;
 }
 
@@ -3281,7 +3281,7 @@ $("internal-sign-in").addEventListener("submit", async (event) => {
     localStorage.setItem(REVIEW_TOKEN_KEY, payload.token);
     state.user = payload.user;
     $("reviewer").textContent = payload.user.name;
-    $("download-all-feedback").hidden = payload.user.role !== "admin";
+    $("download-all-feedback").hidden = false;
     $("open-finalization").hidden = !payload.user.can_finalize;
     $("login-password").value = "";
     showWorkbench();

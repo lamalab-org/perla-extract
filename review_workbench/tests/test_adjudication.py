@@ -533,7 +533,6 @@ def test_shared_adjudication_resolves_conflict_and_allows_another_finalizer(queu
         (f"/api/adjudication/dev/{PAPER}/finalize", "POST", 201),
         (f"/api/adjudication/dev/{PAPER}/plan", "POST", 403),
         ("/api/users", "POST", 403),
-        ("/api/reviewer-feedback-export", "GET", 403),
         ("/api/session", "GET", 200),
     ],
 )

@@ -725,16 +725,20 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     assert "application.reset_reviewer_state(" in server
 
 
-def test_admin_can_download_all_reviewer_feedback():
+def test_signed_in_reviewers_can_download_all_reviewer_feedback():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
     server = (APP.parent / "server.py").read_text(encoding="utf-8")
 
     assert 'id="download-all-feedback"' in html
-    assert 'payload.user.role !== "admin"' in source
+    assert source.count('$("download-all-feedback").hidden = false;') == 2
     assert "/api/reviewer-feedback-export" in source
     assert "application.reviewer_feedback_archive()" in server
-    assert "self.current_user(require_admin=True)" in server
+    route = server.split('if parsed.path == "/api/reviewer-feedback-export":')[1].split(
+        "return", 1
+    )[0]
+    assert "self.current_user()" in route
+    assert "require_admin" not in route
 
 
 def test_file_actions_are_direct_responsive_and_show_progress():
