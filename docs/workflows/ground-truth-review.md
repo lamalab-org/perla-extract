@@ -51,6 +51,11 @@ the full review sequence below.
 Progress is shared. A question resolved by one finalizer does not need to be resolved
 again by another. The history records who made each decision. Coordinate which papers
 you work on; if someone saves a change while you are reviewing, reload before saving.
+Resetting a review withdraws that person's finalization approvals without deleting
+their scientific corrections. A later uncertain decision reopens the record even if
+someone approved the same content earlier. Resolve the new objection explicitly.
+Both the full review and the short finalization queue must resolve pending questions;
+the exporter checks this again before writing a reference.
 See [deployment permissions](../deployment/review-workbench.md#let-reviewers-finalize-references)
 to enable this for existing reviewers.
 
