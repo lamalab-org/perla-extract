@@ -144,7 +144,7 @@ def build_ground_truth_export(
     store.validate_identity(split, paper_id)
     source = store.storage.load_source(split, paper_id)
     revision = store.storage.load_revision(split, paper_id)
-    document = store.load_document(split, paper_id)
+    document = store.storage.load_evidence(split, paper_id, revision.evidence_version)
     events = [ReviewEvent.model_validate(event) for event in revision.events]
     final_event = events[-1]
     if not (
@@ -183,6 +183,13 @@ def build_ground_truth_export(
         != summary["record_count"]
     ):
         raise ValueError("adjudicator must review every current record before export")
+
+    from review_workbench.adjudication import AdjudicationQueue
+
+    if AdjudicationQueue(store).load(split, paper_id, adjudicator, current=revision)[
+        "cases"
+    ]:
+        raise ValueError("resolve pending finalization questions before export")
 
     ground_truth = truth.model_dump(mode="json")
     seed_extraction = seed.model_dump(mode="json")

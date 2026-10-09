@@ -16,6 +16,79 @@ or Supporting Information. Do not digitize plot traces, interpolate, infer unrep
 identities, or copy values from cited background literature. Record unresolved source
 ambiguity in `unresolved_notes`.
 
+## Finish an existing expert review
+
+Administrators, and reviewers when enabled by the deployment, can open
+**Finalize ground truth** from the app header. This is a
+shorter route for papers that experts have already reviewed; it does not repeat
+the full review sequence below.
+
+1. Choose a paper. The queue shows proposed corrections first, then records without
+   a current approval, then unresolved completeness notes. Unchanged records with
+   only positive reviewer decisions do not need another individual click.
+   **What changed and what still needs checking** summarizes prepared review guidance.
+   Use **Jump to a review decision** to go straight to a correction or record.
+2. Compare **Current** and **Proposed**, read the supporting passage, and use
+   **Show source in paper** when needed. **Accept correction & approve** saves the
+   corrected records. **Keep current version** approves the current records instead.
+   Both decisions apply to each complete affected record; expand its full JSON if
+   the difference alone is not enough. Long changes and quotations are collapsed;
+   expand them to inspect every field. **Later** leaves the question open.
+3. Use **Edit in review** for a different correction, then reopen finalization.
+   **Undo my last decision** reverses your saved decision without erasing history.
+   An old suggestion cannot overwrite records that changed after it was prepared.
+4. For records checked together against a paper or earlier workbook, use
+   **Check records together**, select only those you have checked, and state the
+   review basis. Historical workbook comments alone do not count as current approvals.
+5. When no questions remain, confirm that you accept the reviewed records and have
+   checked the main paper and available SI for omissions. **Finalize & download**
+   produces the frozen-reference ZIP used by the scorer, including `ground_truth.json`,
+   the original extraction, its manifest, and review history. The ZIP does not contain
+   PDFs or the parsed evidence document; retain the exact document separately. The app validates the source
+   citations before finalization. Passing these checks does not establish scientific
+   correctness; the person finalizing remains responsible for that judgment.
+
+Progress is shared. A question resolved by one finalizer does not need to be resolved
+again by another. The history records who made each decision. Coordinate which papers
+you work on; if someone saves a change while you are reviewing, reload before saving.
+Resetting a review withdraws that person's finalization approvals without deleting
+their scientific corrections. A later uncertain decision reopens the record even if
+someone approved the same content earlier. Resolve the new objection explicitly.
+Both the full review and the short finalization queue must resolve pending questions;
+the exporter checks this again before writing a reference.
+See [deployment permissions](../deployment/review-workbench.md#let-reviewers-finalize-references)
+to enable this for existing reviewers.
+
+Administrators can use **Load prepared suggestions** to import a private finalization-plan JSON file, not
+an extraction file. Importing saves proposals without applying or approving them.
+The plan must match the current study content. A refined plan can list earlier
+proposal IDs in `supersedes` to retire a broad checklist from the active queue.
+The original proposals and reviewer uploads remain in history; retiring a checklist
+does not approve its records or apply any correction. New proposal IDs must be unique.
+A count mismatch asks for investigation; it never deletes
+records automatically. Finalization exports one paper at a time.
+
+### Account for earlier Excel reviews
+
+A prepared plan can connect original workbook comments to today's records. Open
+**Original workbook review** to see the comment, its sheet and cell, the values
+the reviewer saw, and the corresponding current records. The original file's
+SHA-256 identifies the preserved upload. A record that disappeared is shown as
+having no current counterpart; disappearance does not mean the concern was fixed.
+
+The administrator preparing the plan must check these correspondences. They are
+not automatic record matches or transferred approvals. The import checks that
+every supplied comment occurs once, the per-workbook counts match the supplied
+inventory, and all proposed record links exist. It cannot establish that the
+inventory includes every comment in an external workbook; compare that inventory
+with the original upload when preparing the plan.
+
+Related comments are grouped into specific decisions. Confirming how a comment
+was handled does **not** approve all fields of its linked record. Record approvals
+remain separate and bound to the current content. Both the original comments and
+the admin's decisions are included in the exported review history. Changing the
+study after a comment decision reopens that decision for checking.
+
 ## Review sequence
 
 ```mermaid
@@ -267,7 +340,7 @@ or an explicitly unknown relationship can be verified as such; do not invent det
 The scorer uses every record in the frozen reference and never excludes predictions
 because of reviewer uncertainty.
 
-The administrator can also use **Download PR bundle** in the workbench after
+Any authorized finalizer can also use **Download PR bundle** in the workbench after
 adjudication. Before publishing, inspect all four files for private reviewer identities,
 comments and source content. The exporter is not an anonymization tool. Preserve the
 originals privately; any public derivative needs a new, internally consistent version

@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 from io import BytesIO, StringIO
+from types import SimpleNamespace
 from zipfile import ZipFile
+
+import pytest
 
 from review_workbench.expert_comparison import (
     ComparisonService,
@@ -17,6 +21,51 @@ from review_workbench.study_review import (
     MutationRequest,
     StudyReviewStore,
 )
+
+
+@pytest.mark.parametrize("role", ["reviewer", "admin", None])
+def test_bulk_feedback_requires_sign_in_not_admin(role, monkeypatch):
+    from review_workbench.server import make_handler
+
+    monkeypatch.delenv("REVIEW_ALLOW_REVIEWER_FINALIZATION", raising=False)
+    downloads = []
+
+    def archive():
+        downloads.append(True)
+        return b"complete feedback archive"
+
+    class SignedOut:
+        def authenticate(self, headers):
+            raise PermissionError("Sign in is required")
+
+    handler = object.__new__(
+        make_handler(
+            SimpleNamespace(reviewer_feedback_archive=archive),
+            authenticator=SignedOut(),
+        )
+    )
+    handler.path = "/api/reviewer-feedback-export"
+    handler.headers = {}
+    if role:
+        handler._review_user = {"id": "test-user", "role": role}
+    errors, responses = [], []
+    handler.send_json = lambda payload, status=200, **kwargs: errors.append(
+        (status, payload)
+    )
+    handler.send_bytes = lambda body, mime, headers: responses.append(
+        (body, mime, headers)
+    )
+    handler.do_GET()
+    if role:
+        assert errors == []
+        assert responses[0][0] == b"complete feedback archive"
+        assert responses[0][1] == "application/zip"
+        assert "perla-reviewer-feedback.zip" in responses[0][2]["Content-Disposition"]
+        assert downloads == [True]
+    else:
+        assert errors[0][0] == 403
+        assert responses == []
+        assert downloads == []
 
 
 def test_feedback_download_preserves_history_and_is_easy_to_inspect(
@@ -139,11 +188,56 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
     assert snapshot["uploaded_review_workbooks"][0]["outcome"]["status"] == ("rejected")
     assert "data" not in snapshot["uploaded_review_workbooks"][0]
     assert snapshot["ground_truth_reviews"][0]["events"][0]["kind"] == "mutation"
+    assert snapshot["format_version"] == 2
+    exported = snapshot["ground_truth_reviews"][0]["review_snapshot"]
+    assert exported["study"] == store.load_truth("dev", "10.0000--example")
+    assert exported["document"] == document_payload
+    assert exported["evidence_version"] == 1
+    for name in ("study", "document"):
+        encoded = (
+            json.dumps(exported[name], ensure_ascii=False, indent=2, sort_keys=True)
+            + "\n"
+        ).encode("utf-8")
+        assert hashlib.sha256(encoded).hexdigest() == exported[f"{name}_sha256"]
     assert rows[0]["reviewer_id"] == "reviewer-1"
     assert rows[0]["before_json"] == '"Initial model note"'
     assert rows[0]["after_json"] == '"Checked against the paper"'
     assert comparison_rows == []
     assert figure_rows == []
+
+
+def test_feedback_snapshot_uses_evidence_from_the_head_it_read(
+    tmp_path, empty_study, document_payload, monkeypatch
+):
+    from review_workbench.feedback_export import _paper_feedback
+
+    store = StudyReviewStore(tmp_path / "review")
+    store.import_seed(
+        "dev",
+        "10.0000--example",
+        empty_study,
+        document=document_payload,
+        manifest={},
+        reviewer_id="importer",
+    )
+    original = store.storage.load_revision("dev", "10.0000--example")
+    calls = []
+
+    def load_head(split, paper_id):
+        calls.append((split, paper_id))
+        assert len(calls) == 1, "must not re-read a potentially newer head"
+        return original
+
+    def load_evidence(split, paper_id, version):
+        assert version == original.evidence_version
+        return document_payload
+
+    monkeypatch.setattr(store.storage, "load_revision", load_head)
+    monkeypatch.setattr(store.storage, "load_evidence", load_evidence)
+    exported = _paper_feedback(store, "dev", "10.0000--example")
+    assert exported["review_snapshot"]["study"] == original.ground_truth
+    assert exported["review_snapshot"]["document"] == document_payload
+    assert exported["events"] == []  # Untouched seeds are still recoverable.
 
 
 def test_feedback_download_flattens_only_current_subfigure_census(

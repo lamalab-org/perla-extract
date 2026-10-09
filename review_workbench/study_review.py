@@ -385,6 +385,8 @@ class ReviewEvent(BaseModel):
         "review_reset",
         "ground_truth_refresh",
         "seed_imported",
+        "adjudication_plan",
+        "adjudication_decision",
     ]
     action: MutationAction | None = None
     path: str | None = None
@@ -1098,6 +1100,14 @@ class StudyReviewStore:
                 stages.setdefault(event["details"]["stage"], []).append(
                     event["reviewer_id"]
                 )
+                # An admin may explicitly adopt unchanged expert approvals at
+                # finalization. Bind that adoption to content just like a direct review.
+                for details in event["details"].get("decisions", []):
+                    key = str(details["record_key"])
+                    if catalog.get(key) == details.get("record_digest"):
+                        decisions.setdefault(event["reviewer_id"], {})[key] = str(
+                            details["decision"]
+                        )
             elif event["kind"] == "inventory_audit":
                 details = copy.deepcopy(event["details"])
                 if (
@@ -1113,7 +1123,7 @@ class StudyReviewStore:
                     decisions.setdefault(event["reviewer_id"], {})[record_key] = str(
                         details["decision"]
                     )
-            elif event["kind"] == "spreadsheet_review":
+            elif event["kind"] in {"spreadsheet_review", "adjudication_decision"}:
                 for details in event["details"].get("decisions", []):
                     record_key = str(details["record_key"])
                     if catalog.get(record_key) == details.get("record_digest"):
@@ -2031,6 +2041,16 @@ class StudyReviewStore:
                     "resolve every current record before final adjudication "
                     f"({len(unresolved)} remaining); uncertain decisions can be saved "
                     "during review but cannot enter the final reference"
+                )
+            # Both completion routes must respect the same unresolved questions.
+            # Import locally because the queue itself uses the review state machine.
+            from review_workbench.adjudication import AdjudicationQueue
+
+            if AdjudicationQueue(self).load(
+                split, paper_id, reviewer_id, current=current_revision
+            )["cases"]:
+                raise ValueError(
+                    "resolve pending finalization questions before adjudication"
                 )
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),

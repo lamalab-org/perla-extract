@@ -202,7 +202,7 @@ annotations** saves the same reviewer-scoped ledger as readable JSON, including 
 before/after values and revision timestamps. It is a personal progress export and is
 deliberately separate from adjudicated ground truth.
 
-Administrators also see **Download feedback** in the header. It produces one ZIP for
+All signed-in reviewers see **Download feedback** in the header. It produces one ZIP for
 the complete deployment rather than requiring a paper-by-paper download:
 
 - `feedback.json` is the lossless snapshot, with immutable event history and the
@@ -216,6 +216,18 @@ the complete deployment rather than requiring a paper-by-paper download:
   questions, minimum acceptable bars, and preference rules shown to reviewers;
 - `README.txt` explains the files and how resets, drafts, and superseded answers are
   represented.
+
+Format-2 exports also put a `review_snapshot` in each paper entry: the complete saved
+`study`, its `document`, `evidence_version`, and SHA-256 hashes. Start a revised
+reference from that study; **do not replay the event history onto it**. The snapshot
+is not final ground truth until adjudicated. Each paper's study and evidence come
+from one immutable revision, although papers can be exported at different times.
+Format-1 archives lack these snapshots and may need the original saved revision to
+recover unchanged records. The archive README specifies the JSON hash encoding.
+
+The export contains parsed paper text and private reviewer information. Store it
+with access controls; do not publish it in a code PR. A missing evidence document
+remains `null`, not a guessed or newer document.
 
 Every authenticated Excel submission within the documented 15 MiB limit is retained
 byte-for-byte under `uploaded_workbooks/` before validation begins. This includes
@@ -305,6 +317,26 @@ changing reviewer identities or saved annotations.
 | `REVIEW_COMPARISON_HOSTS` | Optional comma-separated hostnames whose root URL opens the blinded extractor study instead of ground-truth review |
 
 An account role is `reviewer` unless it is explicitly `admin`.
+
+### Let reviewers finalize references
+
+Set `REVIEW_ALLOW_REVIEWER_FINALIZATION=true` and redeploy to let all authenticated
+reviewers resolve finalization questions, freeze reviewed references, and download
+their reference ZIPs. Reviewers should reload the app to see **Finalize ground truth**.
+Without this setting, only administrators can finalize. This setting works with both
+authentication modes; it does not let new people sign in or create accounts.
+
+Finalizers share progress: a saved decision removes that question from everyone's
+queue. Each decision keeps its author and history, and people can undo only their own
+finalization decisions. Editing an approved record invalidates its old approval.
+Simultaneous edits require the second person to reload the latest version.
+
+Account management and importing prepared finalization plans remain administrator-only.
+All signed-in reviewers can use **Download feedback**, independently of this setting.
+This download includes other reviewers' comments, review history, and original uploaded
+workbooks; share it only with the research team. It is not a public download.
+Turning the setting off removes
+reviewer finalization access without deleting any decisions or review data.
 
 ### Dedicated comparison hostname
 

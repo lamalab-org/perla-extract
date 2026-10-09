@@ -35,6 +35,13 @@ from perla_extract.study_extraction.artifacts import (  # noqa: E402
 )
 from perla_extract.study_extraction.enrichment import EnrichmentAudit  # noqa: E402
 from perla_extract.study_extraction.models import StudyExtraction  # noqa: E402
+from review_workbench.adjudication import (  # noqa: E402
+    AdjudicationQueue,
+    ConfirmRecordsRequest,
+    DecisionRequest,
+    FinalizeRequest,
+    PlanRequest,
+)
 from review_workbench.expert_comparison import (  # noqa: E402
     ComparisonService,
     ComparisonStorage,
@@ -88,7 +95,9 @@ def review_app_asset(
     if request_path != "/":
         return request_path.lstrip("/")
     hostname = urlparse(f"//{request_host}").hostname or ""
-    return "comparison.html" if hostname.casefold() in comparison_hosts else "index.html"
+    return (
+        "comparison.html" if hostname.casefold() in comparison_hosts else "index.html"
+    )
 
 
 def _same_pdf_page(left: fitz.Page, right: fitz.Page) -> bool:
@@ -197,7 +206,9 @@ class ReviewApplication:
         pdf_bytes = self.review_pdf(paper_id, "main", split)
         expected_hash = proposal.get("pdf_sha256")
         if expected_hash and hashlib.sha256(pdf_bytes).hexdigest() != expected_hash:
-            raise FileNotFoundError("figure-panel source PDF does not match the proposal")
+            raise FileNotFoundError(
+                "figure-panel source PDF does not match the proposal"
+            )
 
         with fitz.open(stream=pdf_bytes, filetype="pdf") as pdf:
             if not 1 <= page_number <= len(pdf):
@@ -212,15 +223,20 @@ class ReviewApplication:
             ):
                 x0, y0, x1, y1 = panel_bbox
                 if 0 <= x0 < x1 <= 1000 and 0 <= y0 < y1 <= 1000:
-                    clip = fitz.Rect(
-                        figure.x0 + figure.width * x0 / 1000,
-                        figure.y0 + figure.height * y0 / 1000,
-                        figure.x0 + figure.width * x1 / 1000,
-                        figure.y0 + figure.height * y1 / 1000,
-                    ) & page.rect
+                    clip = (
+                        fitz.Rect(
+                            figure.x0 + figure.width * x0 / 1000,
+                            figure.y0 + figure.height * y0 / 1000,
+                            figure.x0 + figure.width * x1 / 1000,
+                            figure.y0 + figure.height * y1 / 1000,
+                        )
+                        & page.rect
+                    )
             if clip.is_empty or clip.is_infinite:
                 raise FileNotFoundError("figure-panel crop is invalid")
-            return page.get_pixmap(matrix=fitz.Matrix(2, 2), clip=clip, alpha=False).tobytes("png")
+            return page.get_pixmap(
+                matrix=fitz.Matrix(2, 2), clip=clip, alpha=False
+            ).tobytes("png")
 
     def create_comparison(self, payload: object) -> dict[str, Any]:
         """Freeze a blinded experiment from one legacy and one rich extraction."""
@@ -273,7 +289,7 @@ class ReviewApplication:
         }
 
     def reviewer_feedback_archive(self) -> bytes:
-        """Package all user feedback for an authenticated administrator."""
+        """Package team feedback without exposing it to signed-out visitors."""
 
         proposal_path = self.static_dir / "figure-census-proposals.json"
         proposals = (
@@ -1084,9 +1100,11 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     result[raw_name] = value if part.get_filename() else value.decode()
             return result
 
-        def current_user(self, require_admin: bool = False) -> dict[str, str]:
+        def current_user(
+            self, require_admin: bool = False, require_finalizer: bool = False
+        ) -> dict[str, Any]:
             if authenticator is None:
-                return {
+                self._review_user = {
                     "id": "local-reviewer",
                     "name": "Local reviewer",
                     "email": "",
@@ -1097,6 +1115,13 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 application.ensure_authenticated_user(self._review_user)
             if require_admin and self._review_user.get("role") != "admin":
                 raise PermissionError("administrator access is required")
+            self._review_user["can_finalize"] = (
+                self._review_user.get("role") == "admin"
+                or os.environ.get("REVIEW_ALLOW_REVIEWER_FINALIZATION", "").lower()
+                == "true"
+            )
+            if require_finalizer and not self._review_user["can_finalize"]:
+                raise PermissionError("reference finalization access is required")
             return self._review_user
 
         @staticmethod
@@ -1140,6 +1165,14 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     )
                     return
                 parts = self.route_parts(parsed.path)
+                if parts[:2] == ["api", "adjudication"] and len(parts) == 4:
+                    user = self.current_user(require_finalizer=True)
+                    self.send_json(
+                        AdjudicationQueue(application.store).load(
+                            parts[2], parts[3], user["id"]
+                        )
+                    )
+                    return
                 if parts[:2] == ["api", "comparisons"] and len(parts) == 3:
                     user = self.current_user()
                     self.send_json(application.comparisons.open(parts[2], user["id"]))
@@ -1169,7 +1202,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     self.send_json(application.reviewer_progress(parts[2], user["id"]))
                     return
                 if parsed.path == "/api/reviewer-feedback-export":
-                    self.current_user(require_admin=True)
+                    self.current_user()
                     self.send_bytes(
                         application.reviewer_feedback_archive(),
                         "application/zip",
@@ -1213,7 +1246,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     )
                     return
                 if parts[:2] == ["api", "ground-truth-export"] and len(parts) == 4:
-                    self.current_user(require_admin=True)
+                    self.current_user(require_finalizer=True)
                     paper_id = parts[3]
                     self.send_bytes(
                         application.ground_truth_archive(parts[2], paper_id),
@@ -1307,6 +1340,8 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     "index.html",
                     "app.js",
                     "styles.css",
+                    "adjudication.js",
+                    "adjudication.css",
                     "comparison.html",
                     "comparison.js",
                     "comparison.css",
@@ -1347,9 +1382,65 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         str(payload.get("email", "")), str(payload.get("password", ""))
                     )
                     application.ensure_authenticated_user(user)
-                    self.send_json({"token": token, "user": user})
+                    self._review_user = user
+                    self.send_json({"token": token, "user": self.current_user()})
                     return
                 user = self.current_user()
+                if parts[:2] == ["api", "adjudication"] and len(parts) == 5:
+                    self.current_user(
+                        require_admin=parts[4] == "plan", require_finalizer=True
+                    )
+                    payload = self.read_json()
+                    queue = AdjudicationQueue(application.store)
+                    action = parts[4]
+                    if action == "plan":
+                        result = queue.import_plan(
+                            parts[2],
+                            parts[3],
+                            PlanRequest.model_validate(payload),
+                            user["id"],
+                        )
+                    elif action == "confirm-records":
+                        result = queue.confirm_records(
+                            parts[2],
+                            parts[3],
+                            ConfirmRecordsRequest.model_validate(payload),
+                            user["id"],
+                        )
+                    elif action == "decide":
+                        result = queue.decide(
+                            parts[2],
+                            parts[3],
+                            DecisionRequest.model_validate(payload),
+                            user["id"],
+                        )
+                    elif action == "finalize":
+                        result = queue.finalize(
+                            parts[2],
+                            parts[3],
+                            FinalizeRequest.model_validate(payload),
+                            user["id"],
+                        )
+                    elif action == "undo":
+                        if (
+                            not isinstance(payload, dict)
+                            or type(payload.get("base_revision")) is not int
+                            or not isinstance(payload.get("event_id"), str)
+                        ):
+                            raise ValueError(
+                                "Undo requires the saved decision and current version"
+                            )
+                        result = queue.undo(
+                            parts[2],
+                            parts[3],
+                            payload["base_revision"],
+                            payload["event_id"],
+                            user["id"],
+                        )
+                    else:
+                        raise ValueError("Unknown finalization action")
+                    self.send_json(result, HTTPStatus.CREATED)
+                    return
                 if parsed.path == "/api/users":
                     self.current_user(require_admin=True)
                     self.send_json(
@@ -1496,7 +1587,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         isinstance(payload, dict)
                         and payload.get("stage") == "adjudication"
                     ):
-                        self.current_user(require_admin=True)
+                        self.current_user(require_finalizer=True)
                     self.send_json(
                         application.complete_stage(
                             parts[2], parts[3], payload, user["id"]
