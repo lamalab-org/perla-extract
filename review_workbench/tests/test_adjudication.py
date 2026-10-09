@@ -385,6 +385,92 @@ def test_finalization_requires_explicit_attestations():
         )
 
 
+def test_later_objection_reopens_shared_approval_for_every_finalizer(queue):
+    queue.import_plan("dev", PAPER, plan(queue), "admin")
+    result = decide(queue)
+    queue.store.decide_record(
+        "dev",
+        PAPER,
+        RecordDecisionRequest(
+            collection="device_families",
+            record_id="family-control",
+            decision="uncertain",
+            base_revision=result["revision"],
+        ),
+        "second-expert",
+    )
+    for actor in ("admin", "collaborator"):
+        view = queue.load("dev", PAPER, actor)
+        assert any(
+            c.get("record_key") == "device_families:family-control"
+            for c in view["cases"]
+        )
+        assert view["own_approved_count"] == 0
+    with pytest.raises(ValueError, match="remaining"):
+        finalize(queue)
+    decide(queue, "keep")
+    assert not queue.load("dev", PAPER, "collaborator")["cases"]
+
+
+def test_reset_withdraws_shared_finalization_but_preserves_correction(queue):
+    from review_workbench.study_review import ReviewerResetRequest
+
+    queue.import_plan("dev", PAPER, plan(queue), "admin")
+    result = decide(queue)
+    queue.store.reset_reviewer_state(
+        "dev", PAPER, ReviewerResetRequest(base_revision=result["revision"]), "admin"
+    )
+    assert (
+        queue.store.load_truth("dev", PAPER)["device_families"][0]["label"]
+        == "Champion control"
+    )
+    for actor in ("admin", "collaborator"):
+        view = queue.load("dev", PAPER, actor)
+        assert view["cases"]
+        assert view["last_decision"] is None
+
+
+def test_legacy_completion_cannot_bypass_pending_proposals(queue):
+    from review_workbench.study_review import InventoryAuditRequest, StageRequest
+
+    queue.store.inventory_audit(
+        "dev",
+        PAPER,
+        InventoryAuditRequest(
+            base_revision=2, searched_sources=["main"], expected_counts={}
+        ),
+        "expert",
+    )
+    for stage in ("inventory", "fields", "completeness"):
+        queue.store.complete_stage(
+            "dev",
+            PAPER,
+            StageRequest(stage=stage, base_revision=queue.store.revision("dev", PAPER)),
+            "expert",
+        )
+    queue.import_plan("dev", PAPER, plan(queue), "admin")
+    with pytest.raises(ValueError, match="pending finalization"):
+        queue.store.complete_stage(
+            "dev",
+            PAPER,
+            StageRequest(
+                stage="adjudication", base_revision=queue.store.revision("dev", PAPER)
+            ),
+            "expert",
+        )
+
+
+def test_export_rejects_historical_completion_with_pending_proposals(queue):
+    queue.import_plan("dev", PAPER, plan(queue), "admin")
+    current = queue.store.storage.load_revision("dev", PAPER)
+    # Reproduce a snapshot produced by the old completion route, not a new approval.
+    queue._commit(
+        "dev", PAPER, current, "expert", "stage_complete", {"stage": "adjudication"}
+    )
+    with pytest.raises(ValueError, match="pending finalization"):
+        build_ground_truth_export(queue.store, "dev", PAPER)
+
+
 def test_stale_suggestion_shows_actual_current_record_and_cannot_apply(queue):
     from review_workbench.study_review import MutationRequest
 

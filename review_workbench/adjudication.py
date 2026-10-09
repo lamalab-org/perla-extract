@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from perla_extract.study_extraction.models import StudyExtraction
 from perla_extract.study_extraction.validation import validate_study
 from review_workbench.ground_truth_export import _evidence_blocks
+from review_workbench.review_storage import ReviewRevision
 from review_workbench.study_review import (
     RECORD_IDENTIFIERS,
     Citation,
@@ -314,27 +315,63 @@ class AdjudicationQueue:
                 records.append(change.after)
         return StudyExtraction.model_validate(result).model_dump(mode="json")
 
-    def load(self, split: str, paper: str, reviewer: str) -> dict:
+    def load(
+        self,
+        split: str,
+        paper: str,
+        reviewer: str,
+        *,
+        current: ReviewRevision | None = None,
+    ) -> dict:
         self.store.validate_identity(split, paper)
-        current = self.store.storage.load_revision(split, paper)
+        current = current or self.store.storage.load_revision(split, paper)
         truth, events = current.ground_truth, current.events
         summary = self.store.summary(truth, events)
         catalog = _record_catalog(truth)
         records = _records(truth)
         own = summary["record_decisions"].get(reviewer, {})
         undone = {e["details"].get("undoes_event_id") for e in events}
+        resets = {
+            e["reviewer_id"]: e["revision"]
+            for e in events
+            if e["kind"] == "review_reset" and e["event_id"] not in undone
+        }
+        active_events = [
+            e
+            for e in events
+            if e["event_id"] not in undone
+            and e["revision"] > resets.get(e["reviewer_id"], 0)
+        ]
+        finalization_events = [
+            e for e in active_events if e["kind"] == "adjudication_decision"
+        ]
+        # A later objection must reopen review even if another person approved
+        # this exact content earlier. Resets withdraw approvals, not corrections.
+        objections = {}
+        for event in active_events:
+            details = event["details"]
+            decisions = (
+                [details]
+                if event["kind"] == "record_decision"
+                else details.get("decisions", [])
+            )
+            for decision in decisions:
+                key = decision["record_key"]
+                if decision.get("decision") == "uncertain" and decision.get(
+                    "record_digest"
+                ) == catalog.get(key):
+                    objections[key] = event["revision"]
         # Finalizers share decisions, but an approval covers only the record that
         # was actually checked. Changed records and undone decisions reopen review.
         adjudicated = {}
-        for event in events:
-            if event["kind"] != "adjudication_decision" or event["event_id"] in undone:
-                continue
+        for event in finalization_events:
             for decision in event["details"].get("decisions", []):
                 key = decision["record_key"]
                 if (
                     decision.get("decision") == "verified"
                     and key in catalog
                     and decision.get("record_digest") == catalog[key]
+                    and event["revision"] > objections.get(key, 0)
                 ):
                     adjudicated[key] = {event["reviewer_id"]: "verified"}
         inherited, record_cases = {}, []
@@ -344,13 +381,13 @@ class AdjudicationQueue:
                 for actor, values in summary["record_decisions"].items()
                 if key in values
             }
-            if own.get(key) == "verified":
-                continue
             if key in adjudicated:
-                inherited[key] = adjudicated[key]
+                if reviewer not in adjudicated[key]:
+                    inherited[key] = adjudicated[key]
                 continue
             if decisions and set(decisions.values()) == {"verified"}:
-                inherited[key] = decisions
+                if own.get(key) != "verified":
+                    inherited[key] = decisions
                 continue
             record_cases.append(
                 {
@@ -442,11 +479,7 @@ class AdjudicationQueue:
                         "keys": [],
                     }
                 )
-        resolutions = {
-            e["details"].get("case_id"): e
-            for e in events
-            if e["kind"] == "adjudication_decision" and e["event_id"] not in undone
-        }
+        resolutions = {e["details"].get("case_id"): e for e in finalization_events}
         pending = []
         for case in cases:
             resolution = resolutions.get(case["id"])
@@ -468,7 +501,7 @@ class AdjudicationQueue:
             "source_notes": truth.get("unresolved_notes", []),
             "record_count": len(catalog),
             "inherited_count": len(inherited),
-            "own_approved_count": sum(own.get(k) == "verified" for k in catalog),
+            "own_approved_count": len(catalog) - len(inherited) - len(record_cases),
             "inherited": inherited,
             "workbook_feedback": feedback_inventory,
             "workbook_current_records": {
@@ -482,7 +515,7 @@ class AdjudicationQueue:
             "last_decision": next(
                 (
                     e
-                    for e in reversed(events)
+                    for e in reversed(finalization_events)
                     if e["reviewer_id"] == reviewer
                     and e["kind"] == "adjudication_decision"
                     and e["event_id"] not in undone
@@ -585,7 +618,7 @@ class AdjudicationQueue:
         self, split: str, paper: str, request: FinalizeRequest, reviewer: str
     ) -> dict:
         current = self.store._validate_revision(split, paper, request.base_revision)
-        queue = self.load(split, paper, reviewer)
+        queue = self.load(split, paper, reviewer, current=current)
         if queue["cases"]:
             raise ValueError(
                 f"Resolve {len(queue['cases'])} remaining items before finalizing"

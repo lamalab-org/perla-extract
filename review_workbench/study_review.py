@@ -2042,6 +2042,16 @@ class StudyReviewStore:
                     f"({len(unresolved)} remaining); uncertain decisions can be saved "
                     "during review but cannot enter the final reference"
                 )
+            # Both completion routes must respect the same unresolved questions.
+            # Import locally because the queue itself uses the review state machine.
+            from review_workbench.adjudication import AdjudicationQueue
+
+            if AdjudicationQueue(self).load(
+                split, paper_id, reviewer_id, current=current_revision
+            )["cases"]:
+                raise ValueError(
+                    "resolve pending finalization questions before adjudication"
+                )
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
             revision=current_revision.revision + 1,
