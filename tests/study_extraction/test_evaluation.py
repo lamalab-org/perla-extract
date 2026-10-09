@@ -1,5 +1,7 @@
 import hashlib
+import itertools
 import json
+import random
 
 import pytest
 from click.testing import CliRunner
@@ -117,6 +119,78 @@ def test_identical_science_with_different_ids_scores_perfectly():
     assert report.field_agreement.reported_value_accuracy == 1
     assert not report.unmatched_truth_record_keys
     assert not report.unmatched_prediction_record_keys
+
+
+@pytest.mark.parametrize("side", ["truth", "prediction"])
+@pytest.mark.parametrize(
+    "kind", ["device_families", "individual_devices", "performance_observations"]
+)
+def test_duplicate_record_ids_cannot_silently_collapse_scoring(side, kind):
+    expected, actual = study(), study(prefix="prediction")
+    records = getattr(expected if side == "truth" else actual, kind)
+    records.append(records[0].model_copy(deep=True))
+    with pytest.raises(ValueError, match=rf"{side}.{kind} contains duplicate"):
+        evaluate_study(expected, actual)
+
+
+def test_cli_rejects_duplicate_identity_without_writing_a_score(tmp_path):
+    expected, actual = study(), study(prefix="prediction")
+    actual.individual_devices.append(actual.individual_devices[0].model_copy(deep=True))
+    truth, prediction, output = (
+        tmp_path / name for name in ("truth.json", "prediction.json", "score.json")
+    )
+    truth.write_text(expected.model_dump_json(), encoding="utf-8")
+    prediction.write_text(actual.model_dump_json(), encoding="utf-8")
+    result = CliRunner().invoke(
+        main,
+        [
+            "--truth",
+            str(truth),
+            "--prediction",
+            str(prediction),
+            "--output",
+            str(output),
+        ],
+    )
+    assert result.exit_code != 0
+    assert "duplicate record IDs" in result.output
+    assert not output.exists()
+
+
+def test_assignment_matches_independent_exhaustive_search():
+    """Check rectangular/tied assignments against brute force, not our own matcher."""
+
+    rng = random.Random(410)
+    for rows in range(1, 5):
+        for columns in range(1, 5):
+            for _ in range(20):
+                scores = [
+                    [rng.randrange(4) for _ in range(columns)] for _ in range(rows)
+                ]
+                pairs = _maximum_assignment(scores)
+                assert len({i for i, _ in pairs}) == len(pairs)
+                assert len({j for _, j in pairs}) == len(pairs)
+                if rows <= columns:
+                    optimal = max(
+                        sum(scores[i][j] for i, j in enumerate(order))
+                        for order in itertools.permutations(range(columns), rows)
+                    )
+                else:
+                    optimal = max(
+                        sum(scores[i][j] for j, i in enumerate(order))
+                        for order in itertools.permutations(range(rows), columns)
+                    )
+                assert sum(scores[i][j] for i, j in pairs) == optimal
+
+
+@pytest.mark.parametrize(
+    "field,value", [("matched", 99), ("precision", 0.5), ("recall", None), ("f1", 0.0)]
+)
+def test_loaded_report_cannot_disagree_with_its_counts(field, value):
+    report = evaluate_study(study(), study(prefix="prediction")).model_dump(mode="json")
+    report["core_facts"]["micro"][field] = value
+    with pytest.raises(ValueError, match="count"):
+        EvaluationReport.model_validate(report)
 
 
 def test_extra_family_reduces_precision_without_reducing_recall():
