@@ -234,6 +234,50 @@ def test_reconciliation_proposal_still_blocks_finalization(queue):
         finalize(queue)
 
 
+@pytest.mark.parametrize(
+    "note, lane", [("", "reconciliation"), ("An electrode is missing.", "scientific")]
+)
+def test_count_difference_alone_is_not_a_scientific_objection(queue, note, lane):
+    from review_workbench.study_review import InventoryAuditRequest
+
+    queue.store.inventory_audit(
+        "dev",
+        PAPER,
+        InventoryAuditRequest(
+            base_revision=2,
+            review_scope_sources=["main", "supplement"],
+            expected_counts={"device_families": 2},
+            missing_or_ambiguous=note,
+        ),
+        "expert",
+    )
+    view = queue.load("dev", PAPER, "admin")
+    assert view["cases"][0]["review_lane"] == lane
+    with pytest.raises(ValueError, match="remaining items"):
+        finalize(queue)
+
+
+def test_workbook_routing_never_hides_a_later_record_objection(queue):
+    request = workbook_plan(queue)
+    request.proposals[0].review_lane = "reconciliation"
+    queue.import_plan("dev", PAPER, request, "admin")
+    queue.store.decide_record(
+        "dev",
+        PAPER,
+        RecordDecisionRequest(
+            collection="device_families",
+            record_id="family-control",
+            decision="needs_correction",
+            base_revision=3,
+        ),
+        "expert",
+    )
+    view = queue.load("dev", PAPER, "admin")
+    record = next(c for c in view["cases"] if c.get("record_key"))
+    assert record["workbook_feedback"]
+    assert record["review_lane"] == "scientific"
+
+
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node is required")
 def test_scientific_view_does_not_offer_finalization_for_hidden_work():
     source = Path(__file__).parents[1] / "review_app/adjudication.js"

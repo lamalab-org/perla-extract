@@ -69,6 +69,8 @@ the exporter checks this again before writing a reference.
 An empty scientific-question queue does not mean a paper is finalized. The selector
 shows the remaining work in each queue. All unfinished items still block export as
 a final reference; switching views never approves data.
+A difference in census counts alone goes to the matching queue. A reviewer's note
+about missing or incorrect data remains a scientific question.
 See [deployment permissions](../deployment/review-workbench.md#let-reviewers-finalize-references)
 to enable this for existing reviewers.
 
