@@ -42,6 +42,7 @@ from review_workbench.adjudication import (  # noqa: E402
     FinalizeRequest,
     PlanRequest,
 )
+from review_workbench.completed_review import AdoptReviewRequest  # noqa: E402
 from review_workbench.expert_comparison import (  # noqa: E402
     ComparisonService,
     ComparisonStorage,
@@ -1167,11 +1168,18 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 parts = self.route_parts(parsed.path)
                 if parts[:2] == ["api", "adjudication"] and len(parts) == 4:
                     user = self.current_user(require_finalizer=True)
-                    self.send_json(
-                        AdjudicationQueue(application.store).load(
-                            parts[2], parts[3], user["id"]
-                        )
+                    view = AdjudicationQueue(application.store).load(
+                        parts[2], parts[3], user["id"]
                     )
+                    names = {
+                        person["id"]: person.get("name")
+                        for person in application.users()
+                    }
+                    for candidate in view["review_candidates"]:
+                        candidate["expert_name"] = (
+                            names.get(candidate["expert_id"]) or candidate["expert_id"]
+                        )
+                    self.send_json(view)
                     return
                 if parts[:2] == ["api", "comparisons"] and len(parts) == 3:
                     user = self.current_user()
@@ -1388,7 +1396,8 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 user = self.current_user()
                 if parts[:2] == ["api", "adjudication"] and len(parts) == 5:
                     self.current_user(
-                        require_admin=parts[4] == "plan", require_finalizer=True
+                        require_admin=parts[4] in {"plan", "adopt-review"},
+                        require_finalizer=True,
                     )
                     payload = self.read_json()
                     queue = AdjudicationQueue(application.store)
@@ -1398,6 +1407,13 @@ def make_handler(application: ReviewApplication, authenticator=None):
                             parts[2],
                             parts[3],
                             PlanRequest.model_validate(payload),
+                            user["id"],
+                        )
+                    elif action == "adopt-review":
+                        result = queue.adopt_review(
+                            parts[2],
+                            parts[3],
+                            AdoptReviewRequest.model_validate(payload),
                             user["id"],
                         )
                     elif action == "confirm-records":

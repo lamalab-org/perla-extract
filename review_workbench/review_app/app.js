@@ -3178,6 +3178,7 @@ const finalization = createFinalizationQueue({
   request,
   context: () => ({ split: state.split, paperId: state.paperId, papers: state.papers, canImportPlan: state.user.role === "admin" }),
   download: downloadResponse,
+  saveBlob,
   openRecord: async (paperId, key) => {
     await selectPaper(paperId);
     state.queueKey = key || null;

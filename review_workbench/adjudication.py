@@ -17,6 +17,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from perla_extract.study_extraction.models import StudyExtraction
 from perla_extract.study_extraction.validation import validate_study
+from review_workbench.completed_review import (
+    AdoptReviewRequest,
+    review_candidate,
+    scope_changes_since_review,
+    unchanged_since_review,
+)
 from review_workbench.ground_truth_export import _evidence_blocks
 from review_workbench.review_storage import ReviewRevision
 from review_workbench.study_review import (
@@ -203,6 +209,87 @@ def _trusted_corrections(events: list[dict], records: dict, trusted: set[str]) -
 class AdjudicationQueue:
     def __init__(self, store: StudyReviewStore):
         self.store = store
+
+    def adopt_review(
+        self, split: str, paper: str, request: AdoptReviewRequest, reviewer: str
+    ) -> dict:
+        """Record the coordinator's confirmation, accepting unchanged expert-reviewed data.
+
+        This is a declared review scope, not a fabricated action by the expert.
+        Conflicting or unresolved decisions stay pending. Final export still requires
+        source validation and resolution of the remaining concrete exceptions.
+        """
+        current = self.store._validate_revision(split, paper, request.base_revision)
+        trusted = {
+            v.strip()
+            for v in os.environ.get("REVIEW_TRUSTED_REVIEWER_IDS", "").split(",")
+            if v.strip()
+        }
+        if request.expert_id not in trusted:
+            raise ValueError("Choose a configured expert reviewer")
+        candidate = review_candidate(current, request.expert_id)
+        if (
+            not candidate
+            or candidate["reviewed_through_revision"]
+            != request.reviewed_through_revision
+        ):
+            raise ValueError("The expert's review changed; reload before adopting it")
+        if any(
+            e["kind"] == "ground_truth_refresh"
+            and e["revision"] > request.reviewed_through_revision
+            for e in current.events
+        ):
+            raise ValueError(
+                "The extraction or evidence was replaced after this expert's review; reconcile that version first"
+            )
+        view = self.load(split, paper, reviewer, current=current)
+        if any(
+            c.get("expert_id") == request.expert_id
+            and c.get("reviewed_through_revision") == request.reviewed_through_revision
+            for c in view["adopted_paper_reviews"]
+        ):
+            raise ValueError("This completed review has already been adopted")
+        catalog = unchanged_since_review(current, request.reviewed_through_revision)
+        # Trust does not silently settle an explicit objection from any reviewer.
+        objections = {
+            c["record_key"]
+            for c in view["cases"]
+            if c.get("record_key")
+            and any(
+                value != "verified"
+                for value in c.get("reviewer_decisions", {}).values()
+            )
+        }
+        decisions = [
+            {"record_key": key, "record_digest": digest, "decision": "verified"}
+            for key, digest in catalog.items()
+            if key not in objections
+        ]
+        document = self.store.storage.load_evidence(
+            split, paper, current.evidence_version
+        )
+        scope = sorted({b.source for b in _evidence_blocks(document)})
+        return self._commit(
+            split,
+            paper,
+            current,
+            reviewer,
+            "adjudication_decision",
+            {
+                "action": "adopt_completed_expert_review",
+                "completed_paper_review": {
+                    **candidate,
+                    "evidence_version": current.evidence_version,
+                    "review_scope_sources": scope,
+                    "basis": "coordinator_confirmed_external_completion",
+                    "confirmed_by": reviewer,
+                    "study_sha256_at_adoption": _digest(current.ground_truth),
+                },
+                "decisions": decisions,
+                "collection_replacements": [],
+            },
+            note=request.note,
+        )
 
     def confirm_records(
         self, split: str, paper: str, request: ConfirmRecordsRequest, reviewer: str
@@ -420,6 +507,32 @@ class AdjudicationQueue:
             if e["event_id"] not in undone
             and e["revision"] > resets.get(e["reviewer_id"], 0)
         ]
+        refreshed_at = max(
+            (e["revision"] for e in events if e["kind"] == "ground_truth_refresh"),
+            default=0,
+        )
+        # A later expert reset withdraws the adopted review as well. Keep its
+        # immutable event in history but do not resurrect its implicit approvals.
+        active_events = [
+            e
+            for e in active_events
+            if not e["details"].get("completed_paper_review")
+            or (
+                resets.get(e["details"]["completed_paper_review"]["expert_id"], 0)
+                < e["details"]["completed_paper_review"]["reviewed_through_revision"]
+                and e["details"]["completed_paper_review"]["evidence_version"]
+                == current.evidence_version
+                and refreshed_at
+                < e["details"]["completed_paper_review"]["reviewed_through_revision"]
+                and e["details"]["completed_paper_review"]["review_event_id"]
+                not in undone
+            )
+        ]
+        adopted_paper_reviews = [
+            {**e["details"]["completed_paper_review"], "event_id": e["event_id"]}
+            for e in active_events
+            if e["details"].get("completed_paper_review")
+        ]
         corrections = _trusted_corrections(active_events, records, trusted)
         finalization_events = [
             e for e in active_events if e["kind"] == "adjudication_decision"
@@ -436,9 +549,10 @@ class AdjudicationQueue:
             )
             for decision in decisions:
                 key = decision["record_key"]
-                if decision.get("decision") == "uncertain" and decision.get(
-                    "record_digest"
-                ) == catalog.get(key):
+                if decision.get("decision") in {
+                    "uncertain",
+                    "needs_correction",
+                } and decision.get("record_digest") == catalog.get(key):
                     objections[key] = event["revision"]
         # Finalizers share decisions, but an approval covers only the record that
         # was actually checked. Changed records and undone decisions reopen review.
@@ -502,6 +616,32 @@ class AdjudicationQueue:
             for identifier in event["details"].get("supersedes", [])
         }
         cases = []
+        # Removed records cannot be flagged in the current-record queue. Preserve
+        # those later changes as explicit decisions rather than silently accepting them.
+        scope_changes = {
+            change["event_id"]: change
+            for adopted in adopted_paper_reviews
+            for change in scope_changes_since_review(
+                current, adopted["reviewed_through_revision"]
+            )
+        }
+        for change in scope_changes.values():
+            cases.append(
+                {
+                    "id": f"post-review-change:{change['event_id']}",
+                    "title": "Check a change made after the expert review",
+                    "reason": "Paper metadata or records were removed after the reviewed version. "
+                    "Confirm that this change is intended: "
+                    + (
+                        ", ".join(change["removed_record_keys"])
+                        or "paper metadata changed"
+                    )
+                    + f" (revision {change['revision']}).",
+                    "changes": [],
+                    "evidence": [],
+                    "keys": [],
+                }
+            )
         feedback_by_record: dict[str, list[str]] = {}
         feedback_inventory = []
         for event in events:
@@ -597,8 +737,11 @@ class AdjudicationQueue:
                 continue
             case["binding"] = _binding(truth, case["keys"])
             pending.append(case)
-        completed_reviews = self._completed_reviews(
-            split, paper, current, active_events, summary, trusted
+        completed_reviews = (
+            self._completed_reviews(
+                split, paper, current, active_events, summary, trusted
+            )
+            + adopted_paper_reviews
         )
         for case in record_cases:
             case["workbook_feedback"] = feedback_by_record.get(case["record_key"], [])
@@ -617,6 +760,12 @@ class AdjudicationQueue:
             "adopted_corrections": adopted_corrections,
             "adopted_proposals": adopted_proposals,
             "completed_reviews": completed_reviews,
+            "adopted_paper_reviews": adopted_paper_reviews,
+            "review_candidates": [
+                candidate
+                for actor in sorted(trusted)
+                if (candidate := review_candidate(current, actor))
+            ],
             "workbook_feedback": feedback_inventory,
             "workbook_current_records": {
                 key: records[key] for key in feedback_by_record if key in records

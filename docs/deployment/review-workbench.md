@@ -352,12 +352,32 @@ A scalar edit does not approve the rest of a record. A workbook comment or a
 attached to a workbook replacement prevent automatic acceptance of that replacement.
 Ordinary explicit approvals from other reviewers continue to count.
 
-The queue offers **adopt the completed expert review** when the expert finished
+When the expert used the app's completion steps, the queue offers to adopt their review if they finished
 the completeness step, checked every source represented in the saved evidence document, and the study, source version,
 and census still match that review. It does not ask the finalizer to claim a second
 reading of the paper. For older completion events without content hashes, adoption
 requires an unchanged scientific history since completion. A source refresh, edit,
 unresolved note, count mismatch, conflicting decision, or withdrawn review needs attention.
+
+If the expert finished reviewing the papers but did not click those completion
+buttons, an administrator can record that fact instead. Open **Finalize ground
+truth → Use a completed expert review**, select the expert, confirm that they
+checked the papers for omissions, and choose **Use this review across the dataset**.
+This accepts unchanged records as part of that completed review, including records
+without an individual approval click. It does not claim that the expert clicked
+buttons they never used. The history records who confirmed completion, which
+expert's saved review it covers, and the evidence version.
+
+The action visits papers in the selected dataset that have saved review activity
+from that expert. It retains unresolved comments, proposals and conflicting
+decisions. Later edits and deletions need explicit decisions; replacing the extraction
+or evidence after the expert's review prevents adoption. Papers with no remaining
+questions are finalized only if schema and source validation pass. Other papers
+stay open, with links to their exceptions. **Download exception report** saves the
+per-paper results, including failures. Each finalized paper has a reference ZIP
+download; the bulk feedback download still preserves the original workbooks and
+history. The completion statement is an administrator's scientific assertion, not
+something the app can infer from activity or timestamps.
 
 The final event preserves the original correction/completion event IDs and authors.
 Resetting a review withdraws its approvals without deleting scientific edits. Freezing

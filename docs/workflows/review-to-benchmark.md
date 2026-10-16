@@ -76,12 +76,21 @@ it also accepts their saved full-record corrections and offers to adopt their
 completed source check. The export records whose work was adopted; it does not
 claim that the finalizer read the paper again.
 
+An expert may have completed the paper review without using the app's completion
+buttons. An administrator can confirm that completed review once using **Use a
+completed expert review** in the finalization screen. The app then accepts unchanged
+reviewed records, even without separate approval clicks. It records the
+administrator's confirmation separately from the expert's original actions.
+The dataset action finalizes papers that have no exceptions and pass validation,
+and provides a downloadable report for the rest.
+
 Only unresolved exceptions need another decision: changed or unmapped records,
 conflicting reviews, comments without resolved replacements, incomplete source
 coverage, and validation failures. A proposed replacement that exactly matches an
 already-approved record needs no second decision, unless it also carries unresolved
 workbook comments. Neither model disagreement nor the number of edits is a reason
-to reject an expert correction. Untouched, unapproved records remain pending.
+to reject an expert correction. Untouched records need individual approval only
+when no completed review has been confirmed for them.
 
 Start with the latest saved revision of each paper, not another extraction run.
 Read the package's `adjudication.json` alongside the preserved workbook and paper. Resolve

@@ -23,6 +23,13 @@ Administrators, and reviewers when enabled by the deployment, can open
 shorter route for papers that experts have already reviewed; it does not repeat
 the full review sequence below.
 
+If the expert finished reading and correcting the papers but did not use the app's
+completion buttons, an administrator can choose **Use a completed expert review**.
+Confirm the completed review and use it across the dataset. Unchanged reviewed
+records are accepted without extra clicks; exceptions stay open. The app records
+this as the administrator's confirmation, not as new actions by the expert.
+Download the exception report to see which papers still need a decision.
+
 1. Choose a paper. The queue shows proposed corrections first, then records without
    a current approval, then unresolved completeness notes. Unchanged records with
    only positive reviewer decisions do not need another individual click.
@@ -40,8 +47,8 @@ the full review sequence below.
 4. For records checked together against a paper or earlier workbook, use
    **Check records together**, select only those you have checked, and state the
    review basis. Historical workbook comments alone do not count as current approvals.
-5. When no questions remain, confirm that you accept the reviewed records and have
-   checked the main paper and available SI for omissions. **Finalize & download**
+5. When no questions remain, accept the expert's completed source review, or confirm
+   that you checked the main paper and available SI for omissions yourself. **Finalize & download**
    produces the frozen-reference ZIP used by the scorer, including `ground_truth.json`,
    the original extraction, its manifest, and review history. The ZIP does not contain
    PDFs or the parsed evidence document; retain the exact document separately. The app validates the source

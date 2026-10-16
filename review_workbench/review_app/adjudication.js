@@ -55,7 +55,7 @@ function recordFields(record) {
   return wrapper;
 }
 
-export function createFinalizationQueue({ request, context, download, openRecord, showCitation }) {
+export function createFinalizationQueue({ request, context, download, saveBlob, openRecord, showCitation }) {
   const dialog = node("dialog", null, "finalization-dialog");
   dialog.setAttribute("aria-labelledby", "finalization-heading");
   const shell = node("div", null, "finalization-shell");
@@ -157,6 +157,58 @@ export function createFinalizationQueue({ request, context, download, openRecord
     if (!queue) return;
     index = Math.min(index, Math.max(0, queue.cases.length - 1));
     content.replaceChildren(node("h3", queue.title), node("p", `${queue.own_approved_count} approved by you · ${queue.inherited_count} current reviewer approvals · ${queue.cases.length} decisions left`, "finalization-summary"));
+    if (context().canImportPlan && queue.review_candidates?.length) {
+      const panel = node("details");
+      panel.append(node("summary", "Use a completed expert review"), node("p", "If the expert finished reviewing the papers, accept their reviewed data—including unchanged records. Only specific exceptions remain. This records your confirmation; it does not claim the expert clicked completion buttons."));
+      const expert = node("select"); expert.setAttribute("aria-label", "Completed review by");
+      queue.review_candidates.forEach(candidate => {
+        const option = node("option", `${candidate.expert_name || candidate.expert_id} · last saved review ${candidate.reviewed_at.slice(0,10)}`);
+        option.value = candidate.expert_id; expert.append(option);
+      });
+      panel.append(expert);
+      const check = node("input"); check.type = "checkbox";
+      const label = node("label", null, "finalization-check");
+      label.append(check, node("span", "I confirm this expert completed the paper reviews, including checking for omissions.")); panel.append(label);
+      panel.append(button("Use this review across the dataset", async () => {
+        if (!check.checked) throw new Error("Confirm that the expert completed the review first.");
+        const report = [];
+        for (const item of context().papers) {
+          message(`Preparing reference ${report.length + 1} of ${context().papers.length}…`);
+          const url = `/api/adjudication/${split}/${encodeURIComponent(item.id)}`;
+          try {
+            let view = await request(url);
+            const candidate = view.review_candidates?.find(c => c.expert_id === expert.value);
+            if (!candidate) { report.push({paper:item.id, status:"Not reviewed by this expert"}); continue; }
+            if (!view.adopted_paper_reviews?.some(c => c.expert_id === expert.value && c.reviewed_through_revision === candidate.reviewed_through_revision)) {
+              view = await request(`${url}/adopt-review`, {method:"POST", body:JSON.stringify({base_revision:view.revision, expert_id:expert.value, reviewed_through_revision:candidate.reviewed_through_revision, completed_paper_review_confirmed:true, note:"Coordinator confirms the expert completed the paper review, including unchanged records and the source-wide omission check. Adopt reviewed data; retain concrete exceptions."})});
+            }
+            if (!view.cases.length && !view.finalized) {
+              view = await request(`${url}/finalize`, {method:"POST", body:JSON.stringify({base_revision:view.revision, adopt_current_reviews:true, adopt_completed_review:true})});
+            }
+            report.push({paper:item.id, status:view.finalized ? "Final reference ready" : `${view.cases.length} specific exceptions`, exceptions:view.cases.map(c => ({id:c.id, reason:c.reason}))});
+          } catch (error) { report.push({paper:item.id, status:"Needs attention", error:error.message}); }
+        }
+        try { await load(paper); }
+        catch (error) { message(`Preparation finished; could not reload this paper: ${error.message}`, true); }
+        const results = node("section", null, "finalization-card");
+        results.append(node("h4", "Reference preparation results"));
+        results.append(button("Download exception report", () => saveBlob(
+          new Blob([JSON.stringify({format_version:1, generated_at:new Date().toISOString(), split, expert_id:expert.value, papers:report}, null, 2)], {type:"application/json"}),
+          `perla-${split}-reference-preparation.json`
+        )));
+        for (const result of report) {
+          const row = node("div"); row.append(node("p", `${result.paper}: ${result.error || result.status}`));
+          if (result.status === "Final reference ready") row.append(button("Download reference ZIP", () => download(`/api/ground-truth-export/${split}/${encodeURIComponent(result.paper)}`, `${result.paper}.ground-truth.zip`)));
+          else row.append(button("Show exceptions", () => load(result.paper)));
+          results.append(row);
+        }
+        content.prepend(results);
+        const ready = report.filter(item => item.status === "Final reference ready").length;
+        message(`${ready} of ${report.length} papers have a final reference. Other papers are listed below; all original feedback is preserved.`);
+      }, true));
+      content.append(panel);
+    }
+    if (queue.adopted_paper_reviews?.length) content.append(node("p", "Completed expert review adopted. Unchanged reviewed records do not need another approval; only the exceptions below remain.", "finalization-summary"));
     if (Object.keys(queue.adopted_corrections || {}).length || queue.adopted_proposals?.length) {
       content.append(node("p", "Saved expert corrections are accepted. Suggestions already satisfied by approved records need no second decision. Original edits and comments remain in the history.", "finalization-summary"));
     }

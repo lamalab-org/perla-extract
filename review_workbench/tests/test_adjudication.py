@@ -881,6 +881,7 @@ def test_finalization_queue_export_is_accepted_by_scorer(queue, tmp_path):
         ("POST", "/plan"),
         ("POST", "/decide"),
         ("POST", "/confirm-records"),
+        ("POST", "/adopt-review"),
         ("POST", "/undo"),
         ("POST", "/finalize"),
     ],
@@ -959,6 +960,7 @@ def test_shared_adjudication_resolves_conflict_and_allows_another_finalizer(queu
         (f"/api/adjudication/dev/{PAPER}", "GET", 200),
         (f"/api/adjudication/dev/{PAPER}/finalize", "POST", 201),
         (f"/api/adjudication/dev/{PAPER}/plan", "POST", 403),
+        (f"/api/adjudication/dev/{PAPER}/adopt-review", "POST", 403),
         ("/api/users", "POST", 403),
         ("/api/session", "GET", 200),
     ],
@@ -972,7 +974,9 @@ def test_reviewer_finalization_permission_is_narrow(
 
     monkeypatch.setenv("REVIEW_ALLOW_REVIEWER_FINALIZATION", "true")
     handler = object.__new__(
-        make_handler(SimpleNamespace(store=queue.store), authenticator=object())
+        make_handler(
+            SimpleNamespace(store=queue.store, users=lambda: []), authenticator=object()
+        )
     )
     handler.path = path
     handler._review_user = {"id": "collaborator", "role": "reviewer"}

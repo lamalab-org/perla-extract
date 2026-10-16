@@ -1093,8 +1093,34 @@ class StudyReviewStore:
             for event in events
             if event.get("details", {}).get("undoes_event_id")
         }
+        resets = {
+            e["reviewer_id"]: e["revision"]
+            for e in events
+            if e["kind"] == "review_reset" and e["event_id"] not in undone_event_ids
+        }
+        evidence_version = next(
+            (
+                e["details"]["replacement_evidence_version"]
+                for e in reversed(events)
+                if e["kind"] == "ground_truth_refresh"
+            ),
+            1,
+        )
+        refreshed_at = max(
+            (e["revision"] for e in events if e["kind"] == "ground_truth_refresh"),
+            default=0,
+        )
         for event in events:
             if event.get("event_id") in undone_event_ids:
+                continue
+            adopted = event["details"].get("completed_paper_review")
+            if adopted and (
+                resets.get(adopted["expert_id"], 0)
+                > adopted["reviewed_through_revision"]
+                or adopted["evidence_version"] != evidence_version
+                or refreshed_at > adopted["reviewed_through_revision"]
+                or adopted["review_event_id"] in undone_event_ids
+            ):
                 continue
             if event["kind"] == "stage_complete":
                 stages.setdefault(event["details"]["stage"], []).append(
