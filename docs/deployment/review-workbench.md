@@ -202,7 +202,7 @@ annotations** saves the same reviewer-scoped ledger as readable JSON, including 
 before/after values and revision timestamps. It is a personal progress export and is
 deliberately separate from adjudicated ground truth.
 
-Administrators also see **Download feedback** in the header. It produces one ZIP for
+All signed-in reviewers see **Download feedback** in the header. It produces one ZIP for
 the complete deployment rather than requiring a paper-by-paper download:
 
 - `feedback.json` is the lossless snapshot, with immutable event history and the
@@ -216,6 +216,18 @@ the complete deployment rather than requiring a paper-by-paper download:
   questions, minimum acceptable bars, and preference rules shown to reviewers;
 - `README.txt` explains the files and how resets, drafts, and superseded answers are
   represented.
+
+Format-2 exports also put a `review_snapshot` in each paper entry: the complete saved
+`study`, its `document`, `evidence_version`, and SHA-256 hashes. Start a revised
+reference from that study; **do not replay the event history onto it**. The snapshot
+is not final ground truth until adjudicated. Each paper's study and evidence come
+from one immutable revision, although papers can be exported at different times.
+Format-1 archives lack these snapshots and may need the original saved revision to
+recover unchanged records. The archive README specifies the JSON hash encoding.
+
+The export contains parsed paper text and private reviewer information. Store it
+with access controls; do not publish it in a code PR. A missing evidence document
+remains `null`, not a guessed or newer document.
 
 Every authenticated Excel submission within the documented 15 MiB limit is retained
 byte-for-byte under `uploaded_workbooks/` before validation begins. This includes
@@ -305,6 +317,73 @@ changing reviewer identities or saved annotations.
 | `REVIEW_COMPARISON_HOSTS` | Optional comma-separated hostnames whose root URL opens the blinded extractor study instead of ground-truth review |
 
 An account role is `reviewer` unless it is explicitly `admin`.
+
+### Let reviewers finalize references
+
+Set `REVIEW_ALLOW_REVIEWER_FINALIZATION=true` and redeploy to let all authenticated
+reviewers resolve finalization questions, freeze reviewed references, and download
+their reference ZIPs. Reviewers should reload the app to see **Finalize ground truth**.
+Without this setting, only administrators can finalize. This setting works with both
+authentication modes; it does not let new people sign in or create accounts.
+
+Finalizers share progress: a saved decision removes that question from everyone's
+queue. Each decision keeps its author and history, and people can undo only their own
+finalization decisions. Editing an approved record invalidates its old approval.
+Simultaneous edits require the second person to reload the latest version.
+
+Account management and importing prepared finalization plans remain administrator-only.
+All signed-in reviewers can use **Download feedback**, independently of this setting.
+This download includes other reviewers' comments, review history, and original uploaded
+workbooks; share it only with the research team. It is not a public download.
+Turning the setting off removes
+reviewer finalization access without deleting any decisions or review data.
+
+### Accept an expert's review without repeating it
+
+Set `REVIEW_TRUSTED_REVIEWER_IDS` to a comma-separated list of authenticated account
+IDs and redeploy. Use the `reviewer_id` in a verified review event, not a person's
+display name or a workbook filename. This setting does not grant access or change
+account roles. Leave it unset to require explicit record approvals as before.
+
+For these accounts, the finalization queue also accepts saved full-record corrections
+from the record editor and exact replacements from validated current workbooks.
+A scalar edit does not approve the rest of a record. A workbook comment or a
+“Correct fields” decision without a replacement still needs resolution. Comments
+attached to a workbook replacement prevent automatic acceptance of that replacement.
+Ordinary explicit approvals from other reviewers continue to count.
+
+When the expert used the app's completion steps, the queue offers to adopt their review if they finished
+the completeness step, checked every source represented in the saved evidence document, and the study, source version,
+and census still match that review. It does not ask the finalizer to claim a second
+reading of the paper. For older completion events without content hashes, adoption
+requires an unchanged scientific history since completion. A source refresh, edit,
+unresolved note, count mismatch, conflicting decision, or withdrawn review needs attention.
+
+If the expert finished reviewing the papers but did not click those completion
+buttons, an administrator can record that fact instead. Open **Finalize ground
+truth → Use a completed expert review**, select the expert, confirm that they
+checked the papers for omissions, and choose **Use this review across the dataset**.
+This accepts unchanged records as part of that completed review, including records
+without an individual approval click. It does not claim that the expert clicked
+buttons they never used. The history records who confirmed completion, which
+expert's saved review it covers, and the evidence version.
+
+The action visits papers in the selected dataset that have saved review activity
+from that expert. It retains unresolved comments, proposals and conflicting
+decisions. Later edits and deletions need explicit decisions; replacing the extraction
+or evidence after the expert's review prevents adoption. Papers with no remaining
+questions are finalized only if schema and source validation pass. Other papers
+stay open, with links to their exceptions. **Download exception report** saves the
+per-paper results, including failures. Each finalized paper has a reference ZIP
+download; the bulk feedback download still preserves the original workbooks and
+history. The completion statement is an administrator's scientific assertion, not
+something the app can infer from activity or timestamps.
+
+The final event preserves the original correction/completion event IDs and authors.
+Resetting a review withdraws its approvals without deleting scientific edits. Freezing
+and export still validate the schema, links, values, and citations. A successful check
+does not prove scientific completeness; that remains the expert's judgment.
+It cannot establish whether an SI file was omitted from the imported source material.
 
 ### Dedicated comparison hostname
 

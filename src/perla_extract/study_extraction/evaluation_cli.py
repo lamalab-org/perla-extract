@@ -277,14 +277,17 @@ def main(
         )
     except ValidationError as exc:
         raise click.ClickException(f"invalid scoring configuration: {exc}") from exc
-    report = evaluate_study(
-        expected,
-        actual,
-        benchmark=benchmark,
-        prediction_validation=prediction_validation,
-        run_efficiency=run_efficiency,
-        config=config,
-    )
+    try:
+        report = evaluate_study(
+            expected,
+            actual,
+            benchmark=benchmark,
+            prediction_validation=prediction_validation,
+            run_efficiency=run_efficiency,
+            config=config,
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
     write_json_atomic(output, report.model_dump(mode="json"))
     click.echo(str(output))
     if fail_on_scoring_issues and report.core_facts.issues:

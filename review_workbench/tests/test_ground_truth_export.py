@@ -124,14 +124,21 @@ def _adjudicate(
     return bundle
 
 
+@pytest.mark.parametrize("backend", ["local", "blob"])
 def test_saved_scientific_correction_changes_the_reference_not_the_seed(
-    tmp_path, empty_study, document_payload
+    tmp_path, empty_study, document_payload, backend
 ):
     """Exercise correction -> adjudication -> immutable export -> meaningful scores."""
 
     from perla_extract.study_extraction.evaluation import evaluate_study
 
-    store = StudyReviewStore(tmp_path / "review")
+    storage = None
+    if backend == "blob":
+        from review_workbench.api.index import BlobReviewStateStorage
+        from review_workbench.tests.test_review_storage import MemoryBlobStore
+
+        storage = BlobReviewStateStorage(MemoryBlobStore())
+    store = StudyReviewStore(tmp_path / "review", storage=storage)
     quote = "The device stack is ITO/perovskite/Ag."
     document = copy.deepcopy(document_payload)
     document["blocks"][0]["text"] += " " + quote
@@ -149,7 +156,9 @@ def test_saved_scientific_correction_changes_the_reference_not_the_seed(
             evidence=[{"block_id": "main_p1_text_1", "quote": quote}],
         ),
     )
-    export = build_ground_truth_export(store, SPLIT, PAPER_ID)
+    # A fresh application instance must recover the saved state, not use UI memory.
+    restored = StudyReviewStore(tmp_path / "review", storage=storage)
+    export = build_ground_truth_export(restored, SPLIT, PAPER_ID)
     assert (
         export.seed_extraction.device_families[0].full_stack_raw
         == "ITO/solvent/perovskite/Ag"
@@ -165,7 +174,10 @@ def test_saved_scientific_correction_changes_the_reference_not_the_seed(
     assert after.core_facts.groups["stack"].f1 == 1
     assert before.truth_content_sha256 == after.truth_content_sha256
     assert before.prediction_content_sha256 != after.prediction_content_sha256
-    target = write_ground_truth_export(export, tmp_path / "frozen")
+    # Exercise the actual browser-download format, not just the filesystem exporter.
+    target = tmp_path / "unzipped-reference"
+    with zipfile.ZipFile(io.BytesIO(ground_truth_zip(export))) as archive:
+        archive.extractall(target)
     output = tmp_path / "score.json"
     result = CliRunner().invoke(
         evaluate,

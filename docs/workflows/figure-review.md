@@ -54,7 +54,7 @@ for the same imported seed until the complete census is submitted. Arrow keys or
 Paper-level figure, relevant-figure, figure-only-record, and figure-only-value totals
 are derived from the panel rows. Older aggregate-only or panel-level censuses remain
 readable, but their panels must be explicitly checked before an updated census can be
-saved. The administrator feedback download includes `figure_panels.csv`, including
+saved. The signed-in team's feedback download includes `figure_panels.csv`, including
 proposal identity and review status, and a JSON summary grouped by class, numeric
 presentation, and extraction effort.
 
@@ -134,7 +134,7 @@ counts rather than duplicating base64-encoded paper images.
 
 ## Evaluate classifications
 
-After review, extract `figure_panels.csv` from the administrator feedback download and
+After review, extract `figure_panels.csv` from **Download feedback** and
 score the frozen proposal:
 
 ```bash
@@ -151,7 +151,7 @@ whose paper, figure number, and panel label match exactly. If the CSV contains s
 reviewers, selecting one or supplying a separately adjudicated CSV is mandatory; the
 tool does not silently pool conflicting annotations.
 
-The administrator feedback ZIP includes both `figure_census_proposals.json` (the exact
+The feedback ZIP includes both `figure_census_proposals.json` (the exact
 starting point shown in the app) and `figure_panels.csv` (current human annotations),
 while the lossless event history preserves superseded edits and resets. Both the
 original proposal and the corrected classifications remain available for comparison.

@@ -17,7 +17,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
 from typing import Annotated, Final, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .models import (
     ReportedValue,
@@ -118,6 +118,29 @@ class PRF(StrictModel):
     precision: float | None = Field(ge=0, le=1)
     recall: float | None = Field(ge=0, le=1)
     f1: float | None = Field(ge=0, le=1)
+
+    @model_validator(mode="after")
+    def rates_follow_counts(self) -> PRF:
+        """Reject damaged reports before counts and rates disagree in aggregation."""
+
+        if self.matched > min(self.predicted, self.truth):
+            raise ValueError("matched count cannot exceed predicted or reference count")
+        expected = {
+            "precision": self.matched / self.predicted if self.predicted else None,
+            "recall": self.matched / self.truth if self.truth else None,
+            "f1": 2 * self.matched / (self.predicted + self.truth)
+            if self.predicted + self.truth
+            else None,
+        }
+        for name, rate in expected.items():
+            actual = getattr(self, name)
+            if (rate is None) != (actual is None) or (
+                rate is not None
+                and actual is not None
+                and not math.isclose(rate, actual, rel_tol=1e-12, abs_tol=0.0)
+            ):
+                raise ValueError(f"{name} does not agree with the saved counts")
+        return self
 
 
 class RecordMatch(StrictModel):
@@ -918,6 +941,19 @@ def evaluate_study(
     """
 
     config = config or EvaluationConfig()
+    # Identity maps are dictionaries. Reused IDs would silently collapse distinct
+    # records and attach facts to the wrong device instead of measuring quality.
+    for side, study in (("truth", truth), ("prediction", prediction)):
+        for kind in RECORD_KINDS:
+            counts = Counter(
+                _record_id(kind, record) for record in getattr(study, kind)
+            )
+            duplicates = sorted(key for key, count in counts.items() if count > 1)
+            if duplicates:
+                raise ValueError(
+                    f"{side}.{kind} contains duplicate record IDs: {', '.join(duplicates)}; "
+                    "resolve the identities before scoring"
+                )
     if tuple(ignored_truth_record_keys):
         raise ValueError(
             "reference exclusions are no longer supported; resolve uncertain records "

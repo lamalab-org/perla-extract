@@ -9,9 +9,38 @@ score the original predictions without editing them.
 - [Run the worked example](scoring-example.md): synthetic corrections and expected scores.
 
 A **reviewed draft** includes saved corrections and additions. **Frozen ground truth**
-is a version the administrator has approved for evaluation. Its manifest records
+is a version an authorized finalizer has approved for evaluation. Its manifest records
 which review revision, source files and schema it uses, with hashes to identify their
 content. Model output and unresolved comments are not a finished reference.
+
+## Checks between review and scoring
+
+| Step | What the code checks | What still needs human judgment |
+| --- | --- | --- |
+| Save a correction | Creates a new revision containing the corrected study and its history; a stale edit cannot overwrite another person's revision | Whether the correction agrees with the paper |
+| Share finalization | Withdrawn approvals and later objections reopen review; old approvals cannot silently settle new objections | How to resolve disagreements |
+| Finalize and export | Both completion routes reject pending questions; export checks current approvals and citations against the evidence version saved with that revision | Whether source review found all relevant records |
+| Score | Rejects duplicate record IDs; verifies a frozen reference's schema/content hashes; records the field pairs that earned credit | Whether difficult record pairings and chemical equivalences are appropriate |
+| Load saved scores | Rejects precision, recall, or F1 values that disagree with their counts | Whether the evaluation set represents the intended use |
+
+The regression tests save a correction, reload it through both local storage and
+the cloud-storage adapter, finalize it, unpack the browser ZIP, and pass that directory
+to the scoring CLI. They check that the original model result remains unchanged and
+that the correction changes the expected score. Cloud tests use an in-memory Blob
+service; they do not prove the live provider will never fail. Separate assignment tests
+compare the matcher with exhaustive search on small rectangular and tied matrices.
+
+To repeat these checks without model calls:
+
+```bash
+PYTHONPATH=.:src python -m pytest review_workbench/tests tests/study_extraction -q
+```
+
+**Download feedback** also preserves each paper's complete current study and its
+matching evidence document, not just changed fields. This private archive includes
+unfinished drafts; use **Finalize & download** for the four-file scoring reference.
+Do not replay historical edits onto an already-corrected snapshot. Browser-local
+drafts still need to be submitted before either download can include them.
 
 ## Reconcile saved feedback
 
@@ -39,6 +68,29 @@ Their comments are useful feedback, but their approvals must not automatically
 verify a newer record just because its ID looks familiar. The package keeps older feedback separate from decisions on the current revision.
 
 ### Using expert feedback in practice
+
+Do not repeat a completed expert review simply because a different person freezes
+the reference. The app already accepts explicit approvals of unchanged records.
+With [trusted reviewers configured](../deployment/review-workbench.md#accept-an-experts-review-without-repeating-it),
+it also accepts their saved full-record corrections and offers to adopt their
+completed source check. The export records whose work was adopted; it does not
+claim that the finalizer read the paper again.
+
+An expert may have completed the paper review without using the app's completion
+buttons. An administrator can confirm that completed review once using **Use a
+completed expert review** in the finalization screen. The app then accepts unchanged
+reviewed records, even without separate approval clicks. It records the
+administrator's confirmation separately from the expert's original actions.
+The dataset action finalizes papers that have no exceptions and pass validation,
+and provides a downloadable report for the rest.
+
+Only unresolved exceptions need another decision: changed or unmapped records,
+conflicting reviews, comments without resolved replacements, incomplete source
+coverage, and validation failures. A proposed replacement that exactly matches an
+already-approved record needs no second decision, unless it also carries unresolved
+workbook comments. Neither model disagreement nor the number of edits is a reason
+to reject an expert correction. Untouched records need individual approval only
+when no completed review has been confirmed for them.
 
 Start with the latest saved revision of each paper, not another extraction run.
 Read the package's `adjudication.json` alongside the preserved workbook and paper. Resolve

@@ -7,6 +7,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  review-deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install deployment dependencies and test runner
+        run: |
+          python - <<'PY'
+          import pathlib, subprocess, sys, tomllib
+          config = tomllib.loads(pathlib.Path("review_workbench/pyproject.toml").read_text())
+          subprocess.check_call([sys.executable, "-m", "pip", "install", "pytest", *config["project"]["dependencies"]])
+          PY
+      - name: Test the prepared server with its real storage SDK
+        run: python -m pytest -q review_workbench/tests/test_prepare.py
+
   scoring-example:
     runs-on: ubuntu-latest
     steps:

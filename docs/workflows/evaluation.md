@@ -36,6 +36,12 @@ The command checks that the schema hash matches the installed schema and that th
 reference's content hash matches its manifest. It records the paper ID, split,
 reference hash, source hashes and source-manifest hash in the report.
 
+Record IDs must be unique within each collection on both sides. Duplicate IDs stop
+scoring: otherwise an identity map could silently collapse two devices or observations.
+Fix malformed output and retain that failure in your run accounting; do not silently
+drop failed papers from a model comparison. Legitimate extra records with distinct
+IDs remain in the precision denominator.
+
 These checks detect mismatched files. They do not prove that anyone reviewed the
 reference. The scorer does not repeat adjudication or check the reference's
 citations against the paper. Use the [review and export workflow](ground-truth-review.md)
@@ -71,6 +77,9 @@ Reports use format **5**, matcher **rich-study-hungarian-v5** and fact profile
 combining scores. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
+When loading reports, count/rate checks reject impossible match counts or precision,
+recall, and F1 values that disagree with their stored counts. These consistency checks
+do not authenticate a report's author or replace inspection of scientific matches.
 
 ## What is scored
 
