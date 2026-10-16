@@ -7,6 +7,12 @@ const node = (tag, text, className) => {
 };
 const pretty = (value) => value == null ? "—" : typeof value === "object" ? JSON.stringify(value, null, 2) : String(value);
 
+// Unfinished review is not evidence of a scientific disagreement. Keep it out of
+// the decision queue without turning a filtered view into a finalized reference.
+export function casesInLane(cases, lane) {
+  return cases.filter(item => lane === "all" || (item.review_lane || "scientific") === lane);
+}
+
 export function differences(before, after, path = "") {
   if (JSON.stringify(before) === JSON.stringify(after)) return [];
   // A new checkpoint should appear as an addition, not shift every later row.
@@ -62,7 +68,7 @@ export function createFinalizationQueue({ request, context, download, saveBlob, 
   const header = node("div", null, "finalization-header");
   const intro = node("div");
   const heading = node("h2", "Finalize ground truth"); heading.id = "finalization-heading";
-  intro.append(heading, node("p", "Resolve the remaining questions. Keep the review already done."));
+  intro.append(heading, node("p", "Focus on scientific questions. Keep the review already done."));
   const close = node("button", "Close"); close.onclick = () => dialog.close();
   header.append(intro, close);
   const status = node("p", "", "finalization-status"); status.setAttribute("role", "status");
@@ -71,6 +77,8 @@ export function createFinalizationQueue({ request, context, download, saveBlob, 
   const content = node("section", null, "finalization-content");
   layout.append(rail, content); shell.append(header, status, layout); dialog.append(shell); document.body.append(dialog);
   let queue = null, paper = null, split = "dev", index = 0, busy = false, generation = 0;
+  let lane = "scientific";
+  const visibleCases = () => casesInLane(queue?.cases || [], lane);
   const base = () => `/api/adjudication/${split}/${encodeURIComponent(paper)}`;
   const message = (text, error = false) => { status.textContent = text; status.classList.toggle("error", error); };
   const button = (text, action, primary = false) => {
@@ -86,13 +94,13 @@ export function createFinalizationQueue({ request, context, download, saveBlob, 
     finally { busy = false; dialog.querySelectorAll("button,input,textarea,select").forEach(el => el.disabled = false); }
   }
   async function load(id) {
-    const previousCase = id === paper ? queue?.cases[index]?.id : null;
+    const previousCase = id === paper ? visibleCases()[index]?.id : null;
     const ticket = ++generation; paper = id; index = 0; queue = null;
     content.replaceChildren(node("p", "Loading saved review…"));
     const result = await request(base());
     if (ticket !== generation) return;
     queue = result;
-    if (previousCase) index = Math.max(0, queue.cases.findIndex(item => item.id === previousCase));
+    if (previousCase) index = Math.max(0, visibleCases().findIndex(item => item.id === previousCase));
     renderRail(); render(); message("All decisions are saved to the review history.");
   }
   function renderRail() {
@@ -155,8 +163,9 @@ export function createFinalizationQueue({ request, context, download, saveBlob, 
   }
   function render() {
     if (!queue) return;
-    index = Math.min(index, Math.max(0, queue.cases.length - 1));
-    content.replaceChildren(node("h3", queue.title), node("p", `${queue.own_approved_count} approved by you · ${queue.inherited_count} current reviewer approvals · ${queue.cases.length} decisions left`, "finalization-summary"));
+    const visible = visibleCases();
+    index = Math.min(index, Math.max(0, visible.length - 1));
+    content.replaceChildren(node("h3", queue.title), node("p", `${queue.own_approved_count} approved by you · ${queue.inherited_count} current reviewer approvals · ${queue.cases.length} unfinished items`, "finalization-summary"));
     if (context().canImportPlan && queue.review_candidates?.length) {
       const panel = node("details");
       panel.append(node("summary", "Use a completed expert review"), node("p", "If the expert finished reviewing the papers, accept their reviewed data—including unchanged records. Only specific exceptions remain. This records your confirmation; it does not claim the expert clicked completion buttons."));
@@ -222,24 +231,36 @@ export function createFinalizationQueue({ request, context, download, saveBlob, 
       ledger.append(workbookFeedback(queue.workbook_feedback)); content.append(ledger);
     }
     if (!queue.cases.length) { renderFinish(); return; }
-    const guidance = queue.cases.filter(item => item.id.startsWith("proposal:") && !item.changes.length);
+    const lanes = node("select"); lanes.setAttribute("aria-label", "Review queue");
+    for (const [value, label] of [["scientific", "Scientific questions"], ["reconciliation", "Match earlier feedback to current records"], ["unreviewed", "Records awaiting review"], ["all", "All unfinished items"]]) {
+      const option = node("option", `${label} (${casesInLane(queue.cases, value).length})`);
+      option.value = value; lanes.append(option);
+    }
+    lanes.value = lane; lanes.onchange = () => { lane = lanes.value; index = 0; render(); };
+    content.append(lanes);
+    if (!visible.length) {
+      content.append(node("h4", "No open items in this view"), node("p", "This is not yet a final reference. Earlier feedback still needs to be matched to the current data, or some records await review. Those tasks are listed separately; they do not imply a scientific disagreement."));
+      content.append(button("Show remaining work", () => { lane = "all"; index = 0; render(); }));
+      return;
+    }
+    const guidance = visible.filter(item => item.id.startsWith("proposal:") && !item.changes.length);
     if (guidance.length) {
       const summary = node("details"); summary.append(node("summary", "What changed and what still needs checking"));
       guidance.forEach(item => summary.append(node("h4", item.title), node("p", item.reason, "finalization-reason")));
       content.append(summary);
     }
     const jump = node("select"); jump.setAttribute("aria-label", "Jump to a review decision");
-    queue.cases.forEach((item, i) => {
+    visible.forEach((item, i) => {
       const option = node("option", `${i + 1}. ${item.changes.length ? "Correction" : item.record_key ? "Record" : "Review decision"}: ${item.title}`);
       option.value = String(i); jump.append(option);
     });
     jump.value = String(index); jump.onchange = () => { index = Number(jump.value); render(); message("Nothing approved. Showing the selected decision."); };
     content.append(jump);
-    const unapproved = queue.cases.filter(item => item.record_key);
+    const unapproved = visible.filter(item => item.record_key);
     if (unapproved.length > 1) content.append(button(`Check ${unapproved.length} records together`, () => renderBatch(unapproved)));
-    const item = queue.cases[index];
+    const item = visible[index];
     const card = node("article", null, "finalization-card");
-    card.append(node("span", `Decision ${index + 1} of ${queue.cases.length}`, "eyebrow"), node("h4", item.title), node("p", item.reason, "finalization-reason"));
+    card.append(node("span", `Item ${index + 1} of ${visible.length}`, "eyebrow"), node("h4", item.title), node("p", item.reason, "finalization-reason"));
     if (item.feedback?.length) {
       card.append(workbookFeedback(item.feedback));
       const linked = new Set(queue.workbook_feedback.filter(entry => item.feedback.includes(entry.id)).flatMap(entry => entry.current_record_keys));
@@ -285,7 +306,7 @@ export function createFinalizationQueue({ request, context, download, saveBlob, 
       const key = item.record_key || (existing ? `${existing.collection}:${existing.record_id}` : null);
       await openRecord(paper, key); dialog.close();
     }));
-    actions.append(button("Later →", () => { index = (index + 1) % queue.cases.length; render(); message("Left unresolved. Nothing was approved."); }));
+    actions.append(button("Later →", () => { index = (index + 1) % visible.length; render(); message("Left unresolved. Nothing was approved."); }));
     card.append(actions); content.append(card);
   }
   function renderBatch(items) {

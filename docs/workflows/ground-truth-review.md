@@ -30,9 +30,12 @@ records are accepted without extra clicks; exceptions stay open. The app records
 this as the administrator's confirmation, not as new actions by the expert.
 Download the exception report to see which papers still need a decision.
 
-1. Choose a paper. The queue shows proposed corrections first, then records without
-   a current approval, then unresolved completeness notes. Unchanged records with
-   only positive reviewer decisions do not need another individual click.
+1. Choose a paper. The queue opens on **Scientific questions**: explicit objections,
+   proposed corrections, and unresolved completeness questions. Records that merely
+   lack approval appear separately under **Records awaiting review**. Records linked
+   to an older workbook, but not yet checked against that version, appear under
+   **Match earlier feedback to current records**. Unchanged records with only positive
+   reviewer decisions do not need another individual click.
    **What changed and what still needs checking** summarizes prepared review guidance.
    Use **Jump to a review decision** to go straight to a correction or record.
 2. Compare **Current** and **Proposed**, read the supporting passage, and use
@@ -63,6 +66,9 @@ their scientific corrections. A later uncertain decision reopens the record even
 someone approved the same content earlier. Resolve the new objection explicitly.
 Both the full review and the short finalization queue must resolve pending questions;
 the exporter checks this again before writing a reference.
+An empty scientific-question queue does not mean a paper is finalized. The selector
+shows the remaining work in each queue. All unfinished items still block export as
+a final reference; switching views never approves data.
 See [deployment permissions](../deployment/review-workbench.md#let-reviewers-finalize-references)
 to enable this for existing reviewers.
 
@@ -72,6 +78,10 @@ The plan must match the current study content. A refined plan can list earlier
 proposal IDs in `supersedes` to retire a broad checklist from the active queue.
 The original proposals and reviewer uploads remain in history; retiring a checklist
 does not approve its records or apply any correction. New proposal IDs must be unique.
+A plan can set a proposal's `review_lane` to `reconciliation` for version matching
+or other preparatory work. The default is `scientific`, so older or unclassified
+proposals remain visible. This label only routes work; it cannot waive validation
+or override a reviewer objection.
 A count mismatch asks for investigation; it never deletes
 records automatically. Finalization exports one paper at a time.
 

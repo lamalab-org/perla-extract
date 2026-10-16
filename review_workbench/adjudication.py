@@ -54,6 +54,7 @@ class Proposal(BaseModel):
     id: str = Field(min_length=1, max_length=200)
     title: str = Field(min_length=1, max_length=300)
     reason: str = Field(min_length=1, max_length=12000)
+    review_lane: Literal["scientific", "reconciliation"] = "scientific"
     changes: list[RecordChange] = Field(default_factory=list, max_length=100)
     evidence: list[Citation] = Field(default_factory=list, max_length=30)
     feedback: list["WorkbookFeedback"] = Field(default_factory=list, max_length=500)
@@ -602,6 +603,7 @@ class AdjudicationQueue:
                     "record_key": key,
                     "record": record,
                     "reviewer_decisions": decisions,
+                    "review_lane": "scientific" if decisions else "unreviewed",
                     "changes": [],
                     "evidence": record.get("evidence", []),
                     "keys": [key],
@@ -629,6 +631,7 @@ class AdjudicationQueue:
             cases.append(
                 {
                     "id": f"post-review-change:{change['event_id']}",
+                    "review_lane": "scientific",
                     "title": "Check a change made after the expert review",
                     "reason": "Paper metadata or records were removed after the reviewed version. "
                     "Confirm that this change is intended: "
@@ -668,6 +671,7 @@ class AdjudicationQueue:
                     cases.append(
                         {
                             **proposal,
+                            "review_lane": proposal.get("review_lane", "scientific"),
                             "feedback": [entry["id"] for entry in entries],
                             "current_changes": current_changes,
                             "stale": any(
@@ -693,6 +697,7 @@ class AdjudicationQueue:
                 cases.append(
                     {
                         "id": f"completeness:{_digest(content)}",
+                        "review_lane": "scientific" if note else "reconciliation",
                         "title": "Resolve the reviewer's completeness check",
                         "reason": note
                         or "The reviewer's count differs from the saved records. Check the reason; do not force the counts to match.",
@@ -745,6 +750,15 @@ class AdjudicationQueue:
         )
         for case in record_cases:
             case["workbook_feedback"] = feedback_by_record.get(case["record_key"], [])
+            if not case["reviewer_decisions"] and case["workbook_feedback"]:
+                case["review_lane"] = "reconciliation"
+        # Routing changes who needs to do the work, not what counts as approved.
+        # Every unresolved item still blocks finalization, including hidden lanes.
+        all_cases = (
+            [c for c in pending if c["changes"]]
+            + record_cases
+            + [c for c in pending if not c["changes"]]
+        )
         last = events[-1]
         return {
             "paper_id": paper,
@@ -770,9 +784,11 @@ class AdjudicationQueue:
             "workbook_current_records": {
                 key: records[key] for key in feedback_by_record if key in records
             },
-            "cases": [c for c in pending if c["changes"]]
-            + record_cases
-            + [c for c in pending if not c["changes"]],
+            "cases": all_cases,
+            "case_counts": {
+                lane: sum(c["review_lane"] == lane for c in all_cases)
+                for lane in ("scientific", "reconciliation", "unreviewed")
+            },
             "finalized": last["kind"] == "stage_complete"
             and last["details"].get("stage") == "adjudication",
             "last_decision": next(

@@ -192,6 +192,89 @@ def test_adopt_unchanged_expert_review_and_export(queue):
     assert export.manifest.review.uncertain_record_keys == []
 
 
+def test_routing_does_not_approve_unreviewed_records(queue):
+    trusted_correction(queue, actor="coordinator", scalar=True)
+    view = queue.load("dev", PAPER, "admin")
+    assert view["case_counts"] == {
+        "scientific": 0,
+        "reconciliation": 0,
+        "unreviewed": 1,
+    }
+    with pytest.raises(ValueError, match="remaining items"):
+        finalize(queue)
+
+
+def test_explicit_objection_stays_in_scientific_queue(queue):
+    queue.store.decide_record(
+        "dev",
+        PAPER,
+        RecordDecisionRequest(
+            collection="device_families",
+            record_id="family-control",
+            decision="needs_correction",
+            base_revision=2,
+        ),
+        "another-reviewer",
+    )
+    view = queue.load("dev", PAPER, "admin")
+    assert view["case_counts"]["scientific"] == 1
+    assert view["cases"][0]["review_lane"] == "scientific"
+
+
+def test_reconciliation_proposal_still_blocks_finalization(queue):
+    request = plan(queue)
+    request.proposals[0].review_lane = "reconciliation"
+    queue.import_plan("dev", PAPER, request, "admin")
+    assert queue.load("dev", PAPER, "admin")["case_counts"] == {
+        "scientific": 0,
+        "reconciliation": 1,
+        "unreviewed": 0,
+    }
+    with pytest.raises(ValueError, match="remaining items"):
+        finalize(queue)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node is required")
+def test_scientific_view_does_not_offer_finalization_for_hidden_work():
+    source = Path(__file__).parents[1] / "review_app/adjudication.js"
+    script = r"""
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+class Element {
+  constructor(tag) { this.tag=tag; this.children=[]; this.classList={toggle(){}}; }
+  append(...items) { this.children.push(...items); }
+  replaceChildren(...items) { this.children=items; }
+  setAttribute() {}
+  showModal() {}
+  querySelectorAll(selector) {
+    return this.children.flatMap(child => [child, ...child.querySelectorAll('*')])
+      .filter(child => selector === '*' || selector.split(',').includes(child.tag));
+  }
+}
+(async () => {
+  const code=fs.readFileSync(process.argv[1],'utf8');
+  const {casesInLane,createFinalizationQueue}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+  const cases=[{id:'record:x',title:'Unreviewed',record_key:'x',record:{label:'Unreviewed'},review_lane:'unreviewed',changes:[],reason:'Awaiting review'}];
+  assert.deepEqual(casesInLane(cases,'scientific'),[]);
+  assert.equal(casesInLane([{id:'legacy'}],'scientific').length,1);
+  global.document={body:new Element('body'),createElement:tag=>new Element(tag)};
+  let writes=0;
+  const ui=createFinalizationQueue({request:async (url,options)=>{if(options) writes++;return {title:'Example',revision:2,record_count:1,inherited_count:0,own_approved_count:0,cases};},context:()=>({split:'dev',paperId:'example',papers:[{id:'example'}]})});
+  await ui.open();
+  let buttons=document.body.querySelectorAll('button');
+  assert(!buttons.some(b=>b.textContent==='Finalize & download'));
+  await buttons.find(b=>b.textContent==='Show remaining work').onclick();
+  buttons=document.body.querySelectorAll('button');
+  assert(buttons.some(b=>b.textContent==='Approve this record'));
+  assert(!buttons.some(b=>b.textContent==='Finalize & download'));
+  assert.equal(writes,0);
+})().catch(e=>{console.error(e);process.exit(1)});
+"""
+    subprocess.run(
+        ["node", "-e", script, str(source)], check=True, capture_output=True, text=True
+    )
+
+
 def trusted_correction(queue, actor="expert", *, scalar=False):
     from review_workbench.study_review import MutationRequest
 
