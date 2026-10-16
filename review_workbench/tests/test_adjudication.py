@@ -28,6 +28,58 @@ PAPER = "10.0000--example"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node is required")
+def test_finalization_ui_distinguishes_adoption_from_personal_source_review():
+    source = Path(__file__).parents[1] / "review_app/adjudication.js"
+    script = r"""
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+class Element {
+  constructor(tag) { this.tag=tag; this.children=[]; this.classList={toggle(){}}; }
+  append(...items) { this.children.push(...items); }
+  replaceChildren(...items) { this.children=items; }
+  setAttribute() {}
+  showModal() {}
+  querySelectorAll(selector) {
+    return this.children.flatMap(child => [child, ...child.querySelectorAll('*')])
+      .filter(child => selector === '*' || selector.split(',').includes(child.tag));
+  }
+}
+(async () => {
+  const code = fs.readFileSync(process.argv[1], 'utf8');
+  const {createFinalizationQueue} = await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+  for (const completed of [false,true]) {
+    global.document = {body:new Element('body'), createElement:tag=>new Element(tag)};
+    const requests=[], downloads=[];
+    const data={title:'Example', revision:2, record_count:1, inherited_count:1, own_approved_count:0, cases:[], completed_reviews:completed ? [{reviewer_id:'expert'}] : []};
+    const ui=createFinalizationQueue({
+      request:async (url, options) => {
+        if (options) requests.push(JSON.parse(options.body));
+        return {...data, finalized:!!options};
+      },
+      context:()=>({split:'dev', paperId:'example', papers:[{id:'example'}]}),
+      download:async url=>downloads.push(url)
+    });
+    await ui.open();
+    const buttons=document.body.querySelectorAll('button');
+    const finish=buttons.find(el=>el.textContent==='Finalize & download');
+    await finish.onclick(); // Must not silently approve an unchecked confirmation.
+    assert.equal(requests.length,0);
+    document.body.querySelectorAll('input')[0].checked=true;
+    await finish.onclick();
+    assert.equal(requests.length,1);
+    assert.equal(requests[0].adopt_current_reviews,true);
+    assert.equal(requests[0].adopt_completed_review,completed ? true : undefined);
+    assert.equal(requests[0].completeness_checked,completed ? undefined : true);
+    assert.equal(downloads.length,1);
+  }
+})().catch(error=>{ console.error(error); process.exit(1); });
+"""
+    subprocess.run(
+        ["node", "-e", script, str(source)], check=True, capture_output=True, text=True
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node is required")
 def test_diff_matches_stable_ids_and_still_shows_reordering():
     source = Path(__file__).parents[1] / "review_app/adjudication.js"
     script = f"""
@@ -138,6 +190,295 @@ def test_adopt_unchanged_expert_review_and_export(queue):
         "device_families:family-control": {"expert": "verified"}
     }
     assert export.manifest.review.uncertain_record_keys == []
+
+
+def trusted_correction(queue, actor="expert", *, scalar=False):
+    from review_workbench.study_review import MutationRequest
+
+    before = queue.store.load_truth("dev", PAPER)["device_families"][0]
+    queue.store.mutate(
+        "dev",
+        PAPER,
+        MutationRequest(
+            base_revision=queue.store.revision("dev", PAPER),
+            action="replace",
+            path="/device_families/0/label" if scalar else "/device_families/0",
+            value="Corrected control"
+            if scalar
+            else {**before, "label": "Corrected control"},
+            evidence=before["evidence"],
+            note="Corrected against the paper.",
+        ),
+        actor,
+    )
+
+
+def completed_expert_review(queue, sources=None):
+    from review_workbench.study_review import InventoryAuditRequest, StageRequest
+
+    queue.store.inventory_audit(
+        "dev",
+        PAPER,
+        InventoryAuditRequest(
+            base_revision=queue.store.revision("dev", PAPER),
+            review_scope_sources=sources or ["main", "supplement"],
+            expected_counts={},
+        ),
+        "expert",
+    )
+    for stage in ("inventory", "fields", "completeness"):
+        queue.store.complete_stage(
+            "dev",
+            PAPER,
+            StageRequest(stage=stage, base_revision=queue.store.revision("dev", PAPER)),
+            "expert",
+        )
+
+
+def test_trusted_correction_is_adopted_and_exportable(queue, monkeypatch):
+    monkeypatch.setenv("REVIEW_TRUSTED_REVIEWER_IDS", "expert")
+    trusted_correction(queue)
+    view = queue.load("dev", PAPER, "admin")
+    assert not view["cases"]
+    assert (
+        view["adopted_corrections"]["device_families:family-control"]["expert"][
+            "revision"
+        ]
+        == 3
+    )
+    finalize(queue)
+    # Once frozen, the export doesn't depend on a deployment's trust setting.
+    monkeypatch.delenv("REVIEW_TRUSTED_REVIEWER_IDS")
+    exported = build_ground_truth_export(queue.store, "dev", PAPER)
+    assert exported.ground_truth.device_families[0].label == "Corrected control"
+    assert exported.review_events[-1].details["adopted_corrections"]
+
+
+@pytest.mark.parametrize("actor,scalar", [("other", False), ("expert", True)])
+def test_trust_does_not_spread_to_other_people_or_unreviewed_record_fields(
+    queue, monkeypatch, actor, scalar
+):
+    monkeypatch.setenv("REVIEW_TRUSTED_REVIEWER_IDS", "expert")
+    trusted_correction(queue, actor, scalar=scalar)
+    assert queue.load("dev", PAPER, "admin")["cases"]
+
+
+def test_trusted_correction_does_not_override_conflict_or_reset(queue, monkeypatch):
+    from review_workbench.study_review import ReviewerResetRequest
+
+    monkeypatch.setenv("REVIEW_TRUSTED_REVIEWER_IDS", "expert")
+    trusted_correction(queue)
+    queue.store.decide_record(
+        "dev",
+        PAPER,
+        RecordDecisionRequest(
+            collection="device_families",
+            record_id="family-control",
+            decision="uncertain",
+            base_revision=3,
+        ),
+        "other",
+    )
+    assert queue.load("dev", PAPER, "admin")["cases"]
+    queue.store.reset_reviewer_state(
+        "dev", PAPER, ReviewerResetRequest(base_revision=4), "expert"
+    )
+    assert not queue.load("dev", PAPER, "admin")["adopted_corrections"]
+
+
+def test_changed_trusted_correction_reopens(queue, monkeypatch):
+    monkeypatch.setenv("REVIEW_TRUSTED_REVIEWER_IDS", "expert")
+    trusted_correction(queue)
+    from review_workbench.study_review import MutationRequest
+
+    queue.store.mutate(
+        "dev",
+        PAPER,
+        MutationRequest(
+            base_revision=3,
+            action="replace",
+            path="/device_families/0/label",
+            value="New unreviewed label",
+            evidence=queue.store.load_truth("dev", PAPER)["device_families"][0][
+                "evidence"
+            ],
+        ),
+        "other",
+    )
+    assert queue.load("dev", PAPER, "admin")["cases"]
+
+
+def test_already_applied_approved_proposal_needs_no_second_decision(queue, monkeypatch):
+    monkeypatch.setenv("REVIEW_TRUSTED_REVIEWER_IDS", "expert")
+    request = plan(queue)
+    request.proposals[0].changes[0].after["label"] = "Corrected control"
+    queue.import_plan("dev", PAPER, request, "admin")
+    trusted_correction(queue)
+    view = queue.load("dev", PAPER, "admin")
+    assert not view["cases"]
+    assert view["adopted_proposals"][0]["case_id"] == "proposal:correct-label"
+    finalize(queue)
+    monkeypatch.delenv("REVIEW_TRUSTED_REVIEWER_IDS")
+    assert build_ground_truth_export(queue.store, "dev", PAPER)
+
+
+def test_adopt_completed_expert_review_without_claiming_a_second_source_check(
+    queue, monkeypatch
+):
+    monkeypatch.setenv("REVIEW_TRUSTED_REVIEWER_IDS", "expert")
+    completed_expert_review(queue)
+    view = queue.load("dev", PAPER, "admin")
+    assert view["completed_reviews"][0]["review_scope_sources"] == [
+        "main",
+        "supplement",
+    ]
+    queue.finalize(
+        "dev",
+        PAPER,
+        FinalizeRequest(
+            base_revision=view["revision"],
+            adopt_current_reviews=True,
+            adopt_completed_review=True,
+        ),
+        "admin",
+    )
+    event = build_ground_truth_export(queue.store, "dev", PAPER).review_events[-1]
+    assert not event.details["completeness_checked"]
+    assert event.details["adopted_completeness"][0]["reviewer_id"] == "expert"
+
+
+@pytest.mark.parametrize(
+    "trust,sources", [("other", ["main", "supplement"]), ("expert", ["main"])]
+)
+def test_completeness_requires_trusted_identity_and_all_available_sources(
+    queue, monkeypatch, trust, sources
+):
+    monkeypatch.setenv("REVIEW_TRUSTED_REVIEWER_IDS", trust)
+    completed_expert_review(queue, sources)
+    view = queue.load("dev", PAPER, "admin")
+    assert not view["completed_reviews"]
+    with pytest.raises(ValueError, match="No completed expert review"):
+        queue.finalize(
+            "dev",
+            PAPER,
+            FinalizeRequest(
+                base_revision=view["revision"],
+                adopt_current_reviews=True,
+                adopt_completed_review=True,
+            ),
+            "admin",
+        )
+
+
+def test_completeness_does_not_survive_scientific_edit(queue, monkeypatch):
+    monkeypatch.setenv("REVIEW_TRUSTED_REVIEWER_IDS", "expert")
+    completed_expert_review(queue)
+    trusted_correction(queue)
+    assert not queue.load("dev", PAPER, "admin")["completed_reviews"]
+
+
+def test_old_completion_adopted_only_if_nothing_scientific_changed(queue, monkeypatch):
+    monkeypatch.setenv("REVIEW_TRUSTED_REVIEWER_IDS", "expert")
+    completed_expert_review(queue)
+    current = queue.store.storage.load_revision("dev", PAPER)
+    # Emulate the historical event format without modifying saved history.
+    old = current.model_copy(deep=True)
+    old.events[-1]["details"].pop("reviewed_snapshot")
+    view = queue.load("dev", PAPER, "admin", current=old)
+    assert (
+        view["completed_reviews"][0]["binding_method"] == "unchanged_since_completion"
+    )
+    trusted_correction(queue)
+    changed = queue.store.storage.load_revision("dev", PAPER).model_copy(deep=True)
+    changed.events[-2]["details"].pop("reviewed_snapshot")
+    assert not queue.load("dev", PAPER, "admin", current=changed)["completed_reviews"]
+
+
+@pytest.mark.parametrize(
+    "comment,mode,expected",
+    [
+        (False, "validated_current_workbook", True),
+        (True, "validated_current_workbook", False),
+        (False, "comments_only_from_older_workbook", False),
+    ],
+)
+def test_workbook_trust_requires_exact_replacement_without_open_comments(
+    queue, comment, mode, expected
+):
+    from review_workbench.adjudication import _records, _trusted_corrections
+
+    current = queue.store.storage.load_revision("dev", PAPER)
+    record = current.ground_truth["device_families"][0]
+    key = "device_families:family-control"
+    event = {
+        "kind": "spreadsheet_review",
+        "reviewer_id": "expert",
+        "event_id": "workbook",
+        "revision": 3,
+        "details": {
+            "workbook_import_mode": mode,
+            "record_replacements": [{"collection": "device_families", "after": record}],
+            "decisions": [{"record_key": key, "decision": "needs_correction"}],
+            "cell_comments": [
+                {
+                    "record_collection": "device_families",
+                    "record_id": "family-control",
+                    "text": "Still unsure",
+                }
+            ]
+            if comment
+            else [],
+        },
+    }
+    assert (
+        bool(_trusted_corrections([event], _records(current.ground_truth), {"expert"}))
+        == expected
+    )
+    later = {
+        "kind": "record_decision",
+        "reviewer_id": "expert",
+        "event_id": "new-question",
+        "revision": 4,
+        "details": {"record_key": key, "decision": "needs_correction"},
+    }
+    assert not _trusted_corrections(
+        [event, later], _records(current.ground_truth), {"expert"}
+    )
+
+
+def test_undo_withdraws_trusted_correction(queue, monkeypatch):
+    from review_workbench.study_review import UndoMutationRequest
+
+    monkeypatch.setenv("REVIEW_TRUSTED_REVIEWER_IDS", "expert")
+    trusted_correction(queue)
+    current = queue.store.storage.load_revision("dev", PAPER)
+    queue.store.undo_mutation(
+        "dev",
+        PAPER,
+        UndoMutationRequest(
+            base_revision=current.revision, event_id=current.events[-1]["event_id"]
+        ),
+        "expert",
+    )
+    assert not queue.load("dev", PAPER, "admin")["adopted_corrections"]
+
+
+def test_trusted_completion_does_not_dismiss_comment_only_proposals(queue, monkeypatch):
+    monkeypatch.setenv("REVIEW_TRUSTED_REVIEWER_IDS", "expert")
+    completed_expert_review(queue)
+    queue.import_plan("dev", PAPER, workbook_plan(queue), "admin")
+    assert queue.load("dev", PAPER, "admin")["cases"]
+    with pytest.raises(ValueError, match="remaining items"):
+        queue.finalize(
+            "dev",
+            PAPER,
+            FinalizeRequest(
+                base_revision=queue.store.revision("dev", PAPER),
+                adopt_current_reviews=True,
+                adopt_completed_review=True,
+            ),
+            "admin",
+        )
 
 
 def workbook_plan(queue):

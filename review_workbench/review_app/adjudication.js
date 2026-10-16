@@ -157,6 +157,9 @@ export function createFinalizationQueue({ request, context, download, openRecord
     if (!queue) return;
     index = Math.min(index, Math.max(0, queue.cases.length - 1));
     content.replaceChildren(node("h3", queue.title), node("p", `${queue.own_approved_count} approved by you · ${queue.inherited_count} current reviewer approvals · ${queue.cases.length} decisions left`, "finalization-summary"));
+    if (Object.keys(queue.adopted_corrections || {}).length || queue.adopted_proposals?.length) {
+      content.append(node("p", "Saved expert corrections are accepted. Suggestions already satisfied by approved records need no second decision. Original edits and comments remain in the history.", "finalization-summary"));
+    }
     if (queue.last_decision) content.append(button("Undo my last decision", async () => {
       queue = await request(`${base()}/undo`, { method: "POST", body: JSON.stringify({ base_revision: queue.revision, event_id: queue.last_decision.event_id }) }); render(); message("Decision undone. The original remains in history.");
     }));
@@ -275,10 +278,14 @@ export function createFinalizationQueue({ request, context, download, openRecord
         card.append(node("p", "If any note describes an unresolved extraction error rather than a limitation of the paper, correct it in review before signing off."));
       }
       const check = node("input"); check.type = "checkbox";
-      const label = node("label", null, "finalization-check"); label.append(check, node("span", "I accept these reviewed records and have checked the main paper and available SI for missing records.")); card.append(label);
+      const completed = queue.completed_reviews?.length > 0;
+      const label = node("label", null, "finalization-check"); label.append(check, node("span", completed
+        ? "I accept the expert's completed source review and these corrected records."
+        : "I accept these reviewed records and have checked the main paper and available SI for missing records.")); card.append(label);
+      if (completed) card.append(node("p", "An authorized expert completed the source check for this version. You do not need to repeat that review. The export records whose check and source scope you adopted.", "finalization-summary"));
       card.append(button("Finalize & download", async () => {
         if (!check.checked) throw new Error("Confirm the completeness check before finalizing.");
-        queue = await request(`${base()}/finalize`, { method: "POST", body: JSON.stringify({ base_revision: queue.revision, adopt_current_reviews: true, completeness_checked: true }) });
+        queue = await request(`${base()}/finalize`, { method: "POST", body: JSON.stringify({ base_revision: queue.revision, adopt_current_reviews: true, ...(completed ? { adopt_completed_review: true } : { completeness_checked: true }) }) });
         render(); message("Finalized. Downloading your reference…");
         await download(`/api/ground-truth-export/${split}/${encodeURIComponent(paper)}`, `${paper}.ground-truth.zip`);
         message("Finalized and downloaded. Human edits and review history are preserved.");

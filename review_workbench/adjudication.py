@@ -8,11 +8,12 @@ adopted explicitly, never inferred from a census count or an old record identifi
 from __future__ import annotations
 
 import copy
+import os
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from perla_extract.study_extraction.models import StudyExtraction
 from perla_extract.study_extraction.validation import validate_study
@@ -98,8 +99,15 @@ class FinalizeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     base_revision: int = Field(ge=1)
     adopt_current_reviews: Literal[True]
-    completeness_checked: Literal[True]
+    completeness_checked: Literal[True] | None = None
+    adopt_completed_review: bool = False
     note: str = Field(default="", max_length=4000)
+
+    @model_validator(mode="after")
+    def require_completeness_basis(self):
+        if not self.completeness_checked and not self.adopt_completed_review:
+            raise ValueError("Check completeness or adopt a completed expert review")
+        return self
 
 
 class ConfirmRecordsRequest(BaseModel):
@@ -125,6 +133,71 @@ def _binding(truth: dict, keys: list[str]) -> str:
 
     records = _records(truth)
     return _digest({key: records.get(key) for key in keys} if keys else truth)
+
+
+def _trusted_corrections(events: list[dict], records: dict, trusted: set[str]) -> dict:
+    """Accept explicit record replacements, never infer approval from a scalar edit.
+
+    The full-record editor and validated workbook imports retain the exact reviewed
+    replacement. Trust follows the authenticated author and that content, not a
+    filename, display name, old row position, or model agreement. Comments remain
+    separate questions and later explicit decisions take precedence.
+    """
+
+    accepted = {}
+    for event in events:
+        actor = event["reviewer_id"]
+        if actor not in trusted or event["details"].get("undoes_event_id"):
+            continue
+        replacements = []
+        replacement_keys = set()
+        if event["kind"] == "mutation" and event.get("action") == "replace":
+            parts = (event.get("path") or "").strip("/").split("/")
+            if len(parts) == 2 and parts[0] in RECORD_IDENTIFIERS:
+                after = event.get("after")
+                if isinstance(after, dict):
+                    replacements = [{"collection": parts[0], "after": after}]
+        elif (
+            event["kind"] == "spreadsheet_review"
+            and event["details"].get("workbook_import_mode")
+            == "validated_current_workbook"
+        ):
+            replacements = event["details"].get("record_replacements", [])
+        for replacement in replacements:
+            collection, after = replacement["collection"], replacement["after"]
+            if not isinstance(after, dict):
+                continue
+            key = f"{collection}:{after.get(RECORD_IDENTIFIERS[collection])}"
+            if any(
+                not comment.get("record_id")
+                or (
+                    comment.get("record_collection") == collection
+                    and comment["record_id"]
+                    == after.get(RECORD_IDENTIFIERS[collection])
+                )
+                for comment in event["details"].get("cell_comments", [])
+            ):
+                continue
+            if after == records.get(key):
+                replacement_keys.add(key)
+                accepted.setdefault(key, {})[actor] = {
+                    "event_id": event["event_id"],
+                    "revision": event["revision"],
+                }
+        decisions = (
+            [event["details"]]
+            if event["kind"] == "record_decision"
+            else event["details"].get("decisions", [])
+        )
+        for decision in decisions:
+            # 'Correct fields' accompanies a replacement in Excel, but on its own
+            # is only a request for correction, not a replacement or an approval.
+            if (
+                decision.get("decision") in {"verified", "uncertain"}
+                or decision["record_key"] not in replacement_keys
+            ):
+                accepted.get(decision["record_key"], {}).pop(actor, None)
+    return {key: authors for key, authors in accepted.items() if authors}
 
 
 class AdjudicationQueue:
@@ -329,6 +402,11 @@ class AdjudicationQueue:
         summary = self.store.summary(truth, events)
         catalog = _record_catalog(truth)
         records = _records(truth)
+        trusted = {
+            value.strip()
+            for value in os.environ.get("REVIEW_TRUSTED_REVIEWER_IDS", "").split(",")
+            if value.strip()
+        }
         own = summary["record_decisions"].get(reviewer, {})
         undone = {e["details"].get("undoes_event_id") for e in events}
         resets = {
@@ -342,6 +420,7 @@ class AdjudicationQueue:
             if e["event_id"] not in undone
             and e["revision"] > resets.get(e["reviewer_id"], 0)
         ]
+        corrections = _trusted_corrections(active_events, records, trusted)
         finalization_events = [
             e for e in active_events if e["kind"] == "adjudication_decision"
         ]
@@ -374,13 +453,18 @@ class AdjudicationQueue:
                     and event["revision"] > objections.get(key, 0)
                 ):
                     adjudicated[key] = {event["reviewer_id"]: "verified"}
-        inherited, record_cases = {}, []
+        inherited, record_cases, adopted_corrections = {}, [], {}
         for key, record in records.items():
             decisions = {
                 actor: values[key]
                 for actor, values in summary["record_decisions"].items()
                 if key in values
             }
+            for actor, provenance in corrections.get(key, {}).items():
+                # Other reviewers' objections still require an explicit resolution.
+                if decisions.get(actor) in {None, "needs_correction"}:
+                    decisions[actor] = "verified"
+                    adopted_corrections.setdefault(key, {})[actor] = provenance
             if key in adjudicated:
                 if reviewer not in adjudicated[key]:
                     inherited[key] = adjudicated[key]
@@ -480,6 +564,8 @@ class AdjudicationQueue:
                     }
                 )
         resolutions = {e["details"].get("case_id"): e for e in finalization_events}
+        accepted_keys = set(records) - {c["record_key"] for c in record_cases}
+        adopted_proposals = []
         pending = []
         for case in cases:
             resolution = resolutions.get(case["id"])
@@ -487,8 +573,33 @@ class AdjudicationQueue:
                 truth, case["keys"]
             ):
                 continue
+            # A prepared replacement sometimes describes an edit already saved by
+            # an expert. Exact content + explicit approval is sufficient; no LLM
+            # similarity judgment and no second scientific review are needed.
+            changes = case.get("current_changes", [])
+            if (
+                changes
+                and not case.get("feedback")
+                and all(
+                    c["after"] is not None
+                    and c["after"] == c["current"]
+                    and f"{c['collection']}:{c['record_id']}" in accepted_keys
+                    for c in changes
+                )
+            ):
+                adopted_proposals.append(
+                    {
+                        "case_id": case["id"],
+                        "binding": _binding(truth, case["keys"]),
+                        "keys": case["keys"],
+                    }
+                )
+                continue
             case["binding"] = _binding(truth, case["keys"])
             pending.append(case)
+        completed_reviews = self._completed_reviews(
+            split, paper, current, active_events, summary, trusted
+        )
         for case in record_cases:
             case["workbook_feedback"] = feedback_by_record.get(case["record_key"], [])
         last = events[-1]
@@ -503,6 +614,9 @@ class AdjudicationQueue:
             "inherited_count": len(inherited),
             "own_approved_count": len(catalog) - len(inherited) - len(record_cases),
             "inherited": inherited,
+            "adopted_corrections": adopted_corrections,
+            "adopted_proposals": adopted_proposals,
+            "completed_reviews": completed_reviews,
             "workbook_feedback": feedback_inventory,
             "workbook_current_records": {
                 key: records[key] for key in feedback_by_record if key in records
@@ -524,6 +638,85 @@ class AdjudicationQueue:
                 None,
             ),
         }
+
+    def _completed_reviews(
+        self, split, paper, current, active_events, summary, trusted
+    ):
+        """Offer source-wide expert checks only for the exact study and source scope.
+
+        For older events without hashes, the append-only history must show no
+        subsequent scientific edit or source refresh. Counts alone never count as
+        a completeness review, and a main-paper check cannot cover an available SI.
+        """
+
+        candidates = [
+            event
+            for event in active_events
+            if event["reviewer_id"] in trusted
+            and event["kind"] == "stage_complete"
+            and event["details"].get("stage") == "completeness"
+        ]
+        if not candidates:
+            return []
+        document = self.store.storage.load_evidence(
+            split, paper, current.evidence_version
+        )
+        sources = {block.source for block in _evidence_blocks(document)}
+        result = []
+        for event in candidates:
+            check = event["details"].get("reviewed_snapshot")
+            audit = summary["inventory_audits"].get(event["reviewer_id"])
+            if (
+                not audit
+                or audit.get("missing_or_ambiguous", "").strip()
+                or not sources
+                or not sources.issubset(audit.get("review_scope_sources", []))
+            ):
+                continue
+            if check is None:
+                # Examine even undone mutations: an edit followed by an undo does
+                # not prove that the old source-wide check was repeated.
+                later = [e for e in current.events if e["revision"] > event["revision"]]
+                if any(
+                    e["kind"]
+                    in {"mutation", "structural_mutation", "ground_truth_refresh"}
+                    or e["details"].get("record_replacements")
+                    or e["details"].get("collection_replacements")
+                    or (
+                        e["kind"] == "inventory_audit"
+                        and e["reviewer_id"] == event["reviewer_id"]
+                    )
+                    for e in later
+                ):
+                    continue
+                check = {
+                    "study_sha256": _digest(current.ground_truth),
+                    "evidence_version": current.evidence_version,
+                    "inventory_sha256": _digest(audit),
+                    "review_scope_sources": audit["review_scope_sources"],
+                    "binding_method": "unchanged_since_completion",
+                }
+            if (
+                check.get("study_sha256") != _digest(current.ground_truth)
+                or check.get("evidence_version") != current.evidence_version
+                or check.get("inventory_sha256") != _digest(audit)
+            ):
+                continue
+            if any(
+                len(current.ground_truth[k]) != count
+                for k, count in audit.get("expected_counts", {}).items()
+                if k in RECORD_IDENTIFIERS
+            ):
+                continue
+            result.append(
+                {
+                    "reviewer_id": event["reviewer_id"],
+                    "event_id": event["event_id"],
+                    "revision": event["revision"],
+                    **check,
+                }
+            )
+        return result
 
     def decide(
         self, split: str, paper: str, request: DecisionRequest, reviewer: str
@@ -623,6 +816,10 @@ class AdjudicationQueue:
             raise ValueError(
                 f"Resolve {len(queue['cases'])} remaining items before finalizing"
             )
+        if request.adopt_completed_review and not queue["completed_reviews"]:
+            raise ValueError(
+                "No completed expert review matches this study and source scope"
+            )
         document = self.store.storage.load_evidence(
             split, paper, current.evidence_version
         )
@@ -649,7 +846,12 @@ class AdjudicationQueue:
                 "method": "admin_queue",
                 "decisions": decisions,
                 "adopted_reviews": queue["inherited"],
-                "completeness_checked": request.completeness_checked,
+                "adopted_corrections": queue["adopted_corrections"],
+                "adopted_proposals": queue["adopted_proposals"],
+                "adopted_completeness": queue["completed_reviews"]
+                if request.adopt_completed_review
+                else [],
+                "completeness_checked": bool(request.completeness_checked),
             },
             note=request.note,
         )

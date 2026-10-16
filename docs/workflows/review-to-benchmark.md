@@ -69,6 +69,20 @@ verify a newer record just because its ID looks familiar. The package keeps olde
 
 ### Using expert feedback in practice
 
+Do not repeat a completed expert review simply because a different person freezes
+the reference. The app already accepts explicit approvals of unchanged records.
+With [trusted reviewers configured](../deployment/review-workbench.md#accept-an-experts-review-without-repeating-it),
+it also accepts their saved full-record corrections and offers to adopt their
+completed source check. The export records whose work was adopted; it does not
+claim that the finalizer read the paper again.
+
+Only unresolved exceptions need another decision: changed or unmapped records,
+conflicting reviews, comments without resolved replacements, incomplete source
+coverage, and validation failures. A proposed replacement that exactly matches an
+already-approved record needs no second decision, unless it also carries unresolved
+workbook comments. Neither model disagreement nor the number of edits is a reason
+to reject an expert correction. Untouched, unapproved records remain pending.
+
 Start with the latest saved revision of each paper, not another extraction run.
 Read the package's `adjudication.json` alongside the preserved workbook and paper. Resolve
 one issue at a time:

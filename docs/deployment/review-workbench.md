@@ -338,6 +338,33 @@ workbooks; share it only with the research team. It is not a public download.
 Turning the setting off removes
 reviewer finalization access without deleting any decisions or review data.
 
+### Accept an expert's review without repeating it
+
+Set `REVIEW_TRUSTED_REVIEWER_IDS` to a comma-separated list of authenticated account
+IDs and redeploy. Use the `reviewer_id` in a verified review event, not a person's
+display name or a workbook filename. This setting does not grant access or change
+account roles. Leave it unset to require explicit record approvals as before.
+
+For these accounts, the finalization queue also accepts saved full-record corrections
+from the record editor and exact replacements from validated current workbooks.
+A scalar edit does not approve the rest of a record. A workbook comment or a
+“Correct fields” decision without a replacement still needs resolution. Comments
+attached to a workbook replacement prevent automatic acceptance of that replacement.
+Ordinary explicit approvals from other reviewers continue to count.
+
+The queue offers **adopt the completed expert review** when the expert finished
+the completeness step, checked every source represented in the saved evidence document, and the study, source version,
+and census still match that review. It does not ask the finalizer to claim a second
+reading of the paper. For older completion events without content hashes, adoption
+requires an unchanged scientific history since completion. A source refresh, edit,
+unresolved note, count mismatch, conflicting decision, or withdrawn review needs attention.
+
+The final event preserves the original correction/completion event IDs and authors.
+Resetting a review withdraws its approvals without deleting scientific edits. Freezing
+and export still validate the schema, links, values, and citations. A successful check
+does not prove scientific completeness; that remains the expert's judgment.
+It cannot establish whether an SI file was omitted from the imported source material.
+
 ### Dedicated comparison hostname
 
 The blinded extractor study can use a separate hostname without a second backend.
