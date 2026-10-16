@@ -660,6 +660,40 @@ def test_workbook_comments_remain_pending_despite_current_record_approval(queue)
     )
 
 
+def test_resolved_comment_survives_unrelated_addition_but_not_subject_edit(queue):
+    queue.import_plan("dev", PAPER, workbook_plan(queue), "admin")
+    view = decide(queue, "keep")
+    assert view["last_decision"]["details"]["decisions"] == []
+    # A new family does not change the electrode in the already checked family.
+    request = plan(queue)
+    proposal = request.proposals[0]
+    proposal.id = "add-other-family"
+    proposal.changes[0].record_id = "family-other"
+    proposal.changes[0].before = None
+    proposal.changes[0].after["family_id"] = "family-other"
+    queue.import_plan("dev", PAPER, request, "admin")
+    view = decide(queue)
+    assert not view["cases"]
+    trusted_correction(queue, actor="coordinator", scalar=True)
+    assert any(
+        c["id"] == "proposal:correct-label"
+        for c in queue.load("dev", PAPER, "admin")["cases"]
+    )
+
+
+def test_unmapped_workbook_comment_still_binds_whole_paper(queue):
+    request = workbook_plan(queue)
+    request.proposals[0].feedback[0].current_record_keys = []
+    queue.import_plan("dev", PAPER, request, "admin")
+    view = decide(queue, "keep")
+    assert view["last_decision"]["details"]["case"]["binding_keys"] == []
+    trusted_correction(queue, actor="coordinator", scalar=True)
+    assert any(
+        c["id"] == "proposal:correct-label"
+        for c in queue.load("dev", PAPER, "admin")["cases"]
+    )
+
+
 @pytest.mark.parametrize(
     "failure", ["missing-count", "duplicate", "unknown-record", "duplicate-link"]
 )

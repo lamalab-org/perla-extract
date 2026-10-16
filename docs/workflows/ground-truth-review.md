@@ -61,6 +61,11 @@ Download the exception report to see which papers still need a decision.
 Progress is shared. A question resolved by one finalizer does not need to be resolved
 again by another. The history records who made each decision. Coordinate which papers
 you work on; if someone saves a change while you are reviewing, reload before saving.
+Resolving a workbook comment does not approve its linked records. It settles that
+question for those records: unrelated additions do not reopen it, but changes to
+the linked records do. Comments with no established record link still cover the
+whole paper. Older decisions retain their original, broader content check until
+they are renewed.
 Resetting a review withdraws that person's finalization approvals without deleting
 their scientific corrections. A later uncertain decision reopens the record even if
 someone approved the same content earlier. Resolve the new objection explicitly.

@@ -136,10 +136,20 @@ def _records(truth: dict) -> dict[str, dict]:
 
 
 def _binding(truth: dict, keys: list[str]) -> str:
-    """Invalidate a resolution when its affected records change; notes bind the paper."""
+    """Bind a resolution to specific records, or the whole paper when no keys exist."""
 
     records = _records(truth)
     return _digest({key: records.get(key) for key in keys} if keys else truth)
+
+
+def _case_binding(truth: dict, case: dict) -> str:
+    """Reopen a comment when its subject changes, not for unrelated new records.
+
+    Binding scope is deliberately separate from approval scope (``keys``): resolving
+    a comment must not approve every field in the records that comment mentions.
+    Unmapped feedback still binds the whole paper because it may describe omissions.
+    """
+    return _binding(truth, case.get("binding_keys", case["keys"]))
 
 
 def _trusted_corrections(events: list[dict], records: dict, trusted: set[str]) -> dict:
@@ -682,6 +692,19 @@ class AdjudicationQueue:
                                 f"{c['collection']}:{c['record_id']}"
                                 for c in proposal["changes"]
                             ],
+                            "binding_keys": sorted(
+                                {
+                                    f"{c['collection']}:{c['record_id']}"
+                                    for c in proposal["changes"]
+                                }
+                                | {
+                                    key
+                                    for entry in entries
+                                    for key in entry["current_record_keys"]
+                                }
+                            )
+                            if all(entry["current_record_keys"] for entry in entries)
+                            else [],
                         }
                     )
         # Keep the latest saved completeness note per reviewer; never convert counts into edits.
@@ -714,10 +737,17 @@ class AdjudicationQueue:
         pending = []
         for case in cases:
             resolution = resolutions.get(case["id"])
-            if resolution and resolution["details"].get("binding") == _binding(
-                truth, case["keys"]
-            ):
-                continue
+            if resolution:
+                saved = resolution["details"]
+                old_case = saved.get("case", {})
+                matches = saved.get("binding") == _case_binding(truth, case)
+                # Existing decisions used the whole paper for comment-only cases.
+                # Preserve those only when that original, broader check still passes.
+                legacy_matches = "binding_keys" not in old_case and saved.get(
+                    "binding"
+                ) == _binding(truth, case["keys"])
+                if matches or legacy_matches:
+                    continue
             # A prepared replacement sometimes describes an edit already saved by
             # an expert. Exact content + explicit approval is sufficient; no LLM
             # similarity judgment and no second scientific review are needed.
@@ -740,7 +770,7 @@ class AdjudicationQueue:
                     }
                 )
                 continue
-            case["binding"] = _binding(truth, case["keys"])
+            case["binding"] = _case_binding(truth, case)
             pending.append(case)
         completed_reviews = (
             self._completed_reviews(
@@ -927,7 +957,7 @@ class AdjudicationQueue:
                 "case_id": case["id"],
                 "action": request.action,
                 "case": case,
-                "binding": _binding(truth, case["keys"]),
+                "binding": _case_binding(truth, case),
                 "decisions": decisions,
                 "collection_replacements": _changed_collections(before, truth),
             },
