@@ -114,10 +114,6 @@ Version-1 inputs with one family-level absorber are read as one explicitly unsco
 component. That migration preserves data but does not guess how a historical tandem
 composition should be split. New output always uses the scoped `absorbers` array.
 
-This arrangement captures chemical detail without adding a Python field or regular
-expression for every possible material property, additive, treatment, or process
-condition.
-
 ## Reporting levels are not interchangeable
 
 | Source statement | Record type | Why |

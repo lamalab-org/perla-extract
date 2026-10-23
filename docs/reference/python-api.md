@@ -19,9 +19,8 @@ report = extract_study(
 )
 ```
 
-The quality-first default performs a second evidence-complete refinement. Set
-`use_refinement=False` for a cost ablation, or set `refinement_model` to test a
-different model while keeping the primary draft fixed through the response cache.
+Refinement runs by default. Set `use_refinement=False` to disable it, or
+`refinement_model` to use a different model for that pass.
 `use_targeted_repair=False` disables the bounded audit-driven recovery call;
 `repair_model` changes only that call.
 
@@ -67,8 +66,9 @@ adapter otherwise refuses to trust accepted semantic proposals.
 
 ## Evaluate rich extractions
 
-`evaluate_study` matches records without run-local IDs and reports inventory,
-relationships, scalar fields, and atomic values separately.
+`evaluate_study` matches records without comparing run-local IDs. Its primary
+score requires correct scientific values in the correct context; separate inventory,
+value-recovery and attribution reports explain mismatches.
 
 ::: perla_extract.study_extraction.evaluation.evaluate_study
     options:

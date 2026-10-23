@@ -1709,8 +1709,7 @@ class StudyReviewStore:
         )
         if source_index is None:
             raise ValueError(
-                f"unknown {request.source_collection} record "
-                f"{request.source_record_id}"
+                f"unknown {request.source_collection} record {request.source_record_id}"
             )
         references = _record_references(before, request.source_collection, source_index)
         if references:
@@ -1983,8 +1982,9 @@ class StudyReviewStore:
         """Advance review only after the evidence-based prerequisites are satisfied.
 
         Inventory requires a saved census, field review requires a current decision for
-        every record, and later stages require the preceding stage. These constraints
-        keep interface clicks from bypassing the ground-truth protocol.
+        every record, and later stages require the preceding stage. Final adjudication
+        requires verified decisions; uncertainty remains a draft-review state, never
+        a reason to exclude predictions from benchmark scoring.
         """
 
         current_revision = self._validate_revision(
@@ -2018,6 +2018,19 @@ class StudyReviewStore:
             if unresolved:
                 raise ValueError(
                     f"review every current record before completing fields ({len(unresolved)} remaining)"
+                )
+        if request.stage == "adjudication":
+            decisions = current_summary["record_decisions"].get(reviewer_id, {})
+            unresolved = [
+                key
+                for key in _record_catalog(current_revision.ground_truth)
+                if decisions.get(key) != "verified"
+            ]
+            if unresolved:
+                raise ValueError(
+                    "resolve every current record before final adjudication "
+                    f"({len(unresolved)} remaining); uncertain decisions can be saved "
+                    "during review but cannot enter the final reference"
                 )
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),

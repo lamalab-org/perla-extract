@@ -1711,6 +1711,7 @@ function renderStageControls() {
   const decisions = state.bundle.summary.record_decisions?.[state.user.id] || {};
   const reviewed = Object.values(decisions).filter((decision) => decision === "verified" || decision === "uncertain").length;
   const remaining = state.bundle.summary.record_count - reviewed;
+  const unresolved = state.bundle.summary.record_count - Object.values(decisions).filter((decision) => decision === "verified").length;
   const labels = {
     inventory: ["Continue to record review", "Paper & figures checked"],
     fields: ["Continue to finish", "Records reviewed"],
@@ -1718,14 +1719,17 @@ function renderStageControls() {
     adjudication: ["Complete adjudication", "Adjudication completed"],
   };
   document.querySelectorAll(".complete-stage").forEach((button) => {
-    const prerequisites = { inventory: hasAudit(), fields: mine("inventory") && remaining === 0, completeness: mine("fields"), adjudication: mine("completeness") };
+    const prerequisites = { inventory: hasAudit(), fields: mine("inventory") && remaining === 0, completeness: mine("fields"), adjudication: mine("completeness") && unresolved === 0 };
     button.disabled = mine(button.dataset.stage) || !prerequisites[button.dataset.stage];
     button.textContent = labels[button.dataset.stage][mine(button.dataset.stage) ? 1 : 0];
     if (button.dataset.stage === "fields" && remaining > 0 && !mine("fields")) button.textContent = `Review ${remaining} remaining record${remaining === 1 ? "" : "s"}`;
+    if (button.dataset.stage === "adjudication" && unresolved > 0) button.textContent = `Resolve ${unresolved} record${unresolved === 1 ? "" : "s"} before finalizing`;
   });
   $("complete-adjudication").hidden = state.user.role !== "admin";
   const finalEvent = state.bundle.events.at(-1);
-  const canExport = state.user.role === "admin" && finalEvent?.kind === "stage_complete" && finalEvent?.details?.stage === "adjudication";
+  const finalDecisions = state.bundle.summary.record_decisions?.[finalEvent?.reviewer_id] || {};
+  const finalVerified = Object.values(finalDecisions).filter((decision) => decision === "verified").length;
+  const canExport = state.user.role === "admin" && finalEvent?.kind === "stage_complete" && finalEvent?.details?.stage === "adjudication" && finalVerified === state.bundle.summary.record_count;
   $("download-truth").hidden = state.user.role !== "admin";
   $("download-truth").disabled = !canExport;
   $("final-export-help").hidden = state.user.role !== "admin" || canExport;
