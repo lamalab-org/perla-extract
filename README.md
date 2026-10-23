@@ -50,7 +50,7 @@ counts. See the [worked example](docs/workflows/scoring-example.md).
 
 The [evaluation method](docs/methods/benchmark.md) explains reference construction,
 matching, scientific credit and limitations. The repository includes a
-[30-paper expert-reviewed reference release](data/study_extraction/ground_truth/v1/README.md)
+[30-paper expert-reviewed reference release](data/study_extraction/ground_truth/v2/README.md)
 for development comparisons, with frozen hashes and automated scorer checks.
 It is not an independent held-out test set.
 
