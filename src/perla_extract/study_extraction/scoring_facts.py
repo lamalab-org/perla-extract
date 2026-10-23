@@ -410,9 +410,8 @@ def scientific_facts(
                             owner,
                             "step",
                             base,
-                            (step.sequence,)
-                            if step.sequence is not None
-                            else (
+                            (
+                                step.sequence,
                                 operation,
                                 targets,
                                 UnorderedContext(tuple(step.materials)),

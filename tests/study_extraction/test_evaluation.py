@@ -691,6 +691,74 @@ def test_unsequenced_identical_operations_require_attribution_review():
     assert EvaluationReport.model_validate_json(report.model_dump_json()) == report
 
 
+@pytest.mark.parametrize(
+    "distinguishing_field", ["operation", "materials", "target_layer_ids"]
+)
+def test_shared_step_position_keeps_distinguishable_processing_scopes(
+    distinguishing_field,
+):
+    truth = scientific_study()
+    first, second = truth.device_families[0].processing_steps
+    second.sequence = first.sequence
+    if distinguishing_field == "operation":
+        second.operation = "gas treatment"
+    elif distinguishing_field == "materials":
+        second.materials = ["different precursor"]
+    else:
+        layer = truth.device_families[0].layers[0].model_copy(deep=True)
+        layer.layer_id = "other-layer"
+        layer.sequence = 2
+        truth.device_families[0].layers.append(layer)
+        second.target_layer_ids = [layer.layer_id]
+    prediction = truth.model_copy(deep=True)
+    prediction.device_families[0].processing_steps.reverse()
+    report = evaluate_study(truth, prediction)
+    assert report.core_facts.micro.f1 == 1
+    assert not report.core_facts.issues
+    # Distinguishing alternatives must not permit temperatures to move between them.
+    a, b = prediction.device_families[0].processing_steps
+    a.conditions, b.conditions = b.conditions, a.conditions
+    wrong = evaluate_study(truth, prediction)
+    assert wrong.core_facts.groups["processing"].f1 < 1
+
+
+def test_duplicate_step_identity_still_requires_review_with_sequence():
+    truth = scientific_study()
+    truth.device_families[0].processing_steps[1].sequence = 1
+    score = evaluate_study(truth, truth).core_facts
+    assert score.scoring_status == "needs_review"
+    assert any(issue.kind == "ambiguous_scope" for issue in score.issues)
+
+
+def test_ordered_variant_values_do_not_collapse_into_a_token_set():
+    truth = study()
+    first = truth.individual_devices[0]
+    first.variant = "10s/40s"
+    second = first.model_copy(deep=True)
+    second.device_id = "second-device"
+    second.variant = "40s/10s"
+    truth.individual_devices.append(second)
+    prediction = truth.model_copy(deep=True)
+    prediction.individual_devices.reverse()
+    prediction.individual_devices[0].device_id = "renamed-second"
+    prediction.individual_devices[1].device_id = "renamed-first"
+    prediction.performance_observations[0].device_id = "renamed-first"
+    report = evaluate_study(truth, prediction)
+    assert report.core_facts.micro.f1 == 1
+    assert not report.core_facts.issues
+    pairs = {
+        m.truth_id: m.predicted_id
+        for m in report.matches
+        if m.kind == "individual_devices"
+    }
+    assert pairs[first.device_id] == "renamed-first"
+    assert pairs[second.device_id] == "renamed-second"
+    prediction.performance_observations[0].device_id = "renamed-second"
+    assert (
+        evaluate_study(truth, prediction).core_facts.groups["performance"].matched == 0
+    )
+
+
 def test_operation_aliases_are_explicit_and_frozen_in_reports():
     truth = scientific_study()
     prediction = truth.model_copy(deep=True)
@@ -1373,7 +1441,7 @@ def test_old_scoring_report_is_not_silently_loaded_as_current():
 
     payload = evaluate_study(study(), study()).model_dump()
     assert payload["format_version"] == 5
-    assert payload["core_facts"]["profile"] == "core-scientific-facts-v3"
+    assert payload["core_facts"]["profile"] == "core-scientific-facts-v4"
     payload["format_version"] = 4
     with pytest.raises(ValidationError):
         EvaluationReport.model_validate(payload)

@@ -40,7 +40,7 @@ from .scoring_facts import (
 from .units import canonical_reported_quantity
 
 EVALUATION_FORMAT_VERSION: Final[Literal[5]] = 5
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v5"]] = "rich-study-hungarian-v5"
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v6"]] = "rich-study-hungarian-v6"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -248,7 +248,7 @@ class CoreFactScore(FactScoreView):
     counts remain available so large recipes cannot hide poor performance extraction.
     """
 
-    profile: Literal["core-scientific-facts-v3"] = "core-scientific-facts-v3"
+    profile: Literal["core-scientific-facts-v4"] = "core-scientific-facts-v4"
     value_only: FactScoreView
     attribution: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
@@ -259,7 +259,7 @@ class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
     format_version: Literal[5] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v5"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v6"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -328,7 +328,7 @@ class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
     format_version: Literal[5] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v5"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v6"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -477,7 +477,13 @@ def _record_features(record: object) -> set[str]:
             values.append(item)
 
     walk(record)
-    return _tokens(values)
+    # Keep lexical overlap for paraphrases, but retain ordering within each scalar.
+    # A token set alone collapses distinct ratios or protocols such as A/B and B/A.
+    # These features help pair records; they do not relax the fact equality rules.
+    phrases = {_text(value) for value in values}
+    return _tokens(values) | {
+        f"phrase:{phrase}" for phrase in phrases if len(phrase.split()) > 1
+    }
 
 
 def _record_similarity(left: object, right: object) -> float:

@@ -72,8 +72,8 @@ You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results.
 
-Reports use format **5**, matcher **rich-study-hungarian-v5** and fact profile
-**core-scientific-facts-v3**. Regenerate older reports from saved predictions before
+Reports use format **5**, matcher **rich-study-hungarian-v6** and fact profile
+**core-scientific-facts-v4**. Regenerate older reports from saved predictions before
 combining scores. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
@@ -183,6 +183,15 @@ The separate views show that the numbers were recovered but their context was no
 - Two objects inside a record have indistinguishable recorded identities, such as
   two annealing steps with no sequence numbers and the same targets and materials.
 
+A processing step's identity includes its sequence, operation, targets and
+materials together. Two alternative operations can share a sequence number without
+being ambiguous. Temperatures, durations and other conditions do not distinguish
+step identity: swapping them between alternatives must still lose credit.
+
+Record pairing retains normalized multiword values as ordered phrases as well as
+individual words. For example, `10s/40s` and `40s/10s` no longer become identical
+matching features. The numeric tolerances and scientific equality rules are unchanged.
+
 For these nested objects, the scorer does not use the outcomes being scored to
 decide which object is which. For example, it will not identify an annealing step
 solely by its temperature.
@@ -221,7 +230,8 @@ content similarity = 0.75 × Jaccard(record-content tokens)
 Jaccard(A, B) = number of shared entries / number of distinct entries in either set
 ```
 
-Record-content tokens include materials, descriptions and reported values. The
+Record-content features include individual words and ordered multiword values from
+materials, descriptions and reported values. The
 scorer excludes record IDs, link IDs and evidence quotations from these tokens.
 For eligible numbers with recognized units, it uses base-unit values and units;
 otherwise it uses raw values and units. It formats canonical numbers to 12 significant
