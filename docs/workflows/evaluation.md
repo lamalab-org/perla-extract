@@ -22,7 +22,8 @@ The [worked example](scoring-example.md) runs without PDFs or an API key.
 
 ## Run a comparison
 
-The paths below are examples; the repository does not include this paper's reference:
+The repository includes a [30-paper reviewed development release](https://github.com/lamalab-org/perla-extract/tree/main/data/study_extraction/ground_truth/v1).
+The prediction path below is an example; generate that run separately:
 
 ```bash
 perla-evaluate \

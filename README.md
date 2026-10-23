@@ -49,8 +49,10 @@ corrections, freezes a reference, and checks four scoring cases against expected
 counts. See the [worked example](docs/workflows/scoring-example.md).
 
 The [evaluation method](docs/methods/benchmark.md) explains reference construction,
-matching, scientific credit and limitations. The software does not bundle a
-real-paper reference dataset.
+matching, scientific credit and limitations. The repository includes a
+[30-paper expert-reviewed reference release](data/study_extraction/ground_truth/v1/README.md)
+for development comparisons, with frozen hashes and automated scorer checks.
+It is not an independent held-out test set.
 
 ## Documentation
 

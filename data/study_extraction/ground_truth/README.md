@@ -1,8 +1,10 @@
 # Study-extraction ground truth
 
 This directory defines the layout for frozen, human-adjudicated benchmark releases.
-No real-paper benchmark items are currently tracked here. A cohort manifest or model
-seed is not an adjudicated reference. The executable synthetic example is under
+The first [published release](v1/README.md) contains 30 finalized expert-reviewed
+development references. Its public manifests omit private review metadata while
+preserving the scientific JSON unchanged. A cohort manifest or model seed alone
+is not an adjudicated reference. The executable synthetic example is under
 `examples/scoring/` and must not be included in scientific benchmark aggregates.
 
 Mutable review state and original uploads remain private. Before publishing a data
@@ -11,7 +13,8 @@ comments. The exporter does not anonymize them. Preserve unmodified originals an
 create a separately versioned, hash-consistent public derivative when needed.
 See [publication requirements](../../../docs/deployment/review-workbench.md#publishing-reviewed-data).
 
-Each release version has this layout:
+Private exports have this layout. The public v1 derivative deliberately includes
+only `ground_truth.json` and its public `manifest.json`:
 
 ```text
 v1/<split>/<paper_id>/

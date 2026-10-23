@@ -19,8 +19,10 @@ An evaluation uses two `StudyExtraction` documents:
 A frozen reference directory records the reviewed version, its schema and content
 hashes and the final review decisions. A complete prediction
 directory includes source evidence and saved call, token, cost and timing totals.
-Bare JSON inputs are also accepted, but lack these checks and supporting records. No real-paper reference dataset is included with the software;
-the bundled example uses synthetic data.
+Bare JSON inputs are also accepted, but lack these checks and supporting records.
+The repository includes a [30-paper expert-reviewed development release](https://github.com/lamalab-org/perla-extract/tree/main/data/study_extraction/ground_truth/v1).
+Its public manifests omit private review history and identities. The separate
+executable scoring example uses synthetic data.
 
 Reference and prediction must cover the same sources and scientific scope. The
 extraction workflow reads parser-produced text and tables. Figure classification
