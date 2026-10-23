@@ -667,9 +667,9 @@ def test_cli_reads_frozen_alias_configuration(tmp_path, invalid):
         tmp_path / name
         for name in ("truth.json", "prediction.json", "score.json", "aliases.json")
     )
-    truth.write_text(scientific_study().model_dump_json())
-    prediction.write_text(scientific_study().model_dump_json())
-    aliases.write_text('{"a":"b", "b":"a"}' if invalid else "{}")
+    truth.write_text(scientific_study().model_dump_json(), encoding="utf-8")
+    prediction.write_text(scientific_study().model_dump_json(), encoding="utf-8")
+    aliases.write_text('{"a":"b", "b":"a"}' if invalid else "{}", encoding="utf-8")
     result = CliRunner().invoke(
         main,
         [
@@ -685,7 +685,12 @@ def test_cli_reads_frozen_alias_configuration(tmp_path, invalid):
     )
     assert result.exit_code == (1 if invalid else 0)
     if not invalid:
-        assert json.loads(output.read_text())["config"]["operation_aliases"] == {}
+        assert (
+            json.loads(output.read_text(encoding="utf-8"))["config"][
+                "operation_aliases"
+            ]
+            == {}
+        )
     else:
         assert "invalid scoring configuration" in result.output
         assert not output.exists()
@@ -703,8 +708,8 @@ def test_cli_and_dataset_gate_write_diagnostics_before_failing(tmp_path):
     ambiguous = scientific_study()
     for step in ambiguous.device_families[0].processing_steps:
         step.sequence = None
-    truth.write_text(ambiguous.model_dump_json())
-    prediction.write_text(ambiguous.model_dump_json())
+    truth.write_text(ambiguous.model_dump_json(), encoding="utf-8")
+    prediction.write_text(ambiguous.model_dump_json(), encoding="utf-8")
     result = CliRunner().invoke(
         main,
         [
@@ -719,7 +724,8 @@ def test_cli_and_dataset_gate_write_diagnostics_before_failing(tmp_path):
     )
     assert result.exit_code == 1
     assert (
-        json.loads(output.read_text())["core_facts"]["scoring_status"] == "needs_review"
+        json.loads(output.read_text(encoding="utf-8"))["core_facts"]["scoring_status"]
+        == "needs_review"
     )
     result = CliRunner().invoke(
         dataset_main,
@@ -732,7 +738,7 @@ def test_cli_and_dataset_gate_write_diagnostics_before_failing(tmp_path):
         ],
     )
     assert result.exit_code == 1
-    payload = json.loads(aggregate.read_text())
+    payload = json.loads(aggregate.read_text(encoding="utf-8"))
     assert payload["papers_needing_scoring_review"] == 1
     assert payload["scoring_issue_count"] == 2
     assert payload["core_value_only_micro"]["f1"] == 1
@@ -922,7 +928,7 @@ def test_cli_verifies_frozen_truth_manifest(tmp_path, artifact_version):
     )
 
     assert result.exit_code == 0
-    result_payload = json.loads(output.read_text())
+    result_payload = json.loads(output.read_text(encoding="utf-8"))
     assert result_payload["micro_inventory"]["f1"] == 1
     assert result_payload["benchmark"]["paper_id"] == "paper-a"
 
@@ -934,9 +940,9 @@ def test_cli_rejects_unresolved_reference_without_writing_scores(
     # Start with a valid legacy/current manifest, then expose an unresolved decision.
     _write_frozen_truth_inputs(tmp_path, artifact_version)
     manifest_path = tmp_path / "truth" / "manifest.json"
-    manifest = json.loads(manifest_path.read_text())
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["review"]["uncertain_record_keys"] = ["device_families:truth-family"]
-    manifest_path.write_text(json.dumps(manifest))
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     output = tmp_path / "must-not-exist.json"
     result = CliRunner().invoke(
         main,
@@ -1067,10 +1073,10 @@ def test_cli_attaches_evidence_validation_for_complete_prediction_run(tmp_path):
     )
 
     assert result.exit_code == 0
-    validation = json.loads(output.read_text())["prediction_validation"]
+    validation = json.loads(output.read_text(encoding="utf-8"))["prediction_validation"]
     assert validation["status"] == "verified"
     assert validation["issues"] == []
-    efficiency = json.loads(output.read_text())["run_efficiency"]
+    efficiency = json.loads(output.read_text(encoding="utf-8"))["run_efficiency"]
     assert efficiency["total_tokens"] == 120
     assert efficiency["cost_usd"] == 0.01
 
