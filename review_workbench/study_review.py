@@ -1100,7 +1100,9 @@ class StudyReviewStore:
         }
         evidence_version = next(
             (
-                e["details"]["replacement_evidence_version"]
+                # Older refreshes did not record an evidence version. Keep them
+                # exportable, but do not infer a version and revive approvals.
+                e["details"].get("replacement_evidence_version")
                 for e in reversed(events)
                 if e["kind"] == "ground_truth_refresh"
             ),
