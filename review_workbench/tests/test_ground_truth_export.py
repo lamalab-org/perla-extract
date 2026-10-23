@@ -11,6 +11,7 @@ from click.testing import CliRunner
 from perla_extract.study_extraction.evaluation_cli import main as evaluate
 from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
+    StudyExtraction,
     study_schema_sha256,
 )
 from review_workbench.ground_truth_export import (
@@ -160,7 +161,7 @@ def test_saved_scientific_correction_changes_the_reference_not_the_seed(
     restored = StudyReviewStore(tmp_path / "review", storage=storage)
     export = build_ground_truth_export(restored, SPLIT, PAPER_ID)
     assert (
-        export.seed_extraction.device_families[0].full_stack_raw
+        export.seed_extraction["device_families"][0]["full_stack_raw"]
         == "ITO/solvent/perovskite/Ag"
     )
     assert export.ground_truth.device_families[0].full_stack_raw == "ITO/perovskite/Ag"
@@ -168,7 +169,9 @@ def test_saved_scientific_correction_changes_the_reference_not_the_seed(
         event.path == "/device_families/0/full_stack_raw"
         for event in export.review_events
     )
-    before = evaluate_study(export.ground_truth, export.seed_extraction)
+    before = evaluate_study(
+        export.ground_truth, StudyExtraction.model_validate(export.seed_extraction)
+    )
     after = evaluate_study(export.ground_truth, export.ground_truth)
     assert before.core_facts.groups["stack"].f1 == 0
     assert after.core_facts.groups["stack"].f1 == 1
@@ -193,6 +196,58 @@ def test_saved_scientific_correction_changes_the_reference_not_the_seed(
     )
     assert result.exit_code == 0, result.output
     assert json.loads(output.read_text())["core_facts"]["groups"]["stack"]["f1"] == 0
+
+
+def test_invalid_historical_seed_does_not_block_corrected_reference(
+    tmp_path, empty_study, document_payload, monkeypatch
+):
+    """Do not require an old model mistake to pass today's reference validation."""
+
+    store = StudyReviewStore(tmp_path / "review")
+    _adjudicate(
+        store, _study_with_evidence(empty_study, "champion device"), document_payload
+    )
+    source = store.storage.load_source(SPLIT, PAPER_ID)
+    historical = copy.deepcopy(source.seed_extraction)
+    historical["device_families"][0]["polarity"] = "invalid-original-polarity"
+    archived = source.model_copy(
+        update={
+            "seed_extraction": historical,
+            "initial_revision": source.initial_revision.model_copy(
+                update={"ground_truth": historical}
+            ),
+        }
+    )
+    monkeypatch.setattr(store.storage, "load_source", lambda *_: archived)
+    export = build_ground_truth_export(store, SPLIT, PAPER_ID)
+    assert export.files()["seed_extraction.json"] == historical
+    target = write_ground_truth_export(export, tmp_path / "frozen")
+    assert json.loads((target / "seed_extraction.json").read_text()) == historical
+    valid = CliRunner().invoke(
+        evaluate,
+        [
+            "--truth",
+            str(target),
+            "--prediction",
+            str(target / "ground_truth.json"),
+            "--output",
+            str(tmp_path / "self.json"),
+        ],
+    )
+    assert valid.exit_code == 0, valid.output
+    invalid = CliRunner().invoke(
+        evaluate,
+        [
+            "--truth",
+            str(target),
+            "--prediction",
+            str(target / "seed_extraction.json"),
+            "--output",
+            str(tmp_path / "invalid.json"),
+        ],
+    )
+    assert invalid.exit_code != 0
+    assert "invalid StudyExtraction" in invalid.output
 
 
 def _study_with_evidence(study: dict, quote: str) -> dict:
