@@ -1,0 +1,1053 @@
+{
+  "paper": {
+    "title": "Rapid processing of perovskite solar cells in under 2.5 seconds",
+    "doi": null
+  },
+  "device_families": [
+    {
+      "family_id": "family-01",
+      "label": "Co-deposited Al2O3–mixed-halide perovskite solar cell on FTO/c-TiO2 with spiro-OMeTAD and gold contact",
+      "variant": null,
+      "architecture": "FTO glass/c-TiO2/co-deposited Al2O3–perovskite/spiro-OMeTAD and additives/gold contact",
+      "polarity": "not_reported",
+      "full_stack_raw": null,
+      "layers": [
+        {
+          "layer_id": "family-01-layer-01",
+          "sequence": 1,
+          "role": "transparent_electrode",
+          "material": "FTO glass",
+          "constituents": [
+            {
+              "name": "FTO",
+              "role": "conductive substrate material",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "FTO-glass thickness",
+              "raw_value": "3 mm",
+              "value_number": 3.0,
+              "unit": "mm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            },
+            {
+              "name": "FTO sheet resistance",
+              "raw_value": "7Ω/",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            },
+            {
+              "name": "FTO surface roughness Ra",
+              "raw_value": "12 nm",
+              "value_number": 12.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0144_text_f66499d263a6",
+              "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-02",
+          "sequence": 2,
+          "role": "electron_transport_layer",
+          "material": "c-TiO2",
+          "constituents": [
+            {
+              "name": "c-TiO2",
+              "role": "electron-collection layer",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "c-TiO2 layer thickness",
+              "raw_value": "50 nm",
+              "value_number": 50.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0144_text_f66499d263a6",
+              "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-03",
+          "sequence": 3,
+          "role": "absorber",
+          "material": "co-deposited Al2O3-perovskite",
+          "constituents": [
+            {
+              "name": "mixed halide (CH3NH3PbI3 -xClx) perovskite precursor",
+              "role": "perovskite precursor",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            },
+            {
+              "name": "Al2O3 nanoparticle addition",
+              "role": "co-deposited nanoparticle addition",
+              "amount": {
+                "name": "Al2O3 nanoparticle addition",
+                "raw_value": "5 wt%",
+                "value_number": 5.0,
+                "unit": "wt%",
+                "evidence": [
+                  {
+                    "block_id": "main_p3_0144_text_f66499d263a6",
+                    "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "annealed co-deposited film thickness",
+              "raw_value": "between 450-500 nm",
+              "value_number": null,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0144_text_f66499d263a6",
+              "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+            },
+            {
+              "block_id": "main_p3_0145_text_46ddfdb32bf8",
+              "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-04",
+          "sequence": 4,
+          "role": "hole_transport_layer",
+          "material": "spiro-OMeTAD and additives (tBP and Li-TFSI)",
+          "constituents": [
+            {
+              "name": "spiro-OMeTAD",
+              "role": "hole-transport material",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0145_text_46ddfdb32bf8",
+                  "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+                }
+              ]
+            },
+            {
+              "name": "tBP",
+              "role": "additive",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0145_text_46ddfdb32bf8",
+                  "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+                }
+              ]
+            },
+            {
+              "name": "Li-TFSI",
+              "role": "additive",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0145_text_46ddfdb32bf8",
+                  "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "spiro-OMeTAD layer thickness",
+              "raw_value": "200 nm",
+              "value_number": 200.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0145_text_46ddfdb32bf8",
+                  "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0145_text_46ddfdb32bf8",
+              "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-05",
+          "sequence": 5,
+          "role": "back_electrode",
+          "material": "gold contact",
+          "constituents": [
+            {
+              "name": "gold",
+              "role": "contact material",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0145_text_46ddfdb32bf8",
+                  "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p3_0145_text_46ddfdb32bf8",
+              "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+            }
+          ]
+        }
+      ],
+      "absorbers": [
+        {
+          "absorber_id": "family-01-absorber-01",
+          "layer_id": "family-01-layer-03",
+          "label": "Co-deposited Al2O3–perovskite light absorber",
+          "formula": {
+            "name": "experimental-section absorber precursor identity",
+            "raw_value": "mixed halide (CH3NH3PbI3 -xClx) perovskite precursor",
+            "value_number": null,
+            "unit": null,
+            "evidence": [
+              {
+                "block_id": "main_p3_0144_text_f66499d263a6",
+                "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+              }
+            ]
+          },
+          "properties": [
+            {
+              "name": "absorber naming in abstract",
+              "raw_value": "CH 3 NH3 PbI 3 perovskite",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0051_text_a4828f773290",
+                  "quote": "A rapid annealing technique for CH 3 NH3 PbI 3 perovskite solar cells is presented. We report a co-deposited Al 2 O3 perovskite device annealed in under 2.5 seconds with a PCE of 10.0% compared to 10.9% for a 45 minute ovenannealed device."
+                }
+              ]
+            },
+            {
+              "name": "annealed co-deposited film thickness",
+              "raw_value": "between 450-500 nm",
+              "value_number": null,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            }
+          ],
+          "constituents": [
+            {
+              "name": "mixed halide (CH3NH3PbI3 -xClx) perovskite precursor",
+              "role": "host perovskite precursor",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            },
+            {
+              "name": "Al2O3 nanoparticle addition",
+              "role": "co-deposited nanoparticle addition",
+              "amount": {
+                "name": "Al2O3 nanoparticle addition",
+                "raw_value": "5 wt%",
+                "value_number": 5.0,
+                "unit": "wt%",
+                "evidence": [
+                  {
+                    "block_id": "main_p3_0144_text_f66499d263a6",
+                    "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0144_text_f66499d263a6",
+              "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+            },
+            {
+              "block_id": "main_p2_0051_text_a4828f773290",
+              "quote": "A rapid annealing technique for CH 3 NH3 PbI 3 perovskite solar cells is presented. We report a co-deposited Al 2 O3 perovskite device annealed in under 2.5 seconds with a PCE of 10.0% compared to 10.9% for a 45 minute ovenannealed device."
+            }
+          ]
+        }
+      ],
+      "processing_steps": [
+        {
+          "step_id": "family-01-step-01",
+          "sequence": 1,
+          "operation": "spin-coating",
+          "target_layer_ids": [
+            "family-01-layer-02"
+          ],
+          "materials": [
+            "titanium (IV) isopropoxide",
+            "ethanol"
+          ],
+          "conditions": [
+            {
+              "name": "titanium (IV) isopropoxide concentration",
+              "raw_value": "0.25 mM",
+              "value_number": 0.25,
+              "unit": "mM",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0144_text_f66499d263a6",
+              "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-02",
+          "sequence": 2,
+          "operation": "sinter the c-TiO2",
+          "target_layer_ids": [
+            "family-01-layer-02"
+          ],
+          "materials": [
+            "c-TiO2"
+          ],
+          "conditions": [
+            {
+              "name": "sintering temperature",
+              "raw_value": "500°C",
+              "value_number": 500.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0144_text_f66499d263a6",
+              "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-03",
+          "sequence": 3,
+          "operation": "prepare mixed-halide perovskite precursor with Al2O3 nanoparticle addition",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [
+            "mixed halide (CH3NH3PbI3 -xClx) perovskite precursor",
+            "DMF",
+            "Al2O3 nanoparticle addition"
+          ],
+          "conditions": [
+            {
+              "name": "Al2O3 nanoparticle addition",
+              "raw_value": "5 wt%",
+              "value_number": 5.0,
+              "unit": "wt%",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0144_text_f66499d263a6",
+              "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-04",
+          "sequence": 4,
+          "operation": "deposited in a single process onto the glass using spin-coating",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [
+            "mixed halide (CH3NH3PbI3 -xClx) perovskite precursor",
+            "Al2O3 nanoparticle addition"
+          ],
+          "conditions": [],
+          "evidence": [
+            {
+              "block_id": "main_p3_0144_text_f66499d263a6",
+              "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-05-nir",
+          "sequence": 5,
+          "operation": "a short burst of near-infrared (NIR) radiation using commercially available NIR lamps",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "NIR equipment",
+              "raw_value": "Adphos Coil Lab LV2, tungsten filament halogen lamps",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "The NIR equipment (Adphos Coil Lab LV2, tungsten filament halogen lamps) has an output spectrum in the region of 250 - 2500nm, peaking between 800 and 1200 nm as can be seen in Fig 1 as well as elsewhere24,25. At maximum power the lamps have a power density of 250 kW m-2. The lamp to sample separation is maintained at 10 cm throughout the experiment. The NIR output was controlled by varying the percentage lamp power and the duration for which samples were exposed to the radiation was controlled by varying the speed of a conveyor system passing beneath the lamp."
+                }
+              ]
+            },
+            {
+              "name": "NIR equipment output-spectrum region",
+              "raw_value": "250 - 2500nm",
+              "value_number": null,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "The NIR equipment (Adphos Coil Lab LV2, tungsten filament halogen lamps) has an output spectrum in the region of 250 - 2500nm, peaking between 800 and 1200 nm as can be seen in Fig 1 as well as elsewhere24,25. At maximum power the lamps have a power density of 250 kW m-2. The lamp to sample separation is maintained at 10 cm throughout the experiment. The NIR output was controlled by varying the percentage lamp power and the duration for which samples were exposed to the radiation was controlled by varying the speed of a conveyor system passing beneath the lamp."
+                }
+              ]
+            },
+            {
+              "name": "NIR equipment peak-output region",
+              "raw_value": "between 800 and 1200 nm",
+              "value_number": null,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "The NIR equipment (Adphos Coil Lab LV2, tungsten filament halogen lamps) has an output spectrum in the region of 250 - 2500nm, peaking between 800 and 1200 nm as can be seen in Fig 1 as well as elsewhere24,25. At maximum power the lamps have a power density of 250 kW m-2. The lamp to sample separation is maintained at 10 cm throughout the experiment. The NIR output was controlled by varying the percentage lamp power and the duration for which samples were exposed to the radiation was controlled by varying the speed of a conveyor system passing beneath the lamp."
+                }
+              ]
+            },
+            {
+              "name": "maximum NIR-lamp power density",
+              "raw_value": "250 kW m-2",
+              "value_number": 250.0,
+              "unit": "kW m-2",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "The NIR equipment (Adphos Coil Lab LV2, tungsten filament halogen lamps) has an output spectrum in the region of 250 - 2500nm, peaking between 800 and 1200 nm as can be seen in Fig 1 as well as elsewhere24,25. At maximum power the lamps have a power density of 250 kW m-2. The lamp to sample separation is maintained at 10 cm throughout the experiment. The NIR output was controlled by varying the percentage lamp power and the duration for which samples were exposed to the radiation was controlled by varying the speed of a conveyor system passing beneath the lamp."
+                }
+              ]
+            },
+            {
+              "name": "lamp-to-sample separation",
+              "raw_value": "10 cm",
+              "value_number": 10.0,
+              "unit": "cm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "The NIR equipment (Adphos Coil Lab LV2, tungsten filament halogen lamps) has an output spectrum in the region of 250 - 2500nm, peaking between 800 and 1200 nm as can be seen in Fig 1 as well as elsewhere24,25. At maximum power the lamps have a power density of 250 kW m-2. The lamp to sample separation is maintained at 10 cm throughout the experiment. The NIR output was controlled by varying the percentage lamp power and the duration for which samples were exposed to the radiation was controlled by varying the speed of a conveyor system passing beneath the lamp."
+                }
+              ]
+            },
+            {
+              "name": "NIR exposure-duration control",
+              "raw_value": "varying the speed of a conveyor system passing beneath the lamp",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0144_text_f66499d263a6",
+                  "quote": "The NIR equipment (Adphos Coil Lab LV2, tungsten filament halogen lamps) has an output spectrum in the region of 250 - 2500nm, peaking between 800 and 1200 nm as can be seen in Fig 1 as well as elsewhere24,25. At maximum power the lamps have a power density of 250 kW m-2. The lamp to sample separation is maintained at 10 cm throughout the experiment. The NIR output was controlled by varying the percentage lamp power and the duration for which samples were exposed to the radiation was controlled by varying the speed of a conveyor system passing beneath the lamp."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0060_text_b4715c00135d",
+              "quote": "In this work, we present an alternative method of postannealing perovskite films which reduces the time required to as little as 2.5 seconds whilst maintaining high PCEs. This was achieved by exposing the freshly deposited perovskite film to a short burst of near-infrared (NIR) radiation using commercially available NIR lamps. The NIR region of the electromagnetic spectrum is situated between the visible and the infrared with wavelengths ranging from 700 nm to 2500 nm, peaking at 1000 nm. NIR sintering of porous TiO 2 films has already been demonstrated for use in DSCs 21,22 and much like the TiO 2 precusor paste used to make DSCs the perovskite precursor"
+            },
+            {
+              "block_id": "main_p3_0144_text_f66499d263a6",
+              "quote": "The NIR equipment (Adphos Coil Lab LV2, tungsten filament halogen lamps) has an output spectrum in the region of 250 - 2500nm, peaking between 800 and 1200 nm as can be seen in Fig 1 as well as elsewhere24,25. At maximum power the lamps have a power density of 250 kW m-2. The lamp to sample separation is maintained at 10 cm throughout the experiment. The NIR output was controlled by varying the percentage lamp power and the duration for which samples were exposed to the radiation was controlled by varying the speed of a conveyor system passing beneath the lamp."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-05-oven",
+          "sequence": 5,
+          "operation": "oven annealing alternative",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [],
+          "conditions": [],
+          "evidence": [
+            {
+              "block_id": "main_p4_0170_text_1c6e3361ba81",
+              "quote": "Once a trend between optimal NIR parameters and sample homogeneity had been established, full devices were fabricated using the NIR oven to anneal the perovskite light absorber at different speeds. NIR lamp power was fixed at 85% for this investigation, a power density approximately equal to 50 W cm-2. In addition, oven annealed devices were also made. The results of an analysis of the JV data produced is seen in Fig. 4. Overall the oven annealed devices show higher PCEs compared to NIR counterparts owing to increased Voc and fill factor. However, Jsc appeared consistently higher in the NIR samples compared to the oven annealed counterparts."
+            },
+            {
+              "block_id": "main_p2_0051_text_a4828f773290",
+              "quote": "A rapid annealing technique for CH 3 NH3 PbI 3 perovskite solar cells is presented. We report a co-deposited Al 2 O3 perovskite device annealed in under 2.5 seconds with a PCE of 10.0% compared to 10.9% for a 45 minute ovenannealed device."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-06",
+          "sequence": 6,
+          "operation": "deposited onto the annealed perovskite layer",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [
+            "spiro-OMeTAD",
+            "tBP",
+            "Li-TFSI"
+          ],
+          "conditions": [
+            {
+              "name": "deposited layer thickness",
+              "raw_value": "200 nm",
+              "value_number": 200.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0145_text_46ddfdb32bf8",
+                  "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0145_text_46ddfdb32bf8",
+              "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-07",
+          "sequence": 7,
+          "operation": "capped with a gold contact evaporated",
+          "target_layer_ids": [
+            "family-01-layer-05"
+          ],
+          "materials": [
+            "gold"
+          ],
+          "conditions": [
+            {
+              "name": "gold-contact evaporation pressure",
+              "raw_value": "10⁻4 torr",
+              "value_number": 0.0001,
+              "unit": "torr",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0145_text_46ddfdb32bf8",
+                  "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0145_text_46ddfdb32bf8",
+              "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p3_0144_text_f66499d263a6",
+          "quote": "Samples were prepared by spin-coating a solution containing 0.25 mM titanium (IV) isopropoxide in ethanol onto 3 mm thick FTO (sheet resistance 7Ω/, Ra 12 nm) glass. The substrate was heated at 500°C to sinter the c-TiO2 leaving a 50 nm layer. A mixed halide (CH3NH3PbI3 -xClx) perovskite precursor was prepared in DMF with a 5 wt% Al2O3 nanoparticle addition as described elsewhere.10 The precursor was deposited in a single process onto the glass using spin-coating and was annealed under various NIR intensities and durations to give a film thickness of between 450-500 nm."
+        },
+        {
+          "block_id": "main_p3_0145_text_46ddfdb32bf8",
+          "quote": "Samples were annealed at lamp power levels ranging from 55% to 85% at 5% increments. At each level, sample exposure time was gradually decreased by iteratively increasing the conveyor speed by 0.5 m/minute; the total length of the NIR active region was 0.4 m. Samples were characterised by extracting RGB (red, green, blue) colour values from images taken of the samples under a calibrated light source. Fig. 3 demonstrates a series of samples imaged under the consistent light. Once annealed, a solution containing spiro-OMeTAD and additives (tBP and Li-TFSI) was deposited (200 nm) onto the annealed perovskite layer and capped with a gold contact evaporated at 10⁻4 torr."
+        },
+        {
+          "block_id": "main_p4_0170_text_1c6e3361ba81",
+          "quote": "Once a trend between optimal NIR parameters and sample homogeneity had been established, full devices were fabricated using the NIR oven to anneal the perovskite light absorber at different speeds. NIR lamp power was fixed at 85% for this investigation, a power density approximately equal to 50 W cm-2. In addition, oven annealed devices were also made. The results of an analysis of the JV data produced is seen in Fig. 4. Overall the oven annealed devices show higher PCEs compared to NIR counterparts owing to increased Voc and fill factor. However, Jsc appeared consistently higher in the NIR samples compared to the oven annealed counterparts."
+        }
+      ]
+    }
+  ],
+  "individual_devices": [
+    {
+      "device_id": "device-nir-abstract",
+      "family_id": "family-01",
+      "label": "Abstract-reported NIR-annealed co-deposited Al2O3 perovskite device",
+      "variant": "NIR annealed",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "annealing duration",
+          "raw_value": "under 2.5 seconds",
+          "value_number": null,
+          "unit": "seconds",
+          "evidence": [
+            {
+              "block_id": "main_p2_0051_text_a4828f773290",
+              "quote": "A rapid annealing technique for CH 3 NH3 PbI 3 perovskite solar cells is presented. We report a co-deposited Al 2 O3 perovskite device annealed in under 2.5 seconds with a PCE of 10.0% compared to 10.9% for a 45 minute ovenannealed device."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p2_0051_text_a4828f773290",
+          "quote": "A rapid annealing technique for CH 3 NH3 PbI 3 perovskite solar cells is presented. We report a co-deposited Al 2 O3 perovskite device annealed in under 2.5 seconds with a PCE of 10.0% compared to 10.9% for a 45 minute ovenannealed device."
+        }
+      ]
+    },
+    {
+      "device_id": "device-oven-abstract",
+      "family_id": "family-01",
+      "label": "Abstract-reported oven-annealed comparison device",
+      "variant": "ovenannealed",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "annealing duration",
+          "raw_value": "45 minute",
+          "value_number": 45.0,
+          "unit": "minute",
+          "evidence": [
+            {
+              "block_id": "main_p2_0051_text_a4828f773290",
+              "quote": "A rapid annealing technique for CH 3 NH3 PbI 3 perovskite solar cells is presented. We report a co-deposited Al 2 O3 perovskite device annealed in under 2.5 seconds with a PCE of 10.0% compared to 10.9% for a 45 minute ovenannealed device."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p2_0051_text_a4828f773290",
+          "quote": "A rapid annealing technique for CH 3 NH3 PbI 3 perovskite solar cells is presented. We report a co-deposited Al 2 O3 perovskite device annealed in under 2.5 seconds with a PCE of 10.0% compared to 10.9% for a 45 minute ovenannealed device."
+        }
+      ]
+    },
+    {
+      "device_id": "device-nir-highest",
+      "family_id": "family-01",
+      "label": "Highest performing NIR-annealed device shown in Fig. 5",
+      "variant": "NIR annealed",
+      "champion_status": "yes",
+      "selection_basis": "champion",
+      "reported_properties": [],
+      "evidence": [
+        {
+          "block_id": "main_p4_0170_text_1c6e3361ba81",
+          "quote": "Increased exposure duration whilst maintaining total energy density can be achieved by lowering the lamp output. The highest performing devices annealed using both oven and NIR have their JV curves shown in Fig. 5, both reaching PCEs ≥ 10%. Using infra-red thermal imaging, the temperature of the FTO layer immediately after NIR exposure was found to be approximately 200°C for the 2.47 s exposed sample."
+        },
+        {
+          "block_id": "main_p5_0178_text_6f2407990396",
+          "quote": "Fig. 5 JV data for highest performing NIR and oven annealed devices."
+        }
+      ]
+    },
+    {
+      "device_id": "device-oven-highest",
+      "family_id": "family-01",
+      "label": "Highest performing oven-annealed device shown in Fig. 5",
+      "variant": "oven annealed",
+      "champion_status": "yes",
+      "selection_basis": "champion",
+      "reported_properties": [],
+      "evidence": [
+        {
+          "block_id": "main_p4_0170_text_1c6e3361ba81",
+          "quote": "Increased exposure duration whilst maintaining total energy density can be achieved by lowering the lamp output. The highest performing devices annealed using both oven and NIR have their JV curves shown in Fig. 5, both reaching PCEs ≥ 10%. Using infra-red thermal imaging, the temperature of the FTO layer immediately after NIR exposure was found to be approximately 200°C for the 2.47 s exposed sample."
+        },
+        {
+          "block_id": "main_p5_0178_text_6f2407990396",
+          "quote": "Fig. 5 JV data for highest performing NIR and oven annealed devices."
+        }
+      ]
+    }
+  ],
+  "performance_observations": [
+    {
+      "observation_id": "observation-nir-abstract-jv",
+      "device_id": "device-nir-abstract",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "PCE",
+          "raw_value": "10.0%",
+          "value_number": 10.0,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p2_0051_text_a4828f773290",
+              "quote": "A rapid annealing technique for CH 3 NH3 PbI 3 perovskite solar cells is presented. We report a co-deposited Al 2 O3 perovskite device annealed in under 2.5 seconds with a PCE of 10.0% compared to 10.9% for a 45 minute ovenannealed device."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p2_0051_text_a4828f773290",
+          "quote": "A rapid annealing technique for CH 3 NH3 PbI 3 perovskite solar cells is presented. We report a co-deposited Al 2 O3 perovskite device annealed in under 2.5 seconds with a PCE of 10.0% compared to 10.9% for a 45 minute ovenannealed device."
+        }
+      ]
+    },
+    {
+      "observation_id": "observation-oven-abstract-jv",
+      "device_id": "device-oven-abstract",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "PCE",
+          "raw_value": "10.9%",
+          "value_number": 10.9,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p2_0051_text_a4828f773290",
+              "quote": "A rapid annealing technique for CH 3 NH3 PbI 3 perovskite solar cells is presented. We report a co-deposited Al 2 O3 perovskite device annealed in under 2.5 seconds with a PCE of 10.0% compared to 10.9% for a 45 minute ovenannealed device."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p2_0051_text_a4828f773290",
+          "quote": "A rapid annealing technique for CH 3 NH3 PbI 3 perovskite solar cells is presented. We report a co-deposited Al 2 O3 perovskite device annealed in under 2.5 seconds with a PCE of 10.0% compared to 10.9% for a 45 minute ovenannealed device."
+        }
+      ]
+    },
+    {
+      "observation_id": "observation-nir-highest-jv",
+      "device_id": "device-nir-highest",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "PCE threshold reached by highest performing NIR device",
+          "raw_value": "PCEs ≥ 10%",
+          "value_number": null,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0170_text_1c6e3361ba81",
+              "quote": "Increased exposure duration whilst maintaining total energy density can be achieved by lowering the lamp output. The highest performing devices annealed using both oven and NIR have their JV curves shown in Fig. 5, both reaching PCEs ≥ 10%. Using infra-red thermal imaging, the temperature of the FTO layer immediately after NIR exposure was found to be approximately 200°C for the 2.47 s exposed sample."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0170_text_1c6e3361ba81",
+          "quote": "Increased exposure duration whilst maintaining total energy density can be achieved by lowering the lamp output. The highest performing devices annealed using both oven and NIR have their JV curves shown in Fig. 5, both reaching PCEs ≥ 10%. Using infra-red thermal imaging, the temperature of the FTO layer immediately after NIR exposure was found to be approximately 200°C for the 2.47 s exposed sample."
+        },
+        {
+          "block_id": "main_p5_0178_text_6f2407990396",
+          "quote": "Fig. 5 JV data for highest performing NIR and oven annealed devices."
+        }
+      ]
+    },
+    {
+      "observation_id": "observation-oven-highest-jv",
+      "device_id": "device-oven-highest",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "PCE threshold reached by highest performing oven device",
+          "raw_value": "PCEs ≥ 10%",
+          "value_number": null,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0170_text_1c6e3361ba81",
+              "quote": "Increased exposure duration whilst maintaining total energy density can be achieved by lowering the lamp output. The highest performing devices annealed using both oven and NIR have their JV curves shown in Fig. 5, both reaching PCEs ≥ 10%. Using infra-red thermal imaging, the temperature of the FTO layer immediately after NIR exposure was found to be approximately 200°C for the 2.47 s exposed sample."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0170_text_1c6e3361ba81",
+          "quote": "Increased exposure duration whilst maintaining total energy density can be achieved by lowering the lamp output. The highest performing devices annealed using both oven and NIR have their JV curves shown in Fig. 5, both reaching PCEs ≥ 10%. Using infra-red thermal imaging, the temperature of the FTO layer immediately after NIR exposure was found to be approximately 200°C for the 2.47 s exposed sample."
+        },
+        {
+          "block_id": "main_p5_0178_text_6f2407990396",
+          "quote": "Fig. 5 JV data for highest performing NIR and oven annealed devices."
+        }
+      ]
+    }
+  ],
+  "population_statistics": [
+    {
+      "population_id": "population-jv-annealing-comparison",
+      "family_id": "family-01",
+      "label": "Statistical analysis of JV data for devices annealed under different NIR exposure times and oven-annealed comparison devices",
+      "statistic_type": "other",
+      "sample_size": null,
+      "metrics": [
+        {
+          "name": "NIR-population lamp power",
+          "raw_value": "85%",
+          "value_number": 85.0,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0170_text_1c6e3361ba81",
+              "quote": "Once a trend between optimal NIR parameters and sample homogeneity had been established, full devices were fabricated using the NIR oven to anneal the perovskite light absorber at different speeds. NIR lamp power was fixed at 85% for this investigation, a power density approximately equal to 50 W cm-2. In addition, oven annealed devices were also made. The results of an analysis of the JV data produced is seen in Fig. 4. Overall the oven annealed devices show higher PCEs compared to NIR counterparts owing to increased Voc and fill factor. However, Jsc appeared consistently higher in the NIR samples compared to the oven annealed counterparts."
+            }
+          ]
+        },
+        {
+          "name": "approximate NIR-population power density",
+          "raw_value": "approximately equal to 50 W cm-2",
+          "value_number": null,
+          "unit": "W cm-2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0170_text_1c6e3361ba81",
+              "quote": "Once a trend between optimal NIR parameters and sample homogeneity had been established, full devices were fabricated using the NIR oven to anneal the perovskite light absorber at different speeds. NIR lamp power was fixed at 85% for this investigation, a power density approximately equal to 50 W cm-2. In addition, oven annealed devices were also made. The results of an analysis of the JV data produced is seen in Fig. 4. Overall the oven annealed devices show higher PCEs compared to NIR counterparts owing to increased Voc and fill factor. However, Jsc appeared consistently higher in the NIR samples compared to the oven annealed counterparts."
+            }
+          ]
+        },
+        {
+          "name": "NIR-population varied annealing setting",
+          "raw_value": "different speeds",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p4_0170_text_1c6e3361ba81",
+              "quote": "Once a trend between optimal NIR parameters and sample homogeneity had been established, full devices were fabricated using the NIR oven to anneal the perovskite light absorber at different speeds. NIR lamp power was fixed at 85% for this investigation, a power density approximately equal to 50 W cm-2. In addition, oven annealed devices were also made. The results of an analysis of the JV data produced is seen in Fig. 4. Overall the oven annealed devices show higher PCEs compared to NIR counterparts owing to increased Voc and fill factor. However, Jsc appeared consistently higher in the NIR samples compared to the oven annealed counterparts."
+            }
+          ]
+        },
+        {
+          "name": "oven-annealed-device PCE relative to NIR counterparts",
+          "raw_value": "higher PCEs",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p4_0170_text_1c6e3361ba81",
+              "quote": "Once a trend between optimal NIR parameters and sample homogeneity had been established, full devices were fabricated using the NIR oven to anneal the perovskite light absorber at different speeds. NIR lamp power was fixed at 85% for this investigation, a power density approximately equal to 50 W cm-2. In addition, oven annealed devices were also made. The results of an analysis of the JV data produced is seen in Fig. 4. Overall the oven annealed devices show higher PCEs compared to NIR counterparts owing to increased Voc and fill factor. However, Jsc appeared consistently higher in the NIR samples compared to the oven annealed counterparts."
+            }
+          ]
+        },
+        {
+          "name": "oven-annealed-device open-circuit voltage relative to NIR counterparts",
+          "raw_value": "increased Voc",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p4_0170_text_1c6e3361ba81",
+              "quote": "Once a trend between optimal NIR parameters and sample homogeneity had been established, full devices were fabricated using the NIR oven to anneal the perovskite light absorber at different speeds. NIR lamp power was fixed at 85% for this investigation, a power density approximately equal to 50 W cm-2. In addition, oven annealed devices were also made. The results of an analysis of the JV data produced is seen in Fig. 4. Overall the oven annealed devices show higher PCEs compared to NIR counterparts owing to increased Voc and fill factor. However, Jsc appeared consistently higher in the NIR samples compared to the oven annealed counterparts."
+            }
+          ]
+        },
+        {
+          "name": "NIR-device Jsc relative to oven-annealed counterparts",
+          "raw_value": "consistently higher",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p4_0170_text_1c6e3361ba81",
+              "quote": "Once a trend between optimal NIR parameters and sample homogeneity had been established, full devices were fabricated using the NIR oven to anneal the perovskite light absorber at different speeds. NIR lamp power was fixed at 85% for this investigation, a power density approximately equal to 50 W cm-2. In addition, oven annealed devices were also made. The results of an analysis of the JV data produced is seen in Fig. 4. Overall the oven annealed devices show higher PCEs compared to NIR counterparts owing to increased Voc and fill factor. However, Jsc appeared consistently higher in the NIR samples compared to the oven annealed counterparts."
+            }
+          ]
+        },
+        {
+          "name": "short-circuit-current response across NIR exposure times",
+          "raw_value": "consistent with different exposure times",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p4_0170_text_1c6e3361ba81",
+              "quote": "It can also be seen that whilst short-circuit current appears to be consistent with different exposure times, open-circuit voltage and fill factor are more sensitive to change. Voc o r o na adr ar 2.47 s, after which a decrease is seen on account of resistive losses caused by incomplete crystallisation and solvent removal. Pockets of trapped solvent at the perovskite-spiro interface may also be thought to induce recombination losses, hence the lower fill factor. Fig.4 illustrates that small fluctuations in annealingtime can lead to changes in PCE. In upscalingthis can be addressed by optimisation and expansion of the process window."
+            }
+          ]
+        },
+        {
+          "name": "open-circuit-voltage sensitivity to NIR exposure-time changes",
+          "raw_value": "more sensitive to change",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p4_0170_text_1c6e3361ba81",
+              "quote": "It can also be seen that whilst short-circuit current appears to be consistent with different exposure times, open-circuit voltage and fill factor are more sensitive to change. Voc o r o na adr ar 2.47 s, after which a decrease is seen on account of resistive losses caused by incomplete crystallisation and solvent removal. Pockets of trapped solvent at the perovskite-spiro interface may also be thought to induce recombination losses, hence the lower fill factor. Fig.4 illustrates that small fluctuations in annealingtime can lead to changes in PCE. In upscalingthis can be addressed by optimisation and expansion of the process window."
+            }
+          ]
+        },
+        {
+          "name": "fill-factor sensitivity to NIR exposure-time changes",
+          "raw_value": "more sensitive to change",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p4_0170_text_1c6e3361ba81",
+              "quote": "It can also be seen that whilst short-circuit current appears to be consistent with different exposure times, open-circuit voltage and fill factor are more sensitive to change. Voc o r o na adr ar 2.47 s, after which a decrease is seen on account of resistive losses caused by incomplete crystallisation and solvent removal. Pockets of trapped solvent at the perovskite-spiro interface may also be thought to induce recombination losses, hence the lower fill factor. Fig.4 illustrates that small fluctuations in annealingtime can lead to changes in PCE. In upscalingthis can be addressed by optimisation and expansion of the process window."
+            }
+          ]
+        },
+        {
+          "name": "reported photovoltaic impact of preferential orientation",
+          "raw_value": "does not seem to impact on the photovoltaic performance of the devices",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0183_text_681ec2b95cd2",
+              "quote": "The high intensity of the peaks at 14.04° and 28.38° associated to the (110) and (220) crystal planes, relatively to other characteristic peaks of the CH3NH3PbI3, labelled as (112), (211), (202), (114) and (134) is indicative of the growth of large crystals with preferential orientation such as the (110) and (220) plane are oriented parallel to the substrate. The subfigure in Fig 7, where the XRD spectra have been normalised to the (110) peak shows that the preferential orientation of the CH3NH3PbI3 crystal lattice is more pronounced in the case of NIR annealed compared to oven annealed films. However, this observation does not seem to impact on the photovoltaic performance of the devices."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0169_text_e6b82d4707ec",
+          "quote": "Fig.4Statistical analysis of JV data showing devices annealed under different NIR exposure times"
+        },
+        {
+          "block_id": "main_p4_0170_text_1c6e3361ba81",
+          "quote": "Once a trend between optimal NIR parameters and sample homogeneity had been established, full devices were fabricated using the NIR oven to anneal the perovskite light absorber at different speeds. NIR lamp power was fixed at 85% for this investigation, a power density approximately equal to 50 W cm-2. In addition, oven annealed devices were also made. The results of an analysis of the JV data produced is seen in Fig. 4. Overall the oven annealed devices show higher PCEs compared to NIR counterparts owing to increased Voc and fill factor. However, Jsc appeared consistently higher in the NIR samples compared to the oven annealed counterparts."
+        },
+        {
+          "block_id": "main_p4_0170_text_1c6e3361ba81",
+          "quote": "It can also be seen that whilst short-circuit current appears to be consistent with different exposure times, open-circuit voltage and fill factor are more sensitive to change. Voc o r o na adr ar 2.47 s, after which a decrease is seen on account of resistive losses caused by incomplete crystallisation and solvent removal. Pockets of trapped solvent at the perovskite-spiro interface may also be thought to induce recombination losses, hence the lower fill factor. Fig.4 illustrates that small fluctuations in annealingtime can lead to changes in PCE. In upscalingthis can be addressed by optimisation and expansion of the process window."
+        },
+        {
+          "block_id": "main_p5_0183_text_681ec2b95cd2",
+          "quote": "The high intensity of the peaks at 14.04° and 28.38° associated to the (110) and (220) crystal planes, relatively to other characteristic peaks of the CH3NH3PbI3, labelled as (112), (211), (202), (114) and (134) is indicative of the growth of large crystals with preferential orientation such as the (110) and (220) plane are oriented parallel to the substrate. The subfigure in Fig 7, where the XRD spectra have been normalised to the (110) peak shows that the preferential orientation of the CH3NH3PbI3 crystal lattice is more pronounced in the case of NIR annealed compared to oven annealed films. However, this observation does not seem to impact on the photovoltaic performance of the devices."
+        }
+      ]
+    }
+  ],
+  "stability_tests": [],
+  "unresolved_notes": [
+    "The Experimental section identifies the absorber precursor as “mixed halide (CH3NH3PbI3 -xClx) perovskite precursor,” whereas the abstract and XRD discussion use CH3NH3PbI3 wording. The evidence does not establish separate complete-device designs, so these descriptions are retained within one family rather than split into separate families.",
+    "NIR and oven annealing are mutually exclusive processing arms for the same reported finished-device architecture and therefore do not define separate device families.",
+    "The abstract-reported devices with PCEs of 10.0% and 10.9% are not explicitly identified as the same physical specimens as the later Fig. 5 “highest performing” devices. They are therefore retained as separate individual devices and observations rather than linked by inference.",
+    "The source does not explicitly report the device polarity. Although the ordered layers could suggest a conventional topology, polarity is left not reported rather than inferred.",
+    "The 55% to 85% lamp-power range, 5% increments, 0.5 m/minute conveyor-speed increments, and 0.4 m active-region length describe the NIR sample-optimization procedure. The evidence does not establish them as properties of every complete device or of a particular measured device, so they are not propagated to the device family or individual devices.",
+    "The approximately 200°C FTO temperature was measured for a 2.47 s exposed sample, but the evidence does not establish that this thermal-imaging sample was a complete photovoltaic device or any reported performance device; it is therefore excluded from individual-device and performance records.",
+    "The film samples used for colour analysis, SEM, XRD, and precursor absorbance measurements are characterization specimens rather than complete photovoltaic devices and are excluded from device-family, individual-device, performance, population, and stability records.",
+    "The supplied evidence reports no device-aging or operational-stability outcome.",
+    "The supplied evidence does not report a complete ordered photovoltaic stack or polarity, so no device family can be safely created for the rapidly annealed cells.",
+    "The conclusion's statement that solar cells were produced with \"PCEs over 10%\" is a broad study-level claim without an identified individual device, sample size, or explicit population statistic; it is therefore not represented as a device or population record.",
+    "The fixed 85% NIR lamp power, approximate power density, and different annealing speeds describe device groups rather than identified specimens, so they cannot safely be assigned as IndividualDevice properties."
+  ]
+}

@@ -7,6 +7,52 @@ on:
   workflow_dispatch:
 
 jobs:
+  reference-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install scoring dependencies
+        run: python -m pip install -r examples/scoring/requirements.txt pytest
+      - name: Verify the complete published reference release without model calls
+        env:
+          PYTHONPATH: .:src
+          PERLA_RUN_REFERENCE_RELEASE_TESTS: "1"
+        run: python -m pytest -q tests/study_extraction/test_reference_release.py
+
+  review-deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install deployment dependencies and test runner
+        run: |
+          python - <<'PY'
+          import pathlib, subprocess, sys, tomllib
+          config = tomllib.loads(pathlib.Path("review_workbench/pyproject.toml").read_text())
+          subprocess.check_call([sys.executable, "-m", "pip", "install", "pytest", *config["project"]["dependencies"]])
+          PY
+      - name: Test the prepared server with its real storage SDK
+        run: python -m pytest -q review_workbench/tests/test_prepare.py
+
+  scoring-example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install pinned example environment
+        run: python -m pip install -r examples/scoring/requirements.txt
+      - name: Reproduce review-to-score example without provider SDKs
+        env:
+          PYTHONPATH: .:src
+        run: python -m examples.scoring.run --output "${{ runner.temp }}/perla-scoring-example"
+
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -29,7 +75,7 @@ jobs:
       - name: Install package and development tools
         run: python -m pip install ".[dev]"
       - name: Lint
-        run: python -m ruff check src tests review_workbench
+        run: python -m ruff check src tests review_workbench examples
       - name: Type-check extraction contracts
         run: python -m mypy src/perla_extract/study_extraction
 

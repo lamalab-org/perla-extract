@@ -8,14 +8,14 @@ longer matches its SHA-256 fingerprint.
 
 ## Quick setup
 
-The repository includes an idempotent installer for a conventional Linux host. Use a
-reviewed release once it is published:
+The repository includes an idempotent installer for a conventional Linux host. Specify a
+release version:
 
 ```bash
 sudo ./scripts/setup-papersbot-cron.sh --release X.Y.Z
 ```
 
-To test an unreleased but reviewed checkout, install its exact committed contents:
+Alternatively, install the exact committed contents of a checkout:
 
 ```bash
 sudo ./scripts/setup-papersbot-cron.sh --checkout "$PWD"
@@ -90,8 +90,7 @@ sudo /opt/perla-papersbot/.venv/bin/pip install \
   "perla-extract[papersbot]==${PERLA_RELEASE}"
 ```
 
-Before a release containing this workflow exists, install a reviewed repository
-checkout instead and retain its exact commit SHA in the deployment record.
+The `--checkout` installation mode records the exact commit when deploying from source.
 
 ## Store configuration and secrets
 
@@ -104,9 +103,9 @@ sudo install -o root -g perla-papersbot -m 0640 /dev/null \
 sudoedit /etc/perla-papersbot.env
 ```
 
-The current PERLA group and journal-club collection use group `6651379` and collection
-`SGN9PJAG`. Copy the dedicated read-only Zotero key directly into this file; do not
-place it in the repository, command line, crontab, logs, or a support message.
+Set your Zotero group ID and collection identifier; the values below are examples.
+Store a group-scoped read-only API credential in this file, not in the repository,
+command line, crontab or logs.
 
 ```bash
 PAPERSBOT_DOWNLOAD_DIR=/srv/perla-papersbot/pdfs
@@ -124,8 +123,8 @@ OPENALEX_EMAIL=project-contact@example.org
 OPENALEX_API_KEY=replace-with-a-free-openalex-key
 UNPAYWALL_EMAIL=project-contact@example.org
 
-ZOTERO_GROUP_ID=6651379
-ZOTERO_COLLECTION_KEY=SGN9PJAG
+ZOTERO_GROUP_ID=123456
+ZOTERO_COLLECTION_KEY=ABCD1234
 ZOTERO_API_KEY=replace-with-the-read-only-group-key
 ZOTERO_CURATED=true
 ```
