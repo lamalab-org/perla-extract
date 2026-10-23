@@ -98,7 +98,9 @@ class GroundTruthExport(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     ground_truth: StudyExtraction
-    seed_extraction: StudyExtraction
+    # Historical model output is audit evidence, not the validated reference.
+    # Preserve it even when later schema rules reject its original mistakes.
+    seed_extraction: dict[str, Any]
     review_events: list[ReviewEvent]
     manifest: GroundTruthManifest
 
@@ -111,7 +113,7 @@ class GroundTruthExport(BaseModel):
 
         return {
             "ground_truth.json": self.ground_truth.model_dump(mode="json"),
-            "seed_extraction.json": self.seed_extraction.model_dump(mode="json"),
+            "seed_extraction.json": self.seed_extraction,
             "review_events.json": [
                 event.model_dump(mode="json") for event in self.review_events
             ],
@@ -154,7 +156,6 @@ def build_ground_truth_export(
         raise ValueError("latest review revision must complete adjudication")
 
     truth = StudyExtraction.model_validate(revision.ground_truth)
-    seed = StudyExtraction.model_validate(source.seed_extraction)
     validation = validate_study(truth, _evidence_blocks(document))
     issues = validation.get("issues", [])
     if validation.get("status") != "verified":
@@ -192,7 +193,7 @@ def build_ground_truth_export(
         raise ValueError("resolve pending finalization questions before export")
 
     ground_truth = truth.model_dump(mode="json")
-    seed_extraction = seed.model_dump(mode="json")
+    seed_extraction = source.seed_extraction
     review_events = [event.model_dump(mode="json") for event in events]
     file_hashes = {
         "ground_truth.json": _sha256(ground_truth),
@@ -227,7 +228,7 @@ def build_ground_truth_export(
     )
     return GroundTruthExport(
         ground_truth=truth,
-        seed_extraction=seed,
+        seed_extraction=seed_extraction,
         review_events=events,
         manifest=manifest,
     )

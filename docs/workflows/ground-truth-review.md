@@ -345,7 +345,7 @@ The command writes an atomic, immutable directory under
 | File | PR reviewer checks |
 | --- | --- |
 | `ground_truth.json` | Final rich `StudyExtraction` records and evidence citations |
-| `seed_extraction.json` | Original model result, kept separate for error analysis |
+| `seed_extraction.json` | Original model result, preserved unchanged for error analysis; it may fail the current schema |
 | `review_events.json` | Complete corrections, decisions, stage gates, and adjudication history |
 | `manifest.json` | Schema and source provenance, frozen revision, evidence-document version and hash, validation counts, reviewers, and content hashes |
 
