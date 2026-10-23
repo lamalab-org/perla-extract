@@ -197,7 +197,7 @@ names alongside the generic `PAPERSBOT_` command options:
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
 | `ZOTERO_GROUP_ID` | unset | Numeric group library ID |
-| `ZOTERO_COLLECTION_KEY` | unset | Optional input collection API key |
+| `ZOTERO_COLLECTION_KEY` | unset | Optional input collection identifier |
 | `ZOTERO_API_KEY` | unset | Credential for member-only library reads |
 | `ZOTERO_CURATED` | `false` | Treat the configured input collection as human-approved |
 
@@ -241,9 +241,8 @@ The status vocabulary separates scientific availability from operational failure
 
 Older state formats are migrated on read. A state file with a newer format version is
 rejected instead of being loaded partially and rewritten with fields silently lost.
-`PAPERSBOT_FORMAT_VERSION` in `papersbot/models.py` is the single code-level version
-constant. Bump it only when persisted semantics require a migration; update
-`load_state`, a legacy-state fixture, and this section in the same change.
+The format version is recorded in the state file; keep a backup before upgrading
+software that migrates persisted state.
 
 Every invocation also checkpoints `STATE_DIR/runs/<run-id>.json` and
 `STATE_DIR/last_run.json`. A run record contains timestamps, a non-secret configuration

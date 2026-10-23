@@ -66,7 +66,7 @@ skipped when there is no corresponding extracted record. Requests use local pars
 text/table evidence rather than the complete paper or rendered pages and share the
 normal content-addressed model cache. Use
 `--enrichment-model` to select a different schema-capable model or `--no-enrichment`
-for a cost or ablation run.
+to disable this stage.
 
 Enrichment never rewrites `extraction.json`. This separation keeps reported facts,
 model interpretation, deterministic acceptance, and later human correction distinct.

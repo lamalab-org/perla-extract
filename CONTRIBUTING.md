@@ -35,8 +35,9 @@ Install the development environment and run the local checks with:
 
 ```bash
 pip install -e '.[dev]'
-ruff check src tests
-pytest -q
+ruff check src tests review_workbench examples
+python -m mypy src/perla_extract/study_extraction
+python -m pytest -q
 ```
 
 The slower Docling contract test is deliberately outside the fast suite:
@@ -61,6 +62,17 @@ mkdocs build --strict
 ```
 
 Use `mkdocs serve` while editing the site locally.
+
+The public scoring example is exercised by the normal test suite. To inspect its
+saved corrections and reports, choose a new output directory and run:
+
+```bash
+PYTHONPATH=.:src python -m examples.scoring.run --output /tmp/perla-scoring-example
+```
+
+Do not regenerate its expected counts from scorer output. Derive them from the
+documented scientific cases and review any changes to the scoring contract.
+Check rendered diagrams, equations and tables as well as the strict build.
 
 Docstrings are expected at public APIs, scientific model boundaries, persistence
 transitions, and non-obvious algorithms. Explain invariants, side effects, or why a

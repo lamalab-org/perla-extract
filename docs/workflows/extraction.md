@@ -4,8 +4,8 @@
 PERLA separates reading the paper from constructing database records. The first
 model pass writes a neutral ledger of source claims and the experimental objects
 they describe. A later pass assembles the final study schema from that ledger and
-the cited source passages. This distinction prevents every treatment, specimen, or
-measurement condition from becoming a separate device family.
+the cited source passages. This separates descriptions of treatments and characterization specimens from
+records representing complete photovoltaic designs.
 
 ```mermaid
 flowchart TD
@@ -64,9 +64,8 @@ calling a model.
 By default, `--claim-recall-passes 2` reads every complete document or window twice
 with independently worded instructions. The second pass receives the same bounded
 parser evidence—not the first model response—and the grounded union guides assembly.
-This costs another claim call per window, but prevents one omitted ledger entry from
-being an unrecoverable single point of failure. Use one pass only as an evaluated cost
-ablation.
+This adds one claim call per window and provides another opportunity to recover
+omissions. Set `--claim-recall-passes 1` to use one reading.
 
 ## Global assembly and reconciliation
 
@@ -79,8 +78,7 @@ tests distinct. It must leave a field unreported when no source claim supports i
 By default, a second global pass re-reads the same compact evidence and returns a
 complete corrected study. It may recover missed records or values and remove
 unsupported duplicates. A failed reconciliation cannot destroy the valid first
-draft, which remains in `draft_extraction.json`. Use `--no-refinement` only for a
-measured cost/quality ablation.
+draft, which remains in `draft_extraction.json`. Use `--no-refinement` to disable this second global pass.
 
 The estimate for this global request is checked against
 `--assembly-max-input-tokens`. Exceeding it produces an explicit failed run and an
@@ -143,8 +141,8 @@ characterization is not a photovoltaic stability test. Processing solvents do no
 become layers, surface modifiers do not silently become part of a bulk formula, and a
 concentration or treatment label alone does not create another device family.
 
-The extractor also separates reporting from inference. It retains atomic qualitative
-claims such as `over 80%`, but does not replace them with a more precise estimate.
+The extractor also separates reporting from inference. It retains qualified values
+such as `over 80%`, but does not replace them with a more precise estimate.
 Likely scan directions, circuit conditions, and shared specimen identities remain
 unknown unless the supplied text or table states them. Such cases are review items,
 not ordinary extracted facts.
@@ -187,6 +185,37 @@ NOMAD archive per atomic source record. The adapter revalidates accepted enrichm
 against the original parser blocks before applying it. See
 [Interpret composition and processing](enrichment.md) and
 [Export to NOMAD](nomad-export.md).
+
+## Artifact reference
+
+Files depend on enabled stages and whether those stages complete. In particular,
+`pre_conservative_extraction.json` is written only when finalization removes a claim.
+
+| Artifact | Purpose |
+| --- | --- |
+| `extraction.json` | Final rich study result after audited source-grounding safeguards |
+| `grounded_values.json` | Conservative subset of reported values that passed local source checks |
+| `validation.json` | Evidence, identifier, and relationship findings |
+| `claim_ledger.json` | Experimental objects and atomic source claims collected before record construction |
+| `claim_grounding.json` | Ledger entries admitted to or rejected from assembly guidance |
+| `claim_window_plan.json` | Single-call or section-aware claim-reading plan |
+| `claim_coverage_audit.json` | Covered, possible, unmatched, context, and unsupported-record findings |
+| `targeted_repair.json` | Evidence-local repair worklist, proposed-record counts, quality gates, and decision |
+| `citation_repairs.json` | Audited non-contiguous-quote and unique-pointer repairs |
+| `conservative_finalization.json` | Exact unsupported optional claims removed after repair, with paths and reasons |
+| `pre_conservative_extraction.json` | Complete pre-finalization candidate, written only when a claim was removed |
+| `document.json` | Model-facing scientific evidence blocks with source and page locations |
+| `report.json` | Status, counts, usage, cost, cache information, and failures |
+| `run_configuration.json` | Non-secret configuration and source fingerprints |
+| `nomad/*.archive.json` | One standalone NOMAD archive per atomic extracted record |
+| `nomad/manifest.json` | NOMAD target pin, record mappings, and conversion issues |
+| `composition_projection.json` | Formula/site-ion normalization review queue |
+| `enrichment.json` | Absorber-scoped composition and processing proposals with deterministic decisions |
+| `draft_extraction.json` | First complete-study result retained before the default quality pass |
+| `refinement_audit.json` | Record IDs added, removed, or changed by the complete-study quality pass |
+| `quality_comparison.json` | Draft-versus-final validation and semantic claim-coverage counts |
+| `reduced.json` | Optional historical export when `--reduced-export` is passed |
+
 
 ## Model choice
 

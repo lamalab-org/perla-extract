@@ -385,6 +385,8 @@ class ReviewEvent(BaseModel):
         "review_reset",
         "ground_truth_refresh",
         "seed_imported",
+        "adjudication_plan",
+        "adjudication_decision",
     ]
     action: MutationAction | None = None
     path: str | None = None
@@ -1091,13 +1093,47 @@ class StudyReviewStore:
             for event in events
             if event.get("details", {}).get("undoes_event_id")
         }
+        resets = {
+            e["reviewer_id"]: e["revision"]
+            for e in events
+            if e["kind"] == "review_reset" and e["event_id"] not in undone_event_ids
+        }
+        evidence_version = next(
+            (
+                e["details"]["replacement_evidence_version"]
+                for e in reversed(events)
+                if e["kind"] == "ground_truth_refresh"
+            ),
+            1,
+        )
+        refreshed_at = max(
+            (e["revision"] for e in events if e["kind"] == "ground_truth_refresh"),
+            default=0,
+        )
         for event in events:
             if event.get("event_id") in undone_event_ids:
+                continue
+            adopted = event["details"].get("completed_paper_review")
+            if adopted and (
+                resets.get(adopted["expert_id"], 0)
+                > adopted["reviewed_through_revision"]
+                or adopted["evidence_version"] != evidence_version
+                or refreshed_at > adopted["reviewed_through_revision"]
+                or adopted["review_event_id"] in undone_event_ids
+            ):
                 continue
             if event["kind"] == "stage_complete":
                 stages.setdefault(event["details"]["stage"], []).append(
                     event["reviewer_id"]
                 )
+                # An admin may explicitly adopt unchanged expert approvals at
+                # finalization. Bind that adoption to content just like a direct review.
+                for details in event["details"].get("decisions", []):
+                    key = str(details["record_key"])
+                    if catalog.get(key) == details.get("record_digest"):
+                        decisions.setdefault(event["reviewer_id"], {})[key] = str(
+                            details["decision"]
+                        )
             elif event["kind"] == "inventory_audit":
                 details = copy.deepcopy(event["details"])
                 if (
@@ -1113,7 +1149,7 @@ class StudyReviewStore:
                     decisions.setdefault(event["reviewer_id"], {})[record_key] = str(
                         details["decision"]
                     )
-            elif event["kind"] == "spreadsheet_review":
+            elif event["kind"] in {"spreadsheet_review", "adjudication_decision"}:
                 for details in event["details"].get("decisions", []):
                     record_key = str(details["record_key"])
                     if catalog.get(record_key) == details.get("record_digest"):
@@ -1709,8 +1745,7 @@ class StudyReviewStore:
         )
         if source_index is None:
             raise ValueError(
-                f"unknown {request.source_collection} record "
-                f"{request.source_record_id}"
+                f"unknown {request.source_collection} record {request.source_record_id}"
             )
         references = _record_references(before, request.source_collection, source_index)
         if references:
@@ -1954,7 +1989,24 @@ class StudyReviewStore:
             for stage, reviewers in summary["completed_stages"].items()
             if reviewer_id in reviewers
         ]
-        if not decisions and inventory is None and not stages:
+        last_reset = max(
+            (
+                e["revision"]
+                for e in current_revision.events
+                if e["reviewer_id"] == reviewer_id and e["kind"] == "review_reset"
+            ),
+            default=0,
+        )
+        undone = {e["details"].get("undoes_event_id") for e in current_revision.events}
+        corrections = any(
+            e["reviewer_id"] == reviewer_id
+            and e["revision"] > last_reset
+            and e["event_id"] not in undone
+            and not e["details"].get("undoes_event_id")
+            and e["kind"] in {"mutation", "structural_mutation", "spreadsheet_review"}
+            for e in current_revision.events
+        )
+        if not decisions and inventory is None and not stages and not corrections:
             raise ValueError("there is no current review state to reset for this paper")
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
@@ -1983,8 +2035,9 @@ class StudyReviewStore:
         """Advance review only after the evidence-based prerequisites are satisfied.
 
         Inventory requires a saved census, field review requires a current decision for
-        every record, and later stages require the preceding stage. These constraints
-        keep interface clicks from bypassing the ground-truth protocol.
+        every record, and later stages require the preceding stage. Final adjudication
+        requires verified decisions; uncertainty remains a draft-review state, never
+        a reason to exclude predictions from benchmark scoring.
         """
 
         current_revision = self._validate_revision(
@@ -1993,7 +2046,10 @@ class StudyReviewStore:
         events = current_revision.events
         current_summary = self.summary(current_revision.ground_truth, events)
         completed = current_summary["completed_stages"]
-        if reviewer_id in completed.get(request.stage, []):
+        if (
+            reviewer_id in completed.get(request.stage, [])
+            and request.stage != "completeness"
+        ):
             raise ValueError(f"{request.stage} stage is already complete")
         if (
             request.stage == "inventory"
@@ -2007,7 +2063,7 @@ class StudyReviewStore:
         }.get(request.stage)
         if prerequisite and reviewer_id not in completed.get(prerequisite, []):
             raise ValueError(f"complete the {prerequisite} stage first")
-        if request.stage == "fields":
+        if request.stage in {"fields", "completeness"}:
             truth = current_revision.ground_truth
             decisions = current_summary["record_decisions"].get(reviewer_id, {})
             unresolved = [
@@ -2019,6 +2075,40 @@ class StudyReviewStore:
                 raise ValueError(
                     f"review every current record before completing fields ({len(unresolved)} remaining)"
                 )
+        if request.stage == "adjudication":
+            decisions = current_summary["record_decisions"].get(reviewer_id, {})
+            unresolved = [
+                key
+                for key in _record_catalog(current_revision.ground_truth)
+                if decisions.get(key) != "verified"
+            ]
+            if unresolved:
+                raise ValueError(
+                    "resolve every current record before final adjudication "
+                    f"({len(unresolved)} remaining); uncertain decisions can be saved "
+                    "during review but cannot enter the final reference"
+                )
+            # Both completion routes must respect the same unresolved questions.
+            # Import locally because the queue itself uses the review state machine.
+            from review_workbench.adjudication import AdjudicationQueue
+
+            if AdjudicationQueue(self).load(
+                split, paper_id, reviewer_id, current=current_revision
+            )["cases"]:
+                raise ValueError(
+                    "resolve pending finalization questions before adjudication"
+                )
+        details: dict[str, Any] = {"stage": request.stage}
+        if request.stage == "completeness":
+            audit = current_summary["inventory_audits"].get(reviewer_id)
+            if not audit:
+                raise ValueError("save the source scope before completing review")
+            details["reviewed_snapshot"] = {
+                "study_sha256": _digest(current_revision.ground_truth),
+                "evidence_version": current_revision.evidence_version,
+                "inventory_sha256": _digest(audit),
+                "review_scope_sources": audit["review_scope_sources"],
+            }
         event = ReviewEvent(
             event_id=str(uuid.uuid4()),
             revision=current_revision.revision + 1,
@@ -2026,7 +2116,7 @@ class StudyReviewStore:
             reviewer_id=reviewer_id,
             kind="stage_complete",
             note=request.note,
-            details={"stage": request.stage},
+            details=details,
         ).model_dump(mode="json")
         return self._commit(
             split,

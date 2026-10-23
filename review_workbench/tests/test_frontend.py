@@ -155,7 +155,7 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
     assert "/api/figure-panel-image/" in javascript
     assert 'responseType: "blob"' in javascript
     assert "loadAuthenticatedImage" in javascript
-    assert 'src: `/api/figure-panel-image/' not in javascript
+    assert "src: `/api/figure-panel-image/" not in javascript
     assert 'id="figure-review-progress"' in html
     assert 'id="figure-review-filter"' in html
     assert "Confirm and next" in javascript
@@ -202,7 +202,10 @@ def test_field_correction_opens_before_the_structured_editor_renders():
 
     assert source.index("dialog.showModal()") < source.index("renderStructuredEditor()")
     assert 'setRecordEditorMode("json", false)' in source
-    assert "The complete record is open as JSON so your correction is not blocked." in source
+    assert (
+        "The complete record is open as JSON so your correction is not blocked."
+        in source
+    )
 
 
 def test_record_review_layout_responds_to_panel_width_without_overlays():
@@ -452,7 +455,9 @@ def test_startup_defers_schema_and_shows_real_loading_states():
     assert "await startApp();" in source
     assert not source.rstrip().endswith("await loadStudySchema();")
     assert "return state.studySchema || loadStudySchema();" in source
-    assert 'throw new Error("The server returned an incomplete study schema.")' in source
+    assert (
+        'throw new Error("The server returned an incomplete study schema.")' in source
+    )
     assert "state.studySchema?.properties?.[kind]?.items" in source
 
 
@@ -543,7 +548,10 @@ def test_structured_editor_prioritizes_scientific_fields_over_schema_plumbing():
     assert "item?.label" in source
     assert 'encodeURIComponent(String(part)).replaceAll("-", "%2D")' in source
     assert ".editor-group .editor-group { grid-column:1 / -1;" in styles
-    assert ".device-related-editor > .editor-group > .editor-fields { grid-template-columns:1fr;" in styles
+    assert (
+        ".device-related-editor > .editor-group > .editor-fields { grid-template-columns:1fr;"
+        in styles
+    )
     assert "attachMissingEvidence(value, citation)" in source
 
 
@@ -557,7 +565,7 @@ def test_structured_editor_can_reorder_sequenced_items_without_raw_json():
     assert 'text: "↑ Earlier"' in source
     assert 'text: "↓ Later"' in source
     assert 'text: "Position"' in source
-    assert 'entry.sequence = position + 1' in source
+    assert "entry.sequence = position + 1" in source
     assert ".ordered-array-controls" in styles
 
 
@@ -625,13 +633,61 @@ def test_ui_builds_untrusted_content_with_dom_nodes():
     assert "replaceChildren" in source
 
 
-def test_only_admins_can_download_an_adjudicated_pr_bundle():
+def test_only_finalizers_can_download_an_adjudicated_pr_bundle():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
     assert "Download adjudicated PR bundle" in html
     assert "ground-truth-export" in source
-    assert 'state.user.role === "admin"' in source
+    assert "const canExport = state.user.can_finalize" in source
     assert 'finalEvent?.details?.stage === "adjudication"' in source
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node is required")
+def test_final_review_controls_require_verified_records():
+    """Draft uncertainty stays usable, but cannot enable finalization or export."""
+
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    function = source[
+        source.index("function renderStageControls()") : source.index(
+            "function renderHistory()"
+        )
+    ]
+    script = (
+        r"""
+const assert = require('node:assert/strict');
+const nodes = new Map();
+const $ = (id) => { if (!nodes.has(id)) nodes.set(id, {}); return nodes.get(id); };
+const buttons = ['inventory', 'fields', 'completeness', 'adjudication'].map(stage => ({dataset: {stage}}));
+const document = {
+  querySelectorAll: () => buttons,
+  querySelector: (key) => $(key),
+};
+const hasAudit = () => true;
+const state = {user: {id: 'admin', role: 'admin', can_finalize: true}, bundle: {
+  summary: {record_count: 1, record_decisions: {admin: {record: 'uncertain'}},
+    completed_stages: {inventory: ['admin'], fields: ['admin'], completeness: ['admin']}},
+  events: [{kind: 'stage_complete', reviewer_id: 'admin', details: {stage: 'adjudication'}}],
+}};
+"""
+        + function
+        + r"""
+renderStageControls();
+assert.equal(buttons[3].disabled, true);
+assert.match(buttons[3].textContent, /Resolve 1 record/);
+assert.equal($('download-truth').disabled, true);
+state.bundle.summary.record_decisions.admin.record = 'verified';
+renderStageControls();
+assert.equal(buttons[3].disabled, false);
+assert.equal($('download-truth').disabled, false);
+state.user = {id: 'collaborator', role: 'reviewer', can_finalize: true};
+renderStageControls();
+assert.equal($('download-truth').disabled, false); // Final review belongs to admin.
+state.user.can_finalize = false;
+renderStageControls();
+assert.equal($('download-truth').disabled, true);
+"""
+    )
+    subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
 
 
 def test_reviewers_can_inspect_and_download_their_persisted_annotations():
@@ -639,7 +695,7 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     source = (APP / "app.js").read_text(encoding="utf-8")
     server = (APP.parent / "server.py").read_text(encoding="utf-8")
 
-    assert '>My work &amp; undo</button>' in html
+    assert ">My work &amp; undo</button>" in html
     assert "My work &amp; undo" in html
     assert "Current work" in html
     assert "History" in html
@@ -669,16 +725,20 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     assert "application.reset_reviewer_state(" in server
 
 
-def test_admin_can_download_all_reviewer_feedback():
+def test_signed_in_reviewers_can_download_all_reviewer_feedback():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
     server = (APP.parent / "server.py").read_text(encoding="utf-8")
 
     assert 'id="download-all-feedback"' in html
-    assert 'payload.user.role !== "admin"' in source
+    assert source.count('$("download-all-feedback").hidden = false;') == 2
     assert "/api/reviewer-feedback-export" in source
     assert "application.reviewer_feedback_archive()" in server
-    assert "self.current_user(require_admin=True)" in server
+    route = server.split('if parsed.path == "/api/reviewer-feedback-export":')[1].split(
+        "return", 1
+    )[0]
+    assert "self.current_user()" in route
+    assert "require_admin" not in route
 
 
 def test_file_actions_are_direct_responsive_and_show_progress():
