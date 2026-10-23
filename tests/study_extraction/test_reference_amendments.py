@@ -12,7 +12,7 @@ from review_workbench.study_review import _digest
 
 ROOT = Path(__file__).resolve().parents[2]
 AMENDMENTS = ROOT / "data/study_extraction/reference_amendments/2026-10-23"
-PLAN = json.loads((AMENDMENTS / "finalization-plan.json").read_text())
+PLAN = json.loads((AMENDMENTS / "finalization-plan.json").read_text(encoding="utf-8"))
 
 
 def amended(item):
@@ -22,7 +22,7 @@ def amended(item):
             / "data/study_extraction/ground_truth/v1/dev"
             / item["paper_id"]
             / "ground_truth.json"
-        ).read_text()
+        ).read_text(encoding="utf-8")
     )
     assert _digest(original) == item["study_sha256"]
     request = PlanRequest.model_validate(
@@ -64,7 +64,9 @@ def test_amendment_is_guarded_and_preserves_existing_measurements(item):
 
 
 def test_known_missing_outcome_is_not_fabricated():
-    inventory = json.loads((AMENDMENTS / "experiment-inventory.json").read_text())
+    inventory = json.loads(
+        (AMENDMENTS / "experiment-inventory.json").read_text(encoding="utf-8")
+    )
     assert len(inventory) == 1
     experiment = inventory[0]["experiment"]
     assert experiment["outcomes"] == [] and experiment["duration"] is None
@@ -77,7 +79,7 @@ def test_public_amendment_contains_no_private_metadata():
     for path in AMENDMENTS.glob("*.json"):
         assert not re.search(
             r"internal_[0-9a-f]+|/Users/|/private/|[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}",
-            path.read_text(),
+            path.read_text(encoding="utf-8"),
         )
 
 
@@ -95,3 +97,42 @@ def test_additions_do_not_create_individual_cells_or_numeric_outcomes():
                             "JV scan rate",
                             "perovskite bandgap",
                         }
+
+
+def test_v2_contains_exactly_the_logged_record_and_note_corrections():
+    """Freeze the reviewed changes, not a silently regenerated model extraction."""
+    notes = json.loads(
+        (AMENDMENTS / "notes-corrections.json").read_text(encoding="utf-8")
+    )
+    assert {item["paper_id"] for item in notes} == {
+        item["paper_id"] for item in PLAN["papers"]
+    }
+    for item in PLAN["papers"]:
+        _, expected, _ = amended(item)
+        correction = next(n for n in notes if n["paper_id"] == item["paper_id"])
+        assert expected["unresolved_notes"] == correction["before"]
+        expected["unresolved_notes"] = correction["after"]
+        frozen = json.loads(
+            (
+                ROOT
+                / "data/study_extraction/ground_truth/v2/dev"
+                / item["paper_id"]
+                / "ground_truth.json"
+            ).read_text(encoding="utf-8")
+        )
+        assert frozen == expected
+
+
+def test_v2_preserves_the_other_26_scientific_jsons():
+    """An amendment release must not change papers outside its declared scope."""
+    releases = ROOT / "data/study_extraction/ground_truth"
+    index = json.loads((releases / "v2/release.json").read_text(encoding="utf-8"))
+    amended_ids = {item["paper_id"] for item in PLAN["papers"]}
+    assert set(index["amended_papers"]) == amended_ids
+    unchanged = [p for p in index["papers"] if p["paper_id"] not in amended_ids]
+    assert len(unchanged) == 26
+    for paper in unchanged:
+        relative = Path(paper["path"]) / "ground_truth.json"
+        assert (releases / "v1" / relative).read_bytes() == (
+            releases / "v2" / relative
+        ).read_bytes()

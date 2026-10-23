@@ -11,23 +11,37 @@ from perla_extract.study_extraction.evaluation import EvaluationConfig, evaluate
 from perla_extract.study_extraction.evaluation_cli import _canonical_digest, _truth
 from perla_extract.study_extraction.models import StudyExtraction
 
-RELEASE = Path(__file__).resolve().parents[2] / "data/study_extraction/ground_truth/v1"
-INDEX = json.loads((RELEASE / "release.json").read_text(encoding="utf-8"))
-PAPERS = INDEX["papers"]
+ROOT = Path(__file__).resolve().parents[2] / "data/study_extraction/ground_truth"
+RELEASES = [
+    (path.parent, json.loads(path.read_text(encoding="utf-8")))
+    for path in sorted(ROOT.glob("v*/release.json"))
+]
+PAPERS = [
+    pytest.param(release, index, paper, id=f"{release.name}/{paper['paper_id']}")
+    for release, index in RELEASES
+    for paper in index["papers"]
+]
 
 
-def test_release_roster_is_complete():
+@pytest.mark.parametrize(
+    "release,index",
+    RELEASES,
+    ids=lambda item: item.name if isinstance(item, Path) else item["release"],
+)
+def test_release_roster_is_complete(release, index):
     """A missing paper must fail CI rather than silently shrink the benchmark."""
-    expected = {paper["paper_id"] for paper in PAPERS}
-    assert len(expected) == len(PAPERS) == INDEX["paper_count"] == 30
-    assert {path.name for path in (RELEASE / "dev").iterdir()} == expected
-    assert INDEX["evaluation_config"] == EvaluationConfig().model_dump(mode="json")
+    expected = {paper["paper_id"] for paper in index["papers"]}
+    assert len(expected) == len(index["papers"]) == index["paper_count"] == 30
+    assert {path.name for path in (release / "dev").iterdir()} == expected
+    assert index["evaluation_config"] == EvaluationConfig().model_dump(mode="json")
 
 
-@pytest.mark.parametrize("paper", PAPERS, ids=lambda paper: paper["paper_id"])
-def test_public_reference_preserves_hashes_and_excludes_private_metadata(paper):
+@pytest.mark.parametrize("release,index,paper", PAPERS)
+def test_public_reference_preserves_hashes_and_excludes_private_metadata(
+    release, index, paper
+):
     """Check the release's fixed inputs, not only whether its JSON parses."""
-    directory = RELEASE / paper["path"]
+    directory = release / paper["path"]
     assert set(path.name for path in directory.iterdir()) == {
         "ground_truth.json",
         "manifest.json",
@@ -85,13 +99,13 @@ def _rename_and_reorder(value, field=""):
     os.environ.get("PERLA_RUN_REFERENCE_RELEASE_TESTS") != "1",
     reason="Full release controls run once in the dedicated CI job.",
 )
-@pytest.mark.parametrize("paper", PAPERS, ids=lambda paper: paper["paper_id"])
-def test_reference_score_invariance_and_negative_controls(paper):
+@pytest.mark.parametrize("release,index,paper", PAPERS)
+def test_reference_score_invariance_and_negative_controls(release, index, paper):
     """Perfect self-scores alone are insufficient: real mistakes must lose credit."""
-    truth, provenance = _truth(RELEASE / paper["path"])
+    truth, provenance = _truth(release / paper["path"])
     same = evaluate_study(truth, truth, benchmark=provenance)
-    assert same.matcher_version == INDEX["matcher_version"]
-    assert same.core_facts.profile == INDEX["fact_profile"]
+    assert same.matcher_version == index["matcher_version"]
+    assert same.core_facts.profile == index["fact_profile"]
     assert same.core_facts.micro.f1 == 1 and not same.core_facts.issues
     reordered = StudyExtraction.model_validate(
         _rename_and_reorder(truth.model_dump(mode="json"))

@@ -1,8 +1,9 @@
 # Study-extraction ground truth
 
 This directory defines the layout for frozen, human-adjudicated benchmark releases.
-The first [published release](v1/README.md) contains 30 finalized expert-reviewed
-development references. Its public manifests omit private review metadata while
+The current [published release](v2/README.md) contains 30 finalized expert-reviewed
+development references, with source-checked amendments to four studies. The
+previous [v1 release](v1/README.md) remains available. Public manifests omit private review metadata while
 preserving the scientific JSON unchanged. A cohort manifest or model seed alone
 is not an adjudicated reference. The executable synthetic example is under
 `examples/scoring/` and must not be included in scientific benchmark aggregates.

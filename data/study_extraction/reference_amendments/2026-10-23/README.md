@@ -1,9 +1,9 @@
 # Source-checked reference amendments
 
 These amendments correct four studies in the frozen `ground_truth/v1` release.
-They do not change that release in place. They are **not a new finalized reference
-release**: publication of a new scoring release requires an export of the amended,
-finalized app records. Do not point the scorer at this directory.
+They do not change that release in place. The finalized app exports are published
+as [reference release v2](../../ground_truth/v2/README.md). This directory retains
+the change plan and the before/after notes for audit; do not point the scorer here.
 
 `finalization-plan.json` is the app's supported import format. Each change includes
 the complete previous and replacement record; the app rejects a plan if the study
@@ -38,10 +38,10 @@ specimen link that the passages do not establish. The S4/S6 records use
   without a treatment-arm recipe representation would risk assigning 4A3HA to
   the control or losing its concentration. This is an unresolved grouping choice,
   not evidence for more experimentally independent architectures.
-- The old extraction's `unresolved_notes` are not edited by the record-amendment
-  interface. Some describe exclusions that these amendments supersede. They are
-  not scored facts. Clean them through a history-preserving notes correction before
-  freezing the next release; do not present those obsolete notes as new findings.
+- The record-amendment interface does not edit `unresolved_notes`. The obsolete
+  exclusions were therefore corrected through separate, history-preserving app
+  mutations before freezing v2. `notes-corrections.json` records their exact
+  before/after text. Other limitations remain explicit; notes are not scored facts.
 - Au is a **figure-only** fact. Its citations locate the images; the quoted captions
   do not themselves contain the Au label. An exact quote check verifies the locator,
   not the scientific interpretation. The addition was checked visually. Full-source

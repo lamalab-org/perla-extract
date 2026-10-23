@@ -20,7 +20,7 @@ A frozen reference directory records the reviewed version, its schema and conten
 hashes and the final review decisions. A complete prediction
 directory includes source evidence and saved call, token, cost and timing totals.
 Bare JSON inputs are also accepted, but lack these checks and supporting records.
-The repository includes a [30-paper expert-reviewed development release](https://github.com/lamalab-org/perla-extract/tree/main/data/study_extraction/ground_truth/v1).
+The repository includes a [30-paper expert-reviewed development release](https://github.com/lamalab-org/perla-extract/tree/main/data/study_extraction/ground_truth/v2).
 Its public manifests omit private review history and identities. The separate
 executable scoring example uses synthetic data.
 
