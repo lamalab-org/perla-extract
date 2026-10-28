@@ -153,8 +153,10 @@ stateDiagram-v2
 4. **Completeness.** Reconcile the paper-wide search for missing records with the
    corrected study and finish every quality gate. Record omissions found during
    source reading, their resolution, the reviewed scope and remaining uncertainty.
-5. **Adjudication.** An administrator resolves reviewer disagreement before freezing
-   the ground-truth revision.
+5. **Adjudication.** An authorized finalizer resolves disagreements before freezing
+   the ground-truth revision. Administrators have this permission by default;
+   deployments can [also grant it to reviewers](
+   ../deployment/review-workbench.md#let-reviewers-finalize-references).
 
 ### Correct records in the workbench
 
@@ -242,7 +244,7 @@ The server derives the personal activity response from immutable revisions using
 authenticated reviewer identity; it does not accept another user ID from the browser.
 The personal export includes exact mutations, evidence, decisions,
 audits, stages, and current-versus-superseded decision state, but it is not a substitute
-for the administrator's adjudicated data-PR bundle.
+for the finalized reference bundle.
 
 **Files & upload** supports an offline handoff. Any reviewer can download the original
 main-paper PDF, the SI when one was imported, the latest validated `StudyExtraction`
@@ -329,8 +331,8 @@ multiple ground truths independently.
 
 ## Freeze a revision for a data PR
 
-The mutable review directory is deliberately ignored by Git. After an administrator
-completes adjudication, freeze one paper from the repository root:
+Git ignores the working review directory. After an authorized finalizer completes
+adjudication, freeze one paper from the repository root:
 
 ```bash
 python review_workbench/export_ground_truth.py \

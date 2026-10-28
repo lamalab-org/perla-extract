@@ -1,10 +1,8 @@
 # Validate before scaling
 
-PERLA needs three different kinds of evidence: trustworthy reference records, a
-scorer that agrees with scientific judgments, and experiments that measure quality
-and cost fairly. Passing a software test does not substitute for any missing
-scientific review. This page separates what is implemented from what still needs
-measurement.
+Before scaling, check the reference records, compare scorer decisions with expert
+judgments, and measure extraction quality and cost. Software tests cover only part
+of this work.
 
 ```mermaid
 flowchart LR
@@ -17,7 +15,7 @@ flowchart LR
 
 ## 1. Know what the reference establishes
 
-The public v2 release contains 30 model-assisted, finalized **development** references.
+The public v2 release contains 30 model-assisted, finalized development references.
 These papers have informed extraction and scoring changes. Do not relabel a subset
 as held out now: its feedback has already influenced the system.
 
@@ -37,13 +35,11 @@ from 134 families, 340 individual devices, 432 performance observations, 142
 population summaries and 107 stability tests. All references passed self-comparison.
 This checks consistency; it does not establish source completeness or a model's accuracy.
 
-All 30 public manifests declare adjudication. Four retain a completeness-stage
-marker. The other 26 are **not automatically unreviewed**: trusted-review adoption
-and revision history can represent review differently. But the public manifest alone
-does not establish a source-wide omission search for those records. Reconcile this
-with the existing private review history before claiming uniform completeness.
-Do not ask experts to redo work that the history already documents. Where evidence
-is genuinely absent, request a focused source-coverage check and retain the result.
+All 30 public manifests declare adjudication; four retain a completeness-stage
+marker. Trusted-review adoption can record completion differently, so missing markers
+do not mean missing review. Check the private history before claiming uniform
+source coverage. Request a focused omission check only where that history does not
+document one.
 
 Repeat the software audit without PDFs, API keys or model calls:
 
@@ -69,7 +65,7 @@ repair references merely to increase a model score.
 
 ## 2. Validate the scorer against scientific decisions
 
-The deterministic scorer checks values **and** context. Its tests cover unit
+The deterministic scorer checks values and context. Its tests cover unit
 conversion, missing and extra records, wrong outcomes, control/treatment swaps,
 recipe omission, renamed IDs, order invariance and assignment ambiguity. The
 assignment implementation is also checked against exhaustive small-matrix solutions.
@@ -97,13 +93,13 @@ conservative; there is no calibrated semantic judge. Enriched A/B/X ion assignme
 and the correctness of NOMAD exports are not covered by the six core scores.
 Test those outputs separately before claiming equivalent downstream chemistry.
 
-A scorer change requires rescoring **all** compared systems with that version.
+A scorer change requires rescoring all compared systems with that version.
 Keep algorithm changes separate from reference amendments. Do not tune tolerances
 or manual pairings to favor a candidate.
 
 ## 3. Compare one choice at a time
 
-The [four ablation studies](../workflows/extraction-ablations.md) already isolate:
+The [four ablation studies](../workflows/extraction-ablations.md) isolate:
 
 | Study | Changed choice | Kept fixed |
 | --- | --- | --- |
@@ -161,7 +157,7 @@ Only then run a monitored production pilot. Expand after it meets prespecified
 quality, failure-rate and cost criteria. Preserve each attempt and its configuration,
 keep retries bounded and logged, verify resume/cache inputs, and impose concurrency
 and campaign-spend controls. The current per-run budget is checked between provider
-calls; it is **not** a guaranteed hard campaign cap. Do not launch thousands of jobs
+calls; it is not a hard campaign cap. Do not launch thousands of jobs
 on the assumption that a pilot's token price is its all-in per-paper cost.
 
 Continue random scientific spot checks, plus targeted checks on parser failures,
@@ -169,7 +165,7 @@ long SI, unusual chemistry and changed providers. Keep those targeted samples
 separate from estimates of average corpus accuracy. New failure modes return to the
 development set; they do not retroactively turn old experiments into held-out tests.
 
-## Readiness, without overclaiming
+## What is ready and what remains
 
 | Layer | Implemented evidence | What remains scientific or operational work |
 | --- | --- | --- |
@@ -178,5 +174,4 @@ development set; they do not retroactively turn old experiments into held-out te
 | Ablations | Paired frozen plans, source checks, complete-roster reporting, cost visibility | Run authorized experiments, inspect errors, lock a candidate |
 | Scale | Existing batch/shard tools and bounded per-run calls | Untouched-paper evaluation, safe campaign operation, production pilot and ongoing audits |
 
-This is a foundation for defensible experiments, not a claim that an extractor has
-already been validated for thousands of papers.
+Extraction accuracy and cost at corpus scale still need to be measured.

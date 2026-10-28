@@ -1,14 +1,14 @@
 # Scoring reference
 
 `perla-evaluate` compares an extraction with a reference using fixed rules. It makes
-no LLM or embedding calls. The result measures agreement with that reference—not
-whether the paper was fully or correctly understood.
+no LLM or embedding calls. The score measures agreement with the reviewed records;
+its usefulness depends on their correctness and completeness.
 
 This guide uses three terms:
 
-- **Reference:** the records you have reviewed against the paper.
-- **Prediction:** the unchanged extraction you want to evaluate.
-- **Fact:** one scored item, such as a PCE value, a layer material or an annealing
+- Reference: the records you have reviewed against the paper.
+- Prediction: the unchanged extraction you want to evaluate.
+- Fact: one scored item, such as a PCE value, a layer material or an annealing
   temperature, together with the context needed to interpret it.
 
 The scorer first pairs records, then compares their facts. It reports missing and
@@ -77,8 +77,8 @@ You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results.
 
-Reports use format **7**, matcher **rich-study-hungarian-v8** and fact profile
-**core-scientific-facts-v6**. Regenerate older reports from saved predictions before
+Reports use format 7, matcher `rich-study-hungarian-v8` and fact profile
+`core-scientific-facts-v6`. Regenerate older reports from saved predictions before
 combining scores. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
@@ -114,8 +114,8 @@ unfamiliar to the scorer. This is not an assessment of every field in the schema
 Some details affect how facts are counted:
 
 - Structured layers take precedence over the raw stack string. If there are no
-  layers, the scorer counts the raw stack string—or, failing that, architecture—as
-  one fact. It does not split the string into layer facts.
+  layers, the scorer counts the raw stack string as one fact, falling back to
+  architecture if the string is absent. It does not split the string into layers.
 - A layer material is compared at its recorded sequence. Its role, form and
   properties also require the material to agree.
 - Processing conditions require the operation, sequence, target layers and material
@@ -209,8 +209,8 @@ being ambiguous. Temperatures, durations and other conditions do not distinguish
 step identity: swapping them between alternatives must still lose credit.
 
 Record pairing retains normalized multiword values as ordered phrases as well as
-individual words. For example, `10s/40s` and `40s/10s` no longer become identical
-matching features. The numeric tolerances and scientific equality rules are unchanged.
+individual words. For example, `10s/40s` and `40s/10s` produce different matching
+features. This tokenization does not alter the numeric comparison rules.
 
 For these nested objects, the scorer does not use the outcomes being scored to
 decide which object is which. For example, it will not identify an annealing step
@@ -265,14 +265,14 @@ For scientific value comparison, it preserves chemical case and punctuation.
 Property names use the aliases described below. Two empty token sets have similarity
 1 by convention; that is not evidence that the records describe the same object.
 
-A candidate must reach `--minimum-record-similarity`, which defaults to **0.35**.
+A candidate must reach `--minimum-record-similarity`, which defaults to 0.35.
 This number is a similarity threshold, not a probability of correctness.
 Population candidates must also have matching cohort labels. Stability candidates
 without explicit device links must have matching specimen labels. Outcomes cannot
 override these identity checks. Explicit checked label equivalences, described below,
 are applied before pairing and fact comparison.
 
-An eligible pair receives **2** extra assignment points if its parent links agree
+An eligible pair receives 2 extra assignment points if its parent links agree
 under the established pairings and its protocol fields agree. The protocol fields
 are measurement type, scan direction, statistic type and sample size, where present.
 Both-missing links can count as agreement. Families have no parent-link bonus.
@@ -327,7 +327,7 @@ abs(reference − prediction)
 | `--numeric-absolute-tolerance` | `0` | No absolute allowance by default |
 | `--minimum-record-similarity` | `0.35` | Record-pairing threshold; not a numeric tolerance |
 
-The relative tolerance allows small conversion and floating-point differences. It does not
+These tolerances allow small conversion and floating-point differences. They do not
 represent experimental uncertainty or infer precision from significant figures.
 They apply to numeric reported values in both facts and context. Schema integers,
 such as sample size and sequence, must match exactly.
@@ -345,7 +345,7 @@ The examples assume that property and context also match:
 | PCE 20% | PCE 20 with no unit | Different |
 | PCE >20% | PCE 20% | Different; a bound is not an exact value |
 
-At 20% PCE, the relative allowance is about **0.00002 percentage points**.
+At 20% PCE, the relative allowance is about 0.00002 percentage points.
 The default absolute tolerance is zero: 1 nm and 2 nm must not match merely because
 both are small in metres. An explicit absolute tolerance is still available, in base
 units, but should only be used for a declared scope where that allowance is justified.
@@ -353,7 +353,7 @@ For example, `1e-9` would allow a whole nanometre of difference for thickness.
 Converting first keeps the comparison consistent across unit representations.
 
 For a single number, conversion requires both raw values to contain one unqualified number, with either
-no suffix or a suffix equivalent to the stated unit **at the same scale and offset**.
+no suffix or a suffix equivalent to the stated unit at the same scale and offset.
 For example, raw `1 h` with unit `hour`, or raw `65 ° C` with unit `°C`, can be
 converted. Raw `1 h` with unit `s` cannot: its number and declared unit contradict
 the raw text. The suffix check recognizes unit spelling, not a different magnitude.
@@ -383,7 +383,7 @@ with the centre. The same scoring tolerances apply separately to both components
 
 For example, `1–2 h` equals `60–120 min`, and `20 ± 1 %` equals
 `0.20 ± 0.01 dimensionless`. An uncertainty of `20 ± 1 °C` equals
-`293.15 ± 1 K`: the centre shifts, but the spread does not. A range is **not**
+`293.15 ± 1 K`: the centre shifts, but the spread does not. A range is not
 interchangeable with a mean plus an uncertainty, even when their endpoints coincide.
 Inequalities, asymmetric errors, extra qualifiers such as `SD` or `SEM`, and
 unrecognized units retain literal comparison. These rules do not infer what an
@@ -423,7 +423,7 @@ When two names have been checked against the source and denote the same group,
 save that decision in a JSON list and pass `--descriptor-equivalences rules.json`.
 Each entry records `reference_sha256`, `record_kind`, `reference_label`,
 `alternative_labels`, and `reason`. Use the score report's `truth_content_sha256`
-for `reference_sha256`—not the ZIP, manifest or file hash.
+for `reference_sha256`, rather than the ZIP, manifest or file hash.
 
 The scorer applies the rule only to that exact reference and record type. It rejects
 overlapping rules and rules that would merge distinct reference groups. It changes
@@ -432,7 +432,7 @@ are saved under `config.descriptor_equivalences` in each score report.
 
 [`examples/scoring/reviewed-descriptors-v2.json`](https://github.com/lamalab-org/perla-extract/blob/main/examples/scoring/reviewed-descriptors-v2.json)
 contains the two label clarifications checked during the v2 audit. It is optional,
-not a rule built into the scorer. Freeze any such list **before** comparing model
+not a rule built into the scorer. Freeze any such list before comparing model
 runs, apply it to every arm, and report the unadjusted scores too. If the reference
 changes, its old rules no longer apply and must be checked again. Do not add rules
 merely because they improve one model's score.
@@ -475,7 +475,7 @@ The benchmark uses one fixed reference for every compared system. The scorer doe
 not exclude reference records or search for predictions to ignore.
 
 Reviewers can save `uncertain` decisions while working. Before final adjudication,
-an administrator must resolve every current record and mark it verified. Export
+an authorized finalizer must resolve every current record and mark it verified. Export
 refuses unresolved records, and scoring also refuses older manifests that contain
 them. Saved review history is not deleted or automatically reclassified.
 
@@ -511,7 +511,7 @@ perla-evaluate-dataset \
 
 For the published benchmark, also pass
 `--release data/study_extraction/ground_truth/v2/release.json` and provide one
-`--report` for **every** paper in that release. The two-paper example above is only
+`--report` for every paper in that release. The two-paper example above is only
 for a separate small dataset; it will correctly fail against the 30-paper release.
 
 The command does not rerun matching. It rejects incompatible report formats, schema
@@ -524,7 +524,7 @@ uses the source-manifest hash to detect duplicates. Bare-JSON reports lack these
 paper-identity checks.
 
 With `--release`, the command rejects missing or extra papers, duplicates, different
-reference hashes and different splits **before writing an aggregate**. Without it,
+reference hashes and different splits before writing an aggregate. Without it,
 the command cannot tell whether you left out a paper. A failed run is not permission
 to shrink the benchmark: retain the failure and resolve how to score it before
 reporting a complete result. The command does not synthesize predictions for failures
@@ -559,7 +559,7 @@ The value-only and attribution views remain available as `core_value_only_micro`
 
 ### Intervals
 
-By default, the command draws **2,000** bootstrap samples with seed **0**. Each
+By default, the command draws 2,000 bootstrap samples with seed 0. Each
 sample resamples the contributing paper scores with replacement and calculates their
 mean. The reported 95% bounds come from the sorted sample means. These are estimates
 of uncertainty in a single system's mean, not a paired significance test of two systems.

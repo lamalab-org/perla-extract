@@ -249,7 +249,7 @@ passwords, session tokens, or deployment configuration. Treat it as research dat
 may contain reviewer-written notes and should be stored with the same access controls
 as the ground-truth dataset.
 
-After the final administrator adjudication, **Download PR bundle** produces a
+After an authorized finalizer completes adjudication, **Download PR bundle** produces a
 deterministic ZIP containing the rich ground truth, immutable seed, complete review
 events, and provenance manifest. The download is disabled if any edit occurred after
 adjudication or if source-evidence validation fails. For a local review directory, the

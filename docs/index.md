@@ -4,8 +4,7 @@
 PERLA Extract turns photovoltaic papers and supporting information into source-linked
 records for device structure, composition, processing, performance and stability.
 It represents individual measurements separately from population statistics and
-stability tests. This supports correct attribution; it does not guarantee complete
-extraction or correct scientific interpretation.
+stability tests. Experts still need to check attribution, interpretation and completeness.
 
 ## Workflow
 
@@ -24,31 +23,24 @@ evidence-span IDs; the application restores exact quotations. Source checks dete
 invalid citations, absent raw values, duplicate identifiers and broken links. They
 do not establish that a passage scientifically supports a claim.
 
-Configured conservative finalization can remove unsupported optional claims from
-the final extraction. The complete candidate and exact removals remain in separate
-audit artifacts. Expert review starts from the final result, with those artifacts
-available for inspection. [Evidence and validation](concepts/evidence.md) describes
-these boundaries.
+Finalization can remove unsupported optional claims. It preserves the complete
+candidate and a list of removals for expert review.
+See [Evidence and validation](concepts/evidence.md) for the checks and their limits.
 
 For evaluation, start with [Evaluation method](methods/benchmark.md) or
 [run the synthetic scoring example](workflows/scoring-example.md).
 
-## Design principles
+## How extraction works
 
-- **Keep scientific reporting levels separate.** Individual measurements,
-  population statistics, and stability experiments are different record types.
-- **Separate reading from record construction.** Long inputs may use structural
-  windows and repeated source readings to collect neutral claims, but one global call
-  constructs the final records from their grounded union and cited passages.
-- **Re-read before review.** A second pass audits the complete draft against the same
-  evidence. The first draft and a record-level change index remain inspectable.
-- **Treat scope as data.** Study targets, processing arms, characterization specimens,
-  populations, and measurements remain distinct before any are mapped to records.
-- **Use generic reported values.** Layers and processing steps contain `ReportedValue`
-  records. Every value denotes one scientific quantity, while shared citation IDs avoid
-  repeating the same evidence.
-- **Make uncertainty inspectable.** The full output, conservative grounded subset,
-  failed responses, configuration, and conversion losses are separate artifacts.
+Models collect claims before assembling records. Long documents can be split at
+structural boundaries and read more than once; one global call assembles the cited
+claims. A later pass checks the draft against the evidence. Saved drafts and change
+reports let you inspect what each pass changed.
+
+Claims distinguish device designs, processing variants, specimens and measurements.
+Layers and processing steps use `ReportedValue` for individual quantities, with
+shared citation IDs to avoid repeating quotations. The output retains failed
+responses, configuration and export losses alongside the final study.
 
 ## Choose a path
 

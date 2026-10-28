@@ -1,20 +1,18 @@
 # Test a cheaper extraction workflow
 
-These are small, paired experiments, not changes to production defaults. They ask
-which paid stages earn their cost. No result or saving is assumed in advance.
-The studies test repeated reading, global refinement, the claim ledger and the
-reader model separately. Run studies 1–3 first; study 4 tests a different cost lever.
+Four paired experiments test which extraction stages earn their cost: repeated
+reading, global refinement, the claim ledger and the reader model. Each changes
+one choice. None changes the production defaults or assumes a saving.
 
 ## Freeze the comparison before running
 
-First follow [Validate before scaling](../methods/validation-and-scale.md). The
-current 30-paper reference is a development set. Neither finalized records nor a
-perfect self-score establish that the scorer agrees with experts on new predictions.
+Use the current 30-paper reference for development. First check scorer decisions
+as described in [Validate before scaling](../methods/validation-and-scale.md).
 
-1. Select eight reviewed development papers using source characteristics, not model
+1. For screening, select eight reviewed development papers using source characteristics, not model
    scores: include short and long SI, multiple specimens, population statistics,
    stability, and detailed chemistry. Categories may overlap. Record why each paper
-   was selected. If fewer references are ready, label the run exploratory; do not
+   was selected. A smaller setup pilot is exploratory; do not
    substitute unreviewed seeds. Papers used to revise prompts are development data.
 2. Use the same finalized reference versions, main PDFs, SI, parser, schema and
    scorer for both arms. The planner requires format-4 finalized references, verifies
@@ -35,8 +33,7 @@ perfect self-score establish that the scorer agrees with experts on new predicti
 
 All studies retain targeted repair and composition/processing enrichment. No paper
 figures are sent to models. Do not edit predictions after seeing the reference.
-The planner records hashes and commands; the existing CLIs perform extraction and
-scoring. There is no new agent framework, model router or production setting.
+The planner records hashes and commands; the existing CLIs perform extraction and scoring.
 
 ## Study 1: does the second source reading pay for itself?
 
@@ -52,11 +49,10 @@ The extraction model never receives it. Keep the list fixed across arms and repe
 | Control | 2 per document/window | Unchanged |
 | Treatment | 1 per document/window | Unchanged |
 
-Hypothesis: one reading removes a substantial call/output cost while preserving
-most correctly attributed facts. Risk: a claim omitted by the reader never reaches
-the assembler. Inspect missing concentrations, population metrics and stability
-conditions, not merely overall F1. Compare the ledger and final extraction to see
-whether a recovered claim survived assembly. Claim count is not accuracy.
+One reading may save calls and output tokens, but omitted claims may never reach
+the assembler. Check missing concentrations, population metrics and stability
+conditions. Compare the claim ledger with the final study to distinguish reading
+omissions from assembly losses.
 
 ## Study 2: does global refinement improve the final result?
 
@@ -68,10 +64,9 @@ in the preparation command below and choose a new output directory.
 | Control | Enabled | 2 | Enabled |
 | Treatment | Disabled | 2 | Enabled |
 
-Hypothesis: local repair recovers enough errors that generating a second complete
-study adds little final quality. This comparison does **not** also remove the
-second reading. Keep all other settings at the common control, even if study 1
-looks favorable. That isolates refinement rather than measuring two changes at once.
+Test whether local repair is enough without a second complete study rewrite. Keep
+the second source reading and all other control settings, even if study 1 favors
+removing it.
 
 Inspect `draft_extraction.json`, `refinement_extraction.json` when present,
 `refinement_selection.json`, repair audits and final `extraction.json`. A refinement
@@ -94,11 +89,9 @@ Configuration: `examples/ablations/03-direct-extraction.json`.
 | Control | Grounded claim ledger plus cited passages | Enabled |
 | Treatment | Complete parsed scientific evidence, no ledger calls | Enabled |
 
-Hypothesis: a strong model can construct the study directly without losing important
-facts, while avoiding the ledger's output cost and its potential omission bottleneck.
-Keep refinement, enrichment, repair settings and budgets unchanged. This is **not**
-a one-call pipeline: only `--claims` changes. A later combined test can remove both
-claims and refinement if the individual studies support that combination.
+Test whether direct assembly preserves facts while avoiding the ledger's cost and
+omissions. Keep refinement, enrichment, repair and budgets unchanged. Only `--claims`
+changes, so this remains a multi-call workflow.
 
 The intervention also changes available audit information: without a claim ledger,
 claim-coverage repair cannot identify the same missing claims. This is a total-system
@@ -106,7 +99,7 @@ comparison of using a ledger, not an isolated test of JSON formatting. Local che
 still run, but source occurrence does not establish scientific correctness.
 
 Report results separately for short and long SI. The existing no-claims path uses
-global source evidence; it does **not** implement direct-extraction windows. A paper
+global source evidence; it does not implement direct-extraction windows. A paper
 that exceeds the assembly input limit must remain a visible failure. Do not truncate
 the SI or quietly omit that paper. Confirm context support with `--dry-run` before
 paid runs; if comparing only the context-feasible subset as a secondary analysis,
@@ -131,17 +124,15 @@ refuses a missing reader or the same model string as the main model.
 Both arms read each document/window twice. Do not also reduce recall passes. Choose
 one candidate before scoring: verify its provider ID, supported context, strict
 schema support, output limits, and current prices. An open-weight candidate is
-welcome; model availability or lower token prices are not evidence of lower
-per-paper cost. Keep the provider/model fixed, record defaults and fallbacks, and
+welcome, but compare total per-paper cost, not just token prices. Keep the
+provider/model fixed, record defaults and fallbacks, and
 count all failed or repaired responses. If its context/output limits cannot support
 the shared settings, do not silently use smaller windows in only that arm. That
 requires a separately declared configuration comparison.
 
-Hypothesis: claim reading can be cheaper while retaining the facts a strong model
-needs to assemble scientifically correct records. The main danger is unrecoverable
-omission: the assembler normally sees ledger-selected evidence, not all uncited
-source passages. A claim-free fallback can also make a superficially successful
-run cease to represent the intended hybrid. Report such fallbacks explicitly.
+Test whether the cheaper reader preserves the facts needed for assembly. The
+assembler normally sees only ledger-selected evidence; it may not recover omitted
+claims. Report claim-free fallbacks, which bypass the reader being tested.
 
 Inspect ledger and final-output errors separately: missing concentrations, damaged
 formulas, wrong object scope, lost statistical qualifiers and unsupported claims.
@@ -149,14 +140,13 @@ The source-grounding audit is not a precision score. Do not conclude that an ope
 model only loses recall; wrong relationships and plausible but wrong values also
 matter. Keep the common per-group precision/recall criteria.
 
-No reader-model leaderboard is implied. Trying another reader is another
-preregistered candidate on development papers; it must not reuse held-out results
-to choose the model. Only test a combined one-reading/hybrid workflow after this
-factor's effect is measured separately.
+Choose each reader candidate before scoring on development papers. Do not use
+held-out results to select a model. Test combined changes only after measuring
+each factor separately.
 
 ## Prepare commands without paid calls
 
-From a clean checkout with PERLA installed, create a **private** cohort file:
+From a clean checkout with PERLA installed, create a private cohort file:
 
 ```json
 [
@@ -258,11 +248,10 @@ summary does not recover their spend from provider billing. Run status, cache hi
 and prediction-validation results remain visible. A successful summary is not a
 claim that every extraction succeeded or passed validation.
 
-This command summarizes saved scores; it does not rerun extraction, verify that a
-provider honored the recorded request settings, or select a production default. Keep the plan, run logs,
-score reports and their recorded hashes together. Version-1 plans lacked validated
-reference/scorer bindings and are refused: prepare a version-2 plan before running
-new comparisons. Do not relabel an old plan as version 2.
+The command summarizes saved scores. It does not rerun extraction or verify provider
+behavior. Keep the plan, logs and score reports together. Plans now use format 3,
+with validated reference/scorer bindings and explicit score output paths.
+Regenerate older plans with the planner; changing the version number is not enough.
 
 The report includes a descriptive 95% percentile bootstrap interval for the mean
 paired F1 difference. It first averages repeated treatment-minus-control differences
@@ -283,7 +272,7 @@ stability, composition, stack and processing. Show each paper, not just averages
 Inspect record matching issues and scientific associations blind to arm when possible.
 Do not alter tolerances, references or pairings to favor a cheaper arm.
 
-Use this **screening rule**, fixed before viewing scores: nominate a cheaper arm
+Use this screening rule, fixed before viewing scores: nominate a cheaper arm
 only if mean paper-level F1 falls by at most 0.01, no group's pooled precision or
 recall falls by more than 0.02, and it has no additional failed runs. These margins
 are practical design choices, not scientifically established equivalence bounds.

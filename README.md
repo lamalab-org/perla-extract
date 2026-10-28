@@ -20,14 +20,13 @@ perla-extract \
 ```
 
 Model calls use LiteLLM. The provider-prefixed model name selects the backend and its
-standard credential—for example, `openai/...` with `OPENAI_API_KEY`,
+standard credential: `openai/...` with `OPENAI_API_KEY`,
 `openrouter/...` with `OPENROUTER_API_KEY`, or `anthropic/...` with
-`ANTHROPIC_API_KEY`. The default calls OpenAI directly; the extraction workflow itself
-remains provider-neutral.
+`ANTHROPIC_API_KEY`. The default calls OpenAI directly.
 
 The output includes `extraction.json`, its source evidence and retained drafts.
-Repair and enrichment are audited. If conservative finalization removes an unsupported
-optional claim, the original candidate and removed content remain available.
+Saved audits show what repair and enrichment changed. If finalization removes an
+unsupported optional claim, it preserves the candidate and the removed content.
 NOMAD export uses reported facts and accepted interpretations without rewriting the
 extraction. Use `--dry-run` to parse inputs without calling a model.
 
@@ -78,25 +77,20 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development and test commands.
 
 ## Discover new papers
 
-PapersBot combines packaged journal feeds, OpenAlex topic searches, and an optional
-Zotero group; applies one replaceable JSON selection policy; retrieves available PDFs;
-and records incremental state as readable JSON. It is deliberately separate from
-scientific data extraction:
+PapersBot finds papers through journal feeds, OpenAlex topic searches and an optional
+Zotero group. It filters candidates, retrieves available PDFs and saves its progress
+as JSON. It does not extract scientific records:
 
 ```bash
 pip install 'perla-extract[papersbot]'
 perla-papersbot downloaded_papers --state-dir .papersbot-state
 ```
 
-Use `--feeds-file` or repeated `--feed` options to replace the journal list and
-`--selection-file` to replace the relevance policy. `--zotero-group-id` also ingests a
-Zotero group, including stored PDF attachments. A configured collection can be a
-journal-club-curated intake queue. Zotero access is read-only and works with a key
-scoped to that group. The supported unattended deployment is an internal cron job,
-with ordinary settings available through `PAPERSBOT_` environment variables. Each PDF
-acquisition records its source and access basis; authorized local retrieval mechanisms
-can implement the small `PdfSource` interface without adding publisher cases to the
-bot.
+Use `--feeds-file` or repeated `--feed` options to change the journal list and
+`--selection-file` to change the relevance policy. `--zotero-group-id` reads a group
+library and its stored PDFs; a collection can serve as a journal-club intake queue.
+Zotero access is read-only. See the [PapersBot guide](docs/workflows/papersbot.md)
+for group-scoped keys, internal cron setup, access records and custom PDF retrieval.
 
 ## Authors
 

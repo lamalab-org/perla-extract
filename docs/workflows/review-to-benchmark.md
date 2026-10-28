@@ -23,12 +23,11 @@ content. Model output and unresolved comments are not a finished reference.
 | Score | Rejects duplicate record IDs; verifies a frozen reference's schema/content hashes; records the field pairs that earned credit | Whether difficult record pairings and chemical equivalences are appropriate |
 | Load saved scores | Rejects precision, recall, or F1 values that disagree with their counts | Whether the evaluation set represents the intended use |
 
-The regression tests save a correction, reload it through both local storage and
-the cloud-storage adapter, finalize it, unpack the browser ZIP, and pass that directory
-to the scoring CLI. They check that the original model result remains unchanged and
-that the correction changes the expected score. Cloud tests use an in-memory Blob
-service; they do not prove the live provider will never fail. Separate assignment tests
-compare the matcher with exhaustive search on small rectangular and tied matrices.
+Regression tests save and reload corrections through local storage and a simulated
+Blob service, finalize them, unpack the browser ZIP and score it. They check that
+corrections change the expected score without changing the original prediction.
+These tests do not exercise live cloud storage. Matcher tests also compare results
+with exhaustive search on small rectangular and tied matrices.
 
 To repeat these checks without model calls:
 
@@ -54,12 +53,12 @@ flowchart TD
     E --> F
     F --> G{Correct and complete within the declared scope?}
     G -->|Not yet| F
-    G -->|Yes; all records verified| H[Administrator makes final decisions]
+    G -->|Yes; all records verified| H[Authorized finalizer approves records]
     H --> I[Export a fixed reference version]
 ```
 
-The browser revision already contains saved edits. The compiler uses that current
-study; it does **not** replay old edits over it. Exact Excel bytes, cell comments,
+The compiler uses the current saved study without replaying old edits. Original
+Excel bytes, cell comments,
 proposed values, browser review history and evidence remain available separately.
 Neither compiling a package nor scoring it changes the deployed app.
 
@@ -157,8 +156,9 @@ because it parses or passes a schema check.
 
 ### Freeze only after adjudication
 
-Apply source-supported corrections through the current review workflow, resolve
-completeness, and have an administrator complete adjudication. Then export:
+Apply corrections, resolve omissions and complete finalization. Administrators can
+finalize by default; deployments can [grant this permission to signed-in reviewers](
+../deployment/review-workbench.md#let-reviewers-finalize-references). Then export:
 
 ```bash
 python review_workbench/export_ground_truth.py \
@@ -188,7 +188,7 @@ Keep review packages private unless they have been cleared for release. They can
 contain reviewer identifiers, free-text comments, original uploads and source documents with redistribution
 restrictions. Keep them outside the public repository.
 
-The ground-truth exporter is **not an anonymization tool**. In particular,
+The ground-truth exporter does not anonymize data.
 `review_events.json` retains reviewer identifiers and comments. Review all exported
 files before publication and obtain the necessary permissions. If a public release
 needs anonymization, create a separate version and update its hashes to match the
@@ -264,8 +264,8 @@ For example, the repository's 30-paper set uses
 above is not a complete run of that benchmark. Check that the compared systems used
 the same sources and their declared model configurations.
 
-If an adjudicator later corrects a reference, release truth v2 and rescore **both saved
-predictions** against v2. Do not compare A/v1 with B/v2 and attribute the difference
+If an adjudicator later corrects a reference, release truth v2 and rescore both saved
+predictions against v2. Do not compare A/v1 with B/v2 and attribute the difference
 to an extractor improvement. Papers whose feedback changed prompts or scoring rules
 are development papers, not a held-out test set.
 

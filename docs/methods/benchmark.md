@@ -13,8 +13,8 @@ tolerance and reporting rules.
 
 An evaluation uses two `StudyExtraction` documents:
 
-- **Reference:** the source-checked records used as the comparison target.
-- **Prediction:** an unchanged extraction being evaluated.
+- Reference: the source-checked records used as the comparison target.
+- Prediction: the unchanged extraction being evaluated.
 
 A frozen reference directory records the reviewed version, its schema and content
 hashes and the final review decisions. A complete prediction
@@ -48,7 +48,10 @@ tests remain separate. Reverse and forward scans can describe one cell; a mean o
 cell only when the source supports that identity.
 
 The workbench saves corrections, additions, decisions and their evidence. An
-administrator makes the final review decisions before export. The exporter checks
+authorized finalizer approves the records before export. Administrators have this
+permission by default; deployments can also grant it to signed-in reviewers through
+`REVIEW_ALLOW_REVIEWER_FINALIZATION=true`.
+The exporter checks
 that every current record has a final decision and that the schema and citations
 pass validation. It cannot tell whether a reviewer read the whole source or
 interpreted it correctly. The [review-to-benchmark guide](
@@ -67,9 +70,9 @@ Report pending papers separately from the finalized benchmark.
 ## Match records, then compare facts
 
 Two extractions may give the same device different IDs. PERLA therefore pairs
-records by their content, separately for each record type. It uses earlier family
-and device pairings, together with measurement conditions, to help pair related records. The assignment is one-to-one: a prediction cannot match
-several reference records.
+records by content within each record type. Family and device pairings, together
+with measurement conditions, help pair their child records. Each prediction can
+match only one reference record.
 
 Missing fabrication steps do not affect family matching; they still lose processing
 credit. Population cohort labels, and stability specimen labels without explicit
@@ -80,9 +83,9 @@ equivalences can be supplied explicitly, tied to an exact reference hash. Freeze
 these decisions before comparing models and use the same list for every arm.
 
 Within paired records, the scorer compares facts in six groups: performance,
-population statistics, stability, stack, composition and processing. The recorded context specifies which cell, scan, layer, constituent, operation or
-stability checkpoint a fact belongs to. Explicit layer and operation sequence is meaningful; JSON array order
-is not.
+population statistics, stability, stack, composition and processing. Context identifies
+the cell, scan, layer, constituent, operation or stability checkpoint. Explicit
+sequence fields determine layer and operation order; JSON array position does not.
 
 Single unqualified numbers with compatible explicit units are converted before
 comparison. The default relative tolerance is `1e-6`, with no absolute allowance. This permits
@@ -108,13 +111,12 @@ prediction and an unmatched reference fact. Extra predictions reduce precision;
 missing facts reduce recall. Duplicate predictions cannot reuse one reference fact.
 
 The group-balanced F1 averages the groups that contain facts in either study.
-Groups empty in both studies are left out rather than given perfect scores. Pooled counts and per-group scores are
-also retained: equal group weighting is a reporting choice, not a measure of every
-field's scientific importance.
+Groups empty in both studies are left out. Reports also retain pooled counts and
+per-group scores. Equal weighting does not imply equal scientific importance.
 
 The dataset command combines paper reports that use compatible versions and scoring
-settings. To estimate uncertainty in average scores, it resamples papers—not
-individual fields. These intervals describe one system, not the difference between
+settings. It estimates uncertainty in average scores by resampling papers, keeping
+each paper's fields together. These intervals describe one system, not the difference between
 two systems. Pass `--release` with the frozen `release.json` to require every listed
 paper and its exact reference hash. The command then refuses an incomplete or mixed
 reference set. It retains the input report hashes in the aggregate. Missing or failed
