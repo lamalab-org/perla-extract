@@ -121,6 +121,9 @@ threshold and numeric tolerances are explicit options and are written into the o
 report. See [Evaluate an extraction](../workflows/evaluation.md).
 Use repeated `--report` options with `perla-evaluate-dataset` to aggregate compatible
 per-paper reports with micro counts, macro rates, and paper-bootstrap intervals.
+Add `--release PATH/TO/release.json` for a frozen benchmark: aggregation then requires
+exactly that paper roster, split and reference hashes, and saves the release and
+input report hashes with the scores. Without this option, completeness is not checked.
 Numeric absolute tolerance is in canonical base units, not the reference's display
 unit. Dataset reports retain `--bootstrap-samples` and `--seed`, explain unavailable
 intervals, and distinguish complete from partial or unknown cost accounting.

@@ -256,8 +256,13 @@ average so missing or failed extractions remain visible.
 
 The aggregator rejects mixed scoring configurations, schema versions, benchmark
 splits and duplicate benchmark sources. It produces single-system intervals, not
-a paired A/B significance test. Check that all intended papers are present and that
-the compared systems used the same sources and their declared model configurations.
+a paired A/B significance test. For a frozen release, add `--release` with its
+`release.json` and supply every listed paper's report. This also rejects incomplete
+rosters and changed reference hashes, and records the release and input report hashes.
+For example, the repository's 30-paper set uses
+`--release data/study_extraction/ground_truth/v2/release.json`; the two-paper example
+above is not a complete run of that benchmark. Check that the compared systems used
+the same sources and their declared model configurations.
 
 If an adjudicator later corrects a reference, release truth v2 and rescore **both saved
 predictions** against v2. Do not compare A/v1 with B/v2 and attribute the difference

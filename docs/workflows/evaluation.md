@@ -73,14 +73,20 @@ You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results.
 
-Reports use format **5**, matcher **rich-study-hungarian-v6** and fact profile
-**core-scientific-facts-v4**. Regenerate older reports from saved predictions before
+Reports use format **6**, matcher **rich-study-hungarian-v7** and fact profile
+**core-scientific-facts-v5**. Regenerate older reports from saved predictions before
 combining scores. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
-When loading reports, count/rate checks reject impossible match counts or precision,
-recall, and F1 values that disagree with their stored counts. These consistency checks
-do not authenticate a report's author or replace inspection of scientific matches.
+When loading reports, checks reject impossible match counts or rates that disagree
+with their counts. They also check scientific group totals, the group-average F1,
+the one-to-one ledger of matched and unmatched fields, and consistency across the
+three fact-score views. These checks detect internally inconsistent reports; they
+do not authenticate an author or prove that the claimed matches are correct.
+
+Frozen releases retain the scorer versions used when they were published. Do not
+edit their metadata to use a newer scorer. Generate new evaluation reports instead;
+the reference stays fixed while the new report records the new scoring rules.
 
 ## What is scored
 
@@ -91,8 +97,8 @@ Use `core_facts` to assess extraction quality. The scorer counts facts in six gr
 | Group | What counts | What must agree for a match |
 | --- | --- | --- |
 | Performance | Reported metrics, such as PCE, Voc, Jsc and FF | Paired record, device/family links, variant, champion status, selection basis, measurement type and scan direction |
-| Population | Sample size and aggregate metrics | Paired record, family link and statistic type; metric matches also require the same sample size |
-| Stability | Test conditions, checkpoint times, checkpoint conditions and outcomes | Paired record and specimen links; checkpoint facts also depend on the recorded time and conditions, as described below |
+| Population | Sample size and aggregate metrics | Paired record, cohort label, family link and statistic type; metric matches also require the same sample size |
+| Stability | Test conditions, checkpoint times, checkpoint conditions and outcomes | Paired record and specimen links; without an explicit device ID, the specimen label must also agree. Checkpoint facts also depend on the recorded time and conditions, as described below |
 | Composition | Absorber formula and properties; layer and absorber constituents, roles and amounts | Paired family, absorber/layer context and constituent association |
 | Stack | Layer materials, roles, material forms and properties; device polarity | Paired family, recorded sequence and material association |
 | Processing | Operations, materials, conditions and specimen-specific properties | Paired record, operation, recorded sequence, target layers and relevant materials or device variant |
@@ -119,6 +125,14 @@ Neither do absent, empty or `not_reported` scalar fields. Labels can still influ
 record pairing; when several absorbers lack layer links, absorber labels also help
 distinguish their context. Champion status constrains performance matches rather
 than earning its own point.
+
+Two labels carry scientific identity in the current schema: a population's `label`
+and a stability test's `specimen_label` when it has no explicit `device_id`.
+These must agree after Unicode, minus-sign and whitespace normalization. For example,
+two populations called `control` and `treated` must not trade their PCE values and
+still get full credit, even if their family and sample size agree. An explicitly
+device-linked stability test uses the device link instead of its display label.
+This rule is conservative: `control` and `untreated cells` do not automatically match.
 
 For quantities, a match requires the property name, value, units and recorded
 context to agree under the rules below. Non-numeric facts use the corresponding
@@ -180,7 +194,8 @@ The separate views show that the numbers were recovered but their context was no
 
 `core_facts.issues` lists detected matching problems. Two kinds are checked:
 
-- A selected record pair has an equally weighted alternative in its row or column.
+- A different complete assignment has the same optimal total weight and changes a
+  selected record pair. A local tie alone is not enough.
 - Two objects inside a record have indistinguishable recorded identities, such as
   two annealing steps with no sequence numbers and the same targets and materials.
 
@@ -204,8 +219,8 @@ when the recorded context does not distinguish a match; a reviewer must decide
 whether the ambiguity reflects an extraction error or a scoring limitation.
 
 `scoring_status="needs_review"` means the report contains such issues.
-`"ready"` means only that these checks found none. The checks do not prove a unique
-scientific pairing and do not find every possible alternative assignment.
+`"ready"` means only that these checks found none. A unique optimum under the
+scorer's weights is not proof of a unique scientific identity.
 
 Both scoring commands accept `--fail-on-scoring-issues`. They save the report, then
 exit with an error if matching needs review. This option does not enforce a minimum
@@ -234,6 +249,9 @@ Jaccard(A, B) = number of shared entries / number of distinct entries in either 
 Record-content features include individual words and ordered multiword values from
 materials, descriptions and reported values. The
 scorer excludes record IDs, link IDs and evidence quotations from these tokens.
+For families it also excludes `processing_steps`: missing a recipe must reduce
+processing recall, not prevent recognition of the family and erase credit for
+unchanged measurements. Other recorded family content still contributes to matching.
 For eligible numbers with recognized units, it uses base-unit values and units;
 otherwise it uses raw values and units. It formats canonical numbers to 12 significant
 digits for this pairing step only. Final numeric comparison does not use that rounding.
@@ -245,6 +263,9 @@ Property names use the aliases described below. Two empty token sets have simila
 
 A candidate must reach `--minimum-record-similarity`, which defaults to **0.35**.
 This number is a similarity threshold, not a probability of correctness.
+Population candidates must also have matching cohort labels. Stability candidates
+without explicit device links must have matching specimen labels. Outcomes cannot
+override these identity checks.
 
 An eligible pair receives **2** extra assignment points if its parent links agree
 under the established pairings and its protocol fields agree. The protocol fields
@@ -272,9 +293,17 @@ from explicit sequence fields, not array position.
 
 Values influence record pairing, so this is not a value-independent identity check.
 Similar specimens can be confused, and a wrong family pairing can affect its
-children. Equal-weight alternatives are flagged within `1e-12` absolute difference,
-but the check does not search all alternative global assignments. Inspect the
-reported pairs and field paths when a score is surprising.
+children. To detect equally optimal assignments, the scorer examines the Hungarian
+solver's reduced costs: edges with zero reduced cost can participate in another
+optimum. A cycle that exchanges selected edges marks the affected pairs as ambiguous.
+The zero test allows `1e-12 / N` for floating-point error, where `N` is the padded
+matrix size; dummy rows and columns are included. This is a numerical tie check,
+not a measure of scientific confidence. Inspect the reported pairs and field paths
+when a score is surprising.
+
+For example, weights `[[0.875, 0.75], [0.625, 0.5]]` have no local ties but two
+complete assignments totaling 1.375: both pairs are ambiguous. Conversely,
+`[[0.9, 0.9], [0.85, 0.4]]` has a local tie but a unique optimum of 1.75.
 
 ### Numeric tolerances: when are two values equal?
 
@@ -319,7 +348,11 @@ For example, `1e-9` would allow a whole nanometre of difference for thickness.
 Converting first keeps the comparison consistent across unit representations.
 
 Conversion requires both raw values to contain one unqualified number, with either
-no suffix or a suffix matching the stated unit. Each parsed number must agree with
+no suffix or a suffix equivalent to the stated unit **at the same scale and offset**.
+For example, raw `1 h` with unit `hour`, or raw `65 ° C` with unit `°C`, can be
+converted. Raw `1 h` with unit `s` cannot: its number and declared unit contradict
+the raw text. The suffix check recognizes unit spelling, not a different magnitude.
+Each parsed number must agree with
 its raw number within an internal relative tolerance of `1e-9`, with no absolute
 allowance. This prevents a small nonzero raw number from being accepted as a parsed
 zero. That consistency check is separate from the scoring tolerance.
@@ -430,6 +463,11 @@ perla-evaluate-dataset \
   --output results/model-x.dataset-evaluation.json
 ```
 
+For the published benchmark, also pass
+`--release data/study_extraction/ground_truth/v2/release.json` and provide one
+`--report` for **every** paper in that release. The two-paper example above is only
+for a separate small dataset; it will correctly fail against the 30-paper release.
+
 The command does not rerun matching. It rejects incompatible report formats, schema
 hashes, matcher versions and scoring settings. It also rejects a mix of reports with
 and without reference manifests.
@@ -439,9 +477,20 @@ duplicate paper IDs or overlapping source hashes. If source hashes are absent, i
 uses the source-manifest hash to detect duplicates. Bare-JSON reports lack these
 paper-identity checks.
 
-The command cannot tell whether you left out a paper. Keep a separate list of all
-intended papers and account for missing and failed runs. It also does not enforce
-one extraction model or configuration across reports; check those run settings yourself.
+With `--release`, the command rejects missing or extra papers, duplicates, different
+reference hashes and different splits **before writing an aggregate**. Without it,
+the command cannot tell whether you left out a paper. A failed run is not permission
+to shrink the benchmark: retain the failure and resolve how to score it before
+reporting a complete result. The command does not synthesize predictions for failures
+or enforce one extraction model or configuration; check those run settings yourself.
+
+Every aggregate retains `input_reports`, with each paper's reference provenance,
+reference-content hash, prediction-content hash and report hash. When a release is
+supplied, `reference_release_sha256` also identifies its full parsed metadata.
+Hashes use sorted, compact UTF-8 JSON rather than the original file formatting;
+the release digest includes a final newline, and the report digest does not.
+Keep the input reports and release file with the aggregate so these hashes can be
+checked. This is a reproducibility record, not a cryptographic signature.
 
 ### Totals and paper averages
 

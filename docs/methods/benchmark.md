@@ -71,6 +71,12 @@ records by their content, separately for each record type. It uses earlier famil
 and device pairings, together with measurement conditions, to help pair related records. The assignment is one-to-one: a prediction cannot match
 several reference records.
 
+Missing fabrication steps do not affect family matching; they still lose processing
+credit. Population cohort labels, and stability specimen labels without explicit
+device links, must agree. This prevents equal outcomes from making a control and a
+treated cohort interchangeable. The rule normalizes typography, not synonyms, so
+different descriptions of the same cohort can still lose credit.
+
 Within paired records, the scorer compares facts in six groups: performance,
 population statistics, stability, stack, composition and processing. The recorded context specifies which cell, scan, layer, constituent, operation or
 stability checkpoint a fact belongs to. Explicit layer and operation sequence is meaningful; JSON array order
@@ -105,7 +111,10 @@ field's scientific importance.
 The dataset command combines paper reports that use compatible versions and scoring
 settings. To estimate uncertainty in average scores, it resamples papers—not
 individual fields. These intervals describe one system, not the difference between
-two systems. You must supply the full paper list and account for missing or failed runs.
+two systems. Pass `--release` with the frozen `release.json` to require every listed
+paper and its exact reference hash. The command then refuses an incomplete or mixed
+reference set. It retains the input report hashes in the aggregate. Missing or failed
+runs still need an explicit resolution; the command does not invent their predictions.
 
 ## Limitations
 
@@ -113,6 +122,10 @@ Record matching is an estimate of identity. Similar specimens or differently gro
 operations can produce incorrect pairings. The report lists selected pairs,
 unmatched fields and detected ambiguity so you can check them against the source.
 A pairing can be wrong even when the scorer gives no warning.
+Ambiguity checks detect changes between equally optimal complete assignments, not
+just ties between two local candidates. They do not measure how plausible a pairing
+is scientifically. If families are distinguishable only by their recipes, excluding
+recipes from family matching can expose an ambiguity rather than settle it.
 
 The fixed text-comparison rules can reject equivalent chemical names or descriptions. Conversely, literal presence in a citation does not prove that a value belongs
 to the asserted device or property. Citation validity and scientific correctness are
