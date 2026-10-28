@@ -41,7 +41,7 @@ def _load_env(path: Path | None) -> None:
             os.environ.setdefault(name, value.strip().strip('"').strip("'"))
 
 
-def _reasoning(value: str) -> str | None:
+def normalize_reasoning_effort(value: str) -> str | None:
     """Translate the CLI-only ``omit`` sentinel into an absent API parameter."""
 
     return None if value == "omit" else value
@@ -98,7 +98,7 @@ def extract_study(
         supplement=Path(supplement) if supplement else None,
         output_dir=Path(output_dir),
         model=model,
-        reasoning_effort=_reasoning(reasoning_effort),
+        reasoning_effort=normalize_reasoning_effort(reasoning_effort),
         use_claim_ledger=use_claim_ledger,
         claim_model=claim_model,
         claim_max_output_tokens=claim_max_output_tokens,

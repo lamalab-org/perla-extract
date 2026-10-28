@@ -71,6 +71,7 @@ def plan(tmp_path):
                         "repeat": repeat,
                         "arm": arm,
                         "score": ["scorer", "--output", str(path)],
+                        "score_output": str(path),
                         "run_configuration": str(configuration_path),
                         "expected_configuration": configuration,
                     }
@@ -79,7 +80,7 @@ def plan(tmp_path):
     path.write_text(
         json.dumps(
             {
-                "format_version": 2,
+                "format_version": 3,
                 "jobs": jobs,
                 "repeats": 2,
                 "study": {"name": "test"},
@@ -103,7 +104,7 @@ def change_score(plan, edit):
     from pathlib import Path
 
     job = json.loads(plan.read_text(encoding="utf-8"))["jobs"][0]
-    path = Path(job["score"][-1])
+    path = Path(job["score_output"])
     payload = json.loads(path.read_text(encoding="utf-8"))
     edit(payload)
     path.write_text(json.dumps(payload), encoding="utf-8")
@@ -130,7 +131,7 @@ def test_missing_or_malformed_report_blocks_headline_not_diagnostics(
     from pathlib import Path
 
     job = json.loads(plan.read_text(encoding="utf-8"))["jobs"][0]
-    path = Path(job["score"][-1])
+    path = Path(job["score_output"])
     if missing:
         path.unlink()
     else:
@@ -200,7 +201,7 @@ def test_agreement_between_arms_does_not_override_prepared_contract(plan, field)
     from pathlib import Path
 
     for job in json.loads(plan.read_text(encoding="utf-8"))["jobs"]:
-        path = Path(job["score"][-1])
+        path = Path(job["score_output"])
         payload = json.loads(path.read_text(encoding="utf-8"))
         if field == "tolerance":
             payload["config"]["numeric_relative_tolerance"] = 0.1
@@ -230,6 +231,27 @@ def test_legacy_unvalidated_plan_cannot_claim_comparable_results(plan):
     del payload["format_version"]
     plan.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(ValueError, match="validated references"):
+        summarize(plan)
+
+
+def test_explicit_output_paths_do_not_depend_on_command_layout(plan):
+    before = summarize(plan)
+    payload = json.loads(plan.read_text(encoding="utf-8"))
+    for job in payload["jobs"]:
+        # Reporting reads its declared artifact, not the shape of a shell command.
+        job["score"] = ["different-launcher", "--unrelated-flag"]
+    plan.write_text(json.dumps(payload), encoding="utf-8")
+    after = summarize(plan)
+    before.pop("plan_sha256")
+    after.pop("plan_sha256")
+    assert after == before
+
+
+def test_missing_explicit_output_path_is_a_clear_error(plan):
+    payload = json.loads(plan.read_text(encoding="utf-8"))
+    del payload["jobs"][0]["score_output"]
+    plan.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="explicit score_output"):
         summarize(plan)
 
 

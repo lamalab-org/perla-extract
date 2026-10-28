@@ -11,7 +11,10 @@ from perla_extract.study_extraction.evaluation import (
     aggregate_evaluations,
     evaluate_study,
 )
-from perla_extract.study_extraction.evaluation_cli import _canonical_digest, _truth
+from perla_extract.study_extraction.evaluation_cli import (
+    load_reference,
+    reference_content_digest,
+)
 from perla_extract.study_extraction.models import StudyExtraction
 from perla_extract.study_extraction.reference_release import ReferenceRelease
 
@@ -60,8 +63,8 @@ def test_public_reference_preserves_hashes_and_excludes_private_metadata(
     manifest_text = (directory / "manifest.json").read_text(encoding="utf-8")
     truth_text = (directory / "ground_truth.json").read_text(encoding="utf-8")
     manifest = json.loads(manifest_text)
-    assert _canonical_digest(manifest) == paper["manifest_sha256"]
-    assert _canonical_digest(json.loads(truth_text)) == paper["ground_truth_sha256"]
+    assert reference_content_digest(manifest) == paper["manifest_sha256"]
+    assert reference_content_digest(json.loads(truth_text)) == paper["ground_truth_sha256"]
     assert manifest["revision"] == paper["revision"]
     assert manifest["review"]["uncertain_record_keys"] == []
     assert "adjudication" in manifest["review"]["completed_stage_names"]
@@ -78,7 +81,7 @@ def test_public_reference_preserves_hashes_and_excludes_private_metadata(
         r"internal_[0-9a-f]+|/Users/|/home/|[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}",
         manifest_text + truth_text,
     )
-    _, provenance = _truth(directory)
+    _, provenance = load_reference(directory)
     assert provenance is not None
     assert provenance.ground_truth_sha256 == paper["ground_truth_sha256"]
 
@@ -113,7 +116,7 @@ def _rename_and_reorder(value, field=""):
 @pytest.mark.parametrize("release,index,paper", PAPERS)
 def test_reference_score_invariance_and_negative_controls(release, index, paper):
     """Perfect self-scores alone are insufficient: real mistakes must lose credit."""
-    truth, provenance = _truth(release / paper["path"])
+    truth, provenance = load_reference(release / paper["path"])
     same = evaluate_study(truth, truth, benchmark=provenance)
     # Release metadata records the original scorer. New scoring rules must not
     # rewrite a frozen reference just to change that historical metadata.
@@ -190,7 +193,7 @@ def test_release_roster_can_be_enforced_on_real_reference_reports(release, index
     """Load real manifests and aggregate a complete set, including zero-score runs."""
     reports = []
     for paper in index["papers"]:
-        truth, provenance = _truth(release / paper["path"])
+        truth, provenance = load_reference(release / paper["path"])
         empty = StudyExtraction(
             paper=truth.paper,
             device_families=[],

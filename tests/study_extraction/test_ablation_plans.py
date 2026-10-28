@@ -12,7 +12,7 @@ from examples.ablations.references import audit_release
 from examples.ablations.references import main as audit_cli
 from examples.scoring.run import seed_study
 from perla_extract.study_extraction import cli
-from perla_extract.study_extraction.evaluation_cli import _canonical_digest
+from perla_extract.study_extraction.evaluation_cli import reference_content_digest
 from perla_extract.study_extraction.models import study_schema_sha256
 
 STUDIES = sorted((ROOT / "examples/ablations").glob("[0-9][0-9]-*.json"))
@@ -40,7 +40,7 @@ def cohort(tmp_path):
                         digest(tmp_path / name) for name in ("main.pdf", "si.pdf")
                     ]
                 },
-                "files": {"ground_truth.json": _canonical_digest(payload)},
+                "files": {"ground_truth.json": reference_content_digest(payload)},
                 "review": {
                     "uncertain_record_keys": [],
                     "completed_stage_names": ["adjudication"],
@@ -130,7 +130,9 @@ def test_isolated_arms_and_real_extraction_cli(
         config_options = {
             field.name: options[field.name] for field in fields(ExtractionConfig)
         }
-        config_options["reasoning_effort"] = cli._reasoning(options["reasoning_effort"])
+        config_options["reasoning_effort"] = cli.normalize_reasoning_effort(
+            options["reasoning_effort"]
+        )
         configuration = _run_configuration(
             ExtractionConfig(**config_options),
             "single",
@@ -164,7 +166,8 @@ def test_isolated_arms_and_real_extraction_cli(
         == 4
     )
     for job in plan["jobs"]:
-        assert any(job["score"][-2] in command for command in plan["aggregates"])
+        assert any(job["score_output"] in command for command in plan["aggregates"])
+        assert job["score"][job["score"].index("--output") + 1] == job["score_output"]
     with pytest.raises(FileExistsError):
         make_plan(study_path, cohort, tmp_path / "plan")
 
@@ -321,7 +324,7 @@ def test_plan_pins_release_and_reports_group_coverage(cohort, tmp_path):
     release_path = tmp_path / "release.json"
     release_path.write_text(json.dumps(release), encoding="utf-8")
     plan = make_plan(STUDIES[0], cohort, tmp_path / "plan", release_path=release_path)
-    assert plan["format_version"] == 2
+    assert plan["format_version"] == 3
     assert plan["references"]["paper-a"]["fact_counts"]["performance"] == 1
     assert plan["references"]["paper-a"]["fact_counts"]["stability"] == 0
     assert all("--release" in command for command in plan["aggregates"])
@@ -347,7 +350,7 @@ def test_reference_audit_distinguishes_integrity_from_review_coverage(cohort, tm
                 "paper_id": "paper-a",
                 "path": "truth",
                 "ground_truth_sha256": manifest["files"]["ground_truth.json"],
-                "manifest_sha256": _canonical_digest(manifest),
+                "manifest_sha256": reference_content_digest(manifest),
             }
         ],
     }

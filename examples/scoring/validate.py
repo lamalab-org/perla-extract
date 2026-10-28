@@ -23,7 +23,10 @@ from pydantic import BaseModel
 from examples.scoring.equivalence_probe import probe
 from perla_extract.study_extraction.artifacts import write_json_exclusive
 from perla_extract.study_extraction.evaluation import EvaluationConfig, evaluate_study
-from perla_extract.study_extraction.evaluation_cli import _canonical_digest, _truth
+from perla_extract.study_extraction.evaluation_cli import (
+    load_reference,
+    reference_content_digest,
+)
 from perla_extract.study_extraction.models import ReportedValue, StudyExtraction
 from perla_extract.study_extraction.reference_release import ReferenceRelease
 from perla_extract.study_extraction.scoring_facts import is_plain_number
@@ -227,7 +230,7 @@ def run(
         directory = (release_path.parent / paper["path"]).resolve()
         if not directory.is_relative_to(release_path.parent.resolve()):
             raise ValueError("Reference path escapes the release directory")
-        truth, provenance = _truth(directory)
+        truth, provenance = load_reference(directory)
         if (
             provenance is None
             or provenance.paper_id != identity
@@ -236,7 +239,7 @@ def run(
         ):
             raise ValueError(f"Reference differs from release: {identity}")
         manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
-        if _canonical_digest(manifest) != paper["manifest_sha256"]:
+        if reference_content_digest(manifest) != paper["manifest_sha256"]:
             raise ValueError(f"Reference manifest differs from release: {identity}")
         baseline = evaluate_study(truth, truth)
         if baseline.core_facts.micro.f1 != 1 or baseline.core_facts.issues:
@@ -252,7 +255,7 @@ def run(
             sensitivity.append(
                 {
                     "paper_id": identity,
-                    "snapshot_sha256": _canonical_digest(
+                    "snapshot_sha256": reference_content_digest(
                         snapshots[identity].model_dump(mode="json")
                     ),
                     "identical_study": snapshots[identity] == truth,

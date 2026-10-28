@@ -14,7 +14,10 @@ from perla_extract.study_extraction.evaluation import (
     aggregate_evaluations,
     evaluate_study,
 )
-from perla_extract.study_extraction.evaluation_cli import _canonical_digest, _truth
+from perla_extract.study_extraction.evaluation_cli import (
+    load_reference,
+    reference_content_digest,
+)
 from perla_extract.study_extraction.reference_release import ReferenceRelease
 
 
@@ -31,7 +34,7 @@ def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
         raise ValueError(
             "Ablations require finalized format-4 references; export the reviewed revision"
         )
-    truth, provenance = _truth(directory)
+    truth, provenance = load_reference(directory)
     if provenance is None:
         raise ValueError("A frozen reference directory is required")
     score = evaluate_study(truth, truth, benchmark=provenance, config=config)
@@ -51,7 +54,7 @@ def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
     return score, {
         "benchmark": provenance.model_dump(mode="json"),
         "truth_content_sha256": score.truth_content_sha256,
-        "manifest_sha256": _canonical_digest(manifest),
+        "manifest_sha256": reference_content_digest(manifest),
         "fact_counts": {
             name: counts.truth for name, counts in score.core_facts.groups.items()
         },

@@ -64,9 +64,9 @@ def summarize(plan_path: Path, *, bootstrap_samples: int = 2000, seed: int = 0) 
 
     plan_bytes = plan_path.read_bytes()
     plan = json.loads(plan_bytes)
-    if plan.get("format_version") != 2:
+    if plan.get("format_version") != 3:
         raise ValueError(
-            "Prepare a version-2 plan with validated references before comparison"
+            "Prepare a version-3 plan with validated references and explicit score outputs before comparison"
         )
     if bootstrap_samples < 0:
         raise ValueError("bootstrap samples cannot be negative")
@@ -96,8 +96,10 @@ def summarize(plan_path: Path, *, bootstrap_samples: int = 2000, seed: int = 0) 
     rows = []
     paths = set()
     for key, job in zip(keys, jobs):
-        command = job["score"]
-        path = Path(command[command.index("--output") + 1])
+        score_output = job.get("score_output")
+        if not isinstance(score_output, str) or not score_output:
+            raise ValueError("Each planned job needs an explicit score_output path")
+        path = Path(score_output)
         if not path.is_absolute():
             raise ValueError("Use absolute score paths from the prepared plan")
         if path in paths:

@@ -35,8 +35,12 @@ def _json(path: Path) -> object:
         raise click.ClickException(f"cannot read {path}: {exc}") from exc
 
 
-def _canonical_digest(value: object) -> str:
-    """Reproduce the ground-truth exporter's content hash."""
+def reference_content_digest(value: object) -> str:
+    """Reproduce the reference export hash for loaders, audits and experiment plans.
+
+    The trailing newline is part of this public serialization contract. Do not
+    substitute the scorer's parsed-study hash or a file-byte hash for this digest.
+    """
 
     encoded = (
         json.dumps(
@@ -59,7 +63,7 @@ def _study(payload: object, path: Path) -> StudyExtraction:
         raise click.ClickException(f"invalid StudyExtraction in {path}: {exc}") from exc
 
 
-def _truth(
+def load_reference(
     path: Path,
 ) -> tuple[StudyExtraction, BenchmarkProvenance | None]:
     """Load truth and verify the schema/content identifiers needed for scoring.
@@ -109,7 +113,7 @@ def _truth(
         )
     files = manifest.get("files")
     expected_truth = files.get("ground_truth.json") if isinstance(files, dict) else None
-    if expected_truth != _canonical_digest(payload):
+    if expected_truth != reference_content_digest(payload):
         raise click.ClickException("ground_truth.json does not match its manifest hash")
     review = manifest.get("review")
     if not isinstance(review, dict):
@@ -165,7 +169,7 @@ def _truth(
             paper_id=paper_id,
             split=split,
             ground_truth_sha256=expected_truth,
-            source_manifest_sha256=_canonical_digest(source_manifest),
+            source_manifest_sha256=reference_content_digest(source_manifest),
             source_sha256=source_hashes,
             evidence_version=evidence_version,
             evidence_document_sha256=evidence_digest,
@@ -287,7 +291,7 @@ def main(
 ) -> None:
     """Score one extraction without using an LLM or run-local identifiers."""
 
-    expected, benchmark = _truth(truth)
+    expected, benchmark = load_reference(truth)
     actual, prediction_validation, run_efficiency = _prediction(prediction)
     try:
         config = EvaluationConfig(

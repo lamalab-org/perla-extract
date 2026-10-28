@@ -1062,7 +1062,7 @@ def test_format_four_requires_declared_finalization_and_clean_validation(
 ):
     import click
 
-    from perla_extract.study_extraction.evaluation_cli import _truth
+    from perla_extract.study_extraction.evaluation_cli import load_reference
 
     directory, _ = _write_frozen_truth_inputs(tmp_path, 4)
     path = directory / "manifest.json"
@@ -1075,7 +1075,7 @@ def test_format_four_requires_declared_finalization_and_clean_validation(
         payload["validation"]["issue_count"] = False if damage == "boolean_count" else 1
     path.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(click.ClickException, match="completed adjudication"):
-        _truth(directory)
+        load_reference(directory)
 
 
 @pytest.mark.parametrize("artifact_version", [2, 3, 4])

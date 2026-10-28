@@ -20,8 +20,8 @@ import click
 from pydantic import BaseModel, ConfigDict, Field
 
 from examples.ablations.references import inspect_reference
-from perla_extract.study_extraction.cli import _reasoning
 from perla_extract.study_extraction.cli import main as extraction_cli
+from perla_extract.study_extraction.cli import normalize_reasoning_effort
 from perla_extract.study_extraction.evaluation import (
     EvaluationConfig,
     aggregate_evaluations,
@@ -103,7 +103,7 @@ def expected_configuration(arguments: list[str], reference: dict) -> dict:
         value = {
             field.name: context.params[field.name] for field in fields(ExtractionConfig)
         }
-    value["reasoning_effort"] = _reasoning(value["reasoning_effort"])
+    value["reasoning_effort"] = normalize_reasoning_effort(value["reasoning_effort"])
     value.update(
         schema_sha256=study_schema_sha256(),
         prompt_sha256=prompt_sha256(),
@@ -270,6 +270,7 @@ def prepare(
                 ]
                 if paper.supplement is not None:
                     extract += ["--supplement", str(paper.supplement)]
+                score_output = str(run / "evaluation.json")
                 score = prefix + [
                     "perla_extract.study_extraction.evaluation_cli",
                     *score_options,
@@ -278,7 +279,7 @@ def prepare(
                     "--prediction",
                     str(run),
                     "--output",
-                    str(run / "evaluation.json"),
+                    score_output,
                     "--fail-on-scoring-issues",
                 ]
                 jobs.append(
@@ -288,6 +289,7 @@ def prepare(
                         "repeat": repeat,
                         "extract": extract,
                         "score": score,
+                        "score_output": score_output,
                         "run_configuration": str(run / "run_configuration.json"),
                         "expected_configuration": expected_configuration(
                             extract[3:], references[paper.paper_id]
@@ -300,7 +302,7 @@ def prepare(
             command = prefix + ["perla_extract.study_extraction.evaluation_dataset_cli"]
             for job in jobs:
                 if job["repeat"] == repeat and job["arm"] == arm:
-                    command += ["--report", job["score"][-2]]
+                    command += ["--report", job["score_output"]]
             command += [
                 "--output",
                 str(output / f"repeat-{repeat}-{arm}.json"),
@@ -310,7 +312,7 @@ def prepare(
             if release_path is not None:
                 command += ["--release", str(release_path)]
     plan = {
-        "format_version": 2,
+        "format_version": 3,
         "study": study.model_dump(),
         "revision": revision,
         "seed": seed,
