@@ -7,14 +7,21 @@ reader model separately. Run studies 1–3 first; study 4 tests a different cost
 
 ## Freeze the comparison before running
 
+First follow [Validate before scaling](../methods/validation-and-scale.md). The
+current 30-paper reference is a development set. Neither finalized records nor a
+perfect self-score establish that the scorer agrees with experts on new predictions.
+
 1. Select eight reviewed development papers using source characteristics, not model
    scores: include short and long SI, multiple specimens, population statistics,
    stability, and detailed chemistry. Categories may overlap. Record why each paper
    was selected. If fewer references are ready, label the run exploratory; do not
    substitute unreviewed seeds. Papers used to revise prompts are development data.
 2. Use the same finalized reference versions, main PDFs, SI, parser, schema and
-   scorer for both arms. Include the complete available SI; record explicitly when
-   there is none. Inspect the correspondence of PDF hashes to the source manifest.
+   scorer for both arms. The planner requires format-4 finalized references, verifies
+   their hashes and declared finalization, and checks that the supplied PDF/SI hashes
+   exactly match the reviewed sources. Include the complete available SI; record
+   explicitly when there is none. A resaved PDF with different bytes requires source
+   reconciliation, not an automatic exemption from the check.
 3. Fix model/provider IDs, provider reasoning defaults, budgets and environment before
    execution. The planner requires model IDs rather than selecting a model for you.
    `omit` leaves reasoning and temperature at provider defaults; it does not disable
@@ -161,6 +168,15 @@ Paths resolve relative to this file. Use `null` for an absent separate supplemen
 `truth` is an exported directory containing `ground_truth.json` and `manifest.json`.
 This example is not a real roster. Keep PDFs, references and plans out of the PR.
 
+Preparation also runs the scorer's self-consistency check on every reference and
+rejects duplicated sources or mixed splits. `plan.json` records reference hashes,
+per-group fact counts, available review-stage declarations and the scoring rules.
+It also resolves the real extraction CLI's defaults and saves the expected settings
+for each job, including models, stage switches, budgets, source hashes and prompt/schema hashes.
+These checks are not a fresh scientific review of the papers. A missing completeness
+marker is shown as missing metadata; it neither excludes the paper nor proves that
+the reviewer did not read it.
+
 ```bash
 PYTHONPATH=.:src python -m examples.ablations.prepare plan \
   --study examples/ablations/01-claim-readings.json \
@@ -169,6 +185,13 @@ PYTHONPATH=.:src python -m examples.ablations.prepare plan \
   --max-cost 5 \
   --output /absolute/path/to/private/study-01
 ```
+
+To require the **whole published set**, add
+`--release data/study_extraction/ground_truth/v2/release.json` and supply all 30
+papers in the cohort. The planner checks the complete roster and reference hashes,
+checks release manifest hashes when recorded, and passes the release to dataset
+aggregation. For a prespecified smaller pilot, omit `--release`: the plan still
+freezes its validated subset, but it is not a complete release benchmark.
 
 The amount is an example **per-run spending threshold**, not a total authorization
 or guaranteed hard cap. The extractor checks provider-reported spend between calls;
@@ -212,8 +235,13 @@ PYTHONPATH=.:src python -m examples.ablations.report \
 
 The report lists every planned run, each paper's treatment-minus-control F1, and
 each group's counts, precision and recall for each repetition. It checks reference
-identity across arms and repetitions and requires matching scorer settings. Repeats
+identity against the prepared plan as well as across arms and repetitions, and
+requires the prepared scorer settings. Switching both arms to a different reference
+or tolerance after preparation is not allowed. Repeats
 are averaged within each paper before the paper-level differences are averaged.
+Each run's saved `run_configuration.json` must match its prepared settings. Missing
+configuration or a changed model, stage, budget, prompt, schema or source blocks the
+quality comparison; the report records the configuration-file hash for inspection.
 Missing, malformed, or incompatible scores prevent a whole-roster quality summary;
 the command still writes diagnostics and exits unsuccessfully. It refuses to
 overwrite an existing output. Choose a new filename after resolving problems.
@@ -226,9 +254,23 @@ and prediction-validation results remain visible. A successful summary is not a
 claim that every extraction succeeded or passed validation.
 
 This command summarizes saved scores; it does not rerun extraction, verify that a
-provider honored the plan, or select a production default. Keep the plan, run logs,
-score reports and their recorded hashes together. It provides no confidence interval
-or automatic equivalence claim. Apply the screening rule below and inspect repeats.
+provider honored the recorded request settings, or select a production default. Keep the plan, run logs,
+score reports and their recorded hashes together. Version-1 plans lacked validated
+reference/scorer bindings and are refused: prepare a version-2 plan before running
+new comparisons. Do not relabel an old plan as version 2.
+
+The report includes a descriptive 95% percentile bootstrap interval for the mean
+paired F1 difference. It first averages repeated treatment-minus-control differences
+within each paper, then resamples papers with replacement (2,000 samples, seed 0
+by default). Both arms stay paired; neither fields nor repetitions become additional
+independent papers. `--bootstrap-samples` and `--seed` control this calculation.
+With one paper or zero bootstrap samples, bounds are `null`. Repeat-level differences
+remain available: this interval conditions on their observed within-paper averages,
+not on all possible model randomness.
+
+This is not an equivalence test, a correction for trying many configurations, or a
+guarantee of coverage on a small convenience sample. An interval crossing zero does
+not establish equal performance. Apply the screening rule below and inspect repeats.
 
 Primary outcome: paired per-paper difference in `core_facts.macro_f1`. Also show
 micro counts, precision and recall separately for performance, population,
@@ -250,10 +292,10 @@ paper, per-run tokens/cache usage and wall time. Keep enrichment/NOMAD checks vi
 the six core groups do not score the correctness of enriched site-ion interpretations.
 Have an expert compare those outputs separately before claiming equal NOMAD quality.
 
-The existing dataset CLI gives single-arm bootstrap intervals, **not a paired
-non-inferiority test**. Compare paired paper differences and repeat ranges
-descriptively for this pilot; do not infer equivalence from overlapping intervals
-or a nonsignificant difference. Keep any later confirmatory statistics separate.
+The dataset CLI gives single-arm intervals; the comparison report gives an interval
+for paired differences. Neither implements a confirmatory non-inferiority test.
+Keep any later confirmatory analysis separate, with margins and sample size chosen
+before examining held-out results.
 
 See [the scoring reference](evaluation.md) and
 [reference preparation](review-to-benchmark.md) for the implemented scoring rules.

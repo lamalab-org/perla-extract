@@ -49,6 +49,10 @@ citations against the paper. Use the [review and export workflow](ground-truth-r
 to create the reference.
 
 New references use format 4 and require a final verified decision for every record.
+The loader also requires the manifest to declare completed adjudication and verified
+validation with zero issues. It accepts private stage-to-reviewer mappings and public,
+redacted stage names. These declarations are checked for consistency, not authenticated
+as an independent review; retain the private review history.
 Older formats 2 and 3 are accepted only if their unresolved-record list is empty.
 Formats 3 and 4 must also declare the reviewed
 evidence-document version and hash. The scorer records them; it does not load that
