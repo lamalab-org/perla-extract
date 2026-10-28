@@ -20,7 +20,11 @@ from .models import (
     StabilityTest,
     StudyExtraction,
 )
-from .units import canonical_reported_quantity, equivalent_unit_spelling
+from .units import (
+    canonical_quantity,
+    canonical_reported_quantity,
+    equivalent_unit_spelling,
+)
 
 FactGroup = Literal[
     "performance", "population", "stability", "composition", "stack", "processing"
@@ -58,6 +62,21 @@ def scientific_text(value: str) -> str:
     return " ".join(unicodedata.normalize("NFKC", value).replace("−", "-").split())
 
 
+def scientific_value_text(value: str) -> str:
+    """Recognize numeric LaTeX subscripts in simple formulas, not chemical synonyms.
+
+    The complete result must be a sequence of element-like tokens and numeric
+    subscripts. Prose, charges, symbolic stoichiometry and algebra stay literal.
+    This changes notation only: it never reorders atoms or expands abbreviations.
+    """
+
+    text = scientific_text(value)
+    formula = re.sub(r"_\{(\d+(?:\.\d+)?)\}|_(\d+)", lambda m: m[1] or m[2], text)
+    if re.fullmatch(r"(?:[A-Z][a-z]?(?:\d+(?:\.\d+)?)?)+", formula):
+        return formula
+    return text
+
+
 def property_name(name: str) -> str:
     key = re.sub(r"[\s_-]+", "", scientific_text(name).casefold())
     return METRIC_ALIASES.get(key, key)
@@ -82,8 +101,8 @@ def scientific_descriptor(record: object) -> str | None:
 def is_plain_number(value: ReportedValue) -> bool:
     """Allow unit conversion only for a single unqualified, internally consistent number.
 
-    Ranges, inequalities, uncertainties and chemical formulas fall back to literal
-    comparison. Their central numeric value alone does not represent the claim.
+    Ranges, inequalities, uncertainties and chemical formulas do not qualify for
+    this path. Their central numeric value alone does not represent the claim.
     The consistency check has no absolute allowance: a small nonzero raw number
     must never qualify as a parsed zero, regardless of the chosen unit.
     """
@@ -105,6 +124,72 @@ def is_plain_number(value: ReportedValue) -> bool:
     )
 
 
+_NUMBER = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
+_COMPOUND_QUANTITY = re.compile(
+    rf"({_NUMBER})\s*(±|\+/-|–|—|\bto\b|-)\s*({_NUMBER})\s*(.*)"
+)
+
+
+def compound_quantity(
+    value: ReportedValue,
+) -> tuple[str, float, float, str | None] | None:
+    """Compare complete ranges or symmetric uncertainties, never their centre alone.
+
+    Accept only two numbers and an optional unit suffix consistent with the unit
+    field. A range must be ordered and have no invented scalar value. An uncertainty
+    must be nonnegative; a supplied parsed value must agree with its centre.
+    Offset temperature units shift endpoints/centres, but only scale uncertainties.
+    Anything outside this grammar retains the existing literal comparison.
+    """
+
+    match = _COMPOUND_QUANTITY.fullmatch(scientific_text(value.raw_value))
+    if match is None:
+        return None
+    first, second = float(match[1]), float(match[3])
+    kind = "uncertainty" if match[2] in {"±", "+/-"} else "range"
+    suffix = match[4]
+    if suffix and (
+        value.unit is None
+        or (
+            scientific_text(suffix) != scientific_text(value.unit)
+            and not equivalent_unit_spelling(suffix, value.unit)
+        )
+    ):
+        return None
+    if not all(math.isfinite(number) for number in (first, second)):
+        return None
+    if kind == "range":
+        if first > second or value.value_number is not None:
+            return None
+    elif second < 0 or (
+        value.value_number is not None
+        and not math.isclose(first, value.value_number, rel_tol=1e-9, abs_tol=0)
+    ):
+        return None
+    if value.unit is None:
+        return kind, first, second, None
+    a, b = canonical_quantity(first, value.unit), canonical_quantity(second, value.unit)
+    if a is None or b is None:
+        return None
+    if kind == "uncertainty":
+        zero, one, two = (canonical_quantity(n, value.unit) for n in (0, 1, 2))
+        if zero is None or one is None or two is None:
+            return None
+        # An error bar of 1 °C is 1 K, not 274.15 K. Reject nonlinear/log units.
+        scale = one[0] - zero[0]
+        if scale <= 0 or not all(
+            math.isclose(
+                converted, zero[0] + scale * original, rel_tol=1e-12, abs_tol=1e-12
+            )
+            for original, converted in ((2, two[0]), (first, a[0]), (second, b[0]))
+        ):
+            return None
+        second = scale * second
+    else:
+        second = b[0]
+    return (kind, a[0], second, a[1]) if math.isfinite(second) else None
+
+
 @dataclass(frozen=True)
 class UnorderedContext:
     """Mark context where order is irrelevant but duplicate entries still matter."""
@@ -116,6 +201,19 @@ def equal_value(left: object, right: object, relative: float, absolute: float) -
     """Compare claims conservatively; missing units are not assumed dimensionless."""
 
     if isinstance(left, ReportedValue) and isinstance(right, ReportedValue):
+        compound_left, compound_right = (
+            compound_quantity(left),
+            compound_quantity(right),
+        )
+        if compound_left is not None and compound_right is not None:
+            return (
+                compound_left[0] == compound_right[0]
+                and compound_left[3] == compound_right[3]
+                and all(
+                    math.isclose(a, b, rel_tol=relative, abs_tol=absolute)
+                    for a, b in zip(compound_left[1:3], compound_right[1:3])
+                )
+            )
         if is_plain_number(left) and is_plain_number(right):
             assert left.value_number is not None and right.value_number is not None
             if (left.unit is None) != (right.unit is None):
@@ -139,12 +237,13 @@ def equal_value(left: object, right: object, relative: float, absolute: float) -
                 left_number, right_number, rel_tol=relative, abs_tol=absolute
             )
         return (
-            scientific_text(left.raw_value) == scientific_text(right.raw_value)
+            scientific_value_text(left.raw_value)
+            == scientific_value_text(right.raw_value)
             and scientific_text(left.unit or "") == scientific_text(right.unit or "")
             and left.value_number == right.value_number
         )
     if isinstance(left, str) and isinstance(right, str):
-        return scientific_text(left) == scientific_text(right)
+        return scientific_value_text(left) == scientific_value_text(right)
     if isinstance(left, UnorderedContext) and isinstance(right, UnorderedContext):
         if len(left.items) != len(right.items):
             return False

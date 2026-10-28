@@ -22,7 +22,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from examples.ablations.references import inspect_reference
 from perla_extract.study_extraction.cli import _reasoning
 from perla_extract.study_extraction.cli import main as extraction_cli
-from perla_extract.study_extraction.evaluation import aggregate_evaluations
+from perla_extract.study_extraction.evaluation import (
+    EvaluationConfig,
+    aggregate_evaluations,
+)
 from perla_extract.study_extraction.models import study_schema_sha256
 from perla_extract.study_extraction.reference_release import ReferenceRelease
 from perla_extract.study_extraction.workflow import ExtractionConfig, prompt_sha256
@@ -119,6 +122,7 @@ def prepare(
     repeats: int,
     seed: int,
     release_path: Path | None = None,
+    descriptor_equivalences: Path | None = None,
 ) -> dict:
     """Freeze a two-arm study; preparation never invokes an extraction provider."""
 
@@ -137,6 +141,17 @@ def prepare(
     if not papers or len({p.paper_id for p in papers}) != len(papers):
         raise ValueError("Cohort must contain distinct papers")
     inputs = {str(p.resolve()): digest(p) for p in (study_path, cohort_path)}
+    score_options = []
+    config = EvaluationConfig()
+    if descriptor_equivalences is not None:
+        descriptor_equivalences = descriptor_equivalences.resolve()
+        config = EvaluationConfig(
+            descriptor_equivalences=json.loads(
+                descriptor_equivalences.read_text(encoding="utf-8")
+            )
+        )
+        inputs[str(descriptor_equivalences)] = digest(descriptor_equivalences)
+        score_options = ["--descriptor-equivalences", str(descriptor_equivalences)]
     release = None
     if release_path is not None:
         release_path = release_path.resolve()
@@ -158,7 +173,7 @@ def prepare(
         for filename in ("ground_truth.json", "manifest.json"):
             path = paper.truth / filename
             inputs[str(path)] = digest(path)
-        control, check = inspect_reference(paper.truth)
+        control, check = inspect_reference(paper.truth, config=config)
         provenance = control.benchmark
         if provenance is None or provenance.paper_id != paper.paper_id:
             raise ValueError(
@@ -257,6 +272,7 @@ def prepare(
                     extract += ["--supplement", str(paper.supplement)]
                 score = prefix + [
                     "perla_extract.study_extraction.evaluation_cli",
+                    *score_options,
                     "--truth",
                     str(paper.truth),
                     "--prediction",
@@ -360,6 +376,11 @@ def main() -> None:
 @click.option("--output", type=click.Path(path_type=Path), required=True)
 @click.option("--model", required=True)
 @click.option("--reader-model")
+@click.option(
+    "--descriptor-equivalences",
+    type=click.Path(path_type=Path, exists=True, dir_okay=False),
+    help="Freeze reviewed cohort/specimen label rules identically for both arms.",
+)
 @click.option(
     "--release",
     "release_path",

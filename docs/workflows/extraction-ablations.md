@@ -42,6 +42,11 @@ scoring. There is no new agent framework, model router or production setting.
 
 Configuration: `examples/ablations/01-claim-readings.json`.
 
+If the study uses checked cohort/specimen name equivalences, add
+`--descriptor-equivalences rules.json` to the preparation command. The plan hashes
+that file, saves the scoring rules and passes the same file to every scoring job.
+The extraction model never receives it. Keep the list fixed across arms and repeats.
+
 | Arm | Independent source readings | Everything downstream |
 | --- | ---: | --- |
 | Control | 2 per document/window | Unchanged |

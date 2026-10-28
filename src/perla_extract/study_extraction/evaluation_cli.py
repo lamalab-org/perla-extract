@@ -265,6 +265,11 @@ def _prediction(
     help="JSON operation-to-canonical-name mapping; replaces defaults.",
 )
 @click.option(
+    "--descriptor-equivalences",
+    type=INPUT,
+    help="JSON list of reviewed cohort/specimen label equivalences, scoped to reference hashes.",
+)
+@click.option(
     "--fail-on-scoring-issues",
     is_flag=True,
     help="Save diagnostics, then fail if scientific attribution is ambiguous.",
@@ -277,6 +282,7 @@ def main(
     numeric_relative_tolerance: float,
     numeric_absolute_tolerance: float,
     operation_aliases: Path | None,
+    descriptor_equivalences: Path | None,
     fail_on_scoring_issues: bool,
 ) -> None:
     """Score one extraction without using an LLM or run-local identifiers."""
@@ -291,6 +297,11 @@ def main(
             **(
                 {"operation_aliases": _json(operation_aliases)}
                 if operation_aliases
+                else {}
+            ),
+            **(
+                {"descriptor_equivalences": _json(descriptor_equivalences)}
+                if descriptor_equivalences
                 else {}
             ),
         )

@@ -77,8 +77,8 @@ You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results.
 
-Reports use format **6**, matcher **rich-study-hungarian-v7** and fact profile
-**core-scientific-facts-v5**. Regenerate older reports from saved predictions before
+Reports use format **7**, matcher **rich-study-hungarian-v8** and fact profile
+**core-scientific-facts-v6**. Regenerate older reports from saved predictions before
 combining scores. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
@@ -256,7 +256,7 @@ scorer excludes record IDs, link IDs and evidence quotations from these tokens.
 For families it also excludes `processing_steps`: missing a recipe must reduce
 processing recall, not prevent recognition of the family and erase credit for
 unchanged measurements. Other recorded family content still contributes to matching.
-For eligible numbers with recognized units, it uses base-unit values and units;
+For eligible numbers, ranges and uncertainties with recognized units, it uses base-unit values and units;
 otherwise it uses raw values and units. It formats canonical numbers to 12 significant
 digits for this pairing step only. Final numeric comparison does not use that rounding.
 
@@ -269,7 +269,8 @@ A candidate must reach `--minimum-record-similarity`, which defaults to **0.35**
 This number is a similarity threshold, not a probability of correctness.
 Population candidates must also have matching cohort labels. Stability candidates
 without explicit device links must have matching specimen labels. Outcomes cannot
-override these identity checks.
+override these identity checks. Explicit checked label equivalences, described below,
+are applied before pairing and fact comparison.
 
 An eligible pair receives **2** extra assignment points if its parent links agree
 under the established pairings and its protocol fields agree. The protocol fields
@@ -351,7 +352,7 @@ units, but should only be used for a declared scope where that allowance is just
 For example, `1e-9` would allow a whole nanometre of difference for thickness.
 Converting first keeps the comparison consistent across unit representations.
 
-Conversion requires both raw values to contain one unqualified number, with either
+For a single number, conversion requires both raw values to contain one unqualified number, with either
 no suffix or a suffix equivalent to the stated unit **at the same scale and offset**.
 For example, raw `1 h` with unit `hour`, or raw `65 ° C` with unit `°C`, can be
 converted. Raw `1 h` with unit `s` cannot: its number and declared unit contradict
@@ -372,14 +373,31 @@ meaningful.
 
 ### Chemicals, ranges and free text
 
-The scorer does not reduce a range, inequality, uncertainty or formula to its parsed
-number. It compares normalized raw text, unit and parsed number instead. It applies
-Unicode NFKC normalization, standardizes the minus sign and collapses whitespace;
-it does not ignore chemical case, other punctuation or stoichiometry.
+The scorer compares a range's two endpoints, or an uncertainty's centre and spread.
+It never substitutes either claim for a single number. It accepts two finite numbers
+joined by `–`, `—`, `-` or `to` for ranges, and `±` or `+/-` for symmetric uncertainty.
+An optional trailing unit must agree with the separate unit field at the same scale
+and offset. A range must have ordered endpoints and `value_number: null`. For an
+uncertainty, the spread must be nonnegative; a supplied `value_number` must agree
+with the centre. The same scoring tolerances apply separately to both components.
+
+For example, `1–2 h` equals `60–120 min`, and `20 ± 1 %` equals
+`0.20 ± 0.01 dimensionless`. An uncertainty of `20 ± 1 °C` equals
+`293.15 ± 1 K`: the centre shifts, but the spread does not. A range is **not**
+interchangeable with a mean plus an uncertainty, even when their endpoints coincide.
+Inequalities, asymmetric errors, extra qualifiers such as `SD` or `SEM`, and
+unrecognized units retain literal comparison. These rules do not infer what an
+unlabelled error bar means.
+
+Text comparison applies Unicode NFKC normalization, standardizes the minus sign
+and collapses whitespace. Simple formulas also accept numeric LaTeX subscripts:
+`CH_{3}NH_{3}PbI_{3}` equals `CH3NH3PbI3`. This rule requires the entire string to
+consist of element-like tokens with numeric subscripts. It does not simplify
+symbolic stoichiometry, charges, parentheses or arbitrary prose.
 
 For example, `CoO` does not equal `COO`. The scorer does not infer that `MAPbI3`
 and `CH3NH3PbI3` describe the same composition. Equivalent names or differently
-written ranges can therefore disagree. Matching text also does not prove that
+written claims outside the supported grammar can therefore disagree. Matching text also does not prove that
 either claim is supported by the paper.
 
 Property names ignore case, whitespace, hyphens and underscores. Four explicit
@@ -394,6 +412,30 @@ alias maps `thermal annealing` to `annealing`. Use
 Operation aliases affect fact comparison and the context of dependent conditions,
 not whole-record token similarity. Keep the map fixed for an evaluation; the report
 stores it with the other settings.
+
+### Checked cohort names
+
+Population labels and unlinked stability-specimen labels carry identity. The scorer
+does not guess that similar names denote the same group. In particular, it does not
+strip text after a semicolon: `control; with additive` is not `control`.
+
+When two names have been checked against the source and denote the same group,
+save that decision in a JSON list and pass `--descriptor-equivalences rules.json`.
+Each entry records `reference_sha256`, `record_kind`, `reference_label`,
+`alternative_labels`, and `reason`. Use the score report's `truth_content_sha256`
+for `reference_sha256`—not the ZIP, manifest or file hash.
+
+The scorer applies the rule only to that exact reference and record type. It rejects
+overlapping rules and rules that would merge distinct reference groups. It changes
+neither input file; reported hashes still identify the originals. The full rules
+are saved under `config.descriptor_equivalences` in each score report.
+
+[`examples/scoring/reviewed-descriptors-v2.json`](https://github.com/lamalab-org/perla-extract/blob/main/examples/scoring/reviewed-descriptors-v2.json)
+contains the two label clarifications checked during the v2 audit. It is optional,
+not a rule built into the scorer. Freeze any such list **before** comparing model
+runs, apply it to every arm, and report the unadjusted scores too. If the reference
+changes, its old rules no longer apply and must be checked again. Do not add rules
+merely because they improve one model's score.
 
 ### LLM judging
 

@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from perla_extract.study_extraction.evaluation import (
-    EvaluationConfig,
     aggregate_evaluations,
     evaluate_study,
 )
@@ -38,7 +37,14 @@ def test_release_roster_is_complete(release, index):
     expected = {paper["paper_id"] for paper in index["papers"]}
     assert len(expected) == len(index["papers"]) == index["paper_count"] == 30
     assert {path.name for path in (release / "dev").iterdir()} == expected
-    assert index["evaluation_config"] == EvaluationConfig().model_dump(mode="json")
+    # These release files describe the historical scorer, not today's defaults.
+    # Never rewrite an immutable reference manifest to add new scorer settings.
+    assert index["evaluation_config"] == {
+        "minimum_record_similarity": 0.35,
+        "numeric_relative_tolerance": 1e-6,
+        "numeric_absolute_tolerance": 0.0,
+        "operation_aliases": {"thermal annealing": "annealing"},
+    }
 
 
 @pytest.mark.parametrize("release,index,paper", PAPERS)
@@ -113,8 +119,8 @@ def test_reference_score_invariance_and_negative_controls(release, index, paper)
     # rewrite a frozen reference just to change that historical metadata.
     assert index["matcher_version"] == "rich-study-hungarian-v6"
     assert index["fact_profile"] == "core-scientific-facts-v4"
-    assert same.matcher_version == "rich-study-hungarian-v7"
-    assert same.core_facts.profile == "core-scientific-facts-v5"
+    assert same.matcher_version == "rich-study-hungarian-v8"
+    assert same.core_facts.profile == "core-scientific-facts-v6"
     assert same.core_facts.micro.f1 == 1 and not same.core_facts.issues
     reordered = StudyExtraction.model_validate(
         _rename_and_reorder(truth.model_dump(mode="json"))

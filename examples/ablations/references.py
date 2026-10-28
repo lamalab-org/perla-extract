@@ -10,6 +10,7 @@ import click
 
 from perla_extract.study_extraction.artifacts import write_json_exclusive
 from perla_extract.study_extraction.evaluation import (
+    EvaluationConfig,
     aggregate_evaluations,
     evaluate_study,
 )
@@ -17,7 +18,7 @@ from perla_extract.study_extraction.evaluation_cli import _canonical_digest, _tr
 from perla_extract.study_extraction.reference_release import ReferenceRelease
 
 
-def inspect_reference(directory: Path):
+def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
     """Check the finalized input and expose what its manifest actually records.
 
     A successful self-score is a consistency control, not evidence that the source
@@ -33,7 +34,7 @@ def inspect_reference(directory: Path):
     truth, provenance = _truth(directory)
     if provenance is None:
         raise ValueError("A frozen reference directory is required")
-    score = evaluate_study(truth, truth, benchmark=provenance)
+    score = evaluate_study(truth, truth, benchmark=provenance, config=config)
     if score.core_facts.scoring_status != "ready" or score.core_facts.micro.f1 != 1:
         raise ValueError(
             f"Reference self-check needs attention: {provenance.paper_id}; inspect identity "

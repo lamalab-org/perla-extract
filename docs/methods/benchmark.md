@@ -75,7 +75,9 @@ Missing fabrication steps do not affect family matching; they still lose process
 credit. Population cohort labels, and stability specimen labels without explicit
 device links, must agree. This prevents equal outcomes from making a control and a
 treated cohort interchangeable. The rule normalizes typography, not synonyms, so
-different descriptions of the same cohort can still lose credit.
+different descriptions of the same cohort can still lose credit. Checked label
+equivalences can be supplied explicitly, tied to an exact reference hash. Freeze
+these decisions before comparing models and use the same list for every arm.
 
 Within paired records, the scorer compares facts in six groups: performance,
 population statistics, stability, stack, composition and processing. The recorded context specifies which cell, scan, layer, constituent, operation or
@@ -85,8 +87,10 @@ is not.
 Single unqualified numbers with compatible explicit units are converted before
 comparison. The default relative tolerance is `1e-6`, with no absolute allowance. This permits
 small relative numerical differences without treating distinct nanometre-scale
-thicknesses as equal. It does not represent experimental uncertainty. Formulas, ranges and unfamiliar descriptions use
-conservative text comparison. The [scoring reference](../workflows/evaluation.md)
+thicknesses as equal. It does not represent experimental uncertainty. Ranges and
+symmetric uncertainties compare both components after conversion. Simple chemical
+formulas accept numeric LaTeX subscripts; unfamiliar descriptions remain literal.
+The [scoring reference](../workflows/evaluation.md)
 gives examples and the full matching algorithm.
 
 ## Read the results

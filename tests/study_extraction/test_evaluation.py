@@ -1466,8 +1466,8 @@ def test_old_scoring_report_is_not_silently_loaded_as_current():
     from pydantic import ValidationError
 
     payload = evaluate_study(study(), study()).model_dump()
-    assert payload["format_version"] == 6
-    assert payload["core_facts"]["profile"] == "core-scientific-facts-v5"
+    assert payload["format_version"] == 7
+    assert payload["core_facts"]["profile"] == "core-scientific-facts-v6"
     payload["format_version"] = 5
     with pytest.raises(ValidationError):
         EvaluationReport.model_validate(payload)

@@ -92,19 +92,21 @@ def canonical_reported_quantity(value: ReportedValue) -> tuple[float, str] | Non
     check that the raw claim is a plain number, not a range or qualified value.
     """
 
-    from pint.errors import PintError
-
     if value.value_number is None or value.unit is None:
         return None
-    unit = value.unit.strip()
+    return canonical_quantity(value.value_number, value.unit)
+
+
+def canonical_quantity(number: float, unit: str) -> tuple[float, str] | None:
+    """Convert an explicit magnitude; callers retain bounds and other qualifiers."""
+
+    from pint.errors import PintError
+
+    unit = unit.strip()
     if unit.casefold() in {"percent", "percentage"}:
         unit = "%"
     try:
-        quantity = (
-            _unit_registry()
-            .Quantity(value.value_number, _pint_unit(unit))
-            .to_base_units()
-        )
+        quantity = _unit_registry().Quantity(number, _pint_unit(unit)).to_base_units()
         magnitude = float(quantity.magnitude)
         return (magnitude, str(quantity.units)) if math.isfinite(magnitude) else None
     except (PintError, TokenError, TypeError, ValueError, OverflowError):

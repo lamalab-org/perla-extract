@@ -174,7 +174,12 @@ def validate_control(truth, name, prediction, changes, baseline):
     }
 
 
-def run(release_path: Path, feedback_zip: Path | None, include_controls: bool = True):
+def run(
+    release_path: Path,
+    feedback_zip: Path | None,
+    include_controls: bool = True,
+    descriptor_equivalences: Path | None = None,
+):
     """Run controls and a prespecified sensitivity grid, preserving every result."""
     release = json.loads(release_path.read_text(encoding="utf-8"))
     ReferenceRelease.model_validate(release)
@@ -210,6 +215,12 @@ def run(release_path: Path, feedback_zip: Path | None, include_controls: bool = 
         "numeric_exact": EvaluationConfig(numeric_relative_tolerance=0),
         "numeric_1e-4": EvaluationConfig(numeric_relative_tolerance=1e-4),
     }
+    if descriptor_equivalences is not None:
+        configurations["reviewed_descriptors"] = EvaluationConfig(
+            descriptor_equivalences=json.loads(
+                descriptor_equivalences.read_text(encoding="utf-8")
+            )
+        )
     missing = []
     for paper in release["papers"]:
         identity = paper["paper_id"]
@@ -316,11 +327,15 @@ def run(release_path: Path, feedback_zip: Path | None, include_controls: bool = 
 @click.option("--feedback-zip", type=click.Path(exists=True, path_type=Path))
 @click.option("--output", required=True, type=click.Path(path_type=Path))
 @click.option("--controls/--no-controls", "include_controls", default=True)
-def main(release_path, feedback_zip, output, include_controls):
+@click.option(
+    "--descriptor-equivalences",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+)
+def main(release_path, feedback_zip, output, include_controls, descriptor_equivalences):
     """Write an audit without modifying references, predictions or existing reports."""
     if output.exists():
         raise click.ClickException("Choose a new audit output path")
-    report = run(release_path, feedback_zip, include_controls)
+    report = run(release_path, feedback_zip, include_controls, descriptor_equivalences)
     write_json_exclusive(output, report)
     click.echo(json.dumps(report["control_summary"], indent=2))
     click.echo(

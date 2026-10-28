@@ -1,12 +1,13 @@
 {
-  "format_version": 6,
-  "matcher_version": "rich-study-hungarian-v7",
-  "profile": "core-scientific-facts-v5",
+  "format_version": 7,
+  "matcher_version": "rich-study-hungarian-v8",
+  "profile": "core-scientific-facts-v6",
   "config": {
     "minimum_record_similarity": 0.35,
     "numeric_relative_tolerance": 1e-6,
     "numeric_absolute_tolerance": 0.0,
-    "operation_aliases": {"thermal annealing": "annealing"}
+    "operation_aliases": {"thermal annealing": "annealing"},
+    "descriptor_equivalences": []
   },
   "cases": {
     "seed": {

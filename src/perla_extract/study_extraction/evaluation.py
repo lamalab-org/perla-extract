@@ -33,17 +33,19 @@ from .scoring_facts import (
     FactGroup,
     ScientificFact,
     UnorderedContext,
+    compound_quantity,
     equal_value,
     is_plain_number,
     property_name,
     scientific_descriptor,
     scientific_facts,
     scientific_text,
+    scientific_value_text,
 )
 from .units import canonical_reported_quantity
 
-EVALUATION_FORMAT_VERSION: Final[Literal[6]] = 6
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v7"]] = "rich-study-hungarian-v7"
+EVALUATION_FORMAT_VERSION: Final[Literal[7]] = 7
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v8"]] = "rich-study-hungarian-v8"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -76,6 +78,37 @@ PARENT_FIELDS: dict[RecordKind, tuple[tuple[str, RecordKind], ...]] = {
 }
 
 
+class DescriptorEquivalence(StrictModel):
+    """Record a checked label equivalence for one immutable reference, not a guess.
+
+    A reviewer must establish that these names denote the same cohort/specimen.
+    The reason and exact input hash travel with every score using the rule. Rules
+    cannot silently follow an edited reference or merge its distinct cohorts.
+    """
+
+    reference_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    record_kind: Literal["population_statistics", "stability_tests"]
+    reference_label: str = Field(min_length=1)
+    alternative_labels: list[str] = Field(min_length=1)
+    reason: str = Field(min_length=1)
+
+    @field_validator("reference_label", "reason")
+    @classmethod
+    def nonempty_text(cls, value: str) -> str:
+        value = scientific_text(value)
+        if not value:
+            raise ValueError("label and reason must not be blank")
+        return value
+
+    @field_validator("alternative_labels")
+    @classmethod
+    def distinct_labels(cls, values: list[str]) -> list[str]:
+        values = [scientific_text(value) for value in values]
+        if any(not value for value in values) or len(set(values)) != len(values):
+            raise ValueError("alternative labels must be nonempty and distinct")
+        return values
+
+
 class EvaluationConfig(StrictModel):
     """Freeze tolerances that can change a reported benchmark result."""
 
@@ -85,6 +118,23 @@ class EvaluationConfig(StrictModel):
     operation_aliases: dict[str, str] = Field(
         default_factory=lambda: dict(DEFAULT_OPERATION_ALIASES)
     )
+    descriptor_equivalences: list[DescriptorEquivalence] = Field(default_factory=list)
+
+    @field_validator("descriptor_equivalences")
+    @classmethod
+    def unambiguous_descriptors(
+        cls, rules: list[DescriptorEquivalence]
+    ) -> list[DescriptorEquivalence]:
+        owners: dict[tuple[str, str, str], str] = {}
+        for rule in rules:
+            for label in [rule.reference_label, *rule.alternative_labels]:
+                key = (rule.reference_sha256, rule.record_kind, label)
+                if key in owners and owners[key] != rule.reference_label:
+                    raise ValueError(
+                        "descriptor equivalences must not overlap or form chains"
+                    )
+                owners[key] = rule.reference_label
+        return rules
 
     @field_validator("operation_aliases")
     @classmethod
@@ -291,7 +341,7 @@ class CoreFactScore(FactScoreView):
     counts remain available so large recipes cannot hide poor performance extraction.
     """
 
-    profile: Literal["core-scientific-facts-v5"] = "core-scientific-facts-v5"
+    profile: Literal["core-scientific-facts-v6"] = "core-scientific-facts-v6"
     value_only: FactScoreView
     attribution: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
@@ -317,8 +367,8 @@ class CoreFactScore(FactScoreView):
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[6] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v7"] = MATCHER_VERSION
+    format_version: Literal[7] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v8"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -395,8 +445,8 @@ class EvaluationInput(StrictModel):
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[6] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v7"] = MATCHER_VERSION
+    format_version: Literal[7] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v8"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -535,17 +585,29 @@ def _record_features(record: object) -> set[str]:
                 canonical_reported_quantity(item) if is_plain_number(item) else None
             )
             values.append(property_name(item.name))
+            compound = compound_quantity(item)
             if canonical is not None:
                 values.extend((format(canonical[0], ".12g"), canonical[1]))
+            elif compound is not None:
+                values.extend(
+                    (
+                        compound[0],
+                        format(compound[1], ".12g"),
+                        format(compound[2], ".12g"),
+                        compound[3],
+                    )
+                )
             else:
-                values.extend((item.raw_value, item.unit))
+                values.extend((scientific_value_text(item.raw_value), item.unit))
         elif isinstance(item, BaseModel):
             for name in item.__class__.model_fields:
                 walk(getattr(item, name), name)
         elif isinstance(item, list):
             for child in item:
                 walk(child)
-        elif isinstance(item, (str, int, float)):
+        elif isinstance(item, str):
+            values.append(scientific_value_text(item))
+        elif isinstance(item, (int, float)):
             values.append(item)
 
     walk(record)
@@ -1063,6 +1125,40 @@ def evaluate_study(
     """
 
     config = config or EvaluationConfig()
+    truth_digest, prediction_digest = _study_digest(truth), _study_digest(prediction)
+    rules = [
+        rule
+        for rule in config.descriptor_equivalences
+        if rule.reference_sha256 == truth_digest
+    ]
+    if rules:
+        # Normalize scorer-local copies only. Hashes and diagnostic paths still
+        # identify the original inputs; no reference or prediction is rewritten.
+        prediction = prediction.model_copy(deep=True)
+        for rule in rules:
+            reference_labels = {
+                scientific_descriptor(record)
+                for record in getattr(truth, rule.record_kind)
+            }
+            if rule.reference_label not in reference_labels:
+                raise ValueError(
+                    "descriptor equivalence names no reference cohort/specimen"
+                )
+            if any(
+                label in reference_labels and label != rule.reference_label
+                for label in rule.alternative_labels
+            ):
+                raise ValueError(
+                    "descriptor equivalence would merge distinct reference cohorts/specimens"
+                )
+            for record in getattr(prediction, rule.record_kind):
+                if scientific_descriptor(record) in rule.alternative_labels:
+                    field = (
+                        "label"
+                        if rule.record_kind == "population_statistics"
+                        else "specimen_label"
+                    )
+                    setattr(record, field, rule.reference_label)
     # Identity maps are dictionaries. Reused IDs would silently collapse distinct
     # records and attach facts to the wrong device instead of measuring quality.
     for side, study in (("truth", truth), ("prediction", prediction)):
@@ -1187,8 +1283,8 @@ def evaluate_study(
     )
     return EvaluationReport(
         study_schema_sha256=study_schema_sha256(),
-        truth_content_sha256=_study_digest(truth),
-        prediction_content_sha256=_study_digest(prediction),
+        truth_content_sha256=truth_digest,
+        prediction_content_sha256=prediction_digest,
         benchmark=benchmark,
         prediction_validation=prediction_validation,
         run_efficiency=run_efficiency,

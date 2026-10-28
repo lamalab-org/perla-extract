@@ -1,6 +1,53 @@
 # Scorer validation audit — 28 October 2026
 
-## Verdict
+## Follow-up: fixes in matcher v8
+
+The v7 audit below found four false rejections. Matcher `rich-study-hungarian-v8`,
+fact profile `core-scientific-facts-v6`, addresses them as follows:
+
+| Finding | Change | Check |
+| --- | --- | --- |
+| Equivalent ranges lost credit | Convert and compare both endpoints | `1–2 h` matches `60–120 min`; a changed endpoint does not |
+| Equivalent uncertainty lost credit | Convert the centre and scale the spread | `20 ± 1 %` matches `0.20 ± 0.01`; offset temperatures shift only the centre; nonlinear conversions are not treated as symmetric errors |
+| LaTeX formula notation lost credit | Normalize numeric subscripts in simple formulas | `CH_{3}NH_{3}PbI_{3}` matches `CH3NH3PbI3`; different stoichiometry and chemical case remain distinct |
+| A cohort-label clarification lost 11 facts | Accept explicit, reference-specific checked equivalences | All 11 population facts match with the checked rules; without them the scorer still refuses to guess |
+
+The label rules are data, not paper-specific code. The optional file
+`examples/scoring/reviewed-descriptors-v2.json` records the two names, the reference
+hash and the rationale. A direct comparison of the archived snapshot confirmed that
+each affected population record was identical to the reference except for its label.
+The rules do not change any scientific values or merge reference cohorts. The scorer
+stores them in its report, and the ablation planner freezes the same file for both arms.
+
+All 14 equivalence probes now pass. The real-paper controls still pass for all
+88 eligible paper/control combinations. In the earlier snapshots, the Chemistry of
+Materials population count changes from **0/11 to 11/11** with the checked rules.
+Its missing stack fact still loses credit, as do the missing population and changed
+stability facts in the other papers. Mean group-balanced F1 across those reviewed
+snapshots changes from 0.9889118796 to 0.9955785462 with the rules. This is a correction
+of a scoring penalty on reviewed data, **not an improvement in model extraction**.
+
+Validation: **763 tests passed, 63 skipped**, with no expected failures. The separate
+release suite passed **124 tests** across both frozen releases. Ruff, type checking
+and the strict documentation build also passed. Neither reference JSONs nor
+production review data were changed. No model calls were made.
+
+To include the checked label rules in a reproducible audit, add:
+
+```bash
+--descriptor-equivalences examples/scoring/reviewed-descriptors-v2.json
+```
+
+The audit retains the unadjusted settings alongside the adjusted result. These tests
+support the implemented arithmetic and identity safeguards; they do not establish
+the scorer's accuracy on arbitrary chemical names or ambiguous device descriptions.
+The remaining publication check is an expert-labelled sample of accepted and rejected
+matches from genuine model outputs, followed by ranking sensitivity across models.
+
+## Initial verdict: matcher v7
+
+**The sections below preserve the initial audit, before the fixes above.** Counts,
+expected failures and unresolved findings in these sections refer to v7, not v8.
 
 The deterministic scorer passes useful arithmetic and identity controls on the
 30-paper v2 reference. It also rejects some scientifically equivalent records.

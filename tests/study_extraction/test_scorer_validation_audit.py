@@ -5,7 +5,7 @@ import pytest
 from examples.scoring.equivalence_probe import CASES
 from examples.scoring.run import quantity, seed_study
 from examples.scoring.validate import controls, convert_units, validate_control
-from perla_extract.study_extraction.evaluation import evaluate_study
+from perla_extract.study_extraction.evaluation import EvaluationConfig, evaluate_study
 from perla_extract.study_extraction.models import StudyExtraction
 from perla_extract.study_extraction.scoring_facts import equal_value
 
@@ -68,12 +68,6 @@ def test_nonunique_protocol_does_not_claim_known_record_identity():
             left,
             right,
             expected,
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="Documented conservative comparator does not yet recognize this scientific equivalence",
-            )
-            if name in {"range_conversion", "uncertainty_conversion", "latex_formula"}
-            else (),
             id=name,
         )
         for name, left, right, expected in CASES
@@ -95,11 +89,8 @@ def test_independently_specified_scientific_equivalences(name, left, right, expe
     assert equal_value(*values, relative=1e-6, absolute=0) is expected
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Cohort display clarification incorrectly prevents all population matches; identity needs a general solution",
-)
 def test_clarifying_a_population_label_preserves_unchanged_scientific_facts():
+    import json
     from pathlib import Path
 
     path = (
@@ -114,9 +105,26 @@ def test_clarifying_a_population_label_preserves_unchanged_scientific_facts():
         population.label = population.label.removesuffix(
             "; photovoltaic parameter comparison, not a pooled mean"
         )
-    report = evaluate_study(truth, prediction)
+    unchanged = truth.model_dump(mode="json"), prediction.model_dump(mode="json")
+    before = evaluate_study(truth, prediction)
+    # Unchecked prose is not automatically equivalent. Explicit reviewed rules
+    # resolve this known false negative without erasing treatment distinctions.
+    assert before.core_facts.groups["population"].matched == 0
+    rules_path = (
+        Path(__file__).resolve().parents[2]
+        / "examples/scoring/reviewed-descriptors-v2.json"
+    )
+    config = EvaluationConfig(
+        descriptor_equivalences=json.loads(rules_path.read_text(encoding="utf-8"))
+    )
+    report = evaluate_study(truth, prediction, config=config)
     assert report.core_facts.groups["population"].matched == 11
     assert report.core_facts.micro.f1 == 1
+    assert report.prediction_content_sha256 == before.prediction_content_sha256
+    assert (
+        truth.model_dump(mode="json"),
+        prediction.model_dump(mode="json"),
+    ) == unchanged
 
 
 @pytest.fixture
@@ -148,7 +156,7 @@ def test_audit_is_reproducible_and_never_overwrites(one_paper_release, tmp_path)
     assert result.exit_code == 0, result.output
     report = json.loads(output.read_text(encoding="utf-8"))
     assert report["independent_expert_calibration"] is False
-    assert sum(not r["agrees"] for r in report["equivalence_probe"]) == 3
+    assert all(r["agrees"] for r in report["equivalence_probe"])
     assert report["code_sha256"] and report["environment"]["pint"]
     original = output.read_bytes()
     assert CliRunner().invoke(main, args).exit_code != 0

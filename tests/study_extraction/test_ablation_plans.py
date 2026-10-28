@@ -72,6 +72,34 @@ def make_plan(path, cohort, output, **kwargs):
     )
 
 
+def test_descriptor_rules_are_frozen_for_all_arms_and_never_sent_to_models(
+    cohort, tmp_path
+):
+    rules = tmp_path / "equivalences.json"
+    # A multi-paper list can contain rules for references outside this tiny cohort.
+    payload = [
+        {
+            "reference_sha256": "0" * 64,
+            "record_kind": "population_statistics",
+            "reference_label": "control",
+            "alternative_labels": ["untreated"],
+            "reason": "Synthetic checked cohort equivalence.",
+        }
+    ]
+    rules.write_text(json.dumps(payload))
+    plan = make_plan(
+        STUDIES[0], cohort, tmp_path / "plan", descriptor_equivalences=rules
+    )
+    assert plan["input_sha256"][str(rules)] == digest(rules)
+    assert plan["scorer"]["config"]["descriptor_equivalences"] == payload
+    for job in plan["jobs"]:
+        assert str(rules) not in job["extract"]
+        assert "--descriptor-equivalences" in job["score"]
+        assert job["score"][job["score"].index("--descriptor-equivalences") + 1] == str(
+            rules
+        )
+
+
 @pytest.mark.parametrize("study_path", STUDIES, ids=lambda path: path.stem)
 def test_isolated_arms_and_real_extraction_cli(
     study_path, cohort, tmp_path, monkeypatch
