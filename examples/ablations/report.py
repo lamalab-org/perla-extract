@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import random
 from pathlib import Path
 from statistics import mean
 
@@ -18,11 +19,42 @@ from perla_extract.study_extraction.evaluation import (
     EvaluationReport,
     aggregate_evaluations,
 )
+from perla_extract.study_extraction.reference_release import ReferenceRelease
 
 ARMS = ("control", "treatment")
 
 
-def summarize(plan_path: Path) -> dict:
+def paired_interval(deltas: list[float], samples: int, seed: int) -> dict:
+    """Resample paper-level paired differences, never fields or repeated runs.
+
+    This descriptive percentile interval conditions on the reviewed paper sample.
+    It is not an equivalence test, and does not adjust for searching many variants.
+    """
+
+    if samples < 0:
+        raise ValueError("bootstrap samples cannot be negative")
+    result = {
+        "paper_count": len(deltas),
+        "mean": mean(deltas),
+        "ci95_lower": None,
+        "ci95_upper": None,
+        "method": "paired-paper-percentile",
+        "samples": samples,
+        "seed": seed,
+        "status": "disabled" if samples == 0 else "insufficient_papers",
+    }
+    if len(deltas) > 1 and samples > 0:
+        rng = random.Random(seed)
+        draws = sorted(mean(rng.choices(deltas, k=len(deltas))) for _ in range(samples))
+        result.update(
+            ci95_lower=draws[int(0.025 * (samples - 1))],
+            ci95_upper=draws[int(0.975 * (samples - 1))],
+            status="available",
+        )
+    return result
+
+
+def summarize(plan_path: Path, *, bootstrap_samples: int = 2000, seed: int = 0) -> dict:
     """Retain the full roster and require compatible references before pairing.
 
     Repeated runs estimate variability on the same papers. Average their paired
@@ -32,6 +64,12 @@ def summarize(plan_path: Path) -> dict:
 
     plan_bytes = plan_path.read_bytes()
     plan = json.loads(plan_bytes)
+    if plan.get("format_version") != 2:
+        raise ValueError(
+            "Prepare a version-2 plan with validated references before comparison"
+        )
+    if bootstrap_samples < 0:
+        raise ValueError("bootstrap samples cannot be negative")
     jobs = plan["jobs"]
     keys = [(j["paper_id"], j["repeat"], j["arm"]) for j in jobs]
     papers = sorted({key[0] for key in keys})
@@ -46,6 +84,13 @@ def summarize(plan_path: Path) -> dict:
     }
     if not jobs or len(set(keys)) != len(keys) or set(keys) != expected:
         raise ValueError("Plan must contain both arms for every paper and repeat")
+    if set(plan["references"]) != set(papers):
+        raise ValueError("Plan jobs do not match its validated reference roster")
+    release = (
+        ReferenceRelease.model_validate(plan["reference_release"])
+        if plan.get("reference_release") is not None
+        else None
+    )
 
     reports = {}
     rows = []
@@ -60,6 +105,27 @@ def summarize(plan_path: Path) -> dict:
         paths.add(path)
         row = dict(zip(("paper_id", "repeat", "arm"), key))
         row.update(report=str(path), issues=[])
+        try:
+            configuration_bytes = Path(job["run_configuration"]).read_bytes()
+            configuration = json.loads(configuration_bytes)
+            if not isinstance(configuration, dict):
+                raise ValueError("Run configuration must be an object")
+            row["run_configuration_sha256"] = hashlib.sha256(
+                configuration_bytes
+            ).hexdigest()
+            for field, expected_value in job["expected_configuration"].items():
+                actual = configuration.get(field)
+                matches = actual == expected_value
+                if field == "source_sha256":
+                    matches = isinstance(actual, list) and sorted(actual) == sorted(
+                        expected_value
+                    )
+                if field not in configuration or not matches:
+                    row["issues"].append(
+                        f"Run setting differs from the prepared configuration: {field}"
+                    )
+        except (OSError, ValueError, TypeError) as error:
+            row["issues"].append(f"Cannot verify run configuration: {error}")
         try:
             content = path.read_bytes()
             report = EvaluationReport.model_validate_json(content)
@@ -76,6 +142,23 @@ def summarize(plan_path: Path) -> dict:
             )
             if report.benchmark is None or report.benchmark.paper_id != key[0]:
                 row["issues"].append("Missing or mismatched benchmark paper identity")
+            pinned = plan["references"][key[0]]
+            if (
+                report.benchmark is None
+                or report.benchmark.model_dump(mode="json") != pinned["benchmark"]
+                or report.truth_content_sha256 != pinned["truth_content_sha256"]
+            ):
+                row["issues"].append(
+                    "Score reference differs from the prepared reference"
+                )
+            scorer = {
+                "format_version": report.format_version,
+                "matcher_version": report.matcher_version,
+                "study_schema_sha256": report.study_schema_sha256,
+                "config": report.config.model_dump(mode="json"),
+            }
+            if scorer != plan["scorer"]:
+                row["issues"].append("Score settings differ from the prepared scorer")
             if report.core_facts.scoring_status != "ready":
                 row["issues"].append("Resolve scoring alignment issues")
             if report.core_facts.macro_f1 is None:
@@ -115,6 +198,7 @@ def summarize(plan_path: Path) -> dict:
                     arm: aggregate_evaluations(
                         [reports[paper, repeat, arm] for paper in papers],
                         bootstrap_samples=0,
+                        reference_release=release,
                     )
                     for arm in ARMS
                 }
@@ -146,6 +230,9 @@ def summarize(plan_path: Path) -> dict:
             quality = {
                 "mean_paired_macro_f1_delta": mean(
                     pair["mean_delta"] for pair in paired
+                ),
+                "paired_macro_f1_delta_interval": paired_interval(
+                    [pair["mean_delta"] for pair in paired], bootstrap_samples, seed
                 ),
                 "papers": paired,
                 "by_repeat": by_repeat,
@@ -182,12 +269,13 @@ def summarize(plan_path: Path) -> dict:
         else None
     )
     return {
-        "format_version": 1,
+        "format_version": 2,
         "plan_sha256": hashlib.sha256(plan_bytes).hexdigest(),
         "study": plan["study"],
         "revision": plan["revision"],
         "paper_count": len(papers),
         "repeats": repeats,
+        "reference_release_sha256": release.digest() if release else None,
         "quality_status": "needs_attention" if issues else "ready",
         "issues": issues,
         "quality": quality,
@@ -202,7 +290,11 @@ def summarize(plan_path: Path) -> dict:
 @click.option(
     "--output", type=click.Path(path_type=Path, dir_okay=False), required=True
 )
-def main(plan: Path, output: Path) -> None:
+@click.option(
+    "--bootstrap-samples", type=click.IntRange(min=0), default=2000, show_default=True
+)
+@click.option("--seed", type=int, default=0, show_default=True)
+def main(plan: Path, output: Path, bootstrap_samples: int, seed: int) -> None:
     """Summarize a prepared study after scoring; no model calls or automatic promotion."""
 
     try:
@@ -210,7 +302,7 @@ def main(plan: Path, output: Path) -> None:
             raise ValueError(
                 "Choose a new output path; existing artifacts are not overwritten"
             )
-        result = summarize(plan)
+        result = summarize(plan, bootstrap_samples=bootstrap_samples, seed=seed)
         write_json_exclusive(output, result)
     except (OSError, ValueError, KeyError, TypeError, IndexError) as error:
         raise click.ClickException(str(error)) from error

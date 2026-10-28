@@ -126,6 +126,25 @@ def _truth(
             "reference contains unresolved records; complete adjudication and export "
             "a finalized reference before scoring"
         )
+    if manifest["artifact_format_version"] >= 4:
+        # Public manifests redact reviewer IDs but retain stage names. Private
+        # exports retain the stage-to-reviewer mapping. Neither is authentication;
+        # both must at least declare the final gate that format 4 promises.
+        stages = review.get("completed_stage_names", review.get("completed_stages"))
+        validation = manifest.get("validation")
+        if (
+            not isinstance(stages, (dict, list))
+            or "adjudication" not in stages
+            or (isinstance(stages, dict) and not stages["adjudication"])
+            or not isinstance(validation, dict)
+            or validation.get("status") != "verified"
+            or type(validation.get("issue_count")) is not int
+            or validation["issue_count"] != 0
+        ):
+            raise click.ClickException(
+                "format-4 reference requires completed adjudication and verified "
+                "validation with zero issues; export the finalized revision again"
+            )
     paper_id = manifest.get("paper_id")
     split = manifest.get("split")
     source_manifest = manifest.get("source_manifest")

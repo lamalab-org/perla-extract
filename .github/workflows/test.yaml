@@ -21,6 +21,19 @@ jobs:
           PYTHONPATH: .:src
           PERLA_RUN_REFERENCE_RELEASE_TESTS: "1"
         run: python -m pytest -q tests/study_extraction/test_reference_release.py
+      - name: Audit finalized references and declared review coverage
+        env:
+          PYTHONPATH: .:src
+        run: >-
+          python -m examples.ablations.references
+          --release data/study_extraction/ground_truth/v2/release.json
+          --output "${{ runner.temp }}/reference-audit-v2.json"
+      - name: Preserve the public reference audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: reference-audit-v2
+          path: ${{ runner.temp }}/reference-audit-v2.json
+          if-no-files-found: error
 
   review-deployment:
     runs-on: ubuntu-latest

@@ -1040,7 +1040,11 @@ def _write_frozen_truth_inputs(tmp_path, artifact_version):
                 "split": "test",
                 "source_manifest": {"main": "source.pdf"},
                 "files": {"ground_truth.json": hashlib.sha256(encoded).hexdigest()},
-                "review": {"uncertain_record_keys": []},
+                "review": {
+                    "uncertain_record_keys": [],
+                    "completed_stage_names": ["adjudication"],
+                },
+                "validation": {"status": "verified", "issue_count": 0},
             }
         ),
         encoding="utf-8",
@@ -1050,6 +1054,28 @@ def _write_frozen_truth_inputs(tmp_path, artifact_version):
         study(prefix="prediction").model_dump_json(), encoding="utf-8"
     )
     return truth, prediction
+
+
+@pytest.mark.parametrize("damage", ["stage", "status", "issues", "boolean_count"])
+def test_format_four_requires_declared_finalization_and_clean_validation(
+    tmp_path, damage
+):
+    import click
+
+    from perla_extract.study_extraction.evaluation_cli import _truth
+
+    directory, _ = _write_frozen_truth_inputs(tmp_path, 4)
+    path = directory / "manifest.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if damage == "stage":
+        payload["review"]["completed_stage_names"] = []
+    elif damage == "status":
+        payload["validation"]["status"] = "needs_review"
+    else:
+        payload["validation"]["issue_count"] = False if damage == "boolean_count" else 1
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(click.ClickException, match="completed adjudication"):
+        _truth(directory)
 
 
 @pytest.mark.parametrize("artifact_version", [2, 3, 4])

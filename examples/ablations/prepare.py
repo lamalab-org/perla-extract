@@ -12,11 +12,20 @@ import random
 import shlex
 import subprocess
 import sys
+from dataclasses import fields
 from pathlib import Path
 from typing import Literal
 
 import click
 from pydantic import BaseModel, ConfigDict, Field
+
+from examples.ablations.references import inspect_reference
+from perla_extract.study_extraction.cli import _reasoning
+from perla_extract.study_extraction.cli import main as extraction_cli
+from perla_extract.study_extraction.evaluation import aggregate_evaluations
+from perla_extract.study_extraction.models import study_schema_sha256
+from perla_extract.study_extraction.reference_release import ReferenceRelease
+from perla_extract.study_extraction.workflow import ExtractionConfig, prompt_sha256
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -79,6 +88,27 @@ def check_inputs(plan: dict) -> None:
             raise ValueError(f"Input changed since preparation: {filename}")
 
 
+def expected_configuration(arguments: list[str], reference: dict) -> dict:
+    """Freeze CLI defaults as well as explicit flags without executing a model.
+
+    Read the real CLI's options so adding a workflow setting cannot silently omit
+    it from experiment checking. Run artifacts may add diagnostics, but these
+    prepared settings and reviewed source hashes must still agree.
+    """
+
+    with extraction_cli.make_context("perla-extract", arguments) as context:
+        value = {
+            field.name: context.params[field.name] for field in fields(ExtractionConfig)
+        }
+    value["reasoning_effort"] = _reasoning(value["reasoning_effort"])
+    value.update(
+        schema_sha256=study_schema_sha256(),
+        prompt_sha256=prompt_sha256(),
+        source_sha256=reference["benchmark"]["source_sha256"],
+    )
+    return json.loads(json.dumps(value, default=str))
+
+
 def prepare(
     study_path: Path,
     cohort_path: Path,
@@ -88,6 +118,7 @@ def prepare(
     max_cost: float,
     repeats: int,
     seed: int,
+    release_path: Path | None = None,
 ) -> dict:
     """Freeze a two-arm study; preparation never invokes an extraction provider."""
 
@@ -106,6 +137,15 @@ def prepare(
     if not papers or len({p.paper_id for p in papers}) != len(papers):
         raise ValueError("Cohort must contain distinct papers")
     inputs = {str(p.resolve()): digest(p) for p in (study_path, cohort_path)}
+    release = None
+    if release_path is not None:
+        release_path = release_path.resolve()
+        release = ReferenceRelease.model_validate_json(
+            release_path.read_text(encoding="utf-8")
+        )
+        inputs[str(release_path)] = digest(release_path)
+    references = {}
+    self_scores = []
     for paper in papers:
         for field in ("pdf", "supplement", "truth"):
             path = getattr(paper, field)
@@ -118,6 +158,36 @@ def prepare(
         for filename in ("ground_truth.json", "manifest.json"):
             path = paper.truth / filename
             inputs[str(path)] = digest(path)
+        control, check = inspect_reference(paper.truth)
+        provenance = control.benchmark
+        if provenance is None or provenance.paper_id != paper.paper_id:
+            raise ValueError(
+                f"Reference identity does not match cohort: {paper.paper_id}"
+            )
+        supplied_sources = {
+            digest(p) for p in (paper.pdf, paper.supplement) if p is not None
+        }
+        if not provenance.source_sha256 or supplied_sources != set(
+            provenance.source_sha256
+        ):
+            raise ValueError(
+                f"PDF/SI hashes differ from the reviewed sources: {paper.paper_id}"
+            )
+        self_scores.append(control)
+        references[paper.paper_id] = check
+    if release is not None:
+        for paper in release.model_dump(mode="json")["papers"]:
+            check = references.get(paper["paper_id"])
+            if (
+                check is not None
+                and paper.get("manifest_sha256") is not None
+                and paper["manifest_sha256"] != check["manifest_sha256"]
+            ):
+                raise ValueError(
+                    f"Reference manifest hash mismatch: {paper['paper_id']}"
+                )
+    # Detect duplicated sources and mixed splits even for a small pilot subset.
+    aggregate_evaluations(self_scores, reference_release=release, bootstrap_samples=0)
     output = output.resolve()
     revision = subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
@@ -202,6 +272,10 @@ def prepare(
                         "repeat": repeat,
                         "extract": extract,
                         "score": score,
+                        "run_configuration": str(run / "run_configuration.json"),
+                        "expected_configuration": expected_configuration(
+                            extract[3:], references[paper.paper_id]
+                        ),
                     }
                 )
     aggregates = []
@@ -217,7 +291,10 @@ def prepare(
                 "--fail-on-scoring-issues",
             ]
             aggregates.append(command)
+            if release_path is not None:
+                command += ["--release", str(release_path)]
     plan = {
+        "format_version": 2,
         "study": study.model_dump(),
         "revision": revision,
         "seed": seed,
@@ -226,6 +303,14 @@ def prepare(
         "aggregates": aggregates,
         "max_cost_per_run": max_cost,
         "repeats": repeats,
+        "references": references,
+        "reference_release": release.model_dump(mode="json") if release else None,
+        "scorer": {
+            "format_version": self_scores[0].format_version,
+            "matcher_version": self_scores[0].matcher_version,
+            "study_schema_sha256": self_scores[0].study_schema_sha256,
+            "config": self_scores[0].config.model_dump(mode="json"),
+        },
     }
     output.mkdir(parents=True, exist_ok=False)
     (output / "plan.json").write_text(json.dumps(plan, indent=2) + "\n")
@@ -275,6 +360,12 @@ def main() -> None:
 @click.option("--output", type=click.Path(path_type=Path), required=True)
 @click.option("--model", required=True)
 @click.option("--reader-model")
+@click.option(
+    "--release",
+    "release_path",
+    type=click.Path(path_type=Path, exists=True, dir_okay=False),
+    help="Require the complete paper roster and exact references in this release.json.",
+)
 @click.option("--max-cost", type=click.FloatRange(min=0, min_open=True), required=True)
 @click.option("--repeats", type=click.IntRange(min=1), default=1)
 @click.option("--seed", type=int, default=0)
