@@ -1,0 +1,8 @@
+{
+  "name": "global-refinement",
+  "factor": "use_refinement",
+  "arms": {
+    "control": {"use_refinement": true},
+    "treatment": {"use_refinement": false}
+  }
+}
