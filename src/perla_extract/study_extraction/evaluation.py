@@ -20,11 +20,13 @@ from typing import Annotated, Final, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .models import (
+    DeviceFamily,
     ReportedValue,
     StrictModel,
     StudyExtraction,
     study_schema_sha256,
 )
+from .reference_release import ReferenceRelease
 from .scoring_facts import (
     DEFAULT_OPERATION_ALIASES,
     FACT_GROUPS,
@@ -34,13 +36,14 @@ from .scoring_facts import (
     equal_value,
     is_plain_number,
     property_name,
+    scientific_descriptor,
     scientific_facts,
     scientific_text,
 )
 from .units import canonical_reported_quantity
 
-EVALUATION_FORMAT_VERSION: Final[Literal[5]] = 5
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v6"]] = "rich-study-hungarian-v6"
+EVALUATION_FORMAT_VERSION: Final[Literal[6]] = 6
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v7"]] = "rich-study-hungarian-v7"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -226,10 +229,50 @@ class FactScoreView(StrictModel):
 
     groups: dict[FactGroup, PRF]
     micro: PRF
-    macro_f1: float | None
+    macro_f1: float | None = Field(ge=0, le=1)
     matches: list[FactMatch]
     unmatched_truth_paths: list[str]
     unmatched_prediction_paths: list[str]
+
+    @model_validator(mode="after")
+    def consistent_ledger(self) -> FactScoreView:
+        """Reject internally damaged reports before aggregation trusts their totals."""
+
+        if set(self.groups) != set(FACT_GROUPS):
+            raise ValueError("fact groups must contain every scientific group")
+        counts = (
+            sum(g.predicted for g in self.groups.values()),
+            sum(g.truth for g in self.groups.values()),
+            sum(g.matched for g in self.groups.values()),
+        )
+        if self.micro != _prf(*counts):
+            raise ValueError("fact micro counts disagree with group totals")
+        rates = [g.f1 for g in self.groups.values() if g.f1 is not None]
+        expected = sum(rates) / len(rates) if rates else None
+        if (expected is None) != (self.macro_f1 is None) or (
+            expected is not None
+            and self.macro_f1 is not None
+            and not math.isclose(expected, self.macro_f1, rel_tol=1e-12, abs_tol=0)
+        ):
+            raise ValueError("fact macro F1 disagrees with group scores")
+        matched_groups = Counter(match.group for match in self.matches)
+        if any(matched_groups[g] != score.matched for g, score in self.groups.items()):
+            raise ValueError("fact match ledger disagrees with group counts")
+        for side, total, unmatched in (
+            ("truth", self.micro.truth, self.unmatched_truth_paths),
+            ("predicted", self.micro.predicted, self.unmatched_prediction_paths),
+        ):
+            matched = [getattr(m, f"{side}_path") for m in self.matches]
+            if (
+                len(set(matched)) != len(matched)
+                or len(set(unmatched)) != len(unmatched)
+                or set(matched) & set(unmatched)
+                or len(matched) + len(unmatched) != total
+            ):
+                raise ValueError(
+                    f"{side} fact paths are not a one-to-one complete ledger"
+                )
+        return self
 
 
 class ScoringIssue(StrictModel):
@@ -248,18 +291,34 @@ class CoreFactScore(FactScoreView):
     counts remain available so large recipes cannot hide poor performance extraction.
     """
 
-    profile: Literal["core-scientific-facts-v4"] = "core-scientific-facts-v4"
+    profile: Literal["core-scientific-facts-v5"] = "core-scientific-facts-v5"
     value_only: FactScoreView
     attribution: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
     issues: list[ScoringIssue]
 
+    @model_validator(mode="after")
+    def consistent_views(self) -> CoreFactScore:
+        """All views score the same facts; strict credit requires value and context."""
+
+        for view in (self.value_only, self.attribution):
+            for group, strict in self.groups.items():
+                diagnostic = view.groups[group]
+                if (strict.truth, strict.predicted) != (
+                    diagnostic.truth,
+                    diagnostic.predicted,
+                ) or strict.matched > diagnostic.matched:
+                    raise ValueError("fact views have inconsistent counts")
+        if (self.scoring_status == "needs_review") != bool(self.issues):
+            raise ValueError("scoring status disagrees with issues")
+        return self
+
 
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[5] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v6"] = MATCHER_VERSION
+    format_version: Literal[6] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v7"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -324,11 +383,20 @@ class DatasetEfficiency(StrictModel):
     elapsed_seconds: float = Field(ge=0)
 
 
+class EvaluationInput(StrictModel):
+    """Retain the reference and prediction behind each aggregated paper score."""
+
+    benchmark: BenchmarkProvenance | None
+    truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    report_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[5] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v6"] = MATCHER_VERSION
+    format_version: Literal[6] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v7"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -337,6 +405,10 @@ class DatasetEvaluationReport(StrictModel):
     paper_count: int = Field(ge=1)
     split: str | None
     paper_ids: list[str]
+    reference_release_sha256: Annotated[
+        str | None, Field(pattern=r"^[0-9a-f]{64}$")
+    ] = None
+    input_reports: list[EvaluationInput]
     prediction_validation: DatasetPredictionValidation
     efficiency: DatasetEfficiency
     inventory_micro: dict[RecordKind, PRF]
@@ -489,6 +561,12 @@ def _record_features(record: object) -> set[str]:
 def _record_similarity(left: object, right: object) -> float:
     """Compare scientific content without relying on run-local record identifiers."""
 
+    # A family describes a design, not the completeness of its fabrication recipe.
+    # Otherwise an omitted recipe can prevent a correct family match and erase
+    # credit for unchanged performance measurements linked to that family.
+    if isinstance(left, DeviceFamily) and isinstance(right, DeviceFamily):
+        left = left.model_copy(update={"processing_steps": []})
+        right = right.model_copy(update={"processing_steps": []})
     lexical = _jaccard(_record_features(left), _record_features(right))
     left_values = _reported_values(left)
     right_values = _reported_values(right)
@@ -500,15 +578,25 @@ def _record_similarity(left: object, right: object) -> float:
 
 
 def _maximum_assignment(scores: Sequence[Sequence[float]]) -> list[tuple[int, int]]:
+    """Return maximum-weight one-to-one pairs, without ambiguity diagnostics."""
+
+    return _assignment(scores)[0]
+
+
+def _assignment(
+    scores: Sequence[Sequence[float]], *, detect_ambiguity: bool = False
+) -> tuple[list[tuple[int, int]], set[tuple[int, int]]]:
     """Return a deterministic maximum-weight one-to-one assignment.
 
     This is the rectangular Hungarian algorithm with zero-weight dummy entries. It
     avoids greedy order effects when several similar device variants compete for a
-    match, without adding a heavy numerical dependency.
+    match. When requested, dual reduced costs identify alternative optimal complete
+    assignments: a selected edge is non-unique exactly when it lies on a tight
+    alternating cycle. This avoids solving the optimization once per selected edge.
     """
 
     if not scores or not scores[0]:
-        return []
+        return [], set()
     rows, columns = len(scores), len(scores[0])
     size = max(rows, columns)
     maximum = max(max(row) for row in scores)
@@ -559,7 +647,36 @@ def _maximum_assignment(scores: Sequence[Sequence[float]]) -> list[tuple[int, in
             if column == 0:
                 break
     pairs = [(p[column] - 1, column - 1) for column in range(1, size + 1)]
-    return [(row, column) for row, column in pairs if row < rows and column < columns]
+    real_pairs = [
+        (row, column) for row, column in pairs if row < rows and column < columns
+    ]
+    ambiguous: set[tuple[int, int]] = set()
+    if detect_ambiguity:
+        # A non-matched tight edge i->j followed by column j's matched edge gives
+        # a directed edge between rows. Cycles correspond to alternate optima.
+        # Include dummy rows/columns: rectangular assignments can be ambiguous too.
+        tolerance = 1e-12 / size
+        edges = [
+            [
+                p[j + 1] - 1
+                for j in range(size)
+                if p[j + 1] - 1 != i
+                and abs(cost[i][j] - u[i + 1] - v[j + 1]) <= tolerance
+            ]
+            for i in range(size)
+        ]
+        for row, column in real_pairs:
+            pending = list(edges[row])
+            visited: set[int] = set()
+            while pending:
+                current = pending.pop()
+                if current == row:
+                    ambiguous.add((row, column))
+                    break
+                if current not in visited:
+                    visited.add(current)
+                    pending.extend(edges[current])
+    return real_pairs, ambiguous
 
 
 def _match(
@@ -609,6 +726,10 @@ def _record_pairs(
     fields = PARENT_FIELDS.get(kind, ())
 
     def score(left: object, right: object) -> float:
+        # The schema stores cohort/standalone specimen identity in these labels.
+        # Never let coincidentally equal outcomes override a different identity.
+        if scientific_descriptor(left) != scientific_descriptor(right):
+            return 0
         content = _record_similarity(left, right)
         if content < threshold:
             return 0
@@ -634,19 +755,14 @@ def _record_pairs(
 
     scores = [[score(left, right) for right in prediction] for left in truth]
     pairs = []
-    for i, j in _maximum_assignment(scores):
+    assignment, ambiguous = _assignment(scores, detect_ambiguity=True)
+    for i, j in assignment:
         selected = scores[i][j]
         if selected <= 0:
             continue
-        # Conservative local ties, not a claim of globally unique assignment.
-        tied = any(
-            k != j and math.isclose(v, selected, rel_tol=0, abs_tol=1e-12)
-            for k, v in enumerate(scores[i])
-        ) or any(
-            k != i and math.isclose(row[j], selected, rel_tol=0, abs_tol=1e-12)
-            for k, row in enumerate(scores)
+        pairs.append(
+            (i, j, _record_similarity(truth[i], prediction[j]), (i, j) in ambiguous)
         )
-        pairs.append((i, j, _record_similarity(truth[i], prediction[j]), tied))
     return pairs
 
 
@@ -790,7 +906,7 @@ def _core_fact_score(
                             kind="ambiguous_record",
                             side=side,
                             paths=[path],
-                            reason="An equal-scoring competing candidate makes this record pairing uncertain.",
+                            reason="An alternative optimal complete assignment changes this record pairing.",
                         )
                     )
         for paths in projection.ambiguous_scopes(
@@ -1170,6 +1286,7 @@ def aggregate_evaluations(
     *,
     bootstrap_samples: int = 2_000,
     seed: int = 0,
+    reference_release: ReferenceRelease | None = None,
 ) -> DatasetEvaluationReport:
     """Aggregate compatible paper reports using counts and paper-level macro rates."""
 
@@ -1191,6 +1308,8 @@ def aggregate_evaluations(
             f"evaluation reports use incompatible schema, matcher, or config: {incompatible}"
         )
     provenance = [report.benchmark for report in reports]
+    if reference_release is not None:
+        reference_release.verify(provenance)
     if any(item is None for item in provenance) and any(
         item is not None for item in provenance
     ):
@@ -1244,6 +1363,25 @@ def aggregate_evaluations(
         paper_count=len(reports),
         split=split,
         paper_ids=paper_ids,
+        reference_release_sha256=reference_release.digest()
+        if reference_release
+        else None,
+        input_reports=[
+            EvaluationInput(
+                benchmark=r.benchmark,
+                truth_content_sha256=r.truth_content_sha256,
+                prediction_content_sha256=r.prediction_content_sha256,
+                report_sha256=hashlib.sha256(
+                    json.dumps(
+                        r.model_dump(mode="json"),
+                        sort_keys=True,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                    ).encode("utf-8")
+                ).hexdigest(),
+            )
+            for r in reports
+        ],
         prediction_validation=DatasetPredictionValidation(
             paper_count=sum(
                 report.prediction_validation is not None for report in reports

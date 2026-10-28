@@ -7,9 +7,14 @@ from pathlib import Path
 
 import pytest
 
-from perla_extract.study_extraction.evaluation import EvaluationConfig, evaluate_study
+from perla_extract.study_extraction.evaluation import (
+    EvaluationConfig,
+    aggregate_evaluations,
+    evaluate_study,
+)
 from perla_extract.study_extraction.evaluation_cli import _canonical_digest, _truth
 from perla_extract.study_extraction.models import StudyExtraction
+from perla_extract.study_extraction.reference_release import ReferenceRelease
 
 ROOT = Path(__file__).resolve().parents[2] / "data/study_extraction/ground_truth"
 RELEASES = [
@@ -104,14 +109,38 @@ def test_reference_score_invariance_and_negative_controls(release, index, paper)
     """Perfect self-scores alone are insufficient: real mistakes must lose credit."""
     truth, provenance = _truth(release / paper["path"])
     same = evaluate_study(truth, truth, benchmark=provenance)
-    assert same.matcher_version == index["matcher_version"]
-    assert same.core_facts.profile == index["fact_profile"]
+    # Release metadata records the original scorer. New scoring rules must not
+    # rewrite a frozen reference just to change that historical metadata.
+    assert index["matcher_version"] == "rich-study-hungarian-v6"
+    assert index["fact_profile"] == "core-scientific-facts-v4"
+    assert same.matcher_version == "rich-study-hungarian-v7"
+    assert same.core_facts.profile == "core-scientific-facts-v5"
     assert same.core_facts.micro.f1 == 1 and not same.core_facts.issues
     reordered = StudyExtraction.model_validate(
         _rename_and_reorder(truth.model_dump(mode="json"))
     )
     result = evaluate_study(truth, reordered, benchmark=provenance)
     assert result.core_facts.micro.f1 == 1 and not result.core_facts.issues
+
+    # Recipe recall is not device identity. This control failed on 12/30 v2 papers
+    # in the audit despite unchanged structure, composition, devices and outcomes.
+    no_recipes = truth.model_copy(deep=True)
+    for family in no_recipes.device_families:
+        family.processing_steps = []
+    partial = evaluate_study(truth, no_recipes)
+    assert (
+        partial.core_facts.groups["performance"]
+        == same.core_facts.groups["performance"]
+    )
+    assert (
+        partial.core_facts.groups["processing"].truth
+        == same.core_facts.groups["processing"].truth
+    )
+    if any(family.processing_steps for family in truth.device_families):
+        assert (
+            partial.core_facts.groups["processing"].matched
+            < same.core_facts.groups["processing"].matched
+        )
 
     collection, id_field = (
         ("performance_observations", "observation_id")
@@ -148,3 +177,33 @@ def test_reference_score_invariance_and_negative_controls(release, index, paper)
     setattr(duplicate, id_field, "test-extra-" + getattr(duplicate, id_field))
     records.append(duplicate)
     assert evaluate_study(truth, extra).core_facts.micro.precision < 1
+
+
+@pytest.mark.parametrize("release,index", RELEASES)
+def test_release_roster_can_be_enforced_on_real_reference_reports(release, index):
+    """Load real manifests and aggregate a complete set, including zero-score runs."""
+    reports = []
+    for paper in index["papers"]:
+        truth, provenance = _truth(release / paper["path"])
+        empty = StudyExtraction(
+            paper=truth.paper,
+            device_families=[],
+            individual_devices=[],
+            performance_observations=[],
+            population_statistics=[],
+            stability_tests=[],
+            unresolved_notes=[],
+        )
+        reports.append(evaluate_study(truth, empty, benchmark=provenance))
+    frozen = ReferenceRelease.model_validate(index)
+    result = aggregate_evaluations(
+        reports, reference_release=frozen, bootstrap_samples=0
+    )
+    assert result.paper_count == 30
+    assert result.core_facts_micro.f1 == 0
+    assert result.reference_release_sha256 == frozen.digest()
+    assert len(result.input_reports) == 30
+    with pytest.raises(ValueError, match="missing"):
+        aggregate_evaluations(
+            reports[:-1], reference_release=frozen, bootstrap_samples=0
+        )

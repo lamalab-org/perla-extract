@@ -1,7 +1,7 @@
 {
-  "format_version": 5,
-  "matcher_version": "rich-study-hungarian-v6",
-  "profile": "core-scientific-facts-v4",
+  "format_version": 6,
+  "matcher_version": "rich-study-hungarian-v7",
+  "profile": "core-scientific-facts-v5",
   "config": {
     "minimum_record_similarity": 0.35,
     "numeric_relative_tolerance": 1e-6,

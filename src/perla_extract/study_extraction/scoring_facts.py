@@ -13,8 +13,14 @@ import unicodedata
 from dataclasses import dataclass
 from typing import Literal
 
-from .models import MaterialConstituent, ReportedValue, StudyExtraction
-from .units import canonical_reported_quantity
+from .models import (
+    MaterialConstituent,
+    PopulationStatistic,
+    ReportedValue,
+    StabilityTest,
+    StudyExtraction,
+)
+from .units import canonical_reported_quantity, equivalent_unit_spelling
 
 FactGroup = Literal[
     "performance", "population", "stability", "composition", "stack", "processing"
@@ -57,6 +63,22 @@ def property_name(name: str) -> str:
     return METRIC_ALIASES.get(key, key)
 
 
+def scientific_descriptor(record: object) -> str | None:
+    """Retain identity that this schema stores only in a cohort/specimen label.
+
+    A population's treatment arm and an unlinked stability specimen cannot be
+    identified by outcome values. Normalize typography, not semantic meaning.
+    Other display labels are deliberately not part of this rule. Unknown synonyms
+    remain disagreements; the scorer must not guess equivalence or change truth.
+    """
+
+    if isinstance(record, PopulationStatistic):
+        return scientific_text(record.label)
+    if isinstance(record, StabilityTest) and record.device_id is None:
+        return scientific_text(record.specimen_label)
+    return None
+
+
 def is_plain_number(value: ReportedValue) -> bool:
     """Allow unit conversion only for a single unqualified, internally consistent number.
 
@@ -72,10 +94,14 @@ def is_plain_number(value: ReportedValue) -> bool:
         match
         and value.value_number is not None
         and math.isfinite(value.value_number)
-        and math.isclose(
-            float(match[1]), value.value_number, rel_tol=1e-9, abs_tol=0.0
+        and math.isclose(float(match[1]), value.value_number, rel_tol=1e-9, abs_tol=0.0)
+        and (
+            scientific_text(match[2]) in {"", scientific_text(value.unit or "")}
+            or (
+                value.unit is not None
+                and equivalent_unit_spelling(match[2], value.unit)
+            )
         )
-        and scientific_text(match[2]) in {"", scientific_text(value.unit or "")}
     )
 
 
@@ -471,6 +497,7 @@ def scientific_facts(
                 context = (
                     reference("device_families", record.family_id),
                     record.statistic_type,
+                    scientific_descriptor(record),
                 )
                 add(
                     "population",
@@ -492,6 +519,7 @@ def scientific_facts(
                     reference("device_families", record.family_id),
                     device_context(record.device_id),
                     record.link_status,
+                    scientific_descriptor(record),
                 )
                 quantities(
                     "stability", f"{path}/conditions", owner, record.conditions, context

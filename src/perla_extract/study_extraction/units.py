@@ -111,6 +111,32 @@ def canonical_reported_quantity(value: ReportedValue) -> tuple[float, str] | Non
         return None
 
 
+def equivalent_unit_spelling(left: str, right: str) -> bool:
+    """Recognize alternate spellings without accepting a changed scale or offset.
+
+    Used for a number's verbatim suffix versus its separate unit field. ``h`` and
+    ``hour`` agree; ``h`` and ``s`` do not, even though they have the same dimension.
+    Testing both zero and one also distinguishes Celsius from Kelvin.
+    """
+
+    from pint.errors import PintError
+
+    try:
+        registry = _unit_registry()
+        source, target = _pint_unit(left), _pint_unit(right)
+        return all(
+            math.isclose(
+                float(registry.Quantity(number, source).to(target).magnitude),
+                number,
+                rel_tol=1e-12,
+                abs_tol=1e-12,
+            )
+            for number in (0, 1)
+        )
+    except (PintError, TokenError, TypeError, ValueError, OverflowError):
+        return False
+
+
 def is_concentration_unit(unit: str | None) -> bool:
     """Recognize explicit amount, mass, or fraction concentrations dimensionally."""
 
