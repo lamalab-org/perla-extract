@@ -68,6 +68,85 @@ def test_bulk_feedback_requires_sign_in_not_admin(role, monkeypatch):
         assert downloads == []
 
 
+def test_export_keeps_legacy_refresh_without_evidence_version(
+    tmp_path, empty_study, document_payload
+):
+    store = StudyReviewStore(tmp_path / "review")
+    paper = "10.0000--legacy"
+    store.import_seed(
+        "calibration",
+        paper,
+        empty_study,
+        document=document_payload,
+        manifest={},
+        reviewer_id="importer",
+    )
+    current = store.storage.load_revision("calibration", paper)
+    event = {
+        "event_id": "legacy-refresh",
+        "revision": 2,
+        "kind": "ground_truth_refresh",
+        "reviewer_id": "historical-importer",
+        "details": {},
+        "note": "Historical refresh",
+        "path": None,
+        "action": None,
+        "before": None,
+        "after": None,
+        "timestamp": "2026-01-01T00:00:00+00:00",
+        "evidence": [],
+    }
+    current.events.append(event)
+    current.revision = 2
+    store.storage.compare_and_swap(
+        "calibration", paper, expected_revision=1, revision=current
+    )
+    comparisons = ComparisonService(LocalComparisonStorage(tmp_path / "comparisons"))
+    with ZipFile(BytesIO(build_feedback_archive(store, comparisons))) as archive:
+        feedback = json.loads(archive.read("feedback.json"))
+    exported = feedback["ground_truth_reviews"][0]
+    assert exported["events"] == [event]
+    assert exported["review_snapshot"]["study"] == empty_study
+    assert exported["review_snapshot"]["document"] == document_payload
+    assert store.storage.load_revision("calibration", paper).events[-1] == event
+
+
+@pytest.mark.parametrize(
+    "version,expected", [(None, {}), (2, {"records": ["coordinator"]})]
+)
+def test_unknown_legacy_evidence_does_not_approve_completed_review(
+    empty_study, version, expected
+):
+    refresh = {
+        "event_id": "refresh",
+        "revision": 2,
+        "kind": "ground_truth_refresh",
+        "reviewer_id": "importer",
+        "details": {},
+    }
+    if version is not None:
+        refresh["details"]["replacement_evidence_version"] = version
+    adoption = {
+        "event_id": "adopt",
+        "revision": 4,
+        "kind": "stage_complete",
+        "reviewer_id": "coordinator",
+        "details": {
+            "stage": "records",
+            "completed_paper_review": {
+                "expert_id": "expert",
+                "reviewed_through_revision": 3,
+                "evidence_version": 2,
+                "review_event_id": "review",
+            },
+        },
+    }
+    assert (
+        StudyReviewStore.summary(empty_study, [refresh, adoption])["completed_stages"]
+        == expected
+    )
+
+
 def test_feedback_download_preserves_history_and_is_easy_to_inspect(
     tmp_path, empty_study, document_payload
 ):
