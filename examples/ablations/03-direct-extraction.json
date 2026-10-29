@@ -1,0 +1,8 @@
+{
+  "name": "direct-extraction",
+  "factor": "use_claim_ledger",
+  "arms": {
+    "control": {"use_claim_ledger": true},
+    "treatment": {"use_claim_ledger": false}
+  }
+}

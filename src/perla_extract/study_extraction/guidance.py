@@ -36,6 +36,14 @@ SHARED_QUANTITY_POLICY = """Shared-quantity boundary:
   propagate a value from the first item to the rest of a list using assumed
   stoichiometry, chemical knowledge, or a nearby recipe. If the scope is ambiguous,
   preserve the ambiguity in unresolved_notes instead of guessing.
+- Distinguish a shared quantity from a sequence of different quantities. When the
+  source pairs several values with several subjects (including "respectively"),
+  retain every supported value-subject pair, not just the last value carrying a
+  printed unit. Reuse the source span and shared unit without copying one subject's
+  value to another.
+- A ratio needs its ordered components and its reference basis. Preserve the reported
+  ratio with those identities; do not turn its terms into unrelated concentrations
+  or derive absolute amounts without a source-reported basis.
 """
 
 RECORD_BOUNDARY_POLICY = """Record boundary:
@@ -57,6 +65,19 @@ RECORD_BOUNDARY_POLICY = """Record boundary:
   population or device family.
 - Reconcile repeated mentions globally. Do not create a second record for the same
   device and protocol merely because another passage reports an additional metric.
+- Resolve the specimen separately from the measurement: several explicitly linked
+  scans or protocols belong to one device but remain distinct observations. A shared
+  material label or recipe alone does not establish that link. Do not merge a best
+  cell with a representative cell simply because they share a device family.
+- Preserve mean, median, maximum, champion, and sample-size qualifiers with their own
+  results. Equal numbers are not evidence that an individual result and an aggregate
+  are the same assertion. If prose and a table disagree about the reporting level,
+  retain the source conflict in unresolved_notes rather than duplicating the number
+  as both an established champion and an established mean.
+- Classify an experiment by its purpose and reported outcome, not its duration or
+  the word "stability" alone. A stabilized power-output measurement is performance;
+  degradation under aging or operation is stability. Multiple conditions or specimens
+  must not be merged into one test solely because they appear in one figure.
 """
 
 COMPOSITION_BOUNDARY_POLICY = """Composition and stack boundary:

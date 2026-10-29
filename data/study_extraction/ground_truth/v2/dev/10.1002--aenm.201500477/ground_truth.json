@@ -1,0 +1,1040 @@
+{
+  "paper": {
+    "title": "Intrinsic Thermal Instability of Methylammonium Lead Trihalide Perovskite",
+    "doi": "10.1002/aenm.201500477"
+  },
+  "device_families": [
+    {
+      "family_id": "family-01",
+      "label": "Planar ITO/TiO2/MAPbI3/P3HT/gold solar cell",
+      "variant": null,
+      "architecture": "planar heterojunction",
+      "polarity": "not_reported",
+      "full_stack_raw": null,
+      "layers": [
+        {
+          "layer_id": "family-01-layer-01",
+          "sequence": 1,
+          "role": "substrate",
+          "material": "ITO",
+          "constituents": [
+            {
+              "name": "ITO",
+              "role": null,
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0028_text_4d492c3bf110",
+                  "quote": "[ 25 ] Solution-processed 'planar heterojunction' [ 26 ] solar cells are now widespread, [ 15,27-41 ] as they make fundamental studies easier due to their simple design. Here, we use semifi nished ITO/TiO 2 /perovskite planar structures ( Figure 1 ) thus enabling to investigate the degradation behavior of the perovskite by isolating it as much as possible from the www.MaterialsViews.com degradation of the other layers and interfaces in complete solar cells. Since, in this case, the perovskite is unprotected by a holetransport material and metal electrode, this semifi nished cell confi guration could be regarded as a benchmark for the worstcase degradation scenario."
+                },
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "ITO substrate sheet resistance",
+              "raw_value": "15 Ω sq -1",
+              "value_number": 15.0,
+              "unit": "Ω sq -1",
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0028_text_4d492c3bf110",
+              "quote": "[ 25 ] Solution-processed 'planar heterojunction' [ 26 ] solar cells are now widespread, [ 15,27-41 ] as they make fundamental studies easier due to their simple design. Here, we use semifi nished ITO/TiO 2 /perovskite planar structures ( Figure 1 ) thus enabling to investigate the degradation behavior of the perovskite by isolating it as much as possible from the www.MaterialsViews.com degradation of the other layers and interfaces in complete solar cells. Since, in this case, the perovskite is unprotected by a holetransport material and metal electrode, this semifi nished cell confi guration could be regarded as a benchmark for the worstcase degradation scenario."
+            },
+            {
+              "block_id": "main_p6_0074_text_844beb3c7fc4",
+              "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-02",
+          "sequence": 2,
+          "role": "not_reported",
+          "material": "TiO 2",
+          "constituents": [
+            {
+              "name": "TiO 2",
+              "role": null,
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0028_text_4d492c3bf110",
+                  "quote": "[ 25 ] Solution-processed 'planar heterojunction' [ 26 ] solar cells are now widespread, [ 15,27-41 ] as they make fundamental studies easier due to their simple design. Here, we use semifi nished ITO/TiO 2 /perovskite planar structures ( Figure 1 ) thus enabling to investigate the degradation behavior of the perovskite by isolating it as much as possible from the www.MaterialsViews.com degradation of the other layers and interfaces in complete solar cells. Since, in this case, the perovskite is unprotected by a holetransport material and metal electrode, this semifi nished cell confi guration could be regarded as a benchmark for the worstcase degradation scenario."
+                },
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p2_0028_text_4d492c3bf110",
+              "quote": "[ 25 ] Solution-processed 'planar heterojunction' [ 26 ] solar cells are now widespread, [ 15,27-41 ] as they make fundamental studies easier due to their simple design. Here, we use semifi nished ITO/TiO 2 /perovskite planar structures ( Figure 1 ) thus enabling to investigate the degradation behavior of the perovskite by isolating it as much as possible from the www.MaterialsViews.com degradation of the other layers and interfaces in complete solar cells. Since, in this case, the perovskite is unprotected by a holetransport material and metal electrode, this semifi nished cell confi guration could be regarded as a benchmark for the worstcase degradation scenario."
+            },
+            {
+              "block_id": "main_p6_0074_text_844beb3c7fc4",
+              "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-03",
+          "sequence": 3,
+          "role": "absorber",
+          "material": "MAPbI 3",
+          "constituents": [
+            {
+              "name": "MAPbI 3",
+              "role": "perovskite absorber",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0028_text_4d492c3bf110",
+                  "quote": "Perovskite fi lms were prepared by spincoating a 3:1 precursor of CH 3 NH 3 I (MAI) and PbCl 2 in dimethylsulfoxide (DMSO), followed by a thermal treatment at 100 ° C (for more details: see the Supporting Information). We confi rmed the absence of Cl in these fi lms by X-ray photoelectron spectroscopy (XPS), (see Figure S1, Supporting Information) and emphasize that the term MAPbI 3 -x Cl x refers only to the method of synthesis and not the outcome (since no Cl is left behind in the perovskite). Accordingly, MAPbI 3 is used as the general term in this paper."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "chlorine in resulting perovskite film",
+              "raw_value": "absence of Cl",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0028_text_4d492c3bf110",
+                  "quote": "Perovskite fi lms were prepared by spincoating a 3:1 precursor of CH 3 NH 3 I (MAI) and PbCl 2 in dimethylsulfoxide (DMSO), followed by a thermal treatment at 100 ° C (for more details: see the Supporting Information). We confi rmed the absence of Cl in these fi lms by X-ray photoelectron spectroscopy (XPS), (see Figure S1, Supporting Information) and emphasize that the term MAPbI 3 -x Cl x refers only to the method of synthesis and not the outcome (since no Cl is left behind in the perovskite). Accordingly, MAPbI 3 is used as the general term in this paper."
+                },
+                {
+                  "block_id": "supplement_p3_0012_text_143154ed2db5",
+                  "quote": "Fig. S1: XPS core level spectra (Cl2p and I4s) for an unannealed precursor film (top) and the resulting perovskite film that was formed by annealing the precursor film at 100°C as described in the experimental section (bottom). It can be seen that all of the Cl has vanished upon crystallization of the perovskite."
+                }
+              ]
+            },
+            {
+              "name": "meaning of MAPbI 3 -x Cl x terminology",
+              "raw_value": "refers only to the method of synthesis and not the outcome",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0028_text_4d492c3bf110",
+                  "quote": "Perovskite fi lms were prepared by spincoating a 3:1 precursor of CH 3 NH 3 I (MAI) and PbCl 2 in dimethylsulfoxide (DMSO), followed by a thermal treatment at 100 ° C (for more details: see the Supporting Information). We confi rmed the absence of Cl in these fi lms by X-ray photoelectron spectroscopy (XPS), (see Figure S1, Supporting Information) and emphasize that the term MAPbI 3 -x Cl x refers only to the method of synthesis and not the outcome (since no Cl is left behind in the perovskite). Accordingly, MAPbI 3 is used as the general term in this paper."
+                }
+              ]
+            },
+            {
+              "name": "intrinsic thermal stability",
+              "raw_value": "not intrinsically stable",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p6_0072_text_771de5046b98",
+                  "quote": "In conclusion, we have investigated the thermal stability of MAPbI 3 perovskite layers in different environmental conditions from a morphological, electronic and chemical point of view. The fi nal verdict is that this type of perovskite is not intrinsically stable while heating to temperatures comparable to the higher range of operational temperatures in full sunlight (85 ° C). The unit cell of the perovskite breaks down not only due to humidity but also due to thermal instability of its constituents (which are partially volatile species), thereby confi rming the soft matter character of this new class of light absorbers."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0028_text_4d492c3bf110",
+              "quote": "[ 25 ] Solution-processed 'planar heterojunction' [ 26 ] solar cells are now widespread, [ 15,27-41 ] as they make fundamental studies easier due to their simple design. Here, we use semifi nished ITO/TiO 2 /perovskite planar structures ( Figure 1 ) thus enabling to investigate the degradation behavior of the perovskite by isolating it as much as possible from the www.MaterialsViews.com degradation of the other layers and interfaces in complete solar cells. Since, in this case, the perovskite is unprotected by a holetransport material and metal electrode, this semifi nished cell confi guration could be regarded as a benchmark for the worstcase degradation scenario."
+            },
+            {
+              "block_id": "main_p2_0028_text_4d492c3bf110",
+              "quote": "Perovskite fi lms were prepared by spincoating a 3:1 precursor of CH 3 NH 3 I (MAI) and PbCl 2 in dimethylsulfoxide (DMSO), followed by a thermal treatment at 100 ° C (for more details: see the Supporting Information). We confi rmed the absence of Cl in these fi lms by X-ray photoelectron spectroscopy (XPS), (see Figure S1, Supporting Information) and emphasize that the term MAPbI 3 -x Cl x refers only to the method of synthesis and not the outcome (since no Cl is left behind in the perovskite). Accordingly, MAPbI 3 is used as the general term in this paper."
+            },
+            {
+              "block_id": "main_p6_0072_text_771de5046b98",
+              "quote": "In conclusion, we have investigated the thermal stability of MAPbI 3 perovskite layers in different environmental conditions from a morphological, electronic and chemical point of view. The fi nal verdict is that this type of perovskite is not intrinsically stable while heating to temperatures comparable to the higher range of operational temperatures in full sunlight (85 ° C). The unit cell of the perovskite breaks down not only due to humidity but also due to thermal instability of its constituents (which are partially volatile species), thereby confi rming the soft matter character of this new class of light absorbers."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-04",
+          "sequence": 4,
+          "role": "hole_transport_layer",
+          "material": "poly-3-hexylthiophene (P3HT)",
+          "constituents": [
+            {
+              "name": "poly-3-hexylthiophene (P3HT)",
+              "role": "hole-transport material",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p6_0075_text_eca6dfb3298b",
+                  "quote": "The samples that were intended for the fabrication of solar cells were placed back inside the glovebox after degradation and coated with a thin layer of poly-3-hexylthiophene (P3HT). A gold contact of 110 nm thickness was then evaporated through a shadow mask at a pressure of 1 × 10 -6 mbar to complete the devices. It was chosen not to subject the entire solar cells to thermal stress in order to isolate as much as possible the degradation of the perovskite itself, to avoid infl uences from capping the perovskite during degradation, and to obtain a comparable level of degradation compared to the samples used for other characterization."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "P3HT layer thickness description",
+              "raw_value": "thin",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p6_0075_text_eca6dfb3298b",
+                  "quote": "The samples that were intended for the fabrication of solar cells were placed back inside the glovebox after degradation and coated with a thin layer of poly-3-hexylthiophene (P3HT). A gold contact of 110 nm thickness was then evaporated through a shadow mask at a pressure of 1 × 10 -6 mbar to complete the devices. It was chosen not to subject the entire solar cells to thermal stress in order to isolate as much as possible the degradation of the perovskite itself, to avoid infl uences from capping the perovskite during degradation, and to obtain a comparable level of degradation compared to the samples used for other characterization."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p6_0075_text_eca6dfb3298b",
+              "quote": "The samples that were intended for the fabrication of solar cells were placed back inside the glovebox after degradation and coated with a thin layer of poly-3-hexylthiophene (P3HT). A gold contact of 110 nm thickness was then evaporated through a shadow mask at a pressure of 1 × 10 -6 mbar to complete the devices. It was chosen not to subject the entire solar cells to thermal stress in order to isolate as much as possible the degradation of the perovskite itself, to avoid infl uences from capping the perovskite during degradation, and to obtain a comparable level of degradation compared to the samples used for other characterization."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-05",
+          "sequence": 5,
+          "role": "back_electrode",
+          "material": "gold",
+          "constituents": [
+            {
+              "name": "gold",
+              "role": "contact",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p6_0075_text_eca6dfb3298b",
+                  "quote": "The samples that were intended for the fabrication of solar cells were placed back inside the glovebox after degradation and coated with a thin layer of poly-3-hexylthiophene (P3HT). A gold contact of 110 nm thickness was then evaporated through a shadow mask at a pressure of 1 × 10 -6 mbar to complete the devices. It was chosen not to subject the entire solar cells to thermal stress in order to isolate as much as possible the degradation of the perovskite itself, to avoid infl uences from capping the perovskite during degradation, and to obtain a comparable level of degradation compared to the samples used for other characterization."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "gold contact thickness",
+              "raw_value": "110 nm",
+              "value_number": 110.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p6_0075_text_eca6dfb3298b",
+                  "quote": "The samples that were intended for the fabrication of solar cells were placed back inside the glovebox after degradation and coated with a thin layer of poly-3-hexylthiophene (P3HT). A gold contact of 110 nm thickness was then evaporated through a shadow mask at a pressure of 1 × 10 -6 mbar to complete the devices. It was chosen not to subject the entire solar cells to thermal stress in order to isolate as much as possible the degradation of the perovskite itself, to avoid infl uences from capping the perovskite during degradation, and to obtain a comparable level of degradation compared to the samples used for other characterization."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p6_0075_text_eca6dfb3298b",
+              "quote": "The samples that were intended for the fabrication of solar cells were placed back inside the glovebox after degradation and coated with a thin layer of poly-3-hexylthiophene (P3HT). A gold contact of 110 nm thickness was then evaporated through a shadow mask at a pressure of 1 × 10 -6 mbar to complete the devices. It was chosen not to subject the entire solar cells to thermal stress in order to isolate as much as possible the degradation of the perovskite itself, to avoid infl uences from capping the perovskite during degradation, and to obtain a comparable level of degradation compared to the samples used for other characterization."
+            }
+          ]
+        }
+      ],
+      "absorbers": [
+        {
+          "absorber_id": "family-01-absorber-01",
+          "layer_id": "family-01-layer-03",
+          "label": "MAPbI 3 perovskite absorber",
+          "formula": {
+            "name": "finished perovskite identity",
+            "raw_value": "MAPbI 3",
+            "value_number": null,
+            "unit": null,
+            "evidence": [
+              {
+                "block_id": "main_p2_0028_text_4d492c3bf110",
+                "quote": "Perovskite fi lms were prepared by spincoating a 3:1 precursor of CH 3 NH 3 I (MAI) and PbCl 2 in dimethylsulfoxide (DMSO), followed by a thermal treatment at 100 ° C (for more details: see the Supporting Information). We confi rmed the absence of Cl in these fi lms by X-ray photoelectron spectroscopy (XPS), (see Figure S1, Supporting Information) and emphasize that the term MAPbI 3 -x Cl x refers only to the method of synthesis and not the outcome (since no Cl is left behind in the perovskite). Accordingly, MAPbI 3 is used as the general term in this paper."
+              }
+            ]
+          },
+          "properties": [
+            {
+              "name": "chlorine in resulting perovskite films",
+              "raw_value": "absence of Cl",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0028_text_4d492c3bf110",
+                  "quote": "Perovskite fi lms were prepared by spincoating a 3:1 precursor of CH 3 NH 3 I (MAI) and PbCl 2 in dimethylsulfoxide (DMSO), followed by a thermal treatment at 100 ° C (for more details: see the Supporting Information). We confi rmed the absence of Cl in these fi lms by X-ray photoelectron spectroscopy (XPS), (see Figure S1, Supporting Information) and emphasize that the term MAPbI 3 -x Cl x refers only to the method of synthesis and not the outcome (since no Cl is left behind in the perovskite). Accordingly, MAPbI 3 is used as the general term in this paper."
+                },
+                {
+                  "block_id": "supplement_p3_0012_text_143154ed2db5",
+                  "quote": "Fig. S1: XPS core level spectra (Cl2p and I4s) for an unannealed precursor film (top) and the resulting perovskite film that was formed by annealing the precursor film at 100°C as described in the experimental section (bottom). It can be seen that all of the Cl has vanished upon crystallization of the perovskite."
+                }
+              ]
+            },
+            {
+              "name": "meaning of MAPbI 3 -x Cl x terminology",
+              "raw_value": "refers only to the method of synthesis and not the outcome",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0028_text_4d492c3bf110",
+                  "quote": "Perovskite fi lms were prepared by spincoating a 3:1 precursor of CH 3 NH 3 I (MAI) and PbCl 2 in dimethylsulfoxide (DMSO), followed by a thermal treatment at 100 ° C (for more details: see the Supporting Information). We confi rmed the absence of Cl in these fi lms by X-ray photoelectron spectroscopy (XPS), (see Figure S1, Supporting Information) and emphasize that the term MAPbI 3 -x Cl x refers only to the method of synthesis and not the outcome (since no Cl is left behind in the perovskite). Accordingly, MAPbI 3 is used as the general term in this paper."
+                }
+              ]
+            },
+            {
+              "name": "intrinsic thermal stability",
+              "raw_value": "not intrinsically stable",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p6_0072_text_771de5046b98",
+                  "quote": "In conclusion, we have investigated the thermal stability of MAPbI 3 perovskite layers in different environmental conditions from a morphological, electronic and chemical point of view. The fi nal verdict is that this type of perovskite is not intrinsically stable while heating to temperatures comparable to the higher range of operational temperatures in full sunlight (85 ° C). The unit cell of the perovskite breaks down not only due to humidity but also due to thermal instability of its constituents (which are partially volatile species), thereby confi rming the soft matter character of this new class of light absorbers."
+                }
+              ]
+            }
+          ],
+          "constituents": [
+            {
+              "name": "MAPbI 3",
+              "role": "perovskite absorber",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0028_text_4d492c3bf110",
+                  "quote": "Perovskite fi lms were prepared by spincoating a 3:1 precursor of CH 3 NH 3 I (MAI) and PbCl 2 in dimethylsulfoxide (DMSO), followed by a thermal treatment at 100 ° C (for more details: see the Supporting Information). We confi rmed the absence of Cl in these fi lms by X-ray photoelectron spectroscopy (XPS), (see Figure S1, Supporting Information) and emphasize that the term MAPbI 3 -x Cl x refers only to the method of synthesis and not the outcome (since no Cl is left behind in the perovskite). Accordingly, MAPbI 3 is used as the general term in this paper."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0028_text_4d492c3bf110",
+              "quote": "Perovskite fi lms were prepared by spincoating a 3:1 precursor of CH 3 NH 3 I (MAI) and PbCl 2 in dimethylsulfoxide (DMSO), followed by a thermal treatment at 100 ° C (for more details: see the Supporting Information). We confi rmed the absence of Cl in these fi lms by X-ray photoelectron spectroscopy (XPS), (see Figure S1, Supporting Information) and emphasize that the term MAPbI 3 -x Cl x refers only to the method of synthesis and not the outcome (since no Cl is left behind in the perovskite). Accordingly, MAPbI 3 is used as the general term in this paper."
+            },
+            {
+              "block_id": "supplement_p3_0012_text_143154ed2db5",
+              "quote": "Fig. S1: XPS core level spectra (Cl2p and I4s) for an unannealed precursor film (top) and the resulting perovskite film that was formed by annealing the precursor film at 100°C as described in the experimental section (bottom). It can be seen that all of the Cl has vanished upon crystallization of the perovskite."
+            },
+            {
+              "block_id": "main_p6_0072_text_771de5046b98",
+              "quote": "In conclusion, we have investigated the thermal stability of MAPbI 3 perovskite layers in different environmental conditions from a morphological, electronic and chemical point of view. The fi nal verdict is that this type of perovskite is not intrinsically stable while heating to temperatures comparable to the higher range of operational temperatures in full sunlight (85 ° C). The unit cell of the perovskite breaks down not only due to humidity but also due to thermal instability of its constituents (which are partially volatile species), thereby confi rming the soft matter character of this new class of light absorbers."
+            }
+          ]
+        }
+      ],
+      "processing_steps": [
+        {
+          "step_id": "family-01-step-01",
+          "sequence": 1,
+          "operation": "sonication cleaning of ITO substrates",
+          "target_layer_ids": [
+            "family-01-layer-01"
+          ],
+          "materials": [
+            "soap solution",
+            "water",
+            "acetone",
+            "isopropanol"
+          ],
+          "conditions": [],
+          "evidence": [
+            {
+              "block_id": "main_p6_0074_text_844beb3c7fc4",
+              "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-02",
+          "sequence": 2,
+          "operation": "spincoating TiO 2 nanoparticle dispersion on top",
+          "target_layer_ids": [
+            "family-01-layer-02"
+          ],
+          "materials": [
+            "TiO 2 nanoparticle dispersion"
+          ],
+          "conditions": [
+            {
+              "name": "TiO 2 nanoparticle dispersion concentration",
+              "raw_value": "0.127 M",
+              "value_number": 0.127,
+              "unit": "M",
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p6_0074_text_844beb3c7fc4",
+              "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-03",
+          "sequence": 3,
+          "operation": "transfer to glovebox",
+          "target_layer_ids": [
+            "family-01-layer-01",
+            "family-01-layer-02",
+            "family-01-layer-03"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "fabrication atmosphere",
+              "raw_value": "N 2 -filled glovebox",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            },
+            {
+              "name": "O 2 level",
+              "raw_value": "<1 ppm",
+              "value_number": null,
+              "unit": "ppm",
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            },
+            {
+              "name": "H 2 O level",
+              "raw_value": "<1 ppm",
+              "value_number": null,
+              "unit": "ppm",
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p6_0074_text_844beb3c7fc4",
+              "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-04",
+          "sequence": 4,
+          "operation": "preparation of perovskite precursor",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [
+            "MAI",
+            "PbCl 2",
+            "DMSO"
+          ],
+          "conditions": [
+            {
+              "name": "precursor concentration",
+              "raw_value": "600 mg mL -1",
+              "value_number": 600.0,
+              "unit": "mg mL -1",
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            },
+            {
+              "name": "MAI-to-PbCl 2 precursor ratio",
+              "raw_value": "3:1 ratio",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            },
+            {
+              "name": "precursor solvent",
+              "raw_value": "DMSO",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p6_0074_text_844beb3c7fc4",
+              "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-05",
+          "sequence": 5,
+          "operation": "spincoating perovskite precursor on the TiO 2 layer",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [
+            "MAI",
+            "PbCl 2"
+          ],
+          "conditions": [],
+          "evidence": [
+            {
+              "block_id": "main_p6_0074_text_844beb3c7fc4",
+              "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-06",
+          "sequence": 6,
+          "operation": "gradual heat treatment and dwell",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "heat-treatment starting temperature",
+              "raw_value": "room temperature",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            },
+            {
+              "name": "heat-treatment endpoint",
+              "raw_value": "100 ° C",
+              "value_number": 100.0,
+              "unit": "° C",
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            },
+            {
+              "name": "heating rate",
+              "raw_value": "1 ° C min -1",
+              "value_number": 1.0,
+              "unit": "° C min -1",
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            },
+            {
+              "name": "dwell duration at 100 ° C",
+              "raw_value": "60-min",
+              "value_number": 60.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            },
+            {
+              "name": "source label after heat treatment",
+              "raw_value": "'pristine'",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p6_0074_text_844beb3c7fc4",
+                  "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p6_0074_text_844beb3c7fc4",
+              "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-07",
+          "sequence": 7,
+          "operation": "coating with P3HT",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [
+            "poly-3-hexylthiophene (P3HT)"
+          ],
+          "conditions": [
+            {
+              "name": "P3HT layer thickness description",
+              "raw_value": "thin",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p6_0075_text_eca6dfb3298b",
+                  "quote": "The samples that were intended for the fabrication of solar cells were placed back inside the glovebox after degradation and coated with a thin layer of poly-3-hexylthiophene (P3HT). A gold contact of 110 nm thickness was then evaporated through a shadow mask at a pressure of 1 × 10 -6 mbar to complete the devices. It was chosen not to subject the entire solar cells to thermal stress in order to isolate as much as possible the degradation of the perovskite itself, to avoid infl uences from capping the perovskite during degradation, and to obtain a comparable level of degradation compared to the samples used for other characterization."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p6_0075_text_eca6dfb3298b",
+              "quote": "The samples that were intended for the fabrication of solar cells were placed back inside the glovebox after degradation and coated with a thin layer of poly-3-hexylthiophene (P3HT). A gold contact of 110 nm thickness was then evaporated through a shadow mask at a pressure of 1 × 10 -6 mbar to complete the devices. It was chosen not to subject the entire solar cells to thermal stress in order to isolate as much as possible the degradation of the perovskite itself, to avoid infl uences from capping the perovskite during degradation, and to obtain a comparable level of degradation compared to the samples used for other characterization."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-08",
+          "sequence": 8,
+          "operation": "gold contact evaporation through a shadow mask",
+          "target_layer_ids": [
+            "family-01-layer-05"
+          ],
+          "materials": [
+            "gold"
+          ],
+          "conditions": [
+            {
+              "name": "gold contact thickness",
+              "raw_value": "110 nm",
+              "value_number": 110.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p6_0075_text_eca6dfb3298b",
+                  "quote": "The samples that were intended for the fabrication of solar cells were placed back inside the glovebox after degradation and coated with a thin layer of poly-3-hexylthiophene (P3HT). A gold contact of 110 nm thickness was then evaporated through a shadow mask at a pressure of 1 × 10 -6 mbar to complete the devices. It was chosen not to subject the entire solar cells to thermal stress in order to isolate as much as possible the degradation of the perovskite itself, to avoid infl uences from capping the perovskite during degradation, and to obtain a comparable level of degradation compared to the samples used for other characterization."
+                }
+              ]
+            },
+            {
+              "name": "gold evaporation pressure",
+              "raw_value": "1 × 10 -6 mbar",
+              "value_number": 1e-06,
+              "unit": "mbar",
+              "evidence": [
+                {
+                  "block_id": "main_p6_0075_text_eca6dfb3298b",
+                  "quote": "The samples that were intended for the fabrication of solar cells were placed back inside the glovebox after degradation and coated with a thin layer of poly-3-hexylthiophene (P3HT). A gold contact of 110 nm thickness was then evaporated through a shadow mask at a pressure of 1 × 10 -6 mbar to complete the devices. It was chosen not to subject the entire solar cells to thermal stress in order to isolate as much as possible the degradation of the perovskite itself, to avoid infl uences from capping the perovskite during degradation, and to obtain a comparable level of degradation compared to the samples used for other characterization."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p6_0075_text_eca6dfb3298b",
+              "quote": "The samples that were intended for the fabrication of solar cells were placed back inside the glovebox after degradation and coated with a thin layer of poly-3-hexylthiophene (P3HT). A gold contact of 110 nm thickness was then evaporated through a shadow mask at a pressure of 1 × 10 -6 mbar to complete the devices. It was chosen not to subject the entire solar cells to thermal stress in order to isolate as much as possible the degradation of the perovskite itself, to avoid infl uences from capping the perovskite during degradation, and to obtain a comparable level of degradation compared to the samples used for other characterization."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p2_0028_text_4d492c3bf110",
+          "quote": "[ 25 ] Solution-processed 'planar heterojunction' [ 26 ] solar cells are now widespread, [ 15,27-41 ] as they make fundamental studies easier due to their simple design. Here, we use semifi nished ITO/TiO 2 /perovskite planar structures ( Figure 1 ) thus enabling to investigate the degradation behavior of the perovskite by isolating it as much as possible from the www.MaterialsViews.com degradation of the other layers and interfaces in complete solar cells. Since, in this case, the perovskite is unprotected by a holetransport material and metal electrode, this semifi nished cell confi guration could be regarded as a benchmark for the worstcase degradation scenario."
+        },
+        {
+          "block_id": "main_p2_0028_text_4d492c3bf110",
+          "quote": "Perovskite fi lms were prepared by spincoating a 3:1 precursor of CH 3 NH 3 I (MAI) and PbCl 2 in dimethylsulfoxide (DMSO), followed by a thermal treatment at 100 ° C (for more details: see the Supporting Information). We confi rmed the absence of Cl in these fi lms by X-ray photoelectron spectroscopy (XPS), (see Figure S1, Supporting Information) and emphasize that the term MAPbI 3 -x Cl x refers only to the method of synthesis and not the outcome (since no Cl is left behind in the perovskite). Accordingly, MAPbI 3 is used as the general term in this paper."
+        },
+        {
+          "block_id": "main_p6_0074_text_844beb3c7fc4",
+          "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+        },
+        {
+          "block_id": "main_p6_0075_text_eca6dfb3298b",
+          "quote": "The samples that were intended for the fabrication of solar cells were placed back inside the glovebox after degradation and coated with a thin layer of poly-3-hexylthiophene (P3HT). A gold contact of 110 nm thickness was then evaporated through a shadow mask at a pressure of 1 × 10 -6 mbar to complete the devices. It was chosen not to subject the entire solar cells to thermal stress in order to isolate as much as possible the degradation of the perovskite itself, to avoid infl uences from capping the perovskite during degradation, and to obtain a comparable level of degradation compared to the samples used for other characterization."
+        }
+      ]
+    }
+  ],
+  "individual_devices": [],
+  "performance_observations": [],
+  "population_statistics": [
+    {
+      "population_id": "population-01",
+      "family_id": "family-01",
+      "label": "Batch of reference solar cells prepared with pristine perovskite layers",
+      "statistic_type": "other",
+      "sample_size": 4,
+      "metrics": [
+        {
+          "name": "error-bar statistic for photovoltaic parameters",
+          "raw_value": "standard deviation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p6_0069_text_06be19cb3a56",
+              "quote": "Figure 7. Photovoltaic parameters of solar cells prepared with perovskite layers that were subjected to a temperature of 85 ° C for 24 h in different atmospheric conditions. The error bars refl ect the standard deviation of a batch of four solar cells for each atmospheric condition."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p6_0074_text_844beb3c7fc4",
+          "quote": "ITO substrates (15 Ω sq -1 ) were cleaned by sonication in soap solution, water, acetone, and isopropanol. A previously reported 0.127 M TiO 2 nanoparticle dispersion was spincoated on top. [ 50 ] The samples were then transferred to a N 2 -fi lled glovebox (<1 ppm O 2 and H 2 O). A 600 mg mL -1 precursor of MAI and PbCl 2 (3:1 ratio) was prepared in DMSO and spincoated on the TiO 2 layer. A gradual heat treatment was then carried out, from room temperature to 100 ° C at a rate of 1 ° C min -1 , followed by a 60-min dwell at 100 ° C ( = 'pristine')."
+        },
+        {
+          "block_id": "main_p5_0062_text_292fc43c828e",
+          "quote": "Next we address the impact of perovskite degradation on the performance of corresponding solar cells. Photovoltaic parameters of solar cells based on perovskite layers (subjected to 85 ° C in identical atmospheric conditions as discussed before) are shown in Figure 7 . Bearing in mind the drastic changes seen in the XPS analysis, the corresponding degraded perovskite layers still seem to perform relatively well in solar cells: The layers that were degraded in N 2 and O 2 still retain 93% and 78% of the reference effi ciency, respectively, and even the most degraded layer that was heated in ambient atmosphere shows more than a quarter of the reference cell's effi ciency."
+        },
+        {
+          "block_id": "main_p6_0069_text_06be19cb3a56",
+          "quote": "Figure 7. Photovoltaic parameters of solar cells prepared with perovskite layers that were subjected to a temperature of 85 ° C for 24 h in different atmospheric conditions. The error bars refl ect the standard deviation of a batch of four solar cells for each atmospheric condition."
+        }
+      ]
+    },
+    {
+      "population_id": "population-02",
+      "family_id": "family-01",
+      "label": "Batch of solar cells prepared with perovskite layers degraded in N 2",
+      "statistic_type": "other",
+      "sample_size": 4,
+      "metrics": [
+        {
+          "name": "reference efficiency retained",
+          "raw_value": "93%",
+          "value_number": 93.0,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "Next we address the impact of perovskite degradation on the performance of corresponding solar cells. Photovoltaic parameters of solar cells based on perovskite layers (subjected to 85 ° C in identical atmospheric conditions as discussed before) are shown in Figure 7 . Bearing in mind the drastic changes seen in the XPS analysis, the corresponding degraded perovskite layers still seem to perform relatively well in solar cells: The layers that were degraded in N 2 and O 2 still retain 93% and 78% of the reference effi ciency, respectively, and even the most degraded layer that was heated in ambient atmosphere shows more than a quarter of the reference cell's effi ciency."
+            }
+          ]
+        },
+        {
+          "name": "effect of degradation on open circuit voltage ( V oc )",
+          "raw_value": "not too much infl uenced by the degradation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+            }
+          ]
+        },
+        {
+          "name": "effect of degradation on short circuit current ( J sc )",
+          "raw_value": "reduced",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+            }
+          ]
+        },
+        {
+          "name": "effect of degradation on fi ll factor (FF)",
+          "raw_value": "reduced",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+            }
+          ]
+        },
+        {
+          "name": "severity of J sc decrease",
+          "raw_value": "decreases severely",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+            }
+          ]
+        },
+        {
+          "name": "error-bar statistic for photovoltaic parameters",
+          "raw_value": "standard deviation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p6_0069_text_06be19cb3a56",
+              "quote": "Figure 7. Photovoltaic parameters of solar cells prepared with perovskite layers that were subjected to a temperature of 85 ° C for 24 h in different atmospheric conditions. The error bars refl ect the standard deviation of a batch of four solar cells for each atmospheric condition."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p5_0062_text_292fc43c828e",
+          "quote": "Next we address the impact of perovskite degradation on the performance of corresponding solar cells. Photovoltaic parameters of solar cells based on perovskite layers (subjected to 85 ° C in identical atmospheric conditions as discussed before) are shown in Figure 7 . Bearing in mind the drastic changes seen in the XPS analysis, the corresponding degraded perovskite layers still seem to perform relatively well in solar cells: The layers that were degraded in N 2 and O 2 still retain 93% and 78% of the reference effi ciency, respectively, and even the most degraded layer that was heated in ambient atmosphere shows more than a quarter of the reference cell's effi ciency."
+        },
+        {
+          "block_id": "main_p5_0062_text_292fc43c828e",
+          "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+        },
+        {
+          "block_id": "main_p6_0069_text_06be19cb3a56",
+          "quote": "Figure 7. Photovoltaic parameters of solar cells prepared with perovskite layers that were subjected to a temperature of 85 ° C for 24 h in different atmospheric conditions. The error bars refl ect the standard deviation of a batch of four solar cells for each atmospheric condition."
+        }
+      ]
+    },
+    {
+      "population_id": "population-03",
+      "family_id": "family-01",
+      "label": "Batch of solar cells prepared with perovskite layers degraded in O 2",
+      "statistic_type": "other",
+      "sample_size": 4,
+      "metrics": [
+        {
+          "name": "reference efficiency retained",
+          "raw_value": "78%",
+          "value_number": 78.0,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "Next we address the impact of perovskite degradation on the performance of corresponding solar cells. Photovoltaic parameters of solar cells based on perovskite layers (subjected to 85 ° C in identical atmospheric conditions as discussed before) are shown in Figure 7 . Bearing in mind the drastic changes seen in the XPS analysis, the corresponding degraded perovskite layers still seem to perform relatively well in solar cells: The layers that were degraded in N 2 and O 2 still retain 93% and 78% of the reference effi ciency, respectively, and even the most degraded layer that was heated in ambient atmosphere shows more than a quarter of the reference cell's effi ciency."
+            }
+          ]
+        },
+        {
+          "name": "effect of degradation on open circuit voltage ( V oc )",
+          "raw_value": "not too much infl uenced by the degradation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+            }
+          ]
+        },
+        {
+          "name": "effect of degradation on short circuit current ( J sc )",
+          "raw_value": "reduced",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+            }
+          ]
+        },
+        {
+          "name": "effect of degradation on fi ll factor (FF)",
+          "raw_value": "reduced",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+            }
+          ]
+        },
+        {
+          "name": "severity of J sc decrease",
+          "raw_value": "decreases severely",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+            }
+          ]
+        },
+        {
+          "name": "error-bar statistic for photovoltaic parameters",
+          "raw_value": "standard deviation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p6_0069_text_06be19cb3a56",
+              "quote": "Figure 7. Photovoltaic parameters of solar cells prepared with perovskite layers that were subjected to a temperature of 85 ° C for 24 h in different atmospheric conditions. The error bars refl ect the standard deviation of a batch of four solar cells for each atmospheric condition."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p5_0062_text_292fc43c828e",
+          "quote": "Next we address the impact of perovskite degradation on the performance of corresponding solar cells. Photovoltaic parameters of solar cells based on perovskite layers (subjected to 85 ° C in identical atmospheric conditions as discussed before) are shown in Figure 7 . Bearing in mind the drastic changes seen in the XPS analysis, the corresponding degraded perovskite layers still seem to perform relatively well in solar cells: The layers that were degraded in N 2 and O 2 still retain 93% and 78% of the reference effi ciency, respectively, and even the most degraded layer that was heated in ambient atmosphere shows more than a quarter of the reference cell's effi ciency."
+        },
+        {
+          "block_id": "main_p5_0062_text_292fc43c828e",
+          "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+        },
+        {
+          "block_id": "main_p6_0069_text_06be19cb3a56",
+          "quote": "Figure 7. Photovoltaic parameters of solar cells prepared with perovskite layers that were subjected to a temperature of 85 ° C for 24 h in different atmospheric conditions. The error bars refl ect the standard deviation of a batch of four solar cells for each atmospheric condition."
+        }
+      ]
+    },
+    {
+      "population_id": "population-04",
+      "family_id": "family-01",
+      "label": "Batch of solar cells prepared with perovskite layers degraded in ambient atmosphere",
+      "statistic_type": "other",
+      "sample_size": 4,
+      "metrics": [
+        {
+          "name": "reference cell's efficiency retained",
+          "raw_value": "more than a quarter of the reference cell's effi ciency",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "Next we address the impact of perovskite degradation on the performance of corresponding solar cells. Photovoltaic parameters of solar cells based on perovskite layers (subjected to 85 ° C in identical atmospheric conditions as discussed before) are shown in Figure 7 . Bearing in mind the drastic changes seen in the XPS analysis, the corresponding degraded perovskite layers still seem to perform relatively well in solar cells: The layers that were degraded in N 2 and O 2 still retain 93% and 78% of the reference effi ciency, respectively, and even the most degraded layer that was heated in ambient atmosphere shows more than a quarter of the reference cell's effi ciency."
+            }
+          ]
+        },
+        {
+          "name": "effect of degradation on open circuit voltage ( V oc )",
+          "raw_value": "not too much infl uenced by the degradation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+            }
+          ]
+        },
+        {
+          "name": "effect of degradation on short circuit current ( J sc )",
+          "raw_value": "reduced",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+            }
+          ]
+        },
+        {
+          "name": "effect of degradation on fi ll factor (FF)",
+          "raw_value": "reduced",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+            }
+          ]
+        },
+        {
+          "name": "severity of J sc decrease",
+          "raw_value": "decreases severely",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0062_text_292fc43c828e",
+              "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+            }
+          ]
+        },
+        {
+          "name": "error-bar statistic for photovoltaic parameters",
+          "raw_value": "standard deviation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p6_0069_text_06be19cb3a56",
+              "quote": "Figure 7. Photovoltaic parameters of solar cells prepared with perovskite layers that were subjected to a temperature of 85 ° C for 24 h in different atmospheric conditions. The error bars refl ect the standard deviation of a batch of four solar cells for each atmospheric condition."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p5_0062_text_292fc43c828e",
+          "quote": "Next we address the impact of perovskite degradation on the performance of corresponding solar cells. Photovoltaic parameters of solar cells based on perovskite layers (subjected to 85 ° C in identical atmospheric conditions as discussed before) are shown in Figure 7 . Bearing in mind the drastic changes seen in the XPS analysis, the corresponding degraded perovskite layers still seem to perform relatively well in solar cells: The layers that were degraded in N 2 and O 2 still retain 93% and 78% of the reference effi ciency, respectively, and even the most degraded layer that was heated in ambient atmosphere shows more than a quarter of the reference cell's effi ciency."
+        },
+        {
+          "block_id": "main_p5_0062_text_292fc43c828e",
+          "quote": "It is interesting to notice that the open circuit voltage ( V oc ) is not too much infl uenced by the degradation, while the reduced short circuit current ( J sc ) and fi ll factor (FF) are affecting the fi nal performance much more. Even though the optical density of the degraded fi lms is still well comparable to the pristine case (see Figure 3 b), J sc of the corresponding solar cells decreases severely. This can be attributed to the increased resistance and associated recombination events near the interface between the perovskite and the hole conductor on top, again as a consequence of the inhomogeneous degradation of the perovskite fi lm."
+        },
+        {
+          "block_id": "main_p6_0069_text_06be19cb3a56",
+          "quote": "Figure 7. Photovoltaic parameters of solar cells prepared with perovskite layers that were subjected to a temperature of 85 ° C for 24 h in different atmospheric conditions. The error bars refl ect the standard deviation of a batch of four solar cells for each atmospheric condition."
+        }
+      ]
+    }
+  ],
+  "stability_tests": [],
+  "unresolved_notes": [
+    "The pristine, N 2, O 2, and ambient-atmosphere labels denote processing arms applied to exposed perovskite layers before P3HT and gold deposition, not distinct device architectures. They were therefore retained as population labels rather than separate device families. For the photovoltaic comparison, the treated layers were subjected to 85 ° C for 24 h; the treatments were performed in the dark in pure dry N 2, pure dry O 2, or ambient atmosphere with ≈ 50% relative humidity (span-6f61c3d2ee5d,",
+    "span-2247fec1b0ab, span-7dd7a7c247e5). The O 2 treatment additionally involved evacuation to <1 mbar and repeated flushing with pure oxygen (span-2247fec1b0ab). These are group-level process differences, and the schema has no population-level processing field; assigning them to an invented individual device would be unsupported.",
+    "The photovoltaic batches were characterized in N 2 at room temperature under AM1.5 illumination of 100 mW cm -2 using a Newport Oriel Class A model 91195A solar simulator and a black mask to delineate the device area (span-6a51ee6c7949). No individual-device outcomes or identifiers are supplied, so no IndividualDevice or PerformanceObservation records were created for the sixteen batch members.",
+    "No StabilityTest record was created because thermal stress was explicitly applied to exposed, semifinished perovskite layers before completion of the photovoltaic devices, rather than to complete photovoltaic devices (span-daf883e99a47). The film-only morphology, spectroscopy, XPS, C-AFM, and related time-series specimens are characterization specimens rather than photovoltaic stability specimens.",
+    "The source establishes the ordered partial stack ITO/TiO 2/perovskite and subsequently identifies P3HT and gold as the completion layers, but it does not supply one verbatim complete-stack string. Consequently, full_stack_raw is null. Device polarity and the electrical role of TiO 2 were not explicitly stated and were not inferred.",
+    "Figure 7 reports population-level photovoltaic results for batches of four solar cells, with error bars representing standard deviation; it does not report an outcome for an identifiable individual device. Therefore no IndividualDevice or PerformanceObservation can be safely created (span-e3c01c04502e, span-e3ed78843068, span-7dd7a7c247e5).",
+    "The IV-characterization conditions—N 2, room temperature, AM1.5, 100 mW cm -2, Newport Oriel Class A model 91195A solar simulator, and black-mask area delineation—are reported generically without an individual-device outcome or explicit specimen link, so they cannot support a standalone PerformanceObservation (span-6a51ee6c7949).",
+    "The atmosphere-specific treatments are group-level, pre-completion treatments of perovskite layers: 85 ° C for 24 h in the dark under pure dry N 2, pure dry O 2, or ambient atmosphere with ≈ 50% relative humidity (span-6f61c3d2ee5d, span-2247fec1b0ab). These processing-arm conditions do not define separate device families and cannot be placed in PopulationStatistic.metrics without treating fabrication conditions as outcomes.",
+    "P3HT coating and gold-contact deposition occurred after degradation, and the complete solar cells were not themselves subjected to thermal stress (span-daf883e99a47). This distinction is group-level processing context rather than a separate family, population statistic, performance observation, or photovoltaic stability test."
+  ]
+}

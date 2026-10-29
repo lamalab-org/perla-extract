@@ -1,0 +1,55 @@
+{
+  "artifact_format_version": 4,
+  "study_schema_version": 6,
+  "study_schema_sha256": "0f242f5cb719b47ae6bbcd1818ce8bd382b358136334ecc2abfb9de9db011413",
+  "paper_id": "10.1021--acs.chemmater.8b01521",
+  "split": "dev",
+  "revision": 22,
+  "evidence_version": 4,
+  "evidence_document_sha256": "0e9c4f23dec7d12a974c1bd6e7d2aa550f22807db298b9d83f21685a987b9c9b",
+  "frozen_at": "2026-10-23T20:25:25.356262+00:00",
+  "source_manifest": {
+    "source_sha256": [
+      "eb93a219dcd817f03875d6cdd00e2444a3747bd3da8ab403403018443bfe6e80",
+      "8c4a55a9a9dbff481ee133308555883e6a60bae553c9b3ee2ee7d319b78e9e78"
+    ],
+    "private_source_manifest_sha256": "61f6e2d06a69bd807f304a5d18026cfe22514257469b2fc7b91fd825b4028c07"
+  },
+  "review": {
+    "event_count": 22,
+    "completed_stage_names": [
+      "adjudication"
+    ],
+    "uncertain_record_keys": []
+  },
+  "validation": {
+    "status": "verified",
+    "counts": {
+      "device_families": 1,
+      "individual_devices": 1,
+      "performance_observations": 1,
+      "population_statistics": 2,
+      "stability_tests": 0,
+      "reported_values": 95,
+      "source_verified_values": 95,
+      "source_assembled_values": 0,
+      "issues_by_reason": {}
+    },
+    "issue_count": 0
+  },
+  "files": {
+    "ground_truth.json": "edfa6ad3be9295b2a951e9ca7cf0ffeb8dcf3cdb5dfdad4f3b5c939acf46a19c"
+  },
+  "publication": {
+    "release": "public-v2-2026-10-23",
+    "private_export_manifest_sha256": "75ac7b1cf4383691c5bb22f58fd7ff61012437f41564a51997cf10d7ce40217a",
+    "omitted": [
+      "historical_seed",
+      "review_events",
+      "reviewer_identities",
+      "private_source_metadata",
+      "pdfs",
+      "evidence_document"
+    ]
+  }
+}

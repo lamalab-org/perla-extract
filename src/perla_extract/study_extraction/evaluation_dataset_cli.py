@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from .artifacts import write_json_atomic
 from .evaluation import EvaluationReport, aggregate_evaluations
+from .reference_release import ReferenceRelease
 
 REPORT = click.Path(
     path_type=Path, exists=True, dir_okay=False, readable=True, resolve_path=True
@@ -27,10 +28,25 @@ OUTPUT = click.Path(path_type=Path, dir_okay=False, resolve_path=True)
     help="Repeat for every immutable per-paper evaluation.json.",
 )
 @click.option("--output", type=OUTPUT, default="dataset_evaluation.json")
+@click.option(
+    "--release",
+    type=REPORT,
+    help="Frozen release.json: require its complete roster and exact reference hashes.",
+)
 @click.option("--bootstrap-samples", type=click.IntRange(min=0), default=2_000)
 @click.option("--seed", type=int, default=0)
+@click.option(
+    "--fail-on-scoring-issues",
+    is_flag=True,
+    help="Save the aggregate, then fail if any paper needs matching review.",
+)
 def main(
-    reports: tuple[Path, ...], output: Path, bootstrap_samples: int, seed: int
+    reports: tuple[Path, ...],
+    output: Path,
+    release: Path | None,
+    bootstrap_samples: int,
+    seed: int,
+    fail_on_scoring_issues: bool,
 ) -> None:
     """Aggregate compatible reports with micro counts and paper bootstrap intervals."""
 
@@ -44,13 +60,25 @@ def main(
                 f"invalid evaluation report {path}: {exc}"
             ) from exc
     try:
-        aggregate = aggregate_evaluations(
-            validated, bootstrap_samples=bootstrap_samples, seed=seed
+        frozen = (
+            ReferenceRelease.model_validate_json(release.read_text(encoding="utf-8"))
+            if release is not None
+            else None
         )
-    except ValueError as exc:
+        aggregate = aggregate_evaluations(
+            validated,
+            bootstrap_samples=bootstrap_samples,
+            seed=seed,
+            reference_release=frozen,
+        )
+    except (OSError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
     write_json_atomic(output, aggregate.model_dump(mode="json"))
     click.echo(str(output))
+    if fail_on_scoring_issues and aggregate.papers_needing_scoring_review:
+        raise click.ClickException(
+            f"{aggregate.papers_needing_scoring_review} paper(s) need scoring review; diagnostics saved to {output}"
+        )
 
 
 if __name__ == "__main__":

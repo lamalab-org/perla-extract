@@ -1,0 +1,236 @@
+{
+  "release": "public-v2-2026-10-23",
+  "split": "dev",
+  "paper_count": 30,
+  "scope": "Expert-reviewed, model-assisted development references; not held-out evaluation data.",
+  "matcher_version": "rich-study-hungarian-v6",
+  "fact_profile": "core-scientific-facts-v4",
+  "evaluation_config": {
+    "minimum_record_similarity": 0.35,
+    "numeric_relative_tolerance": 1e-06,
+    "numeric_absolute_tolerance": 0.0,
+    "operation_aliases": {
+      "thermal annealing": "annealing"
+    }
+  },
+  "scientific_values_changed": true,
+  "papers": [
+    {
+      "paper_id": "10.1002--adfm.201500335",
+      "path": "dev/10.1002--adfm.201500335",
+      "ground_truth_sha256": "213c1918081c1a13fd2a669bc473373a6108f9fe92fcec8688c7993ec8871154",
+      "manifest_sha256": "4cecac427f48ca0847df550cd8527044543b9fb342b3ffbc29b00d203bc1667f",
+      "revision": 35
+    },
+    {
+      "paper_id": "10.1002--adfm.201904856",
+      "path": "dev/10.1002--adfm.201904856",
+      "ground_truth_sha256": "92d70f6f1cc06746f5929f897adb70b00ee9b0184ae9fb8aaf945ab67a79ab40",
+      "manifest_sha256": "9c3f3fa65b3c7e9311a71a0d1849ca2a236776134a32575ebc2a3f785466520c",
+      "revision": 90
+    },
+    {
+      "paper_id": "10.1002--adfm.202212698",
+      "path": "dev/10.1002--adfm.202212698",
+      "ground_truth_sha256": "99a821733fbcec6e6785258c525ed4e24c848c11352642e7427404b1b50b14cd",
+      "manifest_sha256": "f4a1fe100096ebace0fb15b215452fab3e0868471b54fe3c2b9639c9a35fb647",
+      "revision": 108
+    },
+    {
+      "paper_id": "10.1002--adma.202302143",
+      "path": "dev/10.1002--adma.202302143",
+      "ground_truth_sha256": "d52d071fdb8f2006ca61da2179576a6b7bc517c91cbb59505c9e3e9743eac43d",
+      "manifest_sha256": "a7d452c5bd11218bbebb0fc2f1232e59d0f0f468a5e336b8a1b74be3744975c2",
+      "revision": 88
+    },
+    {
+      "paper_id": "10.1002--adma.202305822",
+      "path": "dev/10.1002--adma.202305822",
+      "ground_truth_sha256": "4a6d5b06008259778405696f677570f310090904083ed673bd956b2568c625f3",
+      "manifest_sha256": "64553c9a99dd100750d8d3b1ad94ffea0058cf19b7ccd9d2cb20c4b3141cde92",
+      "revision": 64
+    },
+    {
+      "paper_id": "10.1002--aenm.201500477",
+      "path": "dev/10.1002--aenm.201500477",
+      "ground_truth_sha256": "411e211c5d0e58f6b24f4b79f3ffd07a138887973a19f010aabe8733d5fdacfe",
+      "manifest_sha256": "3336cb0580784deb56411106e0543997a3605cd48aa609c6c71f9f5ae8e2f6fb",
+      "revision": 10
+    },
+    {
+      "paper_id": "10.1002--solr.201900370",
+      "path": "dev/10.1002--solr.201900370",
+      "ground_truth_sha256": "4ec7e7f2b21cf5f84cc837ecf873e764f8ce7b07fa293360073949e01d6f7801",
+      "manifest_sha256": "abc09140f56a1282665e7842b5f9ab003dc773b7368643e5bce3adad64378380",
+      "revision": 46
+    },
+    {
+      "paper_id": "10.1002--solr.202100879",
+      "path": "dev/10.1002--solr.202100879",
+      "ground_truth_sha256": "cdd6fde201dc524061f28fc21bbfb7e200608eb1869ea2bbecfc13aee5bf8660",
+      "manifest_sha256": "079a964798edbdf63dbf41bd953dd2b375b4422b56c97e1c3cf066bb90f34872",
+      "revision": 30
+    },
+    {
+      "paper_id": "10.1002--solr.202300817",
+      "path": "dev/10.1002--solr.202300817",
+      "ground_truth_sha256": "079cd8a45c7c96d913f23f9e0177a4959eb73e62e4ca001a1775d77b16dbae8a",
+      "manifest_sha256": "f7357e7f838fa6305d0a0a93fcfa3c2b8bd5546b174c20a819c5cbbedcef6ed6",
+      "revision": 40
+    },
+    {
+      "paper_id": "10.1016--j.jallcom.2023.170970",
+      "path": "dev/10.1016--j.jallcom.2023.170970",
+      "ground_truth_sha256": "e596b92ff772b569d079148d3ff7fd8c8877da57f0cfd7c94d1bfaf0340dede0",
+      "manifest_sha256": "8ef9c4e6550e3d99aad16496e9a9d09152ca4a0e6224f4180ddaf2571989ecc6",
+      "revision": 53
+    },
+    {
+      "paper_id": "10.1016--j.jmst.2021.03.045",
+      "path": "dev/10.1016--j.jmst.2021.03.045",
+      "ground_truth_sha256": "6b4d137c6326080a285916b5579aa75cc0666df50b66a6e22b0a10df0194ea7c",
+      "manifest_sha256": "94b0480dd292165bb6bce077bd9975fdd2e3b611209c6fa90877b4df5df5cec2",
+      "revision": 36
+    },
+    {
+      "paper_id": "10.1016--j.joule.2019.06.014",
+      "path": "dev/10.1016--j.joule.2019.06.014",
+      "ground_truth_sha256": "79cb326ba0fd2f1f9ced8e64c4081ff6a52c76611017356e7e016995094ee3d4",
+      "manifest_sha256": "c5ce933a1eda308d78c526642aa44541e5a834fb6f11c9a541e7a14400bbd9b6",
+      "revision": 50
+    },
+    {
+      "paper_id": "10.1016--j.joule.2022.03.005",
+      "path": "dev/10.1016--j.joule.2022.03.005",
+      "ground_truth_sha256": "0bb01cf15e94e60778464c49b414d572435b076e5591f719d476a622c4b5b32e",
+      "manifest_sha256": "6cff64b29fa4ef3e5a829df4696ef0ddf5b77412b2feaa809eeaa56982930189",
+      "revision": 64
+    },
+    {
+      "paper_id": "10.1016--j.matlet.2016.07.004",
+      "path": "dev/10.1016--j.matlet.2016.07.004",
+      "ground_truth_sha256": "0a45b5f0a606cec2fef19749f7a504ec061a42b82808108f3afd3cfa9fb2b2b5",
+      "manifest_sha256": "8db7948d6a653ac0c4f389100c37beb869f1a44016713b8787ec528d728f7b73",
+      "revision": 25
+    },
+    {
+      "paper_id": "10.1016--j.matt.2023.09.006",
+      "path": "dev/10.1016--j.matt.2023.09.006",
+      "ground_truth_sha256": "74881604710557d417d97b73370b7653ff16daa489a0e88eef0827e593728232",
+      "manifest_sha256": "653d89f7c2cb9d54a954e5bddf42a98d5a5fc4120b7a9fe52e59172d595e2f7a",
+      "revision": 71
+    },
+    {
+      "paper_id": "10.1016--j.nanoen.2016.05.023",
+      "path": "dev/10.1016--j.nanoen.2016.05.023",
+      "ground_truth_sha256": "dd2c69ef2a6e3d0ef67a716ad06e1f98e167d6e11641e955dc80fda11f04486a",
+      "manifest_sha256": "c68251a438e10b7b7eaaf9b8e588e465906cdec1f3518f1db92fe07e9d31f9d1",
+      "revision": 37
+    },
+    {
+      "paper_id": "10.1016--j.nanoen.2022.107416",
+      "path": "dev/10.1016--j.nanoen.2022.107416",
+      "ground_truth_sha256": "6e436bb2dad7143c987e88cd638257e2de60fe96d81db0ef8e8fecbda149c32a",
+      "manifest_sha256": "8878f065ceda4fdd3d8e76c14e412b033d7f12a6ebb9cc4f2adc0c783eaafbad",
+      "revision": 55
+    },
+    {
+      "paper_id": "10.1021--acs.chemmater.8b01521",
+      "path": "dev/10.1021--acs.chemmater.8b01521",
+      "ground_truth_sha256": "edfa6ad3be9295b2a951e9ca7cf0ffeb8dcf3cdb5dfdad4f3b5c939acf46a19c",
+      "manifest_sha256": "dfeb2418bcac283a9f222997a20af9a55e237001c1270e7fa9480512852e66de",
+      "revision": 22
+    },
+    {
+      "paper_id": "10.1021--acsaem.9b01928",
+      "path": "dev/10.1021--acsaem.9b01928",
+      "ground_truth_sha256": "11fbc2fbebd52158b6d315ebc1d5ab2229a8f45c409581c1eace0b29dfdfca14",
+      "manifest_sha256": "7303542a2fb1191a6241dbeb8e16f21e1b856ac8a052e901556a6dfa3240599d",
+      "revision": 48
+    },
+    {
+      "paper_id": "10.1038--nature12340",
+      "path": "dev/10.1038--nature12340",
+      "ground_truth_sha256": "53d822934e81bfc27107928166f70e40f47febd98a720b8c0fa9d4f12a73aee8",
+      "manifest_sha256": "c6df15bb9412743ca2c3e4973ec6edf95e0691f25fb4292635db0edcae8333aa",
+      "revision": 37
+    },
+    {
+      "paper_id": "10.1038--nmat4014",
+      "path": "dev/10.1038--nmat4014",
+      "ground_truth_sha256": "178a3b8e27b3f14e233573c90e2a8ed3ad8ac575d96d4a3bea2284c2c4948c77",
+      "manifest_sha256": "3b592c391c4f143867c645593070fc5013b6281eab8add42138f1120cbd0f734",
+      "revision": 34
+    },
+    {
+      "paper_id": "10.1038--s41467-020-20272-3",
+      "path": "dev/10.1038--s41467-020-20272-3",
+      "ground_truth_sha256": "b1056b052bfdb6d274843446a45538967be77c49faa751d2d6874246dba51f3d",
+      "manifest_sha256": "31361ad86bfaee0aeb1418a76a40225af625de9876bd6e01654a037aa4dc80b0",
+      "revision": 38
+    },
+    {
+      "paper_id": "10.1038--s41467-021-27740-4",
+      "path": "dev/10.1038--s41467-021-27740-4",
+      "ground_truth_sha256": "f424f477708d4fc1a412bbde64feac1424cfbb5c4ed94580160dd864e7cf6c03",
+      "manifest_sha256": "609dd759b83dd96712fe56e9e58771a431b507f891a99c0a0aebe83c162d8ac4",
+      "revision": 49
+    },
+    {
+      "paper_id": "10.1038--s41467-023-36141-8",
+      "path": "dev/10.1038--s41467-023-36141-8",
+      "ground_truth_sha256": "7edbf5249f257293dd7f62b7a8bfc4e9fd4692e586c6931acbc931adc977942f",
+      "manifest_sha256": "7c3e4d671f55b5c3a10dd734ade3a8892716512e728424e5a45e514ffae1b67c",
+      "revision": 25
+    },
+    {
+      "paper_id": "10.1038--s41560-022-01102-w",
+      "path": "dev/10.1038--s41560-022-01102-w",
+      "ground_truth_sha256": "4d8002a565d62df99e8e35d3593b02bece8cec593af7122c9192a0b00197dff7",
+      "manifest_sha256": "a0a6c71ce1614b316fb1d176d3c19577ed30ded3d13e544ccadfd6fc59b74bc3",
+      "revision": 5
+    },
+    {
+      "paper_id": "10.1038--s41563-025-02163-4",
+      "path": "dev/10.1038--s41563-025-02163-4",
+      "ground_truth_sha256": "de078ab9fabe1281d729b2185860fb6c0a73acbd01e780b9edc4324d914f341d",
+      "manifest_sha256": "861805b78595972b10d9898ed59e11b5c2eba2aaab83346914af47a94f0f043e",
+      "revision": 3
+    },
+    {
+      "paper_id": "10.1039--c5dt02388b",
+      "path": "dev/10.1039--c5dt02388b",
+      "ground_truth_sha256": "43f3880aa7f07f9c4572b10b4f786df17817bbd20a9fc3c21106ffa2ec115e45",
+      "manifest_sha256": "556f4155793dcc5662d4f0298641f392710bf74ac4e67bbb25edf29c870ea4d5",
+      "revision": 4
+    },
+    {
+      "paper_id": "10.1039--c5ta00568j",
+      "path": "dev/10.1039--c5ta00568j",
+      "ground_truth_sha256": "efcda9605a7028ba4fa475b017fe72f03cbb8878a8603a8017efbdeb3d0d8bca",
+      "manifest_sha256": "6b0829f526a9421f6d75a1104e8415150e3dcad17c4f90c65bc8c5a38f93616b",
+      "revision": 3
+    },
+    {
+      "paper_id": "10.1039--c7nr04692h",
+      "path": "dev/10.1039--c7nr04692h",
+      "ground_truth_sha256": "779bd26cc7d484ff11693721b5e55c488338c86acd55753dff8f9400bc1b9e34",
+      "manifest_sha256": "2d8cd2f701b0f9c181e7610b087401e1d7c6957c74e5f912b8f64a57b1fd32c0",
+      "revision": 3
+    },
+    {
+      "paper_id": "10.1126--science.adf0194",
+      "path": "dev/10.1126--science.adf0194",
+      "ground_truth_sha256": "8095ca1dd399e4a484e8ade2a2376045ed894488e90f475c1df4afe8a5f8b677",
+      "manifest_sha256": "661a871cfad66f37c3c23636a0a1741c04f0f0a0fec5066455819227eef5b3a3",
+      "revision": 5
+    }
+  ],
+  "parent_release": "public-v1-2026-10-23",
+  "amended_papers": [
+    "10.1002--adfm.202212698",
+    "10.1016--j.nanoen.2022.107416",
+    "10.1021--acs.chemmater.8b01521",
+    "10.1038--s41467-023-36141-8"
+  ]
+}

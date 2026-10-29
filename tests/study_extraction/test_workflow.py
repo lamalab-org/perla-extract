@@ -89,7 +89,12 @@ def test_every_semantic_pass_uses_shared_record_and_evidence_boundaries():
 def test_value_producing_passes_share_the_atomic_shared_quantity_rule():
     """Keep equal list-scoped values distinct without inferring missing quantities."""
 
-    for prompt in EXTRACTION_PROMPT, REFINEMENT_PROMPT, REPAIR_PROMPT:
+    for prompt in (
+        CLAIM_LEDGER_PROMPT,
+        EXTRACTION_PROMPT,
+        REFINEMENT_PROMPT,
+        REPAIR_PROMPT,
+    ):
         assert SHARED_QUANTITY_POLICY in prompt
     assert (
         "Equal values for different materials are not duplicates" in EXTRACTION_PROMPT

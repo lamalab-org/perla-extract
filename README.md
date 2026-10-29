@@ -20,25 +20,42 @@ perla-extract \
 ```
 
 Model calls use LiteLLM. The provider-prefixed model name selects the backend and its
-standard credential—for example, `openai/...` with `OPENAI_API_KEY`,
+standard credential: `openai/...` with `OPENAI_API_KEY`,
 `openrouter/...` with `OPENROUTER_API_KEY`, or `anthropic/...` with
-`ANTHROPIC_API_KEY`. The default calls OpenAI directly; the extraction workflow itself
-remains provider-neutral.
+`ANTHROPIC_API_KEY`. The default calls OpenAI directly.
 
-The extraction directory contains the refined rich result, its retained first draft,
-a source-grounded ledger of experimental objects and atomic claims, a claim-coverage
-audit, a bounded repair pass for audit-visible gaps, local evidence checks, and audited
-conservative finalization of unsupported optional claims, and audited
-composition/processing enrichment. Every finalization preserves the complete candidate
-and exact removed content. Accepted interpretations feed atomic archives for
-the pinned NOMAD schema without rewriting reported facts in `extraction.json`. Use
-`--dry-run` to parse the documents and estimate call size without calling a model.
-Every model request contains parser-produced text and tables only; the workflow does
-not send rendered pages to a vision model.
+The output includes `extraction.json`, its source evidence and retained drafts.
+Saved audits show what repair and enrichment changed. If finalization removes an
+unsupported optional claim, it preserves the candidate and the removed content.
+NOMAD export uses reported facts and accepted interpretations without rewriting the
+extraction. Use `--dry-run` to parse inputs without calling a model.
+
+Extraction requests contain parser-produced text and tables, not rendered pages.
+Figure classification is a separate workflow. Valid quotations do not prove scientific
+correctness; expert review checks values, attribution and missing information.
+
+## Reproduce the scorer without an API key
+
+From a repository checkout:
+
+```bash
+python -m pip install -e '.[dev]'
+PYTHONPATH=.:src python -m examples.scoring.run --output /tmp/perla-scoring-example
+```
+
+Choose a new output directory. This generates invented evidence, saves simulated
+corrections, freezes a reference, and checks four scoring cases against expected
+counts. See the [worked example](docs/workflows/scoring-example.md).
+
+The [evaluation method](docs/methods/benchmark.md) explains reference construction,
+matching, scientific credit and limitations. The repository includes a
+[30-paper expert-reviewed reference release](data/study_extraction/ground_truth/v2/README.md)
+for development comparisons, with frozen hashes and automated scorer checks.
+It is not an independent held-out test set.
 
 ## Documentation
 
-The [documentation site](docs/index.md) explains:
+The [documentation](docs/index.md), rendered with MkDocs, explains:
 
 - [the study and evidence model](docs/concepts/study-model.md);
 - [single-call and long-supplement extraction](docs/workflows/extraction.md);
@@ -60,25 +77,20 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development and test commands.
 
 ## Discover new papers
 
-PapersBot combines packaged journal feeds, OpenAlex topic searches, and an optional
-Zotero group; applies one replaceable JSON selection policy; retrieves available PDFs;
-and records incremental state as readable JSON. It is deliberately separate from
-scientific data extraction:
+PapersBot finds papers through journal feeds, OpenAlex topic searches and an optional
+Zotero group. It filters candidates, retrieves available PDFs and saves its progress
+as JSON. It does not extract scientific records:
 
 ```bash
 pip install 'perla-extract[papersbot]'
 perla-papersbot downloaded_papers --state-dir .papersbot-state
 ```
 
-Use `--feeds-file` or repeated `--feed` options to replace the journal list and
-`--selection-file` to replace the relevance policy. `--zotero-group-id` also ingests a
-Zotero group, including stored PDF attachments. A configured collection can be a
-journal-club-curated intake queue. Zotero access is read-only and works with a key
-scoped to that group. The supported unattended deployment is an internal cron job,
-with ordinary settings available through `PAPERSBOT_` environment variables. Each PDF
-acquisition records its source and access basis; authorized local retrieval mechanisms
-can implement the small `PdfSource` interface without adding publisher cases to the
-bot.
+Use `--feeds-file` or repeated `--feed` options to change the journal list and
+`--selection-file` to change the relevance policy. `--zotero-group-id` reads a group
+library and its stored PDFs; a collection can serve as a journal-club intake queue.
+Zotero access is read-only. See the [PapersBot guide](docs/workflows/papersbot.md)
+for group-scoped keys, internal cron setup, access records and custom PDF retrieval.
 
 ## Authors
 
@@ -87,4 +99,6 @@ bot.
 - Kevin Jablonka — mail@kjablonka.com
 - Sharat Patil — sharat.patil@physik.hu-berlin.de
 
-Citation information will be added with the first public release of this workflow.
+When citing this software, identify the repository and exact release or commit used.
+A software version alone does not identify the reference data or scoring configuration;
+include their versions and hashes with evaluation results.

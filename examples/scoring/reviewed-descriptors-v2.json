@@ -1,0 +1,16 @@
+[
+  {
+    "reference_sha256": "2517e4875ade32de0867105c41c5a0a775804a70dc009098f8248a1984f4f72a",
+    "record_kind": "population_statistics",
+    "reference_label": "MAPbI3 PSCs employing electrochemically deposited PEDOT without any post-treatment; photovoltaic parameter comparison, not a pooled mean",
+    "alternative_labels": ["MAPbI3 PSCs employing electrochemically deposited PEDOT without any post-treatment"],
+    "reason": "In the archived snapshot and v2 reference for 10.1021/acs.chemmater.8b01521, this same cohort has identical statistic type, sample size, metrics and evidence. The added clause clarifies reporting level; it does not change cohort membership. This rule was checked during the scorer audit, not supplied as a reviewer annotation."
+  },
+  {
+    "reference_sha256": "2517e4875ade32de0867105c41c5a0a775804a70dc009098f8248a1984f4f72a",
+    "record_kind": "population_statistics",
+    "reference_label": "Devices subjected to rapid, mild, or rapid-mild PEDOT post-treatment; photovoltaic parameter comparison, not a pooled mean",
+    "alternative_labels": ["Devices subjected to rapid, mild, or rapid-mild PEDOT post-treatment"],
+    "reason": "In the archived snapshot and v2 reference for 10.1021/acs.chemmater.8b01521, this same cohort has identical statistic type, sample size, metrics and evidence. The added clause clarifies reporting level; it does not change cohort membership. This rule was checked during the scorer audit, not supplied as a reviewer annotation."
+  }
+]

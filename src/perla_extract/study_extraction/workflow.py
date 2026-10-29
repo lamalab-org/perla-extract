@@ -154,6 +154,7 @@ draft StudyExtraction.
 {RECORD_BOUNDARY_POLICY}
 {COMPOSITION_BOUNDARY_POLICY}
 {EVIDENCE_INTERPRETATION_POLICY}
+{SHARED_QUANTITY_POLICY}
 Rules:
 - Describe what each source-mentioned object is used for: a reusable device design,
   individual device, processing arm, characterization specimen, population,
