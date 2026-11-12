@@ -1,14 +1,13 @@
 """Exercise imported browser helpers; labels and source-code layout are not contracts."""
 
 import json
-import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
 
 MODULE = Path(__file__).resolve().parents[1] / "review_app/review-state.js"
-pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="Node is required")
+pytestmark = pytest.mark.usefixtures("node_runtime")
 
 
 def run_javascript(script):

@@ -1,5 +1,8 @@
+import { createApiClient } from "./api-client.js";
+import { createReviewSession } from "./review-session.js";
+import { createRecordEditor } from "./record-editor.js";
 import { createFinalizationQueue } from "/adjudication.js";
-import { pendingRecordAction, resolvePendingAction, schemaCompatibilityMessage, reviewProgress, recordEvidenceSection, relationshipChoices } from "/review-state.js";
+import { schemaCompatibilityMessage, reviewProgress, recordEvidenceSection } from "/review-state.js";
 
 const $ = (id) => document.getElementById(id);
 const REVIEW_TOKEN_KEY = "review-token";
@@ -109,11 +112,6 @@ const QUALITY_GATES = [
   "Every retained reported value has source evidence",
   "Remaining uncertainty recorded without inventing a value",
 ];
-const MATERIAL_FORMS = [
-  "self_assembled_monolayer", "monolayer", "compact_layer",
-  "mesoporous_layer", "nanostructured_layer", "bulk_heterojunction", "other",
-  "not_reported",
-];
 const COMPOSITION_STATUS_TEXT = {
   accepted: {
     label: "Passed automated checks",
@@ -140,9 +138,17 @@ const SPLIT_LABELS = {
   calibration: "Legacy calibration",
   test: "Held-out test",
 };
+const api = createApiClient({
+  getToken: async () => localStorage.getItem(REVIEW_TOKEN_KEY) || await state.clerk?.session?.getToken() || null,
+});
+const reviewSession = createReviewSession(api);
 const state = {
-  split: "dev", papers: [], paperId: null, bundle: null, user: null,
-  page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null, pendingAction: null,
+  get split() { return reviewSession.split; },
+  get paperId() { return reviewSession.paperId; },
+  get bundle() { return reviewSession.bundle; },
+  get pendingAction() { return reviewSession.pendingAction; },
+  papers: [], user: null,
+  page: 1, pageCount: 1, source: "main", tab: "inventory",
   queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
   studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
   pdfObjectUrl: null, pdfDisplayed: null, censusDraft: null, editingCensus: false, loadingPaperId: null,
@@ -183,51 +189,19 @@ function initializeWorkspaceLayout() {
   setWorkspaceView(sessionStorage.getItem("perla-workspace-view") || "split", false);
 }
 
-async function authorizationHeaders(headers = {}) {
-  const token = localStorage.getItem(REVIEW_TOKEN_KEY);
-  if (token) return { ...headers, Authorization: `Bearer ${token}` };
-  if (!state.clerk?.session) return headers;
-  const clerkToken = await state.clerk.session.getToken();
-  return clerkToken ? { ...headers, Authorization: `Bearer ${clerkToken}` } : headers;
+function presentRequestError(error) {
+  if (error.code === "review_revision_conflict") showRevisionConflictActions();
+  return error;
 }
 
 async function request(url, options = {}) {
-  const { responseType, ...fetchOptions } = options;
-  const headers = await authorizationHeaders(options.headers || {});
-  if (options.body && !(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
-  const response = await fetch(url, { ...fetchOptions, headers });
-  if (!response.ok) {
-    const payload = response.headers.get("content-type")?.includes("json") ? await response.json() : await response.text();
-    const error = new Error(payload.error || `Request failed (${response.status})`);
-    error.code = payload.code || "request_failed";
-    error.status = response.status;
-    if (error.code === "review_revision_conflict") showRevisionConflictActions();
-    throw error;
-  }
-  if (responseType === "blob") return response.blob();
-  if (responseType === "pdfPage") return {
-    blob: await response.blob(),
-    pageCount: Number(response.headers.get("X-PDF-Pages")) || null,
-  };
-  return response.headers.get("content-type")?.includes("json") ? response.json() : response.text();
-}
-
-function transientRequest(error) {
-  return error.name !== "AbortError" && (!error.status || error.status === 408 || error.status === 429 || error.status >= 500);
+  try { return await api.request(url, options); }
+  catch (error) { throw presentRequestError(error); }
 }
 
 async function requestWithRetry(url, options = {}, attempts = 2) {
-  let lastError;
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    try { return await request(url, options); }
-    catch (error) {
-      lastError = error;
-      if (attempt === attempts || !transientRequest(error)) throw error;
-      console.warn(`Retrying ${url} after a temporary failure (${attempt}/${attempts})`, error);
-      await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
-    }
-  }
-  throw lastError;
+  try { return await api.requestWithRetry(url, options, attempts); }
+  catch (error) { throw presentRequestError(error); }
 }
 
 async function loadPdfPage(url, signal) {
@@ -475,7 +449,7 @@ async function initializeAuthentication() {
 }
 
 async function loadStudySchema() {
-  const schema = await request("/api/study-schema");
+  const schema = await api.schema();
   if (!schema?.properties || !schema?.$defs) throw new Error("The server returned an incomplete study schema.");
   state.studySchema = schema;
   return schema;
@@ -576,7 +550,7 @@ async function selectPaper(paperId) {
   let bundle;
   try {
     [bundle] = await Promise.all([
-      request(`/api/paper/${state.split}/${encodeURIComponent(paperId)}`),
+      api.paper(state.split, paperId),
       ensureFigureCensusProposal(paperId),
     ]);
   } catch (error) {
@@ -591,11 +565,9 @@ async function selectPaper(paperId) {
     state.loadingPaperId = null;
     renderPapers();
   }
-  state.paperId = paperId;
-  state.bundle = bundle;
+  reviewSession.select(paperId, bundle);
   state.queueIndex = 0;
   state.queueKey = null;
-  state.pendingAction = null;
   state.evidenceCache.clear();
   state.activeCitation = null;
   state.censusDraft = null;
@@ -1428,54 +1400,6 @@ function renderDeviceContext(entry) {
   ]);
 }
 
-function resolvedSchema(node, schema = state.studySchema) {
-  let result = node || {};
-  const visited = new Set();
-  while (result.$ref) {
-    if (!schema?.$defs || visited.has(result.$ref)) return {};
-    visited.add(result.$ref);
-    result = schema.$defs[result.$ref.split("/").at(-1)] || {};
-  }
-  return result;
-}
-
-function draftFromSchema(node, fieldName = "") {
-  const schema = resolvedSchema(node);
-  if (Object.hasOwn(schema, "default")) return structuredClone(schema.default);
-  if (fieldName === "evidence") return [];
-  const choices = schema.anyOf || schema.oneOf;
-  if (choices) {
-    if (choices.some((choice) => resolvedSchema(choice).type === "null")) return null;
-    return draftFromSchema(choices[0], fieldName);
-  }
-  if (schema.enum) return schema.enum.includes("not_reported") ? "not_reported" : schema.enum[0];
-  if (schema.type === "object" || schema.properties) {
-    return Object.fromEntries(Object.entries(schema.properties || {}).map(([name, child]) => [name, draftFromSchema(child, name)]));
-  }
-  if (schema.type === "array") {
-    return Array.from({ length: schema.minItems || 0 }, () => draftFromSchema(schema.items));
-  }
-  if (schema.type === "integer" || schema.type === "number") return schema.minimum ?? 0;
-  if (schema.type === "boolean") return false;
-  return "";
-}
-
-function newRecordDraft(kind) {
-  return draftFromSchema(state.studySchema.properties[kind].items);
-}
-
-function copiedRecordDraft(kind, item) {
-  const draft = structuredClone(item);
-  const identifier = state.bundle.summary.record_identifiers[kind];
-  const used = new Set(state.bundle.ground_truth[kind].map((record) => String(record[identifier])));
-  const stem = `${draft[identifier] || kind}-review-copy`;
-  let candidate = stem;
-  let suffix = 2;
-  while (used.has(candidate)) candidate = `${stem}-${suffix++}`;
-  draft[identifier] = candidate;
-  return draft;
-}
-
 function recordReferences(entry) {
   const keys = new Set(state.bundle.summary.record_references?.[entry.key] || []);
   return recordEntries().filter((candidate) => keys.has(candidate.key));
@@ -1883,90 +1807,13 @@ async function submitAudit() {
   }
   const draft = state.censusDraft;
   try {
-    state.bundle = await request(`/api/inventory-audits/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ base_revision: state.bundle.revision, review_scope_sources: state.bundle.sources, ...draft }) });
+    reviewSession.replaceBundle(await request(`/api/inventory-audits/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ base_revision: state.bundle.revision, review_scope_sources: state.bundle.sources, ...draft }) }));
     clearLocalCensusDraft();
     state.censusDraft = savedCensusDraft();
     state.editingCensus = false;
     renderStudy();
     setStatus("Paper and main-text figure check saved.");
   } catch (error) { setStatus(error.message, true); }
-}
-
-function openRecord(kind, index = null, template = null, intent = index == null ? "add" : "edit") {
-  const source = template || (index == null ? newRecordDraft(kind) : state.bundle.ground_truth[kind][index]);
-  const item = index == null && template ? copiedRecordDraft(kind, source) : structuredClone(source);
-  const entry = index == null ? null : { kind, index, item, key: recordKey(kind, item, index) };
-  const references = entry ? recordReferences(entry) : [];
-  const resolving = intent === "resolve-links";
-  state.edit = { kind, index, value: item, intent, references };
-  $("record-kind").textContent = COLLECTIONS[kind];
-  $("record-title").textContent = index == null
-    ? `Add missing ${singularCollection(kind).toLowerCase()}`
-    : entityTitle(kind, item, index);
-  $("record-dialog-help").textContent = resolving
-    ? "Before changing this record type, correct the records that link to it. The original record remains unchanged until you return and save the new type."
-    : intent === "copy"
-    ? "This is a new record copied from the current one as a structurally valid starting point. The original stays unchanged. Check every copied value and its evidence before saving."
-    : intent === "remove"
-      ? "Remove this record only if it should not exist in the ground truth. Linked records are never deleted automatically."
-      : index == null
-        ? "Fill the missing record from the paper. The draft shape comes from the current schema; blank required fields must be completed before it can be saved."
-        : "Change only the fields that are wrong. The existing source evidence stays attached unless you replace it below.";
-  $("record-json").value = JSON.stringify(item, null, 2);
-  const adding = index == null;
-  $("evidence-search-label").textContent = adding ? "Choose source evidence for this new record" : "Source evidence for this correction";
-  $("mutation-note-label").textContent = intent === "remove" ? "Reason for removal" : adding ? "Review note" : "Reason for correction";
-  $("mutation-note-help").textContent = intent === "remove" ? "Required: explain why this record is not supported by the paper." : adding ? "Optional: explain why this record was missing." : "Explain what the extraction got wrong.";
-  $("mutation-note").placeholder = intent === "remove" ? "Why should this record not exist?" : adding ? "Why was this record added?" : "What did the extraction get wrong?";
-  $("save-record").textContent = adding ? "Add missing record" : "Save my correction";
-  $("save-record").hidden = intent === "remove" || resolving;
-  $("mutation-note").closest("label").hidden = resolving;
-  const dialog = $("record-dialog");
-  if (!dialog.open) dialog.showModal();
-  let editorError = null;
-  try {
-    renderStructuredEditor();
-    setRecordEditorMode("fields", false);
-  } catch (error) {
-    editorError = error;
-    setRecordEditorMode("json", false);
-  }
-  const citation = item.evidence?.[0];
-  $("citation-block").value = citation?.block_id || "";
-  $("citation-quote").value = citation?.quote || "";
-  $("mutation-note").value = "";
-  document.querySelector(".evidence-search").open = adding || !citation;
-  $("record-save-help").replaceChildren(
-    document.createTextNode("Your change is saved with your name. Administrators can retrieve it. If no later edit changes the same record, you can undo it from "),
-    element("strong", { text: "My work & undo" }),
-    document.createTextNode("."),
-  );
-  $("remove-record").hidden = intent !== "remove";
-  $("remove-record").disabled = references.length > 0;
-  $("remove-record").textContent = references.length ? "Resolve linked records first" : "Remove extra record";
-  const dependency = $("record-dependencies");
-  dependency.hidden = (!resolving && intent !== "remove") || references.length === 0;
-  dependency.replaceChildren();
-  if ((resolving || intent === "remove") && references.length) {
-    const type = singularCollection(kind).toLowerCase();
-    dependency.append(
-      element("strong", { text: `${references.length} linked record${references.length === 1 ? " must" : "s must"} be handled first` }),
-      element("p", { text: `This ${type} is used by ${linkedRecordSummary(references)}. ${resolving ? "Changing its type" : "Removing it"} now would leave ${references.length === 1 ? "that record" : "those records"} pointing to something that no longer exists.` }),
-      element("p", { text: "Open each linked record below and change its family or device link. If the linked record is also unsupported by the paper, remove it instead." }),
-      element("ul", {}, references.map((reference) => element("li", {}, [element("button", {
-        text: `Open ${singularCollection(reference.kind).toLowerCase()} · ${entityTitle(reference.kind, reference.item, reference.index)}`,
-        properties: { type: "button" },
-        events: { click: () => reviewReferencedRecord(reference) },
-      })]))),
-    );
-  }
-  $("evidence-results").replaceChildren();
-  $("dialog-status").textContent = editorError
-    ? `The field layout could not be displayed (${editorError.message}). The complete record is open as JSON so your correction is not blocked.`
-    : "";
-  dialog.querySelector(".dialog-card")?.scrollTo({ top: 0 });
-  if (intent === "remove") $("mutation-note").focus();
-  if (citation) focusCitation(citation, false, false);
 }
 
 function humanLabel(value) {
@@ -1987,354 +1834,19 @@ function humanLabel(value) {
   return String(value).replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function recordFieldPath(path) {
-  const recordIndex = state.edit.index == null ? "-" : state.edit.index;
-  return `/${[state.edit.kind, recordIndex, ...path].map(pointerPart).join("/")}`;
-}
-
-function setRecordEditorMode(mode, syncFromJson = true) {
-  if (mode === "fields" && syncFromJson && !$("json-editor-panel").hidden) {
-    try {
-      state.edit.value = JSON.parse($("record-json").value);
-      renderStructuredEditor();
-      $("dialog-status").textContent = "";
-    } catch (error) {
-      $("dialog-status").textContent = `Raw JSON is not valid: ${error.message}`;
-      return false;
-    }
-  }
-  const fields = mode === "fields";
-  $("fields-editor-panel").hidden = !fields;
-  $("json-editor-panel").hidden = fields;
-  $("show-fields-editor").classList.toggle("active", fields);
-  $("show-fields-editor").setAttribute("aria-pressed", String(fields));
-  $("show-json-editor").classList.toggle("active", !fields);
-  $("show-json-editor").setAttribute("aria-pressed", String(!fields));
-  return true;
-}
-
 function singularCollection(kind) {
   const label = COLLECTIONS[kind];
   if (label.endsWith("ies")) return `${label.slice(0, -3)}y`;
   return label.endsWith("s") ? label.slice(0, -1) : label;
 }
 
-function updateEditValue(path, rawValue, original) {
-  let parent = state.edit.value;
-  for (const part of path.slice(0, -1)) parent = parent[part];
-  let value = rawValue;
-  if (original === null) value = rawValue === "" ? null : rawValue;
-  else if (typeof original === "number") value = rawValue === "" ? null : Number(rawValue);
-  else if (typeof original === "boolean") value = rawValue === "true";
-  parent[path.at(-1)] = value;
-  $("record-json").value = JSON.stringify(state.edit.value, null, 2);
-}
-
-function recordSchemaNode(kind, path = []) {
-  let node = resolvedSchema(state.studySchema?.properties?.[kind]?.items);
-  for (const part of path) {
-    node = resolvedSchema(part === "items" ? node?.items : node?.properties?.[part]);
-  }
-  return node;
-}
-
-function layerRoleOptions() {
-  const choices = recordSchemaNode("device_families", ["layers", "items", "role"]).enum;
-  if (Array.isArray(choices) && choices.length) return choices;
-  const rolesInStudy = state.bundle?.ground_truth?.device_families
-    ?.flatMap((family) => family.layers || [])
-    .map((layer) => layer.role)
-    .filter(Boolean) || [];
-  return [...new Set([...rolesInStudy, "not_reported"])];
-}
-
-function syncLayerOrder() {
-  state.edit.value.layers.forEach((layer, index) => { layer.sequence = index + 1; });
-  $("record-json").value = JSON.stringify(state.edit.value, null, 2);
-}
-
-function moveLayer(index, offset) {
-  const target = index + offset;
-  const layers = state.edit.value.layers;
-  if (target < 0 || target >= layers.length) return;
-  [layers[index], layers[target]] = [layers[target], layers[index]];
-  syncLayerOrder();
-  renderStructuredEditor();
-}
-
-function removeLayer(index) {
-  const [removed] = state.edit.value.layers.splice(index, 1);
-  let detachedAbsorbers = 0;
-  let detachedSteps = 0;
-  for (const absorber of state.edit.value.absorbers || []) {
-    if (absorber.layer_id === removed.layer_id) {
-      absorber.layer_id = null;
-      detachedAbsorbers += 1;
-    }
-  }
-  for (const step of state.edit.value.processing_steps || []) {
-    const targets = step.target_layer_ids || [];
-    const remaining = targets.filter((layerId) => layerId !== removed.layer_id);
-    if (remaining.length !== targets.length) {
-      step.target_layer_ids = remaining;
-      detachedSteps += 1;
-    }
-  }
-  syncLayerOrder();
-  renderStructuredEditor();
-  if (detachedAbsorbers || detachedSteps) {
-    $("dialog-status").textContent = `Removed the layer and cleared its link from ${detachedAbsorbers} absorber${detachedAbsorbers === 1 ? "" : "s"} and ${detachedSteps} processing step${detachedSteps === 1 ? "" : "s"}. Their scientific content is preserved.`;
-  }
-}
-
-function addLayer() {
-  const layers = state.edit.value.layers;
-  const used = new Set(layers.map((layer) => layer.layer_id));
-  let suffix = layers.length + 1;
-  while (used.has(`review-layer-${suffix}`)) suffix += 1;
-  layers.push({
-    layer_id: `review-layer-${suffix}`,
-    sequence: layers.length + 1,
-    role: "not_reported",
-    material: "",
-    constituents: [],
-    material_form_raw: null,
-    material_form: "not_reported",
-    reported_properties: [],
-    evidence: [],
-  });
-  syncLayerOrder();
-  renderStructuredEditor();
-  document.querySelector(".stack-layer:last-of-type input")?.focus();
-}
-
-function renderLayerAdvanced(layer, index) {
-  const fields = ["constituents", "material_form_raw", "material_form", "reported_properties"]
-    .map((key) => structuredNode(key, layer[key], ["layers", index, key]));
-  return element("details", { className: "stack-layer-advanced" }, [
-    element("summary", { text: "Composition, form, and properties" }),
-    element("div", { className: "editor-fields" }, fields),
-  ]);
-}
-
-function renderDeviceStackEditor() {
-  const layers = state.edit.value.layers || [];
-  const stackRaw = element("input", {
-    properties: {
-      value: state.edit.value.full_stack_raw || "",
-      placeholder: "For example: glass / ITO / ETL / absorber / HTL / metal",
-    },
-  });
-  stackRaw.addEventListener("input", () => updateEditValue(["full_stack_raw"], stackRaw.value, state.edit.value.full_stack_raw));
-  const cards = layers.map((layer, index) => {
-    const material = element("input", { properties: { value: layer.material || "", placeholder: "Layer material", required: true } });
-    material.addEventListener("input", () => {
-      layer.material = material.value;
-      $("record-json").value = JSON.stringify(state.edit.value, null, 2);
-    });
-    const role = element("select", {}, layerRoleOptions().map((choice) => element("option", {
-      text: humanLabel(choice),
-      properties: { value: choice, selected: layer.role === choice },
-    })));
-    role.addEventListener("change", () => {
-      layer.role = role.value;
-      $("record-json").value = JSON.stringify(state.edit.value, null, 2);
-    });
-    return element("article", { className: "stack-layer" }, [
-      element("div", { className: "stack-layer-main" }, [
-        element("strong", { className: "stack-position", text: String(index + 1), attributes: { "aria-label": `Layer ${index + 1}` } }),
-        element("label", {}, [element("span", { text: "Material" }), material]),
-        element("label", {}, [element("span", { text: "Function" }), role]),
-        element("div", { className: "stack-layer-actions" }, [
-          element("button", { text: "↑", properties: { type: "button", disabled: index === 0 }, attributes: { "aria-label": "Move layer up" }, events: { click: () => moveLayer(index, -1) } }),
-          element("button", { text: "↓", properties: { type: "button", disabled: index === layers.length - 1 }, attributes: { "aria-label": "Move layer down" }, events: { click: () => moveLayer(index, 1) } }),
-          element("button", { className: "danger-link", text: "Remove", properties: { type: "button" }, attributes: { "aria-label": `Remove layer ${index + 1}` }, events: { click: () => removeLayer(index) } }),
-        ]),
-      ]),
-      renderLayerAdvanced(layer, index),
-    ]);
-  });
-  return element("section", { className: "device-stack-editor" }, [
-    element("div", { className: "device-stack-heading" }, [
-      element("div", {}, [
-        element("h3", { text: "Device stack" }),
-        element("p", { text: "Correct the material, function, and order directly. Layer IDs and evidence stay attached automatically." }),
-      ]),
-      element("button", { text: "+ Add layer", properties: { type: "button" }, events: { click: addLayer } }),
-    ]),
-    element("label", { className: "stack-raw" }, [
-      element("span", { text: "Stack exactly as written in the paper (optional)" }),
-      stackRaw,
-    ]),
-    element("div", { className: "stack-layers" }, cards.length ? cards : [element("p", { className: "muted", text: "No layers extracted. Add the first layer above." })]),
-  ]);
-}
-
-function structuredLeaf(label, value, path) {
-  let input;
-  let editOriginal = value;
-  let displayLabel = humanLabel(label);
-  const relationship = path.length === 1
-    ? relationshipChoices(path[0], state.edit.kind, state.bundle.ground_truth, state.bundle.summary.record_identifiers, value)
-    : null;
-  if (relationship) {
-    const schema = recordSchemaNode(state.edit.kind, path);
-    const nullable = value === null || schema.anyOf?.some(choice => choice.type === "null");
-    displayLabel = relationship.target === "device_families" ? "Linked device family" : "Linked individual device";
-    editOriginal = nullable ? null : value;
-    input = element("select", { properties: { required: !nullable } }, [
-      element("option", { text: nullable ? "Not linked" : "Choose a record", properties: { value: "", selected: value == null || value === "", disabled: !nullable } }),
-      ...relationship.choices.map(choice => element("option", {
-        text: `${choice.label} · ${choice.value}`,
-        properties: { value: choice.value, selected: choice.value === value },
-      })),
-    ]);
-  } else if (path.at(-1) === "material_form") {
-    input = element("select", {}, MATERIAL_FORMS.map((form) => element("option", {
-      text: humanLabel(form), properties: { value: form, selected: value === form },
-    })));
-  } else if (typeof value === "boolean") {
-    input = element("select", {}, [element("option", { text: "true", properties: { value: "true" } }), element("option", { text: "false", properties: { value: "false" } })]);
-    input.value = String(value);
-  } else if (typeof value === "string" && value.length > 140) {
-    input = element("textarea", { text: value, properties: { rows: 3 } });
-  } else {
-    input = element("input", { properties: { value: value ?? "", type: typeof value === "number" ? "number" : "text", placeholder: value === null ? "Not reported" : "" } });
-  }
-  const inputId = `record-field-${path.map((part) => encodeURIComponent(String(part)).replaceAll("-", "%2D")).join("-")}`;
-  input.id = inputId;
-  input.addEventListener("input", () => updateEditValue(path, input.value, editOriginal));
-  return element("div", { className: "editor-field" }, [
-    element("div", { className: "editor-field-heading" }, [
-      element("label", { text: displayLabel, attributes: { for: inputId } }),
-      element("details", { className: "field-schema-path" }, [
-        element("summary", { text: "Schema field" }),
-        element("code", { className: "json-path", text: recordFieldPath(path) }),
-      ]),
-    ]),
-    input,
-  ]);
-}
-
-function isTechnicalRecordField(key) {
-  return key === "sequence" || key.endsWith("_id") || key.endsWith("_ids");
-}
-
-function technicalFields(entries, path) {
-  if (!entries.length) return null;
-  return element("details", { className: "editor-technical" }, [
-    element("summary", { text: "Technical details" }),
-    element("p", { text: "Record links and identifiers. Most corrections do not need these." }),
-    element("div", { className: "editor-fields" }, entries.map(([key, value]) => structuredLeaf(key, value, [...path, key]))),
-  ]);
-}
-
-function editValueAt(path) {
-  return path.reduce((value, key) => value?.[key], state.edit.value);
-}
-
-function moveOrderedItem(path, index, targetIndex) {
-  const items = editValueAt(path);
-  if (!Array.isArray(items) || targetIndex < 0 || targetIndex >= items.length || index === targetIndex) return;
-  const [item] = items.splice(index, 1);
-  items.splice(targetIndex, 0, item);
-  items.forEach((entry, position) => {
-    if (entry && typeof entry === "object" && Object.hasOwn(entry, "sequence")) entry.sequence = position + 1;
-  });
-  $("record-json").value = JSON.stringify(state.edit.value, null, 2);
-  renderStructuredEditor();
-  const pathKey = JSON.stringify(path);
-  const moved = [...document.querySelectorAll(".ordered-array-item")]
-    .find((node) => node.dataset.arrayPath === pathKey && Number(node.dataset.arrayIndex) === targetIndex);
-  const details = moved?.querySelector(":scope > details");
-  if (details) details.open = true;
-  moved?.querySelector("select")?.focus();
-}
-
-function orderedArrayItem(label, item, index, path, itemCount) {
-  const position = element("select", {
-    attributes: { "aria-label": `Position of ${humanLabel(label)}` },
-  }, Array.from({ length: itemCount }, (_, optionIndex) => element("option", {
-    text: String(optionIndex + 1),
-    properties: { value: String(optionIndex), selected: optionIndex === index },
-  })));
-  position.addEventListener("change", () => moveOrderedItem(path, index, Number(position.value)));
-  return element("div", {
-    className: "ordered-array-item",
-    attributes: { "data-array-path": JSON.stringify(path), "data-array-index": String(index) },
-  }, [
-    element("div", { className: "ordered-array-controls" }, [
-      element("span", { className: "ordered-array-position", text: `Step ${index + 1}` }),
-      element("label", { className: "ordered-array-jump" }, [element("span", { text: "Position" }), position]),
-      element("button", {
-        text: "↑ Earlier",
-        properties: { type: "button", disabled: index === 0 },
-        events: { click: () => moveOrderedItem(path, index, index - 1) },
-      }),
-      element("button", {
-        text: "↓ Later",
-        properties: { type: "button", disabled: index === itemCount - 1 },
-        events: { click: () => moveOrderedItem(path, index, index + 1) },
-      }),
-    ]),
-    structuredNode(label, item, [...path, index]),
-  ]);
-}
-
-function isOrderedArray(value) {
-  return value.length > 1 && value.every((item) => item && typeof item === "object" && Object.hasOwn(item, "sequence"));
-}
-
-function structuredNode(label, value, path, open = false) {
-  if (value == null || typeof value !== "object") return structuredLeaf(label, value, path);
-  const array = Array.isArray(value);
-  const entries = array
-    ? value.map((item, index) => [item?.label || item?.name || item?.material || item?.operation || `Item ${index + 1}`, item, index])
-    : Object.entries(value).filter(([key]) => key !== "evidence").map(([key, item]) => [key, item, key]);
-  const technical = array ? [] : entries.filter(([key]) => isTechnicalRecordField(key));
-  const primary = array ? entries : entries.filter(([key]) => !isTechnicalRecordField(key));
-  const ordered = array && isOrderedArray(value);
-  const children = primary.map(([childLabel, item, key]) => ordered
-    ? orderedArrayItem(childLabel, item, key, path, value.length)
-    : structuredNode(childLabel, item, [...path, key]));
-  const technicalSection = technicalFields(technical, path);
-  if (technicalSection) children.push(technicalSection);
-  const count = array ? ` (${value.length})` : "";
-  return element("details", { className: "editor-group", properties: { open } }, [
-    element("summary", { text: `${humanLabel(label)}${count}` }),
-    element("div", { className: "editor-fields" }, children.length ? children : [element("p", { className: "muted", text: "No editable fields" })]),
-  ]);
-}
-
-function renderStructuredEditor() {
-  const entries = Object.entries(state.edit.value).filter(([key]) => key !== "evidence");
-  if (state.edit.kind !== "device_families") {
-    $("structured-editor").replaceChildren(...entries.map(([key, value]) => structuredNode(key, value, [key], true)));
-    return;
-  }
-  const simple = entries
-    .filter(([key, value]) => !["full_stack_raw", "layers"].includes(key) && !isTechnicalRecordField(key) && (value == null || typeof value !== "object"))
-    .map(([key, value]) => structuredLeaf(key, value, [key]));
-  const technical = entries.filter(([key, value]) => !["full_stack_raw", "layers"].includes(key) && isTechnicalRecordField(key) && (value == null || typeof value !== "object"));
-  const related = entries
-    .filter(([key, value]) => !["full_stack_raw", "layers"].includes(key) && value != null && typeof value === "object")
-    .map(([key, value]) => structuredNode(key, value, [key], false));
-  $("structured-editor").replaceChildren(
-    element("section", { className: "device-identity-editor" }, [
-      element("h3", { text: "Device family" }),
-      element("div", { className: "editor-fields" }, simple),
-      technicalFields(technical, []),
-    ]),
-    renderDeviceStackEditor(),
-    element("section", { className: "device-related-editor" }, [
-      element("h3", { text: "Materials and fabrication" }),
-      ...related,
-    ]),
-  );
-}
-
 async function submitDecision(entry, decision) {
-  return request(`/api/record-decisions/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ collection: entry.kind, record_id: entityId(entry.kind, entry.item, entry.index), decision, base_revision: state.bundle.revision, note: "" }) });
+  try {
+    return await api.decide(state.split, state.paperId, {
+      collection: entry.kind, record_id: entityId(entry.kind, entry.item, entry.index),
+      decision, base_revision: state.bundle.revision, note: "",
+    });
+  } catch (error) { throw presentRequestError(error); }
 }
 
 async function decideEntry(entry, decision) {
@@ -2345,7 +1857,7 @@ async function decideEntry(entry, decision) {
     actionButtons.forEach((button) => { button.disabled = true; });
     $("queue-decision-status").textContent = `Saving “${DECISION_GUIDANCE[decision]}”…`;
     setStatus(`Saving “${DECISION_GUIDANCE[decision]}” for ${title}…`);
-    state.bundle = await submitDecision(entry, decision);
+    reviewSession.replaceBundle(await submitDecision(entry, decision));
     if (!keepPosition) state.queueIndex += 1;
     state.queueKey = null;
     renderStudy();
@@ -2363,7 +1875,7 @@ async function decideEntry(entry, decision) {
 async function openPreparedRecord(kind, index, template, intent) {
   try {
     state.studySchema = await ensureStudySchema();
-    openRecord(kind, index, template, intent);
+    recordEditor.open(kind, index, template, intent);
   } catch (error) {
     setStatus(`Could not prepare the record editor: ${error.message}`, true);
   }
@@ -2375,7 +1887,7 @@ function beginCorrection(entry) {
 
 function beginRemoval(entry) {
   if (recordReferences(entry).length && !state.pendingAction) {
-    state.pendingAction = pendingRecordAction("remove", entry);
+    reviewSession.beginPending("remove", entry);
     renderPendingAction();
   }
   return openPreparedRecord(entry.kind, entry.index, null, "remove");
@@ -2406,22 +1918,19 @@ async function confirmMerge() {
   const button = $("confirm-merge");
   button.disabled = true;
   try {
-    state.bundle = await request(`/api/record-merges/${state.split}/${encodeURIComponent(state.paperId)}`, {
-      method: "POST",
-      body: JSON.stringify({
-        collection: entry.kind,
-        source_record_id: entityId(entry.kind, entry.item, entry.index),
-        target_record_id: $("merge-target").value,
-        note,
-        base_revision: state.bundle.revision,
-      }),
-    });
+    reviewSession.replaceBundle(await api.merge(state.split, state.paperId, {
+      collection: entry.kind,
+      source_record_id: entityId(entry.kind, entry.item, entry.index),
+      target_record_id: $("merge-target").value,
+      note,
+      base_revision: state.bundle.revision,
+    }));
     $("merge-dialog").close();
     state.queueKey = null;
     renderStudy();
     setStatus("Merged the duplicate and moved its explicit links to the retained record.");
   } catch (error) {
-    $("merge-status").textContent = error.message;
+    $("merge-status").textContent = presentRequestError(error).message;
   } finally { button.disabled = false; }
 }
 
@@ -2429,7 +1938,7 @@ async function beginReclassification(entry) {
   const references = recordReferences(entry);
   if (references.length) {
     setStatus(`Relink the ${references.length} dependent record${references.length === 1 ? "" : "s"} before changing this record type.`, true);
-    if (!state.pendingAction) state.pendingAction = pendingRecordAction("reclassify", entry);
+    if (!state.pendingAction) reviewSession.beginPending("reclassify", entry);
     renderPendingAction();
     await openPreparedRecord(entry.kind, entry.index, null, "resolve-links");
     return;
@@ -2451,14 +1960,14 @@ function continueReclassification() {
   const entry = state.structuralEntry;
   if (!entry) return;
   const targetKind = $("reclassify-target").value;
-  const draft = newRecordDraft(targetKind);
+  const draft = recordEditor.newDraft(targetKind);
   draft.evidence = structuredClone(entry.item.evidence || []);
   $("reclassify-dialog").close();
-  openRecord(targetKind, null, draft, "reclassify");
-  state.edit.source = {
+  recordEditor.open(targetKind, null, draft, "reclassify");
+  recordEditor.setSource({
     kind: entry.kind,
     recordId: entityId(entry.kind, entry.item, entry.index),
-  };
+  });
   $("record-title").textContent = `Change ${singularCollection(entry.kind).toLowerCase()} to ${singularCollection(targetKind).toLowerCase()}`;
   $("record-dialog-help").textContent = "Complete the corrected record. Saving removes the old record and adds this one in a single validated revision.";
   $("save-record").textContent = "Save new record type";
@@ -2475,7 +1984,7 @@ async function addMissingRecord() {
       button.textContent = "Preparing…";
       await ensureStudySchema();
     }
-    openRecord($("new-record-kind").value, null, null, "add");
+    recordEditor.open($("new-record-kind").value, null, null, "add");
   } catch (error) { setStatus(`Could not prepare a new record: ${error.message}`, true); }
   finally {
     button.disabled = false;
@@ -2496,7 +2005,7 @@ async function reviewReferencedRecord(reference) {
 }
 
 function renderPendingAction() {
-  const pending = resolvePendingAction(state.pendingAction, recordEntries(), recordReferences);
+  const pending = reviewSession.resolvePending(recordEntries(), recordReferences);
   const panel = $("pending-record-action");
   panel.hidden = !pending;
   if (!pending) return;
@@ -2512,7 +2021,7 @@ function renderPendingAction() {
 }
 
 async function resumePendingAction() {
-  const pending = resolvePendingAction(state.pendingAction, recordEntries(), recordReferences);
+  const pending = reviewSession.resolvePending(recordEntries(), recordReferences);
   if (!pending?.entry) return;
   if ($("record-dialog").open) $("record-dialog").close();
   $("record-kind-filter").value = pending.kind;
@@ -2524,64 +2033,49 @@ async function resumePendingAction() {
 }
 
 function cancelPendingAction() {
-  state.pendingAction = null;
+  reviewSession.cancelPending();
   renderPendingAction();
   setStatus("Pending action cancelled. Any link corrections you already saved remain in the review history.");
 }
 
-function attachMissingEvidence(value, citation) {
-  if (Array.isArray(value)) return value.forEach((item) => attachMissingEvidence(item, citation));
-  if (!value || typeof value !== "object") return;
-  if (Array.isArray(value.evidence) && value.evidence.length === 0) value.evidence = [structuredClone(citation)];
-  Object.values(value).forEach((item) => attachMissingEvidence(item, citation));
-}
-
 async function saveRecord() {
   try {
-    const value = JSON.parse($("record-json").value);
-    const { kind, index } = state.edit;
+    const value = recordEditor.value();
+    const { kind, index } = recordEditor.edit;
     const blockId = $("citation-block").value.trim();
     const quote = $("citation-quote").value.trim();
     if (!blockId || !quote) throw new Error("Choose an evidence block and provide an exact quote.");
     const citation = { block_id: blockId, quote };
-    attachMissingEvidence(value, citation);
     const note = $("mutation-note").value.trim();
-    const reclassifying = state.edit.intent === "reclassify";
+    const reclassifying = recordEditor.edit.intent === "reclassify";
     if (reclassifying && !note) throw new Error("Explain why the original record type was wrong.");
-    const payload = reclassifying
-      ? { source_collection: state.edit.source.kind, source_record_id: state.edit.source.recordId, target_collection: kind, value, evidence: [citation], note, base_revision: state.bundle.revision }
-      : { action: index == null ? "add" : "replace", path: `/${pointerPart(kind)}/${index == null ? "-" : index}`, value, evidence: [citation], note, base_revision: state.bundle.revision };
-    const endpoint = reclassifying ? "record-reclassifications" : "mutations";
-    state.bundle = await request(`/api/${endpoint}/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify(payload) });
+    await reviewSession.saveRecord({ edit: recordEditor.edit, value, citation, note });
     $("record-dialog").close();
-    if (reclassifying && state.pendingAction?.key === `${state.edit.source.kind}:${state.edit.source.recordId}`) state.pendingAction = null;
     renderStudy();
     setStatus(reclassifying
       ? "Record type changed and saved. Review the updated record, then choose Matches source."
       : index == null
         ? `Added the missing ${singularCollection(kind).toLowerCase()}. Review the new record, then choose Matches source.`
         : "Correction saved for administrators. Review the updated record, then choose Matches source; undo remains available in My work & undo.");
-  } catch (error) { $("dialog-status").textContent = error.message; }
+  } catch (error) { $("dialog-status").textContent = presentRequestError(error).message; }
 }
 
 async function removeRecord() {
   const note = $("mutation-note").value.trim();
-  if (state.edit.references.length) return $("dialog-status").textContent = "Open and resolve each linked record listed above. This record can then be removed safely.";
+  if (recordEditor.edit.references.length) return $("dialog-status").textContent = "Open and resolve each linked record listed above. This record can then be removed safely.";
   if (!note) {
     $("dialog-status").textContent = "Explain why the paper does not support this record before removing it.";
     $("mutation-note").focus();
     return;
   }
-  const title = entityTitle(state.edit.kind, state.edit.value, state.edit.index);
+  const title = entityTitle(recordEditor.edit.kind, recordEditor.edit.value, recordEditor.edit.index);
   if (!window.confirm(`Remove ${title}? Only this record will be deleted; linked records are never removed automatically.`)) return;
   try {
-    const { kind, index } = state.edit;
-    state.bundle = await request(`/api/mutations/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ action: "remove", path: `/${pointerPart(kind)}/${index}`, note, evidence: [], base_revision: state.bundle.revision }) });
+    await reviewSession.removeRecord(recordEditor.edit, note);
     $("record-dialog").close();
-    if (state.pendingAction?.key === recordKey(kind, state.edit.value, index)) state.pendingAction = null;
     renderStudy();
     setStatus(`Removed ${title}. No linked records were deleted.`);
-  } catch (error) { $("dialog-status").textContent = error.message; }
+  } catch (error) { $("dialog-status").textContent = presentRequestError(error).message; }
 }
 
 async function searchEvidence() {
@@ -2610,7 +2104,7 @@ function chooseEvidence(block) {
 async function completeStage(stage) {
   if (stage === "completeness" && [...document.querySelectorAll("[data-gate]")].some((input) => !input.checked)) return setStatus("Confirm every checklist item first.", true);
   try {
-    state.bundle = await request(`/api/stages/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ stage, base_revision: state.bundle.revision, note: $("stage-note").value }) });
+    reviewSession.replaceBundle(await request(`/api/stages/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ stage, base_revision: state.bundle.revision, note: $("stage-note").value }) }));
     renderStudy();
     if (stage === "inventory") setTab("records");
     if (stage === "fields") setTab("completeness");
@@ -2782,7 +2276,7 @@ async function undoAnnotation(paper, event, button) {
       body: JSON.stringify({ event_id: event.event_id, base_revision: paper.current_revision }),
     });
     if (state.paperId === paper.paper_id) {
-      state.bundle = bundle;
+      reviewSession.replaceBundle(bundle);
       renderStudy();
     }
     await loadReviewerProgress();
@@ -2792,7 +2286,7 @@ async function undoAnnotation(paper, event, button) {
     if (error.code === "review_revision_conflict") {
       await loadReviewerProgress();
       if (state.paperId === paper.paper_id) {
-        state.bundle = await request(`/api/paper/${state.split}/${encodeURIComponent(paper.paper_id)}`);
+        reviewSession.replaceBundle(await request(`/api/paper/${state.split}/${encodeURIComponent(paper.paper_id)}`));
         renderStudy();
       }
       clearRevisionConflictActions();
@@ -2918,7 +2412,7 @@ async function applyReviewerResets(papers, button) {
         body: JSON.stringify({ base_revision: paper.current_revision }),
       });
       resetCount += 1;
-      if (state.paperId === paper.paper_id) state.bundle = bundle;
+      if (state.paperId === paper.paper_id) reviewSession.replaceBundle(bundle);
     } catch (error) { failures.push(`${paper.paper_id}: ${error.message}`); }
   }
   await loadReviewerProgress();
@@ -3021,14 +2515,8 @@ function saveBlob(blob, filename) {
 }
 
 async function downloadResponse(url, filename) {
-  const response = await fetch(url, {
-    headers: await authorizationHeaders(),
-  });
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.error || `Request failed (${response.status})`);
-  }
-  saveBlob(await response.blob(), filename);
+  try { saveBlob(await api.download(url), filename); }
+  catch (error) { throw presentRequestError(error); }
 }
 
 async function downloadStudyJson() {
@@ -3060,10 +2548,10 @@ async function uploadReviewWorkbook(file) {
   form.append("filename", file.name);
   setStatus("Validating the workbook and the complete study…");
   try {
-    state.bundle = await request(
+    reviewSession.replaceBundle(await request(
       `/api/review-workbook/${state.split}/${encodeURIComponent(state.paperId)}`,
       { method: "POST", body: form },
-    );
+    ));
     renderStudy();
     await loadReviewerProgress();
     const importMode = state.bundle.events.at(-1)?.details?.workbook_import_mode;
@@ -3130,7 +2618,7 @@ async function importPaper(event) {
   try {
     $("import-status").textContent = "Importing and validating…";
     const bundle = await request("/api/papers/import", { method: "POST", body: form });
-    state.split = form.get("split");
+    reviewSession.reset(form.get("split"));
     $("split").value = state.split;
     $("import-dialog").close();
     await loadPapers();
@@ -3138,7 +2626,13 @@ async function importPaper(event) {
   } catch (error) { $("import-status").textContent = error.message; }
 }
 
-$("split").addEventListener("change", async (event) => { state.pdfAbortController?.abort(); state.split = event.target.value; state.papers = []; state.paperId = null; state.bundle = null; state.annotations = null; state.censusDraft = null; state.editingCensus = false; $("workspace").hidden = true; $("empty-title").textContent = "Choose a paper"; $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures."; $("empty-state").hidden = false; try { await loadPapers(); } catch (error) { showStartupError(error); } });
+const recordEditor = createRecordEditor({
+  document, element, context: () => ({ bundle: state.bundle, studySchema: state.studySchema }),
+  collections: COLLECTIONS, humanLabel, singularCollection, recordKey, recordReferences,
+  entityTitle, linkedRecordSummary, reviewReferencedRecord, focusCitation,
+});
+
+$("split").addEventListener("change", async (event) => { state.pdfAbortController?.abort(); reviewSession.reset(event.target.value); state.papers = []; state.annotations = null; state.censusDraft = null; state.editingCensus = false; $("workspace").hidden = true; $("empty-title").textContent = "Choose a paper"; $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures."; $("empty-state").hidden = false; try { await loadPapers(); } catch (error) { showStartupError(error); } });
 $("toggle-paper-list").addEventListener("click", () => setPaperListOpen(document.querySelector("main").classList.contains("paper-list-hidden")));
 document.querySelectorAll("[data-workspace-view]").forEach((button) => button.addEventListener("click", () => setWorkspaceView(button.dataset.workspaceView)));
 $("paper-filter").addEventListener("input", renderPapers);
@@ -3181,8 +2675,8 @@ $("record-status-filter").addEventListener("change", () => { state.queueIndex = 
 $("record-kind-filter").addEventListener("change", () => { state.queueIndex = 0; state.queueKey = null; renderReviewQueue(); });
 $("previous-record").addEventListener("click", () => moveQueue(-1));
 $("next-record").addEventListener("click", () => moveQueue(1));
-$("show-fields-editor").addEventListener("click", () => setRecordEditorMode("fields"));
-$("show-json-editor").addEventListener("click", () => setRecordEditorMode("json"));
+$("show-fields-editor").addEventListener("click", () => recordEditor.setMode("fields"));
+$("show-json-editor").addEventListener("click", () => recordEditor.setMode("json"));
 $("resume-record-action").addEventListener("click", resumePendingAction);
 $("cancel-record-action").addEventListener("click", cancelPendingAction);
 $("show-unresolved").addEventListener("click", () => {

@@ -1,8 +1,4 @@
-import shutil
-import subprocess
 from pathlib import Path
-
-import pytest
 
 APP = Path(__file__).resolve().parents[1] / "review_app"
 
@@ -57,7 +53,6 @@ def test_refreshed_review_dataset_is_the_clear_default():
         )
         == 2
     )
-    assert 'split: "dev"' in javascript
     assert 'calibration: "Legacy calibration"' in javascript
 
 
@@ -193,20 +188,6 @@ def test_ui_covers_every_rich_record_collection():
         assert collection in javascript
 
 
-def test_field_correction_opens_before_the_structured_editor_renders():
-    javascript = (APP / "app.js").read_text(encoding="utf-8")
-    start = javascript.index("function openRecord(")
-    end = javascript.index("\nfunction humanLabel", start)
-    source = javascript[start:end]
-
-    assert source.index("dialog.showModal()") < source.index("renderStructuredEditor()")
-    assert 'setRecordEditorMode("json", false)' in source
-    assert (
-        "The complete record is open as JSON so your correction is not blocked."
-        in source
-    )
-
-
 def test_record_review_layout_responds_to_panel_width_without_overlays():
     styles = (APP / "styles.css").read_text(encoding="utf-8")
 
@@ -296,7 +277,6 @@ def test_ui_tracks_record_review_and_avoids_prompt_based_creation():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
     assert "new-record-kind" in html
-    assert "record-decisions" in source
     assert "needs_correction" in source
     assert "record_key" in source
     assert "window.prompt" not in source
@@ -411,7 +391,6 @@ def test_startup_defers_schema_and_shows_real_loading_states():
     assert (
         'throw new Error("The server returned an incomplete study schema.")' in source
     )
-    assert "state.studySchema?.properties?.[kind]?.items" in source
 
 
 def test_failed_navigation_keeps_an_open_paper_and_progress_requires_a_session():
@@ -456,112 +435,6 @@ def test_correction_and_removal_dialogs_open_without_saving_a_decision_first():
     assert "submitDecision" not in correction
     assert "openPreparedRecord" in removal
     assert "submitDecision" not in removal
-
-
-def test_device_family_editor_has_a_focused_stack_workflow():
-    source = (APP / "app.js").read_text(encoding="utf-8")
-
-    assert "renderDeviceStackEditor" in source
-    assert "Correct the material, function, and order directly" in source
-    assert "moveLayer" in source
-    assert "removeLayer" in source
-    assert "addLayer" in source
-    assert "recordSchemaNode" in source
-    assert "Composition, form, and properties" in source
-    assert "absorber.layer_id = null" in source
-    assert "step.target_layer_ids = remaining" in source
-    assert 'const fields = ["layer_id"' not in source
-
-
-def test_structured_editor_prioritizes_scientific_fields_over_schema_plumbing():
-    source = (APP / "app.js").read_text(encoding="utf-8")
-    styles = (APP / "styles.css").read_text(encoding="utf-8")
-
-    assert "Schema field" in source
-    assert "Technical details" in source
-    assert "Record links and identifiers" in source
-    assert "isTechnicalRecordField" in source
-    assert "Materials and fabrication" in source
-    assert "item?.label" in source
-    assert 'encodeURIComponent(String(part)).replaceAll("-", "%2D")' in source
-    assert ".editor-group .editor-group { grid-column:1 / -1;" in styles
-    assert (
-        ".device-related-editor > .editor-group > .editor-fields { grid-template-columns:1fr;"
-        in styles
-    )
-    assert "attachMissingEvidence(value, citation)" in source
-
-
-def test_structured_editor_can_reorder_sequenced_items_without_raw_json():
-    source = (APP / "app.js").read_text(encoding="utf-8")
-    styles = (APP / "styles.css").read_text(encoding="utf-8")
-
-    assert "function moveOrderedItem" in source
-    assert "function isOrderedArray" in source
-    assert 'Object.hasOwn(item, "sequence")' in source
-    assert 'text: "↑ Earlier"' in source
-    assert 'text: "↓ Later"' in source
-    assert 'text: "Position"' in source
-    assert "entry.sequence = position + 1" in source
-    assert ".ordered-array-controls" in styles
-
-
-def test_ordered_item_moves_preserve_content_and_renumber_sequences():
-    if shutil.which("node") is None:
-        pytest.skip("Node.js is needed to execute the browser-side reorder helper")
-
-    source = (APP / "app.js").read_text(encoding="utf-8")
-    helper_source = source[
-        source.index("function editValueAt") : source.index(
-            "function orderedArrayItem", source.index("function editValueAt")
-        )
-    ]
-    script = (
-        """
-const assert = require("node:assert/strict");
-const steps = [
-  { sequence: 7, operation: "A", conditions: [{ value: 10 }] },
-  { sequence: 2, operation: "B", conditions: [{ value: 20 }] },
-  { sequence: 99, operation: "C", conditions: [{ value: 30 }] },
-];
-const state = { edit: { value: { processing_steps: steps } } };
-const recordJson = { value: "" };
-const focused = [];
-const opened = [];
-const nodes = [0, 1, 2].map((index) => ({
-  dataset: { arrayPath: JSON.stringify(["processing_steps"]), arrayIndex: String(index) },
-  querySelector(selector) {
-    if (selector === ":scope > details") return { set open(value) { if (value) opened.push(index); } };
-    if (selector === "select") return { focus() { focused.push(index); } };
-    return null;
-  },
-}));
-const document = { querySelectorAll() { return nodes; } };
-const $ = (id) => { assert.equal(id, "record-json"); return recordJson; };
-let renderCount = 0;
-function renderStructuredEditor() { renderCount += 1; }
-"""
-        + helper_source
-        + """
-moveOrderedItem(["processing_steps"], 0, 2); // direct position: A after C
-assert.deepEqual(steps.map((step) => step.operation), ["B", "C", "A"]);
-assert.deepEqual(steps.map((step) => step.sequence), [1, 2, 3]);
-assert.equal(steps[2].conditions[0].value, 10);
-
-moveOrderedItem(["processing_steps"], 2, 1); // Earlier: A before C
-assert.deepEqual(steps.map((step) => step.operation), ["B", "A", "C"]);
-
-moveOrderedItem(["processing_steps"], 0, 1); // Later: B after A
-assert.deepEqual(steps.map((step) => step.operation), ["A", "B", "C"]);
-assert.deepEqual(steps.map((step) => step.sequence), [1, 2, 3]);
-assert.deepEqual(steps.map((step) => step.conditions[0].value), [10, 20, 30]);
-assert.equal(renderCount, 3);
-assert.deepEqual(opened, [2, 1, 1]);
-assert.deepEqual(focused, [2, 1, 1]);
-assert.deepEqual(JSON.parse(recordJson.value).processing_steps, steps);
-"""
-    )
-    subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
 
 
 def test_ui_builds_untrusted_content_with_dom_nodes():

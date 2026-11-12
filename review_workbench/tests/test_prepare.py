@@ -55,6 +55,13 @@ def test_prepare_bundles_only_runtime_and_rich_schema(tmp_path):
     assert not (output / "src/perla_extract/data").exists()
     assert not (output / "review_workbench/review_collaboration.py").exists()
     assert (output / "review_workbench/review_storage.py").exists()
+    for asset in (
+        "record-editor.js",
+        "api-client.js",
+        "review-session.js",
+        "package.json",
+    ):
+        assert (output / "review_workbench/review_app" / asset).is_file()
     assert "class BlobReviewStateStorage" in (output / "api/index.py").read_text(
         encoding="utf-8"
     )
