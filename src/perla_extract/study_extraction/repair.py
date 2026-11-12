@@ -34,6 +34,12 @@ from .models import (
     StrictModel,
     StudyExtraction,
 )
+from .spans import EvidenceSpan, build_evidence_spans, evidence_payload
+from .transport import (
+    compact_to_span_citations,
+    expand_span_citations,
+    span_citation_schema,
+)
 from .validation import validate_study
 
 if TYPE_CHECKING:
@@ -139,6 +145,75 @@ _COLLECTIONS = {
     "population_statistic": ("population_statistics", "population_id"),
     "stability_test": ("stability_tests", "test_id"),
 }
+
+
+def repair_request_schema(worklist: RepairWorklist, spans: list[EvidenceSpan]) -> dict:
+    """Expose only requested record types, IDs, and removals to the repair model.
+
+    Full records remain the unit of replacement so dependent fields are validated
+    together. The public ``StudyRepair`` stays stable; absent collections are filled
+    with empty lists after decoding. Unreachable definitions are omitted from the
+    provider schema to avoid describing unrelated scientific tasks.
+    """
+
+    schema: dict[str, Any] = span_citation_schema(StudyRepair, spans)
+    allowed = {"unresolved_notes"}
+    for kind, (collection, id_field) in _COLLECTIONS.items():
+        items = [
+            item
+            for item in worklist.items
+            if item.record_kind == kind and item.reason != "unclaimed_record"
+        ]
+        if not items:
+            continue
+        allowed.add(collection)
+        if all(item.record_ids for item in items):
+            reference = schema["properties"][collection]["items"]["$ref"].rsplit(
+                "/", 1
+            )[-1]
+            schema["$defs"][reference]["properties"][id_field]["enum"] = sorted(
+                {record_id for item in items for record_id in item.record_ids}
+            )
+    if any(
+        item.reason == "unclaimed_record" and item.record_ids for item in worklist.items
+    ):
+        allowed.add("removals")
+    schema["properties"] = {
+        key: value for key, value in schema["properties"].items() if key in allowed
+    }
+    schema["required"] = [key for key in schema.get("required", []) if key in allowed]
+    definitions = schema.get("$defs", {})
+    used: set[str] = set()
+
+    def visit(value: object) -> None:
+        if isinstance(value, dict):
+            reference = value.get("$ref")
+            if isinstance(reference, str) and reference.startswith("#/$defs/"):
+                name = reference.rsplit("/", 1)[-1]
+                if name not in used:
+                    used.add(name)
+                    visit(definitions[name])
+            for child in value.values():
+                visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+
+    visit(schema["properties"])
+    schema["$defs"] = {
+        name: value for name, value in definitions.items() if name in used
+    }
+    return schema
+
+
+def _decode_repair(payload: object, spans: list[EvidenceSpan]) -> dict[str, object]:
+    """Restore citations and the empty collections omitted by the request schema."""
+
+    expanded = expand_span_citations(payload, spans)
+    for collection, _ in _COLLECTIONS.values():
+        expanded.setdefault(collection, [])
+    expanded.setdefault("removals", [])
+    return expanded
 
 
 def _citation_block_ids(value: object) -> set[str]:
@@ -379,11 +454,9 @@ def _scope_repair_to_worklist(
 ) -> tuple[StudyRepair, dict[str, int]]:
     """Keep only record changes that the deterministic audit explicitly requested.
 
-    A repair model sometimes resolves the requested problem and then helpfully emits
-    other records from the same evidence. Those additions have not passed through the
-    audit that triggered this call. Filtering them here lets us retain a safe deletion
-    or replacement without broadening a deliberately local repair into a second
-    extraction pass.
+    A model may emit additional records beyond its worklist even when the request
+    schema forbids them. Retain only permitted IDs, explicitly requested new record
+    kinds, and named removals. Rejected changes are counted in the repair audit.
     """
 
     permitted_removals = {
@@ -521,12 +594,6 @@ def run_targeted_repair(
     """Request and gate one text-only patch when deterministic audits expose work."""
 
     from .client import ModelCallError
-    from .spans import build_evidence_spans, evidence_payload
-    from .transport import (
-        compact_to_span_citations,
-        expand_span_citations,
-        span_citation_schema,
-    )
 
     worklist = build_repair_worklist(study, coverage, validation)
     known = {block.block_id: block for block in blocks}
@@ -588,11 +655,17 @@ def run_targeted_repair(
             + json.dumps(current_records, ensure_ascii=False)
             + "\n\nPARSER TEXT AND TABLE EVIDENCE:\n"
             + json.dumps(evidence, ensure_ascii=False),
+            prompt_components={
+                "repair_instructions": REPAIR_PROMPT,
+                "worklist": worklist.model_dump(mode="json"),
+                "current_records": current_records,
+                "source_evidence": evidence,
+            },
             response_model=StudyRepair,
             max_output_tokens=max_output_tokens,
             reasoning_effort=reasoning_effort,
-            request_schema=span_citation_schema(StudyRepair, evidence_spans),
-            decode=lambda payload: expand_span_citations(payload, evidence_spans),
+            request_schema=repair_request_schema(worklist, evidence_spans),
+            decode=lambda payload: _decode_repair(payload, evidence_spans),
         )
     except ModelCallError as exc:
         return study, RepairAudit(

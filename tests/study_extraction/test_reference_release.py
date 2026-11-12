@@ -11,11 +11,11 @@ from perla_extract.study_extraction.evaluation import (
     aggregate_evaluations,
     evaluate_study,
 )
-from perla_extract.study_extraction.evaluation_cli import (
+from perla_extract.study_extraction.models import StudyExtraction
+from perla_extract.study_extraction.reference_io import (
     load_reference,
     reference_content_digest,
 )
-from perla_extract.study_extraction.models import StudyExtraction
 from perla_extract.study_extraction.reference_release import ReferenceRelease
 
 ROOT = Path(__file__).resolve().parents[2] / "data/study_extraction/ground_truth"
@@ -64,7 +64,9 @@ def test_public_reference_preserves_hashes_and_excludes_private_metadata(
     truth_text = (directory / "ground_truth.json").read_text(encoding="utf-8")
     manifest = json.loads(manifest_text)
     assert reference_content_digest(manifest) == paper["manifest_sha256"]
-    assert reference_content_digest(json.loads(truth_text)) == paper["ground_truth_sha256"]
+    assert (
+        reference_content_digest(json.loads(truth_text)) == paper["ground_truth_sha256"]
+    )
     assert manifest["revision"] == paper["revision"]
     assert manifest["review"]["uncertain_record_keys"] == []
     assert "adjudication" in manifest["review"]["completed_stage_names"]
@@ -122,7 +124,7 @@ def test_reference_score_invariance_and_negative_controls(release, index, paper)
     # rewrite a frozen reference just to change that historical metadata.
     assert index["matcher_version"] == "rich-study-hungarian-v6"
     assert index["fact_profile"] == "core-scientific-facts-v4"
-    assert same.matcher_version == "rich-study-hungarian-v8"
+    assert same.matcher_version == "rich-study-hungarian-v9"
     assert same.core_facts.profile == "core-scientific-facts-v6"
     assert same.core_facts.micro.f1 == 1 and not same.core_facts.issues
     reordered = StudyExtraction.model_validate(

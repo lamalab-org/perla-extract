@@ -28,6 +28,7 @@ from perla_extract.study_extraction.models import (
     ReportedValue,
     StudyExtraction,
 )
+from perla_extract.study_extraction.run_artifacts import write_run_manifest
 from review_workbench.ground_truth_export import (
     build_ground_truth_export,
     write_ground_truth_export,
@@ -252,6 +253,10 @@ def build_example(output: Path) -> dict:
                 "budget": {"provider_requests": 0, "cost_tracking_complete": True},
             },
         )
+        write_json_atomic(
+            run / "run_configuration.json", {"synthetic": True, "model_calls": 0}
+        )
+        write_run_manifest(run)
         report_path = run / "evaluation.json"
         evaluate.main(
             args=[

@@ -33,7 +33,7 @@ perla-evaluate \
 ```
 
 A frozen reference directory contains `ground_truth.json` and `manifest.json`.
-The command checks that the schema hash matches the installed schema and that the
+The command checks structural schema compatibility and verifies that the
 reference's content hash matches its manifest. It records the paper ID, split,
 reference hash, source hashes and source-manifest hash in the report.
 
@@ -53,9 +53,11 @@ The loader also requires the manifest to declare completed adjudication and veri
 validation with zero issues. It accepts private stage-to-reviewer mappings and public,
 redacted stage names. These declarations are checked for consistency, not authenticated
 as an independent review; retain the private review history.
-Older formats 2 and 3 are accepted only if their unresolved-record list is empty.
-Formats 3 and 4 must also declare the reviewed
-evidence-document version and hash. The scorer records them; it does not load that
+Only ground-truth artifact format 4 is supported. References must declare the reviewed
+evidence-document version and hash. Descriptive schema prose has its own fingerprint;
+editing help text alone does not make a reference structurally incompatible.
+The known archived schema-6 fingerprint remains accepted without rewriting frozen files.
+Other structural mismatches require an explicit migration. The scorer records them; it does not load that
 archived document to verify the declaration.
 
 For `--prediction`, prefer a complete run directory containing:
@@ -64,7 +66,8 @@ For `--prediction`, prefer a complete run directory containing:
 | --- | --- |
 | `extraction.json` | Loads the predicted study |
 | `document.json` | Rechecks the prediction's citations and record links |
-| `report.json` | Checks the structure of the saved call, token, cost and timing totals, then copies them into the evaluation |
+| `report.json` | Loads saved call, token, cost and timing totals |
+| `run_configuration.json`, `run_manifest.json` | Binds the exact configuration, prediction, document and accounting to one run ID |
 
 Citation checks do not determine whether a passage supports a claim scientifically.
 Citation issues do not reduce the fact score automatically; inspect the validation
@@ -77,9 +80,9 @@ You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results.
 
-Reports use format 7, matcher `rich-study-hungarian-v8` and fact profile
+Reports use format 8, matcher `rich-study-hungarian-v9` and fact profile
 `core-scientific-facts-v6`. Regenerate older reports from saved predictions before
-combining scores. Each report hashes both parsed studies, including IDs and array
+combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
 When loading reports, checks reject impossible match counts or rates that disagree
@@ -343,6 +346,8 @@ The examples assume that property and context also match:
 | Time 1 hour | Time 3600 seconds | Equal after conversion |
 | Temperature 65 °C | Temperature 338.15 K | Equal after conversion |
 | PCE 20% | PCE 20 with no unit | Different |
+| PCE 20 percent | PCE 20 pct | Equal when raw suffix and unit agree |
+| Value with an empty unit | Explicit dimensionless value | Different; an empty unit is missing |
 | PCE >20% | PCE 20% | Different; a bound is not an exact value |
 
 At 20% PCE, the relative allowance is about 0.00002 percentage points.
@@ -389,8 +394,9 @@ Inequalities, asymmetric errors, extra qualifiers such as `SD` or `SEM`, and
 unrecognized units retain literal comparison. These rules do not infer what an
 unlabelled error bar means.
 
-Text comparison applies Unicode NFKC normalization, standardizes the minus sign
-and collapses whitespace. Simple formulas also accept numeric LaTeX subscripts:
+Text comparison preserves chemical charge superscripts before Unicode normalization,
+standardizes the minus sign and collapses whitespace. It does not turn `Fe³⁺` into
+`Fe3+` (three Fe atoms with charge notation) or conflate `Co` with `CO`. Simple formulas also accept numeric LaTeX subscripts:
 `CH_{3}NH_{3}PbI_{3}` equals `CH3NH3PbI3`. This rule requires the entire string to
 consist of element-like tokens with numeric subscripts. It does not simplify
 symbolic stoichiometry, charges, parentheses or arbitrary prose.

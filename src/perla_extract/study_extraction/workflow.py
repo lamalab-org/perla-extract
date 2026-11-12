@@ -1,11 +1,12 @@
-"""End-to-end, high-recall extraction of a paper and its supplementary information."""
+"""Build, check, and export one reported photovoltaic study from a paper and its SI."""
 
 from __future__ import annotations
 
 import hashlib
 import json
 import time
-from dataclasses import asdict, dataclass
+from contextlib import nullcontext
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
@@ -21,8 +22,25 @@ from .claims import (
     combine_ledgers,
     grounded_ledger,
 )
-from .client import ModelCallError, ModelClient
+from .client import ModelCallError, ModelClient, summarize_calls
 from .compatibility import to_reduced_with_report
+from .configuration import (
+    DEFAULT_CLAIM_MODEL as DEFAULT_CLAIM_MODEL,
+)
+from .configuration import (
+    DEFAULT_EXTRACTION_MODEL as DEFAULT_EXTRACTION_MODEL,
+)
+from .configuration import (
+    ExtractionConfig,
+    implementation_sha256,
+    runtime_versions,
+)
+from .deployment import (
+    DeploymentSettings,
+    estimate_request_input,
+    request_limit_issues,
+    strict_response_schema,
+)
 from .enrichment import (
     COMPOSITION_ENRICHMENT_PROMPT,
     ENRICHMENT_SYSTEM_PROMPT,
@@ -48,29 +66,31 @@ from .models import (
     EvidenceBlock,
     PaperMetadata,
     StudyExtraction,
+    study_schema_prose_sha256,
     study_schema_sha256,
 )
 from .nomad import NOMADExport, to_nomad_with_report
-from .partitioning import plan_evidence_windows
+from .observability import EventJournal
+from .partitioning import fit_request_windows, plan_evidence_windows
 from .refinement import REFINEMENT_PROMPT, refine_draft
 from .repair import (
     REPAIR_PROMPT,
     REPAIR_SYSTEM_PROMPT,
     RepairAudit,
     candidate_quality,
+    is_monotonic_quality,
     run_targeted_repair,
 )
+from .run_artifacts import write_run_manifest
 from .source import parse_documents
 from .spans import build_evidence_spans, evidence_payload, evidence_spans_sha256
+from .tracing import create_langfuse_adapter
 from .transport import (
     compact_to_span_citations,
     expand_span_citations,
     span_citation_schema,
 )
 from .validation import validate_study
-
-DEFAULT_EXTRACTION_MODEL = "openai/gpt-5.2"
-DEFAULT_CLAIM_MODEL = DEFAULT_EXTRACTION_MODEL
 
 SYSTEM_PROMPT = """Extract the complete present photovoltaic study as device-centered data.
 Use only supplied evidence. Preserve source wording and distinctions. Never invent,
@@ -223,45 +243,6 @@ def prompt_sha256() -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-@dataclass(frozen=True)
-class ExtractionConfig:
-    """Collect settings that change parsing, model behavior, or scientific output."""
-
-    pdf: Path
-    supplement: Path | None
-    output_dir: Path
-    model: str = DEFAULT_EXTRACTION_MODEL
-    reasoning_effort: str | None = None
-    use_claim_ledger: bool = True
-    claim_model: str | None = DEFAULT_CLAIM_MODEL
-    claim_max_output_tokens: int = 30_000
-    claim_recall_passes: int = 2
-    use_enrichment: bool = True
-    enrichment_model: str | None = None
-    enrichment_max_output_tokens: int = 20_000
-    use_refinement: bool = True
-    refinement_model: str | None = None
-    use_targeted_repair: bool = True
-    repair_model: str | None = None
-    repair_max_output_tokens: int = 30_000
-    parser: str = "docling"
-    claim_mode: str = "auto"
-    single_call_max_input_tokens: int = 90_000
-    claim_window_input_tokens: int = 60_000
-    assembly_max_input_tokens: int = 180_000
-    max_output_tokens: int = 80_000
-    max_model_calls: int | None = None
-    max_cost_usd: float | None = None
-    temperature: float | None = None
-    heartbeat_seconds: float = 20
-    timeout_seconds: float = 600
-    document_cache_dir: Path = Path(".perla-cache/documents")
-    model_cache_dir: Path = Path(".perla-cache/models")
-    refresh_document_cache: bool = False
-    reduced_export: bool = False
-    dry_run: bool = False
-
-
 def _write_nomad_artifacts(output_dir: Path, exported: NOMADExport) -> None:
     """Write uploadable archives separately while keeping one inspectable manifest."""
 
@@ -280,8 +261,6 @@ def _write_nomad_artifacts(output_dir: Path, exported: NOMADExport) -> None:
         },
     )
     archive_dir = output_dir / "nomad"
-    for stale in archive_dir.glob("*.archive.json"):
-        stale.unlink()
     for mapping in exported.mappings:
         archive = exported.archives[mapping.archive_index]
         write_json_atomic(
@@ -313,8 +292,14 @@ def _ledger_payload(ledger: ClaimLedger, blocks: list[EvidenceBlock]) -> str:
 
 
 def _direct_prompt(blocks: list[EvidenceBlock], ledger: ClaimLedger) -> str:
-    """Give schema assembly one global view of grounded claims and their source."""
+    """Build a study from complete source or reader-selected statements and text."""
 
+    if not ledger.objects and not ledger.claims:
+        return (
+            EXTRACTION_PROMPT
+            + "\n\nCOMPLETE SOURCE EVIDENCE:\n"
+            + json.dumps(assembly_evidence_payload(blocks, ledger), ensure_ascii=False)
+        )
     return (
         EXTRACTION_PROMPT
         + "\n\nSOURCE-GROUNDED CLAIM LEDGER:\n"
@@ -326,16 +311,31 @@ def _direct_prompt(blocks: list[EvidenceBlock], ledger: ClaimLedger) -> str:
     )
 
 
+def _assembly_components(
+    blocks: list[EvidenceBlock], ledger: ClaimLedger
+) -> dict[str, object]:
+    """Identify the actual request parts for per-stage size diagnostics."""
+
+    has_notes = bool(ledger.objects or ledger.claims)
+    return {
+        "instructions": EXTRACTION_PROMPT
+        + (CLAIM_LEDGER_GUIDANCE if has_notes else ""),
+        "source_evidence": assembly_evidence_payload(blocks, ledger),
+        "reader_notes": _ledger_payload(ledger, blocks) if has_notes else "",
+    }
+
+
 def _claim_ledger_prompt(
     primary: list[EvidenceBlock],
     context: list[EvidenceBlock] | None = None,
     recall_pass: int = 1,
 ) -> str:
-    """Request a neutral ledger in one complete, independently prompted reading.
+    """Ask one reading to inventory source statements and their subjects.
 
-    Repeated passes receive the same bounded source evidence, never another model's
-    output. Their union therefore improves omission tolerance without allowing an
-    earlier assertion to become evidence or enlarging later window inputs.
+    Repeated readings receive the same source and different attention instructions;
+    they do not receive earlier model output. Their errors can still be correlated.
+    Combining readings offers another chance to find omitted facts, not independent
+    scientific confirmation of a statement.
     """
 
     context = context or []
@@ -362,10 +362,36 @@ def _empty_ledger() -> ClaimLedger:
     return ClaimLedger(objects=[], claims=[])
 
 
-def _approximate_tokens(prompt: str, schema: dict) -> int:
-    """Estimate request size conservatively without a model-specific tokenizer."""
+def _approximate_tokens(
+    prompt: str, schema: dict, *, tokenizer: str | None = None
+) -> int:
+    """Use the same serialized-input estimate as the provider request boundary."""
 
-    return (len(prompt) + len(json.dumps(schema, ensure_ascii=False))) // 4
+    estimate = estimate_request_input(
+        SYSTEM_PROMPT,
+        prompt,
+        strict_response_schema(StudyExtraction, schema),
+        tokenizer=tokenizer,
+    )["estimated_input_tokens"]
+    assert isinstance(estimate, int)
+    return estimate
+
+
+def _reading_input_limit(config: ExtractionConfig, configured_limit: int) -> int:
+    """Reserve the configured output before fitting a reader deployment's context."""
+
+    deployment = config.effective_deployment("read")
+    limits = [configured_limit]
+    if deployment:
+        if deployment.max_input_tokens is not None:
+            limits.append(deployment.max_input_tokens)
+        if deployment.context_tokens is not None:
+            output = deployment.max_output_tokens or config.claim_max_output_tokens
+            limits.append(deployment.context_tokens - output)
+    limit = min(limits)
+    if limit <= 0:
+        raise ValueError("reading output allowance leaves no space for source input")
+    return limit
 
 
 def _plan_claim_collection(
@@ -375,35 +401,55 @@ def _plan_claim_collection(
     int,
     list[tuple[str, list[EvidenceBlock], list[EvidenceBlock]]],
 ]:
-    """Choose document-wide or section-aware inputs for each independent read."""
+    """Fit every reading's serialized instructions, evidence, and citation schema.
 
-    schema = span_citation_schema(ClaimLedger, build_evidence_spans(blocks))
-    direct_prompt = _claim_ledger_prompt(blocks)
-    approximate_tokens = _approximate_tokens(direct_prompt, schema)
+    The longest configured reading determines each window's size. Source blocks are
+    never dropped to satisfy a limit; indivisible oversized blocks fail planning.
+    """
+
+    deployment = config.effective_deployment("read")
+    tokenizer = deployment.tokenizer if deployment else None
+
+    def estimate(primary: list[EvidenceBlock], context: list[EvidenceBlock]) -> int:
+        schema = span_citation_schema(
+            ClaimLedger, build_evidence_spans([*context, *primary])
+        )
+        return max(
+            _approximate_tokens(
+                _claim_ledger_prompt(primary, context, reading),
+                schema,
+                tokenizer=tokenizer,
+            )
+            for reading in range(1, config.claim_recall_passes + 1)
+        )
+
+    approximate_tokens = estimate(blocks, [])
+    single_limit = _reading_input_limit(config, config.single_call_max_input_tokens)
     mode = (
         config.claim_mode
         if config.claim_mode != "auto"
-        else (
-            "single"
-            if approximate_tokens <= config.single_call_max_input_tokens
-            else "windowed"
-        )
+        else ("single" if approximate_tokens <= single_limit else "windowed")
     )
     if mode == "single":
+        if approximate_tokens > single_limit:
+            raise ValueError(
+                f"complete reading estimate {approximate_tokens} exceeds input limit "
+                f"{single_limit}; use --claim-mode auto or windowed"
+            )
         plan: list[tuple[str, list[EvidenceBlock], list[EvidenceBlock]]] = [
             ("complete_claim_ledger", blocks, [])
         ]
     else:
-        schema_tokens = len(json.dumps(schema, ensure_ascii=False)) // 4
-        evidence_budget = max(
-            8_000,
-            (config.claim_window_input_tokens - schema_tokens - 4_000) * 4,
-        )
+        input_limit = _reading_input_limit(config, config.claim_window_input_tokens)
+        evidence_budget = max(1, input_limit * 3)
         windows = plan_evidence_windows(
             blocks,
             max_characters=evidence_budget,
             max_context_characters=min(24_000, evidence_budget // 3),
         ).windows
+        windows = fit_request_windows(
+            windows, max_input_tokens=input_limit, estimate=estimate
+        )
         plan = [
             (window.window_id, window.primary_blocks, window.context_blocks)
             for window in windows
@@ -416,12 +462,11 @@ def _collect_claim_ledger(
     client: ModelClient,
     blocks: list[EvidenceBlock],
 ) -> tuple[ClaimLedger, list[str], int]:
-    """Read every source block into a neutral ledger before schema assembly.
+    """Read every source block, then combine exact repeated statements with provenance.
 
-    A normal paper uses one document-level input; each configured recall pass reads it
-    independently. Long inputs are partitioned only at this claim-collection boundary,
-    and all resulting ledgers are reconciled globally. This avoids constructing and
-    merging partial device schemas from disconnected windows.
+    Window outputs describe source statements, not partial final studies. One later
+    assembly call resolves scientific identity across all windows. Reading failures
+    remain explicit; if no reading succeeds the caller uses the complete source.
     """
 
     _, _, plan = _plan_claim_collection(config, blocks)
@@ -451,9 +496,19 @@ def _collect_claim_ledger(
                 ledger = client.complete(
                     kind="source_claim_ledger",
                     slug=pass_slug,
-                    model=config.claim_model or config.model,
+                    model=config.effective_model("read"),
                     system=SYSTEM_PROMPT,
                     prompt=_claim_ledger_prompt(primary, context, pass_index),
+                    prompt_components={
+                        "reading_instructions": CLAIM_LEDGER_PROMPT
+                        + (
+                            CLAIM_RECALL_PROMPTS[pass_index - 2]
+                            if pass_index > 1
+                            else ""
+                        ),
+                        "primary_evidence": evidence_payload(primary),
+                        "context_evidence": evidence_payload(context),
+                    },
                     response_model=ClaimLedger,
                     max_output_tokens=config.claim_max_output_tokens,
                     reasoning_effort=config.reasoning_effort,
@@ -467,7 +522,10 @@ def _collect_claim_ledger(
     planned_calls = len(plan) * config.claim_recall_passes
     if not parts:
         return _empty_ledger(), errors, planned_calls
-    return combine_ledgers(parts), errors, planned_calls
+    provenance: dict[str, object] = {}
+    combined = combine_ledgers(parts, provenance=provenance)
+    write_json_atomic(config.output_dir / "claim_readings.json", provenance)
+    return combined, errors, planned_calls
 
 
 def _empty_extraction(note: str) -> StudyExtraction:
@@ -484,28 +542,10 @@ def _empty_extraction(note: str) -> StudyExtraction:
     )
 
 
-def _summarize_usage(calls: list[dict[str, object]]) -> dict[str, float | int]:
+def _summarize_usage(calls: list[dict[str, object]]) -> dict[str, object]:
     """Aggregate charges from live calls; cache hits cost no tokens or money."""
 
-    usage_records: list[dict[str, Any]] = [
-        usage for call in calls if isinstance((usage := call.get("usage", {})), dict)
-    ]
-    return {
-        "live_calls": sum(not bool(call.get("cache_hit")) for call in calls),
-        "cache_hits": sum(bool(call.get("cache_hit")) for call in calls),
-        "prompt_tokens": sum(
-            int(item.get("prompt_tokens", 0) or 0) for item in usage_records
-        ),
-        "completion_tokens": sum(
-            int(item.get("completion_tokens", 0) or 0) for item in usage_records
-        ),
-        "total_tokens": sum(
-            int(item.get("total_tokens", 0) or 0) for item in usage_records
-        ),
-        "cost": round(
-            sum(float(item.get("cost", 0) or 0) for item in usage_records), 8
-        ),
-    }
+    return summarize_calls(calls)
 
 
 def _run_configuration(
@@ -527,6 +567,28 @@ def _run_configuration(
             "effective_mode": mode,
             "schema_version": STUDY_SCHEMA_VERSION,
             "schema_sha256": study_schema_sha256(),
+            "schema_prose_sha256": study_schema_prose_sha256(),
+            "pipeline_implementation_sha256": implementation_sha256(),
+            "runtime_versions": runtime_versions(),
+            "scientific_settings": config.scientific_settings(),
+            "effective_models": config.scientific_settings()["effective_models"],
+            "parser_dependencies": next(
+                (
+                    event.get("dependency_versions", {})
+                    for event in source_events
+                    if event.get("dependency_versions")
+                ),
+                {},
+            ),
+            "parser_implementation_sha256": next(
+                (
+                    event.get("parser_implementation_sha256")
+                    for event in source_events
+                    if event.get("parser_implementation_sha256")
+                ),
+                None,
+            ),
+            "source_parsing": source_events,
             "prompt_sha256": prompt_sha256(),
             "evidence_spans_sha256": evidence_spans_sha256(
                 build_evidence_spans(evidence_blocks)
@@ -538,9 +600,46 @@ def _run_configuration(
             ],
         }
     )
-    encoded = json.dumps(value, sort_keys=True, default=str).encode("utf-8")
+    identity = {
+        name: value[name]
+        for name in (
+            "scientific_settings",
+            "effective_mode",
+            "schema_sha256",
+            "schema_prose_sha256",
+            "prompt_sha256",
+            "evidence_spans_sha256",
+            "source_sha256",
+            "parser_dependencies",
+            "parser_implementation_sha256",
+            "pipeline_implementation_sha256",
+            "runtime_versions",
+        )
+    }
+    encoded = json.dumps(identity, sort_keys=True, default=str).encode("utf-8")
     value["configuration_sha256"] = hashlib.sha256(encoded).hexdigest()
     return value
+
+
+def _runtime_deployments(
+    config: ExtractionConfig, claim_mode: str
+) -> dict[str, DeploymentSettings]:
+    """Apply shared input caps at the provider boundary, including correction calls."""
+
+    result = {}
+    for stage in ("read", "assemble", "refine", "repair", "enrich"):
+        declared = config.effective_deployment(stage)
+        limit = config.assembly_max_input_tokens
+        if stage == "read":
+            limit = (
+                config.claim_window_input_tokens
+                if claim_mode == "windowed"
+                else config.single_call_max_input_tokens
+            )
+        if declared.max_input_tokens is not None:
+            limit = min(limit, declared.max_input_tokens)
+        result[stage] = replace(declared, max_input_tokens=limit)
+    return result
 
 
 def _run_model_calls(
@@ -548,33 +647,35 @@ def _run_model_calls(
     client: ModelClient,
     blocks: list[EvidenceBlock],
     ledger: ClaimLedger,
+    journal: EventJournal | None = None,
 ) -> tuple[StudyExtraction, StudyExtraction | None, list[str]]:
-    """Assemble one global study draft, then optionally reconcile it once more.
+    """Build one complete study, then optionally review it against the same source.
 
-    Long inputs are partitioned only while collecting claims. This function always
-    sees the combined ledger and its exact supporting passages, so duplicate mentions,
-    treatment arms, and characterization specimens are resolved before final IDs are
-    assigned rather than merged as partial schemas afterward.
+    Without usable reader notes both calls receive the complete parsed source.
+    Otherwise they receive combined notes and selected supporting passages. A failed
+    first call produces an explicitly empty result; a failed review retains its draft.
     """
 
     errors: list[str] = []
     initial_extraction: StudyExtraction | None = None
     prompt = _direct_prompt(blocks, ledger)
     spans = assembly_spans(blocks, ledger)
-    logger.info("Assembling the complete study from the global claim ledger")
+    logger.info("Building the complete study from source evidence")
     try:
-        extraction = client.complete(
-            kind="complete_study",
-            slug="complete_study",
-            model=config.model,
-            system=SYSTEM_PROMPT,
-            prompt=prompt,
-            response_model=StudyExtraction,
-            max_output_tokens=config.max_output_tokens,
-            reasoning_effort=config.reasoning_effort,
-            request_schema=span_citation_schema(StudyExtraction, spans),
-            decode=lambda payload: expand_span_citations(payload, spans),
-        )
+        with journal.stage("assemble") if journal else nullcontext():
+            extraction = client.complete(
+                kind="complete_study",
+                slug="complete_study",
+                model=config.effective_model("assemble"),
+                system=SYSTEM_PROMPT,
+                prompt=prompt,
+                prompt_components=_assembly_components(blocks, ledger),
+                response_model=StudyExtraction,
+                max_output_tokens=config.max_output_tokens,
+                reasoning_effort=config.reasoning_effort,
+                request_schema=span_citation_schema(StudyExtraction, spans),
+                decode=lambda payload: expand_span_citations(payload, spans),
+            )
     except ModelCallError as exc:
         errors.append(str(exc))
         extraction = _empty_extraction(
@@ -583,21 +684,23 @@ def _run_model_calls(
     if config.use_refinement and not errors:
         initial_extraction = extraction
         logger.info("Reconciling the complete draft against claims and source evidence")
-        extraction, error = refine_draft(
-            client,
-            draft=extraction,
-            evidence_prompt=prompt,
-            blocks=blocks,
-            model=config.refinement_model or config.model,
-            reasoning_effort=config.reasoning_effort,
-            max_output_tokens=config.max_output_tokens,
-            system_prompt=SYSTEM_PROMPT,
-            kind="study_refinement",
-            slug="study_refinement",
-            draft_path=config.output_dir / "draft_extraction.json",
-            audit_path=config.output_dir / "refinement_audit.json",
-            spans=spans,
-        )
+        with journal.stage("refine") if journal else nullcontext():
+            extraction, error = refine_draft(
+                client,
+                draft=extraction,
+                evidence_prompt=prompt,
+                evidence_components=_assembly_components(blocks, ledger),
+                blocks=blocks,
+                model=config.effective_model("refine"),
+                reasoning_effort=config.reasoning_effort,
+                max_output_tokens=config.max_output_tokens,
+                system_prompt=SYSTEM_PROMPT,
+                kind="study_refinement",
+                slug="study_refinement",
+                draft_path=config.output_dir / "draft_extraction.json",
+                audit_path=config.output_dir / "refinement_audit.json",
+                spans=spans,
+            )
         if error:
             errors.append(f"study_refinement: {error}")
     return extraction, initial_extraction, errors
@@ -606,13 +709,19 @@ def _run_model_calls(
 def _plan_extraction(
     blocks: list[EvidenceBlock],
     ledger: ClaimLedger,
+    config: ExtractionConfig | None = None,
 ) -> int:
     """Estimate the one global assembly request after claim-based compaction."""
 
     request_schema = span_citation_schema(
         StudyExtraction, assembly_spans(blocks, ledger)
     )
-    return _approximate_tokens(_direct_prompt(blocks, ledger), request_schema)
+    deployment = config.effective_deployment("assemble") if config else None
+    return _approximate_tokens(
+        _direct_prompt(blocks, ledger),
+        request_schema,
+        tokenizer=deployment.tokenizer if deployment else None,
+    )
 
 
 def _select_refinement_candidate(
@@ -621,28 +730,21 @@ def _select_refinement_candidate(
     blocks: list[EvidenceBlock],
     ledger: ClaimLedger | None,
 ) -> tuple[StudyExtraction, dict[str, object]]:
-    """Prefer a changed refinement unless it introduces deterministic errors.
+    """Accept a changed draft only when neither technical issue count increases.
 
-    Citation counts measure textual grounding, not entity precision: eight
-    source-quoted treatment arms can still be one device family. The refinement call
-    is responsible for semantic reconciliation, while deterministic validation keeps
-    malformed citations and values from replacing a safer draft. All quality counts
-    remain in the audit for evaluation rather than acting as a recall-only gate.
+    These source-link and claim-coverage counts are integrity checks, not a measure
+    of scientific correctness. Tied counts permit a changed candidate; evaluate
+    whether that policy helps accuracy against independent reviewed references.
     """
 
     draft_quality = candidate_quality(draft, blocks, ledger)
     refinement_quality = candidate_quality(refinement, blocks, ledger)
     same_candidate = draft == refinement
-    draft_rank = (
-        draft_quality["validation_issues"],
-        draft_quality["semantic_issues"],
-    )
-    refinement_rank = (
-        refinement_quality["validation_issues"],
-        refinement_quality["semantic_issues"],
-    )
     selected = (
-        "draft" if same_candidate or draft_rank < refinement_rank else "refinement"
+        "refinement"
+        if not same_candidate
+        and is_monotonic_quality(draft_quality, refinement_quality)
+        else "draft"
     )
     reason = (
         "refinement changed the draft without worsening validation or claim coverage"
@@ -669,24 +771,17 @@ def _gate_final_candidate_against_draft(
     ledger: ClaimLedger | None,
     selection: dict[str, object],
 ) -> tuple[StudyExtraction, dict[str, object]]:
-    """Prevent refinement and repair from jointly introducing invalid content.
+    """Compare the final corrected candidate with the original draft once more.
 
-    The targeted repair gate compares a patch with the candidate it received, but a
-    repaired refinement can still be less valid than the original draft. This final
-    gate therefore compares deterministic validation issues with the immutable
-    baseline. It deliberately does not require non-decreasing record, value, or
-    record or value counts: doing so would make precision corrections such as
-    consolidating treatment-arm families impossible.
+    Repair is checked against its immediate input. This final comparison prevents
+    a chain of accepted edits from increasing either technical issue count relative
+    to the first valid draft. Record counts are not rewards: removing a duplicate
+    can be a legitimate correction.
     """
 
     draft_quality = candidate_quality(draft, blocks, ledger)
     candidate_quality_summary = candidate_quality(candidate, blocks, ledger)
-    accepted = (
-        candidate_quality_summary["validation_issues"]
-        <= draft_quality["validation_issues"]
-        and candidate_quality_summary["semantic_issues"]
-        <= draft_quality["semantic_issues"]
-    )
+    accepted = is_monotonic_quality(draft_quality, candidate_quality_summary)
     result = dict(selection)
     result["pre_repair_selected"] = selection["selected"]
     result["draft_quality"] = draft_quality
@@ -705,65 +800,96 @@ def _gate_final_candidate_against_draft(
 
 
 def run_extraction(config: ExtractionConfig) -> dict[str, object]:
-    """Write a complete, inspectable extraction run and return its report.
+    """Execute one immutable run, preserving failures and their known model charges.
 
-    Parsing and configuration artifacts are written before model calls. Model failure
-    still yields a valid ``extraction.json`` and report; local grounding annotates
-    rather than filters the rich result. NOMAD archives are the primary downstream
-    artifacts; historical reduced conversion is available only when requested.
+    The destination must be absent or empty, including for dry runs. Each attempt
+    owns its parse, configuration, prediction, report, and event journal; rerunning
+    into another directory prevents stale predictions from acquiring new metadata.
+    Optional source-grounding finalization can remove unsupported values, with the
+    original candidate and exact removal decisions retained for review.
     """
 
-    started = time.monotonic()
-    if config.claim_mode not in {"auto", "single", "windowed"}:
-        raise ValueError("claim_mode must be auto, single, or windowed")
     for path in (config.pdf, config.supplement):
-        if path is not None and not path.exists():
+        if path is not None and not path.is_file():
             raise FileNotFoundError(path)
-    if (
-        min(
-            config.single_call_max_input_tokens,
-            config.claim_window_input_tokens,
-            config.assembly_max_input_tokens,
-            config.max_output_tokens,
-            config.claim_max_output_tokens,
-            config.enrichment_max_output_tokens,
-            config.repair_max_output_tokens,
+    if config.output_dir.exists() and any(config.output_dir.iterdir()):
+        raise FileExistsError(
+            f"output directory is not empty: {config.output_dir}; use a new directory for each run"
         )
-        <= 0
-    ):
-        raise ValueError("token limits must be positive")
-    if config.max_model_calls is not None and config.max_model_calls <= 0:
-        raise ValueError("max_model_calls must be positive")
-    if not 1 <= config.claim_recall_passes <= 3:
-        raise ValueError("claim_recall_passes must be between 1 and 3")
-    if config.max_cost_usd is not None and config.max_cost_usd <= 0:
-        raise ValueError("max_cost_usd must be positive")
-
     config.output_dir.mkdir(parents=True, exist_ok=True)
-    for name in (
-        "claim_ledger.json",
-        "claim_grounding.json",
-        "claim_coverage_audit.json",
-        "draft_claim_coverage_audit.json",
-        "pre_repair_claim_coverage_audit.json",
-        "evidence_routing.json",
-        # Remove artifacts written by the superseded record-first inventory.
-        "evidence_inventory.json",
-        "inventory_grounding.json",
-        "coverage_audit.json",
-        "draft_coverage_audit.json",
-        "pre_repair_coverage_audit.json",
-    ):
-        (config.output_dir / name).unlink(missing_ok=True)
+    # Exclusive creation also reserves an already-created empty directory atomically.
+    (config.output_dir / "events.jsonl").touch(exist_ok=False)
+    journal = EventJournal(config.output_dir)
+    if config.langfuse:
+        try:
+            journal.adapter = create_langfuse_adapter(enabled=True)
+        except Exception as error:
+            logger.warning(
+                "Trace export unavailable; retaining local events ({})",
+                type(error).__name__,
+            )
+            journal.emit(
+                "telemetry.failed", error_type=type(error).__name__, status="disabled"
+            )
+    journal.emit("run.started", dry_run=config.dry_run)
+    state: dict[str, Any] = {}
+    try:
+        report = _run_extraction(config, journal, state)
+    except BaseException as error:
+        client = state.get("client")
+        calls = client.calls if client is not None else []
+        report = {
+            "run_id": journal.run_id,
+            "status": "interrupted"
+            if isinstance(error, (KeyboardInterrupt, SystemExit))
+            else "failed",
+            "errors": [str(error)],
+            "calls": calls,
+            "usage": _summarize_usage(calls),
+            "budget": client.budget_status()
+            if client is not None
+            else {
+                "provider_requests": 0,
+                "cost_tracking_complete": True,
+            },
+            "elapsed_seconds": round(time.monotonic() - journal.started_at, 3),
+            "source_parsing": state.get("source_parsing", []),
+        }
+        if not (config.output_dir / "run_configuration.json").exists():
+            write_json_atomic(
+                config.output_dir / "run_configuration.json",
+                _run_configuration(config, "unplanned", [], []),
+            )
+        write_json_atomic(config.output_dir / "report.json", report)
+        journal.emit(
+            "run.finished", status=report["status"], error_type=type(error).__name__
+        )
+        write_run_manifest(config.output_dir, run_id=journal.run_id)
+        raise
+    report["run_id"] = journal.run_id
+    write_json_atomic(config.output_dir / "report.json", report)
+    journal.emit("run.finished", status=report["status"], usage=report.get("usage", {}))
+    write_run_manifest(config.output_dir, run_id=journal.run_id)
+    return report
+
+
+def _run_extraction(
+    config: ExtractionConfig, journal: EventJournal, state: dict[str, Any]
+) -> dict[str, object]:
+    """Run source preparation, scientific stages, validation, and exports in order."""
+
+    started = time.monotonic()
     logger.info("Parsing main paper{}", " and supplement" if config.supplement else "")
-    blocks, source_events = parse_documents(
-        config.pdf,
-        config.supplement,
-        parser=config.parser,
-        cache_dir=config.document_cache_dir,
-        refresh_cache=config.refresh_document_cache,
-        heartbeat_seconds=config.heartbeat_seconds,
-    )
+    with journal.stage("parse"):
+        blocks, source_events = parse_documents(
+            config.pdf,
+            config.supplement,
+            parser=config.parser,
+            cache_dir=config.document_cache_dir,
+            refresh_cache=config.refresh_document_cache,
+            heartbeat_seconds=config.heartbeat_seconds,
+        )
+    state["source_parsing"] = source_events
     write_json_atomic(
         config.output_dir / "document.json",
         {"blocks": [block.model_dump(mode="json") for block in blocks]},
@@ -776,12 +902,16 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             ]
         },
     )
+    write_json_atomic(
+        config.output_dir / "run_configuration.json",
+        _run_configuration(config, "unplanned", source_events, blocks),
+    )
     schema = StudyExtraction.model_json_schema()
     if config.use_claim_ledger:
         claim_mode, claim_tokens, claim_plan = _plan_claim_collection(config, blocks)
     else:
         claim_mode, claim_tokens, claim_plan = "disabled", 0, []
-    approximate_tokens = _plan_extraction(blocks, _empty_ledger())
+    approximate_tokens = _plan_extraction(blocks, _empty_ledger(), config)
     run_configuration = _run_configuration(config, claim_mode, source_events, blocks)
     write_json_atomic(config.output_dir / "run_configuration.json", run_configuration)
     write_json_atomic(config.output_dir / "extraction.schema.json", schema)
@@ -818,6 +948,24 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     )
 
     if config.dry_run:
+        assembly_deployment = _runtime_deployments(config, claim_mode)["assemble"]
+        known_issues = (
+            request_limit_issues(
+                approximate_tokens,
+                assembly_deployment.max_output_tokens or config.max_output_tokens,
+                assembly_deployment,
+            )
+            if not config.use_claim_ledger
+            else []
+        )
+        feasibility = {
+            "assembly": "conditional_on_reader_output"
+            if config.use_claim_ledger
+            else ("infeasible" if known_issues else "fits_input_estimate"),
+            "later_stages": "conditional_on_generated_records",
+            "note": "Input sizes are estimates; later drafts and provider retries are unknown.",
+        }
+        journal.emit("request.preflight", **feasibility, errors=known_issues)
         extraction_call_count = 1
         claim_call_count = (
             len(claim_plan) * config.claim_recall_passes
@@ -831,8 +979,13 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             + (3 if config.use_enrichment else 0)
             + int(config.use_targeted_repair)
         )
-        report = {
-            "status": "dry_run",
+        report: dict[str, object] = {
+            "status": "failed" if known_issues else "dry_run",
+            "dry_run": True,
+            "request_feasibility": feasibility,
+            "errors": known_issues,
+            "calls": [],
+            "usage": _summarize_usage([]),
             "claim_mode": claim_mode,
             "assembly_mode": "single",
             "evidence_blocks": len(blocks),
@@ -848,6 +1001,8 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             "budget": {
                 "max_model_calls": config.max_model_calls,
                 "max_cost_usd": config.max_cost_usd,
+                "provider_requests": 0,
+                "cost_tracking_complete": True,
                 "planned_calls_fit": (
                     config.max_model_calls is None
                     or planned_calls <= config.max_model_calls
@@ -867,14 +1022,20 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         temperature=config.temperature,
         max_model_calls=config.max_model_calls,
         max_cost_usd=config.max_cost_usd,
+        max_total_tokens=config.max_total_tokens,
+        max_elapsed_seconds=config.max_elapsed_seconds,
+        deployments=_runtime_deployments(config, claim_mode),
+        journal=journal,
     )
+    state["client"] = client
     errors: list[str] = []
     ledger: ClaimLedger | None = None
     grounded_claims: ClaimLedger | None = None
     selected_blocks = blocks
     if config.use_claim_ledger:
         logger.info("Collecting source claims before schema assembly")
-        ledger, claim_errors, _ = _collect_claim_ledger(config, client, blocks)
+        with journal.stage("read"):
+            ledger, claim_errors, _ = _collect_claim_ledger(config, client, blocks)
         errors.extend(claim_errors)
         write_json_atomic(
             config.output_dir / "claim_ledger.json", ledger.model_dump(mode="json")
@@ -888,38 +1049,28 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             selected_blocks = assembly_blocks(blocks, grounded_claims)
 
     approximate_tokens = _plan_extraction(
-        selected_blocks, grounded_claims or _empty_ledger()
+        selected_blocks, grounded_claims or _empty_ledger(), config
+    )
+    journal.emit(
+        "evidence.selected",
+        source_blocks=len(blocks),
+        selected_blocks=len(selected_blocks),
+        selected_spans=len(
+            assembly_spans(selected_blocks, grounded_claims or _empty_ledger())
+        ),
+        strategy="reader_notes" if grounded_claims is not None else "complete_source",
+        estimated_assembly_input_tokens=approximate_tokens,
     )
     write_json_atomic(
         config.output_dir / "run_configuration.json",
-        _run_configuration(config, claim_mode, source_events, selected_blocks),
+        _run_configuration(config, claim_mode, source_events, blocks),
     )
-    (config.output_dir / "window_plan.json").unlink(missing_ok=True)
     logger.info(
         "Selected {} of {} evidence blocks (~{} assembly request tokens)",
         len(selected_blocks),
         len(blocks),
         approximate_tokens,
     )
-    for name in (
-        "draft_extraction.json",
-        "draft_candidates.json",
-        "draft_validation.json",
-        "draft_claim_coverage_audit.json",
-        "refinement_audit.json",
-        "refinement_extraction.json",
-        "refinement_selection.json",
-        "quality_comparison.json",
-        "pre_repair_validation.json",
-        "pre_repair_claim_coverage_audit.json",
-        "targeted_repair.json",
-        "pre_conservative_extraction.json",
-        "conservative_finalization.json",
-    ):
-        (config.output_dir / name).unlink(missing_ok=True)
-    for directory in ("draft_windows", "refinement_audits"):
-        for stale in (config.output_dir / directory).glob("*.json"):
-            stale.unlink()
     assembly_blocked = approximate_tokens > config.assembly_max_input_tokens
     if assembly_blocked:
         message = (
@@ -937,6 +1088,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             client,
             selected_blocks,
             grounded_claims or _empty_ledger(),
+            journal=journal,
         )
     errors.extend(extraction_errors)
 
@@ -961,6 +1113,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         extraction, refinement_selection = _select_refinement_candidate(
             comparable_draft, extraction, blocks, grounded_claims
         )
+        journal.emit("candidate.selected", stage="refine", **refinement_selection)
         if refinement_selection["selected"] == "draft":
             quote_repairs = draft_quote_repairs
             pointer_repairs = draft_pointer_repairs
@@ -990,20 +1143,29 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
                 pre_repair_coverage,
             )
         logger.info("Checking targeted text-only repair worklist")
-        extraction, repair_audit = run_targeted_repair(
-            client=client,
-            study=extraction,
-            blocks=blocks,
-            ledger=grounded_claims,
-            coverage=pre_repair_coverage,
-            validation=pre_repair_validation_public,
-            model=config.repair_model or config.refinement_model or config.model,
-            reasoning_effort=config.reasoning_effort,
-            max_output_tokens=config.repair_max_output_tokens,
-        )
+        with journal.stage("repair"):
+            extraction, repair_audit = run_targeted_repair(
+                client=client,
+                study=extraction,
+                blocks=blocks,
+                ledger=grounded_claims,
+                coverage=pre_repair_coverage,
+                validation=pre_repair_validation_public,
+                model=config.effective_model("repair"),
+                reasoning_effort=config.reasoning_effort,
+                max_output_tokens=config.repair_max_output_tokens,
+            )
         write_json_atomic(
             config.output_dir / "targeted_repair.json",
             repair_audit.model_dump(mode="json"),
+        )
+        journal.emit(
+            "candidate.selected",
+            stage="repair",
+            selected=repair_audit.status,
+            reason=repair_audit.reason,
+            before_quality=repair_audit.before_quality,
+            after_quality=repair_audit.after_quality,
         )
         if repair_audit.status == "accepted":
             extraction, repair_quote_repairs = repair_noncontiguous_citation_quotes(
@@ -1028,6 +1190,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             grounded_claims,
             refinement_selection,
         )
+        journal.emit("candidate.selected", stage="final_check", **refinement_selection)
         if extraction is comparable_draft and final_candidate != comparable_draft:
             assert draft_quote_repairs is not None
             assert draft_pointer_repairs is not None
@@ -1049,8 +1212,14 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     write_json_atomic(config.output_dir / "citation_repairs.json", citation_repairs)
 
     pre_finalization = extraction
-    extraction, conservative_finalization = remove_unsupported_optional_claims(
-        extraction, blocks
+    with journal.stage("finalize"):
+        extraction, conservative_finalization = remove_unsupported_optional_claims(
+            extraction, blocks
+        )
+    journal.emit(
+        "candidate.finalized",
+        removal_count=conservative_finalization["removal_count"],
+        audit="conservative_finalization.json",
     )
     if conservative_finalization["removal_count"]:
         write_json_atomic(
@@ -1120,22 +1289,17 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             config.output_dir / "quality_comparison.json", quality_comparison
         )
     enrichment: EnrichmentAudit | None = None
-    for name in (
-        "enrichment.json",
-        "composition_proposals.json",
-        "processing_proposals.json",
-    ):
-        (config.output_dir / name).unlink(missing_ok=True)
     if config.use_enrichment and not assembly_blocked:
         logger.info("Interpreting composition and processing from local evidence")
-        enrichment = run_enrichment(
-            client=client,
-            study=extraction,
-            blocks=blocks,
-            model=config.enrichment_model or config.model,
-            reasoning_effort=config.reasoning_effort,
-            max_output_tokens=config.enrichment_max_output_tokens,
-        )
+        with journal.stage("enrich"):
+            enrichment = run_enrichment(
+                client=client,
+                study=extraction,
+                blocks=blocks,
+                model=config.effective_model("enrich"),
+                reasoning_effort=config.reasoning_effort,
+                max_output_tokens=config.enrichment_max_output_tokens,
+            )
         write_json_atomic(
             config.output_dir / "enrichment.json",
             enrichment.model_dump(mode="json"),
@@ -1158,24 +1322,15 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
                 ]
             },
         )
-    for name in (
-        "nomad_export.json",
-        "composition_projection.json",
-        "nomad_conversion_failure.json",
-    ):
-        (config.output_dir / name).unlink(missing_ok=True)
-    nomad_dir = config.output_dir / "nomad"
-    for stale in nomad_dir.glob("*.archive.json"):
-        stale.unlink()
-    (nomad_dir / "manifest.json").unlink(missing_ok=True)
     nomad_error: str | None = None
     try:
-        nomad = to_nomad_with_report(
-            extraction,
-            model=config.model,
-            enrichment=enrichment,
-            evidence_blocks=blocks,
-        )
+        with journal.stage("export"):
+            nomad = to_nomad_with_report(
+                extraction,
+                model=config.effective_model("assemble"),
+                enrichment=enrichment,
+                evidence_blocks=blocks,
+            )
     except (ValidationError, ValueError) as exc:
         nomad_error = str(exc)
         write_json_atomic(
@@ -1185,12 +1340,6 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     else:
         _write_nomad_artifacts(config.output_dir, nomad)
 
-    for name in (
-        "reduced.json",
-        "reduced_conversion.json",
-        "reduced_conversion_failure.json",
-    ):
-        (config.output_dir / name).unlink(missing_ok=True)
     reduced_error: str | None = None
     if config.reduced_export:
         try:
@@ -1226,17 +1375,16 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     ]
     enrichment_status = None
     if enrichment is not None:
-        results = [
-            *enrichment.composition_results,
-            *enrichment.processing_results,
-        ]
+        result_statuses = [
+            result.status for result in enrichment.composition_results
+        ] + [result.status for result in enrichment.processing_results]
         enrichment_status = (
             "failed"
-            if enrichment.errors and not results
+            if enrichment.errors and not result_statuses
             else (
                 "needs_review"
                 if enrichment.errors
-                or any(result.status != "accepted" for result in results)
+                or any(status != "accepted" for status in result_statuses)
                 or enrichment.unresolved_absorber_ids
                 or enrichment.unresolved_processing_step_ids
                 else "complete"

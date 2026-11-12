@@ -56,10 +56,13 @@ The monetary limit is checked between calls; one response can cross it. A config
 limit stops further requests if the provider does not return usable cost information.
 See [request budgets](../reference/cli.md#model-request).
 
-The batch writes `cohort_run.json` after each paper. Completed runs are reused when
-their recorded model, parser, reasoning, budgets, claim-reading count, schema and
-prompt fingerprints match the requested configuration. `--rerun` regenerates matching
-runs. Keep new extraction runs separate from saved human-review state.
+The batch updates `cohort_run.json` after each paper and retains every invocation
+in `cohort_runs/`. Each result lists its selected run directory and all retained
+attempt directories, including failures. Completed runs are reused when
+their effective settings, source bytes, parser dependencies and implementation,
+schema and prompt fingerprints match, and their sealed outputs validate. `--rerun`
+creates a new numbered attempt and retains all previous artifacts. Use `--config
+method.toml` to apply the shared extraction settings instead of legacy manifest defaults. Keep new extraction runs separate from saved human-review state.
 
 To divide a batch among workers, give each the same `--shard-count` and a distinct
 zero-based `--shard-index`. Each worker writes a separate batch report.
@@ -73,8 +76,8 @@ evidence checks without model calls if needed:
 perla-extract-revalidate --runs-dir results/review-batch
 ```
 
-Revalidation updates `validation.json`, `grounded_values.json` and validation-related
-fields in `report.json`, not extracted records, requests or cost history.
+Revalidation writes a fresh numbered `revalidation-0001` directory with new evidence
+checks and a derived report. Original extraction and accounting artifacts remain sealed.
 Import needs a schema-valid extraction and its matching evidence
 document; unresolved evidence issues must be addressed first.
 

@@ -44,8 +44,8 @@ from .scoring_facts import (
 )
 from .units import canonical_reported_quantity
 
-EVALUATION_FORMAT_VERSION: Final[Literal[7]] = 7
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v8"]] = "rich-study-hungarian-v8"
+EVALUATION_FORMAT_VERSION: Final[Literal[8]] = 8
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v9"]] = "rich-study-hungarian-v9"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -261,8 +261,10 @@ class RunEfficiency(StrictModel):
     completion_tokens: int = Field(ge=0)
     total_tokens: int = Field(ge=0)
     cost_usd: float = Field(ge=0)
+    cost_sources: list[str] = Field(default_factory=list)
     provider_requests: int | None = Field(default=None, ge=0)
     cost_tracking_complete: bool | None = None
+    token_tracking_complete: bool | None = None
     elapsed_seconds: float = Field(ge=0)
 
 
@@ -367,11 +369,13 @@ class CoreFactScore(FactScoreView):
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[7] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v8"] = MATCHER_VERSION
+    format_version: Literal[8] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v9"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    run_id: str | None = None
+    run_manifest_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     benchmark: BenchmarkProvenance | None = None
     prediction_validation: PredictionValidation | None = None
     run_efficiency: RunEfficiency | None = None
@@ -425,6 +429,7 @@ class DatasetEfficiency(StrictModel):
     total_tokens: int = Field(ge=0)
     cost_usd: float = Field(ge=0)
     cost_tracking_complete: bool
+    token_tracking_complete: bool
     cost_complete_papers: int = Field(ge=0)
     cost_incomplete_papers: int = Field(ge=0)
     cost_unknown_papers: int = Field(ge=0)
@@ -445,8 +450,8 @@ class EvaluationInput(StrictModel):
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[7] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v8"] = MATCHER_VERSION
+    format_version: Literal[8] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v9"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -1115,6 +1120,8 @@ def evaluate_study(
     benchmark: BenchmarkProvenance | None = None,
     prediction_validation: PredictionValidation | None = None,
     run_efficiency: RunEfficiency | None = None,
+    run_id: str | None = None,
+    run_manifest_sha256: str | None = None,
     config: EvaluationConfig | None = None,
 ) -> EvaluationReport:
     """Compare every reference record without prediction-dependent exclusions.
@@ -1285,6 +1292,8 @@ def evaluate_study(
         study_schema_sha256=study_schema_sha256(),
         truth_content_sha256=truth_digest,
         prediction_content_sha256=prediction_digest,
+        run_manifest_sha256=run_manifest_sha256,
+        run_id=run_id,
         benchmark=benchmark,
         prediction_validation=prediction_validation,
         run_efficiency=run_efficiency,
@@ -1497,6 +1506,11 @@ def aggregate_evaluations(
             cost_tracking_complete=all(
                 r.run_efficiency is not None
                 and r.run_efficiency.cost_tracking_complete is True
+                for r in reports
+            ),
+            token_tracking_complete=all(
+                r.run_efficiency is not None
+                and r.run_efficiency.token_tracking_complete is True
                 for r in reports
             ),
             cost_complete_papers=sum(

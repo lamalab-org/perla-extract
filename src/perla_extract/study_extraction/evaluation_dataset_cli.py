@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 from pydantic import ValidationError
 
-from .artifacts import write_json_atomic
+from .artifacts import write_json_exclusive
 from .evaluation import EvaluationReport, aggregate_evaluations
 from .reference_release import ReferenceRelease
 
@@ -73,7 +73,12 @@ def main(
         )
     except (OSError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
-    write_json_atomic(output, aggregate.model_dump(mode="json"))
+    try:
+        write_json_exclusive(output, aggregate.model_dump(mode="json"))
+    except OSError as exc:
+        raise click.ClickException(
+            f"Cannot create {output}; choose a new output path: {exc}"
+        ) from exc
     click.echo(str(output))
     if fail_on_scoring_issues and aggregate.papers_needing_scoring_review:
         raise click.ClickException(

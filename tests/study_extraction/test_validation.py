@@ -1020,3 +1020,101 @@ def test_material_form_raw_is_checked_against_layer_evidence():
         0,
         "material_form_raw",
     )
+
+
+@pytest.mark.parametrize(
+    "source, raw_value, supported",
+    [
+        ("The precursor was Co.", "Co", True),
+        ("The precursor was CO.", "Co", False),
+        ("The reported ion was Pb²⁺.", "Pb2+", False),
+        ("The reported ion was Pb2+.", "Pb2", False),
+        ("The solvent was H₂O.", "H2O", False),
+        ("The concentration was 20 mM.", "20 mm", False),
+        ("The bias was -20 V.", "20 V", False),
+        ("The measured quantity was 120.", "20", False),
+        ("The measured quantity was 20.1.", "20", False),
+        ("The measured quantity was 20.", "20", True),
+    ],
+)
+def test_reported_values_preserve_scientific_case_charge_and_numeric_boundaries(
+    source, raw_value, supported
+):
+    evidence = [EvidenceCitation(block_id="source", quote=source)]
+    device = IndividualDevice(
+        device_id="device",
+        family_id=None,
+        label="device",
+        variant=None,
+        champion_status="not_reported",
+        selection_basis="not_reported",
+        evidence=evidence,
+        reported_properties=[
+            ReportedValue(
+                name="reported quantity",
+                raw_value=raw_value,
+                value_number=None,
+                unit=None,
+                evidence=evidence,
+            )
+        ],
+    )
+    study = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[],
+        individual_devices=[device],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+    block = EvidenceBlock(
+        block_id="source", source="main", page=1, kind="text", text=source
+    )
+    report = validate_study(study, [block])
+    assert report["counts"]["source_verified_values"] == int(supported)
+
+
+def test_reported_value_cannot_borrow_a_number_from_an_uncited_sentence():
+    quote = "Device A reached 20%."
+    evidence = [EvidenceCitation(block_id="source", quote=quote)]
+    device = IndividualDevice(
+        device_id="device",
+        family_id=None,
+        label="Device A",
+        variant=None,
+        champion_status="not_reported",
+        selection_basis="not_reported",
+        evidence=evidence,
+        reported_properties=[
+            ReportedValue(
+                name="efficiency",
+                raw_value="25%",
+                value_number=25,
+                unit="%",
+                evidence=evidence,
+            )
+        ],
+    )
+    study = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[],
+        individual_devices=[device],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    )
+    block = EvidenceBlock(
+        block_id="source",
+        source="main",
+        page=1,
+        kind="text",
+        text=quote + " Device B reached 25%.",
+    )
+    report = validate_study(study, [block])
+    assert report["counts"]["source_verified_values"] == 0
+    assert any(
+        item["reason"] == "raw_value not found in cited evidence"
+        for item in report["issues"]
+    )

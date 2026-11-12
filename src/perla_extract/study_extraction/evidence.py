@@ -95,14 +95,59 @@ def source_contains_text(source: object, query: object) -> bool:
     return False
 
 
+def _scientific_text(value: object) -> tuple[str, list[int], str]:
+    """Ignore layout whitespace while retaining case, charge, and subscripts."""
+
+    raw = unicodedata.normalize("NFC", str(value or "")).replace("−", "-")
+    positions = [
+        index for index, character in enumerate(raw) if not character.isspace()
+    ]
+    return "".join(raw[index] for index in positions), positions, raw
+
+
+def source_contains_scientific_text(source: object, query: object) -> bool:
+    """Check a reported value without conflating chemical notation or numbers.
+
+    Layout whitespace and the Unicode minus glyph may vary. Case, subscripts,
+    superscripts, and charge remain significant. The sole font-map exception is
+    ``士`` at an explicitly requested ``±`` position, an observed PDF uncertainty
+    artifact. Ordinary prose quotation matching uses ``source_contains_text``.
+    """
+
+    needle, _, _ = _scientific_text(query)
+    haystack, offsets, raw_source = _scientific_text(source)
+    if not needle:
+        return False
+    pattern = re.escape(needle).replace("±", "[±士]")
+    for match in re.finditer(pattern, haystack):
+        start, end = offsets[match.start()], offsets[match.end() - 1]
+        before = raw_source[start - 1] if start else ""
+        after = raw_source[end + 1] if end + 1 < len(raw_source) else ""
+        following = raw_source[end + 2] if end + 2 < len(raw_source) else ""
+        if needle[0].isalnum() and before.isalnum():
+            continue
+        if needle[0].isdigit() and before in {"+", "-", "."}:
+            continue
+        if needle[-1].isalnum() and after.isalnum():
+            continue
+        if needle[-1].isdigit() and after == "." and following.isdigit():
+            continue
+        if after in {"^", "+", "⁺", "⁻"}:
+            continue
+        if after == "-" and not following.isalpha():
+            continue
+        return True
+    return False
+
+
 def assembled_from_quotes(raw_value: object, references: list[dict]) -> bool:
     """Accept a value made only by joining two or more verified source quotes."""
 
-    parts = [normalized_source_text(reference.get("quote")) for reference in references]
+    parts = [_scientific_text(reference.get("quote"))[0] for reference in references]
     return (
         len(parts) > 1
         and all(parts)
-        and normalized_source_text(raw_value) == "".join(parts)
+        and _scientific_text(raw_value)[0] in {"".join(parts), ";".join(parts)}
     )
 
 
@@ -123,23 +168,18 @@ def assembled_with_shared_unit(
     grammar assigns the unit to the value.
     """
 
-    raw = normalized_source_text(raw_value)
-    normalized_unit = normalized_source_text(unit)
+    raw = _scientific_text(raw_value)[0]
+    normalized_unit = _scientific_text(unit)[0]
     if not normalized_unit or not raw.endswith(normalized_unit):
         return False
     value_text = raw[: -len(normalized_unit)]
     if not value_text:
         return False
-    literal_raw = unicodedata.normalize("NFKC", str(raw_value)).strip()
-    literal_unit = unicodedata.normalize("NFKC", str(unit)).strip()
-    value_query = value_text
-    if literal_raw.casefold().endswith(literal_unit.casefold()):
-        value_query = literal_raw[: -len(literal_unit)].strip()
     contexts = unit_sources or [reference.get("quote") for reference in references]
     return any(
-        source_contains_text(reference.get("quote"), value_query)
+        source_contains_scientific_text(reference.get("quote"), value_text)
         and index < len(contexts)
-        and source_contains_text(contexts[index], unit)
+        and source_contains_scientific_text(contexts[index], unit)
         for index, reference in enumerate(references)
     )
 

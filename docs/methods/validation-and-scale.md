@@ -44,7 +44,7 @@ document one.
 Repeat the software audit without PDFs, API keys or model calls:
 
 ```bash
-PYTHONPATH=.:src python -m examples.ablations.references \
+PYTHONPATH=.:src python -m examples.scoring.reference_audit \
   --release data/study_extraction/ground_truth/v2/release.json \
   --output /absolute/path/to/new/reference-audit.json
 ```

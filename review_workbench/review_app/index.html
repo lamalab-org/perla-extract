@@ -77,6 +77,7 @@
         <p id="file-action-status" class="file-action-status" role="status" hidden></p>
       </div>
       <p id="schema-compatibility" class="callout" hidden></p>
+      <section aria-label="Review completion"><p id="review-progress" role="status"></p><p id="review-next-step" class="muted"></p><button id="show-unresolved" type="button" hidden>Review unverified records</button></section>
 
       <div class="workspace-grid">
         <section class="pdf-panel">
@@ -152,6 +153,7 @@
                 <select id="record-status-filter" aria-label="Record status">
                   <option value="remaining">Remaining</option>
                   <option value="attention">Needs attention</option>
+                  <option value="unresolved">Not yet verified</option>
                   <option value="all">All records</option>
                   <option value="verified">All fields match source</option>
                   <option value="uncertain">Cannot verify</option>
@@ -180,6 +182,11 @@
                 <p><strong>Needs attention</strong> is a priority list, not a claim that a record is wrong. Use <strong>Add missing record</strong> or the record options when an entire device, measurement, or other record is missing, repeated, or in the wrong category. Merging repeated records moves their explicit links automatically.</p>
               </div>
             </details>
+            <section id="pending-record-action" class="callout" hidden aria-label="Pending record action">
+              <strong id="pending-action-title"></strong><p id="pending-action-help"></p>
+              <button id="resume-record-action" type="button">Return to original action</button>
+              <button id="cancel-record-action" type="button">Cancel pending action</button>
+            </section>
             <div id="review-queue"></div>
             <div class="queue-footer">
               <button id="previous-record" aria-label="Previous record">← Previous</button>
@@ -223,7 +230,7 @@
       <section class="file-section">
         <div><h3>Structured data</h3><p>Download the current validated study record. Administrators can export a PR bundle after adjudication.</p></div>
         <div class="file-actions"><button id="download-study-json" type="button">Download study JSON</button><button id="download-truth" type="button" hidden>Download adjudicated PR bundle</button></div>
-        <p id="final-export-help" class="muted" hidden>PR export becomes available after an administrator completes adjudication.</p>
+        <p id="final-export-help" class="muted" hidden>PR export becomes available after an authorized finalizer completes adjudication.</p>
       </section>
       <p id="files-status" role="status"></p>
       <div class="dialog-actions"><span></span><button value="cancel">Close</button></div>

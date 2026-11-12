@@ -1,0 +1,3 @@
+paper_id,arm,repeat,run_dir
+paper-a,control,1,runs/paper-a/control-1
+paper-a,treatment,1,runs/paper-a/treatment-1

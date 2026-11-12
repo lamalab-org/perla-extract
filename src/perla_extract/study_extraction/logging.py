@@ -22,9 +22,10 @@ def configure_logging(
 ) -> None:
     """Send readable or machine-parseable progress logs to stderr.
 
-    Keeping logs on stderr leaves the command's JSON report on stdout safe for
-    shell pipelines. Loguru also provides serialized JSON when the CLI is run by
-    an orchestrator.
+    Stderr is progress; ``events.jsonl`` is the durable execution journal. Keeping
+    progress off stdout leaves the JSON report safe for shell pipelines. Serialized
+    console records retain bound run, stage and call IDs in their ``extra`` object;
+    consumers should use the journal's event fields for experiment accounting.
     """
 
     logger.remove()

@@ -14,7 +14,7 @@ from perla_extract.study_extraction.evaluation import (
     aggregate_evaluations,
     evaluate_study,
 )
-from perla_extract.study_extraction.evaluation_cli import (
+from perla_extract.study_extraction.reference_io import (
     load_reference,
     reference_content_digest,
 )
@@ -32,7 +32,7 @@ def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
     if manifest.get("artifact_format_version") != 4:
         raise ValueError(
-            "Ablations require finalized format-4 references; export the reviewed revision"
+            "Evaluation requires finalized format-4 references; export the reviewed revision"
         )
     truth, provenance = load_reference(directory)
     if provenance is None:

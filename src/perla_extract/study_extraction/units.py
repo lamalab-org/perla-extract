@@ -55,6 +55,8 @@ def _pint_unit(unit: str) -> str:
         lambda match: "**" + match.group(0).translate(superscript),
         value,
     )
+    if value.casefold() in {"percent", "percentage"}:
+        value = "%"
     value = value.replace("^", "**")
     value = re.sub(r"([+-])\s+(?=\d)", r"\1", value)
     # Plain-text exports often lose superscripting: cm2 and mm3 are unit powers.
@@ -71,6 +73,8 @@ def convert_reported_value(value: ReportedValue, target_unit: str) -> float | No
     if value.value_number is None or value.unit is None:
         return None
     unit = value.unit.strip()
+    if not unit or not target_unit.strip():
+        return None
     if target_unit == "percent":
         return (
             value.value_number
@@ -103,8 +107,8 @@ def canonical_quantity(number: float, unit: str) -> tuple[float, str] | None:
     from pint.errors import PintError
 
     unit = unit.strip()
-    if unit.casefold() in {"percent", "percentage"}:
-        unit = "%"
+    if not unit:
+        return None
     try:
         quantity = _unit_registry().Quantity(number, _pint_unit(unit)).to_base_units()
         magnitude = float(quantity.magnitude)
@@ -123,6 +127,8 @@ def equivalent_unit_spelling(left: str, right: str) -> bool:
 
     from pint.errors import PintError
 
+    if not left.strip() or not right.strip():
+        return False
     try:
         registry = _unit_registry()
         source, target = _pint_unit(left), _pint_unit(right)

@@ -1347,6 +1347,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 if asset not in {
                     "index.html",
                     "app.js",
+                    "review-state.js",
                     "styles.css",
                     "adjudication.js",
                     "adjudication.css",

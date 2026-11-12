@@ -1,295 +1,128 @@
-# Test a cheaper extraction workflow
+# Compare extraction choices
 
-Four paired experiments test which extraction stages earn their cost: repeated
-reading, global refinement, the claim ledger and the reader model. Each changes
-one choice. None changes the production defaults or assumes a saving.
+An ablation is an ordinary extraction run with an explicit setting changed. There is
+no separate experiment planner or generated shell program. Save the method as TOML,
+run both arms on the same PDFs, score against the same frozen references, then list
+the attempts in a CSV. Keep failed attempts in that CSV.
 
-## Freeze the comparison before running
+## Choose a question
 
-Use the current 30-paper reference for development. First check scorer decisions
-as described in [Validate before scaling](../methods/validation-and-scale.md).
-
-1. For screening, select eight reviewed development papers using source characteristics, not model
-   scores: include short and long SI, multiple specimens, population statistics,
-   stability, and detailed chemistry. Categories may overlap. Record why each paper
-   was selected. A smaller setup pilot is exploratory; do not
-   substitute unreviewed seeds. Papers used to revise prompts are development data.
-2. Use the same finalized reference versions, main PDFs, SI, parser, schema and
-   scorer for both arms. The planner requires format-4 finalized references, verifies
-   their hashes and declared finalization, and checks that the supplied PDF/SI hashes
-   exactly match the reviewed sources. Include the complete available SI; record
-   explicitly when there is none. A resaved PDF with different bytes requires source
-   reconciliation, not an automatic exemption from the check.
-3. Fix model/provider IDs, provider reasoning defaults, budgets and environment before
-   execution. The planner requires model IDs rather than selecting a model for you.
-   `omit` leaves reasoning and temperature at provider defaults; it does not disable
-   reasoning or guarantee determinism. The cheap-reader study measures the chosen
-   model's deployed configuration, not architecture alone.
-4. Run each arm once per paper for screening. Repeat both arms three times on two
-   prespecified papers (one short, one long SI) to check variability. Do not count
-   repeats as extra independent papers or choose the best response.
-5. Only after development, lock a candidate and test it on a separately reviewed,
-   untouched set. Eight development papers cannot establish general non-inferiority.
-
-All studies retain targeted repair and composition/processing enrichment. No paper
-figures are sent to models. Do not edit predictions after seeing the reference.
-The planner records hashes and commands; the existing CLIs perform extraction and scoring.
-
-## Study 1: does the second source reading pay for itself?
-
-Configuration: `examples/ablations/01-claim-readings.json`.
-
-If the study uses checked cohort/specimen name equivalences, add
-`--descriptor-equivalences rules.json` to the preparation command. The plan hashes
-that file, saves the scoring rules and passes the same file to every scoring job.
-The extraction model never receives it. Keep the list fixed across arms and repeats.
-
-| Arm | Independent source readings | Everything downstream |
-| --- | ---: | --- |
-| Control | 2 per document/window | Unchanged |
-| Treatment | 1 per document/window | Unchanged |
-
-One reading may save calls and output tokens, but omitted claims may never reach
-the assembler. Check missing concentrations, population metrics and stability
-conditions. Compare the claim ledger with the final study to distinguish reading
-omissions from assembly losses.
-
-## Study 2: does global refinement improve the final result?
-
-Configuration: `examples/ablations/02-global-refinement.json`. Substitute this file
-in the preparation command below and choose a new output directory.
-
-| Arm | Global study rewrite | Source readings | Targeted repair |
-| --- | --- | ---: | --- |
-| Control | Enabled | 2 | Enabled |
-| Treatment | Disabled | 2 | Enabled |
-
-Test whether local repair is enough without a second complete study rewrite. Keep
-the second source reading and all other control settings, even if study 1 favors
-removing it.
-
-Inspect `draft_extraction.json`, `refinement_extraction.json` when present,
-`refinement_selection.json`, repair audits and final `extraction.json`. A refinement
-candidate rejected by local checks is still a paid call. Score the final outputs;
-use intermediate drafts only to explain changes, never to select the better answer
-with reference access. Check whether refinement repairs family/specimen boundaries
-or incorrectly changes supported concentrations and chemical associations.
-
-Count changes in downstream repair calls and total spend: repair is allowed to
-respond to the different drafts, so saved rewrite tokens are not necessarily the
-net saving. This is the effect of removing the stage from the deployed workflow,
-not a claim that the remaining downstream calls are identical.
-
-## Study 3: is the claim ledger better than direct extraction?
-
-Configuration: `examples/ablations/03-direct-extraction.json`.
-
-| Arm | Evidence passed to study assembly | Global refinement |
+| Question | Treatment file | Setting to declare with `--factor` |
 | --- | --- | --- |
-| Control | Grounded claim ledger plus cited passages | Enabled |
-| Treatment | Complete parsed scientific evidence, no ledger calls | Enabled |
+| Does a second source reading help? | `examples/ablations/01-one-reading.toml` | `claim_recall_passes` |
+| Does full-draft revision help? | `examples/ablations/02-no-refinement.toml` | `use_refinement` |
+| Do intermediate source statements help? | `examples/ablations/03-direct-extraction.toml` | `use_claim_ledger` |
+| Can another model read the evidence? | `examples/ablations/04-reader-deployment.toml` | `deployments.read.model` and each changed deployment field |
 
-Test whether direct assembly preserves facts while avoiding the ledger's cost and
-omissions. Keep refinement, enrichment, repair and budgets unchanged. Only `--claims`
-changes, so this remains a multi-call workflow.
+The supplied files change only the named choice relative to the application defaults.
+They are starting points, not claims that a treatment is better. Copy them and record
+the entire intended method before a real study. See [extraction](extraction.md) for
+what each stage does and [open models](open-models.md) for endpoint configuration.
 
-The intervention also changes available audit information: without a claim ledger,
-claim-coverage repair cannot identify the same missing claims. This is a total-system
-comparison of using a ledger, not an isolated test of JSON formatting. Local checks
-still run, but source occurrence does not establish scientific correctness.
+Compare source reading, full-draft revision, and model substitution separately first.
+A direct-source arm changes the evidence representation as well as removing model
+calls; interpret it as that combined intervention. It still receives all retained
+source blocks. Repair only targets audit-visible gaps, so it cannot establish that
+unflagged information is complete. Enrichment interprets reported composition and
+processing; its downstream value requires a separate evaluation from core extraction.
 
-Report results separately for short and long SI. The existing no-claims path uses
-global source evidence; it does not implement direct-extraction windows. A paper
-that exceeds the assembly input limit must remain a visible failure. Do not truncate
-the SI or quietly omit that paper. Confirm context support with `--dry-run` before
-paid runs; if comparing only the context-feasible subset as a secondary analysis,
-define it before inspecting any model output and retain whole-roster failure counts.
-Any future direct-window implementation would be a different experiment.
+## Run and score one pair
 
-Inspect missed devices, erroneous family splits, champion/average conflation and
-precursor-to-concentration associations. Lower call count does not guarantee lower
-cost: direct evidence can make assembly/refinement inputs much larger.
-
-## Study 4: can a cheaper model read claims for the strong assembler?
-
-Configuration: `examples/ablations/04-cheaper-reader.json`. Add an explicit
-`--reader-model PROVIDER/CHEAPER_MODEL` to the preparation command. The planner
-refuses a missing reader or the same model string as the main model.
-
-| Arm | Claim-reading model | Assembly, refinement, repair and enrichment |
-| --- | --- | --- |
-| Control | Main model | Main model |
-| Treatment | Prespecified cheaper model | Same main model |
-
-Both arms read each document/window twice. Do not also reduce recall passes. Choose
-one candidate before scoring: verify its provider ID, supported context, strict
-schema support, output limits, and current prices. An open-weight candidate is
-welcome, but compare total per-paper cost, not just token prices. Keep the
-provider/model fixed, record defaults and fallbacks, and
-count all failed or repaired responses. If its context/output limits cannot support
-the shared settings, do not silently use smaller windows in only that arm. That
-requires a separately declared configuration comparison.
-
-Test whether the cheaper reader preserves the facts needed for assembly. The
-assembler normally sees only ledger-selected evidence; it may not recover omitted
-claims. Report claim-free fallbacks, which bypass the reader being tested.
-
-Inspect ledger and final-output errors separately: missing concentrations, damaged
-formulas, wrong object scope, lost statistical qualifiers and unsupported claims.
-The source-grounding audit is not a precision score. Do not conclude that an open
-model only loses recall; wrong relationships and plausible but wrong values also
-matter. Keep the common per-group precision/recall criteria.
-
-Choose each reader candidate before scoring on development papers. Do not use
-held-out results to select a model. Test combined changes only after measuring
-each factor separately.
-
-## Prepare commands without paid calls
-
-From a clean checkout with PERLA installed, create a private cohort file:
-
-```json
-[
-  {
-    "paper_id": "paper-a",
-    "pdf": "pdfs/paper-a.pdf",
-    "supplement": "pdfs/paper-a-SI.pdf",
-    "truth": "truth/v1/dev/paper-a"
-  }
-]
-```
-
-Paths resolve relative to this file. Use `null` for an absent separate supplement.
-`truth` is an exported directory containing `ground_truth.json` and `manifest.json`.
-This example is not a real roster. Keep PDFs, references and plans out of the PR.
-
-Preparation also runs the scorer's self-consistency check on every reference and
-rejects duplicated sources or mixed splits. `plan.json` records reference hashes,
-per-group fact counts, available review-stage declarations and the scoring rules.
-It also resolves the real extraction CLI's defaults and saves the expected settings
-for each job, including models, stage switches, budgets, source hashes and prompt/schema hashes.
-These checks are not a fresh scientific review of the papers. A missing completeness
-marker is shown as missing metadata; it neither excludes the paper nor proves that
-the reviewer did not read it.
+From an installed checkout, choose a paper ID present in the frozen release. Replace
+`PAPER_ID` and the source paths below with real inputs. An output folder must be new
+or empty. Dry runs also consume their output folder; use a separate folder for them.
 
 ```bash
-PYTHONPATH=.:src python -m examples.ablations.prepare plan \
-  --study examples/ablations/01-claim-readings.json \
-  --cohort /absolute/path/to/private/cohort.json \
-  --model PROVIDER/MODEL \
-  --max-cost 5 \
-  --output /absolute/path/to/private/study-01
+perla-extract --pdf papers/PAPER_ID.pdf --supplement papers/PAPER_ID-SI.pdf \
+  --output-dir runs/PAPER_ID/control-1
+
+perla-extract --config examples/ablations/01-one-reading.toml \
+  --pdf papers/PAPER_ID.pdf --supplement papers/PAPER_ID-SI.pdf \
+  --output-dir runs/PAPER_ID/treatment-1
+
+perla-evaluate --truth data/study_extraction/ground_truth/v2/dev/PAPER_ID \
+  --prediction runs/PAPER_ID/control-1 \
+  --output runs/PAPER_ID/control-1/evaluation.json --fail-on-scoring-issues
+
+perla-evaluate --truth data/study_extraction/ground_truth/v2/dev/PAPER_ID \
+  --prediction runs/PAPER_ID/treatment-1 \
+  --output runs/PAPER_ID/treatment-1/evaluation.json --fail-on-scoring-issues
 ```
 
-To require the **whole published set**, add
-`--release data/study_extraction/ground_truth/v2/release.json` and supply all 30
-papers in the cohort. The planner checks the complete roster and reference hashes,
-checks release manifest hashes when recorded, and passes the release to dataset
-aggregation. For a prespecified smaller pilot, omit `--release`: the plan still
-freezes its validated subset, but it is not a complete release benchmark.
+A model cache hit reproduces a saved answer; it is not another stochastic repetition.
+For independent repeated generations, use a fresh `--model-cache-dir` for every
+attempt. Record the server revision, decoding settings and cache policy. Temperature
+zero and a fixed seed do not guarantee identical results on every backend.
 
-The amount is an example **per-run spending threshold**, not a total authorization
-or guaranteed hard cap. The extractor checks provider-reported spend between calls;
-the last call can exceed the threshold. Approve a campaign budget separately. Eight
-papers and two arms produce 16 runs before repetitions, with repairs included.
+Create `runs.csv` with paths relative to its own directory:
 
-Inspect `plan.json` and then, only when spending is authorized:
+```csv
+paper_id,arm,repeat,run_dir
+PAPER_ID,control,1,runs/PAPER_ID/control-1
+PAPER_ID,treatment,1,runs/PAPER_ID/treatment-1
+```
+
+A failed attempt followed by a successful rerun is additional resource use, not a
+new paired quality repetition. Add the optional `role` column to retain it:
+
+```csv
+paper_id,arm,repeat,run_dir,role
+PAPER_ID,control,1,runs/PAPER_ID/control-1,paired
+PAPER_ID,treatment,1,runs/PAPER_ID/treatment-1,paired
+PAPER_ID,treatment,,runs/PAPER_ID/failed-treatment,accounting_only
+```
+
+Accounting-only rows need no score and must belong to a paper/arm in the paired
+roster. Costs include every listed distinct attempt; missing accounting prevents a
+complete cost total but does not discard otherwise valid paired scores. Unlisted
+attempts cannot be inferred. The cohort audit lists all retained attempt folders.
+
+Then compare:
 
 ```bash
-bash /absolute/path/to/private/study-01/extract.sh
-bash /absolute/path/to/private/study-01/score.sh
+perla-compare runs.csv --factor claim_recall_passes \
+  --output comparison.json --tables-dir figure-data
 ```
 
-Each script checks recorded input hashes and the clean Git revision before starting.
-It tries every planned job even when one command fails. Extraction refuses an
-existing `runs` directory; prepare a new destination for a rerun rather than
-overwriting predictions. Keep stdout/stderr as logs. A successful extraction CLI
-exit alone is not success: inspect every run's `report.json` status.
+This verifies run manifests, predictions, references, scorer settings and paid-work
+accounting. The factor check rejects other changed method settings. List additional
+`--factor` values only when the experiment deliberately changes those settings.
+Without a factor declaration, differences are reported but not restricted.
 
-The scripts share a parser cache but give every arm/repetition a fresh local model
-response cache. Provider prefix caching may still apply: record actual cache usage
-and paid cost, and do not call this a guaranteed cold-provider-cache experiment.
-Execution order is shuffled with a fixed seed. Record the installed environment
-alongside the plan; input hashes do not pin Python dependencies or hosted weights.
+For a cohort, use `perla-extract-cohort --config method.toml` with the roster and
+source directories described in [batch extraction](quality-first-ground-truth.md).
+The cohort audit records each selected run directory. Resume checks source bytes,
+parser and pipeline implementation, runtime dependencies, effective settings, schema, prompts, and
+sealed valid outputs. A rerun creates a numbered attempt and retains previous work.
 
-Scoring uses the full planned roster. Missing reports make aggregation fail instead
-of silently shrinking the sample. A valid empty extraction scores as an empty
-prediction; a missing/malformed result is reported as a run failure, not fabricated
-as a successful zero-valued extraction. Resolve execution failures under the same
-prespecified retry rule for both arms before claiming comparable whole-roster F1.
+## Read the result and make figures
 
-## Report quality and cost together
+The primary difference is treatment minus control in per-paper, populated-group
+macro F1. Repeat differences are averaged within each paper; papers then receive
+equal weight. The percentile bootstrap resamples papers. Its interval is conditional
+on the observed repeats; it does not estimate all possible model or dataset variation.
+One paper has no paper-bootstrap interval. No interval is produced from missing or
+incompatible quality results.
 
-After scoring, produce a paired report without more model calls:
+`--tables-dir` creates plain, inspectable files:
 
-```bash
-PYTHONPATH=.:src python -m examples.ablations.report \
-  /absolute/path/to/private/study-01/plan.json \
-  --output /absolute/path/to/private/study-01/comparison.json
-```
+| File | Use |
+| --- | --- |
+| `runs.csv` | Plot individual quality, token use, request count, latency and recorded spend; includes failed/missing results |
+| `group_scores.csv` | Inspect strict, value-only and attribution precision/recall/F1 with their truth/predicted/matched counts |
+| `paired_papers.csv` | Plot paired paper differences and the number of observed repeats |
+| `analysis.json` | Preserve the estimand, roster hash, factor checks, interval method, seed and diagnostics |
 
-The report lists every planned run, each paper's treatment-minus-control F1, and
-each group's counts, precision and recall for each repetition. It checks reference
-identity against the prepared plan as well as across arms and repetitions, and
-requires the prepared scorer settings. Switching both arms to a different reference
-or tolerance after preparation is not allowed. Repeats
-are averaged within each paper before the paper-level differences are averaged.
-Each run's saved `run_configuration.json` must match its prepared settings. Missing
-configuration or a changed model, stage, budget, prompt, schema or source blocks the
-quality comparison; the report records the configuration-file hash for inspection.
-Missing, malformed, or incompatible scores prevent a whole-roster quality summary;
-the command still writes diagnostics and exits unsuccessfully. It refuses to
-overwrite an existing output. Choose a new filename after resolving problems.
+Empty CSV cells mean unavailable, not zero. `known_total_tokens` retains the observed
+subtotal; token totals are populated only when token accounting is explicitly complete. Known spend remains available even if a
+prediction or score is missing. Total recorded cost and a saving fraction require complete
+accounting. `cost_sources` identifies the adapter provenance; complete availability
+of those amounts does not certify that they equal provider invoices. Self-hosted tokens and latency are useful resources; provider-dollar
+fields are not GPU cost, energy consumption, or total ownership cost. Show cache
+hits and failed attempts alongside comparisons.
 
-`accounting` distinguishes the recorded spend in readable score reports from the
-total for all planned runs. Total cost and savings remain `null` if any run lacks
-complete accounting. Inspect the original run logs for unscored attempts: this
-summary does not recover their spend from provider billing. Run status, cache hits
-and prediction-validation results remain visible. A successful summary is not a
-claim that every extraction succeeded or passed validation.
-
-The command summarizes saved scores. It does not rerun extraction or verify provider
-behavior. Keep the plan, logs and score reports together. Plans now use format 3,
-with validated reference/scorer bindings and explicit score output paths.
-Regenerate older plans with the planner; changing the version number is not enough.
-
-The report includes a descriptive 95% percentile bootstrap interval for the mean
-paired F1 difference. It first averages repeated treatment-minus-control differences
-within each paper, then resamples papers with replacement (2,000 samples, seed 0
-by default). Both arms stay paired; neither fields nor repetitions become additional
-independent papers. `--bootstrap-samples` and `--seed` control this calculation.
-With one paper or zero bootstrap samples, bounds are `null`. Repeat-level differences
-remain available: this interval conditions on their observed within-paper averages,
-not on all possible model randomness.
-
-This is not an equivalence test, a correction for trying many configurations, or a
-guarantee of coverage on a small convenience sample. An interval crossing zero does
-not establish equal performance. Apply the screening rule below and inspect repeats.
-
-Primary outcome: paired per-paper difference in `core_facts.macro_f1`. Also show
-micro counts, precision and recall separately for performance, population,
-stability, composition, stack and processing. Show each paper, not just averages.
-Inspect record matching issues and scientific associations blind to arm when possible.
-Do not alter tolerances, references or pairings to favor a cheaper arm.
-
-Use this screening rule, fixed before viewing scores: nominate a cheaper arm
-only if mean paper-level F1 falls by at most 0.01, no group's pooled precision or
-recall falls by more than 0.02, and it has no additional failed runs. These margins
-are practical design choices, not scientifically established equivalence bounds.
-Undefined groups cannot establish preservation; report their counts and coverage.
-If repeats cross a margin, the result is inconclusive. Select the cheapest eligible
-candidate; if none qualify, keep the control. Do not stack individually favorable
-changes without a separate combined-workflow confirmation.
-
-Report actual total provider cost (including retries/repairs), cost per attempted
-paper, per-run tokens/cache usage and wall time. Keep enrichment/NOMAD checks visible:
-the six core groups do not score the correctness of enriched site-ion interpretations.
-Have an expert compare those outputs separately before claiming equal NOMAD quality.
-
-The dataset CLI gives single-arm intervals; the comparison report gives an interval
-for paired differences. Neither implements a confirmatory non-inferiority test.
-Keep any later confirmatory analysis separate, with margins and sample size chosen
-before examining held-out results.
-
-See [the scoring reference](evaluation.md) and
-[reference preparation](review-to-benchmark.md) for the implemented scoring rules.
+For a paper, show paired differences, group-level quality, and quality versus measured
+resources with uncertainty. Keep development selection separate from the final unseen
+paper set. Do not treat individual extracted facts or repeated generations as
+independent papers. This software checks consistency and provenance; source-checked
+references and expert validation of scorer decisions remain necessary.

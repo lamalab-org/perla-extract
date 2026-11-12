@@ -483,12 +483,68 @@ class StudyExtraction(StrictModel):
         return migrated
 
 
+def _schema_contract(value: object) -> object:
+    """Remove JSON Schema prose while preserving fields, constraints and defaults."""
+
+    if isinstance(value, list):
+        return [_schema_contract(item) for item in value]
+    if not isinstance(value, dict):
+        return value
+    result: dict[str, object] = {}
+    for key, item in value.items():
+        if key in {"title", "description", "$comment", "examples"}:
+            continue
+        if key in {
+            "properties",
+            "$defs",
+            "definitions",
+            "patternProperties",
+            "dependentSchemas",
+        }:
+            result[key] = {
+                name: _schema_contract(schema) for name, schema in item.items()
+            }
+        elif key in {"default", "const", "enum"}:
+            result[key] = item
+        else:
+            result[key] = _schema_contract(item)
+    return result
+
+
 def study_schema_sha256() -> str:
-    """Fingerprint the generated schema so provenance cannot depend on manual bumps."""
+    """Identify the data contract independently of explanatory schema prose.
+
+    Field names, required fields, types, bounds, defaults and validators represented
+    in JSON Schema remain significant. A contract change requires explicit reference
+    compatibility handling; editing descriptions alone does not invalidate truth.
+    """
 
     encoded = json.dumps(
-        StudyExtraction.model_json_schema(),
+        _schema_contract(StudyExtraction.model_json_schema()),
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def study_schema_prose_sha256() -> str:
+    """Identify the exact schema supplied to a model, including its instructions."""
+
+    encoded = json.dumps(
+        StudyExtraction.model_json_schema(), sort_keys=True, separators=(",", ":")
+    ).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+# The immutable v1/v2 releases use the former prose-inclusive schema fingerprint.
+# Accept that identifier only while the installed structural contract still matches
+# the reviewed schema-6 contract. Never rewrite archived manifests to a new hash.
+_SCHEMA_6_CONTRACT = "5703bf0addcf3ba8d20104de05673184efb05f33324f6d04c1e6c6f7dacc8e33"
+_SCHEMA_6_ARCHIVED = "0f242f5cb719b47ae6bbcd1818ce8bd382b358136334ecc2abfb9de9db011413"
+
+
+def compatible_study_schema(fingerprint: object) -> bool:
+    current = study_schema_sha256()
+    return fingerprint == current or (
+        current == _SCHEMA_6_CONTRACT and fingerprint == _SCHEMA_6_ARCHIVED
+    )

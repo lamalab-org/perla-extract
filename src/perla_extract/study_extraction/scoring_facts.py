@@ -57,9 +57,13 @@ def operation_name(value: str, aliases: dict[str, str]) -> str:
 
 
 def scientific_text(value: str) -> str:
-    """Ignore Unicode typography and spacing, never chemical case or punctuation."""
+    """Normalize spacing without flattening chemical superscripts or subscripts.
 
-    return " ".join(unicodedata.normalize("NFKC", value).replace("−", "-").split())
+    Compatibility normalization (NFKC) conflates charge and atom-count notation,
+    for example Fe³⁺ and Fe₃⁺. NFC preserves those scientific distinctions.
+    """
+
+    return " ".join(unicodedata.normalize("NFC", value).replace("−", "-").split())
 
 
 def scientific_value_text(value: str) -> str:
@@ -71,7 +75,8 @@ def scientific_value_text(value: str) -> str:
     """
 
     text = scientific_text(value)
-    formula = re.sub(r"_\{(\d+(?:\.\d+)?)\}|_(\d+)", lambda m: m[1] or m[2], text)
+    formula = text.translate(str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789"))
+    formula = re.sub(r"_\{(\d+(?:\.\d+)?)\}|_(\d+)", lambda m: m[1] or m[2], formula)
     if re.fullmatch(r"(?:[A-Z][a-z]?(?:\d+(?:\.\d+)?)?)+", formula):
         return formula
     return text

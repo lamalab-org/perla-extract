@@ -287,9 +287,7 @@ def test_targeted_repair_discards_additions_not_requested_by_the_worklist():
     assert audit.status == "accepted"
     assert repaired.device_families == []
     assert repaired.individual_devices == [same_id_in_another_collection]
-    assert repaired.unresolved_notes == [
-        "The cited film is not a photovoltaic device."
-    ]
+    assert repaired.unresolved_notes == ["The cited film is not a photovoltaic device."]
     assert audit.discarded_record_counts["device_families"] == 1
     assert audit.reason == (
         "unrequested model additions were discarded before applying the patch"
@@ -326,9 +324,7 @@ def test_repair_salvages_only_independently_quality_improving_records():
     )
     valid = EvidenceCitation(block_id="b1", quote="Device B")
     invalid = EvidenceCitation(block_id="missing", quote="Device B")
-    study = empty_study().model_copy(
-        update={"device_families": [family(invalid)]}
-    )
+    study = empty_study().model_copy(update={"device_families": [family(invalid)]})
     proposed = StudyRepair(
         device_families=[
             family(valid),
@@ -360,3 +356,45 @@ def test_repair_salvages_only_independently_quality_improving_records():
     assert repaired.device_families[0].evidence == [valid]
     assert quality["validation_issues"] == 0
     assert counts["device_families"] == 1
+
+
+def test_repair_provider_schema_excludes_unrequested_scientific_record_types():
+    from perla_extract.study_extraction.repair import (
+        RepairWorkItem,
+        RepairWorklist,
+        StudyRepair,
+        _decode_repair,
+        repair_request_schema,
+    )
+    from perla_extract.study_extraction.spans import build_evidence_spans
+
+    block = EvidenceBlock(
+        block_id="source",
+        source="main",
+        page=1,
+        kind="text",
+        text="The device was measured.",
+    )
+    spans = build_evidence_spans([block])
+    worklist = RepairWorklist(
+        items=[
+            RepairWorkItem(
+                reason="validation_issue",
+                record_kind="individual_device",
+                record_ids=["device-a"],
+                block_ids=["source"],
+                detail="Repair the invalid value.",
+            )
+        ]
+    )
+    schema = repair_request_schema(worklist, spans)
+    assert set(schema["properties"]) == {"individual_devices", "unresolved_notes"}
+    assert "DeviceFamily" not in schema["$defs"]
+    assert "StabilityTest" not in schema["$defs"]
+    assert schema["$defs"]["IndividualDevice"]["properties"]["device_id"]["enum"] == [
+        "device-a"
+    ]
+    result = StudyRepair.model_validate(
+        _decode_repair({"individual_devices": [], "unresolved_notes": []}, spans)
+    )
+    assert result.device_families == result.removals == []

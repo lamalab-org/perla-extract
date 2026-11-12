@@ -12,7 +12,6 @@ import hashlib
 import importlib.metadata
 import json
 import re
-import unicodedata
 from functools import lru_cache
 from pathlib import Path
 from statistics import median
@@ -736,13 +735,13 @@ def parse_pdf(
 def _normalized_block_text_key(block: EvidenceBlock) -> str:
     """Create a conservative equality key for complete-block deduplication.
 
-    Unicode compatibility, case, and whitespace differences are ignored, but wording is
-    otherwise required to match exactly. This is intentionally not fuzzy similarity:
-    two tables or paragraphs with small scientific differences must remain separate.
+    Ignore repeated horizontal whitespace and line-ending conventions only. Case,
+    Unicode scientific notation, and table-row boundaries remain significant: Co is
+    not CO, and a superscript is not an ordinary digit.
     """
 
-    text = unicodedata.normalize("NFKC", block.text).casefold()
-    return re.sub(r"\s+", " ", text).strip()
+    text = block.text.replace("\r\n", "\n").replace("\r", "\n")
+    return re.sub(r"[ \t]+", " ", text).strip()
 
 
 def _deduplicate_evidence_blocks(

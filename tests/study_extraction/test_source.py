@@ -6,6 +6,7 @@ import pytest
 from perla_extract.study_extraction.models import EvidenceBlock
 from perla_extract.study_extraction.source import (
     _cache_identity,
+    _deduplicate_evidence_blocks,
     _scientific_evidence_blocks,
     parse_pdf,
 )
@@ -107,3 +108,46 @@ def test_evidence_view_uses_parser_semantics_without_section_name_rules():
 
     assert [item.block_id for item in evidence] == ["body", "unknown"]
     assert excluded == 2
+
+
+@pytest.mark.parametrize("first, second", [("Co", "CO"), ("cm²", "cm2"), ("mM", "mm")])
+def test_duplicate_supplement_detection_preserves_scientific_case_and_notation(
+    first, second
+):
+    template = (
+        "The precursor contains {} and was added before the final annealing step."
+    )
+    blocks = [
+        EvidenceBlock(
+            block_id="main",
+            source="main",
+            page=1,
+            kind="text",
+            text=template.format(first),
+        ),
+        EvidenceBlock(
+            block_id="si",
+            source="supplement",
+            page=1,
+            kind="text",
+            text=template.format(second),
+        ),
+    ]
+    retained, skipped = _deduplicate_evidence_blocks(blocks)
+    assert retained == blocks
+    assert skipped == 0
+
+
+def test_duplicate_supplement_retains_original_source_location():
+    text = "The precursor contains Co and was added before the final annealing step."
+    blocks = [
+        EvidenceBlock(block_id="main", source="main", page=1, kind="text", text=text),
+        EvidenceBlock(
+            block_id="si", source="supplement", page=4, kind="text", text=text
+        ),
+    ]
+    retained, skipped = _deduplicate_evidence_blocks(blocks)
+    assert len(retained) == skipped == 1
+    assert retained[0].metadata["duplicate_locations"] == [
+        {"source": "supplement", "page": 4, "block_id": "si"}
+    ]

@@ -23,11 +23,11 @@ from pydantic import BaseModel
 from examples.scoring.equivalence_probe import probe
 from perla_extract.study_extraction.artifacts import write_json_exclusive
 from perla_extract.study_extraction.evaluation import EvaluationConfig, evaluate_study
-from perla_extract.study_extraction.evaluation_cli import (
+from perla_extract.study_extraction.models import ReportedValue, StudyExtraction
+from perla_extract.study_extraction.reference_io import (
     load_reference,
     reference_content_digest,
 )
-from perla_extract.study_extraction.models import ReportedValue, StudyExtraction
 from perla_extract.study_extraction.reference_release import ReferenceRelease
 from perla_extract.study_extraction.scoring_facts import is_plain_number
 

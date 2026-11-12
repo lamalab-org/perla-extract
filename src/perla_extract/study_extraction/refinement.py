@@ -7,13 +7,6 @@ from pathlib import Path
 
 from .artifacts import write_json_atomic
 from .client import ModelCallError, ModelClient
-from .guidance import (
-    COMPOSITION_BOUNDARY_POLICY,
-    DEVICE_FAMILY_POLICY,
-    EVIDENCE_INTERPRETATION_POLICY,
-    RECORD_BOUNDARY_POLICY,
-    SHARED_QUANTITY_POLICY,
-)
 from .models import EvidenceBlock, StudyExtraction
 from .spans import EvidenceSpan, build_evidence_spans
 from .transport import (
@@ -22,14 +15,10 @@ from .transport import (
     span_citation_schema,
 )
 
-REFINEMENT_PROMPT = f"""Audit the supplied draft against all supplied evidence and
+REFINEMENT_PROMPT = """Audit the supplied draft against all supplied evidence and
 return a complete corrected StudyExtraction.
 
-{DEVICE_FAMILY_POLICY}
-{RECORD_BOUNDARY_POLICY}
-{COMPOSITION_BOUNDARY_POLICY}
-{EVIDENCE_INTERPRETATION_POLICY}
-{SHARED_QUANTITY_POLICY}
+Apply the extraction rules included with the source evidence below.
 Treat the draft and claim ledger as fallible aids, never as source evidence. Reconcile
 experimental objects globally before deciding final record identity. For every
 grounded target claim, either represent the supported fact at the correct reporting
@@ -118,6 +107,7 @@ def refine_draft(
     draft_path: Path,
     audit_path: Path,
     spans: list[EvidenceSpan] | None = None,
+    evidence_components: dict[str, object] | None = None,
 ) -> tuple[StudyExtraction, str | None]:
     """Refine a valid draft, retaining it as the safe fallback and audit baseline."""
 
@@ -130,6 +120,11 @@ def refine_draft(
             model=model,
             system=system_prompt,
             prompt=_prompt(evidence_prompt, draft, citation_spans),
+            prompt_components={
+                **(evidence_components or {"source_request": evidence_prompt}),
+                "review_instructions": REFINEMENT_PROMPT,
+                "draft": compact_to_span_citations(draft, citation_spans),
+            },
             response_model=StudyExtraction,
             max_output_tokens=max_output_tokens,
             reasoning_effort=reasoning_effort,

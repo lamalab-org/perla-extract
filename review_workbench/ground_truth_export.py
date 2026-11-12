@@ -10,7 +10,7 @@ import shutil
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -21,10 +21,10 @@ from perla_extract.study_extraction.models import (
     StudyExtraction,
     study_schema_sha256,
 )
+from perla_extract.study_extraction.reference_io import GROUND_TRUTH_FORMAT_VERSION
 from perla_extract.study_extraction.validation import validate_study
 from review_workbench.study_review import ReviewEvent, StudyReviewStore
 
-GROUND_TRUTH_FORMAT_VERSION = 4
 GROUND_TRUTH_FILENAMES = (
     "ground_truth.json",
     "seed_extraction.json",
@@ -77,7 +77,7 @@ class GroundTruthManifest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    artifact_format_version: int = Field(ge=1)
+    artifact_format_version: Literal[4] = GROUND_TRUTH_FORMAT_VERSION
     study_schema_version: int = Field(ge=1)
     study_schema_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     paper_id: str

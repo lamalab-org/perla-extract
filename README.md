@@ -24,6 +24,11 @@ standard credential: `openai/...` with `OPENAI_API_KEY`,
 `openrouter/...` with `OPENROUTER_API_KEY`, or `anthropic/...` with
 `ANTHROPIC_API_KEY`. The default calls OpenAI directly.
 
+Use a new output folder for each attempt. A shared TOML file (`--config method.toml`)
+controls stage models and limits; [open-model endpoints and Langfuse tracing](docs/workflows/open-models.md)
+are optional. [Ablations](docs/workflows/extraction-ablations.md) use ordinary runs
+and a CSV roster, with `perla-compare` exporting paired results and plotting tables.
+
 The output includes `extraction.json`, its source evidence and retained drafts.
 Saved audits show what repair and enrichment changed. If finalization removes an
 unsupported optional claim, it preserves the candidate and the removed content.

@@ -13,9 +13,10 @@ final report to stdout and writes progress logs to stderr.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `--pdf PATH` | required | Main paper PDF |
+| `--config PATH` | none | TOML method and stage deployments; explicit CLI options override file values |
+| `--pdf PATH` | CLI or TOML required | Main paper PDF |
 | `--supplement PATH` | none | Supporting Information PDF |
-| `--output-dir DIRECTORY` | `study_extraction` | Artifact directory |
+| `--output-dir DIRECTORY` | `study_extraction` | New or empty artifact directory |
 | `--env-file PATH` | `.env.local` when present | Provider environment variables to load |
 | `--reduced-export` | off | Also write historical reduced-schema compatibility files |
 
@@ -38,7 +39,7 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | `--claim-recall-passes INTEGER` | `2` | Independent complete readings of every claim document/window |
 | `--assembly-max-input-tokens INTEGER` | `180000` | Visible safety bound for the global assembly request estimate |
 | `--enrichment / --no-enrichment` | enrichment | Run the audited composition and processing interpretation stage |
-| `--enrichment-model TEXT` | extraction model | Model used for the two compact enrichment calls |
+| `--enrichment-model TEXT` | extraction model | Model used for interpretation calls, including a conditional composition retry |
 | `--enrichment-max-output-tokens INTEGER` | `20000` | Completion limit for each enrichment call |
 | `--refinement / --no-refinement` | refinement | Re-read the same evidence to correct the extraction draft |
 | `--refinement-model TEXT` | extraction model | Optional different model for the quality pass |
@@ -61,10 +62,12 @@ independently per window and merged afterward.
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--model TEXT` | `openai/gpt-5.2` | LiteLLM provider-prefixed model name |
-| `--reasoning-effort [omit|none|minimal|low|medium|high]` | `omit` | Reasoning setting; `omit` removes the parameter for models that do not support it |
-| `--max-output-tokens INTEGER` | `80000` | Maximum completion tokens per call |
+| `--reasoning-effort [omit|none|minimal|low|medium|high|xhigh]` | `omit` | Reasoning setting; `omit` removes the parameter for models that do not support it |
+| `--max-output-tokens INTEGER` | `80000` | Completion allowance for assembly and full revision; other stages have separate limits |
 | `--max-model-calls INTEGER` | omitted | Maximum provider requests, including retries and validation repair |
-| `--max-cost-usd FLOAT` | omitted | Stop before the next call after provider-reported spend reaches this limit |
+| `--max-cost-usd FLOAT` | omitted | Stop before the next call after adapter-reported cost reaches this limit |
+| `--max-total-tokens INTEGER` | omitted | Token budget for starting further provider requests |
+| `--max-elapsed-seconds FLOAT` | omitted | Elapsed-time budget for starting further provider requests |
 | `--temperature FLOAT` | omitted | Sampling temperature; omission leaves the provider default |
 | `--timeout-seconds FLOAT` | `600` | Timeout for one live request |
 | `--heartbeat-seconds FLOAT` | `20` | Progress-log interval; `0` disables heartbeats |
@@ -87,8 +90,9 @@ generation record with a small run before starting a costly cohort. BYOK configu
 and fallback behavior are documented by
 [OpenRouter](https://openrouter.ai/docs/guides/overview/auth/byok).
 
-The command reports prompt tokens, completion tokens, cache hits, and provider-reported
-cost for each call. Use `--max-model-calls` for a hard request limit and
+The command reports prompt tokens, completion tokens, cache hits, and adapter-reported
+cost for each call. Its provenance is saved; an adapter amount may be estimated and
+is not verified against a provider invoice. Use `--max-model-calls` for a hard request limit and
 `--max-cost-usd` to stop before another request after known spend reaches the limit.
 Because providers report cost only after a response, one response can cross the monetary
 threshold; if cost is omitted, a configured monetary limit fails closed before the next
@@ -101,10 +105,10 @@ the original call metadata remains under `calls[].cached_response_usage` for pro
 perla-extract-revalidate --runs-dir results/review-v1
 ```
 
-This reapplies the current deterministic evidence checks to existing
-`extraction.json` and `document.json` files without contacting a model. It refreshes
-only `validation.json`, `grounded_values.json`, and their derived report counts/status;
-the extraction, requests, usage, and cost provenance remain unchanged.
+This reapplies current deterministic evidence checks without contacting a model.
+Each run gets a fresh `revalidation-0001` (or next numbered) directory containing
+`validation.json`, `grounded_values.json`, and a derived report. The original sealed
+report and paid-work accounting remain unchanged.
 Requests contain parser-produced text and tables only. No option enables rendered-page
 or vision-model input in this workflow.
 
@@ -142,6 +146,24 @@ This gate concerns matching, not scientific certification or a minimum F1.
 | `--refresh-document-cache` | off | Ignore and replace matching parser cache entries |
 | `--log-level [DEBUG|INFO|WARNING|ERROR]` | `INFO` | Minimum stderr log level |
 | `--json-logs` | off | Emit JSON log records |
+| `--langfuse / --no-langfuse` | off | Export the local run event stream through the optional Langfuse adapter |
+
+Every attempt writes `events.jsonl`; run output directories are immutable. TOML
+stage deployments expose endpoint, revision, tokenizer, context and decoding controls.
+See [open models and tracing](../workflows/open-models.md) for a complete example.
+
+## Compare experiments
+
+```bash
+perla-compare runs.csv --factor claim_recall_passes --output comparison.json --tables-dir figure-data
+```
+
+The roster requires `paper_id,arm,repeat,run_dir`; paths are relative to the CSV.
+An optional `role` column distinguishes `paired` scores from additional
+`accounting_only` attempts, whose repeat may be blank.
+Each run is scored into its own `evaluation.json`. The comparison verifies sealed
+configuration, output and accounting identities, then computes paired paper differences.
+Missing quality and missing cost remain separate. See the [ablation guide](../workflows/extraction-ablations.md).
 
 Run `perla-extract --help` to see the complete installed command interface.
 

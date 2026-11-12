@@ -65,7 +65,7 @@ standard credential, such as `openrouter/...` with `OPENROUTER_API_KEY` or
 | `run_configuration.json` | Identify the settings and source fingerprints |
 
 Additional audits and exports are listed in the
-[artifact reference](workflows/extraction.md#artifact-reference).
+[artifact reference](workflows/extraction.md).
 
 When claim collection is windowed, every window still contributes to one combined
 `claim_ledger.json`; final study assembly remains global. Requests and preserved

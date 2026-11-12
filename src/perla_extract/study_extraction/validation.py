@@ -11,6 +11,7 @@ from typing import Any
 from .evidence import (
     assembled_from_quotes,
     assembled_with_shared_unit,
+    source_contains_scientific_text,
     source_contains_text,
 )
 from .identifiers import entity_id_lists
@@ -162,12 +163,20 @@ def validate_study_details(
             if {"name", "raw_value", "evidence"} <= value.keys():
                 total_reported_values += 1
                 evidence_ok = evidence_supported(value["evidence"], location)
-                raw_direct = any(
+                scientific_evidence_ok = evidence_ok and all(
                     (block := block_by_id.get(reference.get("block_id"))) is not None
-                    and source_contains_text(block.text, value["raw_value"])
+                    and source_contains_scientific_text(
+                        block.text, reference.get("quote")
+                    )
                     for reference in value["evidence"]
                 )
-                raw_assembled = evidence_ok and assembled_from_quotes(
+                raw_direct = scientific_evidence_ok and any(
+                    source_contains_scientific_text(
+                        reference.get("quote"), value["raw_value"]
+                    )
+                    for reference in value["evidence"]
+                )
+                raw_assembled = scientific_evidence_ok and assembled_from_quotes(
                     value["raw_value"], value["evidence"]
                 )
                 unit_sources = [
@@ -175,7 +184,7 @@ def validate_study_details(
                     for reference in value["evidence"]
                     if (block := block_by_id.get(reference.get("block_id"))) is not None
                 ]
-                raw_shared_unit = evidence_ok and assembled_with_shared_unit(
+                raw_shared_unit = scientific_evidence_ok and assembled_with_shared_unit(
                     value["raw_value"],
                     value.get("unit"),
                     value["evidence"],

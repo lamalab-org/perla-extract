@@ -1,4 +1,5 @@
 import { createFinalizationQueue } from "/adjudication.js";
+import { pendingRecordAction, resolvePendingAction, schemaCompatibilityMessage, reviewProgress, recordEvidenceSection, relationshipChoices } from "/review-state.js";
 
 const $ = (id) => document.getElementById(id);
 const REVIEW_TOKEN_KEY = "review-token";
@@ -141,7 +142,7 @@ const SPLIT_LABELS = {
 };
 const state = {
   split: "dev", papers: [], paperId: null, bundle: null, user: null,
-  page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null,
+  page: 1, pageCount: 1, source: "main", tab: "inventory", edit: null, pendingAction: null,
   queueIndex: 0, queueKey: null, evidenceCache: new Map(), annotations: null,
   studySchema: null, activeCitation: null, pdfRequest: 0, pdfAbortController: null,
   pdfObjectUrl: null, pdfDisplayed: null, censusDraft: null, editingCensus: false, loadingPaperId: null,
@@ -594,6 +595,7 @@ async function selectPaper(paperId) {
   state.bundle = bundle;
   state.queueIndex = 0;
   state.queueKey = null;
+  state.pendingAction = null;
   state.evidenceCache.clear();
   state.activeCitation = null;
   state.censusDraft = null;
@@ -634,12 +636,8 @@ function renderStudy() {
   $("revision").textContent = `Version ${state.bundle.revision}`;
   const compatibility = state.bundle.schema_compatibility;
   const compatibilityNotice = $("schema-compatibility");
-  compatibilityNotice.hidden = compatibility?.exact_match !== false;
-  if (compatibility?.exact_match === false) {
-    compatibilityNotice.textContent = compatibility.readable_by_current_schema
-      ? `This draft uses study schema v${compatibility.seed_schema_version ?? "unknown"}; the current extractor uses v${compatibility.current_schema_version}. It remains readable, but fields added since import still require review or regeneration.`
-      : `This draft is not readable by current study schema v${compatibility.current_schema_version}. Re-import a current extraction before review.`;
-  }
+  compatibilityNotice.textContent = schemaCompatibilityMessage(compatibility);
+  compatibilityNotice.hidden = !compatibilityNotice.textContent;
   $("pdf-source").replaceChildren(...state.bundle.sources.map((source) => element("option", {
     text: source === "main" ? "Main paper" : "Supporting information (SI)",
     properties: { value: source, selected: source === state.source },
@@ -655,6 +653,7 @@ function renderStudy() {
     renderQualityArtifacts();
   }
   renderStageControls();
+  renderPendingAction();
   renderQualityGates();
   renderHistory();
 }
@@ -679,7 +678,7 @@ function renderQualityArtifacts() {
   if (changed.length) {
     sections.push(element("p", {
       className: "callout",
-      text: `Second extraction read changed the current draft (${changed.join(" · ")}). Compare these records with their evidence; a change is a review priority, not a correctness claim.`,
+      text: `Final record check changed the current draft (${changed.join(" · ")}). Compare these records with their evidence; a change is a review priority, not a correctness claim.`,
     }));
   }
   if (repair?.status) {
@@ -1271,12 +1270,12 @@ function attentionReasons(entry) {
   const changes = state.bundle.manifest.quality_artifacts?.refinement_audit?.collections?.[entry.kind];
   const identifier = entityId(entry.kind, entry.item, entry.index);
   if (changes?.added_ids?.includes(identifier)) reasons.push({
-    label: "Added during the second extraction read",
-    explanation: "This record was absent from the first model draft and added when the model reread the evidence. Compare every field with the cited source.",
+    label: "Added during the final record check",
+    explanation: "This record was absent from the first model draft and added during the final record check. Compare every field with the cited source.",
   });
   if (changes?.changed_ids?.includes(identifier)) reasons.push({
-    label: "Revised during the second extraction read",
-    explanation: "The record existed in the first model draft, but one or more fields changed when the model reread the evidence. The current values still need human verification.",
+    label: "Revised during the final record check",
+    explanation: "The record existed in the first model draft, but one or more fields changed during the final record check. The current values still need human verification.",
   });
   if (entry.kind === "device_families") {
     const results = (entry.item.absorbers || []).map((absorber) => compositionProposal(entry.item, absorber)).filter(Boolean);
@@ -1295,6 +1294,7 @@ function filteredEntries() {
     const decision = recordDecision(entry.kind, entry.item, entry.index);
     if (kind !== "all" && entry.kind !== kind) return false;
     if (status === "remaining") return decision !== "verified" && decision !== "uncertain";
+    if (status === "unresolved") return decision !== "verified";
     if (status === "attention") return attentionReasons(entry).length > 0;
     if (status === "all") return true;
     return decision === status;
@@ -1597,15 +1597,8 @@ async function focusCitation(citation, selectForCorrection = false, scroll = tru
 }
 
 function renderRecordEvidence(entry) {
-  const citation = entry.item.evidence?.[0];
-  if (!citation) return element("section", { className: "record-evidence" }, [element("strong", { text: "No record-level evidence supplied" })]);
-  return element("section", { className: "record-evidence" }, [
-    element("div", { className: "evidence-heading" }, [
-      element("div", {}, [element("strong", { text: "Source evidence" }), element("code", { text: citation.block_id })]),
-      element("button", { text: "Show in paper", events: { click: () => focusCitation(citation) } }),
-    ]),
-    element("blockquote", { text: citation.quote }),
-  ]);
+  return recordEvidenceSection(entry.item.evidence, element, focusCitation,
+    blockId => state.evidenceCache.get(blockId));
 }
 
 function currentEntry() {
@@ -1711,10 +1704,15 @@ function renderQualityGates() {
 function renderStageControls() {
   const stages = state.bundle.summary.completed_stages;
   const mine = (stage) => (stages[stage] || []).includes(state.user.id);
-  const decisions = state.bundle.summary.record_decisions?.[state.user.id] || {};
-  const reviewed = Object.values(decisions).filter((decision) => decision === "verified" || decision === "uncertain").length;
-  const remaining = state.bundle.summary.record_count - reviewed;
-  const unresolved = state.bundle.summary.record_count - Object.values(decisions).filter((decision) => decision === "verified").length;
+  const progress = reviewProgress(state.bundle.summary, state.bundle.events, state.user);
+  const { remaining, unresolved } = progress;
+  $("review-progress").textContent = `${progress.reviewed} of ${progress.total} records reviewed · ${progress.uncertain} cannot verify · ${unresolved} not yet verified. Paper check ${progress.paperChecked ? "complete" : "pending"}. Your review ${progress.reviewCompleted ? "saved as complete" : "in progress"}. Final truth ${progress.finalized ? "finalized" : "awaiting final review"}.`;
+  $("review-next-step").textContent = progress.finalized
+    ? (state.user.can_finalize ? "Finalized truth is ready to export." : "An authorized finalizer can export the finalized truth.")
+    : progress.reviewCompleted && !state.user.can_finalize
+      ? "Your review is saved. An authorized finalizer must resolve outstanding records and complete final review."
+      : "Verify outstanding records against the paper before finalizing truth.";
+  $("show-unresolved").hidden = unresolved === 0;
   const labels = {
     inventory: ["Continue to record review", "Paper & figures checked"],
     fields: ["Continue to finish", "Records reviewed"],
@@ -1729,13 +1727,9 @@ function renderStageControls() {
     if (button.dataset.stage === "adjudication" && unresolved > 0) button.textContent = `Resolve ${unresolved} record${unresolved === 1 ? "" : "s"} before finalizing`;
   });
   $("complete-adjudication").hidden = !state.user.can_finalize;
-  const finalEvent = state.bundle.events.at(-1);
-  const finalDecisions = state.bundle.summary.record_decisions?.[finalEvent?.reviewer_id] || {};
-  const finalVerified = Object.values(finalDecisions).filter((decision) => decision === "verified").length;
-  const canExport = state.user.can_finalize && finalEvent?.kind === "stage_complete" && finalEvent?.details?.stage === "adjudication" && finalVerified === state.bundle.summary.record_count;
   $("download-truth").hidden = !state.user.can_finalize;
-  $("download-truth").disabled = !canExport;
-  $("final-export-help").hidden = !state.user.can_finalize || canExport;
+  $("download-truth").disabled = !progress.canExport;
+  $("final-export-help").hidden = !state.user.can_finalize || progress.canExport;
   $("add-record").disabled = false;
   $("new-record-kind").disabled = false;
   const recordsTab = document.querySelector('[data-tab="records"]');
@@ -1903,12 +1897,15 @@ function openRecord(kind, index = null, template = null, intent = index == null 
   const item = index == null && template ? copiedRecordDraft(kind, source) : structuredClone(source);
   const entry = index == null ? null : { kind, index, item, key: recordKey(kind, item, index) };
   const references = entry ? recordReferences(entry) : [];
+  const resolving = intent === "resolve-links";
   state.edit = { kind, index, value: item, intent, references };
   $("record-kind").textContent = COLLECTIONS[kind];
   $("record-title").textContent = index == null
     ? `Add missing ${singularCollection(kind).toLowerCase()}`
     : entityTitle(kind, item, index);
-  $("record-dialog-help").textContent = intent === "copy"
+  $("record-dialog-help").textContent = resolving
+    ? "Before changing this record type, correct the records that link to it. The original record remains unchanged until you return and save the new type."
+    : intent === "copy"
     ? "This is a new record copied from the current one as a structurally valid starting point. The original stays unchanged. Check every copied value and its evidence before saving."
     : intent === "remove"
       ? "Remove this record only if it should not exist in the ground truth. Linked records are never deleted automatically."
@@ -1922,7 +1919,8 @@ function openRecord(kind, index = null, template = null, intent = index == null 
   $("mutation-note-help").textContent = intent === "remove" ? "Required: explain why this record is not supported by the paper." : adding ? "Optional: explain why this record was missing." : "Explain what the extraction got wrong.";
   $("mutation-note").placeholder = intent === "remove" ? "Why should this record not exist?" : adding ? "Why was this record added?" : "What did the extraction get wrong?";
   $("save-record").textContent = adding ? "Add missing record" : "Save my correction";
-  $("save-record").hidden = intent === "remove";
+  $("save-record").hidden = intent === "remove" || resolving;
+  $("mutation-note").closest("label").hidden = resolving;
   const dialog = $("record-dialog");
   if (!dialog.open) dialog.showModal();
   let editorError = null;
@@ -1947,16 +1945,16 @@ function openRecord(kind, index = null, template = null, intent = index == null 
   $("remove-record").disabled = references.length > 0;
   $("remove-record").textContent = references.length ? "Resolve linked records first" : "Remove extra record";
   const dependency = $("record-dependencies");
-  dependency.hidden = intent !== "remove" || references.length === 0;
+  dependency.hidden = (!resolving && intent !== "remove") || references.length === 0;
   dependency.replaceChildren();
-  if (intent === "remove" && references.length) {
+  if ((resolving || intent === "remove") && references.length) {
     const type = singularCollection(kind).toLowerCase();
     dependency.append(
       element("strong", { text: `${references.length} linked record${references.length === 1 ? " must" : "s must"} be handled first` }),
-      element("p", { text: `This ${type} is used by ${linkedRecordSummary(references)}. Removing it now would leave ${references.length === 1 ? "that record" : "those records"} pointing to something that no longer exists.` }),
+      element("p", { text: `This ${type} is used by ${linkedRecordSummary(references)}. ${resolving ? "Changing its type" : "Removing it"} now would leave ${references.length === 1 ? "that record" : "those records"} pointing to something that no longer exists.` }),
       element("p", { text: "Open each linked record below and change its family or device link. If the linked record is also unsupported by the paper, remove it instead." }),
       element("ul", {}, references.map((reference) => element("li", {}, [element("button", {
-        text: `Open ${singularCollection(reference.kind).toLowerCase()} · ${entityId(reference.kind, reference.item, reference.index)}`,
+        text: `Open ${singularCollection(reference.kind).toLowerCase()} · ${entityTitle(reference.kind, reference.item, reference.index)}`,
         properties: { type: "button" },
         events: { click: () => reviewReferencedRecord(reference) },
       })]))),
@@ -2174,7 +2172,24 @@ function renderDeviceStackEditor() {
 
 function structuredLeaf(label, value, path) {
   let input;
-  if (path.at(-1) === "material_form") {
+  let editOriginal = value;
+  let displayLabel = humanLabel(label);
+  const relationship = path.length === 1
+    ? relationshipChoices(path[0], state.edit.kind, state.bundle.ground_truth, state.bundle.summary.record_identifiers, value)
+    : null;
+  if (relationship) {
+    const schema = recordSchemaNode(state.edit.kind, path);
+    const nullable = value === null || schema.anyOf?.some(choice => choice.type === "null");
+    displayLabel = relationship.target === "device_families" ? "Linked device family" : "Linked individual device";
+    editOriginal = nullable ? null : value;
+    input = element("select", { properties: { required: !nullable } }, [
+      element("option", { text: nullable ? "Not linked" : "Choose a record", properties: { value: "", selected: value == null || value === "", disabled: !nullable } }),
+      ...relationship.choices.map(choice => element("option", {
+        text: `${choice.label} · ${choice.value}`,
+        properties: { value: choice.value, selected: choice.value === value },
+      })),
+    ]);
+  } else if (path.at(-1) === "material_form") {
     input = element("select", {}, MATERIAL_FORMS.map((form) => element("option", {
       text: humanLabel(form), properties: { value: form, selected: value === form },
     })));
@@ -2188,10 +2203,10 @@ function structuredLeaf(label, value, path) {
   }
   const inputId = `record-field-${path.map((part) => encodeURIComponent(String(part)).replaceAll("-", "%2D")).join("-")}`;
   input.id = inputId;
-  input.addEventListener("input", () => updateEditValue(path, input.value, value));
+  input.addEventListener("input", () => updateEditValue(path, input.value, editOriginal));
   return element("div", { className: "editor-field" }, [
     element("div", { className: "editor-field-heading" }, [
-      element("label", { text: humanLabel(label), attributes: { for: inputId } }),
+      element("label", { text: displayLabel, attributes: { for: inputId } }),
       element("details", { className: "field-schema-path" }, [
         element("summary", { text: "Schema field" }),
         element("code", { className: "json-path", text: recordFieldPath(path) }),
@@ -2359,6 +2374,10 @@ function beginCorrection(entry) {
 }
 
 function beginRemoval(entry) {
+  if (recordReferences(entry).length && !state.pendingAction) {
+    state.pendingAction = pendingRecordAction("remove", entry);
+    renderPendingAction();
+  }
   return openPreparedRecord(entry.kind, entry.index, null, "remove");
 }
 
@@ -2410,7 +2429,9 @@ async function beginReclassification(entry) {
   const references = recordReferences(entry);
   if (references.length) {
     setStatus(`Relink the ${references.length} dependent record${references.length === 1 ? "" : "s"} before changing this record type.`, true);
-    beginRemoval(entry);
+    if (!state.pendingAction) state.pendingAction = pendingRecordAction("reclassify", entry);
+    renderPendingAction();
+    await openPreparedRecord(entry.kind, entry.index, null, "resolve-links");
     return;
   }
   try {
@@ -2470,7 +2491,42 @@ async function reviewReferencedRecord(reference) {
   state.queueKey = reference.key;
   renderReviewQueue();
   if (reference.item.evidence?.[0]) await focusCitation(reference.item.evidence[0], false, false);
-  setStatus(`Reviewing the linked ${singularCollection(reference.kind).toLowerCase()} before removing the original record.`);
+  renderPendingAction();
+  setStatus(`Reviewing the linked ${singularCollection(reference.kind).toLowerCase()}. Use Return to continue the original action after saving the link correction.`);
+}
+
+function renderPendingAction() {
+  const pending = resolvePendingAction(state.pendingAction, recordEntries(), recordReferences);
+  const panel = $("pending-record-action");
+  panel.hidden = !pending;
+  if (!pending) return;
+  const label = pending.operation === "reclassify" ? "Change type" : "Remove record";
+  $("pending-action-title").textContent = `${label} · ${singularCollection(pending.kind)}${pending.entry ? ` · ${entityTitle(pending.kind, pending.entry.item, pending.entry.index)}` : ""}`;
+  $("pending-action-help").textContent = !pending.entry
+    ? "The original record no longer exists. Cancel this pending action."
+    : pending.ready
+      ? "The links are resolved. Return to complete the original action."
+      : `${pending.references.length} linked record${pending.references.length === 1 ? " still needs" : "s still need"} correction. Saved corrections remain saved if you cancel this pending action.`;
+  $("resume-record-action").textContent = `Return to ${label.toLowerCase()}`;
+  $("resume-record-action").disabled = !pending.entry;
+}
+
+async function resumePendingAction() {
+  const pending = resolvePendingAction(state.pendingAction, recordEntries(), recordReferences);
+  if (!pending?.entry) return;
+  if ($("record-dialog").open) $("record-dialog").close();
+  $("record-kind-filter").value = pending.kind;
+  $("record-status-filter").value = "all";
+  state.queueKey = pending.key;
+  renderReviewQueue();
+  if (pending.operation === "reclassify") await beginReclassification(pending.entry);
+  else await beginRemoval(pending.entry);
+}
+
+function cancelPendingAction() {
+  state.pendingAction = null;
+  renderPendingAction();
+  setStatus("Pending action cancelled. Any link corrections you already saved remain in the review history.");
 }
 
 function attachMissingEvidence(value, citation) {
@@ -2498,6 +2554,7 @@ async function saveRecord() {
     const endpoint = reclassifying ? "record-reclassifications" : "mutations";
     state.bundle = await request(`/api/${endpoint}/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify(payload) });
     $("record-dialog").close();
+    if (reclassifying && state.pendingAction?.key === `${state.edit.source.kind}:${state.edit.source.recordId}`) state.pendingAction = null;
     renderStudy();
     setStatus(reclassifying
       ? "Record type changed and saved. Review the updated record, then choose Matches source."
@@ -2521,6 +2578,7 @@ async function removeRecord() {
     const { kind, index } = state.edit;
     state.bundle = await request(`/api/mutations/${state.split}/${encodeURIComponent(state.paperId)}`, { method: "POST", body: JSON.stringify({ action: "remove", path: `/${pointerPart(kind)}/${index}`, note, evidence: [], base_revision: state.bundle.revision }) });
     $("record-dialog").close();
+    if (state.pendingAction?.key === recordKey(kind, state.edit.value, index)) state.pendingAction = null;
     renderStudy();
     setStatus(`Removed ${title}. No linked records were deleted.`);
   } catch (error) { $("dialog-status").textContent = error.message; }
@@ -3125,6 +3183,16 @@ $("previous-record").addEventListener("click", () => moveQueue(-1));
 $("next-record").addEventListener("click", () => moveQueue(1));
 $("show-fields-editor").addEventListener("click", () => setRecordEditorMode("fields"));
 $("show-json-editor").addEventListener("click", () => setRecordEditorMode("json"));
+$("resume-record-action").addEventListener("click", resumePendingAction);
+$("cancel-record-action").addEventListener("click", cancelPendingAction);
+$("show-unresolved").addEventListener("click", () => {
+  $("record-status-filter").value = "unresolved";
+  $("record-kind-filter").value = "all";
+  state.queueKey = null;
+  state.queueIndex = 0;
+  setTab("records");
+  renderReviewQueue();
+});
 $("close-record").addEventListener("click", () => $("record-dialog").close());
 $("cancel-record").addEventListener("click", () => $("record-dialog").close());
 $("save-record").addEventListener("click", saveRecord);

@@ -27,6 +27,7 @@ from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
     EvidenceBlock,
     StudyExtraction,
+    compatible_study_schema,
     study_schema_sha256,
 )
 from perla_extract.study_extraction.validation import validate_study
@@ -914,6 +915,7 @@ class StudyReviewStore:
                     seed_schema_version == STUDY_SCHEMA_VERSION
                     and seed_schema_hash == current_schema_hash
                 ),
+                "structurally_compatible": compatible_study_schema(seed_schema_hash),
                 "readable_by_current_schema": readable_by_current_schema,
             },
             "summary": self.summary(revision.ground_truth, revision.events),

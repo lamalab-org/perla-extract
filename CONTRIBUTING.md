@@ -90,3 +90,40 @@ To set up the hooks:
 ### Dependency Management
 
 We use `pyproject.toml` for dependency management. Please ensure that any new dependencies are added to the appropriate section in `pyproject.toml`.
+
+### Extraction implementation map
+
+Keep user interfaces thin. `configuration.py` owns defaults, TOML validation,
+stage inheritance and effective method identity; CLI and cohort execution resolve
+through it. A repair limit override must not lose an inherited local endpoint.
+`workflow.py` orders stages and selects candidates. `source.py`, `claims.py`,
+`refinement.py` and `repair.py` own their evidence transformations. The workflow
+[guide](docs/workflows/extraction.md) explains the same stages without requiring a
+reader to know these module names.
+
+`client.py` owns each logical model call and all provider attempts. Account for paid
+work before optional cache writes; a failed output write must not make a paid attempt
+look free. `deployment.py` sizes the exact serialized request used by both planning
+and dispatch. `observability.py` writes canonical local events; `tracing.py` exports
+those events to optional Langfuse observations. It must not introduce another model
+call or duplicate automatic callbacks.
+
+`reference_io.py` accepts one ground-truth artifact format (4). Structural schema
+compatibility and descriptive prose fingerprints are distinct. Frozen reference
+files remain immutable. `run_artifacts.py` binds extraction configuration, evidence,
+prediction and accounting. Revalidation writes a new numbered directory; it never
+rewrites a sealed report. Resume is conservative about source, code and dependency
+changes. These integrity checks detect accidental mixing, not malicious authorship.
+
+`comparison.py` reads an ordinary paired CSV roster, verifies saved attempts, and
+resamples papers. `figure_data.py` exports its counts and diagnostics without
+rescoring. Known cost/token subtotals must remain distinct from complete totals.
+Do not turn cache hits into independent repetitions, count copied run IDs twice,
+resample individual facts as papers, or omit failed attempts from a claimed cohort.
+
+Test scientific behavior with hand-checkable positives and negatives: equivalent
+units should match; missing units, charge/subscript differences, wrong devices and
+unsupported source values should not. Test failure accounting and replay boundaries
+with injected provider/filesystem failures. Frontend tests execute imported review
+state helpers; verify changed user journeys against the real local backend as well.
+Avoid tests that merely repeat generated plans, source-code shape or incidental copy.

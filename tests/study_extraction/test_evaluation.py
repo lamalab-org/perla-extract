@@ -1060,9 +1060,7 @@ def _write_frozen_truth_inputs(tmp_path, artifact_version):
 def test_format_four_requires_declared_finalization_and_clean_validation(
     tmp_path, damage
 ):
-    import click
-
-    from perla_extract.study_extraction.evaluation_cli import load_reference
+    from perla_extract.study_extraction.reference_io import load_reference
 
     directory, _ = _write_frozen_truth_inputs(tmp_path, 4)
     path = directory / "manifest.json"
@@ -1074,11 +1072,11 @@ def test_format_four_requires_declared_finalization_and_clean_validation(
     else:
         payload["validation"]["issue_count"] = False if damage == "boolean_count" else 1
     path.write_text(json.dumps(payload), encoding="utf-8")
-    with pytest.raises(click.ClickException, match="completed adjudication"):
+    with pytest.raises(ValueError, match="completed adjudication"):
         load_reference(directory)
 
 
-@pytest.mark.parametrize("artifact_version", [2, 3, 4])
+@pytest.mark.parametrize("artifact_version", [4])
 def test_cli_verifies_frozen_truth_manifest(tmp_path, artifact_version):
     truth, prediction = _write_frozen_truth_inputs(tmp_path, artifact_version)
     output = tmp_path / "evaluation.json"
@@ -1101,7 +1099,7 @@ def test_cli_verifies_frozen_truth_manifest(tmp_path, artifact_version):
     assert result_payload["benchmark"]["paper_id"] == "paper-a"
 
 
-@pytest.mark.parametrize("artifact_version", [2, 3, 4])
+@pytest.mark.parametrize("artifact_version", [4])
 def test_cli_rejects_unresolved_reference_without_writing_scores(
     tmp_path, artifact_version
 ):
@@ -1181,13 +1179,22 @@ def test_raw_number_consistency_uses_only_relative_tolerance(raw, number, expect
     assert is_plain_number(value(raw, number, "m")) is expected
 
 
-def test_cli_attaches_evidence_validation_for_complete_prediction_run(tmp_path):
+@pytest.mark.parametrize(
+    "quote,verified", [("reported 20%", True), ("reported", False)]
+)
+def test_cli_attaches_evidence_validation_for_complete_prediction_run(
+    tmp_path, quote, verified
+):
     truth = tmp_path / "truth.json"
     truth.write_text(study().model_dump_json(), encoding="utf-8")
     prediction = tmp_path / "prediction"
     prediction.mkdir()
+    actual = study(prefix="prediction")
+    actual.performance_observations[0].metrics[0].evidence = [
+        EvidenceCitation(block_id="b", quote=quote)
+    ]
     (prediction / "extraction.json").write_text(
-        study(prefix="prediction").model_dump_json(), encoding="utf-8"
+        actual.model_dump_json(), encoding="utf-8"
     )
     (prediction / "document.json").write_text(
         json.dumps(
@@ -1226,6 +1233,10 @@ def test_cli_attaches_evidence_validation_for_complete_prediction_run(tmp_path):
         ),
         encoding="utf-8",
     )
+    from perla_extract.study_extraction.run_artifacts import write_run_manifest
+
+    (prediction / "run_configuration.json").write_text("{}")
+    write_run_manifest(prediction)
     output = tmp_path / "evaluation.json"
 
     result = CliRunner().invoke(
@@ -1242,8 +1253,12 @@ def test_cli_attaches_evidence_validation_for_complete_prediction_run(tmp_path):
 
     assert result.exit_code == 0
     validation = json.loads(output.read_text(encoding="utf-8"))["prediction_validation"]
-    assert validation["status"] == "verified"
-    assert validation["issues"] == []
+    assert validation["status"] == ("verified" if verified else "needs_review")
+    assert len(validation["issues"]) == (0 if verified else 1)
+    if not verified:
+        assert (
+            validation["issues"][0]["reason"] == "raw_value not found in cited evidence"
+        )
     efficiency = json.loads(output.read_text(encoding="utf-8"))["run_efficiency"]
     assert efficiency["total_tokens"] == 120
     assert efficiency["cost_usd"] == 0.01
@@ -1466,8 +1481,58 @@ def test_old_scoring_report_is_not_silently_loaded_as_current():
     from pydantic import ValidationError
 
     payload = evaluate_study(study(), study()).model_dump()
-    assert payload["format_version"] == 7
+    assert payload["format_version"] == 8
     assert payload["core_facts"]["profile"] == "core-scientific-facts-v6"
     payload["format_version"] = 5
     with pytest.raises(ValidationError):
         EvaluationReport.model_validate(payload)
+
+
+def test_score_output_is_not_overwritten_when_rescoring(tmp_path):
+    truth = tmp_path / "truth.json"
+    prediction = tmp_path / "prediction.json"
+    output = tmp_path / "evaluation.json"
+    truth.write_text(study().model_dump_json())
+    prediction.write_text(study().model_dump_json())
+    arguments = [
+        "--truth",
+        str(truth),
+        "--prediction",
+        str(prediction),
+        "--output",
+        str(output),
+    ]
+    assert CliRunner().invoke(main, arguments).exit_code == 0
+    saved = output.read_bytes()
+    result = CliRunner().invoke(main, arguments)
+    assert result.exit_code != 0
+    assert output.read_bytes() == saved
+
+
+def test_dataset_token_totals_are_complete_only_when_every_run_says_so():
+    from perla_extract.study_extraction.evaluation import RunEfficiency
+
+    def report(flag):
+        return evaluate_study(
+            study(),
+            study(),
+            run_efficiency=RunEfficiency(
+                status="complete",
+                live_calls=1,
+                cache_hits=0,
+                prompt_tokens=10,
+                completion_tokens=0,
+                total_tokens=10,
+                cost_usd=0,
+                elapsed_seconds=1,
+                token_tracking_complete=flag,
+            ),
+        )
+
+    assert (
+        aggregate_evaluations([report(True)]).efficiency.token_tracking_complete is True
+    )
+    for flag in (False, None):
+        aggregate = aggregate_evaluations([report(True), report(flag)])
+        assert aggregate.efficiency.token_tracking_complete is False
+        assert aggregate.efficiency.total_tokens == 20

@@ -121,7 +121,7 @@ def test_assembly_includes_only_a_bounded_local_neighborhood():
     ]
 
 
-def test_window_ledgers_are_combined_without_colliding_local_ids():
+def test_exact_repeated_statements_coalesce_with_reading_provenance():
     evidence = citation("result", "Device A reached 20%")
     part = ClaimLedger(
         objects=[
@@ -147,16 +147,20 @@ def test_window_ledgers_are_combined_without_colliding_local_ids():
         ],
     )
 
-    combined = combine_ledgers([("main", part), ("si", part)])
+    provenance = {}
+    combined = combine_ledgers([("main", part), ("si", part)], provenance=provenance)
 
-    assert [item.object_id for item in combined.objects] == [
-        "main:device",
-        "si:device",
-    ]
-    assert [item.subject_object_ids for item in combined.claims] == [
-        ["main:device"],
-        ["si:device"],
-    ]
+    assert [item.object_id for item in combined.objects] == ["main:device"]
+    assert [item.subject_object_ids for item in combined.claims] == [["main:device"]]
+    assert provenance["origins"] == {
+        "main:device": ["main:device", "si:device"],
+        "main:efficiency": ["main:efficiency", "si:efficiency"],
+    }
+    different_subject = part.model_copy(
+        update={"objects": [part.objects[0].model_copy(update={"label": "Device B"})]}
+    )
+    distinct = combine_ledgers([("first", part), ("second", different_subject)])
+    assert len(distinct.objects) == len(distinct.claims) == 2
 
 
 def test_characterization_object_does_not_require_or_justify_a_device_family():
@@ -411,3 +415,68 @@ def test_only_source_grounded_objects_and_claims_can_guide_assembly():
     assert [item.object_id for item in grounded.objects] == ["valid"]
     assert audit["grounded_object_count"] == 1
     assert audit["rejected_count"] == 1
+
+
+@pytest.mark.parametrize(
+    "raw_value, supported",
+    [
+        ("20%", True),
+        ("99%", False),
+        ("20", True),
+        ("0%", False),
+        ("Co", True),
+        ("CO", False),
+        ("2", False),
+    ],
+)
+def test_grounding_checks_value_inside_its_own_source_quote(raw_value, supported):
+    text = "The Co control device reached 20% efficiency."
+    block = EvidenceBlock(
+        block_id="result", source="main", page=1, kind="text", text=text
+    )
+    ledger = ClaimLedger(
+        objects=[],
+        claims=[
+            SourceClaim(
+                claim_id="value",
+                kind="reported_quantity",
+                label="reported value",
+                subject_object_ids=[],
+                scope="target",
+                raw_value=raw_value,
+                shared_targets=[],
+                evidence=[citation("result", text)],
+            )
+        ],
+    )
+    grounded, audit = grounded_ledger([block], ledger)
+    assert bool(grounded.claims) is supported
+    assert audit["rejected_count"] == int(not supported)
+
+
+def test_grounding_does_not_borrow_value_from_an_uncited_sentence():
+    block = EvidenceBlock(
+        block_id="result",
+        source="main",
+        page=1,
+        kind="text",
+        text="Device A reached 20%. Device B reached 25%.",
+    )
+    ledger = ClaimLedger(
+        objects=[],
+        claims=[
+            SourceClaim(
+                claim_id="value",
+                kind="performance",
+                label="efficiency",
+                subject_object_ids=[],
+                scope="target",
+                raw_value="25%",
+                shared_targets=[],
+                evidence=[citation("result", "Device A reached 20%.")],
+            )
+        ],
+    )
+    grounded, audit = grounded_ledger([block], ledger)
+    assert grounded.claims == []
+    assert audit["rejected"][0]["reason"] == "raw value absent from cited evidence"

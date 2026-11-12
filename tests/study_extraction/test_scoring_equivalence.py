@@ -233,3 +233,46 @@ def test_cli_records_equivalences_and_original_input_hashes(tmp_path):
         saved["prediction_content_sha256"]
         == evaluate_study(truth, prediction).prediction_content_sha256
     )
+
+
+@pytest.mark.parametrize("unit", [None, "", "   "])
+def test_missing_unit_never_acquires_dimensionless_scale(unit):
+    assert not equal_value(value("0.2", unit, 0.2), value("20%", "%", 20), 1e-6, 0)
+
+
+@pytest.mark.parametrize("suffix", ["%", "percent", "percentage"])
+@pytest.mark.parametrize("unit", ["%", "percent", "percentage"])
+def test_percentage_suffix_and_unit_aliases_have_identical_meaning(suffix, unit):
+    assert equal_value(
+        value(f"20 {suffix}", unit, 20), value("0.2", "dimensionless", 0.2), 1e-6, 0
+    )
+
+
+def test_charge_and_atom_count_remain_distinct_in_scored_composition():
+    from perla_extract.study_extraction.models import (
+        AbsorberComponent,
+        MaterialConstituent,
+    )
+
+    truth = study()
+    truth.device_families[0].absorbers = [
+        AbsorberComponent(
+            absorber_id="absorber",
+            layer_id=None,
+            label="perovskite absorber",
+            formula=None,
+            properties=[],
+            evidence=EVIDENCE,
+            constituents=[
+                MaterialConstituent(
+                    name="Fe³⁺", role="dopant", amount=None, evidence=EVIDENCE
+                )
+            ],
+        )
+    ]
+    prediction = truth.model_copy(deep=True)
+    prediction.device_families[0].absorbers[0].constituents[0].name = "Fe₃⁺"
+    score = evaluate_study(truth, prediction).core_facts.groups["composition"]
+    assert score.matched < score.truth
+    assert not equal_value("Fe³⁺", "Fe₃⁺", 1e-6, 0)
+    assert equal_value("CH₃NH₃PbI₃", "CH3NH3PbI3", 1e-6, 0)

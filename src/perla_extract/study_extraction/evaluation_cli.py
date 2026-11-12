@@ -2,207 +2,27 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
-import re
 from pathlib import Path
 
 import click
 from pydantic import ValidationError
 
-from .artifacts import write_json_atomic
+from .artifacts import write_json_exclusive
 from .evaluation import (
-    BenchmarkProvenance,
     EvaluationConfig,
     PredictionValidation,
     RunEfficiency,
     evaluate_study,
 )
-from .models import EvidenceBlock, StudyExtraction, study_schema_sha256
+from .models import EvidenceBlock, StudyExtraction
+from .reference_io import load_reference
+from .reference_io import load_study as _study
+from .reference_io import read_json as _json
+from .run_artifacts import load_run_efficiency, verify_run_manifest
 from .validation import validate_study
 
 INPUT = click.Path(path_type=Path, exists=True, readable=True, resolve_path=True)
 OUTPUT = click.Path(path_type=Path, dir_okay=False, resolve_path=True)
-SUPPORTED_GROUND_TRUTH_FORMAT_VERSIONS = {2, 3, 4}
-
-
-def _json(path: Path) -> object:
-    """Load one UTF-8 JSON artifact and keep its path in parse errors."""
-
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise click.ClickException(f"cannot read {path}: {exc}") from exc
-
-
-def reference_content_digest(value: object) -> str:
-    """Reproduce the reference export hash for loaders, audits and experiment plans.
-
-    The trailing newline is part of this public serialization contract. Do not
-    substitute the scorer's parsed-study hash or a file-byte hash for this digest.
-    """
-
-    encoded = (
-        json.dumps(
-            value,
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-        )
-        + "\n"
-    ).encode()
-    return hashlib.sha256(encoded).hexdigest()
-
-
-def _study(payload: object, path: Path) -> StudyExtraction:
-    """Convert schema failures into concise CLI errors that retain the source path."""
-
-    try:
-        return StudyExtraction.model_validate(payload)
-    except ValidationError as exc:
-        raise click.ClickException(f"invalid StudyExtraction in {path}: {exc}") from exc
-
-
-def load_reference(
-    path: Path,
-) -> tuple[StudyExtraction, BenchmarkProvenance | None]:
-    """Load truth and verify the schema/content identifiers needed for scoring.
-
-    This gate binds results to declared inputs; it does not authenticate expert
-    judgments or revalidate the archived reference evidence. Those checks belong
-    to adjudication and export. Bare JSON deliberately has no release provenance.
-    """
-
-    if path.is_file():
-        return _study(_json(path), path), None
-    truth_path = path / "ground_truth.json"
-    manifest_path = path / "manifest.json"
-    if not truth_path.is_file() or not manifest_path.is_file():
-        raise click.ClickException(
-            f"{path} must contain ground_truth.json and manifest.json"
-        )
-    payload = _json(truth_path)
-    manifest = _json(manifest_path)
-    if not isinstance(manifest, dict):
-        raise click.ClickException(f"{manifest_path} is not a JSON object")
-    if (
-        manifest.get("artifact_format_version")
-        not in SUPPORTED_GROUND_TRUTH_FORMAT_VERSIONS
-    ):
-        raise click.ClickException(
-            "ground-truth artifact format is unsupported; regenerate or migrate it"
-        )
-    evidence_version = None
-    evidence_digest = None
-    if manifest["artifact_format_version"] >= 3:
-        evidence_version = manifest.get("evidence_version")
-        evidence_digest = manifest.get("evidence_document_sha256")
-        if (
-            type(evidence_version) is not int
-            or evidence_version < 1
-            or not isinstance(evidence_digest, str)
-            or not re.fullmatch(r"[0-9a-f]{64}", evidence_digest)
-        ):
-            raise click.ClickException(
-                "ground truth format 3 or later requires an evidence version and document hash"
-            )
-    expected_schema = manifest.get("study_schema_sha256")
-    if expected_schema != study_schema_sha256():
-        raise click.ClickException(
-            "ground-truth schema hash differs from the installed evaluator"
-        )
-    files = manifest.get("files")
-    expected_truth = files.get("ground_truth.json") if isinstance(files, dict) else None
-    if expected_truth != reference_content_digest(payload):
-        raise click.ClickException("ground_truth.json does not match its manifest hash")
-    review = manifest.get("review")
-    if not isinstance(review, dict):
-        raise click.ClickException("manifest review must be a JSON object")
-    uncertain = review.get("uncertain_record_keys")
-    if not isinstance(uncertain, list) or not all(
-        isinstance(item, str) for item in uncertain
-    ):
-        raise click.ClickException(
-            "manifest uncertain_record_keys must be a string list"
-        )
-    if uncertain:
-        raise click.ClickException(
-            "reference contains unresolved records; complete adjudication and export "
-            "a finalized reference before scoring"
-        )
-    if manifest["artifact_format_version"] >= 4:
-        # Public manifests redact reviewer IDs but retain stage names. Private
-        # exports retain the stage-to-reviewer mapping. Neither is authentication;
-        # both must at least declare the final gate that format 4 promises.
-        stages = review.get("completed_stage_names", review.get("completed_stages"))
-        validation = manifest.get("validation")
-        if (
-            not isinstance(stages, (dict, list))
-            or "adjudication" not in stages
-            or (isinstance(stages, dict) and not stages["adjudication"])
-            or not isinstance(validation, dict)
-            or validation.get("status") != "verified"
-            or type(validation.get("issue_count")) is not int
-            or validation["issue_count"] != 0
-        ):
-            raise click.ClickException(
-                "format-4 reference requires completed adjudication and verified "
-                "validation with zero issues; export the finalized revision again"
-            )
-    paper_id = manifest.get("paper_id")
-    split = manifest.get("split")
-    source_manifest = manifest.get("source_manifest")
-    if not isinstance(paper_id, str) or not isinstance(split, str):
-        raise click.ClickException("manifest paper_id and split must be strings")
-    if not isinstance(source_manifest, dict):
-        raise click.ClickException("manifest source_manifest must be a JSON object")
-    source_hashes = source_manifest.get("source_sha256", [])
-    if not isinstance(source_hashes, list) or not all(
-        isinstance(item, str) for item in source_hashes
-    ):
-        raise click.ClickException(
-            "source_manifest source_sha256 must be a string list"
-        )
-    return (
-        _study(payload, truth_path),
-        BenchmarkProvenance(
-            paper_id=paper_id,
-            split=split,
-            ground_truth_sha256=expected_truth,
-            source_manifest_sha256=reference_content_digest(source_manifest),
-            source_sha256=source_hashes,
-            evidence_version=evidence_version,
-            evidence_document_sha256=evidence_digest,
-        ),
-    )
-
-
-def _run_efficiency(path: Path) -> RunEfficiency:
-    """Validate measured token, cost, request, and latency totals from report.json."""
-
-    payload = _json(path)
-    if not isinstance(payload, dict):
-        raise click.ClickException(f"{path} is not a JSON object")
-    usage = payload.get("usage")
-    budget = payload.get("budget")
-    if not isinstance(usage, dict):
-        raise click.ClickException(f"{path} has no usage object")
-    budget = budget if isinstance(budget, dict) else {}
-    try:
-        return RunEfficiency(
-            status=payload.get("status"),
-            live_calls=usage.get("live_calls"),
-            cache_hits=usage.get("cache_hits"),
-            prompt_tokens=usage.get("prompt_tokens"),
-            completion_tokens=usage.get("completion_tokens"),
-            total_tokens=usage.get("total_tokens"),
-            cost_usd=usage.get("cost"),
-            provider_requests=budget.get("provider_requests"),
-            cost_tracking_complete=budget.get("cost_tracking_complete"),
-            elapsed_seconds=payload.get("elapsed_seconds"),
-        )
-    except ValidationError as exc:
-        raise click.ClickException(f"invalid run accounting in {path}: {exc}") from exc
 
 
 def _prediction(
@@ -241,7 +61,7 @@ def _prediction(
     return (
         study,
         PredictionValidation.model_validate(validation),
-        _run_efficiency(report_path),
+        load_run_efficiency(report_path),
     )
 
 
@@ -291,8 +111,11 @@ def main(
 ) -> None:
     """Score one extraction without using an LLM or run-local identifiers."""
 
-    expected, benchmark = load_reference(truth)
-    actual, prediction_validation, run_efficiency = _prediction(prediction)
+    try:
+        expected, benchmark = load_reference(truth)
+        actual, prediction_validation, run_efficiency = _prediction(prediction)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
     try:
         config = EvaluationConfig(
             minimum_record_similarity=minimum_record_similarity,
@@ -309,20 +132,32 @@ def main(
                 else {}
             ),
         )
-    except ValidationError as exc:
+    except ValueError as exc:
         raise click.ClickException(f"invalid scoring configuration: {exc}") from exc
     try:
+        manifest_digest = None
+        run_id = None
+        if prediction.is_dir():
+            manifest, manifest_digest = verify_run_manifest(prediction)
+            run_id = manifest.run_id
         report = evaluate_study(
             expected,
             actual,
             benchmark=benchmark,
             prediction_validation=prediction_validation,
             run_efficiency=run_efficiency,
+            run_manifest_sha256=manifest_digest,
+            run_id=run_id,
             config=config,
         )
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
-    write_json_atomic(output, report.model_dump(mode="json"))
+    try:
+        write_json_exclusive(output, report.model_dump(mode="json"))
+    except OSError as exc:
+        raise click.ClickException(
+            f"Cannot create {output}; choose a new output path: {exc}"
+        ) from exc
     click.echo(str(output))
     if fail_on_scoring_issues and report.core_facts.issues:
         raise click.ClickException(

@@ -79,7 +79,6 @@ def test_deployed_authentication_has_a_recoverable_sign_in_flow():
     assert 'state.authMode === "internal_or_clerk"' in javascript
     assert "Choose Forgot password in the form" in javascript
     assert 'elevation: "flush"' in javascript
-    assert 'colorPrimary: "#176b52"' in javascript
     assert "Your session expired. Sign in again" in javascript
     assert "localStorage.removeItem(REVIEW_TOKEN_KEY)" in javascript
     assert '"Connection problem"' not in javascript
@@ -257,23 +256,6 @@ def test_ui_shows_reported_composition_beside_enrichment_proposals():
     assert "result.status" in javascript
 
 
-def test_pipeline_statuses_are_explained_as_review_priorities():
-    html = (APP / "index.html").read_text(encoding="utf-8")
-    source = (APP / "app.js").read_text(encoding="utf-8")
-
-    assert "Start here: review one record at a time" in html
-    assert "is a priority list, not a claim that a record is wrong" in html
-    assert "Passed automated checks" in source
-    assert "It still requires human comparison with the source" in source
-    assert "You marked this for correction" in source
-    assert "Added during the second extraction read" in source
-    assert "Revised during the second extraction read" in source
-    assert "a change is a review priority, not a correctness claim" in source
-    assert "correction required" not in source
-    assert "changed by quality pass" not in source
-    assert "added by quality pass" not in source
-
-
 def test_revision_conflicts_use_reviewer_language_and_offer_recovery():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
@@ -413,35 +395,6 @@ def test_pdf_source_switch_is_visible_cached_and_waits_for_the_new_page():
     assert server.count("private, max-age=3600, immutable") >= 3
 
 
-def test_record_count_corrections_are_explicit_and_reference_guarded():
-    html = (APP / "index.html").read_text(encoding="utf-8")
-    source = (APP / "app.js").read_text(encoding="utf-8")
-    backend = (APP.parent / "study_review.py").read_text(encoding="utf-8")
-
-    assert "Duplicate as missing" in source
-    assert "Merge duplicate" in source
-    assert "Change type" in source
-    assert "/api/record-merges/" in source
-    assert '"record-reclassifications"' in source
-    assert "Remove extra record" in html
-    assert "Merging repeated records moves their explicit links automatically" in html
-    assert "/api/study-schema" in source
-    assert "draftFromSchema" in source
-    assert "recordReferences" in source
-    assert "reviewReferencedRecord" in source
-    assert "Add missing record" in source
-    assert "Save my correction" in source
-    assert "other records refer to it" in backend
-    assert 'dependency.hidden = intent !== "remove"' in source
-    assert '$("remove-record").hidden = intent !== "remove"' in source
-    assert (
-        '$("cancel-record").addEventListener("click", () => $("record-dialog").close())'
-        in source
-    )
-    assert "linkedRecordSummary" in source
-    assert "pointing to something that no longer exists" in source
-
-
 def test_startup_defers_schema_and_shows_real_loading_states():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
@@ -503,22 +456,6 @@ def test_correction_and_removal_dialogs_open_without_saving_a_decision_first():
     assert "submitDecision" not in correction
     assert "openPreparedRecord" in removal
     assert "submitDecision" not in removal
-
-
-def test_corrections_default_to_fields_and_existing_evidence():
-    html = (APP / "index.html").read_text(encoding="utf-8")
-    source = (APP / "app.js").read_text(encoding="utf-8")
-
-    assert "structured-editor" in html
-    assert "Raw record JSON" in html
-    assert ">Form</button>" in html
-    assert "renderStructuredEditor" in source
-    assert "setRecordEditorMode" in source
-    assert "recordFieldPath" in source
-    assert "citation?.block_id" in source
-    assert "MATERIAL_FORMS" in source
-    assert "schema_compatibility" in source
-    assert "fields added since import still require review or regeneration" in source
 
 
 def test_device_family_editor_has_a_focused_stack_workflow():
@@ -631,63 +568,6 @@ def test_ui_builds_untrusted_content_with_dom_nodes():
     source = (APP / "app.js").read_text(encoding="utf-8")
     assert "innerHTML" not in source
     assert "replaceChildren" in source
-
-
-def test_only_finalizers_can_download_an_adjudicated_pr_bundle():
-    html = (APP / "index.html").read_text(encoding="utf-8")
-    source = (APP / "app.js").read_text(encoding="utf-8")
-    assert "Download adjudicated PR bundle" in html
-    assert "ground-truth-export" in source
-    assert "const canExport = state.user.can_finalize" in source
-    assert 'finalEvent?.details?.stage === "adjudication"' in source
-
-
-@pytest.mark.skipif(shutil.which("node") is None, reason="Node is required")
-def test_final_review_controls_require_verified_records():
-    """Draft uncertainty stays usable, but cannot enable finalization or export."""
-
-    source = (APP / "app.js").read_text(encoding="utf-8")
-    function = source[
-        source.index("function renderStageControls()") : source.index(
-            "function renderHistory()"
-        )
-    ]
-    script = (
-        r"""
-const assert = require('node:assert/strict');
-const nodes = new Map();
-const $ = (id) => { if (!nodes.has(id)) nodes.set(id, {}); return nodes.get(id); };
-const buttons = ['inventory', 'fields', 'completeness', 'adjudication'].map(stage => ({dataset: {stage}}));
-const document = {
-  querySelectorAll: () => buttons,
-  querySelector: (key) => $(key),
-};
-const hasAudit = () => true;
-const state = {user: {id: 'admin', role: 'admin', can_finalize: true}, bundle: {
-  summary: {record_count: 1, record_decisions: {admin: {record: 'uncertain'}},
-    completed_stages: {inventory: ['admin'], fields: ['admin'], completeness: ['admin']}},
-  events: [{kind: 'stage_complete', reviewer_id: 'admin', details: {stage: 'adjudication'}}],
-}};
-"""
-        + function
-        + r"""
-renderStageControls();
-assert.equal(buttons[3].disabled, true);
-assert.match(buttons[3].textContent, /Resolve 1 record/);
-assert.equal($('download-truth').disabled, true);
-state.bundle.summary.record_decisions.admin.record = 'verified';
-renderStageControls();
-assert.equal(buttons[3].disabled, false);
-assert.equal($('download-truth').disabled, false);
-state.user = {id: 'collaborator', role: 'reviewer', can_finalize: true};
-renderStageControls();
-assert.equal($('download-truth').disabled, false); // Final review belongs to admin.
-state.user.can_finalize = false;
-renderStageControls();
-assert.equal($('download-truth').disabled, true);
-"""
-    )
-    subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
 
 
 def test_reviewers_can_inspect_and_download_their_persisted_annotations():

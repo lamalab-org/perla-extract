@@ -1018,6 +1018,7 @@ def test_bundle_marks_readable_older_schema_as_not_exactly_comparable(
         "current_schema_sha256": study_schema_sha256(),
         "exact_match": False,
         "readable_by_current_schema": True,
+        "structurally_compatible": False,
     }
 
 
