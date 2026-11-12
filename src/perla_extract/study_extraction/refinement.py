@@ -115,6 +115,7 @@ def refine_draft(
     citation_spans = spans or build_evidence_spans(blocks)
     try:
         refined = client.complete(
+            stage="refine",
             kind=kind,
             slug=slug,
             model=model,

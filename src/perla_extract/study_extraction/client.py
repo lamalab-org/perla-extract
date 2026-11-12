@@ -9,27 +9,33 @@ import time
 import uuid
 from collections.abc import Callable
 from copy import deepcopy
-from functools import wraps
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, TypeVar, cast
+from typing import Any, Generic, TypeVar
 
 import litellm
 from pydantic import BaseModel, ValidationError
 
+from .accounting import (
+    AttemptRecord,
+    CallAccounting,
+    CallRecord,
+)
+from .accounting import (
+    summarize_calls as summarize_calls,
+)
 from .artifacts import write_json_atomic
 from .deployment import (
     DeploymentSettings,
-    deployment_stage,
-    estimate_request_input,
-    request_limit_issues,
+    RequestEstimate,
     strict_response_schema,
 )
 from .logging import logger
 from .observability import EventJournal
 from .progress import heartbeat
+from .request_policy import ResolvedStagePolicy
 
 ResponseModel = TypeVar("ResponseModel", bound=BaseModel)
-CallFunction = TypeVar("CallFunction", bound=Callable[..., Any])
 MessageContent = str | list[dict[str, object]]
 VALIDATION_REPAIR_VERSION = 1
 RETRYABLE_ERRORS = (
@@ -64,6 +70,14 @@ class ModelBudgetExceeded(ModelCallError):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, retryable=False)
+
+
+class _ResponseArtifactError(OSError):
+    """Carry already captured provider usage across a failed diagnostic write."""
+
+    def __init__(self, error: OSError, usage: dict) -> None:
+        super().__init__(*error.args)
+        self.usage = usage
 
 
 def _strict_schema(
@@ -147,147 +161,33 @@ def _validation_repair_request(
     return repaired
 
 
-def _aggregate_usage(records: list[dict]) -> dict:
-    """Sum known attempt usage without replacing unavailable totals with certainty."""
-    if not records:
-        return {}
-    result: dict[str, Any] = {}
-    for key in ("prompt_tokens", "completion_tokens", "total_tokens"):
-        result[key] = sum(int(record.get(key) or 0) for record in records)
-    for key in ("prompt_tokens_details", "completion_tokens_details"):
-        details = [record.get(key) for record in records]
-        names = {name for item in details if isinstance(item, dict) for name in item}
-        result[key] = {
-            name: sum(
-                item[name]
-                for item in details
-                if isinstance(item, dict) and isinstance(item.get(name), (int, float))
-            )
-            if any(
-                isinstance(item, dict) and isinstance(item.get(name), (int, float))
-                for item in details
-            )
-            else None
-            for name in names
-        }
-        result[key + "_complete"] = {
-            name: all(
-                isinstance(item, dict) and isinstance(item.get(name), (int, float))
-                for item in details
-            )
-            for name in names
-        }
-    result["cost"] = round(sum(float(record.get("cost") or 0) for record in records), 8)
-    result["cost_tracking_complete"] = all(
-        record.get("cost") is not None for record in records
-    )
-    result["total_cost_usd"] = (
-        result["cost"] if result["cost_tracking_complete"] else None
-    )
-    result["token_tracking_complete"] = all(
-        all(
-            record.get(k) is not None
-            for k in ("prompt_tokens", "completion_tokens", "total_tokens")
-        )
-        for record in records
-    )
-    result["latency_seconds"] = round(
-        sum(float(record.get("latency_seconds") or 0) for record in records), 6
-    )
-    result["provider_responses"] = sum(
-        bool(record.get("response_received", True)) for record in records
-    )
-    for name in (
-        "response_model",
-        "provider",
-        "finish_reason",
-        "response_id",
-        "cost_source",
-    ):
-        values = list(
-            dict.fromkeys(
-                record[name] for record in records if record.get(name) is not None
-            )
-        )
-        result[name + "s"] = values
-        result[name] = values[0] if len(values) == 1 else None
-    return result
+@dataclass(frozen=True)
+class _PreparedCall:
+    policy: ResolvedStagePolicy
+    body: dict[str, Any]
+    schema: dict
+    record: CallRecord
+    cache_path: Path
 
 
-def summarize_calls(calls: list[dict[str, Any]]) -> dict[str, Any]:
-    """Summarize this execution; cached origin usage never becomes a new charge."""
-    attempts = [attempt for call in calls for attempt in call.get("attempts", [])]
-    usage = _aggregate_usage([attempt["usage"] for attempt in attempts])
-    # Old callers/fixtures can still supply one aggregate per logical call.
-    if not attempts:
-        usage = _aggregate_usage(
-            [
-                call["usage"]
-                for call in calls
-                if isinstance(call.get("usage"), dict) and call["usage"]
-            ]
-        )
-    return {
-        "logical_calls": len(calls),
-        "live_calls": sum(
-            not call.get("cache_hit") and int(call.get("attempt_count", 1)) > 0
-            for call in calls
-        ),
-        "cache_hits": sum(bool(call.get("cache_hit")) for call in calls),
-        "blocked_calls": sum(call.get("status") == "blocked" for call in calls),
-        "provider_attempts": sum(int(call.get("attempt_count", 0)) for call in calls),
-        "responses_received": usage.get("provider_responses", 0),
-        **{
-            key: usage.get(key, 0)
-            for key in ("prompt_tokens", "completion_tokens", "total_tokens", "cost")
-        },
-        "total_cost_usd": usage.get("total_cost_usd", 0.0),
-        "cost_tracking_complete": usage.get("cost_tracking_complete", True),
-        "token_tracking_complete": usage.get("token_tracking_complete", True),
-        **{
-            key: value
-            for key, value in usage.items()
-            if "_details" in key or key == "cost_sources"
-        },
-    }
+@dataclass(frozen=True)
+class _PreparedAttempt:
+    body: dict[str, Any]
+    attempt_id: str
+    index: int
+    request_sha256: str
+    estimate: RequestEstimate
+    failure_path: Path
+    response_path: Path
 
 
-def _preserve_call_accounting(function: CallFunction) -> CallFunction:
-    """Finalize registered work even when planning or artifact I/O raises.
-
-    Attempts enter the in-memory run record before any post-response disk writes.
-    This boundary covers exceptions between attempts too, such as a tokenizer failing
-    while sizing a validation repair. A cache or disk failure cannot erase paid work.
-    """
-
-    @wraps(function)
-    def wrapped(self: ModelClient, *args: Any, **kwargs: Any) -> Any:
-        previous = len(self.calls)
-        try:
-            return function(self, *args, **kwargs)
-        except BaseException as error:
-            for record in self.calls[previous:]:
-                if "_started" not in record:
-                    continue
-                record.update(
-                    status="interrupted"
-                    if isinstance(error, (KeyboardInterrupt, SystemExit))
-                    else "failed",
-                    error=f"{type(error).__name__}: logical call did not complete; inspect preserved artifacts",
-                    usage=_aggregate_usage(
-                        [attempt["usage"] for attempt in record["attempts"]]
-                    ),
-                    attempt_count=len(record["attempts"]),
-                )
-                try:
-                    self._record_call(record)
-                except Exception:
-                    # The original error may itself be a full or unavailable disk.
-                    # Accounting is already in memory for the workflow's failure report.
-                    pass
-            raise
-
-    return cast(CallFunction, wrapped)
+@dataclass
+class _AttemptOutcome(Generic[ResponseModel]):
+    status: str = "failed"
+    value: ResponseModel | None = None
+    raw_result: object = None
+    validation_errors: list[dict[str, Any]] | None = None
+    error: ModelCallError | None = None
 
 
 class ModelClient:
@@ -312,6 +212,7 @@ class ModelClient:
         max_elapsed_seconds: float | None = None,
         deployments: dict[str, DeploymentSettings] | None = None,
         journal: EventJournal | None = None,
+        stage_policies: dict[str, ResolvedStagePolicy] | None = None,
     ) -> None:
         self.cache_dir = Path(cache_dir)
         self.output_dir = Path(output_dir)
@@ -323,15 +224,10 @@ class ModelClient:
         self.max_total_tokens = max_total_tokens
         self.max_elapsed_seconds = max_elapsed_seconds
         self.deployments = deployments or {}
+        self.stage_policies = stage_policies or {}
         self.journal = journal or EventJournal(self.output_dir)
-        self.calls: list[dict[str, Any]] = []
-        self._provider_requests = 0
-        self._known_cost_usd = 0.0
-        self._known_tokens = 0
-        self._cost_tracking_complete = True
-        self._token_tracking_complete = True
+        self.accounting = CallAccounting()
         self._started = getattr(self.journal, "started_at", time.monotonic())
-        self._active_deployment = DeploymentSettings()
         for name in (
             "max_model_calls",
             "max_cost_usd",
@@ -347,7 +243,7 @@ class ModelClient:
     ) -> None:
         if (
             self.max_model_calls is not None
-            and self._provider_requests >= self.max_model_calls
+            and self.accounting.provider_requests >= self.max_model_calls
         ):
             raise ModelBudgetExceeded(
                 f"model-call budget exhausted ({self.max_model_calls} provider requests)"
@@ -357,38 +253,28 @@ class ModelClient:
             and time.monotonic() - self._started >= self.max_elapsed_seconds
         ):
             raise ModelBudgetExceeded("elapsed-time budget exhausted")
-        if self.max_cost_usd is not None and self._provider_requests:
-            if not self._cost_tracking_complete:
+        if self.max_cost_usd is not None and self.accounting.provider_requests:
+            if not self.accounting.cost_tracking_complete:
                 raise ModelBudgetExceeded(
                     "cost budget cannot be enforced because cost is unavailable"
                 )
-            if self._known_cost_usd >= self.max_cost_usd:
+            if self.accounting.known_cost_usd >= self.max_cost_usd:
                 raise ModelBudgetExceeded(
                     f"reported cost budget exhausted (${self.max_cost_usd:.4f})"
                 )
         if self.max_total_tokens is not None:
-            if not self._token_tracking_complete:
+            if not self.accounting.token_tracking_complete:
                 raise ModelBudgetExceeded(
                     "token budget cannot be enforced because token usage is unavailable"
                 )
             if (
-                self._known_tokens + estimated_input_tokens + output_tokens
+                self.accounting.known_tokens + estimated_input_tokens + output_tokens
                 > self.max_total_tokens
             ):
                 raise ModelBudgetExceeded(
                     "token budget exhausted by observed usage plus estimated input and reserved output"
                 )
-        self._provider_requests += 1
-
-    def _record_provider_cost(self, usage: dict) -> None:
-        if usage.get("cost") is None:
-            self._cost_tracking_complete = False
-        else:
-            self._known_cost_usd += float(usage["cost"])
-        if usage.get("total_tokens") is None:
-            self._token_tracking_complete = False
-        else:
-            self._known_tokens += int(usage["total_tokens"])
+        self.accounting.reserve_request()
 
     def budget_status(self) -> dict[str, object]:
         return {
@@ -396,30 +282,33 @@ class ModelClient:
             "max_cost_usd": self.max_cost_usd,
             "max_total_tokens": self.max_total_tokens,
             "max_elapsed_seconds": self.max_elapsed_seconds,
-            "provider_requests": self._provider_requests,
-            "reported_cost_usd": round(self._known_cost_usd, 8),
-            "total_cost_usd": round(self._known_cost_usd, 8)
-            if self._cost_tracking_complete
+            "provider_requests": self.accounting.provider_requests,
+            "reported_cost_usd": round(self.accounting.known_cost_usd, 8),
+            "total_cost_usd": round(self.accounting.known_cost_usd, 8)
+            if self.accounting.cost_tracking_complete
             else None,
-            "cost_tracking_complete": self._cost_tracking_complete,
-            "observed_total_tokens": self._known_tokens,
-            "token_tracking_complete": self._token_tracking_complete,
+            "cost_tracking_complete": self.accounting.cost_tracking_complete,
+            "observed_total_tokens": self.accounting.known_tokens,
+            "token_tracking_complete": self.accounting.token_tracking_complete,
             "cost_limit_policy": "stop_after_observed_limit; not a prepaid ceiling",
             "token_limit_policy": "observed usage plus estimated input and output reservation",
             "elapsed_seconds": round(time.monotonic() - self._started, 6),
             "observed_token_limit_exceeded": self.max_total_tokens is not None
-            and self._known_tokens > self.max_total_tokens,
+            and self.accounting.known_tokens > self.max_total_tokens,
             "elapsed_limit_exceeded": self.max_elapsed_seconds is not None
             and time.monotonic() - self._started > self.max_elapsed_seconds,
         }
 
-    def _record_call(self, record: dict[str, Any]) -> None:
-        record["elapsed_seconds"] = round(time.monotonic() - record.pop("_started"), 6)
-        # Attempt details already have canonical attempt.finished events.
-        summary = {key: value for key, value in record.items() if key != "attempts"}
-        summary["attempt_ids"] = [
-            attempt["attempt_id"] for attempt in record["attempts"]
-        ]
+    @property
+    def calls(self) -> list[dict[str, Any]]:
+        """Return the artifact-compatible view of this run's typed call records."""
+        return self.accounting.calls
+
+    def _record_call(self, record: CallRecord) -> None:
+        record.finish()
+        summary = record.to_dict()
+        summary.pop("attempts")
+        summary["attempt_ids"] = [attempt.attempt_id for attempt in record.attempts]
         self.journal.emit("call.finished", **summary)
 
     def _request(
@@ -462,14 +351,6 @@ class ModelClient:
     def _live(self, body: dict, failure_path: Path) -> tuple[dict, dict]:
         """Capture provider metadata before decoding; preserve every terminal error."""
         transport = dict(body)
-        if self._active_deployment.api_key_env:
-            value = os.environ.get(self._active_deployment.api_key_env)
-            if not value:
-                raise ModelCallError(
-                    f"Missing credential environment variable {self._active_deployment.api_key_env}",
-                    retryable=False,
-                )
-            transport["api_key"] = value
         started = time.monotonic()
         try:
             with heartbeat(
@@ -532,14 +413,17 @@ class ModelClient:
                 raise TypeError("response content is not JSON text")
             result = json.loads(content)
         except (TypeError, json.JSONDecodeError) as exc:
-            write_json_atomic(
-                failure_path,
-                {
-                    "finish_reason": choice.get("finish_reason"),
-                    "usage": usage,
-                    "content": content,
-                },
-            )
+            try:
+                write_json_atomic(
+                    failure_path,
+                    {
+                        "finish_reason": choice.get("finish_reason"),
+                        "usage": usage,
+                        "content": content,
+                    },
+                )
+            except OSError as error:
+                raise _ResponseArtifactError(error, usage) from error
             raise ModelCallError(
                 f"Model returned invalid JSON; see {failure_path}",
                 retryable=choice.get("finish_reason") != "length",
@@ -547,52 +431,60 @@ class ModelClient:
             ) from exc
         return result, usage
 
-    @_preserve_call_accounting
-    def complete(
+    def _policy(
         self,
+        stage: str,
         *,
-        kind: str,
-        slug: str,
-        model: str,
-        system: str,
-        prompt: MessageContent,
-        response_model: type[ResponseModel],
-        max_output_tokens: int,
+        model: str | None,
+        max_output_tokens: int | None,
         reasoning_effort: str | None,
-        request_schema: dict[str, object] | None = None,
-        decode: Callable[[object], object] | None = None,
-        validate: Callable[[ResponseModel], None] | None = None,
-        validation_contract: str | None = None,
-        prompt_components: dict[str, object] | None = None,
-    ) -> ResponseModel:
-        call_started = time.monotonic()
-        if (validate is None) != (validation_contract is None):
+    ) -> ResolvedStagePolicy:
+        if stage in self.stage_policies:
+            return self.stage_policies[stage]
+        if model is None or max_output_tokens is None:
             raise ValueError(
-                "validate and validation_contract must be provided together"
+                f"stage {stage!r} needs a configured policy or explicit model and max_output_tokens"
             )
-        if Path(slug).name != slug:
-            raise ValueError("call slug must be a filename component")
-        deployment = self.deployments.get(
-            kind, self.deployments.get(deployment_stage(kind), DeploymentSettings())
-        )
+        deployment = self.deployments.get(stage, DeploymentSettings())
         if isinstance(deployment, dict):
             deployment = DeploymentSettings(**deployment)
-        self._active_deployment = deployment
+        return ResolvedStagePolicy.resolve(
+            stage,
+            model=model,
+            deployment=deployment,
+            max_output_tokens=max_output_tokens,
+            reasoning_effort=reasoning_effort,
+            temperature=self.temperature,
+        )
+
+    def _prepare_call(
+        self,
+        *,
+        policy: ResolvedStagePolicy,
+        kind: str,
+        slug: str,
+        system: str,
+        prompt: MessageContent,
+        response_model: type[BaseModel],
+        request_schema: dict[str, object] | None,
+        validation_contract: str | None,
+    ) -> _PreparedCall:
+        started = time.monotonic()
         schema = _strict_schema(response_model, request_schema)
         body = self._request(
-            model=deployment.model or model,
+            model=policy.model,
             system=system,
             prompt=prompt,
             schema=schema,
-            max_output_tokens=deployment.max_output_tokens or max_output_tokens,
-            reasoning_effort=deployment.reasoning_effort
-            if deployment.reasoning_effort is not None
-            else reasoning_effort,
+            max_output_tokens=policy.max_output_tokens,
+            reasoning_effort=policy.reasoning_effort,
         )
+        deployment = policy.deployment
         if deployment.base_url:
             body["api_base"] = deployment.base_url
-        if deployment.temperature is not None:
-            body["temperature"] = deployment.temperature
+        body.pop("temperature", None)
+        if policy.temperature is not None:
+            body["temperature"] = policy.temperature
         if deployment.top_p is not None:
             body["top_p"] = deployment.top_p
         extra: dict[str, object] = {}
@@ -615,361 +507,463 @@ class ModelClient:
                 }
             )
         ).hexdigest()
-        request_path = self.output_dir / "requests" / f"{slug}.request.json"
-        cache_path = self.cache_dir / f"{cache_key}.json"
-        write_json_atomic(request_path, _request_artifact(body))
-        call_id = uuid.uuid4().hex
-        record: dict[str, Any] = {
-            "_started": call_started,
-            "kind": kind,
-            "slug": slug,
-            "call_id": call_id,
-            "run_id": self.journal.run_id,
-            "stage_id": self.journal.stage_id,
-            "request_sha256": request_hash,
-            "cache_key_sha256": cache_key,
-            "model": body["model"],
-            "reasoning_effort": body.get("reasoning_effort"),
-            "temperature": body.get("temperature"),
-            "deployment": identity,
-            "deployment_verification": "operator_declared_unverified",
-            "attempts": [],
-            "attempt_count": 0,
-            "cache_hit": False,
-            "status": "running",
-        }
-        self.calls.append(record)
-        log = logger.bind(
-            run_id=self.journal.run_id,
-            call_id=call_id,
-            stage_id=self.journal.stage_id,
-            kind=kind,
+        write_json_atomic(
+            self.output_dir / "requests" / f"{slug}.request.json",
+            _request_artifact(body),
         )
-        self.journal.emit(
-            "call.started",
-            call_id=call_id,
+        record = CallRecord(
             kind=kind,
-            model=body["model"],
+            slug=slug,
+            stage=policy.stage,
+            call_id=uuid.uuid4().hex,
+            run_id=self.journal.run_id,
+            stage_id=self.journal.stage_id,
             request_sha256=request_hash,
             cache_key_sha256=cache_key,
+            model=body["model"],
+            reasoning_effort=body.get("reasoning_effort"),
+            temperature=body.get("temperature"),
+            deployment=identity,
+            started_at=started,
         )
-        if cache_path.exists():
-            try:
-                cached = json.loads(cache_path.read_text(encoding="utf-8"))
-                validated = response_model.model_validate(cached["result"])
-                if validate:
-                    validate(validated)
-            except (
-                OSError,
-                TypeError,
-                json.JSONDecodeError,
-                KeyError,
-                ValidationError,
-                ValueError,
-            ):
-                log.warning("Ignoring invalid model cache entry {}", cache_path.name)
-            else:
-                record.update(
-                    cache_hit=True,
-                    status="local_cache_hit",
-                    attempt_count=0,
-                    cached_response_usage=cached.get("usage", {}),
-                    cache_origin=cached.get("origin"),
-                )
-                self._record_call(record)
-                log.info("{}: local response cache hit", kind)
-                return validated
-        current_body = body
-        last_error: ModelCallError | None = None
-        validation_repair = False
-        for attempt_index in range(1, 3):
-            attempt_id = f"{call_id}.{attempt_index}"
-            attempt_body = deepcopy(current_body)
-            components = dict(prompt_components or {})
-            if len(attempt_body["messages"]) > 2:
-                components["validation_repair_messages"] = attempt_body["messages"][2:]
-            estimate = estimate_request_input(
-                system,
-                prompt,
-                schema,
-                messages=attempt_body["messages"],
-                tokenizer=deployment.tokenizer,
-                components=components,
+        return _PreparedCall(
+            policy, body, schema, record, self.cache_dir / f"{cache_key}.json"
+        )
+
+    def _replay_cache(
+        self,
+        call: _PreparedCall,
+        response_model: type[ResponseModel],
+        validate: Callable[[ResponseModel], None] | None,
+    ) -> ResponseModel | None:
+        if not call.cache_path.exists():
+            return None
+        try:
+            cached = json.loads(call.cache_path.read_text(encoding="utf-8"))
+            validated = response_model.model_validate(cached["result"])
+            if validate:
+                validate(validated)
+        except (
+            OSError,
+            TypeError,
+            json.JSONDecodeError,
+            KeyError,
+            ValidationError,
+            ValueError,
+        ):
+            logger.warning(
+                "Ignoring invalid model cache entry {}", call.cache_path.name
             )
-            try:
-                input_tokens = int(estimate["estimated_input_tokens"])
-                if estimate["contains_images"] and (
-                    deployment.max_input_tokens
-                    or deployment.context_tokens
-                    or self.max_total_tokens
-                ):
-                    raise ModelBudgetExceeded(
-                        "Configured token limits require a provider-specific image token estimator; text estimates cannot bound images"
-                    )
-                limit_issues = request_limit_issues(
-                    input_tokens, int(attempt_body["max_tokens"]), deployment
-                )
-                if limit_issues:
-                    raise ModelBudgetExceeded("; ".join(limit_issues))
-                if deployment.api_key_env and not os.environ.get(
-                    deployment.api_key_env
-                ):
-                    raise ModelBudgetExceeded(
-                        f"Missing credential environment variable {deployment.api_key_env}"
-                    )
-                if self.max_elapsed_seconds is not None:
-                    remaining = self.max_elapsed_seconds - (
-                        time.monotonic() - self._started
-                    )
-                    attempt_body["timeout"] = min(
-                        float(attempt_body["timeout"]), max(0.001, remaining)
-                    )
-                self._reserve_provider_request(
-                    input_tokens, int(attempt_body["max_tokens"])
-                )
-            except ModelBudgetExceeded as exc:
-                last_error = exc
-                record["status"] = "blocked"
-                record["input_estimate"] = estimate
-                break
-            attempt_path = (
-                self.output_dir
-                / "requests"
-                / f"{slug}.attempt-{attempt_index}.request.json"
+            return None
+        call.record.cache_hit = True
+        call.record.status = "local_cache_hit"
+        call.record.cached_response_usage = cached.get("usage", {})
+        call.record.cache_origin = cached.get("origin")
+        self._record_call(call.record)
+        logger.info("{}: local response cache hit", call.record.kind)
+        return validated
+
+    def _reserve_attempt(
+        self, policy: ResolvedStagePolicy, body: dict, estimate: RequestEstimate
+    ) -> None:
+        deployment = policy.deployment
+        if estimate["contains_images"] and (
+            deployment.max_input_tokens
+            or deployment.context_tokens
+            or self.max_total_tokens
+        ):
+            raise ModelBudgetExceeded(
+                "Configured token limits require a provider-specific image token estimator; text estimates cannot bound images"
             )
-            failure_path = (
-                self.output_dir
-                / "requests"
-                / f"{slug}.attempt-{attempt_index}.failure.json"
+        issues = policy.limit_issues(
+            estimate["estimated_input_tokens"], int(body["max_tokens"])
+        )
+        if issues:
+            raise ModelBudgetExceeded("; ".join(issues))
+        if deployment.api_key_env and not os.environ.get(deployment.api_key_env):
+            raise ModelBudgetExceeded(
+                f"Missing credential environment variable {deployment.api_key_env}"
             )
-            response_path = (
-                self.output_dir
-                / "requests"
-                / f"{slug}.attempt-{attempt_index}.response.json"
+        if self.max_elapsed_seconds is not None:
+            remaining = self.max_elapsed_seconds - (time.monotonic() - self._started)
+            body["timeout"] = min(float(body["timeout"]), max(0.001, remaining))
+        self._reserve_provider_request(
+            estimate["estimated_input_tokens"], int(body["max_tokens"])
+        )
+
+    def _prepare_attempt(
+        self,
+        call: _PreparedCall,
+        current_body: dict,
+        index: int,
+        *,
+        system: str,
+        prompt: MessageContent,
+        prompt_components: dict[str, object] | None,
+    ) -> _PreparedAttempt:
+        body = deepcopy(current_body)
+        components = dict(prompt_components or {})
+        if len(body["messages"]) > 2:
+            components["validation_repair_messages"] = body["messages"][2:]
+        estimate = call.policy.estimate(
+            system,
+            prompt,
+            call.schema,
+            messages=body["messages"],
+            components=components,
+        )
+        try:
+            self._reserve_attempt(call.policy, body, estimate)
+        except ModelBudgetExceeded:
+            call.record.status = "blocked"
+            call.record.input_estimate = estimate
+            raise
+        stem = f"{call.record.slug}.attempt-{index}"
+        request_path = self.output_dir / "requests" / f"{stem}.request.json"
+        write_json_atomic(request_path, _request_artifact(body))
+        attempt = _PreparedAttempt(
+            body=body,
+            attempt_id=f"{call.record.call_id}.{index}",
+            index=index,
+            request_sha256=hashlib.sha256(
+                _canonical({"request": body, "deployment": call.record.deployment})
+            ).hexdigest(),
+            estimate=estimate,
+            failure_path=self.output_dir / "requests" / f"{stem}.failure.json",
+            response_path=self.output_dir / "requests" / f"{stem}.response.json",
+        )
+        self.journal.emit(
+            "attempt.started",
+            call_id=call.record.call_id,
+            attempt_id=attempt.attempt_id,
+            attempt_index=index,
+            kind=call.record.kind,
+            model=call.record.model,
+            request_sha256=attempt.request_sha256,
+            artifact=str(request_path.relative_to(self.output_dir)),
+            input_estimate=estimate,
+            max_output_tokens=body["max_tokens"],
+            retry_reason="validation_repair"
+            if call.record.validation_repair
+            else "provider_retry"
+            if index > 1
+            else None,
+        )
+        logger.info(
+            "{}: attempt {}/2, model={}, input≈{}, output cap={}",
+            call.record.kind,
+            index,
+            call.record.model,
+            estimate["estimated_input_tokens"],
+            body["max_tokens"],
+        )
+        return attempt
+
+    def _transport_body(self, call: _PreparedCall, body: dict) -> dict:
+        """Resolve credentials only in the transient copy passed to the transport."""
+        transport = dict(body)
+        name = call.policy.deployment.api_key_env
+        if name:
+            secret = os.environ.get(name)
+            if not secret:
+                raise ModelCallError(
+                    f"Missing credential environment variable {name}", retryable=False
+                )
+            transport["api_key"] = secret
+        return transport
+
+    def _retain_attempt(
+        self,
+        call: _PreparedCall,
+        attempt: _PreparedAttempt,
+        outcome: _AttemptOutcome,
+        usage: dict,
+        started: float,
+    ) -> None:
+        """Retain observed charges before any response-artifact or journal writes."""
+        elapsed = round(time.monotonic() - started, 6)
+        usage.setdefault("latency_seconds", elapsed)
+        usage.setdefault("cost", None)
+        usage.setdefault(
+            "cost_source",
+            "adapter_reported_unspecified" if usage["cost"] is not None else "unknown",
+        )
+        record = AttemptRecord(
+            attempt_id=attempt.attempt_id,
+            attempt_index=attempt.index,
+            status=outcome.status,
+            request_sha256=attempt.request_sha256,
+            input_estimate=attempt.estimate,
+            usage=usage,
+            elapsed_seconds=elapsed,
+            response_received=bool(usage.get("response_received")),
+            error=str(outcome.error)
+            if outcome.status != "success" and outcome.error
+            else None,
+            response_artifact=str(attempt.response_path.relative_to(self.output_dir)),
+        )
+        self.accounting.record_attempt(call.record, record)
+        write_json_atomic(
+            attempt.response_path,
+            {
+                "result": outcome.raw_result,
+                "usage": usage,
+                "validation_errors": outcome.validation_errors,
+                "status": outcome.status,
+            },
+        )
+        self.journal.emit(
+            "attempt.finished",
+            call_id=call.record.call_id,
+            kind=call.record.kind,
+            model=call.record.model,
+            **record.to_dict(),
+        )
+        if outcome.status in {"interrupted", "unexpected_error"}:
+            call.record.status = outcome.status
+            call.record.error = str(outcome.error)
+            self._record_call(call.record)
+
+    def _execute_attempt(
+        self,
+        call: _PreparedCall,
+        attempt: _PreparedAttempt,
+        response_model: type[ResponseModel],
+        decode: Callable[[object], object] | None,
+        validate: Callable[[ResponseModel], None] | None,
+    ) -> _AttemptOutcome[ResponseModel]:
+        started = time.monotonic()
+        usage: dict = {}
+        outcome: _AttemptOutcome[ResponseModel] = _AttemptOutcome()
+        try:
+            outcome.raw_result, usage = self._live(
+                self._transport_body(call, attempt.body), attempt.failure_path
             )
-            write_json_atomic(attempt_path, _request_artifact(attempt_body))
-            attempt_hash = hashlib.sha256(
-                _canonical({"request": attempt_body, "deployment": identity})
-            ).hexdigest()
-            self.journal.emit(
-                "attempt.started",
-                call_id=call_id,
-                attempt_id=attempt_id,
-                attempt_index=attempt_index,
-                kind=kind,
-                model=body["model"],
-                request_sha256=attempt_hash,
-                artifact=str(attempt_path.relative_to(self.output_dir)),
-                input_estimate=estimate,
-                max_output_tokens=attempt_body["max_tokens"],
-                retry_reason="validation_repair"
-                if validation_repair
-                else "provider_retry"
-                if attempt_index > 1
-                else None,
+            usage.setdefault("response_received", True)
+            decoded = decode(outcome.raw_result) if decode else outcome.raw_result
+            outcome.value = response_model.model_validate(decoded)
+            if validate:
+                validate(outcome.value)
+            outcome.status = "success"
+        except (TypeError, ValueError) as error:
+            outcome.status = "validation_rejected"
+            outcome.validation_errors = (
+                error.errors(include_url=False, include_context=False)
+                if isinstance(error, ValidationError)
+                else [{"type": type(error).__name__, "message": str(error)}]
             )
-            log.info(
-                "{}: attempt {}/2, model={}, input≈{}, output cap={}",
-                kind,
-                attempt_index,
-                body["model"],
-                input_tokens,
-                attempt_body["max_tokens"],
-            )
-            started = time.monotonic()
-            raw_result: object = None
-            usage: dict = {}
-            outcome = "failed"
-            validation_errors = None
-            try:
-                raw_result, usage = self._live(attempt_body, failure_path)
-                usage.setdefault("response_received", True)
-                decoded_result = decode(raw_result) if decode else raw_result
-                validated = response_model.model_validate(decoded_result)
-                if validate:
-                    validate(validated)
-                outcome = "success"
-            except (TypeError, ValueError) as exc:
-                outcome = "validation_rejected"
-                validation_errors = (
-                    exc.errors(include_url=False, include_context=False)
-                    if isinstance(exc, ValidationError)
-                    else [{"type": type(exc).__name__, "message": str(exc)}]
-                )
-                write_json_atomic(
-                    failure_path,
-                    {
-                        "validation_errors": validation_errors,
-                        "result": raw_result,
-                        "usage": usage,
-                    },
-                )
-                last_error = ModelCallError(
-                    f"Model output failed Pydantic validation; see {failure_path}"
-                )
-                if attempt_index == 1:
-                    current_body = _validation_repair_request(
-                        body, raw_result, validation_errors
-                    )
-                    write_json_atomic(
-                        self.output_dir
-                        / "requests"
-                        / f"{slug}.validation-repair.request.json",
-                        _request_artifact(current_body),
-                    )
-                    validation_repair = True
-            except ModelCallError as exc:
-                last_error = exc
-                usage = dict(exc.usage or {})
-                usage.setdefault("response_received", False)
-                outcome = (
-                    "invalid_response"
-                    if usage["response_received"]
-                    else "provider_error"
-                )
-            except BaseException as exc:
-                outcome = (
-                    "interrupted"
-                    if isinstance(exc, (KeyboardInterrupt, SystemExit))
-                    else "unexpected_error"
-                )
-                usage.setdefault("response_received", False)
-                last_error = ModelCallError(
-                    f"Interrupted or unexpected model error: {type(exc).__name__}",
-                    retryable=False,
-                )
-                raise
-            finally:
-                elapsed = round(time.monotonic() - started, 6)
-                usage.setdefault("latency_seconds", elapsed)
-                usage.setdefault("cost", None)
-                usage.setdefault(
-                    "cost_source",
-                    "adapter_reported_unspecified"
-                    if usage["cost"] is not None
-                    else "unknown",
-                )
-                self._record_provider_cost(usage)
-                attempt_record = {
-                    "attempt_id": attempt_id,
-                    "attempt_index": attempt_index,
-                    "status": outcome,
-                    "request_sha256": attempt_hash,
-                    "input_estimate": estimate,
+            write_json_atomic(
+                attempt.failure_path,
+                {
+                    "validation_errors": outcome.validation_errors,
+                    "result": outcome.raw_result,
                     "usage": usage,
-                    "elapsed_seconds": elapsed,
-                    "response_received": bool(usage.get("response_received")),
-                    "error": str(last_error)
-                    if outcome != "success" and last_error
-                    else None,
-                    "response_artifact": str(
-                        response_path.relative_to(self.output_dir)
-                    ),
-                }
-                record["attempts"].append(attempt_record)
-                record["attempt_count"] = len(record["attempts"])
-                record["usage"] = _aggregate_usage(
-                    [a["usage"] for a in record["attempts"]]
+                },
+            )
+            outcome.error = ModelCallError(
+                f"Model output failed Pydantic validation; see {attempt.failure_path}"
+            )
+        except ModelCallError as error:
+            outcome.error = error
+            usage = dict(error.usage or {})
+            usage.setdefault("response_received", False)
+            outcome.status = (
+                "invalid_response" if usage["response_received"] else "provider_error"
+            )
+        except BaseException as error:
+            if isinstance(error, _ResponseArtifactError):
+                usage = error.usage
+            outcome.status = (
+                "interrupted"
+                if isinstance(error, (KeyboardInterrupt, SystemExit))
+                else "unexpected_error"
+            )
+            usage.setdefault("response_received", False)
+            outcome.error = ModelCallError(
+                f"Interrupted or unexpected model error: {type(error).__name__}",
+                retryable=False,
+            )
+            raise
+        finally:
+            self._retain_attempt(call, attempt, outcome, usage, started)
+        return outcome
+
+    def _cache_success(self, call: _PreparedCall, value: BaseModel) -> None:
+        record = call.record
+        try:
+            write_json_atomic(
+                call.cache_path,
+                {
+                    "request_sha256": record.request_sha256,
+                    "cache_key_sha256": record.cache_key_sha256,
+                    "result": value.model_dump(mode="json"),
+                    "usage": record.usage,
+                    "origin": {
+                        "run_id": record.run_id,
+                        "call_id": record.call_id,
+                        "attempt_ids": [
+                            attempt.attempt_id for attempt in record.attempts
+                        ],
+                    },
+                },
+            )
+        except OSError as error:
+            record.cache_write_error = type(error).__name__
+            logger.warning(
+                "{}: response validated but cache write failed ({})",
+                record.kind,
+                type(error).__name__,
+            )
+            self.journal.emit(
+                "cache.write_failed",
+                call_id=record.call_id,
+                error_type=type(error).__name__,
+            )
+        record.status = "success"
+        self._record_call(record)
+        logger.info(
+            "{}: complete, {} attempt(s), {} tokens",
+            record.kind,
+            len(record.attempts),
+            record.usage["total_tokens"],
+        )
+
+    def _retry_delay(self) -> None:
+        pause = 2.0
+        if self.max_elapsed_seconds is not None:
+            pause = min(
+                pause,
+                max(0, self.max_elapsed_seconds - (time.monotonic() - self._started)),
+            )
+        time.sleep(pause)
+
+    def _complete_live(
+        self,
+        call: _PreparedCall,
+        *,
+        system: str,
+        prompt: MessageContent,
+        response_model: type[ResponseModel],
+        decode: Callable[[object], object] | None,
+        validate: Callable[[ResponseModel], None] | None,
+        prompt_components: dict[str, object] | None,
+    ) -> ResponseModel:
+        body = call.body
+        last_error: ModelCallError | None = None
+        for index in range(1, 3):
+            try:
+                attempt = self._prepare_attempt(
+                    call,
+                    body,
+                    index,
+                    system=system,
+                    prompt=prompt,
+                    prompt_components=prompt_components,
+                )
+            except ModelBudgetExceeded as error:
+                last_error = error
+                break
+            outcome = self._execute_attempt(
+                call, attempt, response_model, decode, validate
+            )
+            last_error = outcome.error
+            if outcome.status == "success":
+                assert outcome.value is not None
+                self._cache_success(call, outcome.value)
+                return outcome.value
+            if index == 2 or last_error is None or not last_error.retryable:
+                break
+            logger.warning("{}: retrying after {}", call.record.kind, outcome.status)
+            if outcome.validation_errors is not None:
+                body = _validation_repair_request(
+                    call.body, outcome.raw_result, outcome.validation_errors
                 )
                 write_json_atomic(
-                    response_path,
-                    {
-                        "result": raw_result,
-                        "usage": usage,
-                        "validation_errors": validation_errors,
-                        "status": outcome,
-                    },
+                    self.output_dir
+                    / "requests"
+                    / f"{call.record.slug}.validation-repair.request.json",
+                    _request_artifact(body),
                 )
-                self.journal.emit(
-                    "attempt.finished",
-                    call_id=call_id,
-                    kind=kind,
-                    model=body["model"],
-                    **attempt_record,
-                )
-                if outcome in {"interrupted", "unexpected_error"}:
-                    record.update(
-                        cache_hit=False,
-                        status=outcome,
-                        error=str(last_error),
-                        usage=_aggregate_usage(
-                            [a["usage"] for a in record["attempts"]]
-                        ),
-                        attempt_count=len(record["attempts"]),
-                        validation_repair=validation_repair,
-                    )
-                    self._record_call(record)
-            if outcome == "success":
-                combined = _aggregate_usage([a["usage"] for a in record["attempts"]])
-                try:
-                    write_json_atomic(
-                        cache_path,
-                        {
-                            "request_sha256": request_hash,
-                            "cache_key_sha256": cache_key,
-                            "result": validated.model_dump(mode="json"),
-                            "usage": combined,
-                            "origin": {
-                                "run_id": self.journal.run_id,
-                                "call_id": call_id,
-                                "attempt_ids": [
-                                    a["attempt_id"] for a in record["attempts"]
-                                ],
-                            },
-                        },
-                    )
-                except OSError as error:
-                    record["cache_write_error"] = type(error).__name__
-                    log.warning(
-                        "{}: response validated but cache write failed ({})",
-                        kind,
-                        type(error).__name__,
-                    )
-                    self.journal.emit(
-                        "cache.write_failed",
-                        call_id=call_id,
-                        error_type=type(error).__name__,
-                    )
-                record.update(
-                    cache_hit=False,
-                    status="success",
-                    usage=combined,
-                    attempt_count=len(record["attempts"]),
-                    validation_repair=validation_repair,
-                )
-                self._record_call(record)
-                log.info(
-                    "{}: complete, {} attempt(s), {} tokens",
-                    kind,
-                    len(record["attempts"]),
-                    combined["total_tokens"],
-                )
-                return validated
-            if attempt_index == 1 and last_error and last_error.retryable:
-                log.warning("{}: retrying after {}", kind, outcome)
-                if not validation_repair:
-                    pause = 2.0
-                    if self.max_elapsed_seconds is not None:
-                        pause = min(
-                            pause,
-                            max(
-                                0,
-                                self.max_elapsed_seconds
-                                - (time.monotonic() - self._started),
-                            ),
-                        )
-                    time.sleep(pause)
+                call.record.validation_repair = True
             else:
-                break
-        record.update(
-            cache_hit=False,
-            error=str(last_error),
-            usage=_aggregate_usage([a["usage"] for a in record["attempts"]]),
-            attempt_count=len(record["attempts"]),
-            validation_repair=validation_repair,
-        )
-        if record["status"] == "running":
-            record["status"] = "failed"
-        self._record_call(record)
-        log.error("{}: {}", kind, last_error)
+                self._retry_delay()
+        call.record.error = str(last_error)
+        if call.record.status == "running":
+            call.record.status = "failed"
+        self._record_call(call.record)
+        logger.error("{}: {}", call.record.kind, last_error)
         raise last_error or ModelCallError("Unknown model-call failure")
+
+    def complete(
+        self,
+        *,
+        kind: str,
+        slug: str,
+        model: str | None = None,
+        system: str,
+        prompt: MessageContent,
+        response_model: type[ResponseModel],
+        max_output_tokens: int | None = None,
+        reasoning_effort: str | None = None,
+        stage: str = "assemble",
+        request_schema: dict[str, object] | None = None,
+        decode: Callable[[object], object] | None = None,
+        validate: Callable[[ResponseModel], None] | None = None,
+        validation_contract: str | None = None,
+        prompt_components: dict[str, object] | None = None,
+    ) -> ResponseModel:
+        """Resolve one explicit stage, replay a valid cache, or run at most two attempts.
+
+        Configured stage policies are authoritative. Scalar options support direct
+        clients without an ExtractionConfig; call-kind labels never select a stage.
+        """
+        if (validate is None) != (validation_contract is None):
+            raise ValueError(
+                "validate and validation_contract must be provided together"
+            )
+        if Path(slug).name != slug:
+            raise ValueError("call slug must be a filename component")
+        policy = self._policy(
+            stage,
+            model=model,
+            max_output_tokens=max_output_tokens,
+            reasoning_effort=reasoning_effort,
+        )
+        call = self._prepare_call(
+            policy=policy,
+            kind=kind,
+            slug=slug,
+            system=system,
+            prompt=prompt,
+            response_model=response_model,
+            request_schema=request_schema,
+            validation_contract=validation_contract,
+        )
+        with self.accounting.call(call.record, finalize=self._record_call):
+            with logger.contextualize(
+                run_id=call.record.run_id,
+                call_id=call.record.call_id,
+                stage_id=call.record.stage_id,
+                kind=kind,
+            ):
+                self.journal.emit(
+                    "call.started",
+                    call_id=call.record.call_id,
+                    kind=kind,
+                    stage=stage,
+                    model=policy.model,
+                    request_sha256=call.record.request_sha256,
+                    cache_key_sha256=call.record.cache_key_sha256,
+                )
+                cached = self._replay_cache(call, response_model, validate)
+                if cached is not None:
+                    return cached
+                return self._complete_live(
+                    call,
+                    system=system,
+                    prompt=prompt,
+                    response_model=response_model,
+                    decode=decode,
+                    validate=validate,
+                    prompt_components=prompt_components,
+                )

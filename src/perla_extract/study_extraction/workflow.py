@@ -2,28 +2,23 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 import time
 from contextlib import nullcontext
-from dataclasses import asdict, replace
-from pathlib import Path
 from typing import Any
 
-from pydantic import ValidationError
-
 from .artifacts import write_json_atomic
+from .candidate_selection import (
+    _gate_final_candidate_against_draft,
+    _select_refinement_candidate,
+)
 from .claims import (
     ClaimLedger,
     assembly_blocks,
-    assembly_evidence_payload,
     assembly_spans,
     audit_claim_coverage,
-    combine_ledgers,
     grounded_ledger,
 )
 from .client import ModelCallError, ModelClient, summarize_calls
-from .compatibility import to_reduced_with_report
 from .configuration import (
     DEFAULT_CLAIM_MODEL as DEFAULT_CLAIM_MODEL,
 )
@@ -32,328 +27,63 @@ from .configuration import (
 )
 from .configuration import (
     ExtractionConfig,
-    implementation_sha256,
-    runtime_versions,
 )
 from .deployment import (
-    DeploymentSettings,
     estimate_request_input,
-    request_limit_issues,
     strict_response_schema,
 )
 from .enrichment import (
-    COMPOSITION_ENRICHMENT_PROMPT,
-    ENRICHMENT_SYSTEM_PROMPT,
-    PROCESSING_ENRICHMENT_PROMPT,
     EnrichmentAudit,
-    run_enrichment,
 )
 from .evidence import (
     repair_noncontiguous_citation_quotes,
     repair_unique_citation_pointers,
 )
-from .finalization import remove_unsupported_optional_claims
-from .guidance import (
-    COMPOSITION_BOUNDARY_POLICY,
-    DEVICE_FAMILY_POLICY,
-    EVIDENCE_INTERPRETATION_POLICY,
-    RECORD_BOUNDARY_POLICY,
-    SHARED_QUANTITY_POLICY,
+from .extraction_prompts import (
+    SYSTEM_PROMPT,
+    _assembly_components,
+    _direct_prompt,
 )
+from .extraction_prompts import (
+    prompt_sha256 as prompt_sha256,
+)
+from .finalization import remove_unsupported_optional_claims
 from .logging import logger
 from .models import (
-    STUDY_SCHEMA_VERSION,
     EvidenceBlock,
     PaperMetadata,
     StudyExtraction,
-    study_schema_prose_sha256,
-    study_schema_sha256,
 )
-from .nomad import NOMADExport, to_nomad_with_report
 from .observability import EventJournal
-from .partitioning import fit_request_windows, plan_evidence_windows
-from .refinement import REFINEMENT_PROMPT, refine_draft
+from .refinement import refine_draft
 from .repair import (
-    REPAIR_PROMPT,
-    REPAIR_SYSTEM_PROMPT,
     RepairAudit,
-    candidate_quality,
-    is_monotonic_quality,
     run_targeted_repair,
 )
 from .run_artifacts import write_run_manifest
+from .run_configuration import build_run_configuration as _run_configuration
+from .run_reporting import _completed_report, _dry_run_report
 from .source import parse_documents
-from .spans import build_evidence_spans, evidence_payload, evidence_spans_sha256
+from .source_reading import (
+    _collect_claim_ledger,
+    _plan_claim_collection,
+)
+from .spans import build_evidence_spans
+from .study_outputs import _interpret_and_export
 from .tracing import create_langfuse_adapter
 from .transport import (
-    compact_to_span_citations,
     expand_span_citations,
     span_citation_schema,
 )
 from .validation import validate_study
-
-SYSTEM_PROMPT = """Extract the complete present photovoltaic study as device-centered data.
-Use only supplied evidence. Preserve source wording and distinctions. Never invent,
-interpolate, digitize graph traces, or import values from cited literature."""
-
-EXTRACTION_PROMPT = f"""Read all supplied evidence before extracting.
-
-Identify every distinct photovoltaic device family made in the present study. Then
-identify every individually measured device, performance
-observation, population statistic, and stability specimen. Connect records only when
-the evidence supports the connection.
-
-{DEVICE_FAMILY_POLICY}
-{RECORD_BOUNDARY_POLICY}
-{COMPOSITION_BOUNDARY_POLICY}
-{EVIDENCE_INTERPRETATION_POLICY}
-{SHARED_QUANTITY_POLICY}
-Rules:
-- Preserve a device as one coherent object. Do not create one device per metric,
-  paragraph, layer, scan direction, or stability checkpoint.
-- Put a fabrication or material value that distinguishes one measured specimen in
-  that IndividualDevice's reported_properties, not among family-wide conditions.
-- Keep individual devices and population statistics in separate top-level arrays.
-  Means, medians, distributions, sample sizes, ranges, and population maxima are not
-  individual-device measurements.
-- Mark a device champion only when the source explicitly identifies the device as a
-  champion/best-performing device or its efficiency as record/highest. An extremum
-  for one attribute (for example voltage, current, or stability) does not make the
-  device a champion. Otherwise use not_reported.
-- Keep reverse scans, forward scans, stabilized output, certified measurements, and
-  EQE-integrated currents as distinct observations of the same device where supported.
-- A performance observation requires at least one reported result. A statement that a
-  measurement or spectrum exists, without any reported outcome, is context rather than
-  a performance observation. Non-numeric outcomes are valid when the source actually
-  reports them; do not use a method name or specimen description as a metric value.
-- Extract the complete ordered layer stack and all reported processing steps. Create
-  one scoped absorber record per absorber layer or subcell, keeping each absorber's
-  formula, constituents, properties, additives, and dopants together. Never combine
-  wide-bandgap and narrow-bandgap tandem chemistry into one composition.
-  Use one MaterialConstituent per named chemical; do not combine a list of chemicals
-  into one constituent.
-- For every layer, keep its electrical role, chemical constituents, and physical form
-  separate. Copy material_form_raw only when the source explicitly names the form,
-  then select the closest allowed material_form. Use other for an explicit form that
-  is outside the vocabulary and not_reported when the source states no form. A known
-  material name alone is not evidence that it is a self-assembled monolayer.
-  self_assembled_monolayer requires explicit SAM or self-assembled-monolayer wording;
-  monolayer requires explicit monolayer wording without a self-assembly claim;
-  compact_layer, mesoporous_layer, nanostructured_layer, and bulk_heterojunction
-  likewise require corresponding source wording. Do not derive form from deposition
-  method.
-- Put arbitrary reported material, geometry, processing, measurement, and stability
-  values in generic ReportedValue records. Do not omit a value because it lacks a
-  dedicated schema field.
-- Each ReportedValue must contain exactly one semantic quantity. A reported
-  uncertainty or range may stay with that quantity, but never pack different metrics,
-  table columns, or a complete row into one name or raw_value. Emit one object per
-  quantity even when several quantities share the same source row.
-- ReportedValue.raw_value and material_form_raw must be copied from supplied evidence.
-  Every evidence array contains supplied span_id values, never copied quotation text
-  or block IDs. Reuse a span_id when several atomic values share one row or sentence.
-  Typography-preserving renderings are source evidence and may be used for subscript
-  or superscript notation.
-- Stability tests remain separate experiments with ordered checkpoints, even when
-  linked to a performance device. Put a condition that changes between aging stages
-  in the corresponding checkpoint.conditions; test.conditions contains only values
-  that apply to the complete test.
-- Exclude background examples, prior literature, reference entries, review material,
-  and devices not made or measured in this study.
-- Use null or not_reported for unknown identity or context. Do not guess.
-- Empty arrays are correct only when all supplied evidence truly contains no record of
-  that kind.
-- Reconcile duplicate mentions before assigning final record IDs.
-"""
-
-CLAIM_LEDGER_PROMPT = f"""Read the supplied paper evidence before the final schema is
-assembled. Return a neutral ledger of experimental objects and source claims, not a
-draft StudyExtraction.
-
-{DEVICE_FAMILY_POLICY}
-{RECORD_BOUNDARY_POLICY}
-{COMPOSITION_BOUNDARY_POLICY}
-{EVIDENCE_INTERPRETATION_POLICY}
-{SHARED_QUANTITY_POLICY}
-Rules:
-- Describe what each source-mentioned object is used for: a reusable device design,
-  individual device, processing arm, characterization specimen, population,
-  performance measurement, stability experiment, or other object. Do not promote an
-  object to a device family merely because it has a label.
-- Mark an object or claim target only when its facts belong in the present photovoltaic
-  study extraction. Mark background, method-only, and characterization-only facts as
-  context. Use uncertain when the evidence does not resolve scope.
-- Emit one atomic claim per assertion. Use kind=reported_quantity for every numerical
-  or non-numerical value that should become a ReportedValue. Its raw_value must contain
-  only that one exact source value or outcome, not the surrounding procedure.
-- When one explicit source quantity applies grammatically to several named materials
-  or metrics, emit one reported_quantity claim whose raw_value is only the shared
-  quantity and whose shared_targets contains every named target. For example, source
-  text assigning 1.4 M to PbI2, MAI, and DMSO has raw_value="1.4 M" and three targets.
-  If one sentence reports different quantities, emit separate claims; never assign a
-  solvent or material to a quantity that the grammar does not give it. Do not infer
-  shared scope from chemistry or proximity.
-- Connect a claim to every experimental object it concerns. Repeated mentions and
-  treatment labels may refer to the same underlying design; leave that reconciliation
-  to the later document-level assembly call.
-
-Every object and claim needs a supplied evidence span ID. Never invent span IDs.
-"""
-
-CLAIM_LEDGER_GUIDANCE = """The supplied claim ledger is a fallible map of the source,
-not source evidence and not a list of records to create. Reconcile duplicate mentions
-globally. A target device-design object may support a device family; a treatment arm
-or characterization specimen does not. For every supported target claim, represent it
-at the correct reporting level or explain why it remains unresolved. Context claims
-must not create output records. Preserve explicit shared_targets as separate atomic
-values in the final schema."""
-
-CLAIM_RECALL_PROMPTS = (
-    """INDEPENDENT OBJECT-FIRST READING: Start from the primary evidence again. First
-enumerate every distinct experimental object, specimen, comparison group, and reporting
-scope; then attach every supported atomic claim. Do not assume another reading captured
-anything.""",
-    """INDEPENDENT CLAIM-FIRST READING: Start from the primary evidence again. Scan each
-sentence, table row, and caption for atomic values, conditions, relations, and explicit
-scope; then attach them to supported objects. Do not assume another reading captured
-anything.""",
+from .workflow_results import (
+    BuiltStudy,
+    CorrectedStudy,
+    FinalStudy,
+    PreparedSource,
+    ReadingResult,
+    RunState,
 )
-
-
-def prompt_sha256() -> str:
-    """Fingerprint every prompt template that can change scientific model output."""
-
-    encoded = json.dumps(
-        [
-            SYSTEM_PROMPT,
-            EXTRACTION_PROMPT,
-            CLAIM_LEDGER_PROMPT,
-            CLAIM_LEDGER_GUIDANCE,
-            *CLAIM_RECALL_PROMPTS,
-            ENRICHMENT_SYSTEM_PROMPT,
-            COMPOSITION_ENRICHMENT_PROMPT,
-            PROCESSING_ENRICHMENT_PROMPT,
-            REFINEMENT_PROMPT,
-            REPAIR_SYSTEM_PROMPT,
-            REPAIR_PROMPT,
-        ],
-        ensure_ascii=False,
-        separators=(",", ":"),
-    ).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
-
-
-def _write_nomad_artifacts(output_dir: Path, exported: NOMADExport) -> None:
-    """Write uploadable archives separately while keeping one inspectable manifest."""
-
-    payload = exported.model_dump(mode="json", exclude_none=True)
-    write_json_atomic(output_dir / "nomad_export.json", payload)
-    write_json_atomic(
-        output_dir / "composition_projection.json",
-        {
-            "target_package": exported.target_package,
-            "target_version": exported.target_version,
-            "target_commit": exported.target_commit,
-            "projections": [
-                item.model_dump(mode="json", exclude_none=True)
-                for item in exported.composition_projections
-            ],
-        },
-    )
-    archive_dir = output_dir / "nomad"
-    for mapping in exported.mappings:
-        archive = exported.archives[mapping.archive_index]
-        write_json_atomic(
-            archive_dir / mapping.archive_file,
-            archive.model_dump(mode="json", exclude_none=True),
-        )
-    write_json_atomic(
-        archive_dir / "manifest.json",
-        {
-            "target_package": exported.target_package,
-            "target_version": exported.target_version,
-            "target_commit": exported.target_commit,
-            "mappings": [item.model_dump(mode="json") for item in exported.mappings],
-            "issues": [
-                item.model_dump(mode="json", exclude_none=True)
-                for item in exported.issues
-            ],
-        },
-    )
-
-
-def _ledger_payload(ledger: ClaimLedger, blocks: list[EvidenceBlock]) -> str:
-    """Serialize the grounded claim ledger with compact evidence references."""
-
-    return json.dumps(
-        compact_to_span_citations(ledger, build_evidence_spans(blocks)),
-        ensure_ascii=False,
-    )
-
-
-def _direct_prompt(blocks: list[EvidenceBlock], ledger: ClaimLedger) -> str:
-    """Build a study from complete source or reader-selected statements and text."""
-
-    if not ledger.objects and not ledger.claims:
-        return (
-            EXTRACTION_PROMPT
-            + "\n\nCOMPLETE SOURCE EVIDENCE:\n"
-            + json.dumps(assembly_evidence_payload(blocks, ledger), ensure_ascii=False)
-        )
-    return (
-        EXTRACTION_PROMPT
-        + "\n\nSOURCE-GROUNDED CLAIM LEDGER:\n"
-        + CLAIM_LEDGER_GUIDANCE
-        + "\n"
-        + _ledger_payload(ledger, blocks)
-        + "\n\nCLAIM-SUPPORTING SOURCE PASSAGES:\n"
-        + json.dumps(assembly_evidence_payload(blocks, ledger), ensure_ascii=False)
-    )
-
-
-def _assembly_components(
-    blocks: list[EvidenceBlock], ledger: ClaimLedger
-) -> dict[str, object]:
-    """Identify the actual request parts for per-stage size diagnostics."""
-
-    has_notes = bool(ledger.objects or ledger.claims)
-    return {
-        "instructions": EXTRACTION_PROMPT
-        + (CLAIM_LEDGER_GUIDANCE if has_notes else ""),
-        "source_evidence": assembly_evidence_payload(blocks, ledger),
-        "reader_notes": _ledger_payload(ledger, blocks) if has_notes else "",
-    }
-
-
-def _claim_ledger_prompt(
-    primary: list[EvidenceBlock],
-    context: list[EvidenceBlock] | None = None,
-    recall_pass: int = 1,
-) -> str:
-    """Ask one reading to inventory source statements and their subjects.
-
-    Repeated readings receive the same source and different attention instructions;
-    they do not receive earlier model output. Their errors can still be correlated.
-    Combining readings offers another chance to find omitted facts, not independent
-    scientific confirmation of a statement.
-    """
-
-    context = context or []
-    return (
-        CLAIM_LEDGER_PROMPT
-        + (
-            "\n\nThis is one part of a long document. Emit an object, claim, or "
-            "exclusion only when it cites PRIMARY EVIDENCE; CONTEXT is supplied "
-            "only to resolve terminology."
-            if context
-            else ""
-        )
-        + ("\n\n" + CLAIM_RECALL_PROMPTS[recall_pass - 2] if recall_pass > 1 else "")
-        + "\n\nCONTEXT EVIDENCE:\n"
-        + json.dumps(evidence_payload(context), ensure_ascii=False)
-        + "\n\nPRIMARY EVIDENCE:\n"
-        + json.dumps(evidence_payload(primary), ensure_ascii=False)
-    )
 
 
 def _empty_ledger() -> ClaimLedger:
@@ -377,157 +107,6 @@ def _approximate_tokens(
     return estimate
 
 
-def _reading_input_limit(config: ExtractionConfig, configured_limit: int) -> int:
-    """Reserve the configured output before fitting a reader deployment's context."""
-
-    deployment = config.effective_deployment("read")
-    limits = [configured_limit]
-    if deployment:
-        if deployment.max_input_tokens is not None:
-            limits.append(deployment.max_input_tokens)
-        if deployment.context_tokens is not None:
-            output = deployment.max_output_tokens or config.claim_max_output_tokens
-            limits.append(deployment.context_tokens - output)
-    limit = min(limits)
-    if limit <= 0:
-        raise ValueError("reading output allowance leaves no space for source input")
-    return limit
-
-
-def _plan_claim_collection(
-    config: ExtractionConfig, blocks: list[EvidenceBlock]
-) -> tuple[
-    str,
-    int,
-    list[tuple[str, list[EvidenceBlock], list[EvidenceBlock]]],
-]:
-    """Fit every reading's serialized instructions, evidence, and citation schema.
-
-    The longest configured reading determines each window's size. Source blocks are
-    never dropped to satisfy a limit; indivisible oversized blocks fail planning.
-    """
-
-    deployment = config.effective_deployment("read")
-    tokenizer = deployment.tokenizer if deployment else None
-
-    def estimate(primary: list[EvidenceBlock], context: list[EvidenceBlock]) -> int:
-        schema = span_citation_schema(
-            ClaimLedger, build_evidence_spans([*context, *primary])
-        )
-        return max(
-            _approximate_tokens(
-                _claim_ledger_prompt(primary, context, reading),
-                schema,
-                tokenizer=tokenizer,
-            )
-            for reading in range(1, config.claim_recall_passes + 1)
-        )
-
-    approximate_tokens = estimate(blocks, [])
-    single_limit = _reading_input_limit(config, config.single_call_max_input_tokens)
-    mode = (
-        config.claim_mode
-        if config.claim_mode != "auto"
-        else ("single" if approximate_tokens <= single_limit else "windowed")
-    )
-    if mode == "single":
-        if approximate_tokens > single_limit:
-            raise ValueError(
-                f"complete reading estimate {approximate_tokens} exceeds input limit "
-                f"{single_limit}; use --claim-mode auto or windowed"
-            )
-        plan: list[tuple[str, list[EvidenceBlock], list[EvidenceBlock]]] = [
-            ("complete_claim_ledger", blocks, [])
-        ]
-    else:
-        input_limit = _reading_input_limit(config, config.claim_window_input_tokens)
-        evidence_budget = max(1, input_limit * 3)
-        windows = plan_evidence_windows(
-            blocks,
-            max_characters=evidence_budget,
-            max_context_characters=min(24_000, evidence_budget // 3),
-        ).windows
-        windows = fit_request_windows(
-            windows, max_input_tokens=input_limit, estimate=estimate
-        )
-        plan = [
-            (window.window_id, window.primary_blocks, window.context_blocks)
-            for window in windows
-        ]
-    return mode, approximate_tokens, plan
-
-
-def _collect_claim_ledger(
-    config: ExtractionConfig,
-    client: ModelClient,
-    blocks: list[EvidenceBlock],
-) -> tuple[ClaimLedger, list[str], int]:
-    """Read every source block, then combine exact repeated statements with provenance.
-
-    Window outputs describe source statements, not partial final studies. One later
-    assembly call resolves scientific identity across all windows. Reading failures
-    remain explicit; if no reading succeeds the caller uses the complete source.
-    """
-
-    _, _, plan = _plan_claim_collection(config, blocks)
-
-    parts: list[tuple[str, ClaimLedger]] = []
-    errors: list[str] = []
-    for index, (slug, primary, context) in enumerate(plan, start=1):
-        visible = [*context, *primary]
-        spans = build_evidence_spans(visible)
-        for pass_index in range(1, config.claim_recall_passes + 1):
-            pass_slug = f"{slug}-pass-{pass_index}"
-            logger.info(
-                "Collecting source claims window {}/{} pass {}/{} ({})",
-                index,
-                len(plan),
-                pass_index,
-                config.claim_recall_passes,
-                slug,
-            )
-            try:
-
-                def decode_claim_payload(
-                    payload: object, visible_spans=spans
-                ) -> object:
-                    return expand_span_citations(payload, visible_spans)
-
-                ledger = client.complete(
-                    kind="source_claim_ledger",
-                    slug=pass_slug,
-                    model=config.effective_model("read"),
-                    system=SYSTEM_PROMPT,
-                    prompt=_claim_ledger_prompt(primary, context, pass_index),
-                    prompt_components={
-                        "reading_instructions": CLAIM_LEDGER_PROMPT
-                        + (
-                            CLAIM_RECALL_PROMPTS[pass_index - 2]
-                            if pass_index > 1
-                            else ""
-                        ),
-                        "primary_evidence": evidence_payload(primary),
-                        "context_evidence": evidence_payload(context),
-                    },
-                    response_model=ClaimLedger,
-                    max_output_tokens=config.claim_max_output_tokens,
-                    reasoning_effort=config.reasoning_effort,
-                    request_schema=span_citation_schema(ClaimLedger, spans),
-                    decode=decode_claim_payload,
-                )
-            except ModelCallError as exc:
-                errors.append(f"{pass_slug}: {exc}")
-                continue
-            parts.append((pass_slug, ledger))
-    planned_calls = len(plan) * config.claim_recall_passes
-    if not parts:
-        return _empty_ledger(), errors, planned_calls
-    provenance: dict[str, object] = {}
-    combined = combine_ledgers(parts, provenance=provenance)
-    write_json_atomic(config.output_dir / "claim_readings.json", provenance)
-    return combined, errors, planned_calls
-
-
 def _empty_extraction(note: str) -> StudyExtraction:
     """Produce a valid inspectable result even when no model call succeeds."""
 
@@ -546,100 +125,6 @@ def _summarize_usage(calls: list[dict[str, object]]) -> dict[str, object]:
     """Aggregate charges from live calls; cache hits cost no tokens or money."""
 
     return summarize_calls(calls)
-
-
-def _run_configuration(
-    config: ExtractionConfig,
-    mode: str,
-    source_events: list[dict],
-    evidence_blocks: list[EvidenceBlock],
-) -> dict:
-    """Persist a secret-free fingerprint of every scientifically relevant setting."""
-
-    value = asdict(config)
-    value.update(
-        {
-            "pdf": str(config.pdf),
-            "supplement": str(config.supplement) if config.supplement else None,
-            "output_dir": str(config.output_dir),
-            "document_cache_dir": str(config.document_cache_dir),
-            "model_cache_dir": str(config.model_cache_dir),
-            "effective_mode": mode,
-            "schema_version": STUDY_SCHEMA_VERSION,
-            "schema_sha256": study_schema_sha256(),
-            "schema_prose_sha256": study_schema_prose_sha256(),
-            "pipeline_implementation_sha256": implementation_sha256(),
-            "runtime_versions": runtime_versions(),
-            "scientific_settings": config.scientific_settings(),
-            "effective_models": config.scientific_settings()["effective_models"],
-            "parser_dependencies": next(
-                (
-                    event.get("dependency_versions", {})
-                    for event in source_events
-                    if event.get("dependency_versions")
-                ),
-                {},
-            ),
-            "parser_implementation_sha256": next(
-                (
-                    event.get("parser_implementation_sha256")
-                    for event in source_events
-                    if event.get("parser_implementation_sha256")
-                ),
-                None,
-            ),
-            "source_parsing": source_events,
-            "prompt_sha256": prompt_sha256(),
-            "evidence_spans_sha256": evidence_spans_sha256(
-                build_evidence_spans(evidence_blocks)
-            ),
-            "source_sha256": [
-                event.get("source_sha256")
-                for event in source_events
-                if event.get("source_sha256")
-            ],
-        }
-    )
-    identity = {
-        name: value[name]
-        for name in (
-            "scientific_settings",
-            "effective_mode",
-            "schema_sha256",
-            "schema_prose_sha256",
-            "prompt_sha256",
-            "evidence_spans_sha256",
-            "source_sha256",
-            "parser_dependencies",
-            "parser_implementation_sha256",
-            "pipeline_implementation_sha256",
-            "runtime_versions",
-        )
-    }
-    encoded = json.dumps(identity, sort_keys=True, default=str).encode("utf-8")
-    value["configuration_sha256"] = hashlib.sha256(encoded).hexdigest()
-    return value
-
-
-def _runtime_deployments(
-    config: ExtractionConfig, claim_mode: str
-) -> dict[str, DeploymentSettings]:
-    """Apply shared input caps at the provider boundary, including correction calls."""
-
-    result = {}
-    for stage in ("read", "assemble", "refine", "repair", "enrich"):
-        declared = config.effective_deployment(stage)
-        limit = config.assembly_max_input_tokens
-        if stage == "read":
-            limit = (
-                config.claim_window_input_tokens
-                if claim_mode == "windowed"
-                else config.single_call_max_input_tokens
-            )
-        if declared.max_input_tokens is not None:
-            limit = min(limit, declared.max_input_tokens)
-        result[stage] = replace(declared, max_input_tokens=limit)
-    return result
 
 
 def _run_model_calls(
@@ -661,30 +146,30 @@ def _run_model_calls(
     prompt = _direct_prompt(blocks, ledger)
     spans = assembly_spans(blocks, ledger)
     logger.info("Building the complete study from source evidence")
-    try:
-        with journal.stage("assemble") if journal else nullcontext():
+    with journal.stage("assemble") if journal else nullcontext() as outcome:
+        try:
             extraction = client.complete(
+                stage="assemble",
                 kind="complete_study",
                 slug="complete_study",
-                model=config.effective_model("assemble"),
                 system=SYSTEM_PROMPT,
                 prompt=prompt,
                 prompt_components=_assembly_components(blocks, ledger),
                 response_model=StudyExtraction,
-                max_output_tokens=config.max_output_tokens,
-                reasoning_effort=config.reasoning_effort,
                 request_schema=span_citation_schema(StudyExtraction, spans),
                 decode=lambda payload: expand_span_citations(payload, spans),
             )
-    except ModelCallError as exc:
-        errors.append(str(exc))
-        extraction = _empty_extraction(
-            "Complete-study model call failed; inspect requests/ and report.json."
-        )
+        except ModelCallError as exc:
+            errors.append(str(exc))
+            extraction = _empty_extraction(
+                "Complete-study model call failed; inspect requests/ and report.json."
+            )
+            if outcome is not None:
+                outcome.record("failed", errors=[str(exc)], fallback="empty_extraction")
     if config.use_refinement and not errors:
         initial_extraction = extraction
         logger.info("Reconciling the complete draft against claims and source evidence")
-        with journal.stage("refine") if journal else nullcontext():
+        with journal.stage("refine") if journal else nullcontext() as outcome:
             extraction, error = refine_draft(
                 client,
                 draft=extraction,
@@ -701,6 +186,8 @@ def _run_model_calls(
                 audit_path=config.output_dir / "refinement_audit.json",
                 spans=spans,
             )
+            if error and outcome is not None:
+                outcome.record("failed", errors=[error], fallback="retain_draft")
         if error:
             errors.append(f"study_refinement: {error}")
     return extraction, initial_extraction, errors
@@ -716,87 +203,13 @@ def _plan_extraction(
     request_schema = span_citation_schema(
         StudyExtraction, assembly_spans(blocks, ledger)
     )
-    deployment = config.effective_deployment("assemble") if config else None
-    return _approximate_tokens(
+    if config is None:
+        return _approximate_tokens(_direct_prompt(blocks, ledger), request_schema)
+    return config.stage_policy("assemble").estimate(
+        SYSTEM_PROMPT,
         _direct_prompt(blocks, ledger),
-        request_schema,
-        tokenizer=deployment.tokenizer if deployment else None,
-    )
-
-
-def _select_refinement_candidate(
-    draft: StudyExtraction,
-    refinement: StudyExtraction,
-    blocks: list[EvidenceBlock],
-    ledger: ClaimLedger | None,
-) -> tuple[StudyExtraction, dict[str, object]]:
-    """Accept a changed draft only when neither technical issue count increases.
-
-    These source-link and claim-coverage counts are integrity checks, not a measure
-    of scientific correctness. Tied counts permit a changed candidate; evaluate
-    whether that policy helps accuracy against independent reviewed references.
-    """
-
-    draft_quality = candidate_quality(draft, blocks, ledger)
-    refinement_quality = candidate_quality(refinement, blocks, ledger)
-    same_candidate = draft == refinement
-    selected = (
-        "refinement"
-        if not same_candidate
-        and is_monotonic_quality(draft_quality, refinement_quality)
-        else "draft"
-    )
-    reason = (
-        "refinement changed the draft without worsening validation or claim coverage"
-    )
-    if same_candidate:
-        reason = "refinement produced no candidate change"
-    elif selected == "draft":
-        reason = "refinement worsened validation or claim coverage"
-    return (
-        draft if selected == "draft" else refinement,
-        {
-            "selected": selected,
-            "reason": reason,
-            "draft_quality": draft_quality,
-            "refinement_quality": refinement_quality,
-        },
-    )
-
-
-def _gate_final_candidate_against_draft(
-    draft: StudyExtraction,
-    candidate: StudyExtraction,
-    blocks: list[EvidenceBlock],
-    ledger: ClaimLedger | None,
-    selection: dict[str, object],
-) -> tuple[StudyExtraction, dict[str, object]]:
-    """Compare the final corrected candidate with the original draft once more.
-
-    Repair is checked against its immediate input. This final comparison prevents
-    a chain of accepted edits from increasing either technical issue count relative
-    to the first valid draft. Record counts are not rewards: removing a duplicate
-    can be a legitimate correction.
-    """
-
-    draft_quality = candidate_quality(draft, blocks, ledger)
-    candidate_quality_summary = candidate_quality(candidate, blocks, ledger)
-    accepted = is_monotonic_quality(draft_quality, candidate_quality_summary)
-    result = dict(selection)
-    result["pre_repair_selected"] = selection["selected"]
-    result["draft_quality"] = draft_quality
-    result["final_candidate_quality"] = candidate_quality_summary
-    if accepted:
-        result["selected"] = str(selection["selected"])
-        result["reason"] = (
-            "final candidate does not worsen validation or claim coverage relative to the draft"
-        )
-        return candidate, result
-    result["selected"] = "draft"
-    result["reason"] = (
-        "final candidate worsened validation or claim coverage relative to the draft"
-    )
-    return draft, result
+        strict_response_schema(StudyExtraction, request_schema),
+    )["estimated_input_tokens"]
 
 
 def run_extraction(config: ExtractionConfig) -> dict[str, object]:
@@ -832,14 +245,15 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
                 "telemetry.failed", error_type=type(error).__name__, status="disabled"
             )
     journal.emit("run.started", dry_run=config.dry_run)
-    state: dict[str, Any] = {}
+    state = RunState()
     try:
         report = _run_extraction(config, journal, state)
     except BaseException as error:
-        client = state.get("client")
+        client = state.client
         calls = client.calls if client is not None else []
         report = {
             "run_id": journal.run_id,
+            "stages": [outcome.to_dict() for outcome in journal.stages],
             "status": "interrupted"
             if isinstance(error, (KeyboardInterrupt, SystemExit))
             else "failed",
@@ -853,7 +267,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
                 "cost_tracking_complete": True,
             },
             "elapsed_seconds": round(time.monotonic() - journal.started_at, 3),
-            "source_parsing": state.get("source_parsing", []),
+            "source_parsing": state.source_parsing,
         }
         if not (config.output_dir / "run_configuration.json").exists():
             write_json_atomic(
@@ -866,6 +280,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         )
         write_run_manifest(config.output_dir, run_id=journal.run_id)
         raise
+    report["stages"] = [outcome.to_dict() for outcome in journal.stages]
     report["run_id"] = journal.run_id
     write_json_atomic(config.output_dir / "report.json", report)
     journal.emit("run.finished", status=report["status"], usage=report.get("usage", {}))
@@ -873,12 +288,10 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     return report
 
 
-def _run_extraction(
-    config: ExtractionConfig, journal: EventJournal, state: dict[str, Any]
-) -> dict[str, object]:
-    """Run source preparation, scientific stages, validation, and exports in order."""
-
-    started = time.monotonic()
+def _prepare_source(
+    config: ExtractionConfig, journal: EventJournal, state: RunState
+) -> PreparedSource:
+    """Parse and save source evidence, then plan calls without invoking a model."""
     logger.info("Parsing main paper{}", " and supplement" if config.supplement else "")
     with journal.stage("parse"):
         blocks, source_events = parse_documents(
@@ -889,165 +302,120 @@ def _run_extraction(
             refresh_cache=config.refresh_document_cache,
             heartbeat_seconds=config.heartbeat_seconds,
         )
-    state["source_parsing"] = source_events
-    write_json_atomic(
-        config.output_dir / "document.json",
-        {"blocks": [block.model_dump(mode="json") for block in blocks]},
-    )
-    write_json_atomic(
-        config.output_dir / "evidence_spans.json",
-        {
-            "spans": [
-                span.model_dump(mode="json") for span in build_evidence_spans(blocks)
-            ]
-        },
-    )
-    write_json_atomic(
-        config.output_dir / "run_configuration.json",
-        _run_configuration(config, "unplanned", source_events, blocks),
-    )
-    schema = StudyExtraction.model_json_schema()
-    if config.use_claim_ledger:
-        claim_mode, claim_tokens, claim_plan = _plan_claim_collection(config, blocks)
-    else:
-        claim_mode, claim_tokens, claim_plan = "disabled", 0, []
-    approximate_tokens = _plan_extraction(blocks, _empty_ledger(), config)
-    run_configuration = _run_configuration(config, claim_mode, source_events, blocks)
-    write_json_atomic(config.output_dir / "run_configuration.json", run_configuration)
-    write_json_atomic(config.output_dir / "extraction.schema.json", schema)
-    write_json_atomic(
-        config.output_dir / "claim_ledger.schema.json", ClaimLedger.model_json_schema()
-    )
-    write_json_atomic(
-        config.output_dir / "enrichment.schema.json",
-        EnrichmentAudit.model_json_schema(),
-    )
-    logger.info(
-        "Prepared {} evidence blocks (claims ~{} tokens, assembly ~{} tokens); claim_mode={}",
-        len(blocks),
-        claim_tokens,
-        approximate_tokens,
-        claim_mode,
-    )
-
-    claim_window_artifact = {
-        "mode": claim_mode,
-        "recall_passes": config.claim_recall_passes if config.use_claim_ledger else 0,
-        "approximate_request_tokens": claim_tokens,
-        "windows": [
+        state.source_parsing = source_events
+        write_json_atomic(
+            config.output_dir / "document.json",
+            {"blocks": [block.model_dump(mode="json") for block in blocks]},
+        )
+        write_json_atomic(
+            config.output_dir / "evidence_spans.json",
             {
-                "window_id": slug,
-                "primary_block_ids": [block.block_id for block in primary],
-                "context_block_ids": [block.block_id for block in context],
-            }
-            for slug, primary, context in claim_plan
-        ],
-    }
-    write_json_atomic(
-        config.output_dir / "claim_window_plan.json", claim_window_artifact
-    )
-
-    if config.dry_run:
-        assembly_deployment = _runtime_deployments(config, claim_mode)["assemble"]
-        known_issues = (
-            request_limit_issues(
-                approximate_tokens,
-                assembly_deployment.max_output_tokens or config.max_output_tokens,
-                assembly_deployment,
-            )
-            if not config.use_claim_ledger
-            else []
-        )
-        feasibility = {
-            "assembly": "conditional_on_reader_output"
-            if config.use_claim_ledger
-            else ("infeasible" if known_issues else "fits_input_estimate"),
-            "later_stages": "conditional_on_generated_records",
-            "note": "Input sizes are estimates; later drafts and provider retries are unknown.",
-        }
-        journal.emit("request.preflight", **feasibility, errors=known_issues)
-        extraction_call_count = 1
-        claim_call_count = (
-            len(claim_plan) * config.claim_recall_passes
-            if config.use_claim_ledger
-            else 0
-        )
-        planned_calls = (
-            extraction_call_count
-            + extraction_call_count * int(config.use_refinement)
-            + claim_call_count
-            + (3 if config.use_enrichment else 0)
-            + int(config.use_targeted_repair)
-        )
-        report: dict[str, object] = {
-            "status": "failed" if known_issues else "dry_run",
-            "dry_run": True,
-            "request_feasibility": feasibility,
-            "errors": known_issues,
-            "calls": [],
-            "usage": _summarize_usage([]),
-            "claim_mode": claim_mode,
-            "assembly_mode": "single",
-            "evidence_blocks": len(blocks),
-            "selected_evidence_blocks": len(blocks),
-            "approximate_request_tokens": approximate_tokens,
-            "planned_calls": planned_calls,
-            "planned_refinement_calls": (
-                extraction_call_count if config.use_refinement else 0
-            ),
-            "planned_claim_calls": claim_call_count,
-            "planned_enrichment_calls_max": 3 if config.use_enrichment else 0,
-            "planned_targeted_repair_calls_max": int(config.use_targeted_repair),
-            "budget": {
-                "max_model_calls": config.max_model_calls,
-                "max_cost_usd": config.max_cost_usd,
-                "provider_requests": 0,
-                "cost_tracking_complete": True,
-                "planned_calls_fit": (
-                    config.max_model_calls is None
-                    or planned_calls <= config.max_model_calls
-                ),
+                "spans": [
+                    span.model_dump(mode="json")
+                    for span in build_evidence_spans(blocks)
+                ]
             },
-            "source_parsing": source_events,
-            "elapsed_seconds": round(time.monotonic() - started, 3),
-        }
-        write_json_atomic(config.output_dir / "report.json", report)
-        return report
+        )
+    with journal.stage("plan"):
+        write_json_atomic(
+            config.output_dir / "run_configuration.json",
+            _run_configuration(config, "unplanned", source_events, blocks),
+        )
+        schema = StudyExtraction.model_json_schema()
+        if config.use_claim_ledger:
+            claim_mode, claim_tokens, claim_plan = _plan_claim_collection(
+                config, blocks
+            )
+        else:
+            claim_mode, claim_tokens, claim_plan = "disabled", 0, []
+        approximate_tokens = _plan_extraction(blocks, _empty_ledger(), config)
+        run_configuration = _run_configuration(
+            config, claim_mode, source_events, blocks
+        )
+        write_json_atomic(
+            config.output_dir / "run_configuration.json", run_configuration
+        )
+        write_json_atomic(config.output_dir / "extraction.schema.json", schema)
+        write_json_atomic(
+            config.output_dir / "claim_ledger.schema.json",
+            ClaimLedger.model_json_schema(),
+        )
+        write_json_atomic(
+            config.output_dir / "enrichment.schema.json",
+            EnrichmentAudit.model_json_schema(),
+        )
+        logger.info(
+            "Prepared {} evidence blocks (claims ~{} tokens, assembly ~{} tokens); claim_mode={}",
+            len(blocks),
+            claim_tokens,
+            approximate_tokens,
+            claim_mode,
+        )
 
-    client = ModelClient(
-        cache_dir=config.model_cache_dir,
-        output_dir=config.output_dir,
-        heartbeat_seconds=config.heartbeat_seconds,
-        timeout_seconds=config.timeout_seconds,
-        temperature=config.temperature,
-        max_model_calls=config.max_model_calls,
-        max_cost_usd=config.max_cost_usd,
-        max_total_tokens=config.max_total_tokens,
-        max_elapsed_seconds=config.max_elapsed_seconds,
-        deployments=_runtime_deployments(config, claim_mode),
-        journal=journal,
+        claim_window_artifact = {
+            "mode": claim_mode,
+            "recall_passes": config.claim_recall_passes
+            if config.use_claim_ledger
+            else 0,
+            "approximate_request_tokens": claim_tokens,
+            "windows": [
+                {
+                    "window_id": slug,
+                    "primary_block_ids": [block.block_id for block in primary],
+                    "context_block_ids": [block.block_id for block in context],
+                }
+                for slug, primary, context in claim_plan
+            ],
+        }
+        write_json_atomic(
+            config.output_dir / "claim_window_plan.json", claim_window_artifact
+        )
+
+    return PreparedSource(
+        blocks,
+        source_events,
+        claim_mode,
+        len(claim_plan) * config.claim_recall_passes,
+        approximate_tokens,
     )
-    state["client"] = client
+
+
+def _read_source(
+    config: ExtractionConfig,
+    client: ModelClient,
+    blocks: list[EvidenceBlock],
+    journal: EventJournal,
+) -> ReadingResult:
+    """Ground reader notes; retain complete source when they cannot guide assembly."""
     errors: list[str] = []
     ledger: ClaimLedger | None = None
     grounded_claims: ClaimLedger | None = None
     selected_blocks = blocks
     if config.use_claim_ledger:
         logger.info("Collecting source claims before schema assembly")
-        with journal.stage("read"):
+        with journal.stage("read") as outcome:
             ledger, claim_errors, _ = _collect_claim_ledger(config, client, blocks)
-        errors.extend(claim_errors)
-        write_json_atomic(
-            config.output_dir / "claim_ledger.json", ledger.model_dump(mode="json")
-        )
-        grounded_claims, claim_grounding = grounded_ledger(blocks, ledger)
-        write_json_atomic(config.output_dir / "claim_grounding.json", claim_grounding)
-        if not grounded_claims.objects and not grounded_claims.claims:
-            errors.append("source claim ledger contained no grounded objects or claims")
-            grounded_claims = None
-        else:
-            selected_blocks = assembly_blocks(blocks, grounded_claims)
-
+            errors.extend(claim_errors)
+            write_json_atomic(
+                config.output_dir / "claim_ledger.json", ledger.model_dump(mode="json")
+            )
+            grounded_claims, claim_grounding = grounded_ledger(blocks, ledger)
+            write_json_atomic(
+                config.output_dir / "claim_grounding.json", claim_grounding
+            )
+            if not grounded_claims.objects and not grounded_claims.claims:
+                errors.append(
+                    "source claim ledger contained no grounded objects or claims"
+                )
+                grounded_claims = None
+            else:
+                selected_blocks = assembly_blocks(blocks, grounded_claims)
+            if errors:
+                outcome.record(
+                    "partial" if grounded_claims is not None else "failed",
+                    errors=errors,
+                    fallback=None if grounded_claims is not None else "complete_source",
+                )
     approximate_tokens = _plan_extraction(
         selected_blocks, grounded_claims or _empty_ledger(), config
     )
@@ -1061,24 +429,33 @@ def _run_extraction(
         strategy="reader_notes" if grounded_claims is not None else "complete_source",
         estimated_assembly_input_tokens=approximate_tokens,
     )
-    write_json_atomic(
-        config.output_dir / "run_configuration.json",
-        _run_configuration(config, claim_mode, source_events, blocks),
-    )
     logger.info(
         "Selected {} of {} evidence blocks (~{} assembly request tokens)",
         len(selected_blocks),
         len(blocks),
         approximate_tokens,
     )
-    assembly_blocked = approximate_tokens > config.assembly_max_input_tokens
+    return ReadingResult(selected_blocks, grounded_claims, errors, approximate_tokens)
+
+
+def _build_study(
+    config: ExtractionConfig,
+    client: ModelClient,
+    reading: ReadingResult,
+    journal: EventJournal,
+) -> BuiltStudy:
+    selected_blocks = reading.selected_blocks
+    grounded_claims = reading.grounded_claims
+    approximate_tokens = reading.assembly_input_tokens
+    limit_issues = config.stage_policy("assemble").limit_issues(approximate_tokens)
+    assembly_blocked = bool(limit_issues)
     if assembly_blocked:
-        message = (
-            f"assembly request estimate {approximate_tokens} exceeds configured limit "
-            f"{config.assembly_max_input_tokens}; increase --assembly-max-input-tokens "
-            "only after confirming the selected model's context window"
+        message = f"assembly request estimate {approximate_tokens}: " + "; ".join(
+            limit_issues
         )
         logger.error(message)
+        with journal.stage("assemble") as outcome:
+            outcome.record("blocked", errors=[message], fallback="empty_extraction")
         extraction = _empty_extraction(message)
         initial_extraction = None
         extraction_errors = [message]
@@ -1090,8 +467,28 @@ def _run_extraction(
             grounded_claims or _empty_ledger(),
             journal=journal,
         )
-    errors.extend(extraction_errors)
 
+    return BuiltStudy(
+        extraction, initial_extraction, extraction_errors, assembly_blocked
+    )
+
+
+def _correct_study(
+    config: ExtractionConfig,
+    client: ModelClient,
+    built: BuiltStudy,
+    blocks: list[EvidenceBlock],
+    grounded_claims: ClaimLedger | None,
+    journal: EventJournal,
+) -> CorrectedStudy:
+    """Normalize citations, select a refinement, and check a targeted patch.
+
+    Both the refinement and the final patched candidate are compared with the
+    original draft. The saved audits explain every acceptance or fallback.
+    """
+    extraction = built.extraction
+    initial_extraction = built.initial_extraction
+    assembly_blocked = built.assembly_blocked
     extraction, quote_repairs = repair_noncontiguous_citation_quotes(extraction, blocks)
     extraction, pointer_repairs = repair_unique_citation_pointers(extraction, blocks)
     refinement_selection: dict[str, object] | None = None
@@ -1143,7 +540,7 @@ def _run_extraction(
                 pre_repair_coverage,
             )
         logger.info("Checking targeted text-only repair worklist")
-        with journal.stage("repair"):
+        with journal.stage("repair") as outcome:
             extraction, repair_audit = run_targeted_repair(
                 client=client,
                 study=extraction,
@@ -1155,6 +552,14 @@ def _run_extraction(
                 reasoning_effort=config.reasoning_effort,
                 max_output_tokens=config.repair_max_output_tokens,
             )
+            if repair_audit.status == "failed":
+                outcome.record(
+                    "failed",
+                    errors=[repair_audit.reason or "repair failed"],
+                    fallback="retain_candidate",
+                )
+            elif repair_audit.status == "rejected":
+                outcome.record("needs_review", fallback="retain_candidate")
         write_json_atomic(
             config.output_dir / "targeted_repair.json",
             repair_audit.model_dump(mode="json"),
@@ -1211,245 +616,187 @@ def _run_extraction(
         )
     write_json_atomic(config.output_dir / "citation_repairs.json", citation_repairs)
 
+    return CorrectedStudy(
+        extraction, citation_repairs, repair_audit, refinement_selection
+    )
+
+
+def _finalize_study(
+    config: ExtractionConfig,
+    corrected: CorrectedStudy,
+    built: BuiltStudy,
+    blocks: list[EvidenceBlock],
+    grounded_claims: ClaimLedger | None,
+    journal: EventJournal,
+) -> FinalStudy:
+    """Save the source-grounded result and compare its integrity with the first draft."""
+    extraction = corrected.extraction
+    initial_extraction = built.initial_extraction
     pre_finalization = extraction
     with journal.stage("finalize"):
         extraction, conservative_finalization = remove_unsupported_optional_claims(
             extraction, blocks
         )
-    journal.emit(
-        "candidate.finalized",
-        removal_count=conservative_finalization["removal_count"],
-        audit="conservative_finalization.json",
-    )
-    if conservative_finalization["removal_count"]:
+        journal.emit(
+            "candidate.finalized",
+            removal_count=conservative_finalization["removal_count"],
+            audit="conservative_finalization.json",
+        )
+        if conservative_finalization["removal_count"]:
+            write_json_atomic(
+                config.output_dir / "pre_conservative_extraction.json",
+                pre_finalization.model_dump(mode="json"),
+            )
+            logger.warning(
+                "Removed {} unsupported optional atomic claim(s); full details remain "
+                "in the finalization audit",
+                conservative_finalization["removal_count"],
+            )
         write_json_atomic(
-            config.output_dir / "pre_conservative_extraction.json",
-            pre_finalization.model_dump(mode="json"),
+            config.output_dir / "conservative_finalization.json",
+            conservative_finalization,
         )
-        logger.warning(
-            "Removed {} unsupported optional atomic claim(s); full details remain "
-            "in the finalization audit",
-            conservative_finalization["removal_count"],
+
+        write_json_atomic(
+            config.output_dir / "extraction.json", extraction.model_dump(mode="json")
         )
-    write_json_atomic(
-        config.output_dir / "conservative_finalization.json",
+    with journal.stage("validate", audit="validation.json") as outcome:
+        validation = validate_study(extraction, blocks)
+        grounded_values = validation.pop("verified_values")
+        write_json_atomic(config.output_dir / "grounded_values.json", grounded_values)
+        write_json_atomic(config.output_dir / "validation.json", validation)
+        coverage_audit: dict[str, object] | None = None
+        if grounded_claims is not None:
+            coverage_audit = audit_claim_coverage(grounded_claims, extraction)
+            write_json_atomic(
+                config.output_dir / "claim_coverage_audit.json", coverage_audit
+            )
+        quality_comparison: dict[str, object] | None = None
+        if initial_extraction is not None:
+            comparable_draft, _ = repair_noncontiguous_citation_quotes(
+                initial_extraction, blocks
+            )
+            comparable_draft, _ = repair_unique_citation_pointers(
+                comparable_draft, blocks
+            )
+            draft_validation = validate_study(comparable_draft, blocks)
+            draft_validation.pop("verified_values")
+            write_json_atomic(
+                config.output_dir / "draft_validation.json", draft_validation
+            )
+            draft_coverage = (
+                audit_claim_coverage(grounded_claims, comparable_draft)
+                if grounded_claims is not None
+                else None
+            )
+            if draft_coverage is not None:
+                write_json_atomic(
+                    config.output_dir / "draft_claim_coverage_audit.json",
+                    draft_coverage,
+                )
+            quality_comparison = {
+                "draft_validation_issue_count": len(draft_validation["issues"]),
+                "final_validation_issue_count": len(validation["issues"]),
+                "draft_values": {
+                    key: draft_validation["counts"][key]
+                    for key in ("reported_values", "source_verified_values")
+                },
+                "final_values": {
+                    key: validation["counts"][key]
+                    for key in ("reported_values", "source_verified_values")
+                },
+                "draft_claim_coverage": (
+                    draft_coverage["counts"] if draft_coverage else None
+                ),
+                "final_claim_coverage": (
+                    coverage_audit["counts"] if coverage_audit else None
+                ),
+            }
+            write_json_atomic(
+                config.output_dir / "quality_comparison.json", quality_comparison
+            )
+        review_reasons = []
+        if validation["status"] != "verified":
+            review_reasons.append(
+                f"source validation found {len(validation['issues'])} issue(s)"
+            )
+        if coverage_audit is not None and coverage_audit["status"] != "complete":
+            review_reasons.append("reader-note coverage is incomplete")
+        if review_reasons:
+            outcome.record("needs_review", errors=review_reasons)
+    return FinalStudy(
+        extraction,
+        validation,
+        coverage_audit,
+        quality_comparison,
         conservative_finalization,
     )
 
-    write_json_atomic(
-        config.output_dir / "extraction.json", extraction.model_dump(mode="json")
-    )
-    validation = validate_study(extraction, blocks)
-    grounded_values = validation.pop("verified_values")
-    write_json_atomic(config.output_dir / "grounded_values.json", grounded_values)
-    write_json_atomic(config.output_dir / "validation.json", validation)
-    coverage_audit: dict[str, object] | None = None
-    if grounded_claims is not None:
-        coverage_audit = audit_claim_coverage(grounded_claims, extraction)
-        write_json_atomic(
-            config.output_dir / "claim_coverage_audit.json", coverage_audit
-        )
-    quality_comparison: dict[str, object] | None = None
-    if initial_extraction is not None:
-        comparable_draft, _ = repair_noncontiguous_citation_quotes(
-            initial_extraction, blocks
-        )
-        comparable_draft, _ = repair_unique_citation_pointers(comparable_draft, blocks)
-        draft_validation = validate_study(comparable_draft, blocks)
-        draft_validation.pop("verified_values")
-        write_json_atomic(config.output_dir / "draft_validation.json", draft_validation)
-        draft_coverage = (
-            audit_claim_coverage(grounded_claims, comparable_draft)
-            if grounded_claims is not None
-            else None
-        )
-        if draft_coverage is not None:
-            write_json_atomic(
-                config.output_dir / "draft_claim_coverage_audit.json", draft_coverage
-            )
-        quality_comparison = {
-            "draft_validation_issue_count": len(draft_validation["issues"]),
-            "final_validation_issue_count": len(validation["issues"]),
-            "draft_values": {
-                key: draft_validation["counts"][key]
-                for key in ("reported_values", "source_verified_values")
-            },
-            "final_values": {
-                key: validation["counts"][key]
-                for key in ("reported_values", "source_verified_values")
-            },
-            "draft_claim_coverage": (
-                draft_coverage["counts"] if draft_coverage else None
-            ),
-            "final_claim_coverage": (
-                coverage_audit["counts"] if coverage_audit else None
-            ),
-        }
-        write_json_atomic(
-            config.output_dir / "quality_comparison.json", quality_comparison
-        )
-    enrichment: EnrichmentAudit | None = None
-    if config.use_enrichment and not assembly_blocked:
-        logger.info("Interpreting composition and processing from local evidence")
-        with journal.stage("enrich"):
-            enrichment = run_enrichment(
-                client=client,
-                study=extraction,
-                blocks=blocks,
-                model=config.effective_model("enrich"),
-                reasoning_effort=config.reasoning_effort,
-                max_output_tokens=config.enrichment_max_output_tokens,
-            )
-        write_json_atomic(
-            config.output_dir / "enrichment.json",
-            enrichment.model_dump(mode="json"),
-        )
-        write_json_atomic(
-            config.output_dir / "composition_proposals.json",
-            {
-                "results": [
-                    result.model_dump(mode="json")
-                    for result in enrichment.composition_results
-                ]
-            },
-        )
-        write_json_atomic(
-            config.output_dir / "processing_proposals.json",
-            {
-                "results": [
-                    result.model_dump(mode="json")
-                    for result in enrichment.processing_results
-                ]
-            },
-        )
-    nomad_error: str | None = None
-    try:
-        with journal.stage("export"):
-            nomad = to_nomad_with_report(
-                extraction,
-                model=config.effective_model("assemble"),
-                enrichment=enrichment,
-                evidence_blocks=blocks,
-            )
-    except (ValidationError, ValueError) as exc:
-        nomad_error = str(exc)
-        write_json_atomic(
-            config.output_dir / "nomad_conversion_failure.json",
-            {"error": nomad_error},
-        )
-    else:
-        _write_nomad_artifacts(config.output_dir, nomad)
 
-    reduced_error: str | None = None
-    if config.reduced_export:
-        try:
-            reduced = to_reduced_with_report(extraction)
-        except (ValidationError, ValueError) as exc:
-            reduced_error = str(exc)
-            write_json_atomic(
-                config.output_dir / "reduced_conversion_failure.json",
-                {"error": reduced_error},
-            )
-        else:
-            write_json_atomic(
-                config.output_dir / "reduced.json",
-                reduced.cells.model_dump(mode="json"),
-            )
-            write_json_atomic(
-                config.output_dir / "reduced_conversion.json",
-                reduced.model_dump(mode="json"),
-            )
+def _run_extraction(
+    config: ExtractionConfig, journal: EventJournal, state: RunState
+) -> dict[str, object]:
+    """Execute operations in dependency order; each returns the next operation's input."""
+    source = _prepare_source(config, journal, state)
+    if config.dry_run:
+        return _dry_run_report(config, source, journal)
 
-    counts = validation["counts"]
-    extraction_calls = [
-        call
-        for call in client.calls
-        if call.get("kind")
-        not in {
-            "source_claim_ledger",
-            "composition_enrichment",
-            "processing_enrichment",
-            "composition_enrichment_retry",
-            "targeted_study_repair",
-        }
-    ]
-    enrichment_status = None
-    if enrichment is not None:
-        result_statuses = [
-            result.status for result in enrichment.composition_results
-        ] + [result.status for result in enrichment.processing_results]
-        enrichment_status = (
-            "failed"
-            if enrichment.errors and not result_statuses
-            else (
-                "needs_review"
-                if enrichment.errors
-                or any(status != "accepted" for status in result_statuses)
-                or enrichment.unresolved_absorber_ids
-                or enrichment.unresolved_processing_step_ids
-                else "complete"
-            )
-        )
-    status = (
-        "failed"
-        if not extraction_calls or all(call.get("error") for call in extraction_calls)
-        else (
-            "partial"
-            if errors or nomad_error or reduced_error
-            else (
-                "complete"
-                if validation["status"] == "verified"
-                and (coverage_audit is None or coverage_audit["status"] == "complete")
-                and enrichment_status not in {"failed", "needs_review"}
-                else "complete_needs_review"
-            )
-        )
+    client = ModelClient(
+        cache_dir=config.model_cache_dir,
+        output_dir=config.output_dir,
+        heartbeat_seconds=config.heartbeat_seconds,
+        timeout_seconds=config.timeout_seconds,
+        temperature=config.temperature,
+        max_model_calls=config.max_model_calls,
+        max_cost_usd=config.max_cost_usd,
+        max_total_tokens=config.max_total_tokens,
+        max_elapsed_seconds=config.max_elapsed_seconds,
+        stage_policies=config.stage_policies(claim_mode=source.claim_mode),
+        journal=journal,
     )
-    report = {
-        "status": status,
-        "claim_mode": claim_mode,
-        "assembly_mode": "single",
-        "evidence_blocks": len(blocks),
-        "selected_evidence_blocks": len(selected_blocks),
-        "approximate_request_tokens": approximate_tokens,
-        **counts,
-        "validation_issue_count": len(validation["issues"]),
-        "citation_repair_count": citation_repairs["repair_count"],
-        "conservative_removal_count": conservative_finalization["removal_count"],
-        "refinement_calls": sum(
-            call.get("kind") in {"study_refinement", "evidence_window_refinement"}
-            for call in client.calls
-        ),
-        "targeted_repair_status": repair_audit.status if repair_audit else "disabled",
-        "quality_comparison": quality_comparison,
-        "refinement_selection": refinement_selection,
-        "claim_coverage": coverage_audit["counts"] if coverage_audit else None,
-        "enrichment_status": enrichment_status,
-        "enrichment_errors": enrichment.errors if enrichment else [],
-        "accepted_composition_proposals": sum(
-            result.status == "accepted"
-            for result in (enrichment.composition_results if enrichment else [])
-        ),
-        "accepted_processing_proposals": sum(
-            result.status == "accepted"
-            for result in (enrichment.processing_results if enrichment else [])
-        ),
-        "unresolved_composition_proposals": (
-            len(enrichment.unresolved_absorber_ids) if enrichment else 0
-        ),
-        "unresolved_processing_proposals": (
-            len(enrichment.unresolved_processing_step_ids) if enrichment else 0
-        ),
-        "nomad_archive_count": len(nomad.archives) if nomad_error is None else 0,
-        "nomad_issue_count": len(nomad.issues) if nomad_error is None else 0,
-        "nomad_conversion_error": nomad_error,
-        "reduced_conversion_error": reduced_error,
-        "errors": errors,
-        "calls": client.calls,
-        "usage": _summarize_usage(client.calls),
-        "budget": client.budget_status(),
-        "source_parsing": source_events,
-        "elapsed_seconds": round(time.monotonic() - started, 3),
-    }
-    write_json_atomic(config.output_dir / "report.json", report)
-    return report
+    state.client = client
+    reading = _read_source(config, client, source.blocks, journal)
+    built = _build_study(config, client, reading, journal)
+    with journal.stage("correct") as outcome:
+        corrected = _correct_study(
+            config,
+            client,
+            built,
+            source.blocks,
+            reading.grounded_claims,
+            journal,
+        )
+        if corrected.refinement_selection is not None:
+            outcome.decisions.append(
+                {"operation": "select_candidate", **corrected.refinement_selection}
+            )
+        if corrected.repair_audit is not None:
+            audit = corrected.repair_audit
+            outcome.decisions.append(
+                {
+                    "operation": "targeted_repair",
+                    "selected": audit.status,
+                    "reason": audit.reason,
+                    "before_quality": audit.before_quality,
+                    "after_quality": audit.after_quality,
+                }
+            )
+    final = _finalize_study(
+        config,
+        corrected,
+        built,
+        source.blocks,
+        reading.grounded_claims,
+        journal,
+    )
+    exports = _interpret_and_export(
+        config,
+        client,
+        final,
+        source.blocks,
+        built.assembly_blocked,
+        journal,
+    )
+    return _completed_report(
+        source, reading, built, corrected, final, exports, client, journal
+    )

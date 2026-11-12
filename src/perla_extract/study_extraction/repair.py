@@ -644,6 +644,7 @@ def run_targeted_repair(
     }
     try:
         proposed = client.complete(
+            stage="repair",
             kind="targeted_study_repair",
             slug="targeted_study_repair",
             model=model,

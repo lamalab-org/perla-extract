@@ -129,18 +129,6 @@ class DeploymentSettings:
         return value
 
 
-def deployment_stage(kind: str) -> str:
-    if "claim" in kind:
-        return "read"
-    if "refinement" in kind:
-        return "refine"
-    if "repair" in kind:
-        return "repair"
-    if "enrichment" in kind:
-        return "enrich"
-    return "assemble"
-
-
 def request_limit_issues(
     estimated_input_tokens: int,
     reserved_output_tokens: int,

@@ -3,7 +3,16 @@ from pathlib import Path
 
 import pytest
 
+from perla_extract.study_extraction.candidate_selection import (
+    _gate_final_candidate_against_draft,
+    _select_refinement_candidate,
+)
 from perla_extract.study_extraction.claims import ClaimLedger, ExperimentalObject
+from perla_extract.study_extraction.configuration import ExtractionConfig
+from perla_extract.study_extraction.extraction_prompts import (
+    _claim_ledger_prompt,
+    prompt_sha256,
+)
 from perla_extract.study_extraction.guidance import (
     COMPOSITION_BOUNDARY_POLICY,
     DEVICE_FAMILY_POLICY,
@@ -22,15 +31,7 @@ from perla_extract.study_extraction.models import (
     study_schema_sha256,
 )
 from perla_extract.study_extraction.repair import REPAIR_PROMPT
-from perla_extract.study_extraction.workflow import (
-    ExtractionConfig,
-    _claim_ledger_prompt,
-    _gate_final_candidate_against_draft,
-    _run_model_calls,
-    _select_refinement_candidate,
-    prompt_sha256,
-    run_extraction,
-)
+from perla_extract.study_extraction.workflow import _run_model_calls, run_extraction
 
 FIXTURE = Path(__file__).parents[1] / "test_files" / "nat_comm_7139.pdf"
 
@@ -587,7 +588,7 @@ def test_claim_windows_fit_the_serialized_provider_payload(tmp_path):
         estimate_request_input,
         strict_response_schema,
     )
-    from perla_extract.study_extraction.workflow import (
+    from perla_extract.study_extraction.source_reading import (
         _collect_claim_ledger,
         _plan_claim_collection,
     )
@@ -633,7 +634,7 @@ def test_claim_windows_fit_the_serialized_provider_payload(tmp_path):
 
 
 def test_indivisible_source_block_cannot_silently_exceed_reading_budget(tmp_path):
-    from perla_extract.study_extraction.workflow import _plan_claim_collection
+    from perla_extract.study_extraction.source_reading import _plan_claim_collection
 
     block = EvidenceBlock(
         block_id="oversized-table",

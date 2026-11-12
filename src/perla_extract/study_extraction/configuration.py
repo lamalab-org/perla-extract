@@ -21,6 +21,7 @@ except ModuleNotFoundError:  # Python 3.10
     import tomli as tomllib  # type: ignore[no-redef]
 
 from .deployment import DeploymentSettings
+from .request_policy import ResolvedStagePolicy
 
 DEFAULT_EXTRACTION_MODEL = "openai/gpt-5.2"
 DEFAULT_CLAIM_MODEL = None
@@ -231,6 +232,50 @@ class ExtractionConfig:
             }
             return replace(self.deployments["refine"], **overrides)
         return declared
+
+    def stage_policy(
+        self, stage: str, *, claim_mode: str | None = None
+    ) -> ResolvedStagePolicy:
+        """Resolve the exact limits and generation options used by one stage.
+
+        The historical assembly input cap applies to every non-reader stage. Reader
+        planning resolves both single and windowed policies before selecting a mode.
+        """
+        deployment = self.effective_deployment(stage)
+        mode = claim_mode or self.claim_mode
+        input_limit = self.assembly_max_input_tokens
+        if stage == "read":
+            input_limit = (
+                self.claim_window_input_tokens
+                if mode == "windowed"
+                else self.single_call_max_input_tokens
+            )
+        if deployment.max_input_tokens is not None:
+            input_limit = min(input_limit, deployment.max_input_tokens)
+        deployment = replace(deployment, max_input_tokens=input_limit)
+        output_limits = {
+            "read": self.claim_max_output_tokens,
+            "assemble": self.max_output_tokens,
+            "refine": self.max_output_tokens,
+            "repair": self.repair_max_output_tokens,
+            "enrich": self.enrichment_max_output_tokens,
+        }
+        return ResolvedStagePolicy.resolve(
+            stage,
+            model=self.effective_model(stage),
+            deployment=deployment,
+            max_output_tokens=output_limits[stage],
+            reasoning_effort=self.reasoning_effort,
+            temperature=self.temperature,
+        )
+
+    def stage_policies(
+        self, claim_mode: str | None = None
+    ) -> dict[str, ResolvedStagePolicy]:
+        """Resolve dispatch policies after the reader planner has chosen its mode."""
+        return {
+            stage: self.stage_policy(stage, claim_mode=claim_mode) for stage in STAGES
+        }
 
     def scientific_settings(self) -> dict[str, Any]:
         """Settings needed to reproduce an attempted method, independent of file locations."""

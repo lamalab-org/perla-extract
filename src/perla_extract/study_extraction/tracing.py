@@ -99,7 +99,11 @@ class LangfuseAdapter:
                     "validation_rejected",
                 }:
                     values["level"] = "ERROR"
-                elif event.get("status") in {"partial", "complete_needs_review"}:
+                elif event.get("status") in {
+                    "partial",
+                    "needs_review",
+                    "complete_needs_review",
+                }:
                     values["level"] = "WARNING"
                 if kind == "call.finished" and event.get("status") == "local_cache_hit":
                     values["name"] = "Local response cache hit"

@@ -22,6 +22,7 @@ from .configuration import (
     resolve_config,
     runtime_versions,
 )
+from .extraction_prompts import prompt_sha256
 from .logging import configure_logging, logger
 from .models import (
     EvidenceBlock,
@@ -31,7 +32,6 @@ from .models import (
 )
 from .run_artifacts import verify_run_manifest
 from .source import _parser_dependency_versions, _parser_implementation_sha256
-from .workflow import prompt_sha256
 
 
 class CohortPaper(BaseModel):

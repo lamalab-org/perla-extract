@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Iterator, Protocol
 
 from .logging import logger
+from .stage_results import StageOutcome
 
 _stage: ContextVar[tuple[str, str] | None] = ContextVar("perla_stage", default=None)
 
@@ -48,6 +49,7 @@ class EventJournal:
         self.adapter = adapter
         self.started_at = time.monotonic()
         self.sequence = 0
+        self.stages: list[StageOutcome] = []
         self._lock = threading.RLock()
 
     @property
@@ -98,37 +100,34 @@ class EventJournal:
             return record
 
     @contextmanager
-    def stage(self, name: str, **metadata: object) -> Iterator[str]:
+    def stage(self, name: str, **metadata: object) -> Iterator[StageOutcome]:
         stage_id = uuid.uuid4().hex
         parent = self.stage_id
         token = _stage.set((self.run_id, stage_id))
         started = time.monotonic()
-        self.emit("stage.started", stage=name, parent_stage_id=parent, **metadata)
+        outcome = StageOutcome(stage=name, stage_id=stage_id)
         try:
+            self.emit("stage.started", stage=name, parent_stage_id=parent, **metadata)
             with logger.contextualize(
                 run_id=self.run_id, stage_id=stage_id, stage=name
             ):
-                yield stage_id
+                yield outcome
         except BaseException as exc:
-            self.emit(
-                "stage.finished",
-                stage=name,
-                status="interrupted"
+            outcome.record(
+                "interrupted"
                 if isinstance(exc, (KeyboardInterrupt, SystemExit))
                 else "failed",
-                error_type=type(exc).__name__,
-                elapsed_seconds=round(time.monotonic() - started, 6),
+                errors=[str(exc)],
             )
+            outcome.error_type = type(exc).__name__
             raise
-        else:
-            self.emit(
-                "stage.finished",
-                stage=name,
-                status="complete",
-                elapsed_seconds=round(time.monotonic() - started, 6),
-            )
         finally:
-            _stage.reset(token)
+            outcome.elapsed_seconds = round(time.monotonic() - started, 6)
+            self.stages.append(outcome)
+            try:
+                self.emit("stage.finished", **outcome.to_dict())
+            finally:
+                _stage.reset(token)
 
 
 def read_events(path: Path) -> list[dict]:

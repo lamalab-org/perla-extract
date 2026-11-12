@@ -17,12 +17,12 @@ from perla_extract.study_extraction.configuration import (
     implementation_sha256,
     runtime_versions,
 )
+from perla_extract.study_extraction.extraction_prompts import prompt_sha256
 from perla_extract.study_extraction.models import (
     study_schema_prose_sha256,
     study_schema_sha256,
 )
 from perla_extract.study_extraction.run_artifacts import write_run_manifest
-from perla_extract.study_extraction.workflow import prompt_sha256
 
 
 def manifest() -> CohortManifest:

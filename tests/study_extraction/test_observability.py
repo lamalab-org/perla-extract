@@ -400,12 +400,12 @@ def test_console_progress_keeps_execution_ids(tmp_path, monkeypatch):
             litellm, "completion", lambda **kwargs: response({"value": 1})
         )
         model_client = client(tmp_path, journal=journal)
-        with journal.stage("assemble") as stage_id:
+        with journal.stage("assemble") as outcome:
             complete(model_client)
         progress = [record for record in records if record["extra"].get("call_id")]
         assert progress
         assert all(record["extra"]["run_id"] == journal.run_id for record in progress)
-        assert all(record["extra"]["stage_id"] == stage_id for record in progress)
+        assert all(record["extra"]["stage_id"] == outcome.stage_id for record in progress)
     finally:
         logger.remove(sink)
 
@@ -534,7 +534,7 @@ def test_response_artifact_failure_cannot_erase_accounting(tmp_path, monkeypatch
 
 
 def test_retry_planning_failure_preserves_first_paid_attempt(tmp_path, monkeypatch):
-    import perla_extract.study_extraction.client as implementation
+    import perla_extract.study_extraction.request_policy as implementation
 
     original = implementation.estimate_request_input
     estimates = 0

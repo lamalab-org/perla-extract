@@ -637,6 +637,7 @@ def run_enrichment(
     if composition_input:
         try:
             response = client.complete(
+                stage="enrich",
                 kind="composition_enrichment",
                 slug="composition_enrichment",
                 model=model,
@@ -668,6 +669,7 @@ def run_enrichment(
     if composition_call_succeeded and missing_composition_input:
         try:
             retry_response = client.complete(
+                stage="enrich",
                 kind="composition_enrichment_retry",
                 slug="composition_enrichment_retry",
                 model=model,
@@ -697,6 +699,7 @@ def run_enrichment(
     if processing_input:
         try:
             response = client.complete(
+                stage="enrich",
                 kind="processing_enrichment",
                 slug="processing_enrichment",
                 model=model,

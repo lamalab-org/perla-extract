@@ -35,7 +35,7 @@ from perla_extract.study_extraction.nomad_contract import (
     NOMAD_SCHEMA_COMMIT,
     NOMAD_SCHEMA_VERSION,
 )
-from perla_extract.study_extraction.workflow import _write_nomad_artifacts
+from perla_extract.study_extraction.study_outputs import _write_nomad_artifacts
 
 EVIDENCE = [EvidenceCitation(block_id="table-1", quote="reported value")]
 SOURCE_BLOCKS = [
