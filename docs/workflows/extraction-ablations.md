@@ -12,6 +12,22 @@ reviewed reference, scores, paired CSV roster, comparison report and figure tabl
 Its candidates are manually edited, so it teaches the reporting path without
 claiming to test a model or extraction setting.
 
+## Activate the extraction environment
+
+The offline example's `.venv-scoring` contains no extraction command or PDF parser.
+For actual extraction, follow the [checkout installation](../getting-started.md#install)
+and activate `.venv-extraction` from the repository root:
+
+```bash
+source .venv-extraction/bin/activate
+perla-extract --help
+git rev-parse HEAD
+```
+
+Configure the selected provider's credentials, or the server settings described in
+[open models](open-models.md). Keep the source revision with the results. The commands
+below use the same parser and resource limits in both arms.
+
 ## Choose a question
 
 | Question | Treatment file | Setting to declare with `--factor` |
@@ -35,16 +51,36 @@ processing; its downstream value requires a separate evaluation from core extrac
 
 ## Run and score one pair
 
-From an installed checkout, choose a paper ID present in the frozen release. Replace
-`PAPER_ID` and the source paths below with real inputs. An output folder must be new
-or empty. Dry runs also consume their output folder; use a separate folder for them.
+Choose a paper ID present in the frozen release. Replace `PAPER_ID` and the source
+paths below with that paper's actual main PDF and SI. Check that they cover the
+same sources as its reference; the comparison rejects mismatched source hashes.
+An output folder must be new or empty. Dry runs also consume their output folder.
+
+The baseline enables two source-reading passes per window, assembly, full-draft
+revision, targeted repair and enrichment. The treatment changes only the number of
+source-reading passes. These commands select PyMuPDF explicitly for both arms;
+the parser choice is recorded and should stay fixed for this experiment.
+
+Check the inputs before sending a model request:
 
 ```bash
 perla-extract --pdf papers/PAPER_ID.pdf --supplement papers/PAPER_ID-SI.pdf \
+  --parser pymupdf --output-dir plans/PAPER_ID/control-1 --dry-run
+```
+
+Inspect the planned calls and input estimates in that plan's `report.json`. Then
+run both arms with separate model caches and explicit request/spend limits:
+
+```bash
+perla-extract --pdf papers/PAPER_ID.pdf --supplement papers/PAPER_ID-SI.pdf \
+  --parser pymupdf --max-model-calls 14 --max-cost-usd 2.00 \
+  --model-cache-dir caches/PAPER_ID/control-1 \
   --output-dir runs/PAPER_ID/control-1
 
 perla-extract --config examples/ablations/01-one-reading.toml \
   --pdf papers/PAPER_ID.pdf --supplement papers/PAPER_ID-SI.pdf \
+  --parser pymupdf --max-model-calls 14 --max-cost-usd 2.00 \
+  --model-cache-dir caches/PAPER_ID/treatment-1 \
   --output-dir runs/PAPER_ID/treatment-1
 
 perla-evaluate --truth data/study_extraction/ground_truth/v2/dev/PAPER_ID \
@@ -56,7 +92,14 @@ perla-evaluate --truth data/study_extraction/ground_truth/v2/dev/PAPER_ID \
   --output runs/PAPER_ID/treatment-1/evaluation.json --fail-on-scoring-issues
 ```
 
+These budgets are starting limits, not a guarantee that a paper will finish or a
+hard billing ceiling. Keep a budget-limited attempt in the roster. For a self-hosted
+model with no known dollar cost, use token/request/time limits instead of
+`--max-cost-usd`; see [resource limits](open-models.md#understand-context-and-resource-limits).
+
 A model cache hit reproduces a saved answer; it is not another stochastic repetition.
+The separate caches above prevent one arm from reusing the other's paid requests.
+For repeat 2, choose new output and cache directories for both arms.
 For independent repeated generations, use a fresh `--model-cache-dir` for every
 attempt. Record the server revision, decoding settings and cache policy. Temperature
 zero and a fixed seed do not guarantee identical results on every backend.

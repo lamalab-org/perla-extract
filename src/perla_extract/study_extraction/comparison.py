@@ -433,7 +433,13 @@ def main(
         raise click.ClickException(str(exc)) from exc
     click.echo(str(output))
     if result["issues"]:
-        raise click.ClickException("Comparison needs attention; diagnostics were saved")
+        issues = result["issues"]
+        details = "\n".join(f"- {issue}" for issue in issues[:5])
+        if len(issues) > 5:
+            details += f"\n- {len(issues) - 5} more issue(s) in the saved report."
+        raise click.ClickException(
+            f"Comparison needs attention:\n{details}\nFull diagnostics: {output}"
+        )
 
 
 if __name__ == "__main__":

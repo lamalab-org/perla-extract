@@ -49,6 +49,7 @@ perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
   --model openai/gpt-5.2 \
+  --parser pymupdf \
   --max-cost-usd 2.00 \
   --output-dir results/paper
 ```
@@ -62,6 +63,10 @@ Use a new output folder for each attempt. A shared TOML file (`--config method.t
 controls stage models and limits; [open-model endpoints and Langfuse tracing](docs/workflows/open-models.md)
 are optional. [Ablations](docs/workflows/extraction-ablations.md) use ordinary runs
 and a CSV roster, with `perla-compare` exporting paired results and plotting tables.
+
+This first run selects PyMuPDF explicitly. The default Docling parser performs
+additional layout analysis and can download parser-model weights on first use.
+Keep the parser fixed across the arms of a model or stage comparison.
 
 The output includes `extraction.json`, its source evidence and retained drafts.
 Saved audits show what repair and enrichment changed. If finalization removes an

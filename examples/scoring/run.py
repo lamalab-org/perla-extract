@@ -349,6 +349,10 @@ def build_example(output: Path) -> dict:
 def main(output: Path) -> None:
     try:
         build_example(output)
+    except FileExistsError as exc:
+        raise click.ClickException(
+            f"Output already exists: {output}; choose a new directory."
+        ) from exc
     except (OSError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(f"PASS: four synthetic cases; inspect {output / 'summary.json'}")

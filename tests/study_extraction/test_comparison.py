@@ -163,6 +163,20 @@ def test_cli_retains_diagnostics_and_refuses_overwrite(roster):
     assert runner.invoke(main, [str(roster), "--output", str(output)]).exit_code != 0
 
 
+def test_cli_explains_a_rejected_comparison_without_opening_the_report(roster):
+    output = roster.parent / "rejected.json"
+    result = CliRunner().invoke(
+        main, [str(roster), "--factor", "use_refinement", "--output", str(output)]
+    )
+    assert result.exit_code == 1
+    assert "undeclared configuration differences: claim_recall_passes" in result.output
+    assert "declared factor did not change" in result.output
+    assert f"Full diagnostics: {output}" in result.output
+    saved = json.loads(output.read_text())
+    assert saved["quality"] is None
+    assert saved["accounting"]["control"]["known_cost_usd"] == 8
+
+
 def test_missing_pair_is_rejected_instead_of_dropped(roster):
     lines = roster.read_text().splitlines()
     roster.write_text("\n".join(lines[:-1]) + "\n")

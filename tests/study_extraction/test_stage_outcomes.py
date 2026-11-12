@@ -98,7 +98,9 @@ def test_handled_optional_failure_is_shared_by_report_and_events(
 def test_offline_planning_example_refuses_oversize_without_model_calls(
     tmp_path, monkeypatch
 ):
-    from examples.extraction.plan import run
+    from click.testing import CliRunner
+
+    from examples.extraction.plan import main, run
     from perla_extract.study_extraction.client import ModelClient
 
     monkeypatch.setattr(
@@ -118,6 +120,13 @@ def test_offline_planning_example_refuses_oversize_without_model_calls(
             1 if name == "blocked" else 100_000
         )
         assert Path(output / name / "run_manifest.json").exists()
+
+    original = (output / "fits" / "report.json").read_bytes()
+    repeated = CliRunner().invoke(main, ["--output", str(output)])
+    assert repeated.exit_code == 1
+    assert "choose a new directory" in repeated.output
+    assert "Traceback" not in repeated.output
+    assert (output / "fits" / "report.json").read_bytes() == original
 
 
 def test_enrichment_artifact_failure_marks_stage_failed(tmp_path, monkeypatch):

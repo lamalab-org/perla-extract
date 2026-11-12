@@ -19,13 +19,27 @@ PyMuPDF alternative:
 pip install perla-extract
 ```
 
-For a development checkout:
+For a repository checkout, use a separate extraction environment (Python 3.12,
+Linux/macOS):
 
 ```bash
-pip install -e '.[dev,docs]'
+python3.12 -m venv .venv-extraction
+source .venv-extraction/bin/activate
+python -m pip install -e .
 ```
 
+The offline example's `.venv-scoring` intentionally omits extraction commands and
+PDF parsers. Activate `.venv-extraction` when moving to real PDFs. For code or docs
+work, additionally install `python -m pip install -e '.[dev,docs]'`; the reviewer
+behavior tests also require Node.js 20 or newer.
+
 ## Inspect the planned run
+
+Start with `--parser pymupdf`, which reads text without downloading parser-model
+weights. The default `docling` parser performs additional layout analysis and
+may download model weights on its first use; it needs access to the model host
+unless those weights are already cached. Select the parser explicitly and keep it
+fixed when comparing model or extraction settings.
 
 `--dry-run` parses and caches the documents, chooses a single or windowed claim-reading
 mode, and writes a call estimate without contacting a model provider:
@@ -34,6 +48,7 @@ mode, and writes a call estimate without contacting a model provider:
 perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
+  --parser pymupdf \
   --output-dir results/paper-plan \
   --dry-run
 ```
@@ -51,6 +66,7 @@ perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
   --model openai/gpt-5.2 \
+  --parser pymupdf \
   --max-cost-usd 2.00 \
   --output-dir results/paper
 ```

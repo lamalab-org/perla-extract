@@ -62,7 +62,15 @@ def run(output: Path) -> dict[str, str]:
 @click.option("--output", required=True, type=click.Path(path_type=Path))
 def main(output: Path) -> None:
     """Create inspectable request plans with no credentials or provider requests."""
-    click.echo(json.dumps(run(output), indent=2))
+    try:
+        statuses = run(output)
+    except FileExistsError as exc:
+        raise click.ClickException(
+            f"Output already exists: {output}; choose a new directory."
+        ) from exc
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(json.dumps(statuses, indent=2))
     click.echo(
         f"Inspect {output / 'fits/report.json'} and {output / 'blocked/report.json'}"
     )
