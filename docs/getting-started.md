@@ -25,12 +25,13 @@ mode, and writes a call estimate without contacting a model provider:
 perla-extract \
   --pdf paper.pdf \
   --supplement paper_si.pdf \
-  --output-dir results/paper \
+  --output-dir results/paper-plan \
   --dry-run
 ```
 
-Read `results/paper/report.json` for the estimated input tokens, planned call count,
-parser events, and selected mode.
+Read `results/paper-plan/report.json` for the estimated input tokens, planned call count,
+parser events, and selected mode. Every attempt, including a dry run, requires a new
+or empty output directory. The live example below writes to `results/paper` instead.
 
 ## Extract
 

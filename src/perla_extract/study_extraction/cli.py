@@ -180,7 +180,7 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     "--assembly-max-input-tokens",
     type=click.IntRange(min=1),
     default=default("assembly_max_input_tokens"),
-    help="Fail visibly instead of sending an unexpectedly oversized assembly call.",
+    help="Default input cap for assembly, revision, repair and enrichment; stage deployments may lower it.",
 )
 @click.option(
     "--max-output-tokens",

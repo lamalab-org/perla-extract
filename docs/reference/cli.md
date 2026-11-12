@@ -37,7 +37,7 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | `--claim-model TEXT` | extraction model | LiteLLM model used for claim collection |
 | `--claim-max-output-tokens INTEGER` | `30000` | Completion limit for each claim-collection call |
 | `--claim-recall-passes INTEGER` | `2` | Independent complete readings of every claim document/window |
-| `--assembly-max-input-tokens INTEGER` | `180000` | Visible safety bound for the global assembly request estimate |
+| `--assembly-max-input-tokens INTEGER` | `180000` | Default input cap for assembly, revision, repair and enrichment; stage limits can lower it |
 | `--enrichment / --no-enrichment` | enrichment | Run the audited composition and processing interpretation stage |
 | `--enrichment-model TEXT` | extraction model | Model used for interpretation calls, including a conditional composition retry |
 | `--enrichment-max-output-tokens INTEGER` | `20000` | Completion limit for each enrichment call |
