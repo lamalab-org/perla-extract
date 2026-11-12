@@ -1,6 +1,8 @@
 # Contributing
 
-Contributions to this repository are welcomed and encouraged.
+Start with the [maintainer exercises](docs/development/maintaining.md): trace a
+request limit without model calls, explain a score, and correct an invented paper
+in the reviewer UI. These exercises show where the main responsibilities live.
 
 ## Code Contribution
 
@@ -35,6 +37,7 @@ Install the development environment and run the local checks with:
 
 ```bash
 pip install -e '.[dev]'
+node --version  # Node.js 20+ is required for behavioral reviewer tests
 ruff check src tests review_workbench examples
 python -m mypy src/perla_extract/study_extraction
 python -m pytest -q
@@ -96,15 +99,19 @@ We use `pyproject.toml` for dependency management. Please ensure that any new de
 Keep user interfaces thin. `configuration.py` owns defaults, TOML validation,
 stage inheritance and effective method identity; CLI and cohort execution resolve
 through it. A repair limit override must not lose an inherited local endpoint.
-`workflow.py` orders stages and selects candidates. `source.py`, `claims.py`,
+`workflow.py` orders operations through named results in `workflow_results.py`;
+`candidate_selection.py` owns the non-regression rule. `extraction_prompts.py`
+owns scientific instructions, `source_reading.py` the reader, `study_outputs.py`
+interpretation/export, and `run_reporting.py` report assembly. `source.py`, `claims.py`,
 `refinement.py` and `repair.py` own their evidence transformations. The workflow
 [guide](docs/workflows/extraction.md) explains the same stages without requiring a
 reader to know these module names.
 
-`client.py` owns each logical model call and all provider attempts. Account for paid
+`client.py` coordinates each logical model call; `accounting.py` owns typed call and
+attempt records. Budget checks and report totals derive from those records. Account for paid
 work before optional cache writes; a failed output write must not make a paid attempt
-look free. `deployment.py` sizes the exact serialized request used by both planning
-and dispatch. `observability.py` writes canonical local events; `tracing.py` exports
+look free. `request_policy.py` carries one resolved stage policy into planning and dispatch;
+`deployment.py` estimates the exact serialized request. `observability.py` writes canonical local events; `tracing.py` exports
 those events to optional Langfuse observations. It must not introduce another model
 call or duplicate automatic callbacks.
 
@@ -127,3 +134,8 @@ unsupported source values should not. Test failure accounting and replay boundar
 with injected provider/filesystem failures. Frontend tests execute imported review
 state helpers; verify changed user journeys against the real local backend as well.
 Avoid tests that merely repeat generated plans, source-code shape or incidental copy.
+
+The [reviewer UI maintenance guide](docs/development/reviewer-ui.md) includes a
+one-command synthetic workspace. API methods, editor draft state and saved review
+session state have separate owners. The [scoring guide](docs/development/scoring.md)
+shows how to explain a specific missed fact using the evaluator's actual decisions.

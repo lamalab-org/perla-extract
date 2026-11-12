@@ -41,6 +41,10 @@ nav:
   - Reference:
       - Command line: reference/cli.md
       - Python API: reference/python-api.md
+  - Development:
+      - Maintain the pipeline: development/maintaining.md
+      - Explain and maintain scoring: development/scoring.md
+      - Change the reviewer UI: development/reviewer-ui.md
   - Deployment:
       - Review workbench: deployment/review-workbench.md
       - Internal PapersBot cron job: deployment/papersbot-cron.md
