@@ -7,8 +7,42 @@ PERLA Extract turns a photovoltaic paper and its supplementary information into
 device-centered, source-linked data. It keeps device families, individual cells,
 performance observations, population summaries, and stability experiments distinct.
 
+## Start with the offline example
+
+From a checkout of the revision you want to use, run this in the repository root
+(Python 3.12, Linux/macOS):
+
 ```bash
-pip install perla-extract
+python3.12 -m venv .venv-scoring
+source .venv-scoring/bin/activate
+python -m pip install -r examples/scoring/requirements.txt
+PYTHONPATH=.:src python -m examples.scoring.run --output results/first-example
+```
+
+Choose a new output directory. This needs no API key, PDF, model server, Node.js,
+or GPU. After installing dependencies, it runs offline. Expect
+`PASS: four synthetic cases`, a `comparison.json`, and plotting CSVs in
+`results/first-example/figure-data/`. The example uses deliberately edited
+predictions; its difference demonstrates reporting, not a model improvement.
+
+- [Inspect the example and its expected results](docs/workflows/scoring-example.md).
+- [Run a real controlled experiment](docs/workflows/extraction-ablations.md).
+- [Find the code to change and run maintainer exercises](docs/development/maintaining.md).
+
+The [evaluation method](docs/methods/benchmark.md) explains reference construction,
+matching, scientific credit and limitations. The repository includes a
+[30-paper expert-reviewed reference release](data/study_extraction/ground_truth/v2/README.md)
+for development comparisons, with frozen hashes and automated scorer checks.
+It is not an independent held-out test set.
+
+## Run an extraction
+
+From the same checkout, install the full extraction dependencies:
+
+```bash
+python3.12 -m venv .venv-extraction
+source .venv-extraction/bin/activate
+python -m pip install -e .
 export OPENAI_API_KEY="your-openai-key"
 
 perla-extract \
@@ -38,25 +72,6 @@ extraction. Use `--dry-run` to parse inputs without calling a model.
 Extraction requests contain parser-produced text and tables, not rendered pages.
 Figure classification is a separate workflow. Valid quotations do not prove scientific
 correctness; expert review checks values, attribution and missing information.
-
-## Reproduce the scorer without an API key
-
-From a repository checkout:
-
-```bash
-python -m pip install -e '.[dev]'
-PYTHONPATH=.:src python -m examples.scoring.run --output /tmp/perla-scoring-example
-```
-
-Choose a new output directory. This generates invented evidence, saves simulated
-corrections, freezes a reference, and checks four scoring cases against expected
-counts. See the [worked example](docs/workflows/scoring-example.md).
-
-The [evaluation method](docs/methods/benchmark.md) explains reference construction,
-matching, scientific credit and limitations. The repository includes a
-[30-paper expert-reviewed reference release](data/study_extraction/ground_truth/v2/README.md)
-for development comparisons, with frozen hashes and automated scorer checks.
-It is not an independent held-out test set.
 
 ## Documentation
 

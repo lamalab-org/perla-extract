@@ -12,10 +12,10 @@ stability tests. Experts still need to check attribution, interpretation and com
 flowchart TD
     A[Paper and supporting information] --> B[Parse text and tables]
     B --> C[Collect claims and assemble study]
-    C --> D[Reconcile, repair and enrich]
-    D --> E[Validate and finalize]
+    C --> D[Revise and repair]
+    D --> E[Finalize and validate]
     E --> F[Expert review and frozen reference]
-    E --> G[NOMAD export]
+    E --> G[Optional interpretation and NOMAD export]
 ```
 
 The parser retains source, page, text and available coordinates. Models select
@@ -27,8 +27,11 @@ Finalization can remove unsupported optional claims. It preserves the complete
 candidate and a list of removals for expert review.
 See [Evidence and validation](concepts/evidence.md) for the checks and their limits.
 
-For evaluation, start with [Evaluation method](methods/benchmark.md) or
-[run the synthetic scoring example](workflows/scoring-example.md).
+Start with the [offline example](workflows/scoring-example.md): it produces scored
+candidates, a paired comparison and figure tables without a model or supplied PDFs.
+Then [run a controlled experiment](workflows/extraction-ablations.md), or use the
+[maintainer guide](development/maintaining.md) to find the code responsible for each step.
+The [evaluation method](methods/benchmark.md) explains the scientific contract.
 
 ## How extraction works
 

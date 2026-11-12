@@ -20,6 +20,9 @@ PYTHONPATH=.:src python -m examples.scoring.run --output /tmp/perla-scoring-exam
 
 Choose a new output directory for each run. An existing directory is refused to
 protect review history. The final line should say `PASS: four synthetic cases`.
+The same command also writes `runs.csv`, `comparison.json`, and plotting CSVs in
+`figure-data/` through the normal comparison command. No extra command or roster
+editing is needed for this first demonstration.
 The script records Python and key package versions in `summary.json`; retain the
 checkout revision and environment with a published result. The normal package's
 dependency ranges are separate from this pinned example environment.
@@ -56,6 +59,9 @@ scientific correctness. The unit-equivalent candidate uses the same source docum
 ```text
 perla-scoring-example/
   summary.json                      # Actual/expected counts and environment
+  runs.csv                          # Seed/control and corrected/treatment paths
+  comparison.json                   # Paired result and input checks
+  figure-data/                      # runs.csv, group_scores.csv, paired_papers.csv, analysis.json
   review/                           # Simulated saved review state
   truth/dev/10.0000--synthetic/
     ground_truth.json                # Corrected reference
@@ -90,3 +96,31 @@ PYTHONPATH=.:src python -m perla_extract.study_extraction.evaluation_cli \
 To use actual expert corrections, follow [From corrections to a benchmark](
 review-to-benchmark.md). Do not substitute this example's simulated approvals for
 source review, or include synthetic cases in real-paper benchmark aggregates.
+
+## Inspect the paired comparison
+
+`runs.csv` pairs the seed as `control` with the corrected prediction as `treatment`.
+These are deliberately edited candidates with the same synthetic source, not two
+model deployments or an ablation. `comparison.json` should have
+`quality_status: "ready"`, no issues, and `mean_paired_macro_f1_delta: 1.0`.
+The one-paper interval has status `insufficient_papers` and empty bounds. Both
+arms have zero model calls; their difference is not a measurement of an extraction
+improvement or cost saving.
+
+Open `figure-data/paired_papers.csv` to inspect the difference and
+`figure-data/group_scores.csv` to trace it to counts. The comparison checks that
+both runs bind the same source bytes and evidence spans. Here the invented evidence
+JSON is the source; real extraction runs fingerprint their PDFs instead.
+
+To repeat only comparison, using fresh destinations:
+
+```bash
+PYTHONPATH=.:src python -m perla_extract.study_extraction.comparison \
+  /tmp/perla-scoring-example/runs.csv \
+  --output /tmp/perla-scoring-example/comparison-again.json \
+  --tables-dir /tmp/perla-scoring-example/figure-data-again
+```
+
+Proceed to [controlled extraction experiments](extraction-ablations.md) for real
+PDFs and models. That step requires choosing the source/reference pair, deployment,
+method, budget and repetitions; the offline example does not make those choices.

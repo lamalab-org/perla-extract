@@ -8,6 +8,7 @@ errors in scientific credit. Run from a checkout with ``PYTHONPATH=.:src``.
 
 from __future__ import annotations
 
+import csv
 import json
 import platform
 from importlib.metadata import version
@@ -17,6 +18,7 @@ from time import perf_counter
 import click
 
 from perla_extract.study_extraction.artifacts import write_json_atomic
+from perla_extract.study_extraction.comparison import main as compare
 from perla_extract.study_extraction.evaluation_cli import main as evaluate
 from perla_extract.study_extraction.models import (
     DeviceFamily,
@@ -28,7 +30,11 @@ from perla_extract.study_extraction.models import (
     ReportedValue,
     StudyExtraction,
 )
-from perla_extract.study_extraction.run_artifacts import write_run_manifest
+from perla_extract.study_extraction.run_artifacts import file_digest, write_run_manifest
+from perla_extract.study_extraction.spans import (
+    build_evidence_spans,
+    evidence_spans_sha256,
+)
 from review_workbench.ground_truth_export import (
     build_ground_truth_export,
     write_ground_truth_export,
@@ -254,7 +260,21 @@ def build_example(output: Path) -> dict:
             },
         )
         write_json_atomic(
-            run / "run_configuration.json", {"synthetic": True, "model_calls": 0}
+            run / "run_configuration.json",
+            {
+                "synthetic": True,
+                "model_calls": 0,
+                # The invented evidence JSON is this example's source, not a PDF.
+                "source_sha256": [file_digest(run / "document.json")],
+                "evidence_spans_sha256": evidence_spans_sha256(
+                    build_evidence_spans(
+                        [
+                            EvidenceBlock.model_validate(block)
+                            for block in evidence["blocks"]
+                        ]
+                    )
+                ),
+            },
         )
         write_run_manifest(run)
         report_path = run / "evaluation.json"
@@ -300,6 +320,22 @@ def build_example(output: Path) -> dict:
         raise ValueError(
             f"Scoring differs from expected counts; inspect {output}/summary.json"
         )
+    roster = output / "runs.csv"
+    with roster.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(["paper_id", "arm", "repeat", "run_dir"])
+        writer.writerow([PAPER, "control", 1, "predictions/seed"])
+        writer.writerow([PAPER, "treatment", 1, "predictions/corrected"])
+    compare.main(
+        args=[
+            str(roster),
+            "--output",
+            str(output / "comparison.json"),
+            "--tables-dir",
+            str(output / "figure-data"),
+        ],
+        standalone_mode=False,
+    )
     return summary
 
 
@@ -316,6 +352,9 @@ def main(output: Path) -> None:
     except (OSError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(f"PASS: four synthetic cases; inspect {output / 'summary.json'}")
+    click.echo(
+        f"Paired comparison and figure tables: {output / 'comparison.json'}, {output / 'figure-data'}"
+    )
 
 
 if __name__ == "__main__":

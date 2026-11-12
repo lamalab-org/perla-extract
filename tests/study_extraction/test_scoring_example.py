@@ -1,5 +1,6 @@
 """Keep the public worked example executable through the real review/export path."""
 
+import csv
 import json
 
 import pytest
@@ -27,6 +28,17 @@ def test_public_example_preserves_corrections_and_expected_scores(tmp_path):
         assert report["benchmark"]["paper_id"] == "10.0000--synthetic"
         assert report["prediction_validation"]["status"] == "verified"
         assert report["run_efficiency"]["live_calls"] == 0
+    comparison = json.loads((output / "comparison.json").read_text())
+    assert comparison["quality_status"] == "ready"
+    assert comparison["issues"] == []
+    assert comparison["quality"]["mean_paired_macro_f1_delta"] == 1
+    interval = comparison["quality"]["paired_macro_f1_delta_interval"]
+    assert interval["status"] == "insufficient_papers"
+    assert interval["ci95_lower"] is None and interval["ci95_upper"] is None
+    with (output / "figure-data" / "paired_papers.csv").open(newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    assert len(rows) == 1
+    assert rows[0]["paper_id"] == "10.0000--synthetic"
     # Re-running must not overwrite the simulated review history or exports.
     with pytest.raises(FileExistsError):
         build_example(output)

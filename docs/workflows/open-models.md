@@ -83,7 +83,9 @@ visibly instead of disappearing. Global assembly and revision remain whole-study
 operations and may be the limiting stages for smaller models. Do not claim a fully
 small-context pipeline merely because the reading stage is windowed.
 
-`max_model_calls` counts actual provider requests including retries.
+`max_model_calls` limits request reservations, including retries. A local write
+failure before dispatch can consume a reservation without creating a provider
+attempt; use `usage.provider_attempts` to count attempted provider work.
 `max_total_tokens` reserves estimated input plus the output allowance before a request.
 Provider usage updates the observed total afterward; an observed overage is reported
 and the valid response is retained. `max_elapsed_seconds` also limits the timeout of

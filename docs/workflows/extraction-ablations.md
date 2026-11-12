@@ -5,6 +5,13 @@ no separate experiment planner or generated shell program. Save the method as TO
 run both arms on the same PDFs, score against the same frozen references, then list
 the attempts in a CSV. Keep failed attempts in that CSV.
 
+## Start with a complete offline comparison
+
+Run the [synthetic example](scoring-example.md) first. One command creates the
+reviewed reference, scores, paired CSV roster, comparison report and figure tables.
+Its candidates are manually edited, so it teaches the reporting path without
+claiming to test a model or extraction setting.
+
 ## Choose a question
 
 | Question | Treatment file | Setting to declare with `--factor` |

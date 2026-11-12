@@ -1,6 +1,15 @@
 <!-- generated-by: gsd-doc-writer -->
 # Getting started
 
+## First, check the workflow without a model
+
+The [offline example](workflows/scoring-example.md) creates its own evidence,
+reviewed reference, four scored candidates, paired comparison and figure tables.
+Start there to check the reporting path without credentials, PDF parsers or a GPU.
+Then follow the extraction steps below and the
+[controlled experiment guide](workflows/extraction-ablations.md).
+The [maintainer guide](development/maintaining.md) maps these operations to code.
+
 ## Install
 
 The standard installation includes the Docling parser and the explicit
@@ -72,11 +81,15 @@ When claim collection is windowed, every window still contributes to one combine
 `claim_ledger.json`; final study assembly remains global. Requests and preserved
 failure responses are stored under `requests/`.
 
-`report.json` uses `complete` only when local validation and claim coverage report
-no findings.
-`complete_needs_review` means the model call completed but at least one local check
-needs attention. `partial` means a claim-reading window, optional call, or conversion failed
-while inspectable output was still produced; `failed` means no model call succeeded.
+`report.json` uses `complete` when assembly succeeded and the enabled integrity
+and interpretation checks have no outstanding findings. `complete_needs_review`
+means validation, reader-note coverage, or optional interpretation needs attention.
+An interpretation failure can therefore appear under this status.
+`partial` means assembly succeeded but reading, refinement, or an export had errors.
+`failed` means assembly did not complete or execution stopped with an exception;
+a reading call may still have succeeded and incurred cost. `interrupted` records
+a handled cancellation. Inspect `stages`, `errors`, and `usage` for the details;
+these statuses do not certify scientific correctness.
 
 ## Caching and repeatability
 
