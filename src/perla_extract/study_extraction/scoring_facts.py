@@ -7,9 +7,7 @@ do not earn points. No chemical identities or missing relationships are inferred
 
 from __future__ import annotations
 
-import math
 import re
-import unicodedata
 from dataclasses import dataclass
 from typing import Literal
 
@@ -20,10 +18,21 @@ from .models import (
     StabilityTest,
     StudyExtraction,
 )
-from .units import (
-    canonical_quantity,
-    canonical_reported_quantity,
-    equivalent_unit_spelling,
+from .scoring_claims import (
+    compound_quantity as compound_quantity,
+)
+from .scoring_claims import (
+    equal_claims,
+    normalize_claim,
+)
+from .scoring_claims import (
+    is_plain_number as is_plain_number,
+)
+from .scoring_claims import (
+    scientific_text as scientific_text,
+)
+from .scoring_claims import (
+    scientific_value_text as scientific_value_text,
 )
 
 FactGroup = Literal[
@@ -56,32 +65,6 @@ def operation_name(value: str, aliases: dict[str, str]) -> str:
     return aliases.get(normalized, normalized)
 
 
-def scientific_text(value: str) -> str:
-    """Normalize spacing without flattening chemical superscripts or subscripts.
-
-    Compatibility normalization (NFKC) conflates charge and atom-count notation,
-    for example Fe³⁺ and Fe₃⁺. NFC preserves those scientific distinctions.
-    """
-
-    return " ".join(unicodedata.normalize("NFC", value).replace("−", "-").split())
-
-
-def scientific_value_text(value: str) -> str:
-    """Recognize numeric LaTeX subscripts in simple formulas, not chemical synonyms.
-
-    The complete result must be a sequence of element-like tokens and numeric
-    subscripts. Prose, charges, symbolic stoichiometry and algebra stay literal.
-    This changes notation only: it never reorders atoms or expands abbreviations.
-    """
-
-    text = scientific_text(value)
-    formula = text.translate(str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789"))
-    formula = re.sub(r"_\{(\d+(?:\.\d+)?)\}|_(\d+)", lambda m: m[1] or m[2], formula)
-    if re.fullmatch(r"(?:[A-Z][a-z]?(?:\d+(?:\.\d+)?)?)+", formula):
-        return formula
-    return text
-
-
 def property_name(name: str) -> str:
     key = re.sub(r"[\s_-]+", "", scientific_text(name).casefold())
     return METRIC_ALIASES.get(key, key)
@@ -103,98 +86,6 @@ def scientific_descriptor(record: object) -> str | None:
     return None
 
 
-def is_plain_number(value: ReportedValue) -> bool:
-    """Allow unit conversion only for a single unqualified, internally consistent number.
-
-    Ranges, inequalities, uncertainties and chemical formulas do not qualify for
-    this path. Their central numeric value alone does not represent the claim.
-    The consistency check has no absolute allowance: a small nonzero raw number
-    must never qualify as a parsed zero, regardless of the chosen unit.
-    """
-
-    raw = scientific_text(value.raw_value)
-    match = re.fullmatch(r"([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*(.*)", raw)
-    return bool(
-        match
-        and value.value_number is not None
-        and math.isfinite(value.value_number)
-        and math.isclose(float(match[1]), value.value_number, rel_tol=1e-9, abs_tol=0.0)
-        and (
-            scientific_text(match[2]) in {"", scientific_text(value.unit or "")}
-            or (
-                value.unit is not None
-                and equivalent_unit_spelling(match[2], value.unit)
-            )
-        )
-    )
-
-
-_NUMBER = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
-_COMPOUND_QUANTITY = re.compile(
-    rf"({_NUMBER})\s*(±|\+/-|–|—|\bto\b|-)\s*({_NUMBER})\s*(.*)"
-)
-
-
-def compound_quantity(
-    value: ReportedValue,
-) -> tuple[str, float, float, str | None] | None:
-    """Compare complete ranges or symmetric uncertainties, never their centre alone.
-
-    Accept only two numbers and an optional unit suffix consistent with the unit
-    field. A range must be ordered and have no invented scalar value. An uncertainty
-    must be nonnegative; a supplied parsed value must agree with its centre.
-    Offset temperature units shift endpoints/centres, but only scale uncertainties.
-    Anything outside this grammar retains the existing literal comparison.
-    """
-
-    match = _COMPOUND_QUANTITY.fullmatch(scientific_text(value.raw_value))
-    if match is None:
-        return None
-    first, second = float(match[1]), float(match[3])
-    kind = "uncertainty" if match[2] in {"±", "+/-"} else "range"
-    suffix = match[4]
-    if suffix and (
-        value.unit is None
-        or (
-            scientific_text(suffix) != scientific_text(value.unit)
-            and not equivalent_unit_spelling(suffix, value.unit)
-        )
-    ):
-        return None
-    if not all(math.isfinite(number) for number in (first, second)):
-        return None
-    if kind == "range":
-        if first > second or value.value_number is not None:
-            return None
-    elif second < 0 or (
-        value.value_number is not None
-        and not math.isclose(first, value.value_number, rel_tol=1e-9, abs_tol=0)
-    ):
-        return None
-    if value.unit is None:
-        return kind, first, second, None
-    a, b = canonical_quantity(first, value.unit), canonical_quantity(second, value.unit)
-    if a is None or b is None:
-        return None
-    if kind == "uncertainty":
-        zero, one, two = (canonical_quantity(n, value.unit) for n in (0, 1, 2))
-        if zero is None or one is None or two is None:
-            return None
-        # An error bar of 1 °C is 1 K, not 274.15 K. Reject nonlinear/log units.
-        scale = one[0] - zero[0]
-        if scale <= 0 or not all(
-            math.isclose(
-                converted, zero[0] + scale * original, rel_tol=1e-12, abs_tol=1e-12
-            )
-            for original, converted in ((2, two[0]), (first, a[0]), (second, b[0]))
-        ):
-            return None
-        second = scale * second
-    else:
-        second = b[0]
-    return (kind, a[0], second, a[1]) if math.isfinite(second) else None
-
-
 @dataclass(frozen=True)
 class UnorderedContext:
     """Mark context where order is irrelevant but duplicate entries still matter."""
@@ -202,53 +93,63 @@ class UnorderedContext:
     items: tuple[object, ...]
 
 
+@dataclass(frozen=True)
+class RecordReference:
+    """A paired canonical record key, or an explicitly side-local unresolved key."""
+
+    key: str
+    unmatched_side: str | None = None
+
+
+@dataclass(frozen=True)
+class ContextComponent:
+    name: str
+    value: object
+    path: str | None = None
+
+
+@dataclass(frozen=True)
+class FactContext:
+    """Name the existing ordered requirements without adding equality constraints.
+
+    Names and source paths explain the requirements. Only their ordered values
+    determine equality, exactly as the former positional tuples did.
+    """
+
+    components: tuple[ContextComponent, ...] = ()
+
+    @classmethod
+    def of(cls, path: str | None = None, **values: object) -> FactContext:
+        return cls(
+            tuple(
+                ContextComponent(
+                    name, value, f"{path}/{name}" if path is not None else None
+                )
+                for name, value in values.items()
+            )
+        )
+
+    def extend(self, other: FactContext) -> FactContext:
+        return FactContext(self.components + other.components)
+
+    @property
+    def values(self) -> tuple[object, ...]:
+        return tuple(component.value for component in self.components)
+
+
 def equal_value(left: object, right: object, relative: float, absolute: float) -> bool:
     """Compare claims conservatively; missing units are not assumed dimensionless."""
 
     if isinstance(left, ReportedValue) and isinstance(right, ReportedValue):
-        compound_left, compound_right = (
-            compound_quantity(left),
-            compound_quantity(right),
-        )
-        if compound_left is not None and compound_right is not None:
-            return (
-                compound_left[0] == compound_right[0]
-                and compound_left[3] == compound_right[3]
-                and all(
-                    math.isclose(a, b, rel_tol=relative, abs_tol=absolute)
-                    for a, b in zip(compound_left[1:3], compound_right[1:3])
-                )
-            )
-        if is_plain_number(left) and is_plain_number(right):
-            assert left.value_number is not None and right.value_number is not None
-            if (left.unit is None) != (right.unit is None):
-                return False
-            left_number, right_number = left.value_number, right.value_number
-            if left.unit is not None:
-                a, b = (
-                    canonical_reported_quantity(left),
-                    canonical_reported_quantity(right),
-                )
-                if a is None or b is None:
-                    return (
-                        scientific_text(left.raw_value)
-                        == scientific_text(right.raw_value)
-                        and left.unit == right.unit
-                    )
-                if a[1] != b[1]:
-                    return False
-                left_number, right_number = a[0], b[0]
-            return math.isclose(
-                left_number, right_number, rel_tol=relative, abs_tol=absolute
-            )
-        return (
-            scientific_value_text(left.raw_value)
-            == scientific_value_text(right.raw_value)
-            and scientific_text(left.unit or "") == scientific_text(right.unit or "")
-            and left.value_number == right.value_number
+        return equal_claims(
+            normalize_claim(left), normalize_claim(right), relative, absolute
         )
     if isinstance(left, str) and isinstance(right, str):
         return scientific_value_text(left) == scientific_value_text(right)
+    if isinstance(left, FactContext):
+        left = left.values
+    if isinstance(right, FactContext):
+        right = right.values
     if isinstance(left, UnorderedContext) and isinstance(right, UnorderedContext):
         if len(left.items) != len(right.items):
             return False
@@ -285,20 +186,109 @@ def equal_value(left: object, right: object, relative: float, absolute: float) -
 class ScientificFact:
     group: FactGroup
     path: str
-    owner: str
+    owner: RecordReference
     name: str
     value: object
-    context: tuple[object, ...]
+    context: FactContext
+
+
+@dataclass(frozen=True)
+class ContextDifference:
+    name: str
+    truth_path: str | None
+    predicted_path: str | None
+    truth_value: object
+    predicted_value: object
+
+
+@dataclass(frozen=True, slots=True)
+class FactComparison:
+    """The decision used by all score views and their optional explanation."""
+
+    value_equal: bool
+    context_equal: bool
+    ambiguity_blocked: bool
+    context_differences: tuple[ContextDifference, ...]
+
+    def eligible(self, view: str) -> bool:
+        if view == "value":
+            return self.value_equal
+        return (
+            not self.ambiguity_blocked
+            and self.context_equal
+            and (view == "attribution" or self.value_equal)
+        )
+
+
+def compare_context(
+    left: FactContext, right: FactContext, relative: float, absolute: float
+) -> tuple[ContextDifference, ...]:
+    """Compare the original ordered requirements, retaining their differing fields."""
+
+    differences: list[ContextDifference] = []
+    for i in range(max(len(left.components), len(right.components))):
+        a = left.components[i] if i < len(left.components) else None
+        b = right.components[i] if i < len(right.components) else None
+        if a is not None and b is not None:
+            if isinstance(a.value, FactContext) and isinstance(b.value, FactContext):
+                differences.extend(
+                    compare_context(a.value, b.value, relative, absolute)
+                )
+                continue
+            if equal_value(a.value, b.value, relative, absolute):
+                continue
+        component = a if a is not None else b
+        assert component is not None
+        differences.append(
+            ContextDifference(
+                component.name,
+                a.path if a is not None else None,
+                b.path if b is not None else None,
+                a.value if a is not None else None,
+                b.value if b is not None else None,
+            )
+        )
+    return tuple(differences)
+
+
+def compare_facts(
+    left: ScientificFact,
+    right: ScientificFact,
+    relative: float,
+    absolute: float,
+    *,
+    ambiguity_blocked: bool,
+    explain: bool = False,
+) -> FactComparison:
+    # Ordinary scoring needs only booleans and retains the ambiguity short circuit.
+    # Detailed fields are collected solely for requested explanation rows/columns.
+    differences = (
+        compare_context(left.context, right.context, relative, absolute)
+        if explain
+        else ()
+    )
+    context_equal = (
+        not differences
+        if explain
+        else not ambiguity_blocked
+        and equal_value(left.context, right.context, relative, absolute)
+    )
+    return FactComparison(
+        value_equal=equal_value(left.value, right.value, relative, absolute),
+        context_equal=context_equal,
+        ambiguity_blocked=ambiguity_blocked,
+        context_differences=differences,
+    )
 
 
 @dataclass(frozen=True)
 class ScientificScope:
     """Identify a nested object without using the very outcomes being evaluated."""
 
-    owner: str
+    owner: RecordReference
     kind: str
     path: str
-    identity: tuple[object, ...]
+    identity: tuple[object, ...] | FactContext
 
 
 @dataclass
@@ -311,7 +301,7 @@ class FactProjection:
     ) -> list[tuple[str, str]]:
         """Find indistinguishable containers, e.g. repeated unsequenced annealing steps."""
 
-        buckets: dict[tuple[str, str], list[ScientificScope]] = {}
+        buckets: dict[tuple[RecordReference, str], list[ScientificScope]] = {}
         for scope in self.scopes:
             buckets.setdefault((scope.owner, scope.kind), []).append(scope)
         return [
@@ -339,30 +329,44 @@ def scientific_facts(
     facts: list[ScientificFact] = []
     scopes: list[ScientificScope] = []
     devices = {item.device_id: item for item in study.individual_devices}
+    device_paths = {
+        item.device_id: f"/individual_devices/{i}"
+        for i, item in enumerate(study.individual_devices)
+    }
 
-    def reference(collection: str, identifier: str | None) -> str | None:
+    def reference(collection: str, identifier: str | None) -> RecordReference | None:
         if identifier is None:
             return None
         key = f"{collection}:{identifier}"
-        return identities.get(key, f"{side}:unmatched:{key}")
-
-    def device_context(identifier: str | None) -> tuple[object, ...]:
-        device = devices.get(identifier) if identifier is not None else None
         return (
-            reference("individual_devices", identifier),
-            reference("device_families", device.family_id) if device else None,
-            device.variant if device else None,
-            device.champion_status if device else None,
-            device.selection_basis if device else None,
+            RecordReference(identities[key])
+            if key in identities
+            else RecordReference(key, side)
+        )
+
+    def device_context(identifier: str | None, source_path: str) -> FactContext:
+        device = devices.get(identifier) if identifier is not None else None
+        return FactContext.of(
+            source_path, device_id=reference("individual_devices", identifier)
+        ).extend(
+            FactContext.of(
+                device_paths.get(identifier) if identifier is not None else None,
+                family_id=reference("device_families", device.family_id)
+                if device
+                else None,
+                variant=device.variant if device else None,
+                champion_status=device.champion_status if device else None,
+                selection_basis=device.selection_basis if device else None,
+            )
         )
 
     def add(
         group: FactGroup,
         path: str,
-        owner: str,
+        owner: RecordReference,
         name: str,
         value: object,
-        context: tuple = (),
+        context: FactContext = FactContext(),
     ) -> None:
         if value is not None and value != "not_reported" and value != "":
             facts.append(ScientificFact(group, path, owner, name, value, context))
@@ -370,9 +374,9 @@ def scientific_facts(
     def quantities(
         group: FactGroup,
         path: str,
-        owner: str,
+        owner: RecordReference,
         values: list[ReportedValue],
-        context: tuple = (),
+        context: FactContext = FactContext(),
     ) -> None:
         for i, value in enumerate(values):
             add(group, f"{path}/{i}", owner, property_name(value.name), value, context)
@@ -381,7 +385,10 @@ def scientific_facts(
         return UnorderedContext(tuple((property_name(v.name), v) for v in values))
 
     def chemicals(
-        path: str, owner: str, constituents: list[MaterialConstituent], context: tuple
+        path: str,
+        owner: RecordReference,
+        constituents: list[MaterialConstituent],
+        context: FactContext,
     ) -> None:
         for i, constituent in enumerate(constituents):
             base = f"{path}/{i}"
@@ -390,12 +397,14 @@ def scientific_facts(
                     owner,
                     "constituent",
                     base,
-                    (
-                        *context,
-                        constituent.name,
-                        property_name(constituent.amount.name)
-                        if constituent.amount
-                        else None,
+                    context.extend(
+                        FactContext.of(
+                            base,
+                            name=constituent.name,
+                            amount_name=property_name(constituent.amount.name)
+                            if constituent.amount
+                            else None,
+                        )
                     ),
                 )
             )
@@ -407,7 +416,9 @@ def scientific_facts(
                 constituent.name,
                 context,
             )
-            chemical_context = (*context, constituent.name)
+            chemical_context = context.extend(
+                FactContext.of(base, name=constituent.name)
+            )
             add(
                 "composition",
                 f"{base}/role",
@@ -437,7 +448,11 @@ def scientific_facts(
     for collection, id_field in identifiers.items():
         for index, record in enumerate(getattr(study, collection)):
             key = f"{collection}:{getattr(record, id_field)}"
-            owner = identities.get(key, f"{side}:unmatched:{key}")
+            owner = (
+                RecordReference(identities[key])
+                if key in identities
+                else RecordReference(key, side)
+            )
             path = f"/{collection}/{index}"
             if collection == "device_families":
                 add("stack", f"{path}/polarity", owner, "polarity", record.polarity)
@@ -474,7 +489,9 @@ def scientific_facts(
                             else (layer.material, layer.role),
                         )
                     )
-                    context: tuple[object, ...] = ("layer", layer.sequence)
+                    context = FactContext.of(kind="layer").extend(
+                        FactContext.of(base, sequence=layer.sequence)
+                    )
                     add(
                         "stack",
                         f"{base}/material",
@@ -483,7 +500,9 @@ def scientific_facts(
                         layer.material,
                         context,
                     )
-                    context = (*context, layer.material)
+                    context = context.extend(
+                        FactContext.of(base, material=layer.material)
+                    )
                     add("stack", f"{base}/role", owner, "role", layer.role, context)
                     add(
                         "stack",
@@ -505,10 +524,16 @@ def scientific_facts(
                     )
                 for i, absorber in enumerate(record.absorbers):
                     base = f"{path}/absorbers/{i}"
-                    context = ("absorber", layer_reference(absorber.layer_id))
+                    context = FactContext.of(kind="absorber").extend(
+                        FactContext.of(
+                            base, layer_id=layer_reference(absorber.layer_id)
+                        )
+                    )
                     # Several unlinked absorbers cannot safely share an anonymous scope.
                     if absorber.layer_id is None and len(record.absorbers) > 1:
-                        context = (*context, absorber.label)
+                        context = context.extend(
+                            FactContext.of(base, label=absorber.label)
+                        )
                     scopes.append(ScientificScope(owner, "absorber", base, context))
                     add(
                         "composition",
@@ -533,7 +558,11 @@ def scientific_facts(
                     targets = UnorderedContext(
                         tuple(layer_reference(t) for t in step.target_layer_ids)
                     )
-                    context = ("step", step.sequence, targets)
+                    context = FactContext.of(kind="step").extend(
+                        FactContext.of(
+                            base, sequence=step.sequence, target_layer_ids=targets
+                        )
+                    )
                     operation = operation_name(step.operation, operation_aliases)
                     scopes.append(
                         ScientificScope(
@@ -556,7 +585,7 @@ def scientific_facts(
                         operation,
                         context,
                     )
-                    context = (*context, operation)
+                    context = context.extend(FactContext.of(base, operation=operation))
                     for j, material in enumerate(step.materials):
                         add(
                             "processing",
@@ -571,12 +600,17 @@ def scientific_facts(
                         f"{base}/conditions",
                         owner,
                         step.conditions,
-                        (*context, UnorderedContext(tuple(step.materials))),
+                        context.extend(
+                            FactContext.of(
+                                base, materials=UnorderedContext(tuple(step.materials))
+                            )
+                        ),
                     )
             elif collection == "individual_devices":
-                context = (
-                    reference("device_families", record.family_id),
-                    record.variant,
+                context = FactContext.of(
+                    path,
+                    family_id=reference("device_families", record.family_id),
+                    variant=record.variant,
                 )
                 quantities(
                     "processing",
@@ -591,17 +625,20 @@ def scientific_facts(
                     f"{path}/metrics",
                     owner,
                     record.metrics,
-                    (
-                        *device_context(record.device_id),
-                        record.measurement_type,
-                        record.scan_direction,
+                    device_context(record.device_id, path).extend(
+                        FactContext.of(
+                            path,
+                            measurement_type=record.measurement_type,
+                            scan_direction=record.scan_direction,
+                        )
                     ),
                 )
             elif collection == "population_statistics":
-                context = (
-                    reference("device_families", record.family_id),
-                    record.statistic_type,
-                    scientific_descriptor(record),
+                context = FactContext.of(
+                    path,
+                    family_id=reference("device_families", record.family_id),
+                    statistic_type=record.statistic_type,
+                    label=scientific_descriptor(record),
                 )
                 add(
                     "population",
@@ -616,19 +653,24 @@ def scientific_facts(
                     f"{path}/metrics",
                     owner,
                     record.metrics,
-                    (*context, record.sample_size),
+                    context.extend(
+                        FactContext.of(path, sample_size=record.sample_size)
+                    ),
                 )
             elif collection == "stability_tests":
-                context = (
-                    reference("device_families", record.family_id),
-                    device_context(record.device_id),
-                    record.link_status,
-                    scientific_descriptor(record),
+                context = FactContext.of(
+                    path,
+                    family_id=reference("device_families", record.family_id),
+                    device_id=device_context(record.device_id, path),
+                    link_status=record.link_status,
+                    specimen_label=scientific_descriptor(record),
                 )
                 quantities(
                     "stability", f"{path}/conditions", owner, record.conditions, context
                 )
-                context = (*context, conditions(record.conditions))
+                context = context.extend(
+                    FactContext.of(path, conditions=conditions(record.conditions))
+                )
                 for i, checkpoint in enumerate(record.checkpoints):
                     base = f"{path}/checkpoints/{i}"
                     scopes.append(
@@ -645,20 +687,30 @@ def scientific_facts(
                         owner,
                         "time",
                         checkpoint.time,
-                        (*context, conditions(checkpoint.conditions)),
+                        context.extend(
+                            FactContext.of(
+                                base, conditions=conditions(checkpoint.conditions)
+                            )
+                        ),
                     )
                     quantities(
                         "stability",
                         f"{base}/conditions",
                         owner,
                         checkpoint.conditions,
-                        (*context, checkpoint.time),
+                        context.extend(FactContext.of(base, time=checkpoint.time)),
                     )
                     quantities(
                         "stability",
                         f"{base}/outcomes",
                         owner,
                         checkpoint.outcomes,
-                        (*context, checkpoint.time, conditions(checkpoint.conditions)),
+                        context.extend(
+                            FactContext.of(
+                                base,
+                                time=checkpoint.time,
+                                conditions=conditions(checkpoint.conditions),
+                            )
+                        ),
                     )
     return FactProjection(facts, scopes)

@@ -153,7 +153,11 @@ reference fact. It does not earn credit for merely mentioning PCE.
 
 One prediction fact cannot match several reference facts. Repeating a correct value
 does not earn more credit. The report lists each matched pair and each unmatched
-fact by its JSON path.
+fact by its JSON path. To explain a selected path, use `--explain-truth`
+or `--explain-prediction` with `--explanation-output`. The separate artifact names
+value/context differences, ambiguity sources, or the competing field that used a
+match. See [Explain and change scientific scoring](../development/scoring.md) for
+a no-model-call example and the Python API.
 
 ### Read precision, recall and F1
 

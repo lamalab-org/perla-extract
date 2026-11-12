@@ -27,22 +27,28 @@ from .models import (
     study_schema_sha256,
 )
 from .reference_release import ReferenceRelease
+from .scoring_claims import claim_feature_values, normalize_claim
+from .scoring_explanation import (
+    ExplanationCollector,
+    FactSelection,
+    ScoreExplanation,
+)
 from .scoring_facts import (
     DEFAULT_OPERATION_ALIASES,
     FACT_GROUPS,
+    FactContext,
     FactGroup,
+    RecordReference,
     ScientificFact,
     UnorderedContext,
-    compound_quantity,
+    compare_facts,
     equal_value,
-    is_plain_number,
     property_name,
     scientific_descriptor,
     scientific_facts,
     scientific_text,
     scientific_value_text,
 )
-from .units import canonical_reported_quantity
 
 EVALUATION_FORMAT_VERSION: Final[Literal[8]] = 8
 MATCHER_VERSION: Final[Literal["rich-study-hungarian-v9"]] = "rich-study-hungarian-v9"
@@ -586,24 +592,8 @@ def _record_features(record: object) -> set[str]:
         if isinstance(item, ReportedValue):
             # Candidate matching must recognize the same representations as scoring.
             # Rounding here only stabilizes lexical features, never numeric credit.
-            canonical = (
-                canonical_reported_quantity(item) if is_plain_number(item) else None
-            )
             values.append(property_name(item.name))
-            compound = compound_quantity(item)
-            if canonical is not None:
-                values.extend((format(canonical[0], ".12g"), canonical[1]))
-            elif compound is not None:
-                values.extend(
-                    (
-                        compound[0],
-                        format(compound[1], ".12g"),
-                        format(compound[2], ".12g"),
-                        compound[3],
-                    )
-                )
-            else:
-                values.extend((scientific_value_text(item.raw_value), item.unit))
+            values.extend(claim_feature_values(normalize_claim(item)))
         elif isinstance(item, BaseModel):
             for name in item.__class__.model_fields:
                 walk(getattr(item, name), name)
@@ -933,6 +923,7 @@ def _core_fact_score(
     config: EvaluationConfig,
     ambiguous_truth: set[str],
     ambiguous_prediction: set[str],
+    explanation: ExplanationCollector | None = None,
 ) -> CoreFactScore:
     """Match facts only within paired scientific owners and property names.
 
@@ -955,6 +946,7 @@ def _core_fact_score(
     ]
     issues: list[ScoringIssue] = []
     ambiguous_prefixes: list[set[str]] = [set(), set()]
+    ambiguous_record_paths: dict[RecordReference, list[tuple[str, str]]] = {}
     for i, (side, study, keys, projection) in enumerate(
         zip(
             ("truth", "prediction"),
@@ -967,6 +959,12 @@ def _core_fact_score(
             for index, record in enumerate(getattr(study, kind)):
                 if _record_key(kind, record) in keys:
                     path = f"/{kind}/{index}"
+                    canonical = (truth_ids, prediction_ids)[i][
+                        _record_key(kind, record)
+                    ]
+                    ambiguous_record_paths.setdefault(
+                        RecordReference(canonical), []
+                    ).append((side, path))
                     ambiguous_prefixes[i].add(path)
                     issues.append(
                         ScoringIssue(
@@ -988,22 +986,32 @@ def _core_fact_score(
                     reason="These nested objects have indistinguishable identities; outcomes cannot establish their identity.",
                 )
             )
-    ambiguous_ids = {truth_ids[k] for k in ambiguous_truth if k in truth_ids} | {
-        prediction_ids[k] for k in ambiguous_prediction if k in prediction_ids
+    ambiguous_ids = {
+        RecordReference(truth_ids[k]) for k in ambiguous_truth if k in truth_ids
+    } | {
+        RecordReference(prediction_ids[k])
+        for k in ambiguous_prediction
+        if k in prediction_ids
     }
 
-    def unresolved_reference(value: object) -> bool:
-        if isinstance(value, str):
-            return value in ambiguous_ids
+    def ambiguous_references(value: object) -> Iterable[RecordReference]:
+        if isinstance(value, RecordReference):
+            if value in ambiguous_ids:
+                yield value
+            return
+        if isinstance(value, FactContext):
+            value = value.values
         if isinstance(value, UnorderedContext):
-            return any(unresolved_reference(v) for v in value.items)
-        return isinstance(value, tuple) and any(unresolved_reference(v) for v in value)
+            value = value.items
+        if isinstance(value, tuple):
+            for v in value:
+                yield from ambiguous_references(v)
 
     blocked = [
         {
             f.path
             for f in projection.facts
-            if unresolved_reference(f.context)
+            if any(ambiguous_references(f.context))
             or any(
                 f.path == prefix or f.path.startswith(prefix + "/")
                 for prefix in prefixes
@@ -1012,8 +1020,31 @@ def _core_fact_score(
         for projection, prefixes in zip(projections, ambiguous_prefixes)
     ]
     expected, actual = (p.facts for p in projections)
+    if explanation is not None:
+        sources: dict[tuple[str, str], list[tuple[str, str]]] = {}
+        for i, (side, facts) in enumerate(
+            (("truth", expected), ("prediction", actual))
+        ):
+            for fact in facts:
+                if fact.path not in blocked[i]:
+                    continue
+                source_paths: set[tuple[str, str]] = {
+                    (side, path)
+                    for issue in issues
+                    if issue.side == side
+                    and any(
+                        fact.path == prefix or fact.path.startswith(prefix + "/")
+                        for prefix in issue.paths
+                    )
+                    for path in issue.paths
+                }
+                for reference in ambiguous_references(fact.context):
+                    source_paths.update(ambiguous_record_paths[reference])
+                sources[(side, fact.path)] = sorted(source_paths)
+        explanation.start(expected, actual, (blocked[0], blocked[1]), sources)
     buckets: dict[
-        tuple[FactGroup, str, str], tuple[list[ScientificFact], list[ScientificFact]]
+        tuple[FactGroup, RecordReference, str],
+        tuple[list[ScientificFact], list[ScientificFact]],
     ] = {}
     for side_index, facts in enumerate((expected, actual)):
         for fact in facts:
@@ -1024,43 +1055,42 @@ def _core_fact_score(
     value_matches: list[FactMatch] = []
     attribution_matches: list[FactMatch] = []
     for left, right in buckets.values():
-
-        def compare(a: object, b: object, mode: str) -> float:
-            assert isinstance(a, ScientificFact) and isinstance(b, ScientificFact)
-            value_equal = equal_value(
-                a.value,
-                b.value,
-                config.numeric_relative_tolerance,
-                config.numeric_absolute_tolerance,
-            )
-            if mode == "value":
-                return float(value_equal)
-            context_equal = (
-                a.path not in blocked[0]
-                and b.path not in blocked[1]
-                and equal_value(
-                    a.context,
-                    b.context,
+        decisions = [
+            [
+                compare_facts(
+                    a,
+                    b,
                     config.numeric_relative_tolerance,
                     config.numeric_absolute_tolerance,
+                    ambiguity_blocked=a.path in blocked[0] or b.path in blocked[1],
+                    explain=explanation is not None
+                    and explanation.selects_pair(a.path, b.path),
                 )
-            )
-            return float(context_equal and (mode == "attribution" or value_equal))
-
+                for b in right
+            ]
+            for a in left
+        ]
+        bucket_matches: dict[str, list[FactMatch]] = {}
         for mode, matches in (
             ("strict", strict_matches),
             ("value", value_matches),
             ("attribution", attribution_matches),
         ):
-            pairs = _match(left, right, 1, lambda a, b: compare(a, b, mode))
-            matches.extend(
+            # Identical binary weights and assignment as _match(..., threshold=1).
+            # Retain each comparison once for all views and optional explanations.
+            scores = [[float(d.eligible(mode)) for d in row] for row in decisions]
+            bucket_matches[mode] = [
                 FactMatch(
                     group=left[i].group,
                     truth_path=left[i].path,
                     predicted_path=right[j].path,
                 )
-                for i, j, _ in pairs
-            )
+                for i, j in _maximum_assignment(scores)
+                if scores[i][j] > 0
+            ]
+            matches.extend(bucket_matches[mode])
+        if explanation is not None:
+            explanation.capture_bucket(left, right, decisions, bucket_matches)
     strict = _fact_score_view(expected, actual, strict_matches)
     return CoreFactScore(
         **strict.model_dump(),
@@ -1123,6 +1153,7 @@ def evaluate_study(
     run_id: str | None = None,
     run_manifest_sha256: str | None = None,
     config: EvaluationConfig | None = None,
+    _explanation: ExplanationCollector | None = None,
 ) -> EvaluationReport:
     """Compare every reference record without prediction-dependent exclusions.
 
@@ -1305,6 +1336,7 @@ def evaluate_study(
             config,
             ambiguous_truth,
             ambiguous_prediction,
+            _explanation,
         ),
         inventory=inventory,
         micro_inventory=_prf(micro_predicted, micro_truth, micro_matched),
@@ -1331,6 +1363,40 @@ def evaluate_study(
         unmatched_truth_record_keys=sorted(unmatched_truth),
         unmatched_prediction_record_keys=sorted(unmatched_prediction),
     )
+
+
+def evaluate_study_with_explanations(
+    truth: StudyExtraction,
+    prediction: StudyExtraction,
+    *,
+    facts: Sequence[FactSelection],
+    max_candidates: int = 5,
+    config: EvaluationConfig | None = None,
+    benchmark: BenchmarkProvenance | None = None,
+    prediction_validation: PredictionValidation | None = None,
+    run_efficiency: RunEfficiency | None = None,
+    run_id: str | None = None,
+    run_manifest_sha256: str | None = None,
+) -> tuple[EvaluationReport, ScoreExplanation]:
+    """Evaluate once and explain selected facts from that very run's decisions.
+
+    Select at most 25 scored JSON paths. The separate explanation artifact does
+    not change the score report, its version, or its independent three match views.
+    """
+
+    collector = ExplanationCollector(facts, max_candidates)
+    report = evaluate_study(
+        truth,
+        prediction,
+        benchmark=benchmark,
+        prediction_validation=prediction_validation,
+        run_efficiency=run_efficiency,
+        run_id=run_id,
+        run_manifest_sha256=run_manifest_sha256,
+        config=config,
+        _explanation=collector,
+    )
+    return report, collector.finish(report)
 
 
 def _study_digest(study: StudyExtraction) -> str:

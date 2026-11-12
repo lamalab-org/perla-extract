@@ -13,12 +13,14 @@ from .evaluation import (
     PredictionValidation,
     RunEfficiency,
     evaluate_study,
+    evaluate_study_with_explanations,
 )
 from .models import EvidenceBlock, StudyExtraction
 from .reference_io import load_reference
 from .reference_io import load_study as _study
 from .reference_io import read_json as _json
 from .run_artifacts import load_run_efficiency, verify_run_manifest
+from .scoring_explanation import FactSelection
 from .validation import validate_study
 
 INPUT = click.Path(path_type=Path, exists=True, readable=True, resolve_path=True)
@@ -73,6 +75,27 @@ def _prediction(
     "--prediction", type=INPUT, required=True, help="Extraction run directory or JSON."
 )
 @click.option("--output", type=OUTPUT, default="evaluation.json")
+@click.option(
+    "--explain-truth",
+    multiple=True,
+    help="Scored reference JSON path to explain; repeatable.",
+)
+@click.option(
+    "--explain-prediction",
+    multiple=True,
+    help="Scored prediction JSON path to explain; repeatable.",
+)
+@click.option(
+    "--explanation-output",
+    type=OUTPUT,
+    help="Write selected fact explanations to a separate JSON artifact.",
+)
+@click.option("--explanation-candidates", type=click.IntRange(1, 20), default=5)
+@click.option(
+    "--explain-view",
+    type=click.Choice(["strict", "value", "attribution"]),
+    default="strict",
+)
 @click.option("--minimum-record-similarity", type=click.FloatRange(0, 1), default=0.35)
 @click.option(
     "--numeric-relative-tolerance", type=click.FloatRange(min=0), default=1e-6
@@ -102,6 +125,11 @@ def main(
     truth: Path,
     prediction: Path,
     output: Path,
+    explain_truth: tuple[str, ...],
+    explain_prediction: tuple[str, ...],
+    explanation_output: Path | None,
+    explanation_candidates: int,
+    explain_view: str,
     minimum_record_similarity: float,
     numeric_relative_tolerance: float,
     numeric_absolute_tolerance: float,
@@ -111,6 +139,21 @@ def main(
 ) -> None:
     """Score one extraction without using an LLM or run-local identifiers."""
 
+    if bool(explain_truth or explain_prediction) != bool(explanation_output):
+        raise click.ClickException(
+            "Provide fact paths and --explanation-output together"
+        )
+    if (
+        explanation_output is not None
+        and explanation_output.resolve() == output.resolve()
+    ):
+        raise click.ClickException(
+            "Score and explanation outputs must be different files"
+        )
+    if explanation_output is not None and explanation_output.exists():
+        raise click.ClickException(
+            f"Cannot create {explanation_output}; choose a new explanation output path"
+        )
     try:
         expected, benchmark = load_reference(truth)
         actual, prediction_validation, run_efficiency = _prediction(prediction)
@@ -140,25 +183,51 @@ def main(
         if prediction.is_dir():
             manifest, manifest_digest = verify_run_manifest(prediction)
             run_id = manifest.run_id
-        report = evaluate_study(
-            expected,
-            actual,
-            benchmark=benchmark,
-            prediction_validation=prediction_validation,
-            run_efficiency=run_efficiency,
-            run_manifest_sha256=manifest_digest,
-            run_id=run_id,
-            config=config,
-        )
+        explanation = None
+        if explanation_output is not None:
+            report, explanation = evaluate_study_with_explanations(
+                expected,
+                actual,
+                facts=[
+                    FactSelection(side=side, path=path, view=explain_view)
+                    for side, paths in (
+                        ("truth", explain_truth),
+                        ("prediction", explain_prediction),
+                    )
+                    for path in paths
+                ],
+                max_candidates=explanation_candidates,
+                benchmark=benchmark,
+                prediction_validation=prediction_validation,
+                run_efficiency=run_efficiency,
+                run_manifest_sha256=manifest_digest,
+                run_id=run_id,
+                config=config,
+            )
+        else:
+            report = evaluate_study(
+                expected,
+                actual,
+                benchmark=benchmark,
+                prediction_validation=prediction_validation,
+                run_efficiency=run_efficiency,
+                run_manifest_sha256=manifest_digest,
+                run_id=run_id,
+                config=config,
+            )
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
-    try:
-        write_json_exclusive(output, report.model_dump(mode="json"))
-    except OSError as exc:
-        raise click.ClickException(
-            f"Cannot create {output}; choose a new output path: {exc}"
-        ) from exc
-    click.echo(str(output))
+    artifacts = [(output, report.model_dump(mode="json"))]
+    if explanation_output is not None and explanation is not None:
+        artifacts.append((explanation_output, explanation.model_dump(mode="json")))
+    for destination, payload in artifacts:
+        try:
+            write_json_exclusive(destination, payload)
+        except OSError as exc:
+            raise click.ClickException(
+                f"Cannot create {destination}; choose a new output path: {exc}"
+            ) from exc
+        click.echo(str(destination))
     if fail_on_scoring_issues and report.core_facts.issues:
         raise click.ClickException(
             f"{len(report.core_facts.issues)} scoring issue(s) require review; diagnostics saved to {output}"

@@ -123,6 +123,15 @@ perla-evaluate --truth PATH --prediction PATH [OPTIONS]
 directories receive schema- and content-hash verification. The record-matching
 threshold and numeric tolerances are explicit options and are written into the output
 report. See [Evaluate an extraction](../workflows/evaluation.md).
+
+To explain specific scored fields, supply repeated `--explain-truth /json/path`
+or `--explain-prediction /json/path` options with `--explanation-output FILE`.
+`--explain-view` selects `strict` (default), `value`, or `attribution`;
+`--explanation-candidates` limits displayed candidates to 1–20 (default 5).
+The explanation uses the same comparisons and assignments as the score and writes
+a separate artifact. Both output paths must be new. See the
+[offline score explanation example](../development/scoring.md).
+
 Use repeated `--report` options with `perla-evaluate-dataset` to aggregate compatible
 per-paper reports with micro counts, macro rates, and paper-bootstrap intervals.
 Add `--release PATH/TO/release.json` for a frozen benchmark: aggregation then requires
