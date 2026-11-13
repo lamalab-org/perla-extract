@@ -119,7 +119,10 @@ class LangfuseAdapter:
         if event["event"] == "attempt.finished" and self.capture_content:
             relative = event.get("response_artifact")
             response = self._artifact(relative)
-            if response.get("result") is not None:
+            if (
+                response.get("result") is not None
+                or response.get("status") == "validation_rejected"
+            ):
                 return {
                     "response": response["result"],
                     "status": event.get("status"),

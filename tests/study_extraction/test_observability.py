@@ -454,8 +454,9 @@ def test_langfuse_has_one_generation_per_attempt_and_no_generation_for_cache(
     assert create_langfuse_adapter(enabled=False) is None
 
 
+@pytest.mark.parametrize("invalid", [{"value": "invalid"}, None])
 def test_langfuse_content_capture_preserves_rejected_and_repaired_responses(
-    tmp_path, monkeypatch
+    tmp_path, monkeypatch, invalid
 ):
     sdk = FakeLangfuse()
     output = tmp_path / "out"
@@ -468,7 +469,7 @@ def test_langfuse_content_capture_preserves_rejected_and_repaired_responses(
         journal=journal,
         deployments={"assemble": DeploymentSettings(api_key_env="TEST_ENDPOINT_KEY")},
     )
-    responses = iter([response({"value": "invalid"}), response({"value": 5})])
+    responses = iter([response(invalid), response({"value": 5})])
     monkeypatch.setattr(litellm, "completion", lambda **kwargs: next(responses))
     journal.emit("run.started", paper="paper.pdf")
     with journal.stage("assemble"):
@@ -481,7 +482,7 @@ def test_langfuse_content_capture_preserves_rejected_and_repaired_responses(
     assert inputs[0]["response_format"]["json_schema"]["strict"] is True
     assert len(inputs[1]["messages"]) > len(inputs[0]["messages"])
     outputs = [item["output"] for item in sdk.updated if "usage_details" in item]
-    assert outputs[0]["response"] == {"value": "invalid"}
+    assert outputs[0]["response"] == invalid
     assert outputs[0]["validation_errors"]
     assert outputs[1]["response"] == {"value": 5}
     assert sdk.updated[-1]["output"]["extraction"] == {"value": 5}
