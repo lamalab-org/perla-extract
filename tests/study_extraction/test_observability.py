@@ -548,7 +548,7 @@ def test_langfuse_unicode_payloads_do_not_depend_on_windows_locale(
             path,
             mode,
             buffering,
-            encoding or ("cp1252" if "b" not in mode else None),
+            "cp1252" if "b" not in mode and encoding in (None, "locale") else encoding,
             errors,
             newline,
         )
@@ -562,6 +562,8 @@ def test_langfuse_unicode_payloads_do_not_depend_on_windows_locale(
     monkeypatch.setattr(litellm, "completion", lambda **kwargs: response({"value": 5}))
     prompt = "Measured at 25 °C and 4 µA; scope “uncertain”."
     complete(client(tmp_path, journal=journal), prompt=prompt)
+    with pytest.raises(UnicodeDecodeError):
+        (output / "requests/record.attempt-1.request.json").read_text()
     generation = next(item for item in sdk.opened if item["as_type"] == "generation")
     assert generation["input"]["messages"][1]["content"] == prompt
     assert next(item for item in sdk.updated if "usage_details" in item)["output"][
