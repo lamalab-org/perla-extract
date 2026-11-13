@@ -590,13 +590,34 @@ def audit_claim_coverage(
     for item in ledger.objects:
         if item.scope != "target" or item.role not in TOP_LEVEL_RECORD_BY_OBJECT_ROLE:
             status = "context" if item.scope == "context" else "uncertain"
+            # An uncertain source object is not a confirmed target, but neither
+            # is it evidence that a matching record is spurious. Keep its links
+            # for review without counting them as covered target statements.
+            record_kind = (
+                TOP_LEVEL_RECORD_BY_OBJECT_ROLE[item.role][0]
+                if status == "uncertain"
+                and item.role in TOP_LEVEL_RECORD_BY_OBJECT_ROLE
+                else None
+            )
+            candidates = [
+                record_id
+                for record_id, _, block_ids, quotes in records.get(
+                    record_kind or "", []
+                )
+                if _matches_evidence(item.evidence, block_ids, quotes) is not None
+            ]
+            claimed_record_keys.update(
+                (record_kind, record_id)
+                for record_id in candidates
+                if record_kind is not None
+            )
             counts[status] += 1
             items.append(
                 {
                     **item.model_dump(mode="json"),
                     "status": status,
-                    "record_kind": None,
-                    "candidate_record_ids": [],
+                    "record_kind": record_kind,
+                    "candidate_record_ids": candidates,
                 }
             )
             object_record_keys[item.object_id] = set()
@@ -737,7 +758,7 @@ def audit_claim_coverage(
             items.append(
                 {
                     "source_id": f"unclaimed:{record_kind}:{record_id}",
-                    "label": f"Final {record_kind} has no matching target object claim",
+                    "label": f"Final {record_kind} has no matching target or uncertain reader object; missing notes do not establish that the record is wrong",
                     "status": "unclaimed",
                     "record_kind": record_kind,
                     "candidate_record_ids": [record_id],

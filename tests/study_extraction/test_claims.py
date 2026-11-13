@@ -188,6 +188,27 @@ def test_characterization_object_does_not_require_or_justify_a_device_family():
     assert overextracted_audit["counts"]["unclaimed_records"] == 1
 
 
+def test_uncertain_reader_object_is_linked_for_review_not_deletion():
+    evidence = citation("result", "The control solar cell was measured.")
+    ledger = ClaimLedger(
+        objects=[
+            ExperimentalObject(
+                object_id="control",
+                label="Control",
+                role="device_design",
+                scope="uncertain",
+                evidence=[evidence],
+            )
+        ],
+        claims=[],
+    )
+    audit = audit_claim_coverage(ledger, extraction(device_family(evidence)))
+    assert audit["status"] == "needs_review"
+    assert audit["counts"]["uncertain"] == 1
+    assert audit["counts"]["covered"] == audit["counts"]["unclaimed_records"] == 0
+    assert audit["items"][0]["candidate_record_ids"] == ["family-control"]
+
+
 def test_processing_arm_quantity_is_not_forced_into_a_top_level_record():
     evidence = citation("result", "The mild reduction lasted 60 s")
     ledger = ClaimLedger(

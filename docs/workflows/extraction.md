@@ -163,10 +163,12 @@ change `extraction.json`.
 ## Checks, corrections, and their limits
 
 `claim_coverage_audit.json` compares the study with the admitted source notes. It
-lists matched, possible, and unmatched statements; unsupported records; and shared
+lists matched, possible, and unmatched statements; records without matching notes; and shared
 quantities whose targets were not represented individually. A matching citation
 alone does not establish that the correct value was extracted. Missing notes are
 outside this audit's view, so it is a review queue, not a recall or precision score.
+An uncertain reader object remains linked to matching records for review. It does
+not count as a confirmed target and does not authorize deletion of those records.
 
 A targeted repair request includes only the record types and existing IDs needed by
 its worklist. New records or removals require an explicit corresponding work item.
@@ -174,11 +176,19 @@ The model returns complete typed replacements, so dependent fields are validated
 together. Python restores omitted collections as empty and filters changes against
 the worklist. Unrequested records remain unchanged.
 
-Global review and local repair use the same acceptance rule: neither validation
-issues nor semantic claim-coverage issues may increase. Tied counts may accept a
-changed candidate. Such a gate can still miss a wrong association between a valid
-number and a specimen. Assess accepted corrections, newly introduced errors, and
-rejected proposals against reviewed references. Rejected model work still costs money.
+Global review and local repair preserve distinct source-supported values and may
+not increase validation issues or reader-note coverage gaps. Removing an unlinked
+record cannot compensate for losing a target statement. The value check compares
+specimen labels, value names, raw text and cited blocks, independently of local IDs;
+exact repetitions can be removed, but an empty replacement cannot erase supported
+data just to reduce the error count. `lost_verified_values` in the candidate audit
+reports rejected source-value losses. Notes describing discarded edits stay out of
+the final extraction; the original response remains in the request artifacts.
+
+This conservative gate may defer legitimate relabelling or deletion to human review.
+Source presence still does not establish correct units or attribution. Assess
+accepted corrections, newly introduced errors and rejected proposals against reviewed
+references. Rejected model work still costs money.
 
 After corrections, finalization may remove an optional atomic value or material-form
 label that fails its source-support check. Removal must leave the typed study valid,

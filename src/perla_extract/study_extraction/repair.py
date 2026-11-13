@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Annotated, Any, Literal
 from pydantic import Field
 
 from .claims import ClaimLedger, audit_claim_coverage
+from .evidence import normalized_source_text
 from .guidance import (
     COMPOSITION_BOUNDARY_POLICY,
     DEVICE_FAMILY_POLICY,
@@ -83,6 +84,9 @@ Rules:
 - Remove a complete top-level record only when the worklist identifies it as
   unclaimed and the supplied evidence establishes that it is a processing arm,
   characterization specimen, duplicate, or otherwise outside the target schema.
+- An unclaimed record has no matching reader note; this does not prove it is wrong.
+  Missing or uncertain notes are not evidence for deletion. Correct unsupported
+  optional fields in place and preserve the record's source-supported values.
 - Never return the same record ID in both removals and a replacement collection. If
   its identity is uncertain, leave it unchanged and explain the uncertainty.
 - Explain a gap in unresolved_notes when the evidence cannot support a safe repair.
@@ -390,20 +394,72 @@ def candidate_quality(
     study: StudyExtraction,
     blocks: list[EvidenceBlock],
     ledger: ClaimLedger | None,
+    *,
+    baseline: StudyExtraction | None = None,
 ) -> dict[str, int]:
-    """Summarize grounded signals for comparing two extraction candidates."""
+    """Measure technical issues and source-value loss relative to a prior draft.
+
+    Reader notes may be incomplete. Removing a record can reduce their mismatch
+    count while deleting real data, so source-supported values are checked against
+    the prior draft independently. Exact repetitions share one key; adding another
+    value cannot compensate for losing a different one.
+    """
 
     validation = validate_study(study, blocks)
     uncovered = 0
+    missing_claims = 0
     if ledger is not None:
         coverage = audit_claim_coverage(ledger, study)
         uncovered = int(coverage["issue_count"])
+        missing_claims = sum(
+            int(coverage["counts"][key])
+            for key in ("unmatched", "possible_match", "missing_shared_targets")
+        )
+    lost_values = (
+        _verified_value_keys(baseline, validate_study(baseline, blocks))
+        - _verified_value_keys(study, validation)
+        if baseline is not None
+        else set()
+    )
     return {
         "validation_issues": len(validation["issues"]),
         "reported_values": int(validation["counts"]["reported_values"]),
         "source_verified_values": int(validation["counts"]["source_verified_values"]),
         "semantic_issues": uncovered,
+        "missing_claims": missing_claims,
+        "lost_verified_values": len(lost_values),
     }
+
+
+def _verified_value_keys(
+    study: StudyExtraction, validation: dict[str, Any]
+) -> set[tuple[str, str, str, str]]:
+    """Identify source values independently of record IDs and list positions.
+
+    Scope labels keep equal values for different specimens separate. Local IDs
+    and list positions are not identity; exact repetitions share a key. This is
+    a conservative retention check, not proof of units or attribution. Semantic
+    deletions or relabelling may require human review.
+    """
+    devices = {item.device_id: item for item in study.individual_devices}
+    keys: set[tuple[str, str, str, str]] = set()
+    for value in validation["verified_values"]:
+        owner = _record_for_path(study, str(value["path"]))
+        record = owner[1] if owner is not None else None
+        subject = devices.get(str(getattr(record, "device_id", "")), record)
+        scope = normalized_source_text(
+            getattr(subject, "label", None) or getattr(record, "specimen_label", "")
+        )
+        keys.update(
+            (
+                scope,
+                normalized_source_text(value["name"]),
+                normalized_source_text(value["raw_value"]),
+                str(citation["block_id"]),
+            )
+            for citation in value["evidence"]
+        )
+    return keys
 
 
 def is_monotonic_quality(before: dict[str, int], after: dict[str, int]) -> bool:
@@ -412,6 +468,8 @@ def is_monotonic_quality(before: dict[str, int], after: dict[str, int]) -> bool:
     return (
         after["validation_issues"] <= before["validation_issues"]
         and after["semantic_issues"] <= before["semantic_issues"]
+        and after["missing_claims"] <= before["missing_claims"]
+        and after["lost_verified_values"] == 0
     )
 
 
@@ -495,6 +553,10 @@ def _scope_repair_to_worklist(
     ]
     changes["removals"] = removals
     discarded["removals"] = len(proposed.removals) - len(removals)
+    if any(discarded.values()):
+        # Notes can describe edits that were just discarded. The repair audit
+        # records those proposals; do not attach their claimed outcomes to data.
+        changes["unresolved_notes"] = []
     return proposed.model_copy(update=changes), discarded
 
 
@@ -547,7 +609,7 @@ def _monotonic_repair_subset(
         for record in getattr(proposed, collection):
             patch = _empty_repair().model_copy(update={collection: [record]})
             trial = apply_repair(candidate, patch)
-            trial_quality = candidate_quality(trial, blocks, ledger)
+            trial_quality = candidate_quality(trial, blocks, ledger, baseline=candidate)
             if is_monotonic_quality(quality, trial_quality) and (
                 trial_quality["validation_issues"] < quality["validation_issues"]
                 or trial_quality["semantic_issues"] < quality["semantic_issues"]
@@ -558,7 +620,7 @@ def _monotonic_repair_subset(
     for removal in proposed.removals:
         patch = _empty_repair().model_copy(update={"removals": [removal]})
         trial = apply_repair(candidate, patch)
-        trial_quality = candidate_quality(trial, blocks, ledger)
+        trial_quality = candidate_quality(trial, blocks, ledger, baseline=candidate)
         if is_monotonic_quality(quality, trial_quality) and (
             trial_quality["validation_issues"] < quality["validation_issues"]
             or trial_quality["semantic_issues"] < quality["semantic_issues"]
@@ -566,16 +628,7 @@ def _monotonic_repair_subset(
             candidate = trial
             quality = trial_quality
             accepted.removals.append(removal)
-    if candidate != study and proposed.unresolved_notes:
-        candidate = candidate.model_copy(
-            update={
-                "unresolved_notes": list(
-                    dict.fromkeys(
-                        [*candidate.unresolved_notes, *proposed.unresolved_notes]
-                    )
-                )
-            }
-        )
+    # A partial patch cannot safely inherit notes describing the whole proposal.
     return candidate, quality, _repair_counts(accepted)
 
 
@@ -713,9 +766,10 @@ def run_targeted_repair(
             after_quality=before,
             reason="the patch did not change the extraction",
         )
-    after = candidate_quality(candidate, blocks, ledger)
+    after = candidate_quality(candidate, blocks, ledger, baseline=study)
     accepted = is_monotonic_quality(before, after)
     applied_counts = _repair_counts(proposed) if accepted else empty_counts
+    rejected_quality = after
     if not accepted:
         candidate, after, applied_counts = _monotonic_repair_subset(
             study, proposed, blocks, ledger, before
@@ -731,7 +785,7 @@ def run_targeted_repair(
             discarded_record_counts=discarded_counts,
             applied_record_counts=applied_counts,
             before_quality=before,
-            after_quality=after,
+            after_quality=after if accepted else rejected_quality,
             reason=(
                 "applied only independently quality-improving record corrections"
                 if accepted and applied_counts != _repair_counts(proposed)
@@ -740,6 +794,10 @@ def run_targeted_repair(
                 else None
             )
             if accepted
-            else "proposed patch failed monotonic quality gates",
+            else (
+                "proposed patch would discard source-supported values"
+                if rejected_quality["lost_verified_values"]
+                else "proposed patch worsened validation or reader-note coverage"
+            ),
         ),
     )

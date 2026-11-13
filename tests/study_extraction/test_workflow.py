@@ -287,7 +287,17 @@ def test_refinement_is_rejected_when_the_grounded_draft_strictly_dominates():
     assert audit["refinement_quality"]["reported_values"] == 2
 
 
-def test_refinement_may_remove_grounded_values_to_correct_entity_precision():
+@pytest.mark.parametrize(
+    "original,revised,accepted,lost",
+    [
+        (["40 ms", "80 ms"], ["40 ms"], False, 1),
+        (["40 ms"], ["80 ms"], False, 1),
+        (["40 ms", "40 ms"], ["40 ms"], True, 0),
+    ],
+)
+def test_refinement_preserves_distinct_source_values_but_allows_exact_deduplication(
+    original, revised, accepted, lost
+):
     block = EvidenceBlock(
         block_id="result",
         source="main",
@@ -328,18 +338,22 @@ def test_refinement_may_remove_grounded_values_to_correct_entity_precision():
             unresolved_notes=[],
         )
 
-    draft = candidate(["40 ms", "80 ms"])
-    refinement = candidate(["40 ms"])
+    draft = candidate(original)
+    refinement = candidate(revised)
 
     selected, selection = _select_refinement_candidate(draft, refinement, [block], None)
     final, audit = _gate_final_candidate_against_draft(
         draft, selected, [block], None, selection
     )
 
-    assert final == refinement
-    assert audit["selected"] == "refinement"
-    assert audit["draft_quality"]["source_verified_values"] == 2
-    assert audit["final_candidate_quality"]["source_verified_values"] == 1
+    assert final == (refinement if accepted else draft)
+    assert audit["selected"] == ("refinement" if accepted else "draft")
+    assert selection["refinement_quality"]["lost_verified_values"] == lost
+    # The final gate also protects callers that provisionally selected a bad edit.
+    guarded, _ = _gate_final_candidate_against_draft(
+        draft, refinement, [block], None, {"selected": "refinement"}
+    )
+    assert guarded == final
 
 
 def test_final_candidate_cannot_trade_validation_for_more_values():

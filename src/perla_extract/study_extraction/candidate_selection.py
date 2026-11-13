@@ -17,15 +17,15 @@ def _select_refinement_candidate(
     blocks: list[EvidenceBlock],
     ledger: ClaimLedger | None,
 ) -> tuple[StudyExtraction, dict[str, object]]:
-    """Accept a changed draft only when neither technical issue count increases.
+    """Keep source-supported values while checking source links and note coverage.
 
     These source-link and claim-coverage counts are integrity checks, not a measure
-    of scientific correctness. Tied counts permit a changed candidate; evaluate
-    whether that policy helps accuracy against independent reviewed references.
+    of scientific correctness. Tied issue counts permit a changed candidate only
+    when source values survive; measure accuracy against reviewed references.
     """
 
     draft_quality = candidate_quality(draft, blocks, ledger)
-    refinement_quality = candidate_quality(refinement, blocks, ledger)
+    refinement_quality = candidate_quality(refinement, blocks, ledger, baseline=draft)
     same_candidate = draft == refinement
     selected = (
         "refinement"
@@ -34,12 +34,16 @@ def _select_refinement_candidate(
         else "draft"
     )
     reason = (
-        "refinement changed the draft without worsening validation or claim coverage"
+        "refinement preserved source-supported values without worsening "
+        "validation or reader-note coverage"
     )
     if same_candidate:
         reason = "refinement produced no candidate change"
     elif selected == "draft":
-        reason = "refinement worsened validation or claim coverage"
+        reason = (
+            "refinement lost source-supported values or worsened validation "
+            "or reader-note coverage"
+        )
     return (
         draft if selected == "draft" else refinement,
         {
@@ -61,13 +65,15 @@ def _gate_final_candidate_against_draft(
     """Compare the final corrected candidate with the original draft once more.
 
     Repair is checked against its immediate input. This final comparison prevents
-    a chain of accepted edits from increasing either technical issue count relative
-    to the first valid draft. Record counts are not rewards: removing a duplicate
-    can be a legitimate correction.
+    a chain of accepted edits from losing source values or worsening integrity
+    relative to the first valid draft. Record counts are not rewards: removing an
+    exact duplicate can be a legitimate correction.
     """
 
     draft_quality = candidate_quality(draft, blocks, ledger)
-    candidate_quality_summary = candidate_quality(candidate, blocks, ledger)
+    candidate_quality_summary = candidate_quality(
+        candidate, blocks, ledger, baseline=draft
+    )
     accepted = is_monotonic_quality(draft_quality, candidate_quality_summary)
     result = dict(selection)
     result["pre_repair_selected"] = selection["selected"]
@@ -76,11 +82,13 @@ def _gate_final_candidate_against_draft(
     if accepted:
         result["selected"] = str(selection["selected"])
         result["reason"] = (
-            "final candidate does not worsen validation or claim coverage relative to the draft"
+            "final candidate preserves source-supported values and does not worsen "
+            "validation or reader-note coverage relative to the draft"
         )
         return candidate, result
     result["selected"] = "draft"
     result["reason"] = (
-        "final candidate worsened validation or claim coverage relative to the draft"
+        "final candidate lost source-supported values or worsened validation "
+        "or reader-note coverage relative to the draft"
     )
     return draft, result

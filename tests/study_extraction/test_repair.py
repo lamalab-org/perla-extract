@@ -1,3 +1,8 @@
+import pytest
+
+from perla_extract.study_extraction.candidate_selection import (
+    _select_refinement_candidate,
+)
 from perla_extract.study_extraction.claims import (
     ClaimLedger,
     ExperimentalObject,
@@ -9,6 +14,7 @@ from perla_extract.study_extraction.models import (
     EvidenceCitation,
     IndividualDevice,
     PaperMetadata,
+    ReportedValue,
     StudyExtraction,
 )
 from perla_extract.study_extraction.repair import (
@@ -198,6 +204,78 @@ def test_targeted_repair_can_remove_an_unclaimed_characterization_family():
     assert audit.after_quality["semantic_issues"] == 0
 
 
+@pytest.mark.parametrize("replacement", [False, True])
+def test_repair_cannot_improve_issue_counts_by_erasing_source_values(replacement):
+    block = EvidenceBlock(
+        block_id="b1",
+        source="main",
+        page=1,
+        kind="text",
+        text="Device B was measured with a delay of 40 ms.",
+    )
+    citation = EvidenceCitation(block_id="b1", quote=block.text)
+    device = IndividualDevice(
+        device_id="device-b",
+        family_id=None,
+        label="Device B",
+        variant=None,
+        champion_status="not_reported",
+        selection_basis="not_reported",
+        reported_properties=[
+            ReportedValue(
+                name="delay",
+                raw_value=raw,
+                value_number=number,
+                unit="ms",
+                evidence=[citation],
+            )
+            for raw, number in [("40 ms", 40), ("80 ms", 80)]
+        ],
+        evidence=[citation],
+    )
+    study = empty_study().model_copy(update={"individual_devices": [device]})
+    # An incomplete reader found no target objects. Absence from its notes is
+    # not evidence that the explicitly reported measurement should be erased.
+    ledger = ClaimLedger(objects=[], claims=[])
+    proposed = StudyRepair(
+        device_families=[],
+        individual_devices=[device.model_copy(update={"reported_properties": []})]
+        if replacement
+        else [],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        removals=[]
+        if replacement
+        else [RecordRemoval(record_kind="individual_device", record_id="device-b")],
+        unresolved_notes=[],
+    )
+
+    class FakeClient:
+        def complete(self, **request):
+            return proposed
+
+    repaired, audit = run_targeted_repair(
+        client=FakeClient(),
+        study=study,
+        blocks=[block],
+        ledger=ledger,
+        coverage=audit_claim_coverage(ledger, study),
+        validation=validate_study(study, [block]),
+        model="provider/model",
+        reasoning_effort=None,
+        max_output_tokens=1000,
+    )
+    assert repaired == study
+    assert audit.status == "rejected"
+    assert (
+        audit.after_quality["validation_issues"]
+        < audit.before_quality["validation_issues"]
+    )
+    assert audit.after_quality["lost_verified_values"] == 1
+    assert audit.reason == "proposed patch would discard source-supported values"
+
+
 def test_targeted_repair_discards_additions_not_requested_by_the_worklist():
     evidence = EvidenceCitation(block_id="b1", quote="film used for spectroscopy")
     block = EvidenceBlock(
@@ -287,11 +365,82 @@ def test_targeted_repair_discards_additions_not_requested_by_the_worklist():
     assert audit.status == "accepted"
     assert repaired.device_families == []
     assert repaired.individual_devices == [same_id_in_another_collection]
-    assert repaired.unresolved_notes == ["The cited film is not a photovoltaic device."]
+    assert repaired.unresolved_notes == []  # Notes describe the unfiltered proposal.
     assert audit.discarded_record_counts["device_families"] == 1
     assert audit.reason == (
         "unrequested model additions were discarded before applying the patch"
     )
+
+
+def test_removing_unlinked_records_cannot_compensate_for_losing_a_target():
+    block = EvidenceBlock(
+        block_id="b1", source="main", page=1, kind="text", text="Device B was tested."
+    )
+    evidence = EvidenceCitation(block_id="b1", quote=block.text)
+    target = family(evidence)
+    extras = [
+        family(EvidenceCitation(block_id="missing", quote="Unlinked")).model_copy(
+            update={"family_id": f"extra-{i}", "label": f"Extra {i}"}
+        )
+        for i in range(2)
+    ]
+    study = empty_study().model_copy(update={"device_families": [target, *extras]})
+    ledger = ClaimLedger(
+        objects=[
+            ExperimentalObject(
+                object_id="b",
+                label="Device B",
+                role="device_design",
+                scope="target",
+                evidence=[evidence],
+            )
+        ],
+        claims=[],
+    )
+    selected, audit = _select_refinement_candidate(
+        study, empty_study(), [block], ledger
+    )
+    assert selected == study
+    before, after = audit["draft_quality"], audit["refinement_quality"]
+    assert after["semantic_issues"] < before["semantic_issues"]
+    assert after["missing_claims"] > before["missing_claims"]
+
+
+def test_equal_values_for_distinct_devices_are_not_duplicates():
+    block = EvidenceBlock(
+        block_id="b1",
+        source="main",
+        page=1,
+        kind="text",
+        text="Device A and Device B were both measured at 40 ms.",
+    )
+    evidence = EvidenceCitation(block_id="b1", quote=block.text)
+    devices = [
+        IndividualDevice(
+            device_id=name,
+            family_id=None,
+            label=name,
+            variant=None,
+            champion_status="not_reported",
+            selection_basis="not_reported",
+            reported_properties=[
+                ReportedValue(
+                    name="delay",
+                    raw_value="40 ms",
+                    value_number=40,
+                    unit="ms",
+                    evidence=[evidence],
+                )
+            ],
+            evidence=[evidence],
+        )
+        for name in ("Device A", "Device B")
+    ]
+    study = empty_study().model_copy(update={"individual_devices": devices})
+    dropped = study.model_copy(update={"individual_devices": devices[:1]})
+    selected, audit = _select_refinement_candidate(study, dropped, [block], None)
+    assert selected == study
+    assert audit["refinement_quality"]["lost_verified_values"] == 1
 
 
 def test_repair_cannot_remove_and_replace_the_same_record():
@@ -349,6 +498,8 @@ def test_repair_salvages_only_independently_quality_improving_records():
             "reported_values": 0,
             "source_verified_values": 0,
             "semantic_issues": 0,
+            "missing_claims": 0,
+            "lost_verified_values": 0,
         },
     )
 
