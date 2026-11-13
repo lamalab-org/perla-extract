@@ -5,6 +5,7 @@ import json
 from contextlib import contextmanager
 from types import SimpleNamespace
 
+import httpx
 import litellm
 import pytest
 from pydantic import BaseModel
@@ -200,6 +201,88 @@ def test_deployment_identity_and_credentials_are_separate(tmp_path, monkeypatch)
     assert first.calls[0]["cache_key_sha256"] != second.calls[0]["cache_key_sha256"]
     for artifact in tmp_path.rglob("*.json*"):
         assert "test-secret-never-save" not in artifact.read_text()
+
+
+@pytest.mark.parametrize(
+    ("model", "base_url", "host"),
+    [
+        ("openrouter/qwen/qwen3-32b", None, "openrouter.ai"),
+        ("openai/qwen/qwen3-32b", "https://openrouter.ai/api/v1", "openrouter.ai"),
+        (
+            "openai/alias-code",
+            "https://api.blablador.fz-juelich.de/v1",
+            "api.blablador.fz-juelich.de",
+        ),
+    ],
+)
+def test_provider_http_contract_and_accounting(
+    tmp_path, monkeypatch, model, base_url, host
+):
+    """Exercise LiteLLM serialization with synthetic HTTP responses and no network."""
+    monkeypatch.setenv("TRANSPORT_TEST_KEY", "secret-never-save")
+    sent = []
+    router = host == "openrouter.ai"
+
+    def send(self, request, **kwargs):
+        assert request.url.host == host
+        assert request.url.path.endswith("/chat/completions")
+        assert request.headers["authorization"] == "Bearer secret-never-save"
+        sent.append(json.loads(request.content))
+        return httpx.Response(
+            200,
+            request=request,
+            json={
+                "id": "fixture-answer",
+                "object": "chat.completion",
+                "created": 1,
+                "model": "fixture-model",
+                **({"provider": "fixture-backend"} if router else {}),
+                "choices": [
+                    {
+                        "index": 0,
+                        "finish_reason": "stop",
+                        "message": {"role": "assistant", "content": '{"value":7}'},
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 100,
+                    "completion_tokens": 5,
+                    "total_tokens": 105,
+                    **({"cost": 0.0123} if router else {}),
+                },
+            },
+        )
+
+    monkeypatch.setattr(httpx.Client, "send", send)
+    model_client = client(
+        tmp_path,
+        deployments={
+            "assemble": DeploymentSettings(
+                model=model,
+                base_url=base_url,
+                api_key_env="TRANSPORT_TEST_KEY",
+                reasoning_effort="omit",
+            )
+        },
+    )
+    assert complete(model_client).value == 7
+    assert len(sent) == 1
+    assert sent[0]["model"] == model.split("/", 1)[1]
+    assert sent[0].get("provider") == ({"require_parameters": True} if router else None)
+    assert sent[0]["response_format"]["json_schema"]["strict"] is True
+    assert "reasoning_effort" not in sent[0]
+    usage = summarize_calls(model_client.calls)
+    assert usage["upstream_providers"] == (["fixture-backend"] if router else [])
+    assert usage["total_cost_usd"] == (0.0123 if router else None)
+    assert usage["cost_tracking_complete"] is router
+    assert usage["total_tokens"] == 105
+    saved = json.loads((tmp_path / "out/requests/record.request.json").read_text())
+    if router:
+        assert saved["extra_body"]["provider"]["require_parameters"] is True
+    else:
+        assert "extra_body" not in saved
+    for artifact in tmp_path.rglob("*.json*"):
+        assert "secret-never-save" not in artifact.read_text()
 
 
 def test_retry_request_is_checked_against_context_limit(tmp_path, monkeypatch):
@@ -405,7 +488,9 @@ def test_console_progress_keeps_execution_ids(tmp_path, monkeypatch):
         progress = [record for record in records if record["extra"].get("call_id")]
         assert progress
         assert all(record["extra"]["run_id"] == journal.run_id for record in progress)
-        assert all(record["extra"]["stage_id"] == outcome.stage_id for record in progress)
+        assert all(
+            record["extra"]["stage_id"] == outcome.stage_id for record in progress
+        )
     finally:
         logger.remove(sink)
 

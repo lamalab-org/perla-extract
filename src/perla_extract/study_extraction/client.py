@@ -12,6 +12,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Generic, TypeVar
+from urllib.parse import urlsplit
 
 import litellm
 from pydantic import BaseModel, ValidationError
@@ -394,12 +395,18 @@ class ModelClient:
         usage = dict(payload["usage"]) if isinstance(payload.get("usage"), dict) else {}
         hidden = getattr(response, "_hidden_params", {})
         cost = hidden.get("response_cost")
+        # The native OpenRouter adapter moves this field into hidden metadata;
+        # the generic OpenAI-compatible adapter retains it on the response body.
+        upstream_provider = hidden.get("upstream_provider") or payload.get("provider")
         usage.update(
             {
                 "response_received": True,
                 "response_id": payload.get("id"),
                 "response_model": payload.get("model"),
                 "provider": hidden.get("custom_llm_provider"),
+                "upstream_provider": upstream_provider
+                if isinstance(upstream_provider, str)
+                else None,
                 "cost": cost,
                 "cost_source": "adapter_reported_unspecified"
                 if cost is not None
@@ -488,6 +495,12 @@ class ModelClient:
         if deployment.top_p is not None:
             body["top_p"] = deployment.top_p
         extra: dict[str, object] = {}
+        if policy.model.startswith("openrouter/") or (
+            urlsplit(deployment.base_url or "").hostname == "openrouter.ai"
+        ):
+            # Route only to backends that accept the requested schema and controls.
+            # Otherwise OpenRouter may silently ignore unsupported parameters.
+            extra["provider"] = {"require_parameters": True}
         if deployment.top_k is not None:
             extra["top_k"] = deployment.top_k
         if deployment.chat_template_kwargs:

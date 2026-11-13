@@ -78,6 +78,13 @@ The model prefix selects a LiteLLM backend. For example, `openai/...` uses
 logic. All requests set seed `0`;
 reproducibility still depends on the selected provider and model version.
 
+OpenRouter requests include `provider.require_parameters = true` so routing requires
+support for the requested schema and generation controls. A model without a compatible
+backend fails instead of silently dropping parameters. The returned upstream provider
+is saved in attempt usage and the run's `usage.upstream_providers`; inspect it when
+comparing experiments because routing may select different backends. See
+[OpenRouter structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs).
+
 Refinement is enabled by default and adds a global reconciliation call. Use
 `--no-refinement` to disable it or `--refinement-model` to choose its model.
 The request uses a shared citation catalog to avoid repeating source quotations.

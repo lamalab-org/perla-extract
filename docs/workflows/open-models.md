@@ -68,6 +68,37 @@ Do not assume unsupported generation settings are ignored. See the serving engin
 [OpenAI-compatible interface](https://docs.vllm.ai/en/latest/serving/openai_compatible_server/)
 and [structured-output documentation](https://docs.vllm.ai/en/latest/features/structured_outputs/).
 
+### Blablador
+
+For [Blablador](https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/),
+use the same deployment fields on **every enabled stage**:
+
+| Field | Value |
+| --- | --- |
+| `model` | `"openai/<id from /v1/models>"` |
+| `base_url` | `"https://api.blablador.fz-juelich.de/v1"` |
+| `api_key_env` | `"BLABLADOR_API_KEY"` |
+| `reasoning_effort` | `"omit"` initially; enable only supported controls |
+
+Here `openai/` selects the compatible API adapter; requests go to the specified
+Blablador endpoint. Store the key in `.env.local`. Read the authenticated
+`/v1/models` catalog before choosing a model: [aliases can change their underlying
+model](https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_models/). Save the
+catalog with the experiment, prefer a model-specific served ID, and record the
+reported root and context limit. This records what the service advertised; it does
+not verify its weight revision. Test a small schema-constrained response before
+running papers. API compatibility alone does not establish schema support.
+
+For a mixed-provider experiment, keep `[extraction] model` as the default (for
+example, `"openrouter/<organization>/<model>"`) and put the Blablador fields only on
+the stages you want to change, such as `[stages.read]`. Other stages retain their
+default deployment, except that repair inherits an explicit refinement deployment
+as described above. Credentials for both services must be available to the process.
+
+Start with request, token and elapsed-time limits. If the endpoint omits cost,
+`max_cost_usd` prevents the next request; omit that limit when cost cannot be tracked.
+Missing dollar cost remains unknown in the results.
+
 ## Understand context and resource limits
 
 Planning and live requests use the same serializer for messages and the response
