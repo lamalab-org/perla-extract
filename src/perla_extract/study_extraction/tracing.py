@@ -63,7 +63,7 @@ class LangfuseAdapter:
         if not path.is_relative_to(self.output_dir):
             return {}
         try:
-            value = json.loads(path.read_text())
+            value = json.loads(path.read_text(encoding="utf-8"))
             return value if isinstance(value, dict) else {}
         except (OSError, ValueError):
             return {}

@@ -187,7 +187,9 @@ def summarize(
         try:
             manifest, digest = verify_run_manifest(directory, accounting_only=True)
             row.update(run_id=manifest.run_id, run_manifest_sha256=digest)
-            config = json.loads((directory / "run_configuration.json").read_text())
+            config = json.loads(
+                (directory / "run_configuration.json").read_text(encoding="utf-8")
+            )
             if not isinstance(config, dict):
                 raise ValueError("Run configuration must be an object")
             if row["quality_applicable"]:

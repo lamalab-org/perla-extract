@@ -31,7 +31,7 @@ def test_frozen_reference_controls_and_explanations_preserve_credit(paper):
     path = (
         ROOT / "data/study_extraction/ground_truth/v2/dev" / paper / "ground_truth.json"
     )
-    truth = StudyExtraction.model_validate_json(path.read_text())
+    truth = StudyExtraction.model_validate_json(path.read_text(encoding="utf-8"))
     original = truth.model_dump_json()
     baseline = evaluate_study(truth, truth)
     assert baseline.core_facts.micro.f1 == 1

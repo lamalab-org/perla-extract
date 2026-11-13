@@ -21,7 +21,7 @@ def setup(tmp_path, monkeypatch):
     pdf = tmp_path / "paper with spaces.pdf"
     pdf.write_bytes(b"Synthetic placeholder; parsing is replaced in this unit test")
     manifest_path = reference / "manifest.json"
-    manifest = json.loads(manifest_path.read_text())
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["source_manifest"]["source_sha256"] = [file_digest(pdf)]
     manifest_path.write_text(json.dumps(manifest))
     path = tmp_path / "experiment.toml"
@@ -106,7 +106,7 @@ def test_one_command_runs_scores_and_compares_with_separate_caches(setup):
     assert len({call.model_cache_dir for call in calls}) == 4
     assert len({call.document_cache_dir for call in calls}) == 1
     output = path.parent / "results"
-    report = json.loads((output / "comparison.json").read_text())
+    report = json.loads((output / "comparison.json").read_text(encoding="utf-8"))
     assert report["quality_status"] == "ready"
     assert report["quality"]["mean_paired_macro_f1_delta"] == 0
     assert report["study"]["factors"] == {
@@ -115,7 +115,7 @@ def test_one_command_runs_scores_and_compares_with_separate_caches(setup):
     assert report["accounting"]["control"]["total_cost_usd"] == 2
     assert (output / "figure-data/paired_papers.csv").is_file()
     assert (output / "experiment.toml").read_bytes() == path.read_bytes()
-    summary = (output / "summary.md").read_text()
+    summary = (output / "summary.md").read_text(encoding="utf-8")
     assert "Treatment − control: +0.0000" in summary
     assert "only one paper" in summary
     assert "| control | 2 / 2 | 2 | 2.000000 |" in summary
@@ -134,12 +134,21 @@ def test_failed_run_stays_in_roster_and_accounting(setup, monkeypatch):
     result = CliRunner().invoke(experiment.main, [str(path)])
     assert result.exit_code == 1
     assert len(calls) == 4
-    report = json.loads((path.parent / "results/comparison.json").read_text())
+    report = json.loads(
+        (path.parent / "results/comparison.json").read_text(encoding="utf-8")
+    )
     assert len(report["runs"]) == 4
     assert report["quality"] is None
     assert sum(arm["known_cost_usd"] for arm in report["accounting"].values()) == 4
-    assert len(json.loads((path.parent / "results/errors.json").read_text())) == 1
-    summary = (path.parent / "results/summary.md").read_text()
+    assert (
+        len(
+            json.loads(
+                (path.parent / "results/errors.json").read_text(encoding="utf-8")
+            )
+        )
+        == 1
+    )
+    summary = (path.parent / "results/summary.md").read_text(encoding="utf-8")
     assert "Comparison unavailable" in summary
     assert "Treatment − control:" not in summary
     assert "| control | 1 / 2 | 2 | 2.000000 |" in summary
@@ -162,24 +171,29 @@ def test_explicit_paper_si_reference_match_is_shown_and_scored(setup):
     supplement.write_bytes(b"Synthetic SI; parsing is replaced in this unit test")
     reference = path.parent / "example/truth/dev/10.0000--synthetic"
     manifest_path = reference / "manifest.json"
-    manifest = json.loads(manifest_path.read_text())
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["source_manifest"]["source_sha256"].append(file_digest(supplement))
     manifest_path.write_text(json.dumps(manifest))
-    path.write_text(path.read_text() + f"supplement = {json.dumps(supplement.name)}\n")
+    path.write_text(
+        path.read_text(encoding="utf-8")
+        + f"supplement = {json.dumps(supplement.name)}\n"
+    )
 
     checked = CliRunner().invoke(experiment.main, [str(path), "--check"])
     assert checked.exit_code == 0, checked.output
     assert checked.output.count("Ground truth:") == 1
     assert "Paper: paper with spaces.pdf" in checked.output
     assert "SI: supporting measurements.pdf" in checked.output
-    assert "Ground truth: example/truth/dev/10.0000--synthetic" in checked.output
+    assert f"Ground truth: {reference.relative_to(path.parent)}" in checked.output
     assert calls == []
     assert not (path.parent / "results").exists()
 
     result = CliRunner().invoke(experiment.main, [str(path)])
     assert result.exit_code == 0, result.output
     assert all(config.supplement == supplement for config in calls)
-    report = json.loads((path.parent / "results/comparison.json").read_text())
+    report = json.loads(
+        (path.parent / "results/comparison.json").read_text(encoding="utf-8")
+    )
     assert report["quality_status"] == "ready"
 
 
@@ -189,12 +203,13 @@ def test_bad_si_match_stops_before_any_output_or_paid_work(setup, problem):
     supplement = path.parent / "supporting measurements.pdf"
     supplement.write_bytes(b"Expected synthetic SI")
     manifest_path = path.parent / "example/truth/dev/10.0000--synthetic/manifest.json"
-    manifest = json.loads(manifest_path.read_text())
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["source_manifest"]["source_sha256"].append(file_digest(supplement))
     manifest_path.write_text(json.dumps(manifest))
     if problem != "omitted":
         path.write_text(
-            path.read_text() + f"supplement = {json.dumps(supplement.name)}\n"
+            path.read_text(encoding="utf-8")
+            + f"supplement = {json.dumps(supplement.name)}\n"
         )
     if problem == "missing":
         supplement.unlink()
@@ -218,7 +233,9 @@ def test_changed_inputs_stop_remaining_calls_and_preserve_paid_work(
     def change_after_first(config):
         report = extract(config)
         if len(calls) == change_after:
-            path.write_text(path.read_text() + "\n# changed during execution\n")
+            path.write_text(
+                path.read_text(encoding="utf-8") + "\n# changed during execution\n"
+            )
         return report
 
     monkeypatch.setattr(experiment, "run_extraction", change_after_first)
@@ -226,13 +243,17 @@ def test_changed_inputs_stop_remaining_calls_and_preserve_paid_work(
     assert result.exit_code == 1
     assert "Input changed" in result.output
     assert len(calls) == change_after
-    report = json.loads((path.parent / "results/comparison.json").read_text())
+    report = json.loads(
+        (path.parent / "results/comparison.json").read_text(encoding="utf-8")
+    )
     assert report["quality"] is None
     assert (
         sum(arm["known_cost_usd"] for arm in report["accounting"].values())
         == change_after
     )
-    assert "Input changed" in (path.parent / "results/errors.json").read_text()
+    assert "Input changed" in (path.parent / "results/errors.json").read_text(
+        encoding="utf-8"
+    )
 
 
 def test_endpoint_override_expands_both_arm_defaults_without_false_missing_fields(
@@ -240,7 +261,8 @@ def test_endpoint_override_expands_both_arm_defaults_without_false_missing_field
 ):
     path, _, _ = setup
     path.write_text(
-        path.read_text() + '\n[treatment.stages.read]\nmodel = "openai/other-reader"\n'
+        path.read_text(encoding="utf-8")
+        + '\n[treatment.stages.read]\nmodel = "openai/other-reader"\n'
     )
     prepared = experiment.prepare(path)
     contrast = prepared.study.factors["deployments.read.model"]
@@ -252,7 +274,7 @@ def test_endpoint_override_expands_both_arm_defaults_without_false_missing_field
 
 def test_arm_model_switch_does_not_keep_shared_endpoint_or_credentials(setup):
     path, _, _ = setup
-    text = path.read_text().replace(
+    text = path.read_text(encoding="utf-8").replace(
         'model = "openai/synthetic"',
         'model = "openai/synthetic"\nbase_url = "http://localhost:8000/v1"\napi_key_env = "LOCAL_KEY"',
     )
@@ -270,7 +292,7 @@ def test_arm_model_switch_does_not_keep_shared_endpoint_or_credentials(setup):
 def test_repeating_the_effective_default_is_not_an_ablation(setup):
     path, _, _ = setup
     path.write_text(
-        path.read_text().replace(
+        path.read_text(encoding="utf-8").replace(
             "[treatment]\nclaim_recall_passes = 2",
             '[treatment]\nclaim_recall_passes = 1\n[treatment.stages.read]\nmodel = "openai/synthetic"',
         )

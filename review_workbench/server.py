@@ -374,10 +374,10 @@ class ReviewApplication:
                 self._uploaded_workbook_artifact(
                     relative,
                     path.read_bytes(),
-                    json.loads(received_path.read_text())
+                    json.loads(received_path.read_text(encoding="utf-8"))
                     if received_path.exists()
                     else None,
-                    json.loads(outcome_path.read_text())
+                    json.loads(outcome_path.read_text(encoding="utf-8"))
                     if outcome_path.exists()
                     else None,
                 )

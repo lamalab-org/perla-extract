@@ -149,10 +149,12 @@ def _completed_run_matches(
         return False
     try:
         verify_run_manifest(run_dir)
-        report = json.loads((run_dir / "report.json").read_text())
-        configuration = json.loads((run_dir / "run_configuration.json").read_text())
+        report = json.loads((run_dir / "report.json").read_text(encoding="utf-8"))
+        configuration = json.loads(
+            (run_dir / "run_configuration.json").read_text(encoding="utf-8")
+        )
         StudyExtraction.model_validate_json((run_dir / "extraction.json").read_bytes())
-        document = json.loads((run_dir / "document.json").read_text())
+        document = json.loads((run_dir / "document.json").read_text(encoding="utf-8"))
         for block in document["blocks"]:
             EvidenceBlock.model_validate(block)
         wanted = _paper_config(manifest, pdf, supplement, run_dir, config_file)

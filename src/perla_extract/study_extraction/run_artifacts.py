@@ -38,7 +38,7 @@ def write_run_manifest(output_dir: Path, *, run_id: str | None = None) -> RunMan
     missing = [name for name in REQUIRED_FILES if not (output_dir / name).is_file()]
     if missing:
         raise ValueError(f"Cannot seal run without {', '.join(missing)}")
-    report = json.loads((output_dir / "report.json").read_text())
+    report = json.loads((output_dir / "report.json").read_text(encoding="utf-8"))
     if not isinstance(report, dict):
         raise ValueError("Run report must be a JSON object")
     report_run_id = report.get("run_id")
@@ -80,7 +80,7 @@ def verify_run_manifest(
                 raise ValueError(f"Run artifact presence differs from manifest: {name}")
             if expected is not None and file_digest(artifact) != expected:
                 raise ValueError(f"Run artifact differs from manifest: {name}")
-        report = json.loads((output_dir / "report.json").read_text())
+        report = json.loads((output_dir / "report.json").read_text(encoding="utf-8"))
         if not isinstance(report, dict):
             raise ValueError("Run report must be a JSON object")
         if report.get("run_id") is not None and report["run_id"] != manifest.run_id:

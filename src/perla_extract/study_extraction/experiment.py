@@ -115,7 +115,9 @@ def _arm_settings(settings: ExperimentSettings, arm: str, directory: Path) -> di
 def prepare(path: Path) -> Experiment:
     """Validate every paper and both arm configurations before any paid request."""
     path = path.resolve()
-    settings = ExperimentSettings.model_validate(tomllib.loads(path.read_text()))
+    settings = ExperimentSettings.model_validate(
+        tomllib.loads(path.read_text(encoding="utf-8"))
+    )
     output = _path(path.parent, settings.output)
     if output.exists():
         raise ValueError(

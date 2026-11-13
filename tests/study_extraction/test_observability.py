@@ -3,6 +3,7 @@
 import inspect
 import json
 from contextlib import contextmanager
+from pathlib import Path
 from types import SimpleNamespace
 
 import httpx
@@ -533,6 +534,39 @@ def test_langfuse_content_capture_includes_invalid_json(tmp_path, monkeypatch):
     assert exported["output"]["response"] == '{"value": '
     assert exported["output"]["finish_reason"] == "length"
     assert exported["level"] == "ERROR"
+
+
+def test_langfuse_unicode_payloads_do_not_depend_on_windows_locale(
+    tmp_path, monkeypatch
+):
+    original_open = Path.open
+
+    def windows_open(
+        path, mode="r", buffering=-1, encoding=None, errors=None, newline=None
+    ):
+        return original_open(
+            path,
+            mode,
+            buffering,
+            encoding or ("cp1252" if "b" not in mode else None),
+            errors,
+            newline,
+        )
+
+    monkeypatch.setattr(Path, "open", windows_open)
+    sdk = FakeLangfuse()
+    output = tmp_path / "out"
+    journal = EventJournal(
+        output, adapter=LangfuseAdapter(sdk, output_dir=output, capture_content=True)
+    )
+    monkeypatch.setattr(litellm, "completion", lambda **kwargs: response({"value": 5}))
+    prompt = "Measured at 25 °C and 4 µA; scope “uncertain”."
+    complete(client(tmp_path, journal=journal), prompt=prompt)
+    generation = next(item for item in sdk.opened if item["as_type"] == "generation")
+    assert generation["input"]["messages"][1]["content"] == prompt
+    assert next(item for item in sdk.updated if "usage_details" in item)["output"][
+        "response"
+    ] == {"value": 5}
 
 
 def test_langfuse_capture_does_not_read_outside_run(tmp_path):

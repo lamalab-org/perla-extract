@@ -236,7 +236,7 @@ def build_example(output: Path) -> dict:
         "equivalent_units": (equivalent, document),
         "wrong_scan": (wrong_scan, document),
     }
-    expected = json.loads(EXPECTED.read_text())
+    expected = json.loads(EXPECTED.read_text(encoding="utf-8"))
     actual = {}
     for name, (prediction, evidence) in cases.items():
         started = perf_counter()
@@ -291,7 +291,7 @@ def build_example(output: Path) -> dict:
             ],
             standalone_mode=False,
         )
-        report = json.loads(report_path.read_text())
+        report = json.loads(report_path.read_text(encoding="utf-8"))
         for key in ("format_version", "matcher_version"):
             if report[key] != expected[key]:
                 raise ValueError(f"{key} changed; review the example contract")
