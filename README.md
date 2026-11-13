@@ -30,14 +30,15 @@ use the same workflow.
 ## Compare two extraction choices
 
 ```bash
-cp examples/experiment.toml experiment.toml
-# Edit the model, input paths and control/treatment settings.
+# Edit experiment.toml: model, input paths and control/treatment settings.
 perla-experiment experiment.toml --check
 perla-experiment experiment.toml
 ```
 
-One TOML file defines both arms and the papers. The command handles extraction,
-scoring, independent caches, the run roster and plotting tables.
+One TOML file defines both arms and the papers. The included file lists the 30 reviewed
+development references; supply the original PDFs/SIs at its configured paths.
+The command handles extraction and scoring. Open the generated `summary.md` first
+for the effect, uncertainty, run coverage and recorded costs; `figure-data/` contains plotting tables.
 [Experiment guide](docs/workflows/extraction-ablations.md).
 
 ## Find what you need

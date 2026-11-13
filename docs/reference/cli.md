@@ -182,7 +182,7 @@ the extraction configuration format; `[control.stages.NAME]` or
 `--check` prints the validated paper/SI/reference mapping and checks every source/reference hash and setting without parsing PDFs,
 creating outputs or making model calls. Running freezes the intended roster before
 extraction, assigns independent response caches, scores each usable result and
-writes comparison/figure data. Failed attempts remain visible and prevent a complete
+writes `summary.md` (read first), `comparison.json`, and figure data. Failed attempts remain visible and prevent a complete
 quality result. Existing output directories are refused; there is no automatic
 campaign retry or resume. See [Run an experiment](../workflows/extraction-ablations.md).
 

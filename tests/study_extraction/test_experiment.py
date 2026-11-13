@@ -114,6 +114,11 @@ def test_one_command_runs_scores_and_compares_with_separate_caches(setup):
     assert report["accounting"]["control"]["total_cost_usd"] == 2
     assert (output / "figure-data/paired_papers.csv").is_file()
     assert (output / "experiment.toml").read_bytes() == path.read_bytes()
+    summary = (output / "summary.md").read_text()
+    assert "Treatment − control: +0.0000" in summary
+    assert "only one paper" in summary
+    assert "| control | 2 / 2 | 2 | 2.000000 |" in summary
+    assert "Read first:" in result.output
     repeated = CliRunner().invoke(experiment.main, [str(path)])
     assert repeated.exit_code == 1
     assert "Output already exists" in repeated.output
@@ -133,6 +138,10 @@ def test_failed_run_stays_in_roster_and_accounting(setup, monkeypatch):
     assert report["quality"] is None
     assert sum(arm["known_cost_usd"] for arm in report["accounting"].values()) == 4
     assert len(json.loads((path.parent / "results/errors.json").read_text())) == 1
+    summary = (path.parent / "results/summary.md").read_text()
+    assert "Comparison unavailable" in summary
+    assert "Treatment − control:" not in summary
+    assert "| control | 1 / 2 | 2 | 2.000000 |" in summary
 
 
 def test_source_mismatch_is_rejected_before_any_output_or_paid_work(setup):

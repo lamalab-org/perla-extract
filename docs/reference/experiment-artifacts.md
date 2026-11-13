@@ -2,6 +2,11 @@
 
 For the normal starting path, use [Run an experiment](../workflows/extraction-ablations.md). The experiment command creates these records automatically. This page is for inspecting them or comparing runs executed outside that command.
 
+For `perla-experiment`, read the generated `summary.md` first. It explains the
+quality difference and uncertainty, separates scored-run coverage from cost
+availability, and links to the plotting tables and per-run diagnostics.
+The summary displays `comparison.json`; it does not recompute scores.
+
 ## Compare externally executed runs
 
 Create a study declaration before collecting results and list all attempts in a roster. Run settings, source scope, scorer configuration and references must remain fixed except for the declared intervention.

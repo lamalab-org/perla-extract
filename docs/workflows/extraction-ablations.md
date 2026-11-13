@@ -5,14 +5,10 @@ and saves the comparison and plotting tables.
 
 ## 1. Set the question and papers
 
-From an [installed checkout](../getting-started.md#install):
-
-```bash
-cp examples/experiment.toml experiment.toml
-```
-
-Open `experiment.toml`. Set the model, PDF/SI and reference paths. The template asks
-whether a second source reading helps:
+From an [installed checkout](../getting-started.md#install), open `experiment.toml`.
+It already lists the 30 included development references. Set the model and PDF/SI
+paths; keep only the paper blocks you intend to include before starting. The
+single-paper template in `examples/experiment.toml` uses the same structure:
 
 ```toml
 output = "results/readings"
@@ -70,12 +66,28 @@ same settings as extraction.
 
 ## 3. Inspect the result
 
+**Open `summary.md` first.** It shows the tested change, paired quality difference,
+uncertainty, scored/planned run counts, recorded spend and any blocking issues.
+
 | Output | What to open it for |
 | --- | --- |
-| `comparison.json` | Paired quality difference, uncertainty and resource accounting |
-| `figure-data/` | CSVs ready for plotting |
-| `runs/` | Individual extractions, scores, evidence and logs |
-| `errors.json` | Attempts that need attention |
+| `figure-data/paired_papers.csv` | Per-paper effect: positive favors treatment, negative favors control |
+| `figure-data/group_scores.csv` | Strict precision/recall/F1 and fact counts by scientific group; other views diagnose value/context errors |
+| `figure-data/runs.csv` | Per-attempt quality, tokens, requests, elapsed time, recorded cost and failures |
+| `runs/paper-NNN/ARM-REPEAT/evaluation.json` | Trace scores to matched and unmatched fields in that run's `extraction.json` |
+| `errors.json`, per-run `report.json` and `events.jsonl` | Diagnose failed attempts |
+| `comparison.json` | Full machine-readable result and consistency checks |
+
+The primary result is treatment minus control in strict macro F1: `+0.03` means
+**three percentage points**, not a 3% relative improvement. Repeats are averaged
+within each paper and papers receive equal weight. The 95% bootstrap interval
+resamples papers; an interval spanning zero does not establish a direction. One
+paper has no paper-bootstrap interval.
+
+`quality_status = "needs_attention"` means no valid aggregate comparison; retain
+failed attempts rather than interpreting only the successful subset. Empty CSV
+cells and JSON `null` mean unavailable, not zero. Missing cost can coexist with a
+valid quality comparison; a known cost subtotal is not a complete total.
 
 Run folders and response caches are separate for every paper, arm and repeat.
 Execution order is shuffled reproducibly. The intended cohort and arm settings are

@@ -23,6 +23,7 @@ from .comparison import ARMS, _settings, summarize
 from .comparison_study import ComparisonStudy, FactorContrast, same_setting
 from .configuration import ExtractionConfig, parse_settings, resolve_config, tomllib
 from .evaluation_cli import main as evaluate
+from .experiment_summary import write_summary
 from .figure_data import export_tables
 from .logging import configure_logging
 from .models import StrictModel
@@ -327,6 +328,7 @@ def execute(experiment: Experiment) -> dict:
             )
         write_json_exclusive(output / "comparison.json", result)
         export_tables(result, output / "figure-data")
+        write_summary(result, output / "summary.md")
     return result
 
 
@@ -384,6 +386,7 @@ def main(experiment_file: Path, check: bool) -> None:
             click.echo(
                 f"Mean paired macro-F1 change (treatment − control): {delta:+.4f}"
             )
+        click.echo(f"Read first: {experiment.output / 'summary.md'}")
         click.echo(f"Comparison: {experiment.output / 'comparison.json'}")
         click.echo(f"Figure data: {experiment.output / 'figure-data'}")
         if result["issues"]:
