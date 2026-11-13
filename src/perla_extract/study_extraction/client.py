@@ -394,7 +394,17 @@ class ModelClient:
         content = message.get("content") if isinstance(message, dict) else None
         usage = dict(payload["usage"]) if isinstance(payload.get("usage"), dict) else {}
         hidden = getattr(response, "_hidden_params", {})
-        cost = hidden.get("response_cost")
+        # OpenRouter reports charges in usage.cost. Some LiteLLM versions also
+        # copy them into hidden metadata; the generic adapter need not do so.
+        # Prefer the explicit provider amount, including zero, over an adapter
+        # estimate. An absent amount remains unknown rather than becoming free.
+        cost = usage.get("cost")
+        cost_source = "provider_reported_usage"
+        if cost is None:
+            cost = hidden.get("response_cost")
+            cost_source = (
+                "adapter_reported_unspecified" if cost is not None else "unknown"
+            )
         # The native OpenRouter adapter moves this field into hidden metadata;
         # the generic OpenAI-compatible adapter retains it on the response body.
         upstream_provider = hidden.get("upstream_provider") or payload.get("provider")
@@ -408,9 +418,7 @@ class ModelClient:
                 if isinstance(upstream_provider, str)
                 else None,
                 "cost": cost,
-                "cost_source": "adapter_reported_unspecified"
-                if cost is not None
-                else "unknown",
+                "cost_source": cost_source,
                 "finish_reason": choice.get("finish_reason"),
                 "latency_seconds": round(time.monotonic() - started, 6),
             }

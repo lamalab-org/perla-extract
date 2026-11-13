@@ -310,6 +310,28 @@ def test_retry_request_is_checked_against_context_limit(tmp_path, monkeypatch):
     assert model_client.calls[0]["usage"]["total_tokens"] == 150
 
 
+@pytest.mark.parametrize("reported", [0.0, 0.0123])
+def test_provider_reported_cost_takes_precedence_over_adapter_estimate(
+    tmp_path, monkeypatch, reported
+):
+    payload = response({"value": 7}).model_dump()
+    payload["usage"]["cost"] = reported
+    monkeypatch.setattr(
+        litellm,
+        "completion",
+        lambda **kwargs: SimpleNamespace(
+            model_dump=lambda: payload,
+            _hidden_params={"response_cost": 1.0},
+        ),
+    )
+    model_client = client(tmp_path)
+    complete(model_client)
+    usage = summarize_calls(model_client.calls)
+    assert usage["total_cost_usd"] == reported
+    assert usage["cost_sources"] == ["provider_reported_usage"]
+    assert usage["cost_tracking_complete"]
+
+
 def test_input_limit_includes_system_and_response_schema(tmp_path, monkeypatch):
     estimate = estimate_request_input(
         "System instructions", "Evidence", strict_response_schema(Answer)
