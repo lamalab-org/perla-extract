@@ -48,6 +48,40 @@ def scientific_value_text(value: str) -> str:
     return text
 
 
+_MANTISSA = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)"
+_NUMBER = rf"{_MANTISSA}(?:[eE][+-]?\d+)?"
+_SCIENTIFIC_NUMBER = re.compile(
+    rf"({_MANTISSA})\s*(?:×|\\times)\s*10\s*"
+    r"(?:\^\{([+-]?\d+)\}|\^([+-]?\d+)|([+-]\s*\d+)|([⁺⁻]?[⁰¹²³⁴⁵⁶⁷⁸⁹]+))"
+)
+_SUPERSCRIPT_DIGITS = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺", "0123456789-+")
+
+
+def _quantity_text(raw: str) -> str:
+    """Read printed powers of ten without changing the literal claim.
+
+    A signed baseline exponent covers PDF text such as ``2 × 10 -6``. The
+    caller must still match the entire scalar/range/uncertainty and check any
+    supplied number and unit. Prose, bounds and statistical qualifiers survive.
+    """
+
+    def exponent(match: re.Match) -> str:
+        power = next(group for group in match.groups()[1:] if group is not None)
+        return match[1] + "e" + power.translate(_SUPERSCRIPT_DIGITS).replace(" ", "")
+
+    return _SCIENTIFIC_NUMBER.sub(exponent, scientific_text(raw))
+
+
+def _finite_number(text: str) -> float | None:
+    """Reject overflow and nonzero magnitudes that would underflow to zero."""
+
+    number = float(text)
+    nonzero_mantissa = any(c in "123456789" for c in text.lower().split("e")[0])
+    if not math.isfinite(number) or (number == 0 and nonzero_mantissa):
+        return None
+    return number
+
+
 def is_plain_number(value: ReportedValue) -> bool:
     """Allow unit conversion only for a single unqualified, internally consistent number.
 
@@ -57,13 +91,14 @@ def is_plain_number(value: ReportedValue) -> bool:
     must never qualify as a parsed zero, regardless of the chosen unit.
     """
 
-    raw = scientific_text(value.raw_value)
-    match = re.fullmatch(r"([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*(.*)", raw)
+    match = re.fullmatch(rf"({_NUMBER})\s*(.*)", _quantity_text(value.raw_value))
+    number = _finite_number(match[1]) if match else None
     return bool(
         match
+        and number is not None
         and value.value_number is not None
         and math.isfinite(value.value_number)
-        and math.isclose(float(match[1]), value.value_number, rel_tol=1e-9, abs_tol=0.0)
+        and math.isclose(number, value.value_number, rel_tol=1e-9, abs_tol=0.0)
         and (
             scientific_text(match[2]) in {"", scientific_text(value.unit or "")}
             or (
@@ -74,7 +109,6 @@ def is_plain_number(value: ReportedValue) -> bool:
     )
 
 
-_NUMBER = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
 _COMPOUND_QUANTITY = re.compile(
     rf"({_NUMBER})\s*(±|\+/-|–|—|\bto\b|-)\s*({_NUMBER})\s*(.*)"
 )
@@ -92,24 +126,28 @@ def compound_quantity(
     Anything outside this grammar retains the existing literal comparison.
     """
 
-    match = _COMPOUND_QUANTITY.fullmatch(scientific_text(value.raw_value))
+    match = _COMPOUND_QUANTITY.fullmatch(_quantity_text(value.raw_value))
     if match is None:
         return None
-    first, second = float(match[1]), float(match[3])
+    first, second = _finite_number(match[1]), _finite_number(match[3])
+    if first is None or second is None:
+        return None
     kind: Literal["range", "uncertainty"] = (
         "uncertainty" if match[2] in {"±", "+/-"} else "range"
     )
-    suffix = match[4]
-    if suffix and (
-        value.unit is None
-        or (
-            scientific_text(suffix) != scientific_text(value.unit)
-            and not equivalent_unit_spelling(suffix, value.unit)
+    suffix, unit = match[4], value.unit
+    if (
+        suffix
+        and unit is not None
+        and (
+            scientific_text(suffix) != scientific_text(unit)
+            and not equivalent_unit_spelling(suffix, unit)
         )
     ):
         return None
-    if not all(math.isfinite(number) for number in (first, second)):
-        return None
+    # A unit explicitly present in the raw claim needs no redundant unit field.
+    # Unknown suffixes still fail canonical conversion below and remain literal.
+    unit = unit if unit is not None else suffix or None
     if kind == "range":
         if first > second or value.value_number is not None:
             return None
@@ -118,13 +156,13 @@ def compound_quantity(
         and not math.isclose(first, value.value_number, rel_tol=1e-9, abs_tol=0)
     ):
         return None
-    if value.unit is None:
+    if unit is None:
         return kind, first, second, None
-    a, b = canonical_quantity(first, value.unit), canonical_quantity(second, value.unit)
+    a, b = canonical_quantity(first, unit), canonical_quantity(second, unit)
     if a is None or b is None:
         return None
     if kind == "uncertainty":
-        zero, one, two = (canonical_quantity(n, value.unit) for n in (0, 1, 2))
+        zero, one, two = (canonical_quantity(n, unit) for n in (0, 1, 2))
         if zero is None or one is None or two is None:
             return None
         # An error bar of 1 °C is 1 K, not 274.15 K. Reject nonlinear/log units.
@@ -208,17 +246,19 @@ def _normalize_fields(
     )
     # A null convenience field does not erase information explicitly present in
     # the raw claim. Parse only a complete scalar; a raw unit must be recognized.
-    # never replace conflicting supplied numbers or units. This is scorer-local:
+    # Never replace conflicting supplied numbers or units. This is scorer-local:
     # the prediction and its content hash retain the original missing fields.
     match = (
-        re.fullmatch(rf"({_NUMBER})\s*([A-Za-zµμ°℃%].*)?", literal.raw_text)
+        re.fullmatch(
+            rf"({_NUMBER})\s*([A-Za-zµμ°℃%ΩΩÅ].*)?", _quantity_text(value.raw_value)
+        )
         if value.value_number is None or value.unit is None
         else None
     )
     if match:
-        number, suffix = float(match[1]), (match[2] or "").strip()
+        number, suffix = _finite_number(match[1]), (match[2] or "").strip()
         if (
-            math.isfinite(number)
+            number is not None
             and (not suffix or canonical_quantity(number, suffix) is not None)
             and (
                 value.value_number is None

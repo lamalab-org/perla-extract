@@ -80,8 +80,8 @@ You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results.
 
-Reports use format 8, matcher `rich-study-hungarian-v10` and fact profile
-`core-scientific-facts-v7`. Regenerate older reports from saved predictions before
+Reports use format 8, matcher `rich-study-hungarian-v11` and fact profile
+`core-scientific-facts-v8`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
@@ -388,6 +388,15 @@ fields are null. The scorer fills only missing convenience fields internally;
 supplied contradictory fields remain mismatches. It never changes the saved
 prediction. A unit absent from both raw text and the unit field stays missing.
 
+Printed powers of ten such as `2 × 10⁻⁶ mbar`, `2 × 10^{-6} mbar` and the
+PDF-text form `2 × 10 -6 mbar` agree with `2e-6 mbar`. The complete claim must
+still be an unqualified scalar, range or symmetric uncertainty. A changed exponent,
+inequality or contradictory parsed number is not repaired.
+Explicit sheet-resistance spellings such as `Ω sq−1`, `Ω/□` and `ohms per square`
+are recognized; `Ω/m²` retains its different dimension. The property name must
+still agree. See the [Keithley measurement guide](https://download.tek.com/document/Resistivity%20Mesrmnts%20using%202450%20AppNote.pdf)
+for the ohms-per-square convention.
+
 If both units are absent from the entire claim, eligible numbers can match without conversion. If only
 one unit is missing, they cannot. If a unit is unrecognized, the scorer requires
 equal normalized raw text and identical unit strings rather than guessing a conversion.
@@ -402,8 +411,9 @@ meaningful.
 The scorer compares a range's two endpoints, or an uncertainty's centre and spread.
 It never substitutes either claim for a single number. It accepts two finite numbers
 joined by `–`, `—`, `-` or `to` for ranges, and `±` or `+/-` for symmetric uncertainty.
-An optional trailing unit must agree with the separate unit field at the same scale
-and offset. A range must have ordered endpoints and `value_number: null`. For an
+An optional trailing unit must agree with a supplied separate unit field at the same
+scale and offset; a missing unit field can use the explicit trailing unit. A range
+must have ordered endpoints and `value_number: null`. For an
 uncertainty, the spread must be nonnegative; a supplied `value_number` must agree
 with the centre. The same scoring tolerances apply separately to both components.
 

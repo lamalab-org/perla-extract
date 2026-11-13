@@ -62,7 +62,17 @@ def _pint_unit(unit: str) -> str:
     # Plain-text exports often lose superscripting: cm2 and mm3 are unit powers.
     value = re.sub(r"([A-Za-z]+)(\d+)(?=\s|$|[/)*])", r"\1**\2", value)
     value = re.sub(r"(?<=[A-Za-z])([+-]\d+)(?=\s|$|[/)*])", r"**\1", value)
-    return re.sub(r"(?<=[A-Za-z])\s+([+-]?\d+)(?=\s|$|[/)*])", r"**\1", value)
+    value = re.sub(r"(?<=[A-Za-z])\s+([+-]?\d+)(?=\s|$|[/)*])", r"**\1", value)
+    # Sheet resistance uses ohms per square, not ohms per square metre. Restrict
+    # this notation rule to a complete resistance unit so area/volume resistivity
+    # and unrelated uses of "square" retain their dimensions. Property names are
+    # checked separately by the scorer.
+    sheet = re.fullmatch(
+        r"([kMmµμu]?(?:Ω|Ω|ohms?))\s*"
+        r"(?:(?:/|per)\s*(?:sq|square|□)|(?:sq|square)\s*\*\*-1)",
+        value,
+    )
+    return sheet[1].replace("Ω", "Ω") if sheet else value
 
 
 def convert_reported_value(value: ReportedValue, target_unit: str) -> float | None:

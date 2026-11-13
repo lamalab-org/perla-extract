@@ -124,8 +124,8 @@ def test_reference_score_invariance_and_negative_controls(release, index, paper)
     # rewrite a frozen reference just to change that historical metadata.
     assert index["matcher_version"] == "rich-study-hungarian-v6"
     assert index["fact_profile"] == "core-scientific-facts-v4"
-    assert same.matcher_version == "rich-study-hungarian-v10"
-    assert same.core_facts.profile == "core-scientific-facts-v7"
+    assert same.matcher_version == "rich-study-hungarian-v11"
+    assert same.core_facts.profile == "core-scientific-facts-v8"
     assert same.core_facts.micro.f1 == 1 and not same.core_facts.issues
     reordered = StudyExtraction.model_validate(
         _rename_and_reorder(truth.model_dump(mode="json"))

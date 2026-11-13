@@ -52,7 +52,7 @@ from .scoring_facts import (
 from .scoring_vocabulary import material_name
 
 EVALUATION_FORMAT_VERSION: Final[Literal[8]] = 8
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v10"]] = "rich-study-hungarian-v10"
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v11"]] = "rich-study-hungarian-v11"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -350,7 +350,7 @@ class CoreFactScore(FactScoreView):
     counts remain available so large recipes cannot hide poor performance extraction.
     """
 
-    profile: Literal["core-scientific-facts-v7"] = "core-scientific-facts-v7"
+    profile: Literal["core-scientific-facts-v8"] = "core-scientific-facts-v8"
     value_only: FactScoreView
     attribution: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
@@ -377,7 +377,7 @@ class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
     format_version: Literal[8] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v10"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v11"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -458,7 +458,7 @@ class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
     format_version: Literal[8] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v10"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v11"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)

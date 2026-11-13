@@ -134,6 +134,14 @@ owner-independent value recovery. `test_scoring_recovery.py` specifies positive
 and negative cases independently of a live model run. Regenerate all compared
 reports under the same policy; never rewrite frozen references or old scores.
 
+Matcher v11 / fact profile v8 additionally recognizes printed powers of ten,
+complete ranges/uncertainties with units stated only in raw text, and explicit
+ohms-per-square notation. `test_scoring_quantity_notation.py` checks equivalent
+representations in both directions through the public scorer, alongside changed
+exponents, dimensions, uncertainty widths, qualifiers and conflicting parsed fields.
+The raw inputs remain unchanged. These rules do not equate free-text process names
+or change specimen, sequence or population requirements.
+
 Before this policy change, the v9 refactor was audited against the original `2b1d81c` scorer with 118 full-report
 comparisons across all 30 frozen v2/dev papers. Every report was identical within
 each of two tested environments (Pydantic 2.12.5/Pint 0.25.2 and Pydantic 2.14.3/Pint
@@ -141,3 +149,31 @@ each of two tested environments (Pydantic 2.12.5/Pint 0.25.2 and Pydantic 2.14.3
 raw full-report hashes can differ across dependency versions. This parity check
 does not prove that the old scorer was scientifically correct: the hand-checked
 positive/negative cases remain the scientific oracle.
+
+## Remaining scientific validation work
+
+The November 2026 review found limitations beyond numeric notation. These are
+design changes to validate before treating strict F1 as representation-independent
+scientific accuracy, not reasons to relax matching globally.
+
+| Priority | Observed limitation | Proposed change and acceptance test |
+| --- | --- | --- |
+| 1 | Non-family record pairing still depends on quantities and annotation completeness. Removing 35 device properties in a synthetic case also removes credit for its unchanged PCE. | Establish device/protocol identity before comparing outcomes. Missing properties should lose only their own credit; identical unresolved specimens must remain ambiguous and swapped outcomes must still fail. |
+| 2 | Process wording and absolute sequence numbers gate all dependent facts. Removing a middle step and renumbering the remaining two cuts their matched facts from 4 to 2, despite preserved relative order. | Represent operation, method and target separately; align ordered steps with gaps. Preserve reversal and repeated-step ambiguity checks, and never use the condition being scored to choose its owner. |
+| 3 | Free-text property names and roles can reject equivalent scientific statements. The current quantity parser cannot settle these disagreements. | Curate scoped concept mappings using independently reviewed examples across papers. Keep unknown concepts literal; test chemically similar but distinct concepts and freeze mappings before model comparisons. |
+| 4 | The denominator counts schema fields. The same statement can occur under a layer and its linked absorber and count twice. | Define a canonical fact inventory with all source paths retained, or explicitly report the current metric as schema-field agreement. Test duplication, omitted redundant representations and truly distinct layers before changing counts. |
+
+The thermal-instability paper (DOI `10.1002/aenm.201500477`, page 6) also supplies
+important negative controls: batch results must not become individual-device
+measurements, and degradation before device completion must not become a completed-
+device stability test. Qwen made both errors; its correct numbers do not justify
+strict attribution credit. The four cleaning materials were recovered, but different
+representations of the sonication operation blocked their processing credit.
+
+For calibration, sample disagreements across papers, models and score groups and
+have independent reviewers label value, property, owner, protocol and source support
+separately. Compare scorer decisions with those labels, including false matches as
+well as missed matches. Keep papers used for these changes out of held-out claims.
+The existing 30-paper transformation controls are regression checks, not that
+independent calibration. Improve the error report to distinguish representation
+disagreements, incorrect values, incorrect associations and genuinely absent facts.

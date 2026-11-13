@@ -95,8 +95,10 @@ thicknesses as equal. It does not represent experimental uncertainty. Ranges and
 symmetric uncertainties compare both components after conversion. Simple chemical
 formulas accept numeric LaTeX subscripts. Checked material names and redundant
 layer-property qualifiers are normalized by a small versioned vocabulary;
-unfamiliar descriptions remain literal. A unit explicitly present in a raw scalar
-can supply a missing parsed field, but conflicting supplied fields are not repaired.
+unfamiliar descriptions remain literal. Printed powers of ten and explicit
+ohms-per-square notation are recognized. A unit explicitly present in a raw scalar,
+range or uncertainty can supply a missing unit field, but conflicting supplied
+fields are not repaired.
 The [scoring reference](../workflows/evaluation.md)
 gives examples and the full matching algorithm.
 

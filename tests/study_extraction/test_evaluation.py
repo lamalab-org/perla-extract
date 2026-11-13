@@ -1482,7 +1482,7 @@ def test_old_scoring_report_is_not_silently_loaded_as_current():
 
     payload = evaluate_study(study(), study()).model_dump()
     assert payload["format_version"] == 8
-    assert payload["core_facts"]["profile"] == "core-scientific-facts-v7"
+    assert payload["core_facts"]["profile"] == "core-scientific-facts-v8"
     payload["format_version"] = 5
     with pytest.raises(ValidationError):
         EvaluationReport.model_validate(payload)
