@@ -30,15 +30,28 @@ claim_recall_passes = 1
 claim_recall_passes = 2
 
 [[papers]]
-pdf = "papers/PAPER_ID.pdf"
-supplement = "papers/PAPER_ID-SI.pdf"
-reference = "data/study_extraction/ground_truth/v2/dev/PAPER_ID"
+pdf = "papers/10.1002--adfm.201904856.pdf"
+supplement = "papers/10.1002--adfm.201904856-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1002--adfm.201904856"
 ```
 
 `[extraction]` applies to both arms; `[control]` and `[treatment]` change only the
-settings written there. Add another `[[papers]]` block for another paper. Remove
-`supplement` when there is no SI. Paths are relative to this file. Each reference
-must be finalized and identify the same PDF/SI bytes.
+settings written there.
+
+**One `[[papers]]` block is one explicit match:**
+
+| Field | What belongs here |
+| --- | --- |
+| `pdf` | Main article PDF |
+| `supplement` | That article's SI PDF; omit only when the reference has no SI |
+| `reference` | Reviewed ground-truth directory containing `ground_truth.json` and `manifest.json` for the combined paper and SI |
+
+Add one block per paper. Paths are relative to the TOML file; filenames do not
+need to match each other. The fields assign the main/SI roles. The reference's
+manifest supplies the paper ID and source fingerprints; checks verify the source
+file set, not their roles. The example uses a real included reference, but the
+original PDFs are not distributed with it. Use those original files, not a
+re-saved copy, and do not change the reference hashes to bypass a mismatch.
 
 ## 2. Check, then run
 
@@ -49,7 +62,7 @@ perla-experiment experiment.toml --check
 perla-experiment experiment.toml
 ```
 
-The check prints the exact changes and total run count. It validates every input
+The check shows every paper → SI → ground-truth mapping, the exact changes and total run count. It validates every input
 and configuration without parsing PDFs, creating outputs or calling a model.
 The second command makes model calls. `max_model_calls` limits requests **per run**;
 other [resource limits](open-models.md#understand-context-and-resource-limits) use the

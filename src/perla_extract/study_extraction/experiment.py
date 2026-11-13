@@ -142,12 +142,26 @@ def prepare(path: Path) -> Experiment:
             raise ValueError(f"Duplicate reference paper: {benchmark.paper_id}")
         paper_ids.append(benchmark.paper_id)
         splits.add(benchmark.split)
+        missing = [
+            f"  {role}: {source}"
+            for role, source in (("pdf", pdf), ("supplement", supplement))
+            if source is not None and not source.is_file()
+        ]
+        if missing:
+            raise ValueError(
+                f"{benchmark.paper_id}: source files missing for reference {reference}:\n"
+                + "\n".join(missing)
+                + "\nSet this [[papers]] block's paths to the original main PDF and SI. "
+                "The reference directory contains reviewed answers, not source PDFs."
+            )
         hashes = [
             file_digest(source) for source in (pdf, supplement) if source is not None
         ]
         if sorted(hashes) != sorted(benchmark.source_sha256):
             raise ValueError(
-                f"{benchmark.paper_id}: PDF/SI bytes do not match the reference sources"
+                f"{benchmark.paper_id}: PDF/SI bytes do not match the reference sources. "
+                f"Reference: {reference}; pdf: {pdf}; supplement: {supplement or 'none'}. "
+                "Use the original source files recorded by this reference, including its SI."
             )
         if seen_sources.intersection(hashes):
             raise ValueError(
@@ -316,6 +330,26 @@ def execute(experiment: Experiment) -> dict:
     return result
 
 
+def _show_input_mapping(experiment: Experiment) -> None:
+    """Show each source pair and its scoring reference once, before model calls."""
+    click.echo("Paper/SI/reference mapping (source fingerprints verified):")
+    for attempt in experiment.attempts:
+        if attempt.arm != "control" or attempt.repeat != 1:
+            continue
+        click.echo(f"  {attempt.paper_id}")
+        for label, path in (
+            ("Paper", attempt.config.pdf),
+            ("SI", attempt.config.supplement),
+            ("Ground truth", attempt.reference),
+        ):
+            shown = (
+                path.relative_to(experiment.source.parent)
+                if path is not None and path.is_relative_to(experiment.source.parent)
+                else path
+            )
+            click.echo(f"    {label}: {shown if shown is not None else 'none'}")
+
+
 @click.command()
 @click.argument(
     "experiment_file", type=click.Path(path_type=Path, exists=True, dir_okay=False)
@@ -323,13 +357,14 @@ def execute(experiment: Experiment) -> dict:
 @click.option(
     "--check",
     is_flag=True,
-    help="Check all files and settings without parsing PDFs, creating output or calling a model.",
+    help="Verify and show paper/SI/reference matches without parsing PDFs, creating output or calling a model.",
 )
 def main(experiment_file: Path, check: bool) -> None:
     """Extract, score and compare both arms of EXPERIMENT_FILE."""
     configure_logging(level="INFO", json_output=False)
     try:
         experiment = prepare(experiment_file)
+        _show_input_mapping(experiment)
         click.echo(
             f"{len(experiment.study.paper_ids)} paper(s) × 2 arms × {experiment.study.repeats} repeat(s) = {len(experiment.attempts)} runs"
         )

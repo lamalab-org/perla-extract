@@ -67,7 +67,11 @@ reference = {json.dumps(str(reference.relative_to(tmp_path)))}
             output / "run_configuration.json",
             {
                 "scientific_settings": config.scientific_settings(),
-                "source_sha256": [file_digest(pdf)],
+                "source_sha256": [
+                    file_digest(source)
+                    for source in (config.pdf, config.supplement)
+                    if source is not None
+                ],
                 "evidence_spans_sha256": "a" * 64,
             },
         )
@@ -137,6 +141,60 @@ def test_source_mismatch_is_rejected_before_any_output_or_paid_work(setup):
     result = CliRunner().invoke(experiment.main, [str(path)])
     assert result.exit_code == 1
     assert "do not match the reference sources" in result.output
+    assert calls == []
+    assert not (path.parent / "results").exists()
+
+
+def test_explicit_paper_si_reference_match_is_shown_and_scored(setup):
+    path, calls, _ = setup
+    # Deliberately unrelated filenames: the TOML block declares the relationship.
+    supplement = path.parent / "supporting measurements.pdf"
+    supplement.write_bytes(b"Synthetic SI; parsing is replaced in this unit test")
+    reference = path.parent / "example/truth/dev/10.0000--synthetic"
+    manifest_path = reference / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["source_manifest"]["source_sha256"].append(file_digest(supplement))
+    manifest_path.write_text(json.dumps(manifest))
+    path.write_text(path.read_text() + f"supplement = {json.dumps(supplement.name)}\n")
+
+    checked = CliRunner().invoke(experiment.main, [str(path), "--check"])
+    assert checked.exit_code == 0, checked.output
+    assert checked.output.count("Ground truth:") == 1
+    assert "Paper: paper with spaces.pdf" in checked.output
+    assert "SI: supporting measurements.pdf" in checked.output
+    assert "Ground truth: example/truth/dev/10.0000--synthetic" in checked.output
+    assert calls == []
+    assert not (path.parent / "results").exists()
+
+    result = CliRunner().invoke(experiment.main, [str(path)])
+    assert result.exit_code == 0, result.output
+    assert all(config.supplement == supplement for config in calls)
+    report = json.loads((path.parent / "results/comparison.json").read_text())
+    assert report["quality_status"] == "ready"
+
+
+@pytest.mark.parametrize("problem", ["missing", "wrong", "omitted"])
+def test_bad_si_match_stops_before_any_output_or_paid_work(setup, problem):
+    path, calls, _ = setup
+    supplement = path.parent / "supporting measurements.pdf"
+    supplement.write_bytes(b"Expected synthetic SI")
+    manifest_path = path.parent / "example/truth/dev/10.0000--synthetic/manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["source_manifest"]["source_sha256"].append(file_digest(supplement))
+    manifest_path.write_text(json.dumps(manifest))
+    if problem != "omitted":
+        path.write_text(
+            path.read_text() + f"supplement = {json.dumps(supplement.name)}\n"
+        )
+    if problem == "missing":
+        supplement.unlink()
+    elif problem == "wrong":
+        supplement.write_bytes(b"SI from a different paper")
+
+    result = CliRunner().invoke(experiment.main, [str(path)])
+    assert result.exit_code == 1
+    expected = "source files missing" if problem == "missing" else "do not match"
+    assert expected in result.output
     assert calls == []
     assert not (path.parent / "results").exists()
 

@@ -170,12 +170,16 @@ perla-experiment experiment.toml
 
 The single TOML defines shared `[extraction]` settings, `[control]` and `[treatment]`
 overrides, and `[[papers]]` with `pdf`, optional `supplement`, and `reference` paths.
+Each paper block explicitly links the main article, its SI, and the reviewed
+ground-truth directory for both sources. Filenames need not share a stem. The
+reference manifest supplies the paper ID; source hashes verify the file set,
+while the TOML fields assign the main/SI roles.
 Paths are relative to the TOML file. `output` names a new results directory;
 `repeats` defaults to 1 and `order_seed` to 0. Shared `[stages]` and `[tracing]` use
 the extraction configuration format; `[control.stages.NAME]` or
 `[treatment.stages.NAME]` override a stage in one arm.
 
-`--check` validates every source/reference hash and setting without parsing PDFs,
+`--check` prints the validated paper/SI/reference mapping and checks every source/reference hash and setting without parsing PDFs,
 creating outputs or making model calls. Running freezes the intended roster before
 extraction, assigns independent response caches, scores each usable result and
 writes comparison/figure data. Failed attempts remain visible and prevent a complete

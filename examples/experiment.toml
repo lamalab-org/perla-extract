@@ -1,4 +1,5 @@
 # Copy to the repository root as experiment.toml, then set your input paths.
+# This reference is included; its original paper and SI PDFs must be supplied.
 output = "results/readings"
 repeats = 1
 
@@ -15,6 +16,6 @@ claim_recall_passes = 1
 claim_recall_passes = 2
 
 [[papers]]
-pdf = "papers/PAPER_ID.pdf"
-supplement = "papers/PAPER_ID-SI.pdf" # Delete this line if the paper has no SI.
-reference = "data/study_extraction/ground_truth/v2/dev/PAPER_ID"
+pdf = "papers/10.1002--adfm.201904856.pdf"
+supplement = "papers/10.1002--adfm.201904856-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1002--adfm.201904856"
