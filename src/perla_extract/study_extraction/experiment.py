@@ -344,6 +344,11 @@ def main(experiment_file: Path, check: bool) -> None:
             )
             return
         result = execute(experiment)
+        if result["quality"] is not None:
+            delta = result["quality"]["mean_paired_macro_f1_delta"]
+            click.echo(
+                f"Mean paired macro-F1 change (treatment − control): {delta:+.4f}"
+            )
         click.echo(f"Comparison: {experiment.output / 'comparison.json'}")
         click.echo(f"Figure data: {experiment.output / 'figure-data'}")
         if result["issues"]:
