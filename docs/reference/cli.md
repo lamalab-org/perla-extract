@@ -164,7 +164,7 @@ See [open models and tracing](../workflows/open-models.md) for a complete exampl
 ## Compare experiments
 
 ```bash
-perla-compare runs.csv --factor claim_recall_passes --output comparison.json --tables-dir figure-data
+perla-compare runs.csv --study study.json --output comparison.json --tables-dir figure-data
 ```
 
 The roster requires `paper_id,arm,repeat,run_dir`; paths are relative to the CSV.
@@ -172,6 +172,11 @@ An optional `role` column distinguishes `paired` scores from additional
 `accounting_only` attempts, whose repeat may be blank.
 Each run is scored into its own `evaluation.json`. The comparison verifies sealed
 configuration, output and accounting identities, then computes paired paper differences.
+The required study JSON declares `paper_ids`, the positive integer `repeats`, and
+`factors` mapping each changed setting to its expected `control` and `treatment`
+values. Missing/extra pairs, wrong arm values, undeclared differences and settings
+that drift across papers/repeats within an arm block the quality aggregate.
+The report and figure metadata retain the study contents and hash.
 Missing quality and missing cost remain separate. See the [ablation guide](../workflows/extraction-ablations.md).
 
 Run `perla-extract --help` to see the complete installed command interface.

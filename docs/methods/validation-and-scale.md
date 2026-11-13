@@ -97,7 +97,74 @@ A scorer change requires rescoring all compared systems with that version.
 Keep algorithm changes separate from reference amendments. Do not tune tolerances
 or manual pairings to favor a candidate.
 
+### Prepare a sample for independent experts
+
+From the repository root, use the scoring environment to sample an already scored
+run. Choose papers, runs, the sample size and seed before inspecting individual
+scorer errors:
+
+```bash
+PYTHONPATH=.:src python -m examples.scoring.sample_review \
+  --truth data/study_extraction/ground_truth/v2/dev/PAPER_ID \
+  --prediction runs/PAPER_ID/control-1 \
+  --per-stratum 5 --seed 17 --output calibration/anonymous-candidate-01
+```
+
+The command verifies that `evaluation.json` matches the reference and sealed run.
+It samples without replacement within each scientific group and whether the scorer
+awarded credit. Each nonempty stratum contributes at most `--per-stratum` fields.
+An existing output directory is refused. It makes no model calls and supplies no
+expert labels.
+
+Give reviewers **only `review/`**, plus the original PDF and SI. It contains complete
+`candidate.json` and `reference.json` scientific records, and `judgments.csv` listing
+the sampled prediction paths in shuffled order. Filenames and the CSV omit the model
+name, arm and scorer decisions. Check that scientific prose does not itself reveal
+the candidate's origin. Keep `analyst-key.json` private until judgments are locked;
+it binds the sample to input hashes and retains credit decisions, stratum sizes and
+inclusion probabilities. Give each reviewer a separate copy and adjudicate disagreements.
+
+For each path, inspect the full linked records and sources. Fill the first five
+judgment fields with `yes`, `no` or `uncertain`:
+
+| Field | Question |
+| --- | --- |
+| `same_identity` | Does the candidate describe the same device, cohort or experiment as a reference counterpart? |
+| `equivalent_value` | Do value, units and qualifiers express the same scientific claim? |
+| `correct_attribution` | Is it assigned to the correct material, protocol and statistical level? |
+| `credit_should_be_awarded` | Should this field earn credit under the declared value-and-context, one-to-one matching rule? |
+| `reference_supported` | Does source evidence support the reference used for this judgment? |
+
+Use `source_accessibility` values `text_or_table`, `figure_only`, `both` or `uncertain`.
+Add a main/SI page or figure identifier in `source_location` and explain disagreement
+or uncertainty in `reason`. Do not copy the scorer's decision into these columns.
+This sample evaluates credit for **predicted fields**; it does not measure recall
+or establish that the reference covers all source information. Run a separate
+source-first omission audit for those questions.
+
+After locking judgments, join them to the analyst key by `item_id`. Report incorrect
+credit among sampled awarded fields and missed credit among sampled denied fields,
+separately for every group. Unequal stratum sampling needs weights of
+`1 / inclusion_probability` to estimate rates within the sampled runs. Report
+uncertain judgments and reference defects separately; do not silently turn them
+into correct decisions. Choosing papers purposively does not support corpus-wide
+error rates, and fields within a paper are not independent replicates.
+
+To rehearse the mechanics without claiming expert validation, run the
+[offline scoring example](../workflows/scoring-example.md), then use its
+`truth/dev/10.0000--synthetic` and `predictions/wrong_scan` directories as inputs.
+The resulting judgment columns remain empty until a person reviews them.
+
 ## 3. Compare one choice at a time
+
+First test whether the full pipeline improves on direct source-to-study extraction.
+`examples/ablations/00-direct-baseline.toml` disables source reading, refinement,
+targeted repair and enrichment together. Use it for the control and the ordinary
+defaults for the treatment, with all four expected `false` → `true` factors in the
+study JSON. Hold model, parser, source scope and resource limits fixed. A direct
+request that exceeds its context budget is a retained failure, not permission to
+truncate the source or remove that paper. This combined comparison establishes a
+baseline; it cannot attribute a difference to any one stage.
 
 The [four ablation studies](../workflows/extraction-ablations.md) isolate:
 
@@ -108,21 +175,30 @@ The [four ablation studies](../workflows/extraction-ablations.md) isolate:
 | 3 | Claim ledger versus direct source input | Other enabled stages and budgets |
 | 4 | Cheaper claim reader | Strong assembly, repair, refinement and enrichment |
 
-Before running, save the selected paper IDs, arm configurations, scorer settings,
-repeat count, retry policy and primary comparison in a versioned study protocol.
+Report the quality/resource tradeoff at the declared limits. If also asking whether
+a stage helps at equal expenditure, run a separate budget-matched study and state
+the matching rule in advance. An extra reading can improve results simply by using
+more computation. Enrichment's downstream utility requires its own scientific
+outcomes; core extraction F1 does not validate the interpreted chemistry.
+
+Before running, save the selected paper IDs, repeat count and expected factor values
+for both arms in `study.json`, as shown in the [ablation guide](../workflows/extraction-ablations.md).
+Keep arm configurations, scorer settings, retry policy and primary comparison in
+the same versioned study protocol.
 Randomize or counterbalance execution order and give every attempt a separate model
 cache. These are researcher responsibilities in the current TOML-and-CSV workflow;
 there is no experiment planner that freezes or randomizes them automatically.
 
-`perla-compare` verifies saved run artifacts, requires the same source and evidence
-hashes within each pair, checks scorer/reference compatibility, and rejects settings
-that differ outside the declared factors. It requires both arms for every listed
-paper/repeat. It does not compare the CSV with a prospectively frozen cohort or
-verify that factor values and their direction are consistent across all papers.
-Inspect the saved configuration differences against the study protocol before
-interpreting an aggregate effect. A whole omitted pair cannot be detected from the
-remaining CSV alone. For full-release dataset reporting, `perla-evaluate-dataset
---release` separately enforces the published roster and reference hashes.
+`perla-compare --study study.json` verifies saved run artifacts, requires the same
+source and evidence hashes within each pair, checks scorer/reference compatibility,
+and rejects settings that differ outside the declared factors. It compares the CSV
+with every declared paper/repeat, checks the expected value of each factor in each
+arm, and requires consistent settings within each arm across papers and repeats.
+Omitting a whole pair or reversing the intervention blocks quality aggregation.
+The full declaration and its hash accompany the results. These checks cannot prove
+that the protocol was written prospectively or that the references are correct.
+For full-release dataset reporting, `perla-evaluate-dataset --release` separately
+enforces the published roster and reference hashes.
 
 A smaller prespecified pilot remains a pilot, not a full benchmark. Record installed
 dependency versions and provider settings with the clean code revision; neither
@@ -182,7 +258,7 @@ development set; they do not retroactively turn old experiments into held-out te
 | --- | --- | --- |
 | Reference | Versioned exports, preserved corrections, integrity checks, explicit metadata audit | Reconcile source-coverage provenance; targeted checks where that evidence is absent |
 | Scorer | Deterministic contracts, adversarial controls, exact input/version accounting | Measure agreement with experts on actual predictions and semantic edge cases |
-| Ablations | Source/settings checks within listed pairs, paired reporting, cost visibility | Freeze the intended cohort and arm settings, check roster coverage and treatment consistency, run experiments and inspect errors |
+| Ablations | Required cohort/repeat/arm declarations, coverage and setting checks, paired reporting, cost visibility | Freeze the study prospectively, run real experiments and inspect errors |
 | Scale | Existing batch/shard tools and bounded per-run calls | Untouched-paper evaluation, safe campaign operation, production pilot and ongoing audits |
 
 Extraction accuracy and cost at corpus scale still need to be measured.

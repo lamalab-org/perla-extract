@@ -3,7 +3,8 @@
 The roster has paper_id, arm (control/treatment), repeat and run_dir columns. An
 optional role distinguishes paired observations from accounting-only failed or
 abandoned attempts. Paths are relative to the CSV. Run ordinary extraction and
-scoring commands first, then summarize their sealed artifacts here.
+scoring commands first, then compare their sealed artifacts with the study JSON
+that declares the intended papers, repetitions and control/treatment settings.
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ from statistics import mean
 import click
 
 from .artifacts import write_json_exclusive
+from .comparison_study import cohort_issues, load_study, same_setting, setting_issues
 from .evaluation import EvaluationReport, _study_digest, aggregate_evaluations
 from .figure_data import export_tables
 from .models import StudyExtraction
@@ -160,7 +162,7 @@ def read_roster(path: Path) -> list[dict]:
 def summarize(
     roster: Path,
     *,
-    factors: tuple[str, ...] = (),
+    study: Path,
     bootstrap_samples: int = 2000,
     seed: int = 0,
 ) -> dict:
@@ -168,6 +170,8 @@ def summarize(
 
     if bootstrap_samples < 0:
         raise ValueError("bootstrap samples cannot be negative")
+    design = load_study(study)
+    factors = tuple(design.factors)
     rows = read_roster(roster)
     scores, configurations = {}, {}
     for row in rows:
@@ -271,6 +275,10 @@ def summarize(
     paired_rows = [row for row in rows if row["quality_applicable"]]
     papers = sorted({row["paper_id"] for row in paired_rows})
     pairs = sorted({(row["paper_id"], row["repeat"]) for row in paired_rows})
+    roster_issues = cohort_issues(design, set(pairs))
+    study_issues = roster_issues + setting_issues(
+        design, {key: _settings(value) for key, value in configurations.items()}
+    )
     differences = []
     for paper, repeat in pairs:
         keys = [(paper, repeat, arm) for arm in ARMS]
@@ -282,24 +290,24 @@ def summarize(
                     or name not in treatment
                     or control[name] != treatment[name]
                 ):
-                    issues.append(
+                    study_issues.append(
                         f"{paper}/{repeat}: paired runs must bind the same {name}"
                     )
             left, right = _settings(control), _settings(treatment)
             changed = {
                 key: {"control": left.get(key), "treatment": right.get(key)}
                 for key in left.keys() | right.keys()
-                if left.get(key) != right.get(key)
+                if key not in left
+                or key not in right
+                or not same_setting(left[key], right[key])
             }
             differences.append(dict(paper_id=paper, repeat=repeat, fields=changed))
-            if factors:
-                unexpected = set(changed) - set(factors)
-                if unexpected:
-                    issues.append(
-                        f"{paper}/{repeat}: undeclared configuration differences: {', '.join(sorted(unexpected))}"
-                    )
-                if not set(changed) & set(factors):
-                    issues.append(f"{paper}/{repeat}: declared factor did not change")
+            unexpected = set(changed) - set(factors)
+            if unexpected:
+                study_issues.append(
+                    f"{paper}/{repeat}: undeclared configuration differences: {', '.join(sorted(unexpected))}"
+                )
+    issues.extend(study_issues)
     found = list(scores.values())
     if found:
         first = found[0]
@@ -351,10 +359,20 @@ def summarize(
     accounting = {}
     for arm in ARMS:
         arm_rows = [row for row in rows if row["arm"] == arm]
-        complete = all(row["cost_available"] for row in arm_rows)
+        arm_paired = [row for row in arm_rows if row["quality_applicable"]]
+        complete = not roster_issues and all(row["cost_available"] for row in arm_rows)
         known = sum(row.get("accounting", {}).get("cost_usd", 0) for row in arm_rows)
+        paired_complete = sum(
+            row.get("accounting", {}).get("status") == "complete" for row in arm_paired
+        )
         accounting[arm] = dict(
-            planned_runs=sum(row["quality_applicable"] for row in arm_rows),
+            planned_runs=len(design.expected_pairs()),
+            listed_paired_runs=len(arm_paired),
+            paired_complete_runs=paired_complete,
+            paired_scored_runs=sum(row["quality_available"] for row in arm_paired),
+            completion_fraction=paired_complete / len(design.expected_pairs())
+            if not roster_issues
+            else None,
             listed_attempts=len(arm_rows),
             accounting_only_runs=sum(not row["quality_applicable"] for row in arm_rows),
             accounted_runs=sum("accounting" in row for row in arm_rows),
@@ -369,11 +387,19 @@ def summarize(
     control, treatment = (accounting[arm]["total_cost_usd"] for arm in ARMS)
     saving = (
         (control - treatment) / control
-        if control is not None and control > 0 and treatment is not None
+        if not study_issues
+        and control is not None
+        and control > 0
+        and treatment is not None
         else None
     )
     return dict(
         roster_sha256=file_digest(roster),
+        study_sha256=file_digest(study),
+        study=design.model_dump(mode="json"),
+        study_issues=study_issues,
+        study_scope="Checks declarations and saved results; does not certify preregistration or scientific validity",
+        expected_paper_count=len(design.paper_ids),
         paper_count=len(papers),
         factors=list(factors),
         estimand="Equal-paper mean difference in populated-group macro F1; repeats averaged within paper",
@@ -396,10 +422,10 @@ def summarize(
     "--output", type=click.Path(path_type=Path, dir_okay=False), required=True
 )
 @click.option(
-    "--factor",
-    "factors",
-    multiple=True,
-    help="Allowed differing saved setting; repeat for a combined intervention.",
+    "--study",
+    type=click.Path(path_type=Path, exists=True, dir_okay=False),
+    required=True,
+    help="Study JSON declaring paper_ids, repeats and expected control/treatment factor values.",
 )
 @click.option(
     "--bootstrap-samples", type=click.IntRange(min=0), default=2000, show_default=True
@@ -413,7 +439,7 @@ def summarize(
 def main(
     roster: Path,
     output: Path,
-    factors: tuple[str, ...],
+    study: Path,
     bootstrap_samples: int,
     seed: int,
     tables_dir: Path | None,
@@ -424,7 +450,7 @@ def main(
         if tables_dir is not None and tables_dir.exists():
             raise ValueError(f"Table directory already exists: {tables_dir}")
         result = summarize(
-            roster, factors=factors, bootstrap_samples=bootstrap_samples, seed=seed
+            roster, study=study, bootstrap_samples=bootstrap_samples, seed=seed
         )
         write_json_exclusive(output, result)
         if tables_dir is not None:

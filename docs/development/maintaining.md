@@ -83,6 +83,20 @@ maps these events to Langfuse and never initiates model calls. A tracing failure
 disables that exporter and records `telemetry.failed`; it does not erase the local
 journal. [Open models and tracing](../workflows/open-models.md) explains activation.
 
+## Maintain experiment checks
+
+`comparison_study.py` validates the declared papers, repetitions and arm values.
+`comparison.py` verifies saved artifacts, checks the observed settings against that
+declaration, and computes paired results. `figure_data.py` exports those results
+without rescoring them. Keep the declared cohort separate from the observed roster:
+deriving both from successful runs would hide omitted papers. A rejected design
+retains available accounting but cannot produce a paired quality conclusion.
+
+`examples/scoring/sample_review.py` prepares source-linked fields for independent
+expert calibration using the score's actual credit ledger. Its reviewer files have
+blank judgments; the analyst key holds scorer decisions and sampling probabilities.
+See [expert sampling](../methods/validation-and-scale.md#prepare-a-sample-for-independent-experts).
+
 ## Explain a score and change a reviewer field
 
 Run the [worked scoring example](../workflows/scoring-example.md) to obtain a

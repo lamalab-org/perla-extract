@@ -1,0 +1,7 @@
+{
+  "paper_ids": ["PAPER_ID"],
+  "repeats": 1,
+  "factors": {
+    "claim_recall_passes": {"control": 2, "treatment": 1}
+  }
+}

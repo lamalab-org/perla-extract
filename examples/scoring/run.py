@@ -264,6 +264,7 @@ def build_example(output: Path) -> dict:
             {
                 "synthetic": True,
                 "model_calls": 0,
+                "synthetic_candidate": name,
                 # The invented evidence JSON is this example's source, not a PDF.
                 "source_sha256": [file_digest(run / "document.json")],
                 "evidence_spans_sha256": evidence_spans_sha256(
@@ -326,9 +327,22 @@ def build_example(output: Path) -> dict:
         writer.writerow(["paper_id", "arm", "repeat", "run_dir"])
         writer.writerow([PAPER, "control", 1, "predictions/seed"])
         writer.writerow([PAPER, "treatment", 1, "predictions/corrected"])
+    study = output / "study.json"
+    write_json_atomic(
+        study,
+        {
+            "paper_ids": [PAPER],
+            "repeats": 1,
+            "factors": {
+                "synthetic_candidate": {"control": "seed", "treatment": "corrected"}
+            },
+        },
+    )
     compare.main(
         args=[
             str(roster),
+            "--study",
+            str(study),
             "--output",
             str(output / "comparison.json"),
             "--tables-dir",

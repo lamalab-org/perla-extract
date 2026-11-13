@@ -62,7 +62,8 @@ standard credential: `openai/...` with `OPENAI_API_KEY`,
 Use a new output folder for each attempt. A shared TOML file (`--config method.toml`)
 controls stage models and limits; [open-model endpoints and Langfuse tracing](docs/workflows/open-models.md)
 are optional. [Ablations](docs/workflows/extraction-ablations.md) use ordinary runs
-and a CSV roster, with `perla-compare` exporting paired results and plotting tables.
+with a small study JSON declaring the cohort and arm values, plus a CSV roster of
+attempts. `perla-compare` checks that declaration and exports paired results and plotting tables.
 
 This first run selects PyMuPDF explicitly. The default Docling parser performs
 additional layout analysis and can download parser-model weights on first use.

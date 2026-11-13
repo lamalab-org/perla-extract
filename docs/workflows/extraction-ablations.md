@@ -2,8 +2,9 @@
 
 An ablation is an ordinary extraction run with an explicit setting changed. There is
 no separate experiment planner or generated shell program. Save the method as TOML,
-run both arms on the same PDFs, score against the same frozen references, then list
-the attempts in a CSV. Keep failed attempts in that CSV.
+declare the cohort and arm settings in a small study JSON, run both arms on the same
+PDFs, score against the same frozen references, then list the attempts in a CSV.
+Keep failed attempts in that CSV.
 
 ## Start with a complete offline comparison
 
@@ -30,7 +31,7 @@ below use the same parser and resource limits in both arms.
 
 ## Choose a question
 
-| Question | Treatment file | Setting to declare with `--factor` |
+| Question | Treatment file | Factor to declare in the study JSON |
 | --- | --- | --- |
 | Does a second source reading help? | `examples/ablations/01-one-reading.toml` | `claim_recall_passes` |
 | Does full-draft revision help? | `examples/ablations/02-no-refinement.toml` | `use_refinement` |
@@ -55,6 +56,32 @@ Choose a paper ID present in the frozen release. Replace `PAPER_ID` and the sour
 paths below with that paper's actual main PDF and SI. Check that they cover the
 same sources as its reference; the comparison rejects mismatched source hashes.
 An output folder must be new or empty. Dry runs also consume their output folder.
+
+Copy `examples/ablations/study.json` to `study.json` and replace `PAPER_ID`. Before
+running a cohort, list **all** its paper IDs and set the intended repeat count:
+
+```json
+{
+  "paper_ids": ["PAPER_ID"],
+  "repeats": 1,
+  "factors": {
+    "claim_recall_passes": {"control": 2, "treatment": 1}
+  }
+}
+```
+
+Repetitions are numbered `1` through `repeats` for every paper and arm. Factor names
+are the dotted paths in saved scientific settings, such as `deployments.read.model`.
+For a refinement ablation, declare `use_refinement` with the intended boolean values
+instead. Declare every deliberately changed setting, including endpoint or decoding
+changes. Other settings must agree between arms, and each arm must use the same
+settings across papers and repeats. Use separate comparisons for different methods.
+
+Commit the study file with the arm TOMLs, fixed scorer/reference choices and retry
+policy before collecting results. Randomize or counterbalance execution order.
+The comparator stores the study contents and hash; it cannot establish when you
+wrote them or detect attempts you never listed. Do not regenerate the intended
+cohort from the successful runs after execution.
 
 The baseline enables two source-reading passes per window, assembly, full-draft
 revision, targeted repair and enrichment. The treatment changes only the number of
@@ -130,14 +157,22 @@ attempts cannot be inferred. The cohort audit lists all retained attempt folders
 Then compare:
 
 ```bash
-perla-compare runs.csv --factor claim_recall_passes \
+perla-compare runs.csv --study study.json \
   --output comparison.json --tables-dir figure-data
 ```
 
 This verifies run manifests, predictions, references, scorer settings and paid-work
-accounting. The factor check rejects other changed method settings. List additional
-`--factor` values only when the experiment deliberately changes those settings.
-Without a factor declaration, differences are reported but not restricted.
+accounting. The required study file detects missing or extra paper/repeat pairs,
+reversed arms and changed factor values. Additional or missing method settings and
+drift within an arm also block the aggregate quality result. An empty `factors`
+object permits only identical method settings, for example two independent repeats
+of the same method. There is no unchecked comparison mode.
+
+Rejected comparisons retain diagnostics and available per-run accounting. An
+incomplete cohort cannot produce a complete cohort cost or a cost-saving fraction.
+`planned_runs`, `listed_paired_runs`, `paired_complete_runs` and `paired_scored_runs`
+make coverage explicit. `completion_fraction` measures completed paired runs only
+when the roster matches the declared cohort; it is not a scientific accuracy score.
 
 For a cohort, use `perla-extract-cohort --config method.toml` with the roster and
 source directories described in [batch extraction](quality-first-ground-truth.md).

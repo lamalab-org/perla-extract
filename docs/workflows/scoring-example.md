@@ -20,7 +20,7 @@ PYTHONPATH=.:src python -m examples.scoring.run --output /tmp/perla-scoring-exam
 
 Choose a new output directory for each run. An existing directory is refused to
 protect review history. The final line should say `PASS: four synthetic cases`.
-The same command also writes `runs.csv`, `comparison.json`, and plotting CSVs in
+The same command also writes `study.json`, `runs.csv`, `comparison.json`, and plotting CSVs in
 `figure-data/` through the normal comparison command. No extra command or roster
 editing is needed for this first demonstration.
 The script records Python and key package versions in `summary.json`; retain the
@@ -59,6 +59,7 @@ scientific correctness. The unit-equivalent candidate uses the same source docum
 ```text
 perla-scoring-example/
   summary.json                      # Actual/expected counts and environment
+  study.json                        # Expected paper, repeat and synthetic candidate labels
   runs.csv                          # Seed/control and corrected/treatment paths
   comparison.json                   # Paired result and input checks
   figure-data/                      # runs.csv, group_scores.csv, paired_papers.csv, analysis.json
@@ -117,6 +118,7 @@ To repeat only comparison, using fresh destinations:
 ```bash
 PYTHONPATH=.:src python -m perla_extract.study_extraction.comparison \
   /tmp/perla-scoring-example/runs.csv \
+  --study /tmp/perla-scoring-example/study.json \
   --output /tmp/perla-scoring-example/comparison-again.json \
   --tables-dir /tmp/perla-scoring-example/figure-data-again
 ```
@@ -124,3 +126,4 @@ PYTHONPATH=.:src python -m perla_extract.study_extraction.comparison \
 Proceed to [controlled extraction experiments](extraction-ablations.md) for real
 PDFs and models. That step requires choosing the source/reference pair, deployment,
 method, budget and repetitions; the offline example does not make those choices.
+Its study factor `synthetic_candidate` identifies manual fixtures, not a model setting.

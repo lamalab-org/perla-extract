@@ -1,0 +1,7 @@
+# Simple source-to-study baseline. Keep model, parser and budgets fixed in both arms.
+# This removes four stages together; it is a combined baseline, not a single-stage ablation.
+[extraction]
+use_claim_ledger = false
+use_refinement = false
+use_targeted_repair = false
+use_enrichment = false

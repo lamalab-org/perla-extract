@@ -83,6 +83,15 @@ def roster(tmp_path):
                     )
                 )
     path = tmp_path / "runs.csv"
+    path.with_suffix(".study.json").write_text(
+        json.dumps(
+            {
+                "paper_ids": ["paper-a", "paper-b"],
+                "repeats": 2,
+                "factors": {"claim_recall_passes": {"control": 2, "treatment": 1}},
+            }
+        )
+    )
     with path.open("w", newline="") as stream:
         writer = csv.DictWriter(
             stream, fieldnames=["paper_id", "arm", "repeat", "run_dir"]
@@ -93,7 +102,7 @@ def roster(tmp_path):
 
 
 def test_complete_comparison_preserves_pairing_and_cost(roster):
-    result = summarize(roster, factors=("claim_recall_passes",))
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality_status"] == "ready"
     assert result["quality"]["mean_paired_macro_f1_delta"] == -0.5
     assert result["recorded_cost_saving_fraction"] == 0.5
@@ -111,7 +120,7 @@ def test_swapping_any_bound_artifact_cannot_reverse_conclusion(roster, filename)
     original_a, original_b = a.read_bytes(), b.read_bytes()
     a.write_bytes(original_b)
     b.write_bytes(original_a)
-    result = summarize(roster)
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality"] is None
     assert result["issues"]
     if filename in {"report.json", "run_configuration.json"}:
@@ -122,7 +131,7 @@ def test_swapping_any_bound_artifact_cannot_reverse_conclusion(roster, filename)
 
 def test_missing_score_retains_known_paid_cost(roster):
     (roster.parent / "paper-a/control/1/evaluation.json").unlink()
-    result = summarize(roster)
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality"] is None
     assert result["accounting"]["control"]["total_cost_usd"] == 8
     assert result["recorded_cost_saving_fraction"] == 0.5
@@ -138,16 +147,24 @@ def test_incomplete_accounting_is_not_free_or_a_complete_total(roster):
     (directory / "run_manifest.json").unlink()
     write_run_manifest(directory)
     (directory / "evaluation.json").unlink()
-    result = summarize(roster)
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["accounting"]["control"]["known_cost_usd"] == 8
     assert result["accounting"]["control"]["total_cost_usd"] is None
     assert result["recorded_cost_saving_fraction"] is None
 
 
 def test_factor_check_rejects_unrelated_intervention(roster):
-    result = summarize(roster, factors=("use_refinement",))
+    wrong_factor(roster)
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality"] is None
     assert any("undeclared configuration" in issue for issue in result["issues"])
+
+
+def wrong_factor(roster):
+    path = roster.with_suffix(".study.json")
+    study = json.loads(path.read_text())
+    study["factors"] = {"use_refinement": {"control": True, "treatment": False}}
+    path.write_text(json.dumps(study))
 
 
 def test_repeat_means_do_not_create_extra_papers():
@@ -159,20 +176,55 @@ def test_repeat_means_do_not_create_extra_papers():
 def test_cli_retains_diagnostics_and_refuses_overwrite(roster):
     output = roster.parent / "comparison.json"
     runner = CliRunner()
-    assert runner.invoke(main, [str(roster), "--output", str(output)]).exit_code == 0
-    assert runner.invoke(main, [str(roster), "--output", str(output)]).exit_code != 0
+    assert (
+        runner.invoke(
+            main,
+            [
+                str(roster),
+                "--study",
+                str(roster.with_suffix(".study.json")),
+                "--output",
+                str(output),
+            ],
+        ).exit_code
+        == 0
+    )
+    assert (
+        runner.invoke(
+            main,
+            [
+                str(roster),
+                "--study",
+                str(roster.with_suffix(".study.json")),
+                "--output",
+                str(output),
+            ],
+        ).exit_code
+        != 0
+    )
 
 
 def test_cli_explains_a_rejected_comparison_without_opening_the_report(roster):
+    wrong_factor(roster)
     output = roster.parent / "rejected.json"
     result = CliRunner().invoke(
-        main, [str(roster), "--factor", "use_refinement", "--output", str(output)]
+        main,
+        [
+            str(roster),
+            "--study",
+            str(roster.with_suffix(".study.json")),
+            "--output",
+            str(output),
+        ],
     )
     assert result.exit_code == 1
-    assert "undeclared configuration differences: claim_recall_passes" in result.output
-    assert "declared factor did not change" in result.output
+    assert "study factor use_refinement expected" in result.output
     assert f"Full diagnostics: {output}" in result.output
     saved = json.loads(output.read_text())
+    assert any(
+        "undeclared configuration differences: claim_recall_passes" in issue
+        for issue in saved["issues"]
+    )
     assert saved["quality"] is None
     assert saved["accounting"]["control"]["known_cost_usd"] == 8
 
@@ -181,13 +233,13 @@ def test_missing_pair_is_rejected_instead_of_dropped(roster):
     lines = roster.read_text().splitlines()
     roster.write_text("\n".join(lines[:-1]) + "\n")
     with pytest.raises(ValueError, match="both arms"):
-        summarize(roster)
+        summarize(roster, study=roster.with_suffix(".study.json"))
 
 
 def test_plot_tables_retain_counts_pairs_and_missing_measurements(roster):
     from perla_extract.study_extraction.figure_data import export_tables
 
-    result = summarize(roster)
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
     output = roster.parent / "tables"
     export_tables(result, output)
     with (output / "runs.csv").open() as stream:
@@ -203,7 +255,10 @@ def test_plot_tables_retain_counts_pairs_and_missing_measurements(roster):
     assert {float(row["mean_macro_f1_delta"]) for row in pairs} == {-0.5}
     assert len(groups) == 8 * 3 * 6
     (roster.parent / "paper-a/control/1/evaluation.json").unlink()
-    export_tables(summarize(roster), roster.parent / "partial")
+    export_tables(
+        summarize(roster, study=roster.with_suffix(".study.json")),
+        roster.parent / "partial",
+    )
     with (roster.parent / "partial/runs.csv").open() as stream:
         partial = list(csv.DictReader(stream))
     missing = next(row for row in partial if row["quality_available"] == "False")
@@ -254,7 +309,7 @@ def test_copied_run_folder_is_not_an_independent_repeat(roster):
     target = roster.parent / "paper-a/control/2"
     shutil.rmtree(target)
     shutil.copytree(source, target)
-    result = summarize(roster)
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality"] is None
     assert any("duplicate run_id" in issue for issue in result["issues"])
     assert result["accounting"]["control"]["total_cost_usd"] is None
@@ -305,7 +360,7 @@ def failed_attempt(roster, *, complete=True):
 def test_failed_extra_attempt_adds_spend_without_changing_paired_quality(roster):
     directory = failed_attempt(roster)
     add_accounting_attempt(roster, directory)
-    result = summarize(roster, factors=("claim_recall_passes",))
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality_status"] == "ready"
     assert result["issues"] == []
     assert result["paper_count"] == 2
@@ -329,7 +384,7 @@ def test_failed_extra_attempt_adds_spend_without_changing_paired_quality(roster)
 
 def test_unknown_extra_spend_stays_unknown_without_erasing_quality(roster):
     add_accounting_attempt(roster, failed_attempt(roster, complete=False))
-    result = summarize(roster)
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality_status"] == "ready"
     assert result["quality"] is not None
     assert result["accounting"]["treatment"]["known_cost_usd"] == 7
@@ -339,7 +394,7 @@ def test_unknown_extra_spend_stays_unknown_without_erasing_quality(roster):
 
 def test_missing_extra_accounting_is_reported_separately_from_quality(roster):
     add_accounting_attempt(roster, roster.parent / "missing-attempt")
-    result = summarize(roster)
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality_status"] == "ready"
     assert result["quality"] is not None
     assert result["quality_issues"] == []
@@ -351,7 +406,7 @@ def test_missing_extra_accounting_is_reported_separately_from_quality(roster):
 def test_accounting_only_attempt_cannot_introduce_an_unpaired_paper(roster):
     add_accounting_attempt(roster, roster.parent / "extra", paper="unpaired-paper")
     with pytest.raises(ValueError, match="must appear in the paired roster"):
-        summarize(roster)
+        summarize(roster, study=roster.with_suffix(".study.json"))
 
 
 def test_accounting_only_cannot_replace_a_missing_quality_pair(roster):
@@ -365,7 +420,7 @@ def test_accounting_only_cannot_replace_a_missing_quality_pair(roster):
         writer.writeheader()
         writer.writerows(rows)
     with pytest.raises(ValueError, match="both arms"):
-        summarize(roster)
+        summarize(roster, study=roster.with_suffix(".study.json"))
 
 
 def test_accounting_copy_cannot_double_charge_an_existing_run(roster):
@@ -374,8 +429,154 @@ def test_accounting_copy_cannot_double_charge_an_existing_run(roster):
     directory = roster.parent / "copied-attempt"
     shutil.copytree(roster.parent / "paper-a/treatment/1", directory)
     add_accounting_attempt(roster, directory)
-    result = summarize(roster)
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert any("duplicate run_id" in issue for issue in result["issues"])
     assert result["accounting"]["treatment"]["known_cost_usd"] == 4
     assert result["accounting"]["treatment"]["total_cost_usd"] is None
     assert result["quality"] is None
+
+
+def rewrite_roster(roster, transform):
+    with roster.open(newline="") as stream:
+        reader = csv.DictReader(stream)
+        fields, rows = reader.fieldnames, list(reader)
+    with roster.open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(transform(rows))
+
+
+@pytest.mark.parametrize("omission", ["paper", "repeat"])
+def test_whole_omitted_pair_blocks_quality_and_complete_cost(roster, omission):
+    rewrite_roster(
+        roster,
+        lambda rows: [
+            row
+            for row in rows
+            if (
+                row["paper_id"] != "paper-b"
+                if omission == "paper"
+                else row["repeat"] != "2"
+            )
+        ],
+    )
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
+    assert result["quality"] is None
+    assert any(
+        "Missing study paper/repeat pairs" in issue for issue in result["issues"]
+    )
+    assert result["accounting"]["control"]["planned_runs"] == 4
+    assert result["accounting"]["control"]["listed_paired_runs"] == 2
+    assert result["accounting"]["control"]["known_cost_usd"] == 4
+    assert result["accounting"]["control"]["total_cost_usd"] is None
+    assert result["recorded_cost_saving_fraction"] is None
+
+
+@pytest.mark.parametrize("paper", ["paper-b", None])
+def test_reversed_arm_direction_is_rejected_for_one_or_all_papers(roster, paper):
+    rewrite_roster(
+        roster,
+        lambda rows: [
+            {**row, "arm": "control" if row["arm"] == "treatment" else "treatment"}
+            if paper is None or row["paper_id"] == paper
+            else row
+            for row in rows
+        ],
+    )
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
+    assert result["quality"] is None
+    assert result["recorded_cost_saving_fraction"] is None
+    assert any(
+        "study factor claim_recall_passes expected 2, found 1" in issue
+        for issue in result["issues"]
+    )
+    # Valid expenditure remains observable even when quality is uninterpretable.
+    assert result["accounting"]["control"]["known_cost_usd"] > 0
+
+
+def test_extra_pairs_do_not_silently_expand_the_declared_cohort(roster):
+    path = roster.with_suffix(".study.json")
+    study = json.loads(path.read_text())
+    study["paper_ids"] = ["paper-a"]
+    path.write_text(json.dumps(study))
+    result = summarize(roster, study=path)
+    assert result["quality"] is None
+    assert any(
+        "Unexpected study paper/repeat pairs: paper-b/1, paper-b/2" in issue
+        for issue in result["issues"]
+    )
+
+
+def test_method_drift_in_both_arms_cannot_hide_between_papers(roster):
+    for arm in ("control", "treatment"):
+        for repeat in (1, 2):
+            directory = roster.parent / "paper-b" / arm / str(repeat)
+            path = directory / "run_configuration.json"
+            configuration = json.loads(path.read_text())
+            configuration["model"] = "provider/different-model"
+            path.write_text(json.dumps(configuration))
+            (directory / "run_manifest.json").unlink()
+            write_run_manifest(directory)
+            _, digest = verify_run_manifest(directory)
+            score_path = directory / "evaluation.json"
+            score = json.loads(score_path.read_text())
+            score["run_manifest_sha256"] = digest
+            score_path.write_text(json.dumps(score))
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
+    assert result["quality"] is None
+    assert all(row["quality_available"] for row in result["runs"])
+    assert any(
+        "settings differ from paper-a/1/control: model" in issue
+        for issue in result["issues"]
+    )
+
+
+def test_study_is_required_and_exported_with_its_hash(roster):
+    output = roster.parent / "missing-study.json"
+    result = CliRunner().invoke(main, [str(roster), "--output", str(output)])
+    assert result.exit_code == 2
+    assert "--study" in result.output
+    assert not output.exists()
+    path = roster.with_suffix(".study.json")
+    report = summarize(roster, study=path)
+    from perla_extract.study_extraction.run_artifacts import file_digest
+
+    assert report["study"] == json.loads(path.read_text())
+    assert report["study_sha256"] == file_digest(path)
+    assert report["accounting"]["control"]["completion_fraction"] == 1
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"paper_ids": ["paper-a", "paper-a"]},
+        {"paper_ids": []},
+        {"repeats": True},
+        {"repeats": 0},
+        {"repeat": 2},
+        {"factors": {"claim_recall_passes": {"control": 1, "treatment": 1}}},
+        {"factors": {"claim_recall_passes": {"control": 2, "treament": 1}}},
+    ],
+)
+def test_invalid_study_is_rejected_without_guessing(roster, change):
+    path = roster.with_suffix(".study.json")
+    study = json.loads(path.read_text())
+    study.update(change)
+    path.write_text(json.dumps(study))
+    with pytest.raises(ValueError):
+        summarize(roster, study=path)
+
+
+def test_setting_comparison_preserves_types_without_inventing_numeric_changes():
+    from perla_extract.study_extraction.comparison_study import (
+        FactorContrast,
+        same_setting,
+    )
+
+    assert same_setting({"temperature": 0}, {"temperature": 0.0})
+    assert not same_setting([True], [1])
+    assert not same_setting({"enabled": False}, {"enabled": 0})
+    with pytest.raises(ValueError, match="must differ"):
+        FactorContrast(control=1, treatment=1.0)
+    with pytest.raises(ValueError):
+        FactorContrast(control=1, treatment=float("nan"))
