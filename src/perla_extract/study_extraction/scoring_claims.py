@@ -10,6 +10,7 @@ import math
 import re
 import unicodedata
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Literal
 
 from .models import ReportedValue
@@ -41,6 +42,7 @@ def scientific_value_text(value: str) -> str:
     text = scientific_text(value)
     formula = text.translate(str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789"))
     formula = re.sub(r"_\{(\d+(?:\.\d+)?)\}|_(\d+)", lambda m: m[1] or m[2], formula)
+    formula = re.sub(r"(?<=[A-Za-z])\s+(?=\d)", "", formula)
     if re.fullmatch(r"(?:[A-Z][a-z]?(?:\d+(?:\.\d+)?)?)+", formula):
         return formula
     return text
@@ -160,6 +162,7 @@ class CanonicalQuantity:
 @dataclass(frozen=True)
 class ScalarClaim:
     number: float
+    unit: str | None
     canonical: CanonicalQuantity | None
     literal: LiteralClaim
 
@@ -184,6 +187,18 @@ def normalize_claim(value: ReportedValue) -> NormalizedClaim:
     an inconsistent parsed number just because another representation is valid.
     """
 
+    return _normalize_fields(value.raw_value, value.value_number, value.unit)
+
+
+@lru_cache(maxsize=8192)
+def _normalize_fields(
+    raw: str, number: float | None, unit: str | None
+) -> NormalizedClaim:
+    # Equality examines many candidate pairs. Interpret each distinct claim once,
+    # excluding property names and citations, which cannot change its quantity.
+    # The caller already holds a validated ReportedValue; no synthetic evidence
+    # or mutation of the source record is needed for this private projection.
+    value = ReportedValue.model_construct(raw_value=raw, value_number=number, unit=unit)
     literal = LiteralClaim(
         text=scientific_value_text(value.raw_value),
         unit=scientific_text(value.unit or ""),
@@ -191,6 +206,33 @@ def normalize_claim(value: ReportedValue) -> NormalizedClaim:
         source_unit=value.unit,
         raw_text=scientific_text(value.raw_value),
     )
+    # A null convenience field does not erase information explicitly present in
+    # the raw claim. Parse only a complete scalar; a raw unit must be recognized.
+    # never replace conflicting supplied numbers or units. This is scorer-local:
+    # the prediction and its content hash retain the original missing fields.
+    match = (
+        re.fullmatch(rf"({_NUMBER})\s*([A-Za-zµμ°℃%].*)?", literal.raw_text)
+        if value.value_number is None or value.unit is None
+        else None
+    )
+    if match:
+        number, suffix = float(match[1]), (match[2] or "").strip()
+        if (
+            math.isfinite(number)
+            and (not suffix or canonical_quantity(number, suffix) is not None)
+            and (
+                value.value_number is None
+                or math.isclose(number, value.value_number, rel_tol=1e-9, abs_tol=0)
+            )
+            and (
+                not suffix
+                or value.unit is None
+                or equivalent_unit_spelling(suffix, value.unit)
+            )
+        ):
+            value = value.model_copy(
+                update={"value_number": number, "unit": suffix or value.unit}
+            )
     compound = compound_quantity(value)
     if compound is not None:
         kind, first, second, unit = compound
@@ -200,6 +242,7 @@ def normalize_claim(value: ReportedValue) -> NormalizedClaim:
         canonical = canonical_reported_quantity(value)
         return ScalarClaim(
             value.value_number,
+            value.unit,
             CanonicalQuantity(*canonical) if canonical is not None else None,
             literal,
         )
@@ -223,14 +266,14 @@ def equal_claims(
             )
         )
     if isinstance(left, ScalarClaim) and isinstance(right, ScalarClaim):
-        if (left.literal.source_unit is None) != (right.literal.source_unit is None):
+        if (left.unit is None) != (right.unit is None):
             return False
         a, b = left.number, right.number
-        if left.literal.source_unit is not None:
+        if left.unit is not None:
             if left.canonical is None or right.canonical is None:
                 return (
                     left.literal.raw_text == right.literal.raw_text
-                    and left.literal.source_unit == right.literal.source_unit
+                    and left.unit == right.unit
                 )
             if left.canonical.unit != right.canonical.unit:
                 return False

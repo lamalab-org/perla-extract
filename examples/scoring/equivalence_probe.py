@@ -11,6 +11,14 @@ from perla_extract.study_extraction.scoring_facts import equal_value
 # Triples are raw text, parsed number and explicit unit. Ranges and uncertainty
 # retain their full claims; matching only a central number would be incorrect.
 CASES = [
+    (
+        "explicit_raw_unit_without_parsed_fields",
+        ("125 nm", 125, "nm"),
+        ("0.125 µm", None, None),
+        True,
+    ),
+    ("contradictory_raw_unit", ("125 nm", 125, "nm"), ("125 nm", None, "m"), False),
+    ("absent_unit_is_not_inferred", ("125 nm", 125, "nm"), ("125", None, None), False),
     ("percent_fraction", ("20", 20, "%"), ("0.20", 0.2, "dimensionless"), True),
     ("hours_seconds", ("1", 1, "h"), ("3600", 3600, "s"), True),
     ("temperature_offset", ("65", 65, "°C"), ("338.15", 338.15, "K"), True),

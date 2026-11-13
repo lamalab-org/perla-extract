@@ -80,8 +80,8 @@ You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results.
 
-Reports use format 8, matcher `rich-study-hungarian-v9` and fact profile
-`core-scientific-facts-v6`. Regenerate older reports from saved predictions before
+Reports use format 8, matcher `rich-study-hungarian-v10` and fact profile
+`core-scientific-facts-v7`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
@@ -186,7 +186,7 @@ The report compares the same facts in three ways:
 
 | Report field | Question |
 | --- | --- |
-| `core_facts.value_only` | Within the paired record and property, does the value match, ignoring its nested context? |
+| `core_facts.value_only` | Within the same scientific group and property, was the value recovered anywhere in the paper, regardless of owner or context? |
 | `core_facts.attribution` | Does the property have matching context, regardless of its value, with no detected ambiguity? |
 | `core_facts` | Do both value and context match, with no detected ambiguity? |
 
@@ -194,6 +194,8 @@ All three use the same predicted and reference counts, but each finds its own
 one-to-one fact matches. Do not multiply their scores or combine their match lists
 to reconstruct the primary score. A value-only match does not prove that the value
 belongs to the right specimen or chemical.
+This diagnostic still separates scientific groups: an individual-device result
+does not become a population statistic just because its number agrees.
 
 Consider a stability test with one temperature, two checkpoint times and two
 outcomes: five facts in total. If the prediction omits the temperature but retains
@@ -203,12 +205,15 @@ The separate views show that the numbers were recovered but their context was no
 
 ### Ambiguity is visible and can stop a benchmark run
 
-`core_facts.issues` lists detected matching problems. Two kinds are checked:
+`core_facts.issues` lists detected matching problems:
 
 - A different complete assignment has the same optimal total weight and changes a
   selected record pair. A local tie alone is not enough.
 - Two objects inside a record have indistinguishable recorded identities, such as
   two annealing steps with no sequence numbers and the same targets and materials.
+- Both studies contain a record type but none of its owners pair. This may reflect
+  an extraction error or unresolved naming; inspect it before interpreting zero
+  contextual credit as failure to recover any information.
 
 A processing step's identity includes its sequence, operation, targets and
 materials together. Two alternative operations can share a sequence number without
@@ -248,7 +253,14 @@ The scorer pairs families first, followed by individual devices, performance
 observations, populations and stability tests. It pairs records only within the
 same type. Parent pairings can then guide the child pairings.
 
-For each possible pair, it calculates:
+Families use the Jaccard overlap of structural features: layer materials and their
+sequence positions, constituent names, absorber formulas and the design variant.
+Without structured layers, raw stack/architecture text supplies the stack features.
+Display labels, recipes and measured properties do not establish family identity.
+Missing properties therefore lose their own recall without erasing unchanged
+measurements linked to the family. Checked material aliases apply to these features.
+
+For other record types, the content score is:
 
 ```text
 content similarity = 0.75 × Jaccard(record-content tokens)
@@ -260,9 +272,6 @@ Jaccard(A, B) = number of shared entries / number of distinct entries in either 
 Record-content features include individual words and ordered multiword values from
 materials, descriptions and reported values. The
 scorer excludes record IDs, link IDs and evidence quotations from these tokens.
-For families it also excludes `processing_steps`: missing a recipe must reduce
-processing recall, not prevent recognition of the family and erase credit for
-unchanged measurements. Other recorded family content still contributes to matching.
 For eligible numbers, ranges and uncertainties with recognized units, it uses base-unit values and units;
 otherwise it uses raw values and units. It formats canonical numbers to 12 significant
 digits for this pairing step only. Final numeric comparison does not use that rounding.
@@ -298,12 +307,14 @@ Choosing A for reference 1 leaves B for reference 2, totaling 1.30.
 Choosing 1→B and 2→A totals 1.65, so the scorer selects that assignment.
 The report's `matches[].similarity` shows the content score without the bonus.
 
-The scorer then compares facts only within a paired record, scientific group and
-property name. A comparison either passes or fails; there is no partial credit for
+Primary and attribution scores compare facts only within a paired record, scientific
+group and property name. Value-only matching uses group and property without the
+owner requirement. A comparison either passes or fails; there is no partial credit for
 a value that falls outside the numeric tolerance. Layer and operation order comes
 from explicit sequence fields, not array position.
 
-Values influence record pairing, so this is not a value-independent identity check.
+Values still influence non-family record pairing, so this is not a fully
+value-independent identity check.
 Similar specimens can be confused, and a wrong family pairing can affect its
 children. To detect equally optimal assignments, the scorer examines the Hungarian
 solver's reduced costs: edges with zero reduced cost can participate in another
@@ -371,7 +382,13 @@ its raw number within an internal relative tolerance of `1e-9`, with no absolute
 allowance. This prevents a small nonzero raw number from being accepted as a parsed
 zero. That consistency check is separate from the scoring tolerance.
 
-If both units are missing, eligible numbers can match without conversion. If only
+For plain scalar claims, an explicit recognized unit in raw text is sufficient:
+`125 nm` equals parsed `0.125 µm` even if its separate `value_number` and `unit`
+fields are null. The scorer fills only missing convenience fields internally;
+supplied contradictory fields remain mismatches. It never changes the saved
+prediction. A unit absent from both raw text and the unit field stays missing.
+
+If both units are absent from the entire claim, eligible numbers can match without conversion. If only
 one unit is missing, they cannot. If a unit is unrecognized, the scorer requires
 equal normalized raw text and identical unit strings rather than guessing a conversion.
 
@@ -405,14 +422,26 @@ standardizes the minus sign and collapses whitespace. It does not turn `Fe³⁺`
 consist of element-like tokens with numeric subscripts. It does not simplify
 symbolic stoichiometry, charges, parentheses or arbitrary prose.
 
+Material fields use the small explicit vocabulary in `scoring_vocabulary.py`:
+for example, `silver`, `Ag` and `Silver (Ag)` agree. Both halves of a parenthetical
+name must resolve to the same material; `Gold (Ag)` does not match gold.
+Morphology, doping and mixtures are not stripped. Formula notation also accepts
+spaces before numeric subscripts, such as `TiO 2`.
+Known layer properties can omit a redundant qualifier naming their own material:
+`silver contact thickness` and `thickness` agree on a silver layer. A qualifier
+naming a different material does not. Unknown chemical names and property
+paraphrases remain literal; this vocabulary is not general semantic understanding.
+
 For example, `CoO` does not equal `COO`. The scorer does not infer that `MAPbI3`
 and `CH3NH3PbI3` describe the same composition. Equivalent names or differently
 written claims outside the supported grammar can therefore disagree. Matching text also does not prove that
 either claim is supported by the paper.
 
-Property names ignore case, whitespace, hyphens and underscores. Four explicit
-aliases map the full names of power conversion efficiency, open-circuit voltage,
+Property names ignore case, whitespace, hyphens and underscores. Explicit aliases
+map the full names of power conversion efficiency, open-circuit voltage,
 short-circuit current density and fill factor to PCE, Voc, Jsc and FF.
+`PCE retention` and `reference efficiency retained` map to `efficiency retention`;
+absolute efficiency and retained efficiency remain different properties.
 
 Operation names ignore case and normalize whitespace. By default, the one operation
 alias maps `thermal annealing` to `annealing`. Use

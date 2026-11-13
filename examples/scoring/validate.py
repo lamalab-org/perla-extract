@@ -292,6 +292,9 @@ def run(
                     for name in (
                         "evaluation.py",
                         "scoring_facts.py",
+                        "scoring_claims.py",
+                        "scoring_vocabulary.py",
+                        "scoring_explanation.py",
                         "units.py",
                         "models.py",
                     )

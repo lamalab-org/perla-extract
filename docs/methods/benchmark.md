@@ -74,8 +74,9 @@ records by content within each record type. Family and device pairings, together
 with measurement conditions, help pair their child records. Each prediction can
 match only one reference record.
 
-Missing fabrication steps do not affect family matching; they still lose processing
-credit. Population cohort labels, and stability specimen labels without explicit
+Family matching uses structure, composition and variant; missing recipes or
+measured properties lose their own credit without changing family identity.
+Population cohort labels, and stability specimen labels without explicit
 device links, must agree. This prevents equal outcomes from making a control and a
 treated cohort interchangeable. The rule normalizes typography, not synonyms, so
 different descriptions of the same cohort can still lose credit. Checked label
@@ -92,7 +93,10 @@ comparison. The default relative tolerance is `1e-6`, with no absolute allowance
 small relative numerical differences without treating distinct nanometre-scale
 thicknesses as equal. It does not represent experimental uncertainty. Ranges and
 symmetric uncertainties compare both components after conversion. Simple chemical
-formulas accept numeric LaTeX subscripts; unfamiliar descriptions remain literal.
+formulas accept numeric LaTeX subscripts. Checked material names and redundant
+layer-property qualifiers are normalized by a small versioned vocabulary;
+unfamiliar descriptions remain literal. A unit explicitly present in a raw scalar
+can supply a missing parsed field, but conflicting supplied fields are not repaired.
 The [scoring reference](../workflows/evaluation.md)
 gives examples and the full matching algorithm.
 
@@ -101,7 +105,7 @@ gives examples and the full matching algorithm.
 | Result | Question answered |
 | --- | --- |
 | Correct value in correct context | Do the value and its recorded context match the reference? |
-| Value only | Was the value recovered within the paired record, ignoring nested context? |
+| Value only | Was the value recovered anywhere in the same scientific group/property, ignoring owner and context? |
 | Attribution only | Is the property in the correct context, regardless of its value? |
 | Citation validation | Do the cited passages and raw values occur in the supplied evidence? |
 

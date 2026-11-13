@@ -3,7 +3,8 @@
 A scientific value earns primary credit only when its owner is paired, its property
 and value agree, its recorded context agrees, and its attribution is unambiguous.
 Each fact can be used only once. The three score views make independent assignments:
-`strict` requires value and context, `value` ignores context and ambiguity, and
+`strict` requires value and context, `value` ignores owner, context and ambiguity
+while retaining scientific group and property, and
 `attribution` ignores the value. None of these views repairs the reference.
 
 ## Find the rule
@@ -13,14 +14,17 @@ Each fact can be used only once. The three score views make independent assignme
 | Raw scientific record | `models.py`, `ReportedValue` | Preserve raw text, parsed number, explicit unit and evidence |
 | Interpret a claim | `scoring_claims.py`, `normalize_claim` | Return scalar, range, uncertainty or literal; preserve unsupported claims literally |
 | Convert explicit units | `units.py` | Handle dimensions, scale and offset without inferring a missing unit |
-| Pair records | `evaluation.py`, `_record_features` / `_record_pairs` | Consume normalized claim features; retain the frozen threshold, parent/protocol bonus and assignment algorithm |
+| Normalize names | `scoring_vocabulary.py` | Use checked material aliases and redundant material qualifiers; preserve unknown chemistry and properties |
+| Pair records | `evaluation.py`, `_family_features` / `_record_pairs` | Use structural family identity; keep other record features, the frozen threshold and parent/protocol bonus explicit |
 | Select facts and requirements | `scoring_facts.py`, `scientific_facts` | Keep owner references and named context components; preserve order and duplicate entries where meaningful |
 | Compare facts | `scoring_facts.py`, `compare_facts` | Produce the value, context and ambiguity decision used by every score view |
 | Explain an existing decision | `scoring_explanation.py` | Consume those decisions and selected assignments; never run a second matcher |
 
 The normalized claim retains its literal fallback. For example, a scalar with an
 unrecognized unit still needs equal raw text and the original unit spelling;
-a missing unit never becomes dimensionless. Record features use 12-significant-digit
+a unit absent from the complete claim never becomes dimensionless. A recognized
+unit stated in a plain raw scalar can supply a missing convenience field; a
+contradictory field cannot be replaced. Record features use 12-significant-digit
 canonical numbers, while scientific equality uses the configured numeric tolerances.
 Feature generation and equality share interpretation, not their acceptance criteria.
 
@@ -60,8 +64,9 @@ asks about context credit. Select paths from a score's `matches` or
 The artifact marks omitted candidates and truncates long displayed values; the paths
 and input hashes identify the complete source data.
 
-A reason of `owner_unmatched` means the fact never reached comparison with a paired
-owner. `property_mismatch` lists nearby scored properties within the paired owner;
+A reason of `owner_unmatched` means strict/attribution credit was blocked by the
+owner pairing. The value view can still match that fact elsewhere in the same
+scientific group. `property_mismatch` lists nearby scored properties within the paired owner;
 `no_candidate` means that owner has no opposite scored facts. Candidate explanations
 distinguish value differences, named context differences and ambiguity. An eligible
 candidate can still lose to `one_to_one_competition`; the explanation names the exact
@@ -123,7 +128,13 @@ outcome controls on representative v2/dev papers, then verifies that requesting 
 explanation leaves the entire report unchanged. Expectations are scientific edits,
 not hashes that change with a dependency's lexical normalization.
 
-The refactor was also audited against the original `2b1d81c` scorer with 118 full-report
+Matcher v10 / fact profile v7 intentionally changes the scoring policy: it uses
+structural family features, checked material names, explicit raw scalar units and
+owner-independent value recovery. `test_scoring_recovery.py` specifies positive
+and negative cases independently of a live model run. Regenerate all compared
+reports under the same policy; never rewrite frozen references or old scores.
+
+Before this policy change, the v9 refactor was audited against the original `2b1d81c` scorer with 118 full-report
 comparisons across all 30 frozen v2/dev papers. Every report was identical within
 each of two tested environments (Pydantic 2.12.5/Pint 0.25.2 and Pydantic 2.14.3/Pint
 0.26.2). Compare old and new code in the same environment for future refactor audits;

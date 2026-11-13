@@ -210,7 +210,7 @@ class ExplanationCollector:
             eligible = sum(d.eligible(selection.view) for _, _, d, _ in candidates)
             if any(chosen for _, _, _, chosen in candidates):
                 reason = "matched"
-            elif fact.owner.unmatched_side is not None:
+            elif selection.view != "value" and fact.owner.unmatched_side is not None:
                 reason = "owner_unmatched"
             elif eligible:
                 reason = "one_to_one_competition"

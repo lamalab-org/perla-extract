@@ -34,6 +34,7 @@ from .scoring_claims import (
 from .scoring_claims import (
     scientific_value_text as scientific_value_text,
 )
+from .scoring_vocabulary import material_name, scoped_property_name
 
 FactGroup = Literal[
     "performance", "population", "stability", "composition", "stack", "processing"
@@ -54,6 +55,8 @@ METRIC_ALIASES = {
     "opencircuitvoltage": "voc",
     "shortcircuitcurrentdensity": "jsc",
     "fillfactor": "ff",
+    "referenceefficiencyretained": "efficiencyretention",
+    "pceretention": "efficiencyretention",
 }
 DEFAULT_OPERATION_ALIASES = {"thermal annealing": "annealing"}
 
@@ -267,7 +270,13 @@ def compare_facts(
         if explain
         else ()
     )
-    context_equal = (
+    owner_equal = left.owner == right.owner and left.owner.unmatched_side is None
+    if explain and not owner_equal:
+        differences = (
+            ContextDifference("owner", None, None, left.owner, right.owner),
+            *differences,
+        )
+    context_equal = owner_equal and (
         not differences
         if explain
         else not ambiguity_blocked
@@ -377,9 +386,13 @@ def scientific_facts(
         owner: RecordReference,
         values: list[ReportedValue],
         context: FactContext = FactContext(),
+        material: str | None = None,
     ) -> None:
         for i, value in enumerate(values):
-            add(group, f"{path}/{i}", owner, property_name(value.name), value, context)
+            name = (
+                scoped_property_name(value.name, material) if material else value.name
+            )
+            add(group, f"{path}/{i}", owner, property_name(name), value, context)
 
     def conditions(values: list[ReportedValue]) -> UnorderedContext:
         return UnorderedContext(tuple((property_name(v.name), v) for v in values))
@@ -400,7 +413,7 @@ def scientific_facts(
                     context.extend(
                         FactContext.of(
                             base,
-                            name=constituent.name,
+                            name=material_name(constituent.name),
                             amount_name=property_name(constituent.amount.name)
                             if constituent.amount
                             else None,
@@ -413,11 +426,11 @@ def scientific_facts(
                 f"{base}/name",
                 owner,
                 "constituent",
-                constituent.name,
+                material_name(constituent.name),
                 context,
             )
             chemical_context = context.extend(
-                FactContext.of(base, name=constituent.name)
+                FactContext.of(base, name=material_name(constituent.name))
             )
             add(
                 "composition",
@@ -466,7 +479,7 @@ def scientific_facts(
                         record.full_stack_raw or record.architecture,
                     )
                 layers = {
-                    layer.layer_id: (layer.sequence, layer.material)
+                    layer.layer_id: (layer.sequence, material_name(layer.material))
                     for layer in record.layers
                 }
 
@@ -486,7 +499,7 @@ def scientific_facts(
                             base,
                             (layer.sequence,)
                             if layer.sequence is not None
-                            else (layer.material, layer.role),
+                            else (material_name(layer.material), layer.role),
                         )
                     )
                     context = FactContext.of(kind="layer").extend(
@@ -497,11 +510,11 @@ def scientific_facts(
                         f"{base}/material",
                         owner,
                         "material",
-                        layer.material,
+                        material_name(layer.material),
                         context,
                     )
                     context = context.extend(
-                        FactContext.of(base, material=layer.material)
+                        FactContext.of(base, material=material_name(layer.material))
                     )
                     add("stack", f"{base}/role", owner, "role", layer.role, context)
                     add(
@@ -518,6 +531,7 @@ def scientific_facts(
                         owner,
                         layer.reported_properties,
                         context,
+                        material=layer.material,
                     )
                     chemicals(
                         f"{base}/constituents", owner, layer.constituents, context
@@ -573,7 +587,9 @@ def scientific_facts(
                                 step.sequence,
                                 operation,
                                 targets,
-                                UnorderedContext(tuple(step.materials)),
+                                UnorderedContext(
+                                    tuple(material_name(m) for m in step.materials)
+                                ),
                             ),
                         )
                     )
@@ -592,7 +608,7 @@ def scientific_facts(
                             f"{base}/materials/{j}",
                             owner,
                             "material",
-                            material,
+                            material_name(material),
                             context,
                         )
                     quantities(
@@ -602,7 +618,10 @@ def scientific_facts(
                         step.conditions,
                         context.extend(
                             FactContext.of(
-                                base, materials=UnorderedContext(tuple(step.materials))
+                                base,
+                                materials=UnorderedContext(
+                                    tuple(material_name(m) for m in step.materials)
+                                ),
                             )
                         ),
                     )

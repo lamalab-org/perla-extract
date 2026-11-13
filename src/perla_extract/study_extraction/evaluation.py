@@ -49,9 +49,10 @@ from .scoring_facts import (
     scientific_text,
     scientific_value_text,
 )
+from .scoring_vocabulary import material_name
 
 EVALUATION_FORMAT_VERSION: Final[Literal[8]] = 8
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v9"]] = "rich-study-hungarian-v9"
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v10"]] = "rich-study-hungarian-v10"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -336,7 +337,7 @@ class FactScoreView(StrictModel):
 class ScoringIssue(StrictModel):
     """Make unresolved alignment visible without erasing facts from denominators."""
 
-    kind: Literal["ambiguous_record", "ambiguous_scope"]
+    kind: Literal["ambiguous_record", "ambiguous_scope", "unmatched_records"]
     side: Literal["truth", "prediction"]
     paths: list[str]
     reason: str
@@ -349,7 +350,7 @@ class CoreFactScore(FactScoreView):
     counts remain available so large recipes cannot hide poor performance extraction.
     """
 
-    profile: Literal["core-scientific-facts-v6"] = "core-scientific-facts-v6"
+    profile: Literal["core-scientific-facts-v7"] = "core-scientific-facts-v7"
     value_only: FactScoreView
     attribution: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
@@ -376,7 +377,7 @@ class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
     format_version: Literal[8] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v9"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v10"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -457,7 +458,7 @@ class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
     format_version: Literal[8] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v9"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v10"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -618,12 +619,10 @@ def _record_features(record: object) -> set[str]:
 def _record_similarity(left: object, right: object) -> float:
     """Compare scientific content without relying on run-local record identifiers."""
 
-    # A family describes a design, not the completeness of its fabrication recipe.
-    # Otherwise an omitted recipe can prevent a correct family match and erase
-    # credit for unchanged performance measurements linked to that family.
+    # A family describes a design. Recipe completeness and measured properties
+    # must not determine its identity or suppress credit for unchanged children.
     if isinstance(left, DeviceFamily) and isinstance(right, DeviceFamily):
-        left = left.model_copy(update={"processing_steps": []})
-        right = right.model_copy(update={"processing_steps": []})
+        return _jaccard(_family_features(left), _family_features(right))
     lexical = _jaccard(_record_features(left), _record_features(right))
     left_values = _reported_values(left)
     right_values = _reported_values(right)
@@ -632,6 +631,43 @@ def _record_similarity(left: object, right: object) -> float:
         {property_name(value.name) for value in right_values},
     )
     return 0.75 * lexical + 0.25 * value_names
+
+
+def _family_features(family: DeviceFamily) -> set[str]:
+    """Pair designs using structure, never outcomes or verbosity of annotations.
+
+    Materials and their ordered positions identify the stack; constituent names
+    and absorber formulas add composition. Variant distinguishes designs when the
+    source supplies it. These features select candidates, not scientific credit.
+    """
+
+    values: list[object] = [family.variant]
+    for layer in family.layers:
+        values.append(layer.material)
+        values.extend(c.name for c in layer.constituents)
+    for absorber in family.absorbers:
+        values.append(absorber.formula.raw_value if absorber.formula else None)
+        values.extend(c.name for c in absorber.constituents)
+    if not family.layers:
+        values.append(family.full_stack_raw or family.architecture)
+    features = _tokens(material_name(v) for v in values if isinstance(v, str))
+    # Lexical tokens support candidate recall; exact structural features retain
+    # chemical case and sequence, which tokenization must never flatten away.
+    features.update(
+        f"material:{material_name(v)}" for v in values[1:] if isinstance(v, str)
+    )
+    if family.variant:
+        features.add(f"variant:{scientific_text(family.variant)}")
+    for layer in family.layers:
+        if layer.sequence is not None:
+            features.add(
+                f"layer:{layer.sequence}:material:{material_name(layer.material)}"
+            )
+            features.update(
+                f"layer:{layer.sequence}:{token}"
+                for token in _tokens([material_name(layer.material)])
+            )
+    return features
 
 
 def _maximum_assignment(scores: Sequence[Sequence[float]]) -> list[tuple[int, int]]:
@@ -925,7 +961,7 @@ def _core_fact_score(
     ambiguous_prediction: set[str],
     explanation: ExplanationCollector | None = None,
 ) -> CoreFactScore:
-    """Match facts only within paired scientific owners and property names.
+    """Match facts by group/property; require paired owners for scientific credit.
 
     Small independent assignments avoid a paper-wide cubic matching problem. Wrong
     values count as both missing truth and extra prediction, not successful matches.
@@ -945,6 +981,23 @@ def _core_fact_score(
         ),
     ]
     issues: list[ScoringIssue] = []
+    for kind in RECORD_KINDS:
+        if (
+            getattr(truth, kind)
+            and getattr(prediction, kind)
+            and not any(k == kind for k, _, _ in identities)
+        ):
+            for side, study in (("truth", truth), ("prediction", prediction)):
+                issues.append(
+                    ScoringIssue(
+                        kind="unmatched_records",
+                        side=side,
+                        paths=[
+                            f"/{kind}/{i}" for i, _ in enumerate(getattr(study, kind))
+                        ],
+                        reason="Both studies contain this record type, but no owners paired. Inspect alignment before interpreting zero contextual credit as failed information recovery.",
+                    )
+                )
     ambiguous_prefixes: list[set[str]] = [set(), set()]
     ambiguous_record_paths: dict[RecordReference, list[tuple[str, str]]] = {}
     for i, (side, study, keys, projection) in enumerate(
@@ -1043,14 +1096,14 @@ def _core_fact_score(
                 sources[(side, fact.path)] = sorted(source_paths)
         explanation.start(expected, actual, (blocked[0], blocked[1]), sources)
     buckets: dict[
-        tuple[FactGroup, RecordReference, str],
+        tuple[FactGroup, str],
         tuple[list[ScientificFact], list[ScientificFact]],
     ] = {}
     for side_index, facts in enumerate((expected, actual)):
         for fact in facts:
-            buckets.setdefault((fact.group, fact.owner, fact.name), ([], []))[
-                side_index
-            ].append(fact)
+            buckets.setdefault((fact.group, fact.name), ([], []))[side_index].append(
+                fact
+            )
     strict_matches: list[FactMatch] = []
     value_matches: list[FactMatch] = []
     attribution_matches: list[FactMatch] = []
