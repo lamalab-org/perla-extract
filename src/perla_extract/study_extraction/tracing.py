@@ -26,12 +26,17 @@ class LangfuseAdapter:
                     "Langfuse tracing requires LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY; extraction can continue with local events"
                 )
             try:
-                from langfuse import get_client
+                from langfuse import Langfuse
             except ImportError as exc:
                 raise RuntimeError(
                     "Langfuse tracing requires perla-extract[tracing]"
                 ) from exc
-            client = get_client()
+            # The SDK appends the OTLP path verbatim. A trailing slash can send
+            # exports to //api/... even when its separate auth check succeeds.
+            base_url = os.environ.get("LANGFUSE_BASE_URL") or os.environ.get(
+                "LANGFUSE_HOST"
+            )
+            client = Langfuse(base_url=base_url.rstrip("/") if base_url else None)
         self.client = client
         self._observations: dict[str, tuple[Any, Any]] = {}
         self._stack: list[str] = []

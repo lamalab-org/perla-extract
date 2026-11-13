@@ -460,6 +460,66 @@ def test_installed_langfuse_sdk_accepts_adapter_arguments():
     )
 
 
+@pytest.mark.parametrize("url_variable", ["LANGFUSE_BASE_URL", "LANGFUSE_HOST"])
+def test_langfuse_exports_to_normalized_url(tmp_path, monkeypatch, url_variable):
+    sdk = pytest.importorskip("langfuse")
+    import gzip
+
+    import requests
+    from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+        ExportTraceServiceRequest,
+    )
+    from opentelemetry.sdk.trace import TracerProvider
+
+    monkeypatch.delenv("LANGFUSE_BASE_URL", raising=False)
+    monkeypatch.delenv("LANGFUSE_HOST", raising=False)
+    monkeypatch.setenv(url_variable, "https://tracing.example.test/")
+    monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-test-" + url_variable)
+    monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-test-secret")
+    sdk_client = sdk.Langfuse
+    monkeypatch.setattr(
+        sdk,
+        "Langfuse",
+        lambda **options: sdk_client(**options, tracer_provider=TracerProvider()),
+    )
+    sent = []
+
+    def send(self, request, **kwargs):
+        body = request.body
+        if request.headers.get("content-encoding") == "gzip":
+            body = gzip.decompress(body)
+        sent.append((request.url, ExportTraceServiceRequest.FromString(body)))
+        response = requests.Response()
+        response.status_code = 200
+        response._content = b""
+        return response
+
+    monkeypatch.setattr(requests.Session, "send", send)
+    adapter = LangfuseAdapter()
+    try:
+        journal = EventJournal(tmp_path, adapter=adapter)
+        journal.emit("run.started")
+        with journal.stage("connection_check"):
+            pass
+        journal.emit("run.finished", status="complete")
+        assert len(sent) == 1
+        url, request = sent[0]
+        assert url == "https://tracing.example.test/api/public/otel/v1/traces"
+        spans = [
+            span
+            for resource in request.resource_spans
+            for scope in resource.scope_spans
+            for span in scope.spans
+        ]
+        assert len(spans) == 2
+        assert len({span.trace_id for span in spans}) == 1
+        assert not any(
+            e["event"] == "telemetry.failed" for e in read_events(journal.path)
+        )
+    finally:
+        adapter.client.shutdown()
+
+
 @pytest.mark.parametrize(
     "options",
     [
