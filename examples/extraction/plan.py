@@ -40,9 +40,12 @@ def run(output: Path) -> dict[str, str]:
         use_refinement=False,
         use_targeted_repair=False,
         use_enrichment=False,
-        max_output_tokens=1024,
         assembly_max_input_tokens=100_000,
-        deployments={"assemble": DeploymentSettings(context_tokens=128_000)},
+        deployments={
+            "assemble": DeploymentSettings(
+                context_tokens=128_000, max_output_tokens=1024
+            )
+        },
         document_cache_dir=output / "document-cache",
         model_cache_dir=output / "unused-model-cache",
         heartbeat_seconds=0,

@@ -28,8 +28,9 @@ def setup(tmp_path, monkeypatch):
     path.write_text(f"""
 output = "results"
 repeats = 2
-[extraction]
+[stages.default]
 model = "openai/synthetic"
+[extraction]
 parser = "pymupdf"
 max_model_calls = 3
 [control]
@@ -243,7 +244,36 @@ def test_endpoint_override_expands_both_arm_defaults_without_false_missing_field
     )
     prepared = experiment.prepare(path)
     contrast = prepared.study.factors["deployments.read.model"]
-    assert contrast.control is None
+    assert contrast.control == "openai/synthetic"
     assert contrast.treatment == "openai/other-reader"
     result = experiment.execute(prepared)
     assert result["quality_status"] == "ready"
+
+
+def test_arm_model_switch_does_not_keep_shared_endpoint_or_credentials(setup):
+    path, _, _ = setup
+    text = path.read_text().replace(
+        'model = "openai/synthetic"',
+        'model = "openai/synthetic"\nbase_url = "http://localhost:8000/v1"\napi_key_env = "LOCAL_KEY"',
+    )
+    path.write_text(text + '\n[treatment.stages.default]\nmodel = "openrouter/other"\n')
+    prepared = experiment.prepare(path)
+    control, treatment = prepared.attempts[:2]
+    assert control.config.effective_deployment("read").api_key_env == "LOCAL_KEY"
+    for stage in ("read", "assemble", "refine", "repair", "enrich"):
+        deployment = treatment.config.effective_deployment(stage)
+        assert deployment.model == "openrouter/other"
+        assert deployment.base_url is None
+        assert deployment.api_key_env is None
+
+
+def test_repeating_the_effective_default_is_not_an_ablation(setup):
+    path, _, _ = setup
+    path.write_text(
+        path.read_text().replace(
+            "[treatment]\nclaim_recall_passes = 2",
+            '[treatment]\nclaim_recall_passes = 1\n[treatment.stages.read]\nmodel = "openai/synthetic"',
+        )
+    )
+    with pytest.raises(ValueError, match="identical"):
+        experiment.prepare(path)

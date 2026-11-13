@@ -65,8 +65,6 @@ def test_explicit_policy_controls_dispatch_independently_of_call_label(
 ):
     config = ExtractionConfig(
         pdf=Path("paper.pdf"),
-        model="base/model",
-        temperature=None,
         deployments={
             "enrich": DeploymentSettings(
                 model="openai/enricher",
@@ -150,7 +148,7 @@ def test_resolved_reader_and_inherited_repair_limits_have_one_source():
         assembly_max_input_tokens=700,
         deployments={
             "read": DeploymentSettings(context_tokens=1200, max_output_tokens=300),
-            "refine": DeploymentSettings(
+            "default": DeploymentSettings(
                 model="openai/local",
                 base_url="http://localhost:8000/v1",
                 max_input_tokens=900,

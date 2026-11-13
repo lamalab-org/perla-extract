@@ -101,8 +101,8 @@ def _interpret_and_export(
                 study=extraction,
                 blocks=blocks,
                 model=config.effective_model("enrich"),
-                reasoning_effort=config.reasoning_effort,
-                max_output_tokens=config.enrichment_max_output_tokens,
+                reasoning_effort=config.stage_policy("enrich").reasoning_effort,
+                max_output_tokens=config.stage_policy("enrich").max_output_tokens,
             )
             enrichment_status = _enrichment_status(enrichment)
             outcome.record(enrichment_status, errors=enrichment.errors)

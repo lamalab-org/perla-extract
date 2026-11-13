@@ -20,12 +20,6 @@ from .claims import (
 )
 from .client import ModelCallError, ModelClient, summarize_calls
 from .configuration import (
-    DEFAULT_CLAIM_MODEL as DEFAULT_CLAIM_MODEL,
-)
-from .configuration import (
-    DEFAULT_EXTRACTION_MODEL as DEFAULT_EXTRACTION_MODEL,
-)
-from .configuration import (
     ExtractionConfig,
 )
 from .deployment import (
@@ -177,8 +171,8 @@ def _run_model_calls(
                 evidence_components=_assembly_components(blocks, ledger),
                 blocks=blocks,
                 model=config.effective_model("refine"),
-                reasoning_effort=config.reasoning_effort,
-                max_output_tokens=config.max_output_tokens,
+                reasoning_effort=config.stage_policy("refine").reasoning_effort,
+                max_output_tokens=config.stage_policy("refine").max_output_tokens,
                 system_prompt=SYSTEM_PROMPT,
                 kind="study_refinement",
                 slug="study_refinement",
@@ -549,8 +543,8 @@ def _correct_study(
                 coverage=pre_repair_coverage,
                 validation=pre_repair_validation_public,
                 model=config.effective_model("repair"),
-                reasoning_effort=config.reasoning_effort,
-                max_output_tokens=config.repair_max_output_tokens,
+                reasoning_effort=config.stage_policy("repair").reasoning_effort,
+                max_output_tokens=config.stage_policy("repair").max_output_tokens,
             )
             if repair_audit.status == "failed":
                 outcome.record(
@@ -746,7 +740,6 @@ def _run_extraction(
         output_dir=config.output_dir,
         heartbeat_seconds=config.heartbeat_seconds,
         timeout_seconds=config.timeout_seconds,
-        temperature=config.temperature,
         max_model_calls=config.max_model_calls,
         max_cost_usd=config.max_cost_usd,
         max_total_tokens=config.max_total_tokens,

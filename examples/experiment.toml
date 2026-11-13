@@ -3,8 +3,10 @@
 output = "results/readings"
 repeats = 1
 
-[extraction]
+[stages.default]
 model = "openai/gpt-5.2"
+
+[extraction]
 parser = "pymupdf"
 max_model_calls = 14
 

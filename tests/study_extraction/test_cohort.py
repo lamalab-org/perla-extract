@@ -32,7 +32,7 @@ def manifest() -> CohortManifest:
             "name": "review",
             "purpose": "review seeds",
             "split": "dev",
-            "model": "openai/model",
+            "stages": {"default": {"model": "openai/model"}},
             "papers": [{"paper_id": "paper"}],
         }
     )
@@ -183,7 +183,7 @@ def test_every_semantic_stage_uses_the_frozen_cohort_model(tmp_path, monkeypatch
     assert {
         config.effective_model(stage)
         for stage in ("read", "assemble", "refine", "repair", "enrich")
-    } == {value.model}
+    } == {value.stages["default"]["model"]}
 
 
 def test_shards_select_disjoint_papers(tmp_path, monkeypatch):

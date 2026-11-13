@@ -9,7 +9,7 @@ from typing import Any
 
 import click
 
-from .configuration import default, resolve_config
+from .configuration import DEFAULT_EXTRACTION_MODEL, default, resolve_config
 from .logging import configure_logging, logger
 from .source import available_parsers
 from .workflow import run_extraction
@@ -37,12 +37,6 @@ def _load_env(path: Path | None) -> None:
         name = key.strip().removeprefix("export ").strip()
         if name:
             os.environ.setdefault(name, value.strip().strip('"').strip("'"))
-
-
-def normalize_reasoning_effort(value: str) -> str | None:
-    """Translate the CLI-only ``omit`` sentinel into an absent API parameter."""
-
-    return None if value == "omit" else value
 
 
 def extract_study(
@@ -89,8 +83,15 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 @click.option("--output-dir", type=OUTPUT_DIRECTORY, default=default("output_dir"))
 @click.option(
     "--model",
-    default=default("model"),
-    help="LiteLLM provider-prefixed model name.",
+    default=DEFAULT_EXTRACTION_MODEL,
+    help="Select the default deployment; stage model overrides remain explicit in TOML.",
+)
+@click.option(
+    "--base-url",
+    help="Default model endpoint; specify with --model when selecting a new endpoint.",
+)
+@click.option(
+    "--api-key-env", help="Environment variable containing the default endpoint key."
 )
 @click.option("--reasoning-effort", type=click.Choice(REASONING_LEVELS), default="omit")
 @click.option(
@@ -98,16 +99,6 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     "use_claim_ledger",
     default=default("use_claim_ledger"),
     help="Read source statements before building the linked study.",
-)
-@click.option(
-    "--claim-model",
-    default=default("claim_model"),
-    help="Source-reading model; inherits --model unless overridden.",
-)
-@click.option(
-    "--claim-max-output-tokens",
-    type=click.IntRange(min=1),
-    default=default("claim_max_output_tokens"),
 )
 @click.option(
     "--claim-recall-passes",
@@ -122,41 +113,16 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     help="Interpret composition sites and processing roles in separate audited calls.",
 )
 @click.option(
-    "--enrichment-model",
-    default=default("enrichment_model"),
-    help="LiteLLM model for enrichment; defaults to --model.",
-)
-@click.option(
-    "--enrichment-max-output-tokens",
-    type=click.IntRange(min=1),
-    default=default("enrichment_max_output_tokens"),
-)
-@click.option(
     "--refinement/--no-refinement",
     "use_refinement",
     default=default("use_refinement"),
     help="Request a complete draft revision against the selected evidence.",
 )
 @click.option(
-    "--refinement-model",
-    default=default("refinement_model"),
-    help="Draft-revision model; inherits --model unless overridden.",
-)
-@click.option(
     "--targeted-repair/--no-targeted-repair",
     "use_targeted_repair",
     default=default("use_targeted_repair"),
     help="Retry only audit-visible gaps using their parser text and table evidence.",
-)
-@click.option(
-    "--repair-model",
-    default=default("repair_model"),
-    help="LiteLLM model for targeted repair; defaults to refinement model or --model.",
-)
-@click.option(
-    "--repair-max-output-tokens",
-    type=click.IntRange(min=1),
-    default=default("repair_max_output_tokens"),
 )
 @click.option(
     "--parser", type=click.Choice(available_parsers()), default=default("parser")
@@ -185,8 +151,8 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 @click.option(
     "--max-output-tokens",
     type=click.IntRange(min=1),
-    default=default("max_output_tokens"),
-    help="Output allowance for assembly and full revision; other stages have separate limits.",
+    default=None,
+    help="Set stages.default.max_output_tokens; otherwise use the documented per-stage defaults.",
 )
 @click.option(
     "--max-model-calls",

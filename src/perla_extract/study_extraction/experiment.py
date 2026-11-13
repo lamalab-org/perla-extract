@@ -95,20 +95,17 @@ def _arm_settings(settings: ExperimentSettings, arm: str, directory: Path) -> di
         raise ValueError(
             f"Put sources in [[papers]]; run paths and caches are automatic: {', '.join(sorted(forbidden))}"
         )
-    # Include empty deployments in both arms when either arm configures a stage.
-    # This makes an omitted override an explicit default in comparison settings.
-    stage_names = set(settings.stages)
-    for name in ARMS:
-        declared = getattr(settings, name).get("stages", {})
-        if not isinstance(declared, dict):
-            raise ValueError(f"{name}.stages must contain stage tables")
-        stage_names.update(declared)
+    stage_names = set(settings.stages) | set(arm_stages)
     stages = {}
     for stage in stage_names:
         override = arm_stages.get(stage, {})
         if not isinstance(override, dict):
             raise ValueError(f"{arm}.stages.{stage} must be a table")
-        stages[stage] = dict(settings.stages.get(stage, {})) | override
+        # Selecting a model supplies a complete deployment, including transport.
+        # Limit-only interventions keep the shared connection.
+        stages[stage] = (
+            {} if "model" in override else dict(settings.stages.get(stage, {}))
+        ) | override
     return parse_settings(
         {"extraction": options, "stages": stages, "tracing": settings.tracing},
         directory,

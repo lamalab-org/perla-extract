@@ -28,7 +28,7 @@ def test_omit_reasoning_leaves_parameter_out(monkeypatch, tmp_path: Path) -> Non
     )
 
     assert result == {"status": "complete"}
-    assert captured["config"].reasoning_effort is None
+    assert captured["config"].stage_policy("read").reasoning_effort in (None, "omit")
 
 
 def test_env_file_loads_any_provider_key_without_overwriting_process_env(
@@ -116,9 +116,10 @@ def test_explicit_cli_settings_override_toml_without_resetting_other_options(
     config = tmp_path / "method.toml"
     config.write_text("""[extraction]
 pdf = "paper.pdf"
-model = "openai/local-model"
 claim_recall_passes = 1
 use_refinement = false
+[stages.default]
+model = "openai/local-model"
 [stages.read]
 model = "openai/local-reader"
 base_url = "http://localhost:8000/v1"

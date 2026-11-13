@@ -19,10 +19,12 @@ report = extract_study(
 )
 ```
 
-Refinement runs by default. Set `use_refinement=False` to disable it, or
-`refinement_model` to use a different model for that pass.
-`use_targeted_repair=False` disables the bounded audit-driven recovery call;
-`repair_model` changes only that call.
+Refinement runs by default; `use_refinement=False` disables it.
+`use_targeted_repair=False` disables the audit-driven recovery call.
+Pass `config_file="method.toml"` to configure `[stages.default]` and stage overrides
+using the same format as experiments. Python callers can instead pass a `deployments`
+mapping from `"default"` and stage names to `DeploymentSettings` objects; it uses the
+same inheritance rules. The older per-step model keywords are no longer accepted.
 
 ::: perla_extract.study_extraction.cli.extract_study
     options:

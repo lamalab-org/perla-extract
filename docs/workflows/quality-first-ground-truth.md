@@ -14,7 +14,7 @@ Create `cohort.json`:
   "name": "solar-cell-review",
   "purpose": "Generate drafts for source-based expert review",
   "split": "dev",
-  "model": "openai/gpt-5.2",
+  "stages": {"default": {"model": "openai/gpt-5.2"}},
   "parser": "docling",
   "claim_recall_passes": 2,
   "max_model_calls_per_paper": 14,

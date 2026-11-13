@@ -24,8 +24,31 @@ from .deployment import DeploymentSettings
 from .request_policy import ResolvedStagePolicy
 
 DEFAULT_EXTRACTION_MODEL = "openai/gpt-5.2"
-DEFAULT_CLAIM_MODEL = None
 STAGES = ("read", "assemble", "refine", "repair", "enrich")
+DEFAULT_OUTPUT_TOKENS = {
+    "read": 30_000,
+    "assemble": 80_000,
+    "refine": 80_000,
+    "repair": 30_000,
+    "enrich": 20_000,
+}
+_DEPLOYMENT_SHORTCUTS = {
+    "model",
+    "base_url",
+    "api_key_env",
+    "reasoning_effort",
+    "temperature",
+    "max_output_tokens",
+}
+_REMOVED_SETTINGS = {
+    "claim_model": "read.model",
+    "refinement_model": "refine.model",
+    "repair_model": "repair.model",
+    "enrichment_model": "enrich.model",
+    "claim_max_output_tokens": "read.max_output_tokens",
+    "repair_max_output_tokens": "repair.max_output_tokens",
+    "enrichment_max_output_tokens": "enrich.max_output_tokens",
+}
 _PATHS = {"pdf", "supplement", "output_dir", "document_cache_dir", "model_cache_dir"}
 _OPERATIONAL = _PATHS | {
     "heartbeat_seconds",
@@ -35,43 +58,76 @@ _OPERATIONAL = _PATHS | {
 }
 
 
+def _validate_deployments(deployments: dict[str, DeploymentSettings]) -> None:
+    if not isinstance(deployments, dict):
+        raise ValueError(
+            "deployments must map default or stage names to DeploymentSettings"
+        )
+    if unknown := set(deployments) - {"default", *STAGES}:
+        raise ValueError(f"unknown stages: {', '.join(sorted(unknown))}")
+    for stage, deployment in deployments.items():
+        if not isinstance(deployment, DeploymentSettings):
+            raise ValueError("each deployment must be a DeploymentSettings instance")
+        if (deployment.base_url or deployment.api_key_env) and not deployment.model:
+            raise ValueError(
+                f"stages.{stage}: specify model together with base_url or api_key_env"
+            )
+
+
+def _override_deployment(
+    base: DeploymentSettings, declared: DeploymentSettings
+) -> DeploymentSettings:
+    if declared.model is not None:
+        return declared
+    return replace(
+        base,
+        **{
+            item.name: getattr(declared, item.name)
+            for item in fields(declared)
+            if getattr(declared, item.name) is not None
+            and getattr(declared, item.name) != {}
+        },
+    )
+
+
+def merge_deployments(
+    base: dict[str, DeploymentSettings], overrides: dict[str, DeploymentSettings]
+) -> dict[str, DeploymentSettings]:
+    """Apply the same model-selection rule to file, cohort and invocation settings."""
+    _validate_deployments(base)
+    _validate_deployments(overrides)
+    return base | {
+        stage: _override_deployment(base.get(stage, DeploymentSettings()), declared)
+        for stage, declared in overrides.items()
+    }
+
+
 @dataclass(frozen=True)
 class ExtractionConfig:
     """The applied method and its operational limits for one immutable run.
 
-    A missing stage model inherits the main model; repair can inherit the explicit
-    refinement override. Deployment settings take precedence over these shortcuts.
+    Every stage uses the default deployment unless it selects its own model.
+    Settings-only stage tables tune that default without repeating its connection.
     Paths locate inputs and artifacts; content hashes bind their scientific identity.
     """
 
     pdf: Path
     supplement: Path | None = None
     output_dir: Path = Path("study_extraction")
-    model: str = DEFAULT_EXTRACTION_MODEL
-    reasoning_effort: str | None = None
     use_claim_ledger: bool = True
-    claim_model: str | None = None
-    claim_max_output_tokens: int = 30_000
     claim_recall_passes: int = 2
     use_enrichment: bool = True
-    enrichment_model: str | None = None
-    enrichment_max_output_tokens: int = 20_000
     use_refinement: bool = True
-    refinement_model: str | None = None
     use_targeted_repair: bool = True
-    repair_model: str | None = None
-    repair_max_output_tokens: int = 30_000
     parser: str = "docling"
     claim_mode: str = "auto"
     single_call_max_input_tokens: int = 90_000
     claim_window_input_tokens: int = 60_000
     assembly_max_input_tokens: int = 180_000
-    max_output_tokens: int = 80_000
     max_model_calls: int | None = None
     max_cost_usd: float | None = None
     max_total_tokens: int | None = None
     max_elapsed_seconds: float | None = None
-    temperature: float | None = None
     heartbeat_seconds: float = 20
     timeout_seconds: float = 600
     document_cache_dir: Path = Path(".perla-cache/documents")
@@ -87,30 +143,6 @@ class ExtractionConfig:
             value = getattr(self, name)
             if value is not None:
                 object.__setattr__(self, name, Path(value))
-        for name in (
-            "model",
-            "claim_model",
-            "enrichment_model",
-            "refinement_model",
-            "repair_model",
-        ):
-            value = getattr(self, name)
-            if value is not None and (not isinstance(value, str) or not value.strip()):
-                raise ValueError(f"{name} must be a nonempty string")
-        if self.model is None:
-            raise ValueError("model must be a nonempty string")
-        if self.reasoning_effort not in {
-            None,
-            "none",
-            "minimal",
-            "low",
-            "medium",
-            "high",
-            "xhigh",
-        }:
-            raise ValueError(
-                "reasoning_effort must be none, minimal, low, medium or high"
-            )
         if self.claim_mode not in {"auto", "single", "windowed"}:
             raise ValueError("claim_mode must be auto, single or windowed")
         if self.parser not in {"docling", "pymupdf"}:
@@ -129,13 +161,9 @@ class ExtractionConfig:
                 raise ValueError(f"{name} must be true or false")
         integers = (
             "claim_recall_passes",
-            "claim_max_output_tokens",
-            "enrichment_max_output_tokens",
-            "repair_max_output_tokens",
             "single_call_max_input_tokens",
             "claim_window_input_tokens",
             "assembly_max_input_tokens",
-            "max_output_tokens",
             "max_model_calls",
             "max_total_tokens",
         )
@@ -153,16 +181,14 @@ class ExtractionConfig:
             "max_elapsed_seconds",
             "timeout_seconds",
             "heartbeat_seconds",
-            "temperature",
         ):
             value = getattr(self, name)
             if value is None and name in {
                 "max_cost_usd",
                 "max_elapsed_seconds",
-                "temperature",
             }:
                 continue
-            minimum_inclusive = name in {"heartbeat_seconds", "temperature"}
+            minimum_inclusive = name == "heartbeat_seconds"
             if (
                 isinstance(value, bool)
                 or not isinstance(value, (int, float))
@@ -173,65 +199,24 @@ class ExtractionConfig:
                 raise ValueError(
                     f"{name} must be a finite {'nonnegative' if minimum_inclusive else 'positive'} number"
                 )
-        if not isinstance(self.deployments, dict):
-            raise ValueError(
-                "deployments must be a mapping of stage names to DeploymentSettings"
-            )
-        unknown = set(self.deployments) - set(STAGES)
-        if unknown:
-            raise ValueError(f"unknown stages: {', '.join(sorted(unknown))}")
-        if any(
-            not isinstance(value, DeploymentSettings)
-            for value in self.deployments.values()
-        ):
-            raise ValueError("each deployment must be a DeploymentSettings instance")
+        _validate_deployments(self.deployments)
 
     def effective_model(self, stage: str) -> str:
         """Return the model that will receive this stage's request."""
-        if stage not in STAGES:
-            raise ValueError(f"unknown stage: {stage}")
-        deployment = self.effective_deployment(stage)
-        if deployment and deployment.model:
-            return deployment.model
-        overrides = {
-            "read": self.claim_model,
-            "assemble": self.model,
-            "refine": self.refinement_model,
-            "repair": self.repair_model or self.refinement_model,
-            "enrich": self.enrichment_model,
-        }
-        if stage == "repair" and not self.repair_model:
-            refinement = self.deployments.get("refine")
-            if refinement and refinement.model:
-                return refinement.model
-        return overrides[stage] or self.model
+        return self.effective_deployment(stage).model or DEFAULT_EXTRACTION_MODEL
 
     def effective_deployment(self, stage: str) -> DeploymentSettings:
-        """Resolve a stage's transport and generation options together.
+        """Selecting a model starts a separate deployment; tuning inherits the default.
 
-        A repair stage without its own model or endpoint inherits refinement settings,
-        including its endpoint and limits. Supplying repair_model opts out; configure
-        the repair deployment explicitly when it needs another endpoint. Partial repair
-        limits override inherited limits without dropping the transport.
+        Endpoints, credentials, tokenizer and weight identity never follow a model
+        switch implicitly. Repair follows the same rule as every other stage.
         """
         if stage not in STAGES:
             raise ValueError(f"unknown stage: {stage}")
+        base = self.deployments.get("default", DeploymentSettings())
+        base = replace(base, model=base.model or DEFAULT_EXTRACTION_MODEL)
         declared = self.deployments.get(stage, DeploymentSettings())
-        if (
-            stage == "repair"
-            and not self.repair_model
-            and "refine" in self.deployments
-            and declared.model is None
-            and declared.base_url is None
-        ):
-            overrides = {
-                item.name: getattr(declared, item.name)
-                for item in fields(declared)
-                if getattr(declared, item.name) is not None
-                and getattr(declared, item.name) != {}
-            }
-            return replace(self.deployments["refine"], **overrides)
-        return declared
+        return _override_deployment(base, declared)
 
     def stage_policy(
         self, stage: str, *, claim_mode: str | None = None
@@ -253,20 +238,13 @@ class ExtractionConfig:
         if deployment.max_input_tokens is not None:
             input_limit = min(input_limit, deployment.max_input_tokens)
         deployment = replace(deployment, max_input_tokens=input_limit)
-        output_limits = {
-            "read": self.claim_max_output_tokens,
-            "assemble": self.max_output_tokens,
-            "refine": self.max_output_tokens,
-            "repair": self.repair_max_output_tokens,
-            "enrich": self.enrichment_max_output_tokens,
-        }
         return ResolvedStagePolicy.resolve(
             stage,
             model=self.effective_model(stage),
             deployment=deployment,
-            max_output_tokens=output_limits[stage],
-            reasoning_effort=self.reasoning_effort,
-            temperature=self.temperature,
+            max_output_tokens=DEFAULT_OUTPUT_TOKENS[stage],
+            reasoning_effort=None,
+            temperature=None,
         )
 
     def stage_policies(
@@ -280,14 +258,23 @@ class ExtractionConfig:
     def scientific_settings(self) -> dict[str, Any]:
         """Settings needed to reproduce an attempted method, independent of file locations."""
         result = {
-            key: value for key, value in asdict(self).items() if key not in _OPERATIONAL
+            key: value
+            for key, value in asdict(self).items()
+            if key not in _OPERATIONAL | {"deployments"}
         }
         result["effective_models"] = {
             stage: self.effective_model(stage) for stage in STAGES
         }
-        result["effective_deployments"] = {
-            stage: self.effective_deployment(stage).identity() for stage in STAGES
-        }
+        result["deployments"] = {}
+        for stage in STAGES:
+            policy = self.stage_policy(stage)
+            result["deployments"][stage] = {
+                **self.effective_deployment(stage).identity(),
+                "max_output_tokens": policy.max_output_tokens,
+                "reasoning_effort": None
+                if policy.reasoning_effort == "omit"
+                else policy.reasoning_effort,
+            }
         return result
 
 
@@ -338,6 +325,12 @@ def parse_settings(document: dict[str, Any], directory: Path) -> dict[str, Any]:
     if not isinstance(options, dict):
         raise ValueError("[extraction] must be a table")
     options = dict(options)
+    for key in options:
+        if key in _REMOVED_SETTINGS or key in _DEPLOYMENT_SHORTCUTS:
+            target = _REMOVED_SETTINGS.get(key, f"default.{key}")
+            raise ValueError(
+                f"extraction.{key} has moved to stages.{target}; use one deployment table"
+            )
     allowed = {f.name for f in fields(ExtractionConfig)} - {"deployments", "langfuse"}
     unknown = set(options) - allowed
     if unknown:
@@ -348,8 +341,8 @@ def parse_settings(document: dict[str, Any], directory: Path) -> dict[str, Any]:
         value = Path(options[key])
         options[key] = value if value.is_absolute() else (directory / value).resolve()
     stages = document.get("stages", {})
-    if not isinstance(stages, dict) or set(stages) - set(STAGES):
-        raise ValueError(f"stages must be tables named {', '.join(STAGES)}")
+    if not isinstance(stages, dict) or set(stages) - {"default", *STAGES}:
+        raise ValueError(f"stages must be tables named default, {', '.join(STAGES)}")
     stages = dict(stages)
     for stage, settings in stages.items():
         if not isinstance(settings, dict):
@@ -371,6 +364,7 @@ def parse_settings(document: dict[str, Any], directory: Path) -> dict[str, Any]:
         }
     except TypeError as error:
         raise ValueError(f"invalid stage configuration: {error}") from error
+    _validate_deployments(options["deployments"])
     tracing = document.get("tracing", {})
     if not isinstance(tracing, dict) or set(tracing) - {"langfuse"}:
         raise ValueError("[tracing] accepts only langfuse = true or false")
@@ -385,13 +379,24 @@ def resolve_config(
 ) -> ExtractionConfig:
     """Apply invocation overrides to file settings, then validate the resulting method."""
     options = load_settings(config_file)
+    for key in overrides:
+        if key in _REMOVED_SETTINGS:
+            raise ValueError(
+                f"{key} has moved to stages.{_REMOVED_SETTINGS[key]}; use a deployment table"
+            )
+    deployment_options = {
+        key: overrides.pop(key) for key in _DEPLOYMENT_SHORTCUTS if key in overrides
+    }
     options.update(overrides)
+    if deployment_options:
+        options["deployments"] = merge_deployments(
+            options.get("deployments", {}),
+            {"default": DeploymentSettings(**deployment_options)},
+        )
     if pdf is not None:
         options["pdf"] = pdf
     if "pdf" not in options:
         raise ValueError("provide --pdf or extraction.pdf in the configuration file")
-    if options.get("reasoning_effort") == "omit":
-        options["reasoning_effort"] = None
     try:
         return ExtractionConfig(**options)
     except TypeError as error:

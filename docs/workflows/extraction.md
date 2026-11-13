@@ -118,10 +118,10 @@ it is not silently truncated or sent beyond the planned limit.
 | `--single-call-max-input-tokens` | 90,000 | Input estimate threshold for one complete-source reading |
 | `--claim-window-input-tokens` | 60,000 | Input estimate cap for each windowed reading |
 | `--assembly-max-input-tokens` | 180,000 | Shared input cap for building, reviewing, repairing, and interpreting records |
-| `--claim-max-output-tokens` | 30,000 | Reader output allowance |
-| `--max-output-tokens` | 80,000 | Study-building and draft-review output allowance |
-| `--repair-max-output-tokens` | 30,000 | Targeted-repair output allowance |
-| `--enrichment-max-output-tokens` | 20,000 | Interpretation output allowance |
+| `stages.read.max_output_tokens` | 30,000 | Reader output allowance |
+| `stages.assemble.max_output_tokens` / `stages.refine.max_output_tokens` | 80,000 | Study-building and draft-review output allowance |
+| `stages.repair.max_output_tokens` | 30,000 | Targeted-repair output allowance |
+| `stages.enrich.max_output_tokens` | 20,000 | Interpretation output allowance |
 
 These are engineering defaults, not scientifically validated thresholds. A deployment
 can set smaller input and output limits and declare its total context capacity.

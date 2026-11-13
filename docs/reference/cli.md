@@ -34,18 +34,11 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | `--claim-window-input-tokens INTEGER` | `60000` | Request budget used to size claim-reading windows |
 | `--dry-run` | off | Parse, plan, and write an estimate without a model call |
 | `--claims / --no-claims` | claims | Collect and ground objects and atomic source claims before assembly |
-| `--claim-model TEXT` | extraction model | LiteLLM model used for claim collection |
-| `--claim-max-output-tokens INTEGER` | `30000` | Completion limit for each claim-collection call |
 | `--claim-recall-passes INTEGER` | `2` | Independent complete readings of every claim document/window |
 | `--assembly-max-input-tokens INTEGER` | `180000` | Default input cap for assembly, revision, repair and enrichment; stage limits can lower it |
 | `--enrichment / --no-enrichment` | enrichment | Run the audited composition and processing interpretation stage |
-| `--enrichment-model TEXT` | extraction model | Model used for interpretation calls, including a conditional composition retry |
-| `--enrichment-max-output-tokens INTEGER` | `20000` | Completion limit for each enrichment call |
 | `--refinement / --no-refinement` | refinement | Re-read the same evidence to correct the extraction draft |
-| `--refinement-model TEXT` | extraction model | Optional different model for the quality pass |
 | `--targeted-repair / --no-targeted-repair` | targeted repair | Retry only gaps exposed by coverage and validation audits |
-| `--repair-model TEXT` | refinement or extraction model | Model for the evidence-local repair call |
-| `--repair-max-output-tokens INTEGER` | `30000` | Completion limit for the bounded repair response |
 
 Docling is the default parser. PyMuPDF is an explicit lightweight
 alternative; parser failures never silently change backends. Complete parser results
@@ -59,11 +52,20 @@ independently per window and merged afterward.
 
 ## Model request
 
+Model, endpoint, credentials and generation controls belong in `[stages.default]`,
+with optional `[stages.read]`, `[stages.assemble]`, `[stages.refine]`, `[stages.repair]`
+and `[stages.enrich]` overrides. A table with `model` selects a complete deployment;
+a settings-only table adjusts the default. All stages inherit the default directly.
+The CLI options below configure that same default table, not a second configuration
+layer. See the [mixed-provider example](../workflows/open-models.md#configure-a-deployment).
+
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `--model TEXT` | `openai/gpt-5.2` | LiteLLM provider-prefixed model name |
+| `--model TEXT` | `openai/gpt-5.2` | Select `stages.default.model`; resets its connection and model-specific settings |
+| `--base-url URL` | omitted | Default endpoint; specify its model alongside it |
+| `--api-key-env NAME` | provider convention | Environment variable containing the default endpoint key |
 | `--reasoning-effort [omit|none|minimal|low|medium|high|xhigh]` | `omit` | Reasoning setting; `omit` removes the parameter for models that do not support it |
-| `--max-output-tokens INTEGER` | `80000` | Completion allowance for assembly and full revision; other stages have separate limits |
+| `--max-output-tokens INTEGER` | per-stage defaults | Set the default deployment output allowance; stage tables can override it |
 | `--max-model-calls INTEGER` | omitted | Maximum provider requests, including retries and validation repair |
 | `--max-cost-usd FLOAT` | omitted | Stop before the next call after adapter-reported cost reaches this limit |
 | `--max-total-tokens INTEGER` | omitted | Token budget for starting further provider requests |
@@ -86,7 +88,7 @@ comparing experiments because routing may select different backends. See
 [OpenRouter structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs).
 
 Refinement is enabled by default and adds a global reconciliation call. Use
-`--no-refinement` to disable it or `--refinement-model` to choose its model.
+`--no-refinement` to disable it; `[stages.refine]` selects a separate deployment.
 The request uses a shared citation catalog to avoid repeating source quotations.
 
 OpenRouter can also route an eligible model through a provider key stored in its BYOK
@@ -183,7 +185,7 @@ reference manifest supplies the paper ID; source hashes verify the file set,
 while the TOML fields assign the main/SI roles.
 Paths are relative to the TOML file. `output` names a new results directory;
 `repeats` defaults to 1 and `order_seed` to 0. Shared `[stages]` and `[tracing]` use
-the extraction configuration format; `[control.stages.NAME]` or
+the extraction configuration format, including `[stages.default]`; `[control.stages.NAME]` or
 `[treatment.stages.NAME]` override a stage in one arm.
 
 `--check` prints the validated paper/SI/reference mapping and checks every source/reference hash and setting without parsing PDFs,

@@ -17,87 +17,74 @@ perla-extract --config examples/open-models/direct-local.toml --pdf paper.pdf \
 ```
 
 Use a different output directory for the live attempt. Add stages one at a time and
-configure each active deployment explicitly.
+configure the default deployment before adding stage overrides.
 
 ## Configure a deployment
 
-TOML sections are `[extraction]`, `[stages.read]`, `[stages.assemble]`,
-`[stages.refine]`, `[stages.repair]`, `[stages.enrich]`, and `[tracing]`.
-Explicit CLI options override `[extraction]`; a stage model overrides the global
-model. Paths in TOML are relative to the file, including local tokenizer files.
-Unknown names and invalid setting types fail before execution.
+Put shared model settings in `[stages.default]`. Use a named stage only when it
+needs different settings. `[extraction]` contains pipeline switches, parsing and
+run budgets; `[tracing]` enables Langfuse. Paths are relative to the TOML file.
 
-This example is a local **reader intervention**, with other enabled stages retaining
-their configured models. Replace the served name and deployment identity with your
-actual values. The endpoint must support the requested JSON schema response format.
+This uses OpenRouter by default and Blablador for reading:
 
 ```toml
-[extraction]
-claim_mode = "windowed"
-claim_window_input_tokens = 12000
-claim_max_output_tokens = 4096
-max_model_calls = 40
-max_total_tokens = 250000
-max_elapsed_seconds = 3600
+[stages.default]
+model = "openrouter/<organization>/<model>"
 
 [stages.read]
-model = "openai/your-served-model"
-base_url = "http://localhost:8000/v1"
-api_key_env = "LOCAL_MODEL_API_KEY"
-revision = "exact-weight-revision"
-quantization = "your-serving-precision"
-chat_template = "your-template-revision"
-context_tokens = 32768
-max_input_tokens = 12000
-max_output_tokens = 4096
+model = "openai/<Blablador-served-model-id>"
+base_url = "https://api.blablador.fz-juelich.de/v1"
+api_key_env = "BLABLADOR_API_KEY"
 reasoning_effort = "omit"
-temperature = 0.0
+max_output_tokens = 4096
 ```
 
-For an entirely local pipeline, configure an endpoint for every enabled stage. Repair
-inherits an explicitly configured refinement deployment, including endpoint and limits,
-when neither a repair deployment nor a repair-model shortcut is supplied. A partial repair limit override retains that inherited endpoint. An explicit
-repair model or endpoint selects its own deployment. Enrichment uses the `enrich` deployment for its
-two ordinary interpretation calls and a conditional composition retry. Disabling stages changes the method and must be recorded.
+To use Blablador throughout, put its settings in `[stages.default]` instead. Store
+keys in `.env.local`; `api_key_env` names the variable, never its value. Here
+`openai/` selects the compatible API adapter; requests go to `base_url`.
 
-`revision`, `quantization` and `chat_template` are operator declarations used in
-provenance and cache identity; they do not change or verify server weights. Configure
-and verify those on the serving process. `chat_template_kwargs` and `top_k` are
-forwarded only for an explicit self-hosted endpoint; `top_p` is also available.
-Do not assume unsupported generation settings are ignored. See the serving engine's
-[OpenAI-compatible interface](https://docs.vllm.ai/en/latest/serving/openai_compatible_server/)
-and [structured-output documentation](https://docs.vllm.ai/en/latest/features/structured_outputs/).
+The stages are `read`, `assemble`, `refine`, `repair`, and `enrich`. All inherit the
+default, including repair. A stage table containing only limits or generation
+controls adjusts the default deployment. For example, `[stages.read]` with just
+`max_output_tokens = 16000` keeps the shared model and connection.
 
-### Blablador
+**Specifying `model` selects a separate deployment.** Supply its endpoint and key
+variable alongside it when needed; settings from the default model are not carried
+across. An endpoint or key override without a model is rejected. The same rule
+applies to model changes in experiment arms and the CLI's `--model` shortcut.
+This prevents one provider's credentials, tokenizer or weight identity from being
+silently applied to another. There is no special refinement-to-repair inheritance.
 
-For [Blablador](https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/),
-use the same deployment fields on **every enabled stage**:
+`--model`, `--base-url`, `--api-key-env`, `--reasoning-effort`, `--temperature`, and
+`--max-output-tokens` configure the default deployment. Stage overrides stay in TOML.
+The old `claim_model`, `refinement_model`, `repair_model`, `enrichment_model` and
+per-stage output-limit shortcuts have been removed; configuration errors point to
+their replacement under `stages`.
 
-| Field | Value |
-| --- | --- |
-| `model` | `"openai/<id from /v1/models>"` |
-| `base_url` | `"https://api.blablador.fz-juelich.de/v1"` |
-| `api_key_env` | `"BLABLADOR_API_KEY"` |
-| `reasoning_effort` | `"omit"` initially; enable only supported controls |
+Without an output override, the defaults are 30,000 tokens for reading and repair,
+80,000 for assembly and refinement, and 20,000 for enrichment. Set limits suitable
+for the served model. `context_tokens`, `max_input_tokens`, `max_output_tokens`,
+`temperature`, `reasoning_effort`, `top_p`, and `tokenizer` use the same names on
+the default and stage tables. `top_k` and `chat_template_kwargs` require an explicit
+endpoint. Unsupported controls fail rather than being silently discarded.
 
-Here `openai/` selects the compatible API adapter; requests go to the specified
-Blablador endpoint. Store the key in `.env.local`. Read the authenticated
-`/v1/models` catalog before choosing a model: [aliases can change their underlying
-model](https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_models/). Save the
-catalog with the experiment, prefer a model-specific served ID, and record the
-reported root and context limit. This records what the service advertised; it does
-not verify its weight revision. Test a small schema-constrained response before
-running papers. API compatibility alone does not establish schema support.
+`revision`, `quantization` and `chat_template` record operator declarations for
+provenance and cache identity. They do not change or verify the server's weights.
+See your serving engine's [API](https://docs.vllm.ai/en/latest/serving/openai_compatible_server/)
+and [structured-output support](https://docs.vllm.ai/en/latest/features/structured_outputs/).
 
-For a mixed-provider experiment, keep `[extraction] model` as the default (for
-example, `"openrouter/<organization>/<model>"`) and put the Blablador fields only on
-the stages you want to change, such as `[stages.read]`. Other stages retain their
-default deployment, except that repair inherits an explicit refinement deployment
-as described above. Credentials for both services must be available to the process.
+### Choose a Blablador model
 
-Start with request, token and elapsed-time limits. If the endpoint omits cost,
+Obtain a key using [Blablador's instructions](https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/).
+Read the authenticated `https://api.blablador.fz-juelich.de/v1/models` catalog before
+choosing a model: [aliases can change their underlying model](https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_models/).
+Save that catalog with the experiment, prefer a model-specific served ID, and record
+the advertised root and context limit. This does not verify the weight revision.
+Test a small schema-constrained response before running papers.
+
+Use request, token and elapsed-time limits. If the endpoint omits dollar cost,
 `max_cost_usd` prevents the next request; omit that limit when cost cannot be tracked.
-Missing dollar cost remains unknown in the results.
+Missing cost remains unknown in the results.
 
 ## Understand context and resource limits
 

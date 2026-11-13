@@ -14,8 +14,10 @@ single-paper template in `examples/experiment.toml` uses the same structure:
 output = "results/readings"
 repeats = 1
 
-[extraction]
+[stages.default]
 model = "openai/gpt-5.2"
+
+[extraction]
 parser = "pymupdf"
 max_model_calls = 14
 
@@ -31,7 +33,7 @@ supplement = "papers/10.1002--adfm.201904856-SI.pdf"
 reference = "data/study_extraction/ground_truth/v2/dev/10.1002--adfm.201904856"
 ```
 
-`[extraction]` applies to both arms; `[control]` and `[treatment]` change only the
+`[stages.default]` selects the shared deployment. `[extraction]` applies to both arms; `[control]` and `[treatment]` change only the
 settings written there.
 
 **One `[[papers]]` block is one explicit match:**

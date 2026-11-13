@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import fields
+from dataclasses import asdict, fields
 from pathlib import Path
 from typing import Any, Literal
 from uuid import uuid4
@@ -19,6 +19,8 @@ from .configuration import (
     default,
     implementation_sha256,
     load_settings,
+    merge_deployments,
+    parse_settings,
     resolve_config,
     runtime_versions,
 )
@@ -61,10 +63,7 @@ class CohortManifest(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     purpose: str = Field(min_length=1, max_length=1000)
     split: Literal["calibration", "dev", "test"]
-    model: str | None = Field(default=None, min_length=1, max_length=300)
-    reasoning_effort: Literal["omit", "none", "minimal", "low", "medium", "high"] = (
-        "omit"
-    )
+    stages: dict[str, dict[str, Any]] = Field(default_factory=dict)
     parser: Literal["docling", "pymupdf"] = default("parser")
     claim_recall_passes: int = Field(default=default("claim_recall_passes"), ge=1, le=3)
     max_model_calls_per_paper: int | None = Field(default=None, ge=1)
@@ -77,6 +76,16 @@ def _load_manifest(path: Path) -> CohortManifest:
     """Validate cohort membership and reject ambiguous duplicate paper IDs."""
 
     manifest = CohortManifest.model_validate_json(path.read_text(encoding="utf-8"))
+    deployments = parse_settings({"stages": manifest.stages}, path.parent)[
+        "deployments"
+    ]
+    manifest = manifest.model_copy(
+        update={
+            "stages": {
+                stage: asdict(settings) for stage, settings in deployments.items()
+            }
+        }
+    )
     identifiers = [paper.paper_id for paper in manifest.papers]
     if any(name in {".", ".."} or "/" in name or "\\" in name for name in identifiers):
         raise ValueError("paper IDs must be single filename components")
@@ -112,14 +121,18 @@ def _paper_config(
 ) -> ExtractionConfig:
     """Apply the shared TOML configuration to each paper's fixed input roles."""
     settings: dict[str, Any] = {
-        "model": manifest.model or default("model"),
+        **parse_settings({"stages": manifest.stages}, Path.cwd()),
         "parser": manifest.parser,
         "claim_recall_passes": manifest.claim_recall_passes,
-        "reasoning_effort": manifest.reasoning_effort,
         "max_model_calls": manifest.max_model_calls_per_paper,
         "max_cost_usd": manifest.max_cost_usd_per_paper,
     }
-    settings.update(load_settings(config_file))
+    file_settings = load_settings(config_file)
+    # A parser-only TOML must not discard the cohort's frozen deployment.
+    file_settings["deployments"] = merge_deployments(
+        settings["deployments"], file_settings.get("deployments", {})
+    )
+    settings.update(file_settings)
     settings.update(pdf=pdf, supplement=supplement, output_dir=run_dir)
     return resolve_config(**settings)
 
@@ -223,7 +236,7 @@ def _new_attempt(paper_dir: Path) -> Path:
     "--config",
     "config_file",
     type=click.Path(path_type=Path, exists=True, dir_okay=False),
-    help="Shared extraction TOML; overrides legacy manifest settings.",
+    help="Shared extraction TOML; overrides cohort settings.",
 )
 @click.option("--env-file", type=click.Path(path_type=Path, dir_okay=False))
 @click.option(
