@@ -131,10 +131,24 @@ export LANGFUSE_BASE_URL='https://your-langfuse-host'
 perla-extract --config method.toml --pdf paper.pdf --output-dir runs/traced --langfuse
 ```
 
-Alternatively set `[tracing] langfuse = true`. The adapter creates a run trace with
-nested stages, calls and generations from the same local event stream. It sends
-execution metadata and artifact references; full source and request payloads remain
-in local artifacts. Do not enable another automatic callback for the same calls.
+Alternatively set `[tracing] langfuse = true`. The run's Input panel identifies the
+paper, SI and models; Output shows status and usage. Expand **Stage → Call → Attempt**
+to inspect individual provider requests, retries and validation failures.
+
+To inspect full prompts and responses in Langfuse, add this to the same TOML:
+
+```toml
+[tracing]
+langfuse = true
+capture_content = true
+```
+
+Content capture uploads the request messages (including paper text), response schema,
+model responses and final extraction from the local audit artifacts. Invalid JSON
+is included so truncation and validation failures can be debugged. Credentials and
+transport headers are excluded. Without `capture_content`, panels show summaries
+and artifact paths; full content stays local. Existing traces are not backfilled.
+Do not enable another automatic callback for the same calls.
 Telemetry failure is recorded locally and does not alter the scientific result.
 The dependency intentionally pins SDK v4; consult Langfuse's
 [SDK and server compatibility guidance](https://langfuse.com/docs/observability/sdk/overview)

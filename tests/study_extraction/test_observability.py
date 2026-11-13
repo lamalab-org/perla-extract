@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from perla_extract.study_extraction.client import (
     ModelBudgetExceeded,
+    ModelCallError,
     ModelClient,
     summarize_calls,
 )
@@ -444,18 +445,93 @@ def test_langfuse_has_one_generation_per_attempt_and_no_generation_for_cache(
         if event == "attempt.started"
     )
     assert sdk.flushed
-    assert all("input" not in item and "output" not in item for item in sdk.opened)
+    assert all(item["input"] for item in sdk.opened)
+    assert all(item["output"] for item in sdk.updated)
+    assert "Stage: assemble" in sdk.closed
+    assert "Call: complete_study" in sdk.closed
+    assert "System instructions" not in json.dumps(sdk.opened)
+    assert '"response":' not in json.dumps(sdk.updated)
     assert create_langfuse_adapter(enabled=False) is None
+
+
+def test_langfuse_content_capture_preserves_rejected_and_repaired_responses(
+    tmp_path, monkeypatch
+):
+    sdk = FakeLangfuse()
+    output = tmp_path / "out"
+    journal = EventJournal(
+        output, adapter=LangfuseAdapter(sdk, output_dir=output, capture_content=True)
+    )
+    monkeypatch.setenv("TEST_ENDPOINT_KEY", "secret-never-export")
+    model_client = client(
+        tmp_path,
+        journal=journal,
+        deployments={"assemble": DeploymentSettings(api_key_env="TEST_ENDPOINT_KEY")},
+    )
+    responses = iter([response({"value": "invalid"}), response({"value": 5})])
+    monkeypatch.setattr(litellm, "completion", lambda **kwargs: next(responses))
+    journal.emit("run.started", paper="paper.pdf")
+    with journal.stage("assemble"):
+        complete(model_client)
+    (output / "extraction.json").write_text('{"value": 5}')
+    journal.emit("run.finished", status="complete")
+    inputs = [item["input"] for item in sdk.opened if item["as_type"] == "generation"]
+    assert inputs[0]["messages"][0]["content"] == "System instructions"
+    assert inputs[0]["messages"][1]["content"] == "Evidence"
+    assert inputs[0]["response_format"]["json_schema"]["strict"] is True
+    assert len(inputs[1]["messages"]) > len(inputs[0]["messages"])
+    outputs = [item["output"] for item in sdk.updated if "usage_details" in item]
+    assert outputs[0]["response"] == {"value": "invalid"}
+    assert outputs[0]["validation_errors"]
+    assert outputs[1]["response"] == {"value": 5}
+    assert sdk.updated[-1]["output"]["extraction"] == {"value": 5}
+    assert "secret-never-export" not in json.dumps(sdk.opened + sdk.updated)
+
+
+def test_langfuse_content_capture_includes_invalid_json(tmp_path, monkeypatch):
+    sdk = FakeLangfuse()
+    output = tmp_path / "out"
+    journal = EventJournal(
+        output, adapter=LangfuseAdapter(sdk, output_dir=output, capture_content=True)
+    )
+    payload = response({"value": 1}).model_dump()
+    payload["choices"][0] = {
+        "finish_reason": "length",
+        "message": {"content": '{"value": '},
+    }
+    monkeypatch.setattr(
+        litellm,
+        "completion",
+        lambda **kwargs: SimpleNamespace(model_dump=lambda: payload),
+    )
+    with pytest.raises(ModelCallError, match="invalid JSON"):
+        complete(client(tmp_path, journal=journal))
+    exported = next(item for item in sdk.updated if "usage_details" in item)
+    assert exported["output"]["response"] == '{"value": '
+    assert exported["output"]["finish_reason"] == "length"
+    assert exported["level"] == "ERROR"
+
+
+def test_langfuse_capture_does_not_read_outside_run(tmp_path):
+    output = tmp_path / "out"
+    output.mkdir()
+    (tmp_path / "private.json").write_text('{"messages": "private"}')
+    sdk = FakeLangfuse()
+    adapter = LangfuseAdapter(sdk, output_dir=output, capture_content=True)
+    journal = EventJournal(output, adapter=adapter)
+    journal.emit("attempt.started", attempt_id="test", artifact="../private.json")
+    journal.emit("attempt.finished", attempt_id="test", status="failed")
+    assert "messages" not in sdk.opened[0]["input"]
 
 
 def test_installed_langfuse_sdk_accepts_adapter_arguments():
     sdk = pytest.importorskip("langfuse")
     from langfuse._client.span import LangfuseGeneration
 
-    assert {"name", "as_type", "metadata", "model"} <= set(
+    assert {"name", "as_type", "metadata", "model", "input"} <= set(
         inspect.signature(sdk.Langfuse.start_as_current_observation).parameters
     )
-    assert {"usage_details", "cost_details", "metadata", "level"} <= set(
+    assert {"usage_details", "cost_details", "metadata", "level", "output"} <= set(
         inspect.signature(LangfuseGeneration.update).parameters
     )
 
@@ -513,6 +589,10 @@ def test_langfuse_exports_to_normalized_url(tmp_path, monkeypatch, url_variable)
         ]
         assert len(spans) == 2
         assert len({span.trace_id for span in spans}) == 1
+        for span in spans:
+            attributes = {item.key: item.value.string_value for item in span.attributes}
+            assert json.loads(attributes["langfuse.observation.input"])
+            assert json.loads(attributes["langfuse.observation.output"])
         assert not any(
             e["event"] == "telemetry.failed" for e in read_events(journal.path)
         )

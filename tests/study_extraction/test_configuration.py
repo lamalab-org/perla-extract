@@ -22,6 +22,7 @@ from perla_extract.study_extraction.deployment import DeploymentSettings
         {"temperature": float("nan")},
         {"use_refinement": "false"},
         {"langfuse": 1},
+        {"langfuse_capture_content": "false"},
         {"model": ""},
         {"deployments": {"read": {"model": "example"}}},
     ],
@@ -73,6 +74,7 @@ def test_toml_relative_paths_and_explicit_overrides(tmp_path):
         '[extraction]\nmodle="typo"',
         '[stages.unknown]\nmodel="x"',
         '[tracing]\nlangfuse="false"',
+        '[tracing]\ncapture_content="false"',
     ],
 )
 def test_unknown_or_mistyped_file_settings_fail(tmp_path, text):
@@ -101,6 +103,16 @@ def test_partial_repair_limits_keep_inherited_self_hosted_transport():
     assert repair.base_url == refine.base_url
     assert repair.api_key_env == "LOCAL_KEY"
     assert repair.max_output_tokens == 512
+
+
+def test_tracing_capture_is_opt_in_and_not_a_scientific_factor(tmp_path):
+    path = tmp_path / "method.toml"
+    path.write_text("[tracing]\nlangfuse=true\ncapture_content=true\n")
+    plain = resolve_config("paper.pdf")
+    traced = resolve_config("paper.pdf", config_file=path)
+    assert not plain.langfuse_capture_content
+    assert traced.langfuse and traced.langfuse_capture_content
+    assert plain.scientific_settings() == traced.scientific_settings()
 
 
 def test_model_switch_drops_default_provider_identity_and_credentials(tmp_path):

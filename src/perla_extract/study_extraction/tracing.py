@@ -1,23 +1,32 @@
 """Optional Langfuse view of canonical local events; no automatic instrumentation.
 
-The model client owns attempts, cache hits and validation outcomes. Installing this
-adapter does not enable LiteLLM callbacks, change requests or upload full documents.
+The model client owns attempts, cache hits and validation outcomes. Summaries are
+always visible; prompt and response capture is an explicit debugging option.
 """
 
 from __future__ import annotations
 
+import json
 import os
+from pathlib import Path
 from typing import Any
 
 
 class LangfuseAdapter:
     """Map sequential run/stage/attempt boundaries onto SDK observations.
 
-    Only metadata, normalized usage and explicitly known costs are exported. Prompt and
-    response text remain in local artifacts. The journal isolates adapter failures.
+    Content capture reads the same credential-free artifacts used for local auditing.
+    It never reads environment files or changes model requests. The journal isolates
+    exporter failures from the extraction result.
     """
 
-    def __init__(self, client: Any = None) -> None:
+    def __init__(
+        self,
+        client: Any = None,
+        *,
+        output_dir: Path | None = None,
+        capture_content: bool = False,
+    ) -> None:
         if client is None:
             if not os.environ.get("LANGFUSE_PUBLIC_KEY") or not os.environ.get(
                 "LANGFUSE_SECRET_KEY"
@@ -38,8 +47,109 @@ class LangfuseAdapter:
             )
             client = Langfuse(base_url=base_url.rstrip("/") if base_url else None)
         self.client = client
+        self.output_dir = Path(output_dir).resolve() if output_dir else None
+        self.capture_content = capture_content
         self._observations: dict[str, tuple[Any, Any]] = {}
         self._stack: list[str] = []
+
+    def _artifact(self, relative: object) -> dict:
+        if (
+            not self.capture_content
+            or self.output_dir is None
+            or not isinstance(relative, str)
+        ):
+            return {}
+        path = (self.output_dir / relative).resolve()
+        if not path.is_relative_to(self.output_dir):
+            return {}
+        try:
+            value = json.loads(path.read_text())
+            return value if isinstance(value, dict) else {}
+        except (OSError, ValueError):
+            return {}
+
+    def _input(self, event: dict[str, object]) -> dict:
+        if event["event"] == "attempt.started":
+            request = self._artifact(event.get("artifact"))
+            if request:
+                # Whitelist model input, not transport credentials or HTTP headers.
+                return {
+                    key: request[key]
+                    for key in ("messages", "response_format")
+                    if key in request
+                }
+        summary: dict[str, object] = {
+            key: event[key]
+            for key in (
+                "paper",
+                "supplement",
+                "models",
+                "readings",
+                "dry_run",
+                "stage",
+                "kind",
+                "model",
+                "attempt_index",
+                "input_estimate",
+                "max_output_tokens",
+                "artifact",
+            )
+            if key in event
+        }
+        return summary or {"operation": str(event["event"]).split(".")[0]}
+
+    def _output(self, event: dict[str, object]) -> dict:
+        summary: dict[str, object] = {
+            key: event[key]
+            for key in (
+                "status",
+                "errors",
+                "error",
+                "error_type",
+                "decisions",
+                "fallback",
+                "attempt_count",
+                "cache_hit",
+                "usage",
+                "elapsed_seconds",
+                "response_artifact",
+            )
+            if key in event
+        }
+        if event["event"] == "attempt.finished" and self.capture_content:
+            relative = event.get("response_artifact")
+            response = self._artifact(relative)
+            if response.get("result") is not None:
+                return {
+                    "response": response["result"],
+                    "status": event.get("status"),
+                    "validation_errors": response.get("validation_errors", []),
+                }
+            if isinstance(relative, str):
+                failure = self._artifact(
+                    relative.removesuffix(".response.json") + ".failure.json"
+                )
+                if "content" in failure:
+                    summary["response"] = failure["content"]
+                    summary["finish_reason"] = failure.get("finish_reason")
+        elif event["event"] == "run.finished":
+            extraction = self._artifact("extraction.json")
+            if extraction:
+                summary["extraction"] = extraction
+        return summary or {"status": "finished"}
+
+    @staticmethod
+    def _name(event: dict[str, object]) -> str:
+        boundary = str(event["event"]).split(".")[0]
+        if boundary == "stage":
+            return f"Stage: {event.get('stage', 'unknown')}"
+        if boundary == "call":
+            return f"Call: {event.get('kind', 'model')}"
+        if boundary == "attempt":
+            return (
+                f"Attempt {event.get('attempt_index', 1)}: {event.get('kind', 'model')}"
+            )
+        return str(event.get("kind") or event.get("paper") or "PERLA extraction")
 
     def close(self) -> None:
         """Restore parent contexts if export fails midway through an execution."""
@@ -59,11 +169,10 @@ class LangfuseAdapter:
         if kind in {"run.started", "stage.started", "call.started", "attempt.started"}:
             generation = kind == "attempt.started"
             options: dict[str, object] = {
-                "name": str(
-                    event.get("stage") or event.get("kind") or "PERLA extraction"
-                ),
+                "name": self._name(event),
                 "as_type": "generation" if generation else "span",
                 "metadata": event,
+                "input": self._input(event),
             }
             if generation:
                 options["model"] = event.get("model")
@@ -85,6 +194,7 @@ class LangfuseAdapter:
                     child_observation.update(
                         level="ERROR",
                         metadata={"status": "interrupted", "ended_with_parent": True},
+                        output={"status": "interrupted", "ended_with_parent": True},
                     )
                 finally:
                     child_manager.__exit__(None, None, None)
@@ -93,7 +203,10 @@ class LangfuseAdapter:
                 self._stack.remove(identity)
             if opened:
                 manager, observation = opened
-                values: dict[str, object] = {"metadata": event}
+                values: dict[str, object] = {
+                    "metadata": event,
+                    "output": self._output(event),
+                }
                 if event.get("status") in {
                     "failed",
                     "blocked",
@@ -153,7 +266,11 @@ class LangfuseAdapter:
 
 
 def create_langfuse_adapter(
-    *, enabled: bool = False, client: Any = None
+    *,
+    enabled: bool = False,
+    client: Any = None,
+    output_dir: Path | None = None,
+    capture_content: bool = False,
 ) -> LangfuseAdapter | None:
     """Construct telemetry only when explicitly enabled by run configuration."""
     if not enabled:
@@ -168,4 +285,6 @@ def create_langfuse_adapter(
         raise RuntimeError(
             "Disable LiteLLM Langfuse callbacks before enabling PERLA tracing; two instrumentation paths would duplicate attempts"
         )
-    return LangfuseAdapter(client)
+    return LangfuseAdapter(
+        client, output_dir=output_dir, capture_content=capture_content
+    )

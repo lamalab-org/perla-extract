@@ -169,6 +169,8 @@ This gate concerns matching, not scientific certification or a minimum F1.
 Every attempt writes `events.jsonl`; run output directories are immutable. TOML
 stage deployments expose endpoint, revision, tokenizer, context and decoding controls.
 See [open models and tracing](../workflows/open-models.md) for a complete example.
+Langfuse shows run and call summaries by default. Set `[tracing] capture_content = true`
+in the TOML to also upload full prompts, model responses and the final extraction.
 
 ## Run an experiment
 

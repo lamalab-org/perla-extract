@@ -229,7 +229,11 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
     journal = EventJournal(config.output_dir)
     if config.langfuse:
         try:
-            journal.adapter = create_langfuse_adapter(enabled=True)
+            journal.adapter = create_langfuse_adapter(
+                enabled=True,
+                output_dir=config.output_dir,
+                capture_content=config.langfuse_capture_content,
+            )
         except Exception as error:
             logger.warning(
                 "Trace export unavailable; retaining local events ({})",
@@ -238,7 +242,16 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             journal.emit(
                 "telemetry.failed", error_type=type(error).__name__, status="disabled"
             )
-    journal.emit("run.started", dry_run=config.dry_run)
+    journal.emit(
+        "run.started",
+        dry_run=config.dry_run,
+        paper=config.pdf.name,
+        supplement=config.supplement.name if config.supplement else None,
+        models={
+            stage: policy.model for stage, policy in config.stage_policies().items()
+        },
+        readings=config.claim_recall_passes if config.use_claim_ledger else 0,
+    )
     state = RunState()
     try:
         report = _run_extraction(config, journal, state)
@@ -270,14 +283,23 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
             )
         write_json_atomic(config.output_dir / "report.json", report)
         journal.emit(
-            "run.finished", status=report["status"], error_type=type(error).__name__
+            "run.finished",
+            status=report["status"],
+            error_type=type(error).__name__,
+            errors=report.get("errors", []),
+            usage=report.get("usage", {}),
         )
         write_run_manifest(config.output_dir, run_id=journal.run_id)
         raise
     report["stages"] = [outcome.to_dict() for outcome in journal.stages]
     report["run_id"] = journal.run_id
     write_json_atomic(config.output_dir / "report.json", report)
-    journal.emit("run.finished", status=report["status"], usage=report.get("usage", {}))
+    journal.emit(
+        "run.finished",
+        status=report["status"],
+        usage=report.get("usage", {}),
+        errors=report.get("errors", []),
+    )
     write_run_manifest(config.output_dir, run_id=journal.run_id)
     return report
 

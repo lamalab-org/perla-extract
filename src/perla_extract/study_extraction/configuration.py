@@ -55,6 +55,7 @@ _OPERATIONAL = _PATHS | {
     "dry_run",
     "refresh_document_cache",
     "langfuse",
+    "langfuse_capture_content",
 }
 
 
@@ -137,6 +138,7 @@ class ExtractionConfig:
     dry_run: bool = False
     deployments: dict[str, DeploymentSettings] = field(default_factory=dict)
     langfuse: bool = False
+    langfuse_capture_content: bool = False
 
     def __post_init__(self) -> None:
         for name in _PATHS:
@@ -156,6 +158,7 @@ class ExtractionConfig:
             "reduced_export",
             "dry_run",
             "langfuse",
+            "langfuse_capture_content",
         ):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be true or false")
@@ -331,7 +334,11 @@ def parse_settings(document: dict[str, Any], directory: Path) -> dict[str, Any]:
             raise ValueError(
                 f"extraction.{key} has moved to stages.{target}; use one deployment table"
             )
-    allowed = {f.name for f in fields(ExtractionConfig)} - {"deployments", "langfuse"}
+    allowed = {f.name for f in fields(ExtractionConfig)} - {
+        "deployments",
+        "langfuse",
+        "langfuse_capture_content",
+    }
     unknown = set(options) - allowed
     if unknown:
         raise ValueError(f"unknown extraction settings: {', '.join(sorted(unknown))}")
@@ -366,11 +373,14 @@ def parse_settings(document: dict[str, Any], directory: Path) -> dict[str, Any]:
         raise ValueError(f"invalid stage configuration: {error}") from error
     _validate_deployments(options["deployments"])
     tracing = document.get("tracing", {})
-    if not isinstance(tracing, dict) or set(tracing) - {"langfuse"}:
-        raise ValueError("[tracing] accepts only langfuse = true or false")
+    if not isinstance(tracing, dict) or set(tracing) - {"langfuse", "capture_content"}:
+        raise ValueError("[tracing] accepts langfuse and capture_content booleans")
     options["langfuse"] = tracing.get("langfuse", False)
     if not isinstance(options["langfuse"], bool):
         raise ValueError("tracing.langfuse must be true or false")
+    options["langfuse_capture_content"] = tracing.get("capture_content", False)
+    if not isinstance(options["langfuse_capture_content"], bool):
+        raise ValueError("tracing.capture_content must be true or false")
     return options
 
 
