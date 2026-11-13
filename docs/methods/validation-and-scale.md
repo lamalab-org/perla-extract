@@ -108,14 +108,25 @@ The [four ablation studies](../workflows/extraction-ablations.md) isolate:
 | 3 | Claim ledger versus direct source input | Other enabled stages and budgets |
 | 4 | Cheaper claim reader | Strong assembly, repair, refinement and enrichment |
 
-Preparation makes no paid calls. It validates references, verifies input PDF/SI
-hashes, freezes the cohort and scorer, randomizes arm order and separates model
-caches. Comparison checks each run's saved settings against its prepared settings,
-including CLI defaults, model choices, stage switches, budgets and prompt/schema hashes.
-A full-release plan refuses missing papers. A smaller prespecified pilot
-remains a pilot, not a full benchmark. Record installed dependency versions and
-provider settings with the clean code revision; neither hashes nor a model name
-guarantee unchanged hosted weights or provider defaults.
+Before running, save the selected paper IDs, arm configurations, scorer settings,
+repeat count, retry policy and primary comparison in a versioned study protocol.
+Randomize or counterbalance execution order and give every attempt a separate model
+cache. These are researcher responsibilities in the current TOML-and-CSV workflow;
+there is no experiment planner that freezes or randomizes them automatically.
+
+`perla-compare` verifies saved run artifacts, requires the same source and evidence
+hashes within each pair, checks scorer/reference compatibility, and rejects settings
+that differ outside the declared factors. It requires both arms for every listed
+paper/repeat. It does not compare the CSV with a prospectively frozen cohort or
+verify that factor values and their direction are consistent across all papers.
+Inspect the saved configuration differences against the study protocol before
+interpreting an aggregate effect. A whole omitted pair cannot be detected from the
+remaining CSV alone. For full-release dataset reporting, `perla-evaluate-dataset
+--release` separately enforces the published roster and reference hashes.
+
+A smaller prespecified pilot remains a pilot, not a full benchmark. Record installed
+dependency versions and provider settings with the clean code revision; neither
+hashes nor a model name guarantee unchanged hosted weights or provider defaults.
 
 Use paired paper-level differences and all six groups' precision/recall/counts.
 Average repeated runs within papers; do not treat thousands of fields or repeated
@@ -171,7 +182,7 @@ development set; they do not retroactively turn old experiments into held-out te
 | --- | --- | --- |
 | Reference | Versioned exports, preserved corrections, integrity checks, explicit metadata audit | Reconcile source-coverage provenance; targeted checks where that evidence is absent |
 | Scorer | Deterministic contracts, adversarial controls, exact input/version accounting | Measure agreement with experts on actual predictions and semantic edge cases |
-| Ablations | Paired frozen plans, source checks, complete-roster reporting, cost visibility | Run authorized experiments, inspect errors, lock a candidate |
+| Ablations | Source/settings checks within listed pairs, paired reporting, cost visibility | Freeze the intended cohort and arm settings, check roster coverage and treatment consistency, run experiments and inspect errors |
 | Scale | Existing batch/shard tools and bounded per-run calls | Untouched-paper evaluation, safe campaign operation, production pilot and ongoing audits |
 
 Extraction accuracy and cost at corpus scale still need to be measured.

@@ -17,7 +17,8 @@ The label rules are data, not paper-specific code. The optional file
 hash and the rationale. A direct comparison of the archived snapshot confirmed that
 each affected population record was identical to the reference except for its label.
 The rules do not change any scientific values or merge reference cohorts. The scorer
-stores them in its report, and the ablation planner freezes the same file for both arms.
+stores them in its report. In the current experiment workflow, freeze the same rules
+for both arms before running; comparison rejects differing scorer configurations.
 
 All 14 equivalence probes now pass. The real-paper controls still pass for all
 88 eligible paper/control combinations. In the earlier snapshots, the Chemistry of
