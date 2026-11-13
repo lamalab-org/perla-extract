@@ -86,6 +86,9 @@ journal. [Open models and tracing](../workflows/open-models.md) explains activat
 ## Maintain experiment checks
 
 `comparison_study.py` validates the declared papers, repetitions and arm values.
+`experiment.py` derives that declaration from the user's single TOML, freezes the
+roster, and calls the existing extractor, scorer and comparator. `--check` validates
+all inputs without creating output. The runner has no independent scoring logic.
 `comparison.py` verifies saved artifacts, checks the observed settings against that
 declaration, and computes paired results. `figure_data.py` exports those results
 without rescoring them. Keep the declared cohort separate from the observed roster:

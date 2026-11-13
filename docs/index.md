@@ -27,10 +27,10 @@ Finalization can remove unsupported optional claims. It preserves the complete
 candidate and a list of removals for expert review.
 See [Evidence and validation](concepts/evidence.md) for the checks and their limits.
 
-Start with the [offline example](workflows/scoring-example.md): it produces scored
-candidates, a paired comparison and figure tables without a model or supplied PDFs.
-Then [run a controlled experiment](workflows/extraction-ablations.md), or use the
-[maintainer guide](development/maintaining.md) to find the code responsible for each step.
+Start with an [extraction](getting-started.md) or
+[run an experiment](workflows/extraction-ablations.md) from one configuration file.
+The optional [offline example](workflows/scoring-example.md) exercises scoring without
+a model. The [maintainer guide](development/maintaining.md) maps operations to code.
 The [evaluation method](methods/benchmark.md) explains the scientific contract.
 
 ## How extraction works

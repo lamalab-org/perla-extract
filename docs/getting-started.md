@@ -1,133 +1,55 @@
-<!-- generated-by: gsd-doc-writer -->
-# Getting started
-
-## First, check the workflow without a model
-
-The [offline example](workflows/scoring-example.md) creates its own evidence,
-reviewed reference, four scored candidates, paired comparison and figure tables.
-Start there to check the reporting path without credentials, PDF parsers or a GPU.
-Then follow the extraction steps below and the
-[controlled experiment guide](workflows/extraction-ablations.md).
-The [maintainer guide](development/maintaining.md) maps these operations to code.
+# Extract your first paper
 
 ## Install
 
-The standard installation includes the Docling parser and the explicit
-PyMuPDF alternative:
+From the repository root (Python 3.12):
 
 ```bash
-pip install perla-extract
-```
-
-For a repository checkout, use a separate extraction environment (Python 3.12,
-Linux/macOS):
-
-```bash
-python3.12 -m venv .venv-extraction
-source .venv-extraction/bin/activate
+python3.12 -m venv .venv
+source .venv/bin/activate
 python -m pip install -e .
 ```
 
-The offline example's `.venv-scoring` intentionally omits extraction commands and
-PDF parsers. Activate `.venv-extraction` when moving to real PDFs. For code or docs
-work, additionally install `python -m pip install -e '.[dev,docs]'`; the reviewer
-behavior tests also require Node.js 20 or newer.
+The package includes PDF parsing and model-provider support. Maintainers can add
+`python -m pip install -e '.[dev,docs]'`; reviewer UI tests also need Node.js 20+.
+The optional [offline scoring example](workflows/scoring-example.md) has a smaller,
+separate environment when you only want to try scoring.
 
-## Inspect the planned run
-
-Start with `--parser pymupdf`, which reads text without downloading parser-model
-weights. The default `docling` parser performs additional layout analysis and
-may download model weights on its first use; it needs access to the model host
-unless those weights are already cached. Select the parser explicitly and keep it
-fixed when comparing model or extraction settings.
-
-`--dry-run` parses and caches the documents, chooses a single or windowed claim-reading
-mode, and writes a call estimate without contacting a model provider:
+## Check the input, then extract
 
 ```bash
-perla-extract \
-  --pdf paper.pdf \
-  --supplement paper_si.pdf \
-  --parser pymupdf \
-  --output-dir results/paper-plan \
-  --dry-run
-```
+perla-extract --pdf paper.pdf --supplement paper_si.pdf \
+  --parser pymupdf --output-dir results/paper-check --dry-run
 
-Read `results/paper-plan/report.json` for the estimated input tokens, planned call count,
-parser events, and selected mode. Every attempt, including a dry run, requires a new
-or empty output directory. The live example below writes to `results/paper` instead.
-
-## Extract
-
-```bash
 export OPENAI_API_KEY="your-openai-key"
-
-perla-extract \
-  --pdf paper.pdf \
-  --supplement paper_si.pdf \
-  --model openai/gpt-5.2 \
-  --parser pymupdf \
-  --max-cost-usd 2.00 \
+perla-extract --pdf paper.pdf --supplement paper_si.pdf \
+  --model openai/gpt-5.2 --parser pymupdf --max-model-calls 14 \
   --output-dir results/paper
 ```
 
-Progress and periodic heartbeats go to stderr. The final report is printed as JSON on
-stdout. `--json-logs` emits machine-readable logs; `--log-level DEBUG` shows parser
-details.
+Omit `--supplement` if there is no SI. The dry run parses the input and estimates
+requests without calling a model. Each attempt needs a new output directory.
+PyMuPDF avoids parser-model downloads; the default Docling parser can download
+layout-model weights on first use.
 
-Model transport is provider-neutral through LiteLLM. The default calls OpenAI directly
-with `OPENAI_API_KEY`. Choose another backend with its provider-prefixed model name and
-standard credential, such as `openrouter/...` with `OPENROUTER_API_KEY` or
-`anthropic/...` with `ANTHROPIC_API_KEY`.
+For other providers, open-model servers and Langfuse, see
+[models and tracing](workflows/open-models.md). Limits apply per run; inspect planned
+calls before choosing a limit for a long paper.
 
 ## Read the result
 
-| Artifact | Start here to… |
+| File | What it contains |
 | --- | --- |
-| `extraction.json` | Inspect device records, measurements and their citations |
-| `document.json` | Read the parsed source text and page locations |
-| `validation.json` | Find citation, value and relationship issues |
-| `report.json` | Check completion status, calls, tokens and reported cost |
-| `run_configuration.json` | Identify the settings and source fingerprints |
+| `extraction.json` | Scientific records and citations |
+| `document.json` | Parsed source text and page locations |
+| `report.json` | Completion status, stage outcomes, calls and usage |
+| `validation.json` | Citation, value and relationship issues |
+| `run_configuration.json` | Applied settings and input fingerprints |
 
-Additional audits and exports are listed in the
-[artifact reference](workflows/extraction.md).
+Progress appears in the terminal. A `partial`, `failed` or `complete_needs_review`
+status needs inspection; `complete` records successful workflow checks, not expert
+certification of scientific correctness. [The extraction reference](workflows/extraction.md)
+explains stages, status details and retained drafts.
 
-When claim collection is windowed, every window still contributes to one combined
-`claim_ledger.json`; final study assembly remains global. Requests and preserved
-failure responses are stored under `requests/`.
-
-`report.json` uses `complete` when assembly succeeded and the enabled integrity
-and interpretation checks have no outstanding findings. `complete_needs_review`
-means validation, reader-note coverage, or optional interpretation needs attention.
-An interpretation failure can therefore appear under this status.
-`partial` means assembly succeeded but reading, refinement, or an export had errors.
-`failed` means assembly did not complete or execution stopped with an exception;
-a reading call may still have succeeded and incurred cost. `interrupted` records
-a handled cancellation. Inspect `stages`, `errors`, and `usage` for the details;
-these statuses do not certify scientific correctness.
-
-## Caching and repeatability
-
-Complete parsed documents and validated model responses use content-addressed caches.
-The parser cache retains references and document furniture for provenance, while
-`document.json` contains the scientific evidence view sent to the model. Its cache key
-covers the source, selected backend and version, block schema, and parser implementation.
-The model cache key covers the complete request, including model, schema, prompts,
-reasoning, temperature, token limits, timeout, and evidence. Requests also set a fixed
-seed. Provider behavior can still change, so the run configuration and source hashes are
-part of the scientific record.
-
-Parser code, schema, dependency, and source changes automatically produce distinct
-cache keys. Use `--refresh-document-cache` only when you explicitly want to reparse an
-otherwise identical input. Change model or request settings to produce a distinct
-model-cache key.
-
-`run_configuration.json` records a small integer `schema_version` for intentional
-compatibility breaks and automatically computed SHA-256 fingerprints for the generated
-Pydantic schema, all model prompts, and the exact deterministic evidence-span catalog.
-A schema, prompt, or citable-evidence change therefore changes provenance and cache
-identity without relying on a date string or a manual patch bump.
-Older outputs may remain readable after a schema change without containing all the
-fields supported by the new schema. Preserve their original provenance when importing
-or evaluating them.
+To compare choices, use [one experiment file](workflows/extraction-ablations.md).
+To change the implementation, start with the [maintainer guide](development/maintaining.md).

@@ -161,7 +161,28 @@ Every attempt writes `events.jsonl`; run output directories are immutable. TOML
 stage deployments expose endpoint, revision, tokenizer, context and decoding controls.
 See [open models and tracing](../workflows/open-models.md) for a complete example.
 
-## Compare experiments
+## Run an experiment
+
+```bash
+perla-experiment experiment.toml --check
+perla-experiment experiment.toml
+```
+
+The single TOML defines shared `[extraction]` settings, `[control]` and `[treatment]`
+overrides, and `[[papers]]` with `pdf`, optional `supplement`, and `reference` paths.
+Paths are relative to the TOML file. `output` names a new results directory;
+`repeats` defaults to 1 and `order_seed` to 0. Shared `[stages]` and `[tracing]` use
+the extraction configuration format; `[control.stages.NAME]` or
+`[treatment.stages.NAME]` override a stage in one arm.
+
+`--check` validates every source/reference hash and setting without parsing PDFs,
+creating outputs or making model calls. Running freezes the intended roster before
+extraction, assigns independent response caches, scores each usable result and
+writes comparison/figure data. Failed attempts remain visible and prevent a complete
+quality result. Existing output directories are refused; there is no automatic
+campaign retry or resume. See [Run an experiment](../workflows/extraction-ablations.md).
+
+## Compare externally executed runs
 
 ```bash
 perla-compare runs.csv --study study.json --output comparison.json --tables-dir figure-data
@@ -177,7 +198,7 @@ The required study JSON declares `paper_ids`, the positive integer `repeats`, an
 values. Missing/extra pairs, wrong arm values, undeclared differences and settings
 that drift across papers/repeats within an arm block the quality aggregate.
 The report and figure metadata retain the study contents and hash.
-Missing quality and missing cost remain separate. See the [ablation guide](../workflows/extraction-ablations.md).
+Missing quality and missing cost remain separate. See the [artifact reference](experiment-artifacts.md).
 
 Run `perla-extract --help` to see the complete installed command interface.
 

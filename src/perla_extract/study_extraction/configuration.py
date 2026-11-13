@@ -324,6 +324,11 @@ def load_settings(path: Path | None) -> dict[str, Any]:
     path = Path(path)
     with path.open("rb") as stream:
         document = tomllib.load(stream)
+    return parse_settings(document, path.parent)
+
+
+def parse_settings(document: dict[str, Any], directory: Path) -> dict[str, Any]:
+    """Validate settings from a standalone method or an experiment's arm tables."""
     unknown = set(document) - {"extraction", "stages", "tracing"}
     if unknown:
         raise ValueError(
@@ -341,13 +346,15 @@ def load_settings(path: Path | None) -> dict[str, Any]:
         if not isinstance(options[key], str):
             raise ValueError(f"extraction.{key} must be a path string")
         value = Path(options[key])
-        options[key] = value if value.is_absolute() else (path.parent / value).resolve()
+        options[key] = value if value.is_absolute() else (directory / value).resolve()
     stages = document.get("stages", {})
     if not isinstance(stages, dict) or set(stages) - set(STAGES):
         raise ValueError(f"stages must be tables named {', '.join(STAGES)}")
+    stages = dict(stages)
     for stage, settings in stages.items():
         if not isinstance(settings, dict):
             raise ValueError(f"stages.{stage} must be a table")
+        settings = stages[stage] = dict(settings)
         tokenizer = settings.get("tokenizer")
         if isinstance(tokenizer, str) and tokenizer not in {
             "estimate",
@@ -356,9 +363,7 @@ def load_settings(path: Path | None) -> dict[str, Any]:
         }:
             location = Path(tokenizer)
             settings["tokenizer"] = str(
-                location
-                if location.is_absolute()
-                else (path.parent / location).resolve()
+                location if location.is_absolute() else (directory / location).resolve()
             )
     try:
         options["deployments"] = {

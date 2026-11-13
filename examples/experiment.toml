@@ -1,0 +1,20 @@
+# Copy to the repository root as experiment.toml, then set your input paths.
+output = "results/readings"
+repeats = 1
+
+[extraction]
+model = "openai/gpt-5.2"
+parser = "pymupdf"
+max_model_calls = 14
+
+# Everything else is identical in both arms.
+[control]
+claim_recall_passes = 1
+
+[treatment]
+claim_recall_passes = 2
+
+[[papers]]
+pdf = "papers/PAPER_ID.pdf"
+supplement = "papers/PAPER_ID-SI.pdf" # Delete this line if the paper has no SI.
+reference = "data/study_extraction/ground_truth/v2/dev/PAPER_ID"

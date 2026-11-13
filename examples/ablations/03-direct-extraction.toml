@@ -1,3 +1,0 @@
-# Read the source directly during assembly. Preflight context coverage.
-[extraction]
-use_claim_ledger = false

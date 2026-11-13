@@ -22,7 +22,7 @@ nav:
       - Worked scoring example: workflows/scoring-example.md
       - From corrections to a benchmark: workflows/review-to-benchmark.md
       - Scoring reference: workflows/evaluation.md
-      - Extraction ablation studies: workflows/extraction-ablations.md
+      - Run an experiment: workflows/extraction-ablations.md
       - Historical comparison and preference: workflows/expert-comparison.md
   - Concepts:
       - Study model: concepts/study-model.md
@@ -40,6 +40,7 @@ nav:
       - Reduced PERLA schema: compatibility/reduced-schema.md
   - Reference:
       - Command line: reference/cli.md
+      - Experiment records: reference/experiment-artifacts.md
       - Python API: reference/python-api.md
   - Development:
       - Maintain the pipeline: development/maintaining.md

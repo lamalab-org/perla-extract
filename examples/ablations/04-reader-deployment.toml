@@ -1,4 +1,0 @@
-# Replace with the reader deployment you intend to test.
-# A model identifier is not evidence that it is cheaper or equally accurate.
-[stages.read]
-model = "openai/your-reader-model"

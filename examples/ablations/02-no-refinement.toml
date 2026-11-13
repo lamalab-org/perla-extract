@@ -1,3 +1,0 @@
-# Measure the total effect of disabling the global refinement stage.
-[extraction]
-use_refinement = false

@@ -158,10 +158,9 @@ The resulting judgment columns remain empty until a person reviews them.
 ## 3. Compare one choice at a time
 
 First test whether the full pipeline improves on direct source-to-study extraction.
-`examples/ablations/00-direct-baseline.toml` disables source reading, refinement,
-targeted repair and enrichment together. Use it for the control and the ordinary
-defaults for the treatment, with all four expected `false` → `true` factors in the
-study JSON. Hold model, parser, source scope and resource limits fixed. A direct
+In `experiment.toml`, set `use_claim_ledger`, `use_refinement`, `use_targeted_repair`
+and `use_enrichment` to `false` under `[control]` and `true` under `[treatment]`.
+Hold model, parser, source scope and resource limits fixed. A direct
 request that exceeds its context budget is a retained failure, not permission to
 truncate the source or remove that paper. This combined comparison establishes a
 baseline; it cannot attribute a difference to any one stage.
@@ -181,15 +180,16 @@ the matching rule in advance. An extra reading can improve results simply by usi
 more computation. Enrichment's downstream utility requires its own scientific
 outcomes; core extraction F1 does not validate the interpreted chemistry.
 
-Before running, save the selected paper IDs, repeat count and expected factor values
-for both arms in `study.json`, as shown in the [ablation guide](../workflows/extraction-ablations.md).
-Keep arm configurations, scorer settings, retry policy and primary comparison in
-the same versioned study protocol.
-Randomize or counterbalance execution order and give every attempt a separate model
-cache. These are researcher responsibilities in the current TOML-and-CSV workflow;
-there is no experiment planner that freezes or randomizes them automatically.
+Before running, commit `experiment.toml` with the selected sources/references,
+repeat count and both arms' settings, as shown in the
+[experiment guide](../workflows/extraction-ablations.md). Keep the scorer version,
+retry policy and primary comparison in the same versioned study protocol.
+`perla-experiment` freezes the derived study and complete roster before execution,
+shuffles execution order using the saved `order_seed` (default 0), and separates
+response caches. It stops if source, reference or configuration files change during
+the campaign. It does not rerun failed attempts automatically.
 
-`perla-compare --study study.json` verifies saved run artifacts, requires the same
+Its comparison step verifies saved run artifacts, requires the same
 source and evidence hashes within each pair, checks scorer/reference compatibility,
 and rejects settings that differ outside the declared factors. It compares the CSV
 with every declared paper/repeat, checks the expected value of each factor in each
