@@ -69,6 +69,8 @@ class NearbyProperty(StrictModel):
 
 class FactExplanation(StrictModel):
     selection: FactSelection
+    canonical_path: str
+    source_paths: list[str]
     group: FactGroup
     name: str
     owner: str
@@ -95,9 +97,9 @@ class FactExplanation(StrictModel):
 
 
 class ScoreExplanation(StrictModel):
-    """An additive artifact; the existing EvaluationReport format is unchanged."""
+    """Explain selected canonical facts and source aliases from one evaluation."""
 
-    format_version: Literal[1] = 1
+    format_version: Literal[2] = 2
     evaluation_format_version: int
     matcher_version: str
     fact_profile: str
@@ -145,6 +147,7 @@ class ExplanationCollector:
         if not 1 <= max_candidates <= 20:
             raise ValueError("max_candidates must be between 1 and 20")
         self.selections = [FactSelection.model_validate(fact) for fact in facts]
+        self.requested_selections = list(self.selections)
         keys = [(f.side, f.path, f.view) for f in self.selections]
         if len(set(keys)) != len(keys):
             raise ValueError("Fact selections must be distinct")
@@ -174,12 +177,23 @@ class ExplanationCollector:
         self.facts = truth, prediction
         self.blocked = blocked
         self.ambiguity_sources = ambiguity_sources
-        paths = [{fact.path for fact in side} for side in self.facts]
+        paths = [
+            {path: fact.path for fact in side for path in fact.source_paths}
+            for side in self.facts
+        ]
         for selection in self.selections:
             if selection.path not in paths[0 if selection.side == "truth" else 1]:
                 raise ValueError(
                     f"Not a scored {selection.side} fact path: {selection.path}"
                 )
+        self.selections = [
+            s.model_copy(update={"path": paths[0 if s.side == "truth" else 1][s.path]})
+            for s in self.requested_selections
+        ]
+        self.selected_truth = {s.path for s in self.selections if s.side == "truth"}
+        self.selected_prediction = {
+            s.path for s in self.selections if s.side == "prediction"
+        }
 
     def capture_bucket(
         self,
@@ -315,6 +329,8 @@ class ExplanationCollector:
             self.results[(selection.side, selection.path, selection.view)] = (
                 FactExplanation(
                     selection=selection,
+                    canonical_path=fact.path,
+                    source_paths=list(fact.source_paths),
                     group=fact.group,
                     name=fact.name,
                     owner=fact.owner.key,
@@ -351,5 +367,10 @@ class ExplanationCollector:
             prediction_content_sha256=report.prediction_content_sha256,
             config=report.config.model_dump(mode="json"),
             max_candidates=self.max_candidates,
-            facts=[self.results[(s.side, s.path, s.view)] for s in self.selections],
+            facts=[
+                self.results[(s.side, s.path, s.view)].model_copy(
+                    update={"selection": requested}
+                )
+                for s, requested in zip(self.selections, self.requested_selections)
+            ],
         )

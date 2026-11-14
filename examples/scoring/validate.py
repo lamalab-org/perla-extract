@@ -88,19 +88,24 @@ def controls(truth):
     count = convert_units(converted)
     if count:
         yield "equivalent_units", converted, count
-    # Remove exactly one scalar performance value, leaving specimen and protocol
-    # unchanged. Remaining scientific facts should retain their credit.
-    dropped = truth.model_copy(deep=True)
-    for observation in dropped.performance_observations:
-        if observation.metrics:
-            observation.metrics.pop(0)
-            yield "drop_one_metric", dropped, 1
-            break
     # Unique device+protocol tuples identify these records without their outcomes.
     keys = Counter(
         (o.device_id, o.measurement_type, o.scan_direction)
         for o in truth.performance_observations
     )
+    # Remove exactly one scalar performance value, leaving specimen and protocol
+    # unchanged. Remaining scientific facts should retain their credit.
+    dropped = truth.model_copy(deep=True)
+    for observation in dropped.performance_observations:
+        key = (
+            observation.device_id,
+            observation.measurement_type,
+            observation.scan_direction,
+        )
+        if observation.metrics and observation.device_id is not None and keys[key] == 1:
+            observation.metrics.pop(0)
+            yield "drop_one_metric", dropped, 1
+            break
     corrupted = truth.model_copy(deep=True)
     expected_ids = []
     for observation in corrupted.performance_observations:
@@ -128,13 +133,19 @@ def validate_control(truth, name, prediction, changes, baseline):
     score = evaluate_study(truth, prediction)
     failures = []
     if name == "equivalent_units":
-        if score.core_facts.micro.f1 != 1 or score.core_facts.issues:
+        if any(
+            getattr(score.core_facts, view) != getattr(baseline.core_facts, view)
+            for view in ("groups", "issues", "value_only")
+        ):
             failures.append("Equivalent units changed scientific credit or alignment")
     elif name == "drop_one_metric":
         for group, original in baseline.core_facts.groups.items():
-            expected = original.truth - (1 if group == "performance" else 0)
+            removed = 1 if group == "performance" else 0
             actual = score.core_facts.groups[group]
-            if (actual.predicted, actual.matched) != (expected, expected):
+            if (actual.predicted, actual.matched) != (
+                original.predicted - removed,
+                original.matched - removed,
+            ):
                 failures.append(f"Removing one metric also changed {group} credit")
     else:
         mapping = {
@@ -154,7 +165,7 @@ def validate_control(truth, name, prediction, changes, baseline):
             for a, b in zip(left.metrics, right.metrics)
         )
         for group, original in baseline.core_facts.groups.items():
-            expected = original.truth - (
+            expected = original.matched - (
                 changed_metrics if group == "performance" else 0
             )
             if score.core_facts.groups[group].matched != expected:
@@ -210,7 +221,7 @@ def run(
                 if hashlib.sha256(encoded).hexdigest() != snapshot["study_sha256"]:
                     raise ValueError(f"Archived snapshot hash mismatch: {key}")
                 snapshots[key] = StudyExtraction.model_validate(snapshot["study"])
-    results, sensitivity = [], []
+    results, sensitivity, baselines = [], [], []
     configurations = {
         "default": EvaluationConfig(),
         "matching_0.20": EvaluationConfig(minimum_record_similarity=0.20),
@@ -242,8 +253,18 @@ def run(
         if reference_content_digest(manifest) != paper["manifest_sha256"]:
             raise ValueError(f"Reference manifest differs from release: {identity}")
         baseline = evaluate_study(truth, truth)
-        if baseline.core_facts.micro.f1 != 1 or baseline.core_facts.issues:
-            raise ValueError(f"Baseline self-check failed: {identity}")
+        if baseline.core_facts.value_only.micro.f1 != 1 or (
+            baseline.core_facts.micro.f1 != 1 and not baseline.core_facts.issues
+        ):
+            raise ValueError(f"Unexplained baseline self-check failure: {identity}")
+        baselines.append(
+            {
+                "paper_id": identity,
+                "score": summary(baseline),
+                "issues": [issue.model_dump() for issue in baseline.core_facts.issues],
+                "unmatched_truth_paths": baseline.core_facts.unmatched_truth_paths,
+            }
+        )
         for name, prediction, changes in controls(truth) if include_controls else []:
             result = validate_control(truth, name, prediction, changes, baseline)
             results.append({"paper_id": identity, **result})
@@ -270,7 +291,7 @@ def run(
         rows = [r for r in results if r["case"] == name]
         counts[name] = {"tested": len(rows), "passed": sum(r["passed"] for r in rows)}
     return {
-        "format_version": 1,
+        "format_version": 2,
         "scope": "Controlled perturbations and archived reviewed-snapshot sensitivity; not expert calibration or a model ranking",
         "independent_expert_calibration": False,
         "environment": {
@@ -292,6 +313,8 @@ def run(
                     for name in (
                         "evaluation.py",
                         "scoring_facts.py",
+                        "scoring_identity.py",
+                        "scoring_process.py",
                         "scoring_claims.py",
                         "scoring_vocabulary.py",
                         "scoring_explanation.py",
@@ -310,7 +333,28 @@ def run(
         "configurations": {
             k: v.model_dump(mode="json") for k, v in configurations.items()
         },
-        "control_summary": counts,
+        "reference_self_checks": baselines,
+        "controls_requested": include_controls,
+        "control_scope": {
+            "equivalent_units": "All convertible scalar quantities; preserve baseline credit and ambiguity.",
+            "drop_one_metric": "One metric from a unique explicit device/protocol tuple.",
+            "wrong_outcomes_same_identity": "Scalar outcomes from unique explicit device/protocol tuples.",
+        },
+        "control_summary": {
+            name: {
+                **counts.get(name, {"tested": 0, "passed": 0}),
+                "not_applicable": len(release["papers"])
+                - counts.get(name, {}).get("tested", 0)
+                if include_controls
+                else 0,
+                "not_run": 0 if include_controls else len(release["papers"]),
+            }
+            for name in (
+                "equivalent_units",
+                "drop_one_metric",
+                "wrong_outcomes_same_identity",
+            )
+        },
         "controls": results,
         "snapshot_sensitivity": sensitivity,
         "missing_snapshots": missing,
@@ -344,6 +388,10 @@ def main(release_path, feedback_zip, output, include_controls, descriptor_equiva
     report = run(release_path, feedback_zip, include_controls, descriptor_equivalences)
     write_json_exclusive(output, report)
     click.echo(json.dumps(report["control_summary"], indent=2))
+    click.echo(
+        f"Reference self-checks needing identity/scope review: "
+        f"{sum(row['score']['status'] != 'ready' for row in report['reference_self_checks'])}"
+    )
     click.echo(
         f"Semantic-equivalence discrepancies: {sum(not item['agrees'] for item in report['equivalence_probe'])}; inspect {output}"
     )

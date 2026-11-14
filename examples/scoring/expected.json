@@ -1,12 +1,17 @@
 {
-  "format_version": 8,
-  "matcher_version": "rich-study-hungarian-v11",
-  "profile": "core-scientific-facts-v8",
+  "format_version": 9,
+  "matcher_version": "rich-study-hungarian-v12",
+  "profile": "core-scientific-facts-v9",
   "config": {
     "minimum_record_similarity": 0.35,
     "numeric_relative_tolerance": 1e-6,
     "numeric_absolute_tolerance": 0.0,
-    "operation_aliases": {"thermal annealing": "annealing"},
+    "operation_aliases": {
+      "thermal annealing": "annealing",
+      "spincoating": "spin coating",
+      "spin_coating": "spin coating",
+      "spin-coating": "spin coating"
+    },
     "descriptor_equivalences": []
   },
   "cases": {

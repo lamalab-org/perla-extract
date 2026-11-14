@@ -55,9 +55,11 @@ def test_nonunique_protocol_does_not_claim_known_record_identity():
     second = truth.performance_observations[0].model_copy(deep=True)
     second.observation_id = "second"
     truth.performance_observations.append(second)
-    assert "wrong_outcomes_same_identity" not in {
-        name for name, _, _ in controls(truth)
-    }
+    assert {name for name, _, _ in controls(truth)} == {"equivalent_units"}
+    baseline = evaluate_study(truth, truth)
+    assert baseline.core_facts.scoring_status == "needs_review"
+    rows = [validate_control(truth, *control, baseline) for control in controls(truth)]
+    assert all(row["passed"] for row in rows)
 
 
 @pytest.mark.parametrize(
@@ -156,6 +158,9 @@ def test_audit_is_reproducible_and_never_overwrites(one_paper_release, tmp_path)
     assert result.exit_code == 0, result.output
     report = json.loads(output.read_text(encoding="utf-8"))
     assert report["independent_expert_calibration"] is False
+    assert report["controls_requested"] is True
+    assert len(report["reference_self_checks"]) == 1
+    assert all(row["not_run"] == 0 for row in report["control_summary"].values())
     assert all(r["agrees"] for r in report["equivalence_probe"])
     assert report["code_sha256"] and report["environment"]["pint"]
     original = output.read_bytes()

@@ -9,7 +9,6 @@ from test_scoring_contracts import EVIDENCE, study
 
 from perla_extract.study_extraction.evaluation import (
     EvaluationConfig,
-    _record_features,
     evaluate_study,
 )
 from perla_extract.study_extraction.evaluation_cli import main
@@ -61,8 +60,6 @@ def value(raw, unit=None, number=None):
 def test_complete_claims(left, right, expected):
     assert equal_value(left, right, 1e-6, 0) is expected
     assert equal_value(right, left, 1e-6, 0) is expected
-    if expected:
-        assert _record_features(left) == _record_features(right)
 
 
 def equivalence_config(truth, **overrides):

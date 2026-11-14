@@ -76,6 +76,9 @@ match only one reference record.
 
 Family matching uses structure, composition and variant; missing recipes or
 measured properties lose their own credit without changing family identity.
+Device/measurement identity uses declared specimen and protocol fields, excluding
+outcomes, metric names and annotation completeness. Indistinguishable repeated
+measurements remain ambiguous even when their values differ.
 Population cohort labels, and stability specimen labels without explicit
 device links, must agree. This prevents equal outcomes from making a control and a
 treated cohort interchangeable. The rule normalizes typography, not synonyms, so
@@ -87,6 +90,11 @@ Within paired records, the scorer compares facts in six groups: performance,
 population statistics, stability, stack, composition and processing. Context identifies
 the cell, scan, layer, constituent, operation or stability checkpoint. Explicit
 sequence fields determine layer and operation order; JSON array position does not.
+Fully ordered recipes align by operation and target with gaps. Only step pairs shared
+by every optimal order-preserving alignment receive contextual credit. Conditions
+cannot break a tie. Equal properties and constituents duplicated across a layer and
+its sole explicitly linked absorber count once, with all original paths retained;
+conflicting quantities are flagged. Copies within one list remain extra facts.
 
 Single unqualified numbers with compatible explicit units are converted before
 comparison. The default relative tolerance is `1e-6`, with no absolute allowance. This permits
@@ -133,7 +141,10 @@ runs still need an explicit resolution; the command does not invent their predic
 Record matching is an estimate of identity. Similar specimens or differently grouped
 operations can produce incorrect pairings. The report lists selected pairs,
 unmatched fields and detected ambiguity so you can check them against the source.
-A pairing can be wrong even when the scorer gives no warning.
+A pairing can be wrong even when the scorer gives no warning. Eight papers in the
+frozen v2 development release contain measurement identities the current policy
+cannot distinguish in a self-comparison. Their affected facts remain in denominators
+and are flagged for review; they are not silently omitted or identified by outcomes.
 Ambiguity checks detect changes between equally optimal complete assignments, not
 just ties between two local candidates. They do not measure how plausible a pairing
 is scientifically. If families are distinguishable only by their recipes, excluding

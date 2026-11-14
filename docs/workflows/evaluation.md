@@ -80,14 +80,14 @@ You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results.
 
-Reports use format 8, matcher `rich-study-hungarian-v11` and fact profile
-`core-scientific-facts-v8`. Regenerate older reports from saved predictions before
+Reports use format 9, matcher `rich-study-hungarian-v12` and fact profile
+`core-scientific-facts-v9`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
 When loading reports, checks reject impossible match counts or rates that disagree
 with their counts. They also check scientific group totals, the group-average F1,
-the one-to-one ledger of matched and unmatched fields, and consistency across the
+the one-to-one ledger of canonical facts and their source fields, and consistency across the
 three fact-score views. These checks detect internally inconsistent reports; they
 do not authenticate an author or prove that the claimed matches are correct.
 
@@ -106,9 +106,9 @@ Use `core_facts` to assess extraction quality. The scorer counts facts in six gr
 | Performance | Reported metrics, such as PCE, Voc, Jsc and FF | Paired record, device/family links, variant, champion status, selection basis, measurement type and scan direction |
 | Population | Sample size and aggregate metrics | Paired record, cohort label, family link and statistic type; metric matches also require the same sample size |
 | Stability | Test conditions, checkpoint times, checkpoint conditions and outcomes | Paired record and specimen links; without an explicit device ID, the specimen label must also agree. Checkpoint facts also depend on the recorded time and conditions, as described below |
-| Composition | Absorber formula and properties; layer and absorber constituents, roles and amounts | Paired family, absorber/layer context and constituent association |
-| Stack | Layer materials, roles, material forms and properties; device polarity | Paired family, recorded sequence and material association |
-| Processing | Operations, materials, conditions and specimen-specific properties | Paired record, operation, recorded sequence, target layers and relevant materials or device variant |
+| Composition | Absorber formula and properties (including absorber-layer properties); layer and absorber constituents, roles and amounts | Paired family, absorber/layer context and constituent association |
+| Stack | Layer materials, roles, material forms and non-absorber properties; device polarity | Paired family, recorded sequence and material association |
+| Processing | Operations, materials, conditions and specimen-specific properties | Paired record, aligned operation, target layers and relevant materials or device variant |
 
 These groups select parts of the schema, not a fixed list of paper-specific property
 names. For example, a reported processing condition can count even if its name is
@@ -121,8 +121,22 @@ Some details affect how facts are counted:
   architecture if the string is absent. It does not split the string into layers.
 - A layer material is compared at its recorded sequence. Its role, form and
   properties also require the material to agree.
-- Processing conditions require the operation, sequence, target layers and material
-  list to agree. Specimen-specific properties use the device's family and variant.
+- Fully ordered recipes align by operation and target in relative order, allowing
+  gaps. A missing middle operation does not invalidate later retained steps solely
+  because they were renumbered. Conditions additionally require the material list
+  to agree. Partially ordered recipes retain their explicit sequence/operation/target
+  scopes; no missing sequence is inferred. Specimen-specific properties use the
+  device's family and variant.
+- Equal properties and constituents repeated in a layer and its sole explicitly
+  linked absorber count once. `core_facts.fact_sources` retains all original paths
+  for each canonical fact. Copies within one list or in different layers remain
+  separate facts. Merging allows only conversion roundoff (16 machine epsilons
+  relatively, zero absolute allowance), independently of matching tolerances.
+  Conflicting quantities across the linked representations are
+  flagged and cannot receive strict credit. No ambiguous absorber link is merged.
+- Explicit sonication cleaning can be written in the operation or as `cleaning`
+  with a `Method: sonication` condition. This counts as one operation, with both
+  original paths retained. Generic cleaning without that method is not equivalent.
 - Stability checkpoint times require matching test and checkpoint conditions.
   Checkpoint conditions require matching test conditions and time. Outcomes require
   matching test conditions, time and checkpoint conditions.
@@ -153,7 +167,8 @@ reference fact. It does not earn credit for merely mentioning PCE.
 
 One prediction fact cannot match several reference facts. Repeating a correct value
 does not earn more credit. The report lists each matched pair and each unmatched
-fact by its JSON path. To explain a selected path, use `--explain-truth`
+fact by its canonical JSON path. Any original path in `fact_sources` can also be
+explained. To explain a selected path, use `--explain-truth`
 or `--explain-prediction` with `--explanation-output`. The separate artifact names
 value/context differences, ambiguity sources, or the competing field that used a
 match. See [Explain and change scientific scoring](../development/scoring.md) for
@@ -215,18 +230,16 @@ The separate views show that the numbers were recovered but their context was no
   an extraction error or unresolved naming; inspect it before interpreting zero
   contextual credit as failure to recover any information.
 
-A processing step's identity includes its sequence, operation, targets and
-materials together. Two alternative operations can share a sequence number without
-being ambiguous. Temperatures, durations and other conditions do not distinguish
-step identity: swapping them between alternatives must still lose credit.
+For fully ordered recipes, all longest order-preserving alignments are considered.
+Only pairs shared by every optimal alignment earn contextual credit. If removing a
+repeated operation makes its identity uncertain, affected steps are flagged. A
+reversed order cannot be repaired by choosing matching temperatures or durations.
+For partially ordered recipes, sequence, operation, targets and materials define
+the scope; alternative operations may share a sequence number.
 
-Record pairing retains normalized multiword values as ordered phrases as well as
-individual words. For example, `10s/40s` and `40s/10s` produce different matching
-features. This tokenization does not alter the numeric comparison rules.
-
-For these nested objects, the scorer does not use the outcomes being scored to
-decide which object is which. For example, it will not identify an annealing step
-solely by its temperature.
+Conflicting values for the same scoped property in a layer and its sole linked
+absorber also produce an issue. The scorer keeps both values visible rather than
+selecting whichever agrees with the reference.
 
 Affected facts stay in the counts but receive no primary or attribution credit.
 They can still receive value-only credit. An ambiguous parent record can also
@@ -260,26 +273,23 @@ Display labels, recipes and measured properties do not establish family identity
 Missing properties therefore lose their own recall without erasing unchanged
 measurements linked to the family. Checked material aliases apply to these features.
 
-For other record types, the content score is:
+For other record types, similarity is the Jaccard overlap of declared identity
+features, including a shared record-type feature:
 
-```text
-content similarity = 0.75 × Jaccard(record-content tokens)
-                   + 0.25 × Jaccard(normalized property names)
+| Record | Identity fields |
+| --- | --- |
+| Individual device | Label, variant, champion status, selection basis |
+| Performance observation | Measurement type, scan direction |
+| Population | Cohort label, statistic type |
+| Stability test | Link status; specimen label without a device link; test conditions, checkpoint times and conditions |
 
-Jaccard(A, B) = number of shared entries / number of distinct entries in either set
-```
-
-Record-content features include individual words and ordered multiword values from
-materials, descriptions and reported values. The
-scorer excludes record IDs, link IDs and evidence quotations from these tokens.
-For eligible numbers, ranges and uncertainties with recognized units, it uses base-unit values and units;
-otherwise it uses raw values and units. It formats canonical numbers to 12 significant
-digits for this pairing step only. Final numeric comparison does not use that rounding.
-
-For token matching, the scorer lowercases text and simplifies punctuation.
-For scientific value comparison, it preserves chemical case and punctuation.
-Property names use the aliases described below. Two empty token sets have similarity
-1 by convention; that is not evidence that the records describe the same object.
+Parent links guide assignment separately. Complete field phrases retain order, so
+`10s/40s` and `40s/10s` remain distinct. Stability protocol quantities use canonical
+units and 12-significant-digit features; final value comparison uses the configured
+tolerances. Outcome values, metric names, property counts and population sample
+sizes do not select record identity. Omitting a metric cannot settle a repeated
+protocol's ambiguity. Distinct records with indistinguishable identities remain
+flagged even in a reference self-comparison.
 
 A candidate must reach `--minimum-record-similarity`, which defaults to 0.35.
 This number is a similarity threshold, not a probability of correctness.
@@ -290,7 +300,7 @@ are applied before pairing and fact comparison.
 
 An eligible pair receives 2 extra assignment points if its parent links agree
 under the established pairings and its protocol fields agree. The protocol fields
-are measurement type, scan direction, statistic type and sample size, where present.
+are measurement type, scan direction and statistic type, where present.
 Both-missing links can count as agreement. Families have no parent-link bonus.
 
 The Hungarian algorithm chooses the one-to-one assignment with the largest total
@@ -313,8 +323,7 @@ owner requirement. A comparison either passes or fails; there is no partial cred
 a value that falls outside the numeric tolerance. Layer and operation order comes
 from explicit sequence fields, not array position.
 
-Values still influence non-family record pairing, so this is not a fully
-value-independent identity check.
+Protocol values still help identify stability tests; their outcome values do not.
 Similar specimens can be confused, and a wrong family pairing can affect its
 children. To detect equally optimal assignments, the scorer examines the Hungarian
 solver's reduced costs: edges with zero reduced cost can participate in another

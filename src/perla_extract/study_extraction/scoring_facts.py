@@ -8,7 +8,8 @@ do not earn points. No chemical identities or missing relationships are inferred
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+import sys
+from dataclasses import dataclass, field, replace
 from typing import Literal
 
 from .models import (
@@ -34,6 +35,7 @@ from .scoring_claims import (
 from .scoring_claims import (
     scientific_value_text as scientific_value_text,
 )
+from .scoring_process import describe_process
 from .scoring_vocabulary import material_name, scoped_property_name
 
 FactGroup = Literal[
@@ -58,14 +60,12 @@ METRIC_ALIASES = {
     "referenceefficiencyretained": "efficiencyretention",
     "pceretention": "efficiencyretention",
 }
-DEFAULT_OPERATION_ALIASES = {"thermal annealing": "annealing"}
-
-
-def operation_name(value: str, aliases: dict[str, str]) -> str:
-    """Use only frozen, explicit equivalences; never infer prose similarity."""
-
-    normalized = scientific_text(value).casefold()
-    return aliases.get(normalized, normalized)
+DEFAULT_OPERATION_ALIASES = {
+    "thermal annealing": "annealing",
+    "spincoating": "spin coating",
+    "spin_coating": "spin coating",
+    "spin-coating": "spin coating",
+}
 
 
 def property_name(name: str) -> str:
@@ -113,10 +113,10 @@ class ContextComponent:
 
 @dataclass(frozen=True)
 class FactContext:
-    """Name the existing ordered requirements without adding equality constraints.
+    """Store ordered scientific requirements with their diagnostic source paths.
 
-    Names and source paths explain the requirements. Only their ordered values
-    determine equality, exactly as the former positional tuples did.
+    Component values determine equality. Names and paths identify the requirement
+    responsible for a mismatch without becoming additional matching criteria.
     """
 
     components: tuple[ContextComponent, ...] = ()
@@ -193,6 +193,7 @@ class ScientificFact:
     name: str
     value: object
     context: FactContext
+    source_paths: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -304,6 +305,8 @@ class ScientificScope:
 class FactProjection:
     facts: list[ScientificFact]
     scopes: list[ScientificScope]
+    linked_containers: list[tuple[str, str]] = field(default_factory=list)
+    conflicts: list[tuple[str, str]] = field(default_factory=list)
 
     def ambiguous_scopes(
         self, relative: float, absolute: float
@@ -319,6 +322,68 @@ class FactProjection:
             for i, left in enumerate(scopes)
             for right in scopes[i + 1 :]
             if equal_value(left.identity, right.identity, relative, absolute)
+            and not any(
+                (left.path.startswith(a + "/") and right.path.startswith(b + "/"))
+                or (left.path.startswith(b + "/") and right.path.startswith(a + "/"))
+                for a, b in self.linked_containers
+            )
+        ]
+
+    def merge_linked_representations(self) -> None:
+        """Count equal facts once across a layer and its sole linked absorber.
+
+        Only equal property, context and complete value can merge. Unit conversion
+        may introduce floating-point roundoff, allowed up to 16 machine epsilons
+        relatively, with no absolute allowance. This fixed bound is independent
+        of the scientific matching tolerance and cannot be widened by a caller.
+        Copies within
+        one list remain separate predictions. Differing singleton values on the
+        two representations are conflicts, not alternate answers to choose from.
+        Every original path survives in the representative fact's source_paths.
+        """
+
+        removed: set[str] = set()
+        replacements: dict[str, ScientificFact] = {}
+        for layer, absorber in self.linked_containers:
+            left = [f for f in self.facts if f.path.startswith(layer + "/")]
+            right = [f for f in self.facts if f.path.startswith(absorber + "/")]
+            used: set[str] = set()
+
+            def same_property(a: ScientificFact, b: ScientificFact) -> bool:
+                return (a.group, a.name, a.owner) == (
+                    b.group,
+                    b.name,
+                    b.owner,
+                ) and equal_value(a.context, b.context, 0, 0)
+
+            for b in right:
+                candidates = [a for a in left if same_property(a, b)]
+                match = next(
+                    (
+                        a
+                        for a in candidates
+                        if a.path not in used
+                        and equal_value(
+                            a.value, b.value, 16 * sys.float_info.epsilon, 0
+                        )
+                    ),
+                    None,
+                )
+                if match is not None:
+                    used.add(match.path)
+                    removed.add(b.path)
+                    replacements[match.path] = replace(
+                        match, source_paths=match.source_paths + b.source_paths
+                    )
+                elif (
+                    len(candidates) == 1
+                    and isinstance(b.value, ReportedValue)
+                    and isinstance(candidates[0].value, ReportedValue)
+                    and sum(same_property(candidates[0], f) for f in right) == 1
+                ):
+                    self.conflicts.append((candidates[0].path, b.path))
+        self.facts = [
+            replacements.get(f.path, f) for f in self.facts if f.path not in removed
         ]
 
 
@@ -327,6 +392,7 @@ def scientific_facts(
     identities: dict[str, str],
     side: str,
     operation_aliases: dict[str, str],
+    process_references: dict[str, str | None] | None = None,
 ) -> FactProjection:
     """Select key fields while retaining device, layer, recipe and checkpoint context.
 
@@ -337,6 +403,8 @@ def scientific_facts(
 
     facts: list[ScientificFact] = []
     scopes: list[ScientificScope] = []
+    linked_containers: list[tuple[str, str]] = []
+    process_references = process_references or {}
     devices = {item.device_id: item for item in study.individual_devices}
     device_paths = {
         item.device_id: f"/individual_devices/{i}"
@@ -376,9 +444,14 @@ def scientific_facts(
         name: str,
         value: object,
         context: FactContext = FactContext(),
+        source_paths: tuple[str, ...] = (),
     ) -> None:
         if value is not None and value != "not_reported" and value != "":
-            facts.append(ScientificFact(group, path, owner, name, value, context))
+            facts.append(
+                ScientificFact(
+                    group, path, owner, name, value, context, source_paths or (path,)
+                )
+            )
 
     def quantities(
         group: FactGroup,
@@ -482,6 +555,14 @@ def scientific_facts(
                     layer.layer_id: (layer.sequence, material_name(layer.material))
                     for layer in record.layers
                 }
+                linked_absorbers = {
+                    layer.layer_id: (i, absorber)
+                    for layer in record.layers
+                    for i, absorber in enumerate(record.absorbers)
+                    if absorber.layer_id == layer.layer_id
+                    and sum(a.layer_id == layer.layer_id for a in record.absorbers) == 1
+                }
+                layer_contexts: dict[str, FactContext] = {}
 
                 def layer_reference(identifier: str | None) -> object:
                     return (
@@ -516,6 +597,12 @@ def scientific_facts(
                     context = context.extend(
                         FactContext.of(base, material=material_name(layer.material))
                     )
+                    layer_contexts[layer.layer_id] = context
+                    if layer.layer_id in linked_absorbers:
+                        absorber_index, _ = linked_absorbers[layer.layer_id]
+                        linked_containers.append(
+                            (base, f"{path}/absorbers/{absorber_index}")
+                        )
                     add("stack", f"{base}/role", owner, "role", layer.role, context)
                     add(
                         "stack",
@@ -526,7 +613,10 @@ def scientific_facts(
                         context,
                     )
                     quantities(
-                        "stack",
+                        "composition"
+                        if layer.layer_id in linked_absorbers
+                        or layer.role == "absorber"
+                        else "stack",
                         f"{base}/reported_properties",
                         owner,
                         layer.reported_properties,
@@ -562,22 +652,56 @@ def scientific_facts(
                         f"{base}/properties",
                         owner,
                         absorber.properties,
-                        context,
+                        layer_contexts[absorber.layer_id]
+                        if absorber.layer_id in linked_absorbers
+                        else context,
+                        material=next(
+                            (
+                                layer.material
+                                for layer in record.layers
+                                if layer.layer_id == absorber.layer_id
+                            ),
+                            None,
+                        ),
                     )
                     chemicals(
-                        f"{base}/constituents", owner, absorber.constituents, context
+                        f"{base}/constituents",
+                        owner,
+                        absorber.constituents,
+                        layer_contexts[absorber.layer_id]
+                        if absorber.layer_id in linked_absorbers
+                        else context,
                     )
                 for i, step in enumerate(record.processing_steps):
                     base = f"{path}/processing_steps/{i}"
                     targets = UnorderedContext(
                         tuple(layer_reference(t) for t in step.target_layer_ids)
                     )
-                    context = FactContext.of(kind="step").extend(
-                        FactContext.of(
-                            base, sequence=step.sequence, target_layer_ids=targets
+                    if base in process_references:
+                        paired = process_references[base]
+                        position = FactContext.of(
+                            base,
+                            step_id=RecordReference(
+                                paired or base, None if paired else side
+                            ),
                         )
+                    else:
+                        position = FactContext.of(base, sequence=step.sequence)
+                    context = (
+                        FactContext.of(kind="step")
+                        .extend(position)
+                        .extend(FactContext.of(base, target_layer_ids=targets))
                     )
-                    operation = operation_name(step.operation, operation_aliases)
+                    description = describe_process(
+                        step,
+                        [
+                            layer.material
+                            for layer in record.layers
+                            if layer.layer_id in step.target_layer_ids
+                        ],
+                        operation_aliases,
+                    )
+                    operation = description.operation
                     scopes.append(
                         ScientificScope(
                             owner,
@@ -600,6 +724,12 @@ def scientific_facts(
                         "operation",
                         operation,
                         context,
+                        (
+                            f"{base}/operation",
+                            f"{base}/conditions/{description.method_index}",
+                        )
+                        if description.method_index is not None
+                        else (),
                     )
                     context = context.extend(FactContext.of(base, operation=operation))
                     for j, material in enumerate(step.materials):
@@ -611,20 +741,24 @@ def scientific_facts(
                             material_name(material),
                             context,
                         )
-                    quantities(
-                        "processing",
-                        f"{base}/conditions",
-                        owner,
-                        step.conditions,
-                        context.extend(
-                            FactContext.of(
-                                base,
-                                materials=UnorderedContext(
-                                    tuple(material_name(m) for m in step.materials)
-                                ),
-                            )
-                        ),
+                    condition_context = context.extend(
+                        FactContext.of(
+                            base,
+                            materials=UnorderedContext(
+                                tuple(material_name(m) for m in step.materials)
+                            ),
+                        )
                     )
+                    for j, condition in enumerate(step.conditions):
+                        if j != description.method_index:
+                            add(
+                                "processing",
+                                f"{base}/conditions/{j}",
+                                owner,
+                                property_name(condition.name),
+                                condition,
+                                condition_context,
+                            )
             elif collection == "individual_devices":
                 context = FactContext.of(
                     path,
@@ -732,4 +866,6 @@ def scientific_facts(
                             )
                         ),
                     )
-    return FactProjection(facts, scopes)
+    projection = FactProjection(facts, scopes, linked_containers)
+    projection.merge_linked_representations()
+    return projection

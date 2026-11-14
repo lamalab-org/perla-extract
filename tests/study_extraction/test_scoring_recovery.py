@@ -162,8 +162,8 @@ def test_missing_family_properties_do_not_erase_unchanged_device_results():
     result = evaluate_study(truth, prediction)
     assert result.core_facts.groups["performance"].f1 == 1
     assert (
-        result.core_facts.groups["stack"].truth
-        - result.core_facts.groups["stack"].matched
+        result.core_facts.groups["composition"].truth
+        - result.core_facts.groups["composition"].matched
         == 35
     )
 
