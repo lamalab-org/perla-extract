@@ -19,21 +19,25 @@ The public v2 release contains 30 model-assisted, finalized development referenc
 These papers have informed extraction and scoring changes. Do not relabel a subset
 as held out now: its feedback has already influenced the system.
 
-An audit with matcher v7 on 28 October 2026 counted:
+An audit with matcher v12 / fact profile v9 on 14 November 2026 counted:
 
 | Scientific group | Scored facts | Papers with at least one fact |
 | --- | ---: | ---: |
 | Performance | 1,947 | 29 |
 | Population statistics | 560 | 28 |
 | Stability | 1,152 | 23 |
-| Composition | 3,430 | 30 |
-| Stack | 2,200 | 30 |
+| Composition | 2,780 | 30 |
+| Stack | 2,159 | 30 |
 | Processing | 5,209 | 30 |
 
 These are scorer-defined facts, not independent experimental replicates. They come
 from 134 families, 340 individual devices, 432 performance observations, 142
-population summaries and 107 stability tests. All references passed self-comparison.
-This checks consistency; it does not establish source completeness or a model's accuracy.
+population summaries and 107 stability tests. Every reference recovers all its values
+in a self-comparison. Eight contain repeated measurement identities: 50 observations
+cannot be distinguished by their recorded device/protocol fields. Their contextual
+credit is withheld and flagged, while every fact remains counted. Resolve these
+against the sources before treating strict scores as scientific accuracy. Self-checks
+do not establish source completeness or agreement with independent reviewers.
 
 All 30 public manifests declare adjudication; four retain a completeness-stage
 marker. Trusted-review adoption can record completion differently, so missing markers
@@ -51,7 +55,9 @@ PYTHONPATH=.:src python -m examples.scoring.reference_audit \
 
 The command checks reference and manifest hashes, finalization declarations,
 scorer self-consistency and the complete roster. It reports group coverage and
-review-stage metadata. It does not reopen the private source documents, verify the
+review-stage metadata, plus `papers_needing_scoring_review` and each paper's exact
+self-score issues and unmatched paths. Integrity failures still stop the command;
+known identity ambiguity is saved for review. It does not reopen the private source documents, verify the
 identity of a reviewer, or certify every scientific statement. Existing audit files
 are never overwritten.
 

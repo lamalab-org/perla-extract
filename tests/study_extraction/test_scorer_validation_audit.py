@@ -211,3 +211,33 @@ def test_audit_refuses_changed_feedback_snapshot(one_paper_release, tmp_path):
         )
     with pytest.raises(ValueError, match="snapshot hash mismatch"):
         run(one_paper_release, archive)
+
+
+def test_public_reference_audit_retains_identity_issues(one_paper_release):
+    from examples.scoring.reference_audit import audit_release
+
+    report = audit_release(one_paper_release)
+    assert report["paper_count"] == 1
+    assert report["software_checks"] == "passed"
+    assert report["papers_needing_scoring_review"] == ["10.1002--adfm.201500335"]
+    paper = report["papers"]["10.1002--adfm.201500335"]
+    score = paper["self_score"]
+    assert score["micro"]["truth"] - score["micro"]["matched"] == 10
+    assert score["value_only_micro"]["f1"] == 1
+    assert score["status"] == "needs_review"
+    assert len(score["unmatched_truth_paths"]) == 10
+    assert all(issue["kind"] == "ambiguous_record" for issue in score["issues"])
+
+
+def test_public_reference_audit_still_refuses_changed_manifest(one_paper_release):
+    import json
+
+    from examples.scoring.reference_audit import audit_release
+
+    release = json.loads(one_paper_release.read_text(encoding="utf-8"))
+    path = one_paper_release.parent / release["papers"][0]["path"] / "manifest.json"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    manifest["revision"] += 1
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="manifest hash mismatch"):
+        audit_release(one_paper_release)

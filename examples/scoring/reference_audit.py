@@ -27,6 +27,8 @@ def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
     A successful self-score is a consistency control, not evidence that the source
     contains no omitted facts. Missing review-stage metadata does not prove that a
     reviewer skipped that work; retain the distinction for a provenance audit.
+    Indistinguishable measurement identities remain review issues, with every fact
+    retained. Missing value-only credit or unexplained losses are software failures.
     """
 
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
@@ -38,10 +40,12 @@ def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
     if provenance is None:
         raise ValueError("A frozen reference directory is required")
     score = evaluate_study(truth, truth, benchmark=provenance, config=config)
-    if score.core_facts.scoring_status != "ready" or score.core_facts.micro.f1 != 1:
+    if score.core_facts.value_only.micro.f1 != 1 or (
+        score.core_facts.micro.f1 != 1 and not score.core_facts.issues
+    ):
         raise ValueError(
-            f"Reference self-check needs attention: {provenance.paper_id}; inspect identity "
-            "and scorer limitations rather than changing facts to increase a score"
+            f"Unexplained reference self-check failure: {provenance.paper_id}; "
+            "inspect the scorer before changing any reference facts"
         )
     review = manifest["review"]
     stages = review.get("completed_stage_names")
@@ -55,6 +59,13 @@ def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
         "benchmark": provenance.model_dump(mode="json"),
         "truth_content_sha256": score.truth_content_sha256,
         "manifest_sha256": reference_content_digest(manifest),
+        "self_score": {
+            "status": score.core_facts.scoring_status,
+            "micro": score.core_facts.micro.model_dump(),
+            "value_only_micro": score.core_facts.value_only.micro.model_dump(),
+            "issues": [issue.model_dump() for issue in score.core_facts.issues],
+            "unmatched_truth_paths": score.core_facts.unmatched_truth_paths,
+        },
         "fact_counts": {
             name: counts.truth for name, counts in score.core_facts.groups.items()
         },
@@ -93,12 +104,17 @@ def audit_release(path: Path) -> dict:
         facts.update(check["fact_counts"])
         coverage.update(name for name, count in check["fact_counts"].items() if count)
     return {
-        "format_version": 1,
+        "format_version": 2,
         "release_sha256": release.digest(),
         "split": release.split,
         "paper_count": aggregate.paper_count,
         "matcher_version": aggregate.matcher_version,
         "software_checks": "passed",
+        "papers_needing_scoring_review": sorted(
+            paper
+            for paper, check in checks.items()
+            if check["self_score"]["status"] == "needs_review"
+        ),
         "scope": "Integrity, finalization declarations and scorer self-consistency; not independent scientific review",
         "source_documents_rechecked": False,
         "fact_counts": dict(facts),
@@ -135,7 +151,9 @@ def main(release_path: Path, output: Path) -> None:
     except (OSError, ValueError, KeyError, TypeError) as error:
         raise click.ClickException(str(error)) from error
     click.echo(
-        f"Checked {report['paper_count']} references; inspect coverage and review declarations in {output}"
+        f"Checked {report['paper_count']} references; "
+        f"{len(report['papers_needing_scoring_review'])} need identity/scope review. "
+        f"Inspect the saved issues, coverage and review declarations in {output}"
     )
 
 
