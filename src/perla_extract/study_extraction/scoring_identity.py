@@ -15,12 +15,12 @@ from .models import (
     IndividualDevice,
     PerformanceObservation,
     PopulationStatistic,
-    ReportedValue,
     StabilityTest,
 )
-from .scoring_claims import claim_feature_values, normalize_claim, scientific_text
-from .scoring_facts import property_name
-from .scoring_vocabulary import material_name
+from .scoring_claims import scientific_text
+from .scoring_context import UnorderedContext, equal_value
+from .scoring_protocol import protocol_claims
+from .scoring_vocabulary import material_name, material_stage, property_name
 
 
 def _tokens(values: Iterable[object]) -> set[str]:
@@ -36,23 +36,43 @@ def _jaccard(left: set[str], right: set[str]) -> float:
     return len(left & right) / len(left | right) if left or right else 1.0
 
 
-def record_similarity(left: object, right: object) -> float:
+def record_similarity(
+    left: object, right: object, relative: float, absolute: float
+) -> float:
     """Compare declared identity and protocol, independently of measured outcomes."""
 
     # A family describes a design. Recipe completeness and measured properties
     # must not determine its identity or suppress credit for unchanged children.
     if isinstance(left, DeviceFamily) and isinstance(right, DeviceFamily):
         return _jaccard(_family_features(left), _family_features(right))
-    return _jaccard(_identity_features(left), _identity_features(right))
+    a, b = _identity_features(left), _identity_features(right)
+    shared, total = len(a & b), len(a | b)
+    left_protocol, right_protocol = _protocol(left), _protocol(right)
+    if left_protocol or right_protocol:
+        # Missing conditions do not prove that two measurements differ. Compare
+        # only explicitly shared condition names for identity; strict fact context
+        # still requires the complete protocol. This preserves ambiguity when a
+        # second observation differs only in annotation completeness.
+        names = {v[:-1] for v in left_protocol} & {v[:-1] for v in right_protocol}
+        a_protocol = UnorderedContext(
+            tuple(v for v in left_protocol if v[:-1] in names)
+        )
+        b_protocol = UnorderedContext(
+            tuple(v for v in right_protocol if v[:-1] in names)
+        )
+        same = equal_value(a_protocol, b_protocol, relative, absolute)
+        shared += int(same)
+        total += 1 if same else 2
+    return shared / total if total else 1.0
 
 
 def _identity_features(record: object) -> set[str]:
     """Keep specimen labels and experimental protocol; exclude results and counts.
 
     Complete field values preserve distinctions such as A/B versus B/A. Device
-    properties, performance metrics, population sizes and stability outcomes are
-    scored after pairing and cannot establish that pairing. Stability conditions
-    and checkpoint times describe the protocol, not its measured response.
+    properties, outcome metrics and population sizes are scored after pairing
+    and cannot establish that pairing. Explicit protocols are compared separately
+    with the same numeric tolerance used for fact credit.
     """
 
     fields: tuple[str, ...]
@@ -74,27 +94,41 @@ def _identity_features(record: object) -> set[str]:
         if (value := getattr(record, name)) not in (None, "", "not_reported")
     }
     features.add(f"record_type:{type(record).__name__}")
+    return features
+
+
+def _protocol(record: object) -> tuple[tuple[object, ...], ...]:
+    if isinstance(record, (PerformanceObservation, PopulationStatistic)):
+        return protocol_claims(record)
     if isinstance(record, StabilityTest):
-
-        def protocol_value(scope: str, value: ReportedValue) -> None:
-            features.add(
-                repr(
-                    (
-                        scope,
-                        property_name(value.name),
-                        claim_feature_values(normalize_claim(value)),
-                    )
-                )
-            )
-
-        for condition in record.conditions:
-            protocol_value("test", condition)
+        values = [("test", property_name(v.name), v) for v in record.conditions]
         for checkpoint in record.checkpoints:
             if checkpoint.time is not None:
-                protocol_value("checkpoint_time", checkpoint.time)
-            for condition in checkpoint.conditions:
-                protocol_value("checkpoint_condition", condition)
-    return features
+                values.append(
+                    (
+                        "checkpoint_time",
+                        property_name(checkpoint.time.name),
+                        checkpoint.time,
+                    )
+                )
+            values.extend(
+                ("checkpoint_condition", property_name(v.name), v)
+                for v in checkpoint.conditions
+            )
+        return tuple(values)
+    return ()
+
+
+def family_pair_evidence(
+    left: DeviceFamily, right: DeviceFamily
+) -> dict[str, list[str]]:
+    """Expose the exact design features behind a selected family's Jaccard score."""
+    a, b = _family_features(left), _family_features(right)
+    return {
+        "shared": sorted(a & b),
+        "truth_only": sorted(a - b),
+        "prediction_only": sorted(b - a),
+    }
 
 
 def _family_features(family: DeviceFamily) -> set[str]:
@@ -108,10 +142,14 @@ def _family_features(family: DeviceFamily) -> set[str]:
     values: list[object] = [family.variant]
     for layer in family.layers:
         values.append(layer.material)
-        values.extend(c.name for c in layer.constituents)
+        values.extend(
+            c.name for c in layer.constituents if material_stage(c.role) != "recipe"
+        )
     for absorber in family.absorbers:
         values.append(absorber.formula.raw_value if absorber.formula else None)
-        values.extend(c.name for c in absorber.constituents)
+        values.extend(
+            c.name for c in absorber.constituents if material_stage(c.role) != "recipe"
+        )
     if not family.layers:
         values.append(family.full_stack_raw or family.architecture)
     features = _tokens(material_name(v) for v in values if isinstance(v, str))

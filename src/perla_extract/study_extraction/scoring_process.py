@@ -11,7 +11,39 @@ from dataclasses import dataclass, field
 
 from .models import DeviceFamily, ProcessingStep, StudyExtraction
 from .scoring_claims import scientific_text
-from .scoring_vocabulary import material_name
+from .scoring_vocabulary import material_name, property_name
+
+# These conditions describe the identified operation, independently of an optional
+# ingredients list. Concentrations and unfamiliar properties retain that list.
+OPERATION_CONDITIONS = {
+    "annealing": {
+        "annealingtime": "duration",
+        "annealingduration": "duration",
+        "time": "duration",
+        "duration": "duration",
+        "annealingtemperature": "temperature",
+        "temperature": "temperature",
+    },
+    "spin coating": {
+        "spintime": "duration",
+        "spinduration": "duration",
+        "time": "duration",
+        "duration": "duration",
+        "spinspeed": "speed",
+        "spincoatingspeed": "speed",
+    },
+}
+
+
+def condition_name(name: str, operation: str) -> str:
+    return OPERATION_CONDITIONS.get(operation, {}).get(
+        property_name(name), property_name(name)
+    )
+
+
+def independent_condition(name: str, operation: str) -> bool:
+    """Whether an already aligned operation supplies the condition's subject."""
+    return property_name(name) in OPERATION_CONDITIONS.get(operation, {})
 
 
 @dataclass(frozen=True)
@@ -33,6 +65,8 @@ def describe_process(
 
     raw = scientific_text(step.operation)
     raw = aliases.get(raw.casefold(), raw)
+    if raw.casefold() == "annealed":
+        raw = "annealing"
     operation = raw.casefold()
     cleaning = re.fullmatch(
         r"(sonication cleaning|ultrasonic cleaning|cleaning by sonication|cleaning)"

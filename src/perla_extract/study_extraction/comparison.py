@@ -22,7 +22,12 @@ from .comparison_study import cohort_issues, load_study, same_setting, setting_i
 from .evaluation import EvaluationReport, _study_digest, aggregate_evaluations
 from .figure_data import export_tables
 from .models import StudyExtraction
-from .run_artifacts import file_digest, load_run_efficiency, verify_run_manifest
+from .run_artifacts import (
+    file_digest,
+    load_run_efficiency,
+    verify_run_manifest,
+    verify_source_hashes,
+)
 
 ARMS = ("control", "treatment")
 _RUNTIME_FIELDS = {
@@ -183,6 +188,8 @@ def summarize(
             quality_available=False,
             quality_applicable=row["role"] == "paired",
             cost_available=False,
+            prediction_validation=None,
+            input_warnings=[],
         )
         try:
             manifest, digest = verify_run_manifest(directory, accounting_only=True)
@@ -223,10 +230,23 @@ def summarize(
                 )
             if report.benchmark is None or report.benchmark.paper_id != row["paper_id"]:
                 raise ValueError("Score benchmark paper differs from the roster")
-            if report.benchmark.source_sha256 and sorted(
-                report.benchmark.source_sha256
-            ) != sorted(config.get("source_sha256", [])):
-                raise ValueError("Reference source hashes differ from the run sources")
+            verify_source_hashes(report.benchmark.source_sha256, config)
+            validation = report.prediction_validation
+            row.update(
+                prediction_validation=validation.model_dump() if validation else None,
+                input_warnings=report.input_warnings,
+                scientific_scores=report.core_facts.model_dump(),
+            )
+            if run_accounting.status != "complete":
+                raise ValueError(
+                    f"Planned run is {run_accounting.status}; partial output is diagnostic only"
+                )
+            if validation and any(
+                issue.category != "citation" for issue in validation.issues
+            ):
+                raise ValueError(
+                    "Prediction has unresolved structural or unclassified validation issues"
+                )
             if (
                 report.core_facts.scoring_status != "ready"
                 or report.core_facts.macro_f1 is None
@@ -413,6 +433,19 @@ def summarize(
         accounting=accounting,
         recorded_cost_saving_fraction=saving,
         cost_scope="All unique listed paired and accounting_only attempts; unlisted work is not inferred",
+        validation_coverage={
+            "checked_runs": sum(
+                row["prediction_validation"] is not None for row in paired_rows
+            ),
+            "unavailable_runs": sum(
+                row["prediction_validation"] is None for row in paired_rows
+            ),
+            "issues": sum(
+                len(row["prediction_validation"]["issues"])
+                for row in paired_rows
+                if row["prediction_validation"]
+            ),
+        },
         configuration_differences=differences,
         runs=rows,
     )

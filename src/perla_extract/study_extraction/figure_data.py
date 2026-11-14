@@ -23,7 +23,9 @@ def _write(path: Path, columns: list[str], rows: list[dict]) -> None:
 def export_tables(result: dict, directory: Path) -> None:
     """Write a fresh table directory, including failures and analysis provenance."""
     directory.mkdir(parents=True, exist_ok=False)
-    runs, groups = [], []
+    runs: list[dict] = []
+    groups: list[dict] = []
+    subfields: list[dict] = []
     for run in result["runs"]:
         identity = {name: run[name] for name in ("paper_id", "arm", "repeat")}
         accounting = run.get("accounting", {})
@@ -35,6 +37,16 @@ def export_tables(result: dict, directory: Path) -> None:
                 "run_id": run.get("run_id"),
                 "run_dir": run["run_dir"],
                 "quality_available": run["quality_available"],
+                "validation_status": (run.get("prediction_validation") or {}).get(
+                    "status", "unavailable"
+                ),
+                "validation_issues": " | ".join(
+                    f"{item['category']}: {item['path']}: {item['reason']}"
+                    for item in (run.get("prediction_validation") or {}).get(
+                        "issues", []
+                    )
+                ),
+                "input_warnings": " | ".join(run.get("input_warnings", [])),
                 "cost_available": run["cost_available"],
                 "status": accounting.get("status"),
                 "macro_f1": run.get("macro_f1"),
@@ -68,43 +80,50 @@ def export_tables(result: dict, directory: Path) -> None:
             ("value_only", score["value_only"]),
             ("attribution", score["attribution"]),
         ):
-            for group, counts in scores["groups"].items():
-                groups.append(
-                    {
-                        **identity,
-                        "view": view,
-                        "group": group,
-                        **{
-                            key: counts[key]
-                            for key in (
-                                "truth",
-                                "predicted",
-                                "matched",
-                                "precision",
-                                "recall",
-                                "f1",
-                            )
-                        },
-                    }
-                )
+            for category, rows in (("groups", groups), ("subfields", subfields)):
+                for name, counts in scores[category].items():
+                    rows.append(
+                        {
+                            **identity,
+                            "quality_available": run["quality_available"],
+                            "view": view,
+                            "group" if category == "groups" else "subfield": name,
+                            **{
+                                key: counts[key]
+                                for key in (
+                                    "truth",
+                                    "predicted",
+                                    "matched",
+                                    "precision",
+                                    "recall",
+                                    "f1",
+                                )
+                            },
+                        }
+                    )
     _write(directory / "runs.csv", list(runs[0]), runs)
-    _write(
-        directory / "group_scores.csv",
-        [
-            "paper_id",
-            "arm",
-            "repeat",
-            "view",
-            "group",
-            "truth",
-            "predicted",
-            "matched",
-            "precision",
-            "recall",
-            "f1",
-        ],
-        groups,
-    )
+    for filename, category, rows in (
+        ("group_scores.csv", "group", groups),
+        ("subfield_scores.csv", "subfield", subfields),
+    ):
+        _write(
+            directory / filename,
+            [
+                "paper_id",
+                "arm",
+                "repeat",
+                "quality_available",
+                "view",
+                category,
+                "truth",
+                "predicted",
+                "matched",
+                "precision",
+                "recall",
+                "f1",
+            ],
+            rows,
+        )
     papers = [
         {
             "paper_id": paper["paper_id"],

@@ -6,7 +6,7 @@ import json
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 from .evidence import (
     assembled_from_quotes,
@@ -42,6 +42,7 @@ class ValidationIssue:
 
     location: Location
     reason: str
+    category: Literal["structural", "citation"] = "structural"
 
     @property
     def path(self) -> str:
@@ -52,7 +53,7 @@ class ValidationIssue:
     def as_dict(self) -> dict[str, str]:
         """Serialize without exposing internal navigation details as public schema."""
 
-        return {"path": self.path, "reason": self.reason}
+        return {"path": self.path, "reason": self.reason, "category": self.category}
 
 
 @dataclass(frozen=True)
@@ -143,6 +144,9 @@ def validate_study_details(
     def issue(location: Location, reason: str) -> None:
         issues.append(ValidationIssue(location=location, reason=reason))
 
+    def citation(location: Location, reason: str) -> None:
+        issues.append(ValidationIssue(location, reason, "citation"))
+
     def evidence_supported(items: list[dict], location: Location) -> bool:
         supported = bool(items)
         for index, reference in enumerate(items):
@@ -150,10 +154,10 @@ def validate_study_details(
             block = block_by_id.get(block_id) if isinstance(block_id, str) else None
             reference_location = (*location, "evidence", index)
             if block is None:
-                issue(reference_location, "unknown block_id")
+                citation(reference_location, "unknown block_id")
                 supported = False
             elif not source_contains_text(block.text, reference.get("quote")):
-                issue(reference_location, "quote not found in cited block")
+                citation(reference_location, "quote not found in cited block")
                 supported = False
         return supported
 
@@ -192,7 +196,7 @@ def validate_study_details(
                 )
                 raw_ok = raw_direct or raw_assembled or raw_shared_unit
                 if not raw_ok:
-                    issue(location, "raw_value not found in cited evidence")
+                    citation(location, "raw_value not found in cited evidence")
                 if evidence_ok and raw_ok:
                     source_verified_values += 1
                     source_assembled_values += int(
@@ -209,7 +213,7 @@ def validate_study_details(
                     and source_contains_text(block.text, raw_form)
                     for reference in value["evidence"]
                 ):
-                    issue(
+                    citation(
                         (*location, "material_form_raw"),
                         "material_form_raw not found in cited evidence",
                     )

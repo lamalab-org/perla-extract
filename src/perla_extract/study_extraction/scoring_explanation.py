@@ -14,6 +14,7 @@ from pydantic import Field
 from .models import ReportedValue, StrictModel
 from .scoring_claims import normalize_claim
 from .scoring_facts import FactComparison, FactGroup, ScientificFact
+from .scoring_fields import FactSubfield
 
 if TYPE_CHECKING:
     from .evaluation import EvaluationReport, FactMatch
@@ -72,6 +73,7 @@ class FactExplanation(StrictModel):
     canonical_path: str
     source_paths: list[str]
     group: FactGroup
+    subfield: FactSubfield
     name: str
     owner: str
     owner_matched: bool
@@ -99,7 +101,7 @@ class FactExplanation(StrictModel):
 class ScoreExplanation(StrictModel):
     """Explain selected canonical facts and source aliases from one evaluation."""
 
-    format_version: Literal[2] = 2
+    format_version: Literal[3] = 3
     evaluation_format_version: int
     matcher_version: str
     fact_profile: str
@@ -332,6 +334,7 @@ class ExplanationCollector:
                     canonical_path=fact.path,
                     source_paths=list(fact.source_paths),
                     group=fact.group,
+                    subfield=fact.subfield,
                     name=fact.name,
                     owner=fact.owner.key,
                     owner_matched=fact.owner.unmatched_side is None,

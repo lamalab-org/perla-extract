@@ -30,6 +30,7 @@ from perla_extract.study_extraction.reference_io import (
 )
 from perla_extract.study_extraction.reference_release import ReferenceRelease
 from perla_extract.study_extraction.scoring_facts import is_plain_number
+from perla_extract.study_extraction.scoring_protocol import protocol_name
 
 # Independent dimensional arithmetic for test transformations, not production
 # chemical/unit aliases. No formulas are inferred from the particular papers.
@@ -103,9 +104,18 @@ def controls(truth):
             observation.scan_direction,
         )
         if observation.metrics and observation.device_id is not None and keys[key] == 1:
-            observation.metrics.pop(0)
-            yield "drop_one_metric", dropped, 1
-            break
+            index = next(
+                (
+                    i
+                    for i, value in enumerate(observation.metrics)
+                    if protocol_name(value.name) is None
+                ),
+                None,
+            )
+            if index is not None:
+                observation.metrics.pop(index)
+                yield "drop_one_metric", dropped, 1
+                break
     corrupted = truth.model_copy(deep=True)
     expected_ids = []
     for observation in corrupted.performance_observations:
@@ -118,7 +128,7 @@ def controls(truth):
             continue
         changed = False
         for value in observation.metrics:
-            if is_plain_number(value):
+            if protocol_name(value.name) is None and is_plain_number(value):
                 number = value.value_number * 2 + 1
                 value.raw_value, value.value_number = str(number), number
                 changed = True
@@ -315,6 +325,9 @@ def run(
                         "evaluation.py",
                         "scoring_facts.py",
                         "scoring_identity.py",
+                        "scoring_context.py",
+                        "scoring_fields.py",
+                        "scoring_protocol.py",
                         "scoring_process.py",
                         "scoring_claims.py",
                         "scoring_vocabulary.py",

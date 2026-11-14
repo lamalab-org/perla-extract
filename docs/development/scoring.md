@@ -4,7 +4,7 @@ A scientific value earns primary credit only when its owner is paired, its prope
 and value agree, its recorded context agrees, and its attribution is unambiguous.
 Each fact can be used only once. The three score views make independent assignments:
 `strict` requires value and context, `value` ignores owner, context and ambiguity
-while retaining scientific group and property, and
+while retaining scientific group, subfield and property, and
 `attribution` ignores the value. None of these views repairs the reference.
 
 ## Find the rule
@@ -15,6 +15,9 @@ while retaining scientific group and property, and
 | Interpret a claim | `scoring_claims.py`, `normalize_claim` | Return scalar, range, uncertainty or literal; preserve unsupported claims literally |
 | Convert explicit units | `units.py` | Handle dimensions, scale and offset without inferring a missing unit |
 | Normalize names | `scoring_vocabulary.py` | Use checked material aliases and redundant material qualifiers; preserve unknown chemistry and properties |
+| Interpret measurement protocol | `scoring_protocol.py` | One checked vocabulary shared by record identity, fact context and reporting |
+| Compare context | `scoring_context.py` | Preserve units, missingness, multiplicity and numeric tolerance |
+| Classify fact subfields | `scoring_fields.py` | Assign every fact exactly once; never change parent-group weights |
 | Establish record identity | `scoring_identity.py` | Declare identity/protocol fields by type; exclude measured outcomes and metric completeness |
 | Assign records | `evaluation.py`, `_record_pairs` | Apply the frozen threshold, parent/protocol bonus and assignment ambiguity checks |
 | Align fabrication steps | `scoring_process.py` | Normalize explicit operation/method/target forms; retain only forced pairs across optimal ordered alignments |
@@ -26,9 +29,9 @@ The normalized claim retains its literal fallback. For example, a scalar with an
 unrecognized unit still needs equal raw text and the original unit spelling;
 a unit absent from the complete claim never becomes dimensionless. A recognized
 unit stated in a plain raw scalar can supply a missing convenience field; a
-contradictory field cannot be replaced. Record features use 12-significant-digit
-canonical numbers, while scientific equality uses the configured numeric tolerances.
-Feature generation and equality share interpretation, not their acceptance criteria.
+contradictory field cannot be replaced. Protocol identity and scientific equality use the same numeric tolerances.
+Only explicitly shared protocol fields distinguish candidate records; a missing
+condition cannot prove that two otherwise identical observations are different.
 
 `FactContext` components carry a name, value and source path. Their ordered values
 retain the original comparison contract; names and paths are diagnostic metadata.
@@ -98,72 +101,51 @@ the hashes identify the original inputs.
 
 ## A first contribution exercise
 
-Timebox a new maintainer's first pass to half a day:
-
-1. Explain why explicit `20 %` and `0.20 dimensionless` match, then why the same
-   value attached to the wrong scan loses strict credit but keeps value-only credit.
-   Use the public explanation API and identify the source context field.
-2. In a separate experimental change, support literal LaTeX `\pm` as another
-   spelling of symmetric uncertainty. It is deliberately unsupported by the current
-   scorer. Make the interpretation change in the claim parser; both equality and
-   record features should consume it through `normalize_claim`.
-3. Write independently expected positive cases in both directions, including
-   `20 \pm 1 °C` versus `293.15 ± 1 K`. Add negative cases for an inconsistent
-   parsed number, a changed spread, and attached `SD`/`SEM` qualifiers. Do not
-   reinterpret a range, inequality or unknown qualifier as an uncertainty.
-4. Use two distinct cohorts and reordered records to demonstrate that representation
-   changes preserve attribution, while swapping their outcomes still loses credit.
-   Assert the public fact paths and counts, not private lexical feature sets.
-5. Run the focused checks below. Explain any changed score before changing an
-   expectation. An intentional new equivalence is a scoring-policy change; review
-   the matcher/fact-profile version policy before proposing it for a benchmark.
+1. Run the example above and explain the missed PCE. Locate its `subfield` and the
+   context difference, then find the rule in the ownership table.
+2. Inspect the scoped `η` → PCE rule in `scoring_protocol.py`. Its JV positive case
+   and EQE counterexample live in `test_scoring_protocol.py`. New aliases belong
+   here or in the vocabulary, with an independently specified near-miss test.
+3. Trace `photovoltaic_metrics` through `core_facts.subfields`, a match's `subfield`,
+   and `figure-data/subfield_scores.csv`. Counts must agree; reporting must not
+   reinterpret the extraction.
 
 ```bash
 PYTHONPATH=.:src python -m pytest -q \
-  tests/study_extraction/test_scoring_contracts.py \
-  tests/study_extraction/test_scoring_equivalence.py \
-  tests/study_extraction/test_scoring_explanation.py \
-  tests/study_extraction/test_scoring_refactor_invariance.py
+  tests/study_extraction/test_scoring_protocol.py \
+  tests/study_extraction/test_scoring_materials.py \
+  tests/study_extraction/test_scoring_structure.py \
+  tests/study_extraction/test_scoring_explanation.py
 ```
-
-The frozen-reference test checks known equivalent-unit, missing-metric and changed-
-outcome controls on representative v2/dev papers, then verifies that requesting an
-explanation leaves the entire report unchanged. Expectations are scientific edits,
-not hashes that change with a dependency's lexical normalization.
 
 ## Current policy and acceptance checks
 
-`EvaluationConfig` supplies the API and CLI numeric defaults: 1% relative tolerance,
-zero absolute tolerance. The existing CLI option can reproduce the former `1e-6`
-setting. This is a configuration change; matcher v12 and fact profile v9 retain
-identical algorithms and fact inventories. Reports with differing tolerances cannot
-be aggregated. `test_scoring_tolerances.py` covers values inside/outside 1%, unit
-conversion, ranges, uncertainty widths, exact counts and the strict override.
-Raw/parsed-number consistency and duplicate merging retain their separate, much
-tighter roundoff checks.
+Report format **10**, matcher **v13**, fact profile **v10**, explanation format **3**
+are the only current contracts. Regenerate older reports from unchanged inputs.
+Frozen reference manifests keep their original metadata and data format.
 
-Matcher v12 / fact profile v9 separates outcomes from record identity, aligns fully
-ordered recipes with gaps, and counts equal properties/constituents once across a
-layer and its sole linked absorber. Format 9 reports expose the canonical fact's
-complete source-path map. Explanation format 2 accepts those aliases. Older reports
-must be regenerated from saved inputs; frozen references remain unchanged.
+The numeric default remains 1% relative and zero absolute tolerance after unit
+conversion. Counts remain exact. Raw/parsed-number consistency and duplicate
+merging retain tighter roundoff checks. Changing a tolerance creates a different
+comparison policy; reports with different policies cannot be aggregated.
 
-`test_scoring_structure.py` specifies the structural policy through the public
-scorer: omitted device properties, distinct outcomes under identical protocols,
-missing and reordered operations, repeated-step ambiguity, explicit sonication
-methods, redundant representations and contradictory linked values. An exhaustive
-small-sequence oracle independently verifies the ordered alignment algorithm.
-`test_scoring_quantity_notation.py` covers units, ranges, uncertainties and printed
-powers of ten. Do not change expected scores without explaining the scientific rule.
+This revision makes explicit protocols constrain outcomes, scopes `η` to photovoltaic
+measurements, separates recipe claims, merges redundant whole-material identities,
+and normalizes checked annealing conditions. A missing sample size loses its own
+point; conflicting reported counts still block the cohort's outcomes. An aligned
+annealing duration does not depend on an optional ingredient list; concentration
+and ratio claims still do. See the [field contract](../workflows/evaluation.md#subfields-and-their-keys)
+for every reporting category and its source fields.
 
-The release audit runs known equivalent-unit, missing-metric and changed-outcome
-controls. It preserves baseline ambiguity and reports inapplicable controls rather
-than selecting records by their answers. All 30 references remain included. Eight
-v2/dev papers have repeated measurement identities: their self-scores retain all
-values but withhold contextual credit for indistinguishable observations. The
-explicit roster in `test_reference_release.py` prevents that limitation from being
-silently added or removed. Resolve it by source review and a newly frozen reference,
-or by a separately validated identity-policy change—not by using outcomes as IDs.
+`core_facts.fact_sources` retains all aliases after merging. Selected family matches
+also expose `family_features`: shared, reference-only and prediction-only features
+from the actual matcher. Similarity is candidate evidence, not scientific credit.
+
+Run `examples.scoring.validate` and the opt-in `test_reference_release.py` checks
+against all 30 references before publishing a scoring-policy change. The controls
+change outcomes without modifying protocol descriptors. Known ambiguous observations
+stay in denominators; outcomes and annotation completeness cannot resolve them.
+Do not change a reference or an expected count simply to make the tests pass.
 
 ## Remaining scientific validation
 
@@ -175,7 +157,7 @@ batch results must not become individual-device measurements, and degradation
 before device completion must not become a completed-device stability test.
 
 Use `examples.scoring.sample_review` to prepare blinded credit/no-credit samples
-from sealed runs. Independent reviewers must judge property, value, owner, protocol
+from both prediction and reference facts in sealed runs, including reference misses. Independent reviewers must judge property, value, owner, protocol
 and source support; include false matches as well as missed matches. The tool
 provides blank judgments and a separate analyst key, not expert validation. Sampling
 one paper does not establish corpus accuracy or reference completeness. Keep papers

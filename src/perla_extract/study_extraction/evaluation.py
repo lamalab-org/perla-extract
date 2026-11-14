@@ -46,11 +46,13 @@ from .scoring_facts import (
     scientific_facts,
     scientific_text,
 )
+from .scoring_fields import FACT_SUBFIELDS, FactSubfield
+from .scoring_identity import family_pair_evidence
 from .scoring_identity import record_similarity as _record_similarity
 from .scoring_process import align_processes
 
-EVALUATION_FORMAT_VERSION: Final[Literal[9]] = 9
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v12"]] = "rich-study-hungarian-v12"
+EVALUATION_FORMAT_VERSION: Final[Literal[10]] = 10
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v13"]] = "rich-study-hungarian-v13"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -209,6 +211,7 @@ class RecordMatch(StrictModel):
     predicted_id: str
     similarity: float = Field(ge=0, le=1)
     ambiguous: bool = False
+    family_features: dict[str, list[str]] | None = None
 
 
 class FieldAgreement(StrictModel):
@@ -246,6 +249,7 @@ class EvaluationValidationIssue(StrictModel):
 
     path: str
     reason: str
+    category: Literal["structural", "citation", "unspecified"] = "unspecified"
 
 
 class PredictionValidation(StrictModel):
@@ -277,6 +281,7 @@ class FactMatch(StrictModel):
     """Identify the exact source fields that earned scientific credit."""
 
     group: FactGroup
+    subfield: FactSubfield
     truth_path: str
     predicted_path: str
 
@@ -285,6 +290,7 @@ class FactScoreView(StrictModel):
     """Expose one comparison rule with its complete counts and field-level audit."""
 
     groups: dict[FactGroup, PRF]
+    subfields: dict[FactSubfield, PRF]
     micro: PRF
     macro_f1: float | None = Field(ge=0, le=1)
     matches: list[FactMatch]
@@ -304,6 +310,18 @@ class FactScoreView(StrictModel):
         )
         if self.micro != _prf(*counts):
             raise ValueError("fact micro counts disagree with group totals")
+        if set(self.subfields) != set(FACT_SUBFIELDS) or self.micro != _prf(
+            *(
+                sum(getattr(s, field) for s in self.subfields.values())
+                for field in ("predicted", "truth", "matched")
+            )
+        ):
+            raise ValueError(
+                "fact subfields must partition the complete fact inventory"
+            )
+        matched_subfields = Counter(match.subfield for match in self.matches)
+        if any(matched_subfields[k] != s.matched for k, s in self.subfields.items()):
+            raise ValueError("fact match ledger disagrees with subfield counts")
         rates = [g.f1 for g in self.groups.values() if g.f1 is not None]
         expected = sum(rates) / len(rates) if rates else None
         if (expected is None) != (self.macro_f1 is None) or (
@@ -353,7 +371,7 @@ class CoreFactScore(FactScoreView):
     counts remain available so large recipes cannot hide poor performance extraction.
     """
 
-    profile: Literal["core-scientific-facts-v9"] = "core-scientific-facts-v9"
+    profile: Literal["core-scientific-facts-v10"] = "core-scientific-facts-v10"
     value_only: FactScoreView
     attribution: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
@@ -372,6 +390,13 @@ class CoreFactScore(FactScoreView):
                     diagnostic.predicted,
                 ) or strict.matched > diagnostic.matched:
                     raise ValueError("fact views have inconsistent counts")
+            for key, strict in self.subfields.items():
+                diagnostic = view.subfields[key]
+                if (strict.truth, strict.predicted) != (
+                    diagnostic.truth,
+                    diagnostic.predicted,
+                ) or strict.matched > diagnostic.matched:
+                    raise ValueError("fact subfield views have inconsistent counts")
         if (self.scoring_status == "needs_review") != bool(self.issues):
             raise ValueError("scoring status disagrees with issues")
         if set(self.fact_sources) != {"truth", "prediction"}:
@@ -410,8 +435,8 @@ class CoreFactScore(FactScoreView):
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[9] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v12"] = MATCHER_VERSION
+    format_version: Literal[10] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v13"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -420,6 +445,7 @@ class EvaluationReport(StrictModel):
     benchmark: BenchmarkProvenance | None = None
     prediction_validation: PredictionValidation | None = None
     run_efficiency: RunEfficiency | None = None
+    input_warnings: list[str] = Field(default_factory=list)
     config: EvaluationConfig
     reference_policy: Literal["fixed-no-exclusions"] = "fixed-no-exclusions"
     inventory: dict[RecordKind, PRF]
@@ -491,8 +517,8 @@ class EvaluationInput(StrictModel):
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[9] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v12"] = MATCHER_VERSION
+    format_version: Literal[10] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v13"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -520,6 +546,8 @@ class DatasetEvaluationReport(StrictModel):
     reported_value_accuracy_micro: Agreement
     core_fact_groups_micro: dict[FactGroup, PRF]
     core_fact_groups_macro_f1: dict[FactGroup, MetricSummary]
+    core_fact_subfields_micro: dict[FactSubfield, PRF]
+    core_fact_subfields_macro_f1: dict[FactSubfield, MetricSummary]
     core_facts_micro: PRF
     core_facts_macro_f1: MetricSummary
     core_value_only_micro: PRF
@@ -708,7 +736,7 @@ def _match(
     truth: Sequence[object],
     prediction: Sequence[object],
     threshold: float,
-    similarity: Callable[[object, object], float] = _record_similarity,
+    similarity: Callable[[object, object], float],
 ) -> list[tuple[int, int, float]]:
     """Match records globally and discard assignments below the frozen threshold."""
 
@@ -738,6 +766,8 @@ def _record_pairs(
     prediction: Sequence[object],
     identities: list[tuple[RecordKind, str, str]],
     threshold: float,
+    relative: float,
+    absolute: float,
 ) -> list[tuple[int, int, float, bool]]:
     """Prefer established parent and protocol context over coincidentally equal numbers.
 
@@ -755,7 +785,7 @@ def _record_pairs(
         # Never let coincidentally equal outcomes override a different identity.
         if scientific_descriptor(left) != scientific_descriptor(right):
             return 0
-        content = _record_similarity(left, right)
+        content = _record_similarity(left, right, relative, absolute)
         if content < threshold:
             return 0
         compatible = bool(fields) and all(
@@ -785,7 +815,12 @@ def _record_pairs(
         if selected <= 0:
             continue
         pairs.append(
-            (i, j, _record_similarity(truth[i], prediction[j]), (i, j) in ambiguous)
+            (
+                i,
+                j,
+                _record_similarity(truth[i], prediction[j], relative, absolute),
+                (i, j) in ambiguous,
+            )
         )
     return pairs
 
@@ -969,7 +1004,7 @@ def _core_fact_score(
                     kind="conflicting_representations",
                     side=side,
                     paths=list(paths),
-                    reason="A layer and its linked absorber report different values for the same scoped property.",
+                    reason="Linked material representations assert incompatible identities or values for the same claim.",
                 )
             )
         for kind in RECORD_KINDS:
@@ -1062,14 +1097,14 @@ def _core_fact_score(
                 sources[(side, fact.path)] = sorted(source_paths)
         explanation.start(expected, actual, (blocked[0], blocked[1]), sources)
     buckets: dict[
-        tuple[FactGroup, str],
+        tuple[FactGroup, FactSubfield, str],
         tuple[list[ScientificFact], list[ScientificFact]],
     ] = {}
     for side_index, facts in enumerate((expected, actual)):
         for fact in facts:
-            buckets.setdefault((fact.group, fact.name), ([], []))[side_index].append(
-                fact
-            )
+            buckets.setdefault((fact.group, fact.subfield, fact.name), ([], []))[
+                side_index
+            ].append(fact)
     strict_matches: list[FactMatch] = []
     value_matches: list[FactMatch] = []
     attribution_matches: list[FactMatch] = []
@@ -1101,6 +1136,7 @@ def _core_fact_score(
             bucket_matches[mode] = [
                 FactMatch(
                     group=left[i].group,
+                    subfield=left[i].subfield,
                     truth_path=left[i].path,
                     predicted_path=right[j].path,
                 )
@@ -1144,6 +1180,14 @@ def _fact_score_view(
     matched_right = {m.predicted_path for m in matches}
     return FactScoreView(
         groups=groups,
+        subfields={
+            key: _prf(
+                sum(f.subfield == key for f in actual),
+                sum(f.subfield == key for f in expected),
+                sum(m.subfield == key for m in matches),
+            )
+            for key in FACT_SUBFIELDS
+        },
         micro=_prf(len(actual), len(expected), len(matches)),
         macro_f1=sum(rates) / len(rates) if rates else None,
         matches=matches,
@@ -1258,6 +1302,8 @@ def evaluate_study(
             prediction_records,
             identity_pairs,
             config.minimum_record_similarity,
+            config.numeric_relative_tolerance,
+            config.numeric_absolute_tolerance,
         )
         total_truth_values += sum(
             len(_reported_values(record)) for record in truth_records
@@ -1299,6 +1345,9 @@ def evaluate_study(
                     predicted_id=_record_id(kind, predicted_record),
                     similarity=similarity,
                     ambiguous=ambiguous,
+                    family_features=family_pair_evidence(truth_record, predicted_record)
+                    if kind == "device_families"
+                    else None,
                 )
             )
 
@@ -1351,6 +1400,9 @@ def evaluate_study(
         benchmark=benchmark,
         prediction_validation=prediction_validation,
         run_efficiency=run_efficiency,
+        input_warnings=_input_warnings(
+            truth, prediction, benchmark, run_manifest_sha256
+        ),
         config=config,
         core_facts=_core_fact_score(
             truth,
@@ -1386,6 +1438,40 @@ def evaluate_study(
         unmatched_truth_record_keys=sorted(unmatched_truth),
         unmatched_prediction_record_keys=sorted(unmatched_prediction),
     )
+
+
+def _input_warnings(
+    truth: StudyExtraction,
+    prediction: StudyExtraction,
+    benchmark: BenchmarkProvenance | None,
+    run_manifest_sha256: str | None,
+) -> list[str]:
+    """Expose metadata conflicts without treating an extracted DOI as source identity."""
+
+    warnings = []
+    if run_manifest_sha256 is None:
+        warnings.append(
+            "Prediction has no sealed source provenance; source compatibility is unverified."
+        )
+    if benchmark is None or not benchmark.source_sha256:
+        warnings.append(
+            "Reference source provenance is unavailable; scores are diagnostic agreement."
+        )
+
+    def doi(value: str) -> str:
+        return re.sub(
+            r"^(?:https?://(?:dx\.)?doi\.org/|doi:\s*)", "", value.strip(), flags=re.I
+        ).casefold()
+
+    if (
+        truth.paper.doi
+        and prediction.paper.doi
+        and doi(truth.paper.doi) != doi(prediction.paper.doi)
+    ):
+        warnings.append(
+            "Extracted paper DOI differs from the reference; check the bound source files."
+        )
+    return warnings
 
 
 def evaluate_study_with_explanations(
@@ -1732,6 +1818,23 @@ def aggregate_evaluations(
                 seed=seed + 200 + i,
             )
             for i, group in enumerate(FACT_GROUPS)
+        },
+        core_fact_subfields_micro={
+            key: _prf(
+                *(
+                    sum(getattr(r.core_facts.subfields[key], field) for r in reports)
+                    for field in ("predicted", "truth", "matched")
+                )
+            )
+            for key in FACT_SUBFIELDS
+        },
+        core_fact_subfields_macro_f1={
+            key: _metric_summary(
+                (r.core_facts.subfields[key].f1 for r in reports),
+                bootstrap_samples=bootstrap_samples,
+                seed=seed + 100 + i,
+            )
+            for i, key in enumerate(FACT_SUBFIELDS)
         },
         core_facts_micro=_prf(
             sum(r.core_facts.micro.predicted for r in reports),

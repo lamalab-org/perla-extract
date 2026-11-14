@@ -246,7 +246,8 @@ def build_example(output: Path) -> dict:
         write_json_atomic(
             run / "report.json",
             {
-                "status": "synthetic_no_model_calls",
+                "status": "complete",
+                "synthetic_no_model_calls": True,
                 "elapsed_seconds": perf_counter() - started,
                 "usage": {
                     "live_calls": 0,

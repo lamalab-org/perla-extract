@@ -62,7 +62,7 @@ perla-scoring-example/
   study.json                        # Expected paper, repeat and synthetic candidate labels
   runs.csv                          # Seed/control and corrected/treatment paths
   comparison.json                   # Paired result and input checks
-  figure-data/                      # runs.csv, group_scores.csv, paired_papers.csv, analysis.json
+  figure-data/                      # runs.csv, group_scores.csv, subfield_scores.csv, paired_papers.csv, analysis.json
   review/                           # Simulated saved review state
   truth/dev/10.0000--synthetic/
     ground_truth.json                # Corrected reference
@@ -109,7 +109,8 @@ arms have zero model calls; their difference is not a measurement of an extracti
 improvement or cost saving.
 
 Open `figure-data/paired_papers.csv` to inspect the difference and
-`figure-data/group_scores.csv` to trace it to counts. The comparison checks that
+`figure-data/group_scores.csv` to trace it to counts.
+`figure-data/subfield_scores.csv` gives the finer breakdown from the same ledger. The comparison checks that
 both runs bind the same source bytes and evidence spans. Here the invented evidence
 JSON is the source; real extraction runs fingerprint their PDFs instead.
 

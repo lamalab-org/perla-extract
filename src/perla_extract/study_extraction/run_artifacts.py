@@ -20,6 +20,22 @@ REQUIRED_FILES = ("run_configuration.json", "report.json")
 OPTIONAL_FILES = ("extraction.json", "document.json")
 
 
+def verify_source_hashes(reference: list[str], configuration: object) -> None:
+    """Require the same main paper and supplements when reference hashes exist.
+
+    Input hashes come from the sealed run configuration, not extracted metadata.
+    Absence of reference hashes cannot establish compatibility; callers retain
+    that provenance limitation in their reports.
+    """
+
+    if not isinstance(configuration, dict):
+        raise ValueError("Run configuration must be an object")
+    if reference and sorted(reference) != sorted(
+        configuration.get("source_sha256", [])
+    ):
+        raise ValueError("Reference source hashes differ from the run sources")
+
+
 class RunManifest(BaseModel):
     """Identify an attempt, including failed attempts that produced no prediction."""
 

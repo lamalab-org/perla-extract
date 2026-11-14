@@ -121,6 +121,27 @@ def test_identical_science_with_different_ids_scores_perfectly():
     assert not report.unmatched_prediction_record_keys
 
 
+def test_doi_conflict_is_visible_without_overriding_scientific_values():
+    truth, prediction = study(), study()
+    prediction.paper.doi = "10.9999/other-paper"
+    report = evaluate_study(truth, prediction)
+    assert any("DOI differs" in message for message in report.input_warnings)
+    assert report.core_facts.micro.f1 == 1
+    prediction.paper.doi = "https://doi.org/10.1/example"
+    assert not any(
+        "DOI differs" in m for m in evaluate_study(truth, prediction).input_warnings
+    )
+
+
+def test_source_compatibility_uses_bound_hashes_including_supplements():
+    from perla_extract.study_extraction.run_artifacts import verify_source_hashes
+
+    verify_source_hashes(["main", "si"], {"source_sha256": ["si", "main"]})
+    for sources in (["main"], ["other", "si"], []):
+        with pytest.raises(ValueError, match="source hashes differ"):
+            verify_source_hashes(["main", "si"], {"source_sha256": sources})
+
+
 @pytest.mark.parametrize("side", ["truth", "prediction"])
 @pytest.mark.parametrize(
     "kind", ["device_families", "individual_devices", "performance_observations"]
@@ -1483,9 +1504,9 @@ def test_old_scoring_report_is_not_silently_loaded_as_current():
     from pydantic import ValidationError
 
     payload = evaluate_study(study(), study()).model_dump()
-    assert payload["format_version"] == 9
-    assert payload["core_facts"]["profile"] == "core-scientific-facts-v9"
-    payload["format_version"] = 5
+    assert payload["format_version"] == 10
+    assert payload["core_facts"]["profile"] == "core-scientific-facts-v10"
+    payload["format_version"] = 9
     with pytest.raises(ValidationError):
         EvaluationReport.model_validate(payload)
 

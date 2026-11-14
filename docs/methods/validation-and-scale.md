@@ -117,14 +117,17 @@ PYTHONPATH=.:src python -m examples.scoring.sample_review \
 ```
 
 The command verifies that `evaluation.json` matches the reference and sealed run.
-It samples without replacement within each scientific group and whether the scorer
-awarded credit. Each nonempty stratum contributes at most `--per-stratum` fields.
+Use `--score path/to/fresh-evaluation.json` when rescoring into a separate file;
+previous reports can stay unchanged.
+It samples without replacement within each side (prediction/reference), scientific group and whether the scorer
+awarded credit. Reference misses are included, as are awarded reference facts, so
+the side alone does not reveal the scorer decision. Each nonempty stratum contributes at most `--per-stratum` fields.
 An existing output directory is refused. It makes no model calls and supplies no
 expert labels.
 
 Give reviewers **only `review/`**, plus the original PDF and SI. It contains complete
 `candidate.json` and `reference.json` scientific records, and `judgments.csv` listing
-the sampled prediction paths in shuffled order. Filenames and the CSV omit the model
+the sampled side and field paths in shuffled order. Filenames and the CSV omit the model
 name, arm and scorer decisions. Check that scientific prose does not itself reveal
 the candidate's origin. Keep `analyst-key.json` private until judgments are locked;
 it binds the sample to input hashes and retains credit decisions, stratum sizes and

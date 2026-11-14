@@ -23,11 +23,11 @@ def inputs(tmp_path):
 def test_sample_covers_both_credit_decisions_without_revealing_them(inputs, tmp_path):
     truth, prediction = inputs
     output = tmp_path / "sample"
-    assert prepare(truth, prediction, output, per_stratum=1, seed=17) == 2
+    assert prepare(truth, prediction, output, per_stratum=1, seed=17) == 4
     with (output / "review/judgments.csv").open() as stream:
         rows = list(csv.DictReader(stream))
     assert set(rows[0]) == set(LABEL_COLUMNS)
-    assert all(not row[name] for row in rows for name in LABEL_COLUMNS[3:])
+    assert all(not row[name] for row in rows for name in LABEL_COLUMNS[4:])
     assert "scorer_awarded_credit" not in (output / "review/judgments.csv").read_text()
     assert {path.name for path in (output / "review").iterdir()} == {
         "candidate.json",
@@ -37,7 +37,12 @@ def test_sample_covers_both_credit_decisions_without_revealing_them(inputs, tmp_
     key = json.loads((output / "analyst-key.json").read_text())
     assert {item["scorer_awarded_credit"] for item in key["items"]} == {True, False}
     assert {item["inclusion_probability"] for item in key["items"]} == {1, 0.5}
-    assert sum(stratum["population"] for stratum in key["strata"]) == 3
+    assert sum(stratum["population"] for stratum in key["strata"]) == 6
+    assert {item["side"] for item in key["items"]} == {"truth", "prediction"}
+    assert any(
+        item["side"] == "truth" and not item["scorer_awarded_credit"]
+        for item in key["items"]
+    )
     assert key["score_sha256"] and key["run_manifest_sha256"]
     assert {row["item_id"] for row in rows} == {
         item["item_id"] for item in key["items"]
@@ -85,3 +90,15 @@ def test_review_labels_are_never_overwritten(inputs, tmp_path):
     assert "choose a new directory" in result.output
     assert "Traceback" not in result.output
     assert labels.read_text() == "expert work already saved"
+
+
+def test_fresh_score_can_be_sampled_without_replacing_the_historical_report(
+    inputs, tmp_path
+):
+    truth, prediction = inputs
+    original = prediction / "evaluation.json"
+    fresh = tmp_path / "rescored.json"
+    fresh.write_bytes(original.read_bytes())
+    original.write_text("Historical report kept separately")
+    assert prepare(truth, prediction, tmp_path / "sample", 1, 17, fresh) == 4
+    assert original.read_text() == "Historical report kept separately"

@@ -10,6 +10,8 @@ from examples.scoring.run import quantity, seed_study
 from perla_extract.study_extraction.comparison import main, paired_interval, summarize
 from perla_extract.study_extraction.evaluation import (
     BenchmarkProvenance,
+    EvaluationReport,
+    PredictionValidation,
     evaluate_study,
 )
 from perla_extract.study_extraction.run_artifacts import (
@@ -108,6 +110,53 @@ def test_complete_comparison_preserves_pairing_and_cost(roster):
     assert result["recorded_cost_saving_fraction"] == 0.5
     assert result["accounting"]["control"]["planned_runs"] == 4
     assert result["quality"]["paired_macro_f1_delta_interval"]["paper_count"] == 2
+
+
+def test_sealed_partial_output_cannot_turn_a_failed_attempt_into_completed_quality(
+    roster,
+):
+    directory = roster.parent / "paper-a/control/1"
+    path = directory / "report.json"
+    raw = json.loads(path.read_text())
+    raw["status"] = "failed"
+    path.write_text(json.dumps(raw))
+    (directory / "run_manifest.json").unlink()
+    write_run_manifest(directory)
+    _, digest = verify_run_manifest(directory)
+    score_path = directory / "evaluation.json"
+    score = EvaluationReport.model_validate_json(score_path.read_bytes())
+    score.run_manifest_sha256 = digest
+    score.run_efficiency = load_run_efficiency(path)
+    score_path.write_text(score.model_dump_json())
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
+    assert result["quality"] is None
+    assert result["accounting"]["control"]["total_cost_usd"] == 8
+    assert result["accounting"]["control"]["completion_fraction"] == 0.75
+    assert any(
+        "partial output is diagnostic" in issue for issue in result["quality_issues"]
+    )
+
+
+@pytest.mark.parametrize(
+    "category,ready",
+    [("structural", False), ("unspecified", False), ("citation", True)],
+)
+def test_validation_categories_are_visible_and_only_safe_diagnostics_allow_comparison(
+    roster, category, ready
+):
+    path = roster.parent / "paper-a/control/1/evaluation.json"
+    score = EvaluationReport.model_validate_json(path.read_bytes())
+    score.prediction_validation = PredictionValidation(
+        status="needs_review",
+        counts={},
+        issues=[dict(path="/some/field", reason="Test issue", category=category)],
+    )
+    path.write_text(score.model_dump_json())
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
+    assert (result["quality"] is not None) is ready
+    assert result["validation_coverage"] == dict(
+        checked_runs=1, unavailable_runs=7, issues=1
+    )
 
 
 @pytest.mark.parametrize(

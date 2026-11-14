@@ -11,6 +11,68 @@ import re
 
 from .scoring_claims import scientific_text, scientific_value_text
 
+METRIC_ALIASES = {
+    "powerconversionefficiency": "pce",
+    "opencircuitvoltage": "voc",
+    "shortcircuitcurrentdensity": "jsc",
+    "fillfactor": "ff",
+    "referenceefficiencyretained": "efficiencyretention",
+    "pceretention": "efficiencyretention",
+    "chlorineinresultingperovskitefilms": "chlorineinresultingperovskitefilm",
+}
+
+
+def property_name(name: str) -> str:
+    """Normalize typography and checked property synonyms; retain unknown concepts."""
+    key = re.sub(r"[\s_-]+", "", scientific_text(name).casefold())
+    return METRIC_ALIASES.get(key, key)
+
+
+MATERIAL_ROLES = {
+    "perovskiteabsorber": "absorber",
+    "hostabsorber": "absorber",
+    "absorber": "absorber",
+    "holetransportmaterial": "hole_transport_layer",
+    "holetransportlayer": "hole_transport_layer",
+    "htl": "hole_transport_layer",
+    "electrontransportmaterial": "electron_transport_layer",
+    "electrontransportlayer": "electron_transport_layer",
+    "etl": "electron_transport_layer",
+    "transparentelectrode": "transparent_electrode",
+    "backelectrode": "back_electrode",
+    "electrode": "electrode",
+    "contact": "contact",
+    "substrate": "substrate",
+    "precursor": "precursor",
+    "perovskiteprecursor": "precursor",
+    "precursoradditive": "precursor_additive",
+}
+FUNCTION_ROLES = frozenset(MATERIAL_ROLES.values()) - {
+    "precursor",
+    "precursor_additive",
+}
+
+
+def material_role(role: str | None) -> str | None:
+    """Normalize a constituent's stated function, retaining unknown qualifiers."""
+    return (
+        MATERIAL_ROLES.get(property_name(role), scientific_text(role)) if role else None
+    )
+
+
+def material_stage(role: str | None) -> str:
+    """An explicit precursor role is recipe scope; unknown roles remain unspecified."""
+    canonical = material_role(role)
+    if canonical in {"precursor", "precursor_additive"}:
+        return "recipe"
+    return "finished" if canonical in FUNCTION_ROLES else "unspecified"
+
+
+def whole_material_role(role: str | None) -> bool:
+    """An additive or crystallographic-site constituent cannot stand for a whole layer."""
+    return role is None or material_role(role) in FUNCTION_ROLES
+
+
 # Full chemical names are case-insensitive; formula symbols are not.
 MATERIAL_NAMES = {
     "gold": "Au",
@@ -65,6 +127,11 @@ def material_name(value: str) -> str:
         if left is not None and left == right:
             return left
     return text
+
+
+def known_material(value: str) -> bool:
+    """Limit automatic identity-conflict flags to the checked material vocabulary."""
+    return material_name(value) in _SYMBOLS
 
 
 def scoped_property_name(name: str, material: str) -> str:

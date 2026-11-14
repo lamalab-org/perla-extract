@@ -19,7 +19,11 @@ from .models import EvidenceBlock, StudyExtraction
 from .reference_io import load_reference
 from .reference_io import load_study as _study
 from .reference_io import read_json as _json
-from .run_artifacts import load_run_efficiency, verify_run_manifest
+from .run_artifacts import (
+    load_run_efficiency,
+    verify_run_manifest,
+    verify_source_hashes,
+)
 from .scoring_explanation import FactSelection
 from .validation import validate_study
 
@@ -190,6 +194,11 @@ def main(
         if prediction.is_dir():
             manifest, manifest_digest = verify_run_manifest(prediction)
             run_id = manifest.run_id
+            if benchmark is not None:
+                verify_source_hashes(
+                    benchmark.source_sha256,
+                    _json(prediction / "run_configuration.json"),
+                )
         explanation = None
         if explanation_output is not None:
             report, explanation = evaluate_study_with_explanations(
@@ -235,6 +244,8 @@ def main(
                 f"Cannot create {destination}; choose a new output path: {exc}"
             ) from exc
         click.echo(str(destination))
+    for warning in report.input_warnings:
+        click.echo(f"Input warning: {warning}", err=True)
     if fail_on_scoring_issues and report.core_facts.issues:
         raise click.ClickException(
             f"{len(report.core_facts.issues)} scoring issue(s) require review; diagnostics saved to {output}"

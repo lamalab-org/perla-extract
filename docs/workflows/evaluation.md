@@ -73,15 +73,16 @@ Citation checks do not determine whether a passage supports a claim scientifical
 Citation issues do not reduce the fact score automatically; inspect the validation
 result alongside the score.
 Run accounting comes from the saved report; the scorer does not audit provider bills.
-You must also check that prediction and reference cover the same paper, SI and
-scientific scope.
+When reference source hashes exist, the CLI requires the same main-paper and SI
+hashes in the sealed prediction. `input_warnings` records conflicting extracted DOIs
+and missing provenance. Hash agreement does not establish reference completeness.
 
 You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
-or run-accounting results.
+or run-accounting results. Their scores are diagnostic; source compatibility is unverified.
 
-Reports use format 9, matcher `rich-study-hungarian-v12` and fact profile
-`core-scientific-facts-v9`. Regenerate older reports from saved predictions before
+Reports use format 10, matcher `rich-study-hungarian-v13` and fact profile
+`core-scientific-facts-v10`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
@@ -103,8 +104,8 @@ Use `core_facts` to assess extraction quality. The scorer counts facts in six gr
 
 | Group | What counts | What must agree for a match |
 | --- | --- | --- |
-| Performance | Reported metrics, such as PCE, Voc, Jsc and FF | Paired record, device/family links, variant, champion status, selection basis, measurement type and scan direction |
-| Population | Sample size and aggregate metrics | Paired record, cohort label, family link and statistic type; metric matches also require the same sample size |
+| Performance | Reported metrics, such as PCE, Voc, Jsc and FF | Paired record, device/family links, variant, champion status, selection basis, measurement type, scan direction and explicitly recorded protocol conditions |
+| Population | Sample size and aggregate metrics | Paired record, cohort label, family link and statistic type; conflicting reported sample sizes block metrics; an omitted count loses only its own point |
 | Stability | Test conditions, checkpoint times, checkpoint conditions and outcomes | Paired record and specimen links; without an explicit device ID, the specimen label must also agree. Checkpoint facts also depend on the recorded time and conditions, as described below |
 | Composition | Absorber formula and properties (including absorber-layer properties); layer and absorber constituents, roles and amounts | Paired family, absorber/layer context and constituent association |
 | Stack | Layer materials, roles, material forms and non-absorber properties; device polarity | Paired family, recorded sequence and material association |
@@ -123,8 +124,9 @@ Some details affect how facts are counted:
   properties also require the material to agree.
 - Fully ordered recipes align by operation and target in relative order, allowing
   gaps. A missing middle operation does not invalidate later retained steps solely
-  because they were renumbered. Conditions additionally require the material list
-  to agree. Partially ordered recipes retain their explicit sequence/operation/target
+  because they were renumbered. Recognized duration/temperature conditions of an unambiguously aligned annealing
+  step, and duration/speed of spin coating, do not require an optional material list.
+  Concentrations, ratios and unknown conditions still require it to agree. Partially ordered recipes retain their explicit sequence/operation/target
   scopes; no missing sequence is inferred. Specimen-specific properties use the
   device's family and variant.
 - Equal properties and constituents repeated in a layer and its sole explicitly
@@ -134,6 +136,10 @@ Some details affect how facts are counted:
   relatively, zero absolute allowance), independently of matching tolerances.
   Conflicting quantities across the linked representations are
   flagged and cannot receive strict credit. No ambiguous absorber link is merged.
+- Equal whole-material identities across a layer material, its sole whole-material
+  constituent and its sole linked absorber formula also count once. Amounts and
+  roles retain their own points. Explicit precursor roles remain recipe claims;
+  precursor ratios never establish finished-film composition.
 - Explicit sonication cleaning can be written in the operation or as `cleaning`
   with a `Method: sonication` condition. This counts as one operation, with both
   original paths retained. Generic cleaning without that method is not equivalent.
@@ -195,13 +201,58 @@ both sides is left out of the average. Equal group weighting is a reporting choi
 not a claim that every group has equal scientific importance. Show the group counts
 alongside the average.
 
+### Subfields and their keys
+
+`core_facts.subfields` partitions the same facts into the categories below. Each
+contains `truth`, `predicted`, `matched`, `precision`, `recall` and `f1`; every match
+also names its subfield. The value-only and attribution views have identical
+subfield denominators. **The six parent groups still determine macro F1.**
+Subfields do not add weights, and broad `composition` is not pure formula accuracy.
+
+| Subfield | Included keys or source fields |
+| --- | --- |
+| `material_identity` | Layer `material`; absorber `formula`; whole/non-recipe constituent `name`, after linked deduplication |
+| `composition_amounts` | Non-recipe constituent `amount`, including its reported basis |
+| `composition_properties` | Checked `chlorine in resulting perovskite film(s)` property |
+| `material_roles` | Non-recipe constituent `role` |
+| `recipe_composition` | Constituent name/role/amount with explicit precursor or precursor-additive role; composition properties named `precursor…` |
+| `material_properties` | Remaining absorber/layer properties and unfamiliar composition properties |
+| `device_structure` | Layer `role`, `material_form`, family `polarity`, raw stack fallback |
+| `photovoltaic_metrics` | Individual PCE, Voc, Jsc, FF and their checked name aliases |
+| `measurement_protocol` | Recognized conditions in individual or population `metrics`: illumination/intensity/spectrum/standard, scan rate/voltage range/voltage step, measurement temperature/atmosphere/condition, storage before measurement/in glovebox |
+| `other_measurement_fields` | Other individual metrics, including retention; unfamiliar keys remain literal |
+| `population_metrics` | Aggregate metrics other than protocol and metadata |
+| `population_metadata` | `sample_size` and the `error bar statistic` metric |
+| `stability_protocol` | Test/checkpoint conditions and checkpoint time |
+| `stability_outcomes` | Checkpoint outcomes |
+| `processing_operations` | Step operation, including an explicitly equivalent method representation |
+| `processing_materials` | Step `materials` entries |
+| `processing_conditions` | Step `conditions` other than a method merged into the operation |
+| `specimen_properties` | Individual-device `reported_properties` |
+
+`scoring_fields.py` is the classifier; `scoring_protocol.py` owns the exact protocol
+aliases. Names ignore whitespace, underscores and hyphens. Unknown concepts remain
+literal, counted in their stated container. `η` and `efficiency` mean PCE only for
+`jv_scan`, `stabilized_power_output` or `certified_measurement` observations.
+
+A wrong or omitted measurement condition withholds strict outcome credit; value-only
+credit can still show recovery of the number. Conditions themselves are scored in
+the device/cohort context without depending on the other conditions. No condition
+is inferred from a neighboring record or borrowed from the reference.
+
+Experiment output includes `figure-data/subfield_scores.csv` with these same counts.
+Filter `quality_available` for verified runs: incomplete attempts retain diagnostic
+rows and accounting, but cannot produce a paired quality result. Structural validation
+issues block comparison; citation issues and validation coverage remain visible in
+`runs.csv` and the summary.
+
 ### Separate value recovery from attribution
 
 The report compares the same facts in three ways:
 
 | Report field | Question |
 | --- | --- |
-| `core_facts.value_only` | Within the same scientific group and property, was the value recovered anywhere in the paper, regardless of owner or context? |
+| `core_facts.value_only` | Within the same scientific group, subfield and property, was the value recovered anywhere in the paper, regardless of owner or context? |
 | `core_facts.attribution` | Does the property have matching context, regardless of its value, with no detected ambiguity? |
 | `core_facts` | Do both value and context match, with no detected ambiguity? |
 
@@ -209,7 +260,7 @@ All three use the same predicted and reference counts, but each finds its own
 one-to-one fact matches. Do not multiply their scores or combine their match lists
 to reconstruct the primary score. A value-only match does not prove that the value
 belongs to the right specimen or chemical.
-This diagnostic still separates scientific groups: an individual-device result
+This diagnostic still separates scientific groups and recipe/finished-material claims: an individual-device result
 does not become a population statistic just because its number agrees.
 
 Consider a stability test with one temperature, two checkpoint times and two
@@ -279,15 +330,16 @@ features, including a shared record-type feature:
 | Record | Identity fields |
 | --- | --- |
 | Individual device | Label, variant, champion status, selection basis |
-| Performance observation | Measurement type, scan direction |
-| Population | Cohort label, statistic type |
+| Performance observation | Measurement type, scan direction, recognized explicit protocol conditions |
+| Population | Cohort label, statistic type, recognized explicit protocol conditions |
 | Stability test | Link status; specimen label without a device link; test conditions, checkpoint times and conditions |
 
 Parent links guide assignment separately. Complete field phrases retain order, so
-`10s/40s` and `40s/10s` remain distinct. Stability protocol quantities use canonical
-units and 12-significant-digit features; final value comparison uses the configured
-tolerances. Outcome values, metric names, property counts and population sample
-sizes do not select record identity. Omitting a metric cannot settle a repeated
+`10s/40s` and `40s/10s` remain distinct. Protocol quantities use canonical units
+and the configured tolerance. Their complete set contributes one identity feature:
+only conflicting shared conditions distinguish records; missing conditions do not.
+Outcome values, outcome completeness and population sample sizes do not select
+record identity. Omitting a metric cannot settle a repeated
 protocol's ambiguity. Distinct records with indistinguishable identities remain
 flagged even in a reference self-comparison.
 

@@ -7,13 +7,13 @@ do not earn points. No chemical identities or missing relationships are inferred
 
 from __future__ import annotations
 
-import re
 import sys
 from dataclasses import dataclass, field, replace
 from typing import Literal
 
 from .models import (
     MaterialConstituent,
+    PerformanceObservation,
     PopulationStatistic,
     ReportedValue,
     StabilityTest,
@@ -21,10 +21,6 @@ from .models import (
 )
 from .scoring_claims import (
     compound_quantity as compound_quantity,
-)
-from .scoring_claims import (
-    equal_claims,
-    normalize_claim,
 )
 from .scoring_claims import (
     is_plain_number as is_plain_number,
@@ -35,8 +31,32 @@ from .scoring_claims import (
 from .scoring_claims import (
     scientific_value_text as scientific_value_text,
 )
-from .scoring_process import describe_process
-from .scoring_vocabulary import material_name, scoped_property_name
+from .scoring_context import (
+    CohortSize,
+    ContextComponent,
+    ContextDifference,
+    FactContext,
+    RecordReference,
+    compare_context,
+)
+from .scoring_context import (
+    UnorderedContext as UnorderedContext,
+)
+from .scoring_context import (
+    equal_value as equal_value,
+)
+from .scoring_fields import FactSubfield, fact_subfield
+from .scoring_process import condition_name, describe_process, independent_condition
+from .scoring_protocol import performance_name, protocol_claims, protocol_name
+from .scoring_vocabulary import (
+    known_material,
+    material_name,
+    material_role,
+    material_stage,
+    property_name,
+    scoped_property_name,
+    whole_material_role,
+)
 
 FactGroup = Literal[
     "performance", "population", "stability", "composition", "stack", "processing"
@@ -50,27 +70,12 @@ FACT_GROUPS: tuple[FactGroup, ...] = (
     "processing",
 )
 
-# Only standard metric spellings are aliases. Unfamiliar properties still score,
-# but arbitrary semantic paraphrases and chemical synonyms require adjudication.
-METRIC_ALIASES = {
-    "powerconversionefficiency": "pce",
-    "opencircuitvoltage": "voc",
-    "shortcircuitcurrentdensity": "jsc",
-    "fillfactor": "ff",
-    "referenceefficiencyretained": "efficiencyretention",
-    "pceretention": "efficiencyretention",
-}
 DEFAULT_OPERATION_ALIASES = {
     "thermal annealing": "annealing",
     "spincoating": "spin coating",
     "spin_coating": "spin coating",
     "spin-coating": "spin coating",
 }
-
-
-def property_name(name: str) -> str:
-    key = re.sub(r"[\s_-]+", "", scientific_text(name).casefold())
-    return METRIC_ALIASES.get(key, key)
 
 
 def scientific_descriptor(record: object) -> str | None:
@@ -90,102 +95,6 @@ def scientific_descriptor(record: object) -> str | None:
 
 
 @dataclass(frozen=True)
-class UnorderedContext:
-    """Mark context where order is irrelevant but duplicate entries still matter."""
-
-    items: tuple[object, ...]
-
-
-@dataclass(frozen=True)
-class RecordReference:
-    """A paired canonical record key, or an explicitly side-local unresolved key."""
-
-    key: str
-    unmatched_side: str | None = None
-
-
-@dataclass(frozen=True)
-class ContextComponent:
-    name: str
-    value: object
-    path: str | None = None
-
-
-@dataclass(frozen=True)
-class FactContext:
-    """Store ordered scientific requirements with their diagnostic source paths.
-
-    Component values determine equality. Names and paths identify the requirement
-    responsible for a mismatch without becoming additional matching criteria.
-    """
-
-    components: tuple[ContextComponent, ...] = ()
-
-    @classmethod
-    def of(cls, path: str | None = None, **values: object) -> FactContext:
-        return cls(
-            tuple(
-                ContextComponent(
-                    name, value, f"{path}/{name}" if path is not None else None
-                )
-                for name, value in values.items()
-            )
-        )
-
-    def extend(self, other: FactContext) -> FactContext:
-        return FactContext(self.components + other.components)
-
-    @property
-    def values(self) -> tuple[object, ...]:
-        return tuple(component.value for component in self.components)
-
-
-def equal_value(left: object, right: object, relative: float, absolute: float) -> bool:
-    """Compare claims conservatively; missing units are not assumed dimensionless."""
-
-    if isinstance(left, ReportedValue) and isinstance(right, ReportedValue):
-        return equal_claims(
-            normalize_claim(left), normalize_claim(right), relative, absolute
-        )
-    if isinstance(left, str) and isinstance(right, str):
-        return scientific_value_text(left) == scientific_value_text(right)
-    if isinstance(left, FactContext):
-        left = left.values
-    if isinstance(right, FactContext):
-        right = right.values
-    if isinstance(left, UnorderedContext) and isinstance(right, UnorderedContext):
-        if len(left.items) != len(right.items):
-            return False
-        # Augmenting paths avoid greedy errors when tolerance neighborhoods overlap.
-        edges = [
-            [
-                j
-                for j, b in enumerate(right.items)
-                if equal_value(a, b, relative, absolute)
-            ]
-            for a in left.items
-        ]
-        assigned: dict[int, int] = {}
-
-        def assign(i: int, visited: set[int]) -> bool:
-            for j in edges[i]:
-                if j in visited:
-                    continue
-                visited.add(j)
-                if j not in assigned or assign(assigned[j], visited):
-                    assigned[j] = i
-                    return True
-            return False
-
-        return all(assign(i, set()) for i in range(len(left.items)))
-    if isinstance(left, tuple) and isinstance(right, tuple):
-        return len(left) == len(right) and all(
-            equal_value(a, b, relative, absolute) for a, b in zip(left, right)
-        )
-    return type(left) is type(right) and left == right
-
-
-@dataclass(frozen=True)
 class ScientificFact:
     group: FactGroup
     path: str
@@ -193,16 +102,8 @@ class ScientificFact:
     name: str
     value: object
     context: FactContext
+    subfield: FactSubfield
     source_paths: tuple[str, ...] = ()
-
-
-@dataclass(frozen=True)
-class ContextDifference:
-    name: str
-    truth_path: str | None
-    predicted_path: str | None
-    truth_value: object
-    predicted_value: object
 
 
 @dataclass(frozen=True, slots=True)
@@ -222,37 +123,6 @@ class FactComparison:
             and self.context_equal
             and (view == "attribution" or self.value_equal)
         )
-
-
-def compare_context(
-    left: FactContext, right: FactContext, relative: float, absolute: float
-) -> tuple[ContextDifference, ...]:
-    """Compare the original ordered requirements, retaining their differing fields."""
-
-    differences: list[ContextDifference] = []
-    for i in range(max(len(left.components), len(right.components))):
-        a = left.components[i] if i < len(left.components) else None
-        b = right.components[i] if i < len(right.components) else None
-        if a is not None and b is not None:
-            if isinstance(a.value, FactContext) and isinstance(b.value, FactContext):
-                differences.extend(
-                    compare_context(a.value, b.value, relative, absolute)
-                )
-                continue
-            if equal_value(a.value, b.value, relative, absolute):
-                continue
-        component = a if a is not None else b
-        assert component is not None
-        differences.append(
-            ContextDifference(
-                component.name,
-                a.path if a is not None else None,
-                b.path if b is not None else None,
-                a.value if a is not None else None,
-                b.value if b is not None else None,
-            )
-        )
-    return tuple(differences)
 
 
 def compare_facts(
@@ -307,6 +177,33 @@ class FactProjection:
     scopes: list[ScientificScope]
     linked_containers: list[tuple[str, str]] = field(default_factory=list)
     conflicts: list[tuple[str, str]] = field(default_factory=list)
+
+    def merge_material_identities(self, aliases: list[tuple[str, str]]) -> None:
+        """Attach explicitly redundant whole-material fields to their layer identity.
+
+        Eligibility is determined from this input's own unambiguous layer links,
+        equal names and constituent roles. This does not infer a mixture or use
+        the opposite study to repair a record. Linked constituent aliases already
+        merged by ``merge_linked_representations`` travel with their representative.
+        """
+        by_path = {path: f.path for f in self.facts for path in f.source_paths}
+        facts = {f.path: f for f in self.facts}
+        for target_path, source_path in aliases:
+            target, source = by_path.get(target_path), by_path.get(source_path)
+            if (
+                target is None
+                or source is None
+                or target == source
+                or source not in facts
+            ):
+                continue
+            canonical, redundant = facts[target], facts.pop(source)
+            facts[target] = replace(
+                canonical, source_paths=canonical.source_paths + redundant.source_paths
+            )
+            for path in redundant.source_paths:
+                by_path[path] = target
+        self.facts = list(facts.values())
 
     def ambiguous_scopes(
         self, relative: float, absolute: float
@@ -387,6 +284,19 @@ class FactProjection:
         ]
 
 
+def _protocol_context(
+    record: PerformanceObservation | PopulationStatistic, path: str
+) -> FactContext:
+    """Attach shared measurement requirements to their actual source metric array."""
+    return FactContext(
+        (
+            ContextComponent(
+                "protocol", UnorderedContext(protocol_claims(record)), f"{path}/metrics"
+            ),
+        )
+    )
+
+
 def scientific_facts(
     study: StudyExtraction,
     identities: dict[str, str],
@@ -404,6 +314,8 @@ def scientific_facts(
     facts: list[ScientificFact] = []
     scopes: list[ScientificScope] = []
     linked_containers: list[tuple[str, str]] = []
+    material_aliases: list[tuple[str, str]] = []
+    material_conflicts: list[tuple[str, str]] = []
     process_references = process_references or {}
     devices = {item.device_id: item for item in study.individual_devices}
     device_paths = {
@@ -449,7 +361,27 @@ def scientific_facts(
         if value is not None and value != "not_reported" and value != "":
             facts.append(
                 ScientificFact(
-                    group, path, owner, name, value, context, source_paths or (path,)
+                    group=group,
+                    path=path,
+                    owner=owner,
+                    name=name,
+                    value=value,
+                    context=context,
+                    source_paths=source_paths or (path,),
+                    subfield=fact_subfield(
+                        group,
+                        name,
+                        path,
+                        next(
+                            (
+                                c.value
+                                for c in context.components
+                                if c.name == "material_stage"
+                                and isinstance(c.value, str)
+                            ),
+                            None,
+                        ),
+                    ),
                 )
             )
 
@@ -478,12 +410,23 @@ def scientific_facts(
     ) -> None:
         for i, constituent in enumerate(constituents):
             base = f"{path}/{i}"
+            constituent_context = context.extend(
+                FactContext(
+                    (
+                        ContextComponent(
+                            "material_stage",
+                            material_stage(constituent.role),
+                            f"{base}/role",
+                        ),
+                    )
+                )
+            )
             scopes.append(
                 ScientificScope(
                     owner,
                     "constituent",
                     base,
-                    context.extend(
+                    constituent_context.extend(
                         FactContext.of(
                             base,
                             name=material_name(constituent.name),
@@ -500,9 +443,9 @@ def scientific_facts(
                 owner,
                 "constituent",
                 material_name(constituent.name),
-                context,
+                constituent_context,
             )
-            chemical_context = context.extend(
+            chemical_context = constituent_context.extend(
                 FactContext.of(base, name=material_name(constituent.name))
             )
             add(
@@ -510,7 +453,7 @@ def scientific_facts(
                 f"{base}/role",
                 owner,
                 "constituent_role",
-                constituent.role,
+                material_role(constituent.role),
                 chemical_context,
             )
             add(
@@ -564,6 +507,29 @@ def scientific_facts(
                 }
                 layer_contexts: dict[str, FactContext] = {}
 
+                layer_paths = {
+                    layer.layer_id: f"{path}/layers/{i}"
+                    for i, layer in enumerate(record.layers)
+                }
+
+                def whole_constituent(
+                    layer_material: str,
+                    layer_path: str,
+                    constituents: list[MaterialConstituent],
+                    base: str,
+                ) -> None:
+                    """A sole whole-material claim can repeat or contradict its layer."""
+                    if len(constituents) != 1 or not whole_material_role(
+                        constituents[0].role
+                    ):
+                        return
+                    member = constituents[0]
+                    paths = (f"{layer_path}/material", f"{base}/constituents/0/name")
+                    if material_name(member.name) == material_name(layer_material):
+                        material_aliases.append(paths)
+                    elif known_material(member.name) and known_material(layer_material):
+                        material_conflicts.append(paths)
+
                 def layer_reference(identifier: str | None) -> object:
                     return (
                         layers.get(identifier, f"{side}:unmatched_layer:{identifier}")
@@ -573,6 +539,7 @@ def scientific_facts(
 
                 for i, layer in enumerate(record.layers):
                     base = f"{path}/layers/{i}"
+                    whole_constituent(layer.material, base, layer.constituents, base)
                     scopes.append(
                         ScientificScope(
                             owner,
@@ -628,6 +595,37 @@ def scientific_facts(
                     )
                 for i, absorber in enumerate(record.absorbers):
                     base = f"{path}/absorbers/{i}"
+                    if absorber.layer_id in linked_absorbers:
+                        layer_index, layer = next(
+                            (j, item)
+                            for j, item in enumerate(record.layers)
+                            if item.layer_id == absorber.layer_id
+                        )
+                        whole_constituent(
+                            layer.material,
+                            layer_paths[layer.layer_id],
+                            absorber.constituents,
+                            base,
+                        )
+                        formula = absorber.formula
+                        if (
+                            formula
+                            and formula.unit is None
+                            and formula.value_number is None
+                        ):
+                            material_path = f"{path}/layers/{layer_index}/material"
+                            if material_name(formula.raw_value) == material_name(
+                                layer.material
+                            ):
+                                material_aliases.append(
+                                    (material_path, f"{base}/formula")
+                                )
+                            elif known_material(formula.raw_value) and known_material(
+                                layer.material
+                            ):
+                                material_conflicts.append(
+                                    (material_path, f"{base}/formula")
+                                )
                     context = FactContext.of(kind="absorber").extend(
                         FactContext.of(
                             base, layer_id=layer_reference(absorber.layer_id)
@@ -755,9 +753,12 @@ def scientific_facts(
                                 "processing",
                                 f"{base}/conditions/{j}",
                                 owner,
-                                property_name(condition.name),
+                                condition_name(condition.name, operation),
                                 condition,
-                                condition_context,
+                                context
+                                if process_references.get(base) is not None
+                                and independent_condition(condition.name, operation)
+                                else condition_context,
                             )
             elif collection == "individual_devices":
                 context = FactContext.of(
@@ -773,19 +774,25 @@ def scientific_facts(
                     context,
                 )
             elif collection == "performance_observations":
-                quantities(
-                    "performance",
-                    f"{path}/metrics",
-                    owner,
-                    record.metrics,
-                    device_context(record.device_id, path).extend(
-                        FactContext.of(
-                            path,
-                            measurement_type=record.measurement_type,
-                            scan_direction=record.scan_direction,
-                        )
-                    ),
+                context = device_context(record.device_id, path).extend(
+                    FactContext.of(
+                        path,
+                        measurement_type=record.measurement_type,
+                        scan_direction=record.scan_direction,
+                    )
                 )
+                protocol = _protocol_context(record, path)
+                for j, metric in enumerate(record.metrics):
+                    add(
+                        "performance",
+                        f"{path}/metrics/{j}",
+                        owner,
+                        performance_name(metric.name, record.measurement_type),
+                        metric,
+                        context
+                        if protocol_name(metric.name)
+                        else context.extend(protocol),
+                    )
             elif collection == "population_statistics":
                 context = FactContext.of(
                     path,
@@ -801,15 +808,19 @@ def scientific_facts(
                     record.sample_size,
                     context,
                 )
-                quantities(
-                    "population",
-                    f"{path}/metrics",
-                    owner,
-                    record.metrics,
-                    context.extend(
-                        FactContext.of(path, sample_size=record.sample_size)
-                    ),
-                )
+                outcome_context = context.extend(
+                    FactContext.of(path, sample_size=CohortSize(record.sample_size))
+                ).extend(_protocol_context(record, path))
+                for j, metric in enumerate(record.metrics):
+                    add(
+                        "population",
+                        f"{path}/metrics/{j}",
+                        owner,
+                        protocol_name(metric.name) or property_name(metric.name),
+                        metric,
+                        context if protocol_name(metric.name) else outcome_context,
+                    )
+
             elif collection == "stability_tests":
                 context = FactContext.of(
                     path,
@@ -868,4 +879,6 @@ def scientific_facts(
                     )
     projection = FactProjection(facts, scopes, linked_containers)
     projection.merge_linked_representations()
+    projection.merge_material_identities(material_aliases)
+    projection.conflicts.extend(material_conflicts)
     return projection

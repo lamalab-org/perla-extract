@@ -91,6 +91,15 @@ def write_summary(result: dict, path: Path) -> None:
             f"| {arm} | {counts['paired_scored_runs']} / {counts['planned_runs']} "
             f"| {counts['listed_attempts']} | {cost} | {counts['known_cost_usd']:.6f} |"
         )
+    validation = result["validation_coverage"]
+    lines.extend(
+        [
+            "",
+            f"Evidence/link validation: {validation['checked_runs']} checked runs, "
+            f"{validation['unavailable_runs']} unavailable, {validation['issues']} issue(s). "
+            "Inspect validation details in figure-data/runs.csv; citation checks do not establish scientific support.",
+        ]
+    )
     lines.extend(
         [
             "",
@@ -104,6 +113,7 @@ def write_summary(result: dict, path: Path) -> None:
             "| --- | --- |",
             "| Which papers improved or worsened? | [figure-data/paired_papers.csv](figure-data/paired_papers.csv): treatment minus control per paper |",
             "| Which fact groups changed? | [figure-data/group_scores.csv](figure-data/group_scores.csv): use `strict` for primary quality; `value_only` and `attribution` diagnose errors |",
+            "| Which specific fields changed? | [figure-data/subfield_scores.csv](figure-data/subfield_scores.csv): material identity, outcomes, protocol and processing breakdowns; filter `quality_available` for verified runs |",
             "| What did each attempt consume? | [figure-data/runs.csv](figure-data/runs.csv): scores, tokens, requests, time, cost and failures; empty cells mean unavailable |",
             "| Which exact values were wrong? | `runs/paper-NNN/ARM-REPEAT/evaluation.json`: matched and unmatched field paths; `extraction.json` contains the prediction |",
             "| Why did a run fail? | [errors.json](errors.json) and that run's `report.json` / `events.jsonl` |",

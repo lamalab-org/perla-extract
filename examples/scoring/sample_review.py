@@ -1,6 +1,6 @@
-"""Sample actual scored prediction fields for independent expert review.
+"""Sample scored prediction and reference fields for independent expert review.
 
-Sampling is without replacement within each scientific group and awarded/denied
+Sampling is without replacement within each side, scientific group and awarded/denied
 credit stratum. Reviewers receive the complete scientific records and blank labels;
 the scoring decisions and inclusion probabilities remain in a separate analyst key.
 This prepares evidence for calibration. It does not provide expert judgments.
@@ -28,7 +28,8 @@ from perla_extract.study_extraction.scoring_facts import scientific_facts
 LABEL_COLUMNS = [
     "item_id",
     "group",
-    "prediction_path",
+    "side",
+    "path",
     "same_identity",
     "equivalent_value",
     "correct_attribution",
@@ -41,9 +42,14 @@ LABEL_COLUMNS = [
 
 
 def prepare(
-    truth: Path, prediction: Path, output: Path, per_stratum: int, seed: int
+    truth: Path,
+    prediction: Path,
+    output: Path,
+    per_stratum: int,
+    seed: int,
+    score_path: Path | None = None,
 ) -> int:
-    """Bind a saved score to its inputs, then sample its complete prediction ledger."""
+    """Bind a saved score to its inputs, then sample both complete fact ledgers."""
     if output.exists():
         raise ValueError(f"Output already exists: {output}; choose a new directory")
     if per_stratum < 1:
@@ -52,7 +58,7 @@ def prepare(
     actual = StudyExtraction.model_validate_json(
         (prediction / "extraction.json").read_bytes()
     )
-    score_path = prediction / "evaluation.json"
+    score_path = score_path or prediction / "evaluation.json"
     score = EvaluationReport.model_validate_json(score_path.read_bytes())
     manifest, digest = verify_run_manifest(prediction)
     if (
@@ -65,28 +71,37 @@ def prepare(
         raise ValueError(
             "Score does not match the supplied reference and sealed run; score them again"
         )
-    facts = scientific_facts(
-        actual, {}, "prediction", score.config.operation_aliases
-    ).facts
-    credited = {match.predicted_path for match in score.core_facts.matches}
-    denied = set(score.core_facts.unmatched_prediction_paths)
-    if {fact.path for fact in facts} != credited | denied:
-        raise ValueError(
-            "Scored prediction paths differ from the current fact projection"
-        )
-    if not facts:
-        raise ValueError(
-            "No predicted scientific facts to sample; audit reference omissions separately"
-        )
     strata = defaultdict(list)
-    for fact in facts:
-        strata[(fact.group, fact.path in credited)].append(fact.path)
+    for side, study, credited, denied in (
+        (
+            "prediction",
+            actual,
+            {m.predicted_path for m in score.core_facts.matches},
+            set(score.core_facts.unmatched_prediction_paths),
+        ),
+        (
+            "truth",
+            expected,
+            {m.truth_path for m in score.core_facts.matches},
+            set(score.core_facts.unmatched_truth_paths),
+        ),
+    ):
+        facts = scientific_facts(study, {}, side, score.config.operation_aliases).facts
+        if {fact.path for fact in facts} != credited | denied:
+            raise ValueError(
+                f"Scored {side} paths differ from the current fact projection"
+            )
+        for fact in facts:
+            strata[(side, fact.group, fact.path in credited)].append(fact.path)
+    if not strata:
+        raise ValueError("Neither input has scientific facts to sample")
     rng = random.Random(seed)
     selected, counts = [], []
-    for (group, accepted), paths in sorted(strata.items()):
+    for (side, group, accepted), paths in sorted(strata.items()):
         count = min(per_stratum, len(paths))
         counts.append(
             {
+                "side": side,
                 "group": group,
                 "scorer_awarded_credit": accepted,
                 "population": len(paths),
@@ -96,8 +111,9 @@ def prepare(
         for path in rng.sample(sorted(paths), count):
             selected.append(
                 {
+                    "side": side,
                     "group": group,
-                    "prediction_path": path,
+                    "path": path,
                     "scorer_awarded_credit": accepted,
                     "inclusion_probability": count / len(paths),
                 }
@@ -118,8 +134,8 @@ def prepare(
     write_json_exclusive(
         output / "analyst-key.json",
         {
-            "sampling_unit": "predicted scientific fact within this run",
-            "sampling_method": "without replacement within group and scorer-credit stratum",
+            "sampling_unit": "scientific fact within one side of this scored run",
+            "sampling_method": "without replacement within side, group and scorer-credit stratum",
             "seed": seed,
             "per_stratum": per_stratum,
             "strata": counts,
@@ -151,14 +167,25 @@ def prepare(
 @click.option(
     "--output", required=True, type=click.Path(path_type=Path, file_okay=False)
 )
+@click.option(
+    "--score",
+    "score_path",
+    type=click.Path(path_type=Path, exists=True, dir_okay=False),
+    help="Fresh evaluation JSON; defaults to the run evaluation.json.",
+)
 @click.option("--per-stratum", type=click.IntRange(min=1), default=5, show_default=True)
 @click.option("--seed", type=int, default=0, show_default=True)
 def main(
-    truth: Path, prediction: Path, output: Path, per_stratum: int, seed: int
+    truth: Path,
+    prediction: Path,
+    output: Path,
+    per_stratum: int,
+    seed: int,
+    score_path: Path | None,
 ) -> None:
     """Prepare an expert sample from one scored run; make no model calls."""
     try:
-        count = prepare(truth, prediction, output, per_stratum, seed)
+        count = prepare(truth, prediction, output, per_stratum, seed, score_path)
     except (OSError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(f"Prepared {count} fields in {output / 'review'}")

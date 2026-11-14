@@ -326,19 +326,3 @@ def equal_claims(
         and literal_left.unit == literal_right.unit
         and literal_left.number == literal_right.number
     )
-
-
-def claim_feature_values(claim: NormalizedClaim) -> tuple[object, ...]:
-    """Produce the existing lexical inputs; rounding affects pairing only."""
-
-    if isinstance(claim, ScalarClaim) and claim.canonical is not None:
-        return format(claim.canonical.magnitude, ".12g"), claim.canonical.unit
-    if isinstance(claim, CompoundClaim):
-        return (
-            claim.kind,
-            format(claim.first, ".12g"),
-            format(claim.second, ".12g"),
-            claim.unit,
-        )
-    literal = claim if isinstance(claim, LiteralClaim) else claim.literal
-    return literal.text, literal.source_unit

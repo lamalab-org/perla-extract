@@ -369,3 +369,31 @@ def test_diagnostic_views_cannot_substitute_a_different_fact_ledger(view):
     payload["core_facts"][view]["matches"][0]["predicted_path"] = "/invented/path"
     with pytest.raises(ValidationError, match="same canonical facts"):
         EvaluationReport.model_validate(payload)
+
+
+@pytest.mark.parametrize("operation", ["annealed", "annealing"])
+def test_annealing_time_alias_is_local_to_the_identified_operation(operation):
+    truth = recipe(["annealing"])
+    truth.device_families[0].processing_steps[0].conditions[0].name = "annealing time"
+    prediction = truth.model_copy(deep=True)
+    step = prediction.device_families[0].processing_steps[0]
+    step.operation = operation
+    step.conditions[0].name = "annealing duration"
+    assert evaluate_study(truth, prediction).core_facts.groups["processing"].f1 == 1
+    step.operation = "annealing ramp"
+    assert (
+        evaluate_study(truth, prediction).core_facts.groups["processing"].matched == 0
+    )
+
+
+def test_missing_ingredients_do_not_erase_identified_annealing_time_but_do_block_ratio():
+    truth = recipe(["annealing"])
+    step = truth.device_families[0].processing_steps[0]
+    step.materials = ["PbI2", "MAI"]
+    step.conditions.append(quantity("precursor ratio", 1, "dimensionless"))
+    prediction = truth.model_copy(deep=True)
+    prediction.device_families[0].processing_steps[0].materials.clear()
+    score = evaluate_study(truth, prediction).core_facts
+    assert score.subfields["processing_operations"].matched == 1
+    assert score.subfields["processing_conditions"].matched == 1  # Duration only.
+    assert score.value_only.subfields["processing_conditions"].matched == 2
