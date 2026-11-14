@@ -350,14 +350,16 @@ abs(reference − prediction)
 
 | Setting | Default | Meaning |
 | --- | ---: | --- |
-| `--numeric-relative-tolerance` | `1e-6` | Allowed difference relative to the larger absolute value |
+| `--numeric-relative-tolerance` | `0.01` | 1% allowance relative to the larger absolute value |
 | `--numeric-absolute-tolerance` | `0` | No absolute allowance by default |
 | `--minimum-record-similarity` | `0.35` | Record-pairing threshold; not a numeric tolerance |
 
-These tolerances allow small conversion and floating-point differences. They do not
-represent experimental uncertainty or infer precision from significant figures.
-They apply to numeric reported values in both facts and context. Schema integers,
-such as sample size and sequence, must match exactly.
+The 1% default allows modest numerical and rounding differences. It is a scoring
+policy, not experimental uncertainty or an inference from significant figures.
+It applies after unit conversion to numeric reported values in both facts and
+context. Counts such as `sample_size` still require exact equality. Sequence
+numbers establish structural order under the layer/process matching rules;
+numeric tolerance never makes different orderings equivalent.
 
 The examples assume that property and context also match:
 
@@ -365,8 +367,9 @@ The examples assume that property and context also match:
 | --- | --- | --- |
 | PCE 20% | PCE 0.20, explicitly dimensionless | Equal after conversion |
 | PCE 20% | PCE 20.00001% | Equal within tolerance |
-| PCE 20% | PCE 20.0001% | Different |
-| PCE 20.0% | PCE 20.04% | Different; no automatic rounding |
+| PCE 20.0% | PCE 20.04% | Equal within 1% |
+| PCE 20% | PCE 20.20% | Equal within 1% |
+| PCE 20% | PCE 20.21% | Different |
 | Time 1 hour | Time 3600 seconds | Equal after conversion |
 | Temperature 65 °C | Temperature 338.15 K | Equal after conversion |
 | PCE 20% | PCE 20 with no unit | Different |
@@ -374,7 +377,17 @@ The examples assume that property and context also match:
 | Value with an empty unit | Explicit dimensionless value | Different; an empty unit is missing |
 | PCE >20% | PCE 20% | Different; a bound is not an exact value |
 
-At 20% PCE, the relative allowance is about 0.00002 percentage points.
+Near 20% PCE, the relative allowance is about **0.2 percentage points**.
+Relative temperature comparisons use kelvin: near 65 °C, 1%
+corresponds to approximately 3.4 K. The same rule applies to numeric protocol
+conditions, so a 100 h versus 101 h checkpoint can match; 100 h versus 102 h cannot.
+
+For a strict sensitivity analysis, use `--numeric-relative-tolerance 1e-6`.
+Each report stores the exact tolerance in `config`; aggregates reject mixed
+settings. The former default was `1e-6`. Rescore every compared arm under the same
+chosen setting, using fresh output filenames. The matcher, schema and fact
+inventory have not changed in this default-setting update.
+
 The default absolute tolerance is zero: 1 nm and 2 nm must not match merely because
 both are small in metres. An explicit absolute tolerance is still available, in base
 units, but should only be used for a declared scope where that allowance is justified.

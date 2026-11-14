@@ -96,14 +96,21 @@ def _prediction(
     type=click.Choice(["strict", "value", "attribution"]),
     default="strict",
 )
-@click.option("--minimum-record-similarity", type=click.FloatRange(0, 1), default=0.35)
 @click.option(
-    "--numeric-relative-tolerance", type=click.FloatRange(min=0), default=1e-6
+    "--minimum-record-similarity",
+    type=click.FloatRange(0, 1),
+    default=EvaluationConfig().minimum_record_similarity,
+)
+@click.option(
+    "--numeric-relative-tolerance",
+    type=click.FloatRange(min=0),
+    default=EvaluationConfig().numeric_relative_tolerance,
+    help="Relative numeric allowance after unit conversion; 0.01 means 1%. Use 1e-6 for strict comparison.",
 )
 @click.option(
     "--numeric-absolute-tolerance",
     type=click.FloatRange(min=0),
-    default=0.0,
+    default=EvaluationConfig().numeric_absolute_tolerance,
     help="Absolute allowance in base units; disabled by default because scales differ.",
 )
 @click.option(

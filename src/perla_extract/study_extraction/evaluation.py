@@ -118,7 +118,7 @@ class EvaluationConfig(StrictModel):
     """Freeze tolerances that can change a reported benchmark result."""
 
     minimum_record_similarity: float = Field(default=0.35, ge=0, le=1)
-    numeric_relative_tolerance: float = Field(default=1e-6, ge=0)
+    numeric_relative_tolerance: float = Field(default=0.01, ge=0)
     numeric_absolute_tolerance: float = Field(default=0.0, ge=0)
     operation_aliases: dict[str, str] = Field(
         default_factory=lambda: dict(DEFAULT_OPERATION_ALIASES)

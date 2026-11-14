@@ -133,6 +133,15 @@ not hashes that change with a dependency's lexical normalization.
 
 ## Current policy and acceptance checks
 
+`EvaluationConfig` supplies the API and CLI numeric defaults: 1% relative tolerance,
+zero absolute tolerance. The existing CLI option can reproduce the former `1e-6`
+setting. This is a configuration change; matcher v12 and fact profile v9 retain
+identical algorithms and fact inventories. Reports with differing tolerances cannot
+be aggregated. `test_scoring_tolerances.py` covers values inside/outside 1%, unit
+conversion, ranges, uncertainty widths, exact counts and the strict override.
+Raw/parsed-number consistency and duplicate merging retain their separate, much
+tighter roundoff checks.
+
 Matcher v12 / fact profile v9 separates outcomes from record identity, aligns fully
 ordered recipes with gaps, and counts equal properties/constituents once across a
 layer and its sole linked absorber. Format 9 reports expose the canonical fact's

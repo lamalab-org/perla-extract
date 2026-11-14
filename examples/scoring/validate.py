@@ -227,6 +227,7 @@ def run(
         "matching_0.20": EvaluationConfig(minimum_record_similarity=0.20),
         "matching_0.50": EvaluationConfig(minimum_record_similarity=0.50),
         "numeric_exact": EvaluationConfig(numeric_relative_tolerance=0),
+        "numeric_1e-6": EvaluationConfig(numeric_relative_tolerance=1e-6),
         "numeric_1e-4": EvaluationConfig(numeric_relative_tolerance=1e-4),
     }
     if descriptor_equivalences is not None:

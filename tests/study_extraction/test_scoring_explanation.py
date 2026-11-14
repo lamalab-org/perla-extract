@@ -220,6 +220,11 @@ def test_stability_context_names_the_checkpoint_field_and_preserves_unordered_co
         quantity(101, "h", "time")
     )
     _, fact = explain(truth, prediction, path=path)
+    assert fact.reason == "matched"  # Within the default 1% context tolerance.
+    prediction.stability_tests[0].checkpoints[0].time = ReportedValue.model_validate(
+        quantity(102, "h", "time")
+    )
+    _, fact = explain(truth, prediction, path=path)
     assert fact.reason == "context_mismatch"
     assert (
         fact.candidates[0].context_mismatches[0].truth_path

@@ -97,9 +97,12 @@ its sole explicitly linked absorber count once, with all original paths retained
 conflicting quantities are flagged. Copies within one list remain extra facts.
 
 Single unqualified numbers with compatible explicit units are converted before
-comparison. The default relative tolerance is `1e-6`, with no absolute allowance. This permits
-small relative numerical differences without treating distinct nanometre-scale
-thicknesses as equal. It does not represent experimental uncertainty. Ranges and
+comparison. The default relative tolerance is **1% (`0.01`)**, with no absolute
+allowance, to accommodate modest rounding differences. The allowance scales with
+the converted magnitude; it applies to reported values and numeric context, with
+temperature expressed in kelvin. It does not represent experimental uncertainty.
+Use `--numeric-relative-tolerance 1e-6` for a stricter sensitivity analysis. Freeze
+the chosen tolerance across all arms; it is recorded in each report. Ranges and
 symmetric uncertainties compare both components after conversion. Simple chemical
 formulas accept numeric LaTeX subscripts. Checked material names and redundant
 layer-property qualifiers are normalized by a small versioned vocabulary;
