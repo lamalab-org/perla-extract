@@ -13,6 +13,7 @@ from perla_extract.study_extraction.evaluation import (
 )
 from perla_extract.study_extraction.evaluation_cli import main
 from perla_extract.study_extraction.models import (
+    ProcessingStep,
     ReportedValue,
     StabilityTest,
     StudyExtraction,
@@ -149,6 +150,33 @@ def test_missing_property_and_missing_owner_are_distinct():
     _, fact = explain(truth, prediction)
     assert fact.reason == "owner_unmatched"
     assert not fact.owner_matched
+
+
+def test_property_mismatch_shows_related_conditions_before_unrelated_family_facts():
+    truth = study()
+    truth.device_families[0].processing_steps = [
+        ProcessingStep.model_validate(
+            dict(
+                step_id="heat",
+                sequence=1,
+                operation="annealing",
+                target_layer_ids=[],
+                materials=[],
+                conditions=[quantity(120, "degC", "heat-treatment endpoint")],
+                evidence=EVIDENCE,
+            )
+        )
+    ]
+    prediction = truth.model_copy(deep=True)
+    prediction.device_families[0].processing_steps[0].conditions[0].name = "temperature"
+    path = "/device_families/0/processing_steps/0/conditions/0"
+    # With only one visible alternative, polarity/operation must not hide the
+    # differently named temperature. The explain helper also checks score parity.
+    _, fact = explain(truth, prediction, path=path, view="recovery", max_candidates=1)
+    assert fact.reason == "property_mismatch"
+    assert fact.nearby_properties[0].path == path
+    assert fact.nearby_properties[0].name == "temperature"
+    assert fact.nearby_properties_truncated
 
 
 def test_eligible_duplicate_loses_credit_to_exact_competing_path():

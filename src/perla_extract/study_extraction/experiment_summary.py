@@ -36,7 +36,9 @@ def write_summary(result: dict, path: Path) -> None:
     if quality is None:
         lines.extend(
             [
-                "**Comparison unavailable.** Missing, failed or inconsistent runs prevent a valid paired result.",
+                "**Comparison unavailable.** The checks below prevent a verified paired conclusion. "
+                "Possible reasons include incomplete reference review, ambiguous scoring, or missing, failed or inconsistent runs.",
+                "Per-run reference-agreement diagnostics remain in the evaluation files and plotting tables. "
                 "Inspect the issues below and retain failed attempts when accounting for resources.",
             ]
         )
@@ -66,8 +68,8 @@ def write_summary(result: dict, path: Path) -> None:
         lines.extend(
             [
                 "",
-                "Strict scoring requires the value and its scientific context to match. "
-                "F1 is averaged over populated fact groups within each paper. "
+                "Attributed scoring requires the value and its scientific context to match. "
+                "Each paper's F1 uses matched, predicted and reference fact counts pooled across groups. "
                 "Repeat differences are averaged within a paper, then papers receive equal weight.",
                 "The interval resamples papers, conditional on the observed repeats. "
                 "An interval spanning zero does not establish a direction; a positive mean alone is not evidence of a reliable improvement.",

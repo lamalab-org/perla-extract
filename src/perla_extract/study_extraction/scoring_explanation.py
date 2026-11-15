@@ -328,6 +328,15 @@ class ExplanationCollector:
                 if not candidates
                 else []
             )
+            # Keep relevant alternative property names visible when a family has
+            # many unrelated facts. This orders diagnostics, never match candidates.
+            nearby.sort(
+                key=lambda f: (
+                    f.subfield != fact.subfield,
+                    f.group != fact.group,
+                    f.path,
+                )
+            )
             self.results[(selection.side, selection.path, selection.view)] = (
                 FactExplanation(
                     selection=selection,

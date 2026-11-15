@@ -74,20 +74,27 @@ uncertainty, scored/planned run counts, recorded spend and any blocking issues.
 | Output | What to open it for |
 | --- | --- |
 | `figure-data/paired_papers.csv` | Per-paper effect: positive favors treatment, negative favors control |
-| `figure-data/group_scores.csv` | Strict precision/recall/F1 and fact counts by scientific group; other views diagnose value/context errors |
+| `figure-data/group_scores.csv` | Attributed and recovery precision/recall/F1 and fact counts by scientific group |
+| `figure-data/subfield_scores.csv` | The same scores split into measurement, composition, processing and other subfields |
 | `figure-data/runs.csv` | Per-attempt quality, tokens, requests, elapsed time, recorded cost and failures |
 | `runs/paper-NNN/ARM-REPEAT/evaluation.json` | Trace scores to matched and unmatched fields in that run's `extraction.json` |
 | `errors.json`, per-run `report.json` and `events.jsonl` | Diagnose failed attempts |
 | `comparison.json` | Full machine-readable result and consistency checks |
 
-The primary result is treatment minus control in strict macro F1: `+0.03` means
-**three percentage points**, not a 3% relative improvement. Repeats are averaged
+The primary result is treatment minus control in attributed fact micro F1: `+0.03`
+means **three percentage points**, not a 3% relative improvement. Each paper's F1
+pools matched, predicted and reference fact counts across groups. Repeats are averaged
 within each paper and papers receive equal weight. The 95% bootstrap interval
 resamples papers; an interval spanning zero does not establish a direction. One
 paper has no paper-bootstrap interval.
 
-`quality_status = "needs_attention"` means no valid aggregate comparison; retain
-failed attempts rather than interpreting only the successful subset. Empty CSV
+`quality_status = "needs_attention"` means the checks prevent a verified aggregate
+conclusion. This includes incomplete reference coverage review, ambiguous attribution,
+and missing, failed or inconsistent runs. Per-run scores remain available as
+diagnostics. `interpretation = "reference_agreement"` means agreement with the
+annotated subset: precision and F1 can penalize correct extractions absent from the
+reference. Do not interpret these as established extraction accuracy. Retain failed
+attempts rather than interpreting only the successful subset. Empty CSV
 cells and JSON `null` mean unavailable, not zero. Missing cost can coexist with a
 valid quality comparison; a known cost subtotal is not a complete total.
 
