@@ -26,6 +26,7 @@ from .models import (
     study_schema_sha256,
 )
 from .reference_release import ReferenceRelease
+from .scoring_coverage import ReferenceCoverage
 from .scoring_explanation import (
     ExplanationCollector,
     FactSelection,
@@ -33,7 +34,6 @@ from .scoring_explanation import (
 )
 from .scoring_facts import (
     DEFAULT_OPERATION_ALIASES,
-    FACT_GROUPS,
     FactContext,
     FactGroup,
     RecordReference,
@@ -46,13 +46,13 @@ from .scoring_facts import (
     scientific_facts,
     scientific_text,
 )
-from .scoring_fields import FACT_SUBFIELDS, FactSubfield
+from .scoring_fields import FACT_GROUPS, FACT_SUBFIELDS, FactSubfield
 from .scoring_identity import family_pair_evidence
 from .scoring_identity import record_similarity as _record_similarity
 from .scoring_process import align_processes
 
-EVALUATION_FORMAT_VERSION: Final[Literal[10]] = 10
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v13"]] = "rich-study-hungarian-v13"
+EVALUATION_FORMAT_VERSION: Final[Literal[11]] = 11
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v14"]] = "rich-study-hungarian-v14"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -232,6 +232,7 @@ class BenchmarkProvenance(StrictModel):
     """Identify the immutable truth item and split used for one paper score."""
 
     paper_id: str
+    coverage: ReferenceCoverage = Field(default_factory=ReferenceCoverage)
     split: str
     ground_truth_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     source_manifest_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -284,6 +285,8 @@ class FactMatch(StrictModel):
     subfield: FactSubfield
     truth_path: str
     predicted_path: str
+    truth_container: str
+    predicted_container: str
 
 
 class FactScoreView(StrictModel):
@@ -292,7 +295,6 @@ class FactScoreView(StrictModel):
     groups: dict[FactGroup, PRF]
     subfields: dict[FactSubfield, PRF]
     micro: PRF
-    macro_f1: float | None = Field(ge=0, le=1)
     matches: list[FactMatch]
     unmatched_truth_paths: list[str]
     unmatched_prediction_paths: list[str]
@@ -322,14 +324,6 @@ class FactScoreView(StrictModel):
         matched_subfields = Counter(match.subfield for match in self.matches)
         if any(matched_subfields[k] != s.matched for k, s in self.subfields.items()):
             raise ValueError("fact match ledger disagrees with subfield counts")
-        rates = [g.f1 for g in self.groups.values() if g.f1 is not None]
-        expected = sum(rates) / len(rates) if rates else None
-        if (expected is None) != (self.macro_f1 is None) or (
-            expected is not None
-            and self.macro_f1 is not None
-            and not math.isclose(expected, self.macro_f1, rel_tol=1e-12, abs_tol=0)
-        ):
-            raise ValueError("fact macro F1 disagrees with group scores")
         matched_groups = Counter(match.group for match in self.matches)
         if any(matched_groups[g] != score.matched for g, score in self.groups.items()):
             raise ValueError("fact match ledger disagrees with group counts")
@@ -365,15 +359,10 @@ class ScoringIssue(StrictModel):
 
 
 class CoreFactScore(FactScoreView):
-    """Score correct claims in context, not just the presence of a named quantity.
+    """Correctly attributed claims, with recovery over the identical fact inventory."""
 
-    Group-macro F1 gives each populated scientific area equal weight; the micro
-    counts remain available so large recipes cannot hide poor performance extraction.
-    """
-
-    profile: Literal["core-scientific-facts-v10"] = "core-scientific-facts-v10"
-    value_only: FactScoreView
-    attribution: FactScoreView
+    profile: Literal["core-scientific-facts-v11"] = "core-scientific-facts-v11"
+    recovery: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
     issues: list[ScoringIssue]
     fact_sources: dict[Literal["truth", "prediction"], dict[str, list[str]]]
@@ -382,21 +371,21 @@ class CoreFactScore(FactScoreView):
     def consistent_views(self) -> CoreFactScore:
         """All views score the same facts; strict credit requires value and context."""
 
-        for view in (self.value_only, self.attribution):
-            for group, strict in self.groups.items():
-                diagnostic = view.groups[group]
-                if (strict.truth, strict.predicted) != (
-                    diagnostic.truth,
-                    diagnostic.predicted,
-                ) or strict.matched > diagnostic.matched:
-                    raise ValueError("fact views have inconsistent counts")
-            for key, strict in self.subfields.items():
-                diagnostic = view.subfields[key]
-                if (strict.truth, strict.predicted) != (
-                    diagnostic.truth,
-                    diagnostic.predicted,
-                ) or strict.matched > diagnostic.matched:
-                    raise ValueError("fact subfield views have inconsistent counts")
+        view = self.recovery
+        for group, strict in self.groups.items():
+            diagnostic = view.groups[group]
+            if (strict.truth, strict.predicted) != (
+                diagnostic.truth,
+                diagnostic.predicted,
+            ) or strict.matched > diagnostic.matched:
+                raise ValueError("fact views have inconsistent counts")
+        for key, strict in self.subfields.items():
+            diagnostic = view.subfields[key]
+            if (strict.truth, strict.predicted) != (
+                diagnostic.truth,
+                diagnostic.predicted,
+            ) or strict.matched > diagnostic.matched:
+                raise ValueError("fact subfield views have inconsistent counts")
         if (self.scoring_status == "needs_review") != bool(self.issues):
             raise ValueError("scoring status disagrees with issues")
         if set(self.fact_sources) != {"truth", "prediction"}:
@@ -416,16 +405,13 @@ class CoreFactScore(FactScoreView):
                 path not in aliases for path, aliases in sources.items()
             ):
                 raise ValueError("fact sources must identify every canonical fact")
-            for view in (self.value_only, self.attribution):
-                diagnostic_paths = set(
-                    view.unmatched_truth_paths
-                    if side == "truth"
-                    else view.unmatched_prediction_paths
-                ) | {getattr(m, match_field) for m in view.matches}
-                if diagnostic_paths != paths:
-                    raise ValueError(
-                        "fact views must identify the same canonical facts"
-                    )
+            diagnostic_paths = set(
+                view.unmatched_truth_paths
+                if side == "truth"
+                else view.unmatched_prediction_paths
+            ) | {getattr(m, match_field) for m in view.matches}
+            if diagnostic_paths != paths:
+                raise ValueError("fact views must identify the same canonical facts")
             flattened = [path for aliases in sources.values() for path in aliases]
             if len(set(flattened)) != len(flattened):
                 raise ValueError("a source field cannot belong to multiple facts")
@@ -435,14 +421,17 @@ class CoreFactScore(FactScoreView):
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[10] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v13"] = MATCHER_VERSION
+    format_version: Literal[11] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v14"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     run_id: str | None = None
     run_manifest_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     benchmark: BenchmarkProvenance | None = None
+    interpretation: Literal["reference_agreement", "reviewed_scope"] = (
+        "reference_agreement"
+    )
     prediction_validation: PredictionValidation | None = None
     run_efficiency: RunEfficiency | None = None
     input_warnings: list[str] = Field(default_factory=list)
@@ -455,6 +444,13 @@ class EvaluationReport(StrictModel):
     matches: list[RecordMatch]
     unmatched_truth_record_keys: list[str]
     unmatched_prediction_record_keys: list[str]
+
+    @model_validator(mode="after")
+    def interpretation_matches_coverage(self) -> "EvaluationReport":
+        complete = self.benchmark is not None and self.benchmark.coverage.complete()
+        if (self.interpretation == "reviewed_scope") != complete:
+            raise ValueError("Score interpretation disagrees with reference coverage")
+        return self
 
 
 class Agreement(StrictModel):
@@ -517,8 +513,8 @@ class EvaluationInput(StrictModel):
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[10] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v13"] = MATCHER_VERSION
+    format_version: Literal[11] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v14"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -549,13 +545,12 @@ class DatasetEvaluationReport(StrictModel):
     core_fact_subfields_micro: dict[FactSubfield, PRF]
     core_fact_subfields_macro_f1: dict[FactSubfield, MetricSummary]
     core_facts_micro: PRF
-    core_facts_macro_f1: MetricSummary
-    core_value_only_micro: PRF
-    core_value_only_macro_f1: MetricSummary
-    core_attribution_micro: PRF
-    core_attribution_macro_f1: MetricSummary
+    core_facts_mean_paper_f1: MetricSummary
+    core_recovery_micro: PRF
+    core_recovery_mean_paper_f1: MetricSummary
     papers_needing_scoring_review: int = Field(ge=0)
     scoring_issue_count: int = Field(ge=0)
+    papers_with_unreviewed_scope: int = Field(ge=0)
 
 
 def _prf(predicted: int, truth: int, matched: int) -> PRF:
@@ -927,10 +922,10 @@ def _core_fact_score(
     ambiguous_prediction: set[str],
     explanation: ExplanationCollector | None = None,
 ) -> CoreFactScore:
-    """Match facts by group/property; require paired owners for scientific credit.
+    """Assign compatible concepts once per view, independent of storage containers.
 
-    Small independent assignments avoid a paper-wide cubic matching problem. Wrong
-    values count as both missing truth and extra prediction, not successful matches.
+    Subjects are paired before this step without outcomes. Recovery ignores their
+    attribution; the primary view requires both value and scientific context.
     """
 
     truth_ids = {f"{kind}:{left}": f"{kind}:{left}" for kind, left, _ in identities}
@@ -1097,17 +1092,14 @@ def _core_fact_score(
                 sources[(side, fact.path)] = sorted(source_paths)
         explanation.start(expected, actual, (blocked[0], blocked[1]), sources)
     buckets: dict[
-        tuple[FactGroup, FactSubfield, str],
+        tuple[str, str],
         tuple[list[ScientificFact], list[ScientificFact]],
     ] = {}
     for side_index, facts in enumerate((expected, actual)):
         for fact in facts:
-            buckets.setdefault((fact.group, fact.subfield, fact.name), ([], []))[
-                side_index
-            ].append(fact)
+            buckets.setdefault(fact.concept, ([], []))[side_index].append(fact)
     strict_matches: list[FactMatch] = []
     value_matches: list[FactMatch] = []
-    attribution_matches: list[FactMatch] = []
     for left, right in buckets.values():
         decisions = [
             [
@@ -1126,31 +1118,39 @@ def _core_fact_score(
         ]
         bucket_matches: dict[str, list[FactMatch]] = {}
         for mode, matches in (
-            ("strict", strict_matches),
-            ("value", value_matches),
-            ("attribution", attribution_matches),
+            ("attributed", strict_matches),
+            ("recovery", value_matches),
         ):
             # Identical binary weights and assignment as _match(..., threshold=1).
             # Retain each comparison once for all views and optional explanations.
             scores = [[float(d.eligible(mode)) for d in row] for row in decisions]
-            bucket_matches[mode] = [
-                FactMatch(
-                    group=left[i].group,
-                    subfield=left[i].subfield,
-                    truth_path=left[i].path,
-                    predicted_path=right[j].path,
+            bucket_matches[mode] = []
+            for i, j in _maximum_assignment(scores):
+                if scores[i][j] <= 0:
+                    continue
+                a, b = left[i], right[j]
+                if (a.group, a.subfield) != (b.group, b.subfield):
+                    raise ValueError(
+                        f"Equivalent facts have inconsistent reporting bins: {a.path} and {b.path}; "
+                        "fix the classifier rather than restricting semantic matches"
+                    )
+                bucket_matches[mode].append(
+                    FactMatch(
+                        group=a.group,
+                        subfield=a.subfield,
+                        truth_path=a.path,
+                        predicted_path=b.path,
+                        truth_container=a.path.split("/")[1],
+                        predicted_container=b.path.split("/")[1],
+                    )
                 )
-                for i, j in _maximum_assignment(scores)
-                if scores[i][j] > 0
-            ]
             matches.extend(bucket_matches[mode])
         if explanation is not None:
             explanation.capture_bucket(left, right, decisions, bucket_matches)
     strict = _fact_score_view(expected, actual, strict_matches)
     return CoreFactScore(
         **strict.model_dump(),
-        value_only=_fact_score_view(expected, actual, value_matches),
-        attribution=_fact_score_view(expected, actual, attribution_matches),
+        recovery=_fact_score_view(expected, actual, value_matches),
         scoring_status="needs_review" if issues else "ready",
         issues=issues,
         fact_sources={
@@ -1175,7 +1175,6 @@ def _fact_score_view(
         )
         for group in FACT_GROUPS
     }
-    rates = [score.f1 for score in groups.values() if score.f1 is not None]
     matched_left = {m.truth_path for m in matches}
     matched_right = {m.predicted_path for m in matches}
     return FactScoreView(
@@ -1189,7 +1188,6 @@ def _fact_score_view(
             for key in FACT_SUBFIELDS
         },
         micro=_prf(len(actual), len(expected), len(matches)),
-        macro_f1=sum(rates) / len(rates) if rates else None,
         matches=matches,
         unmatched_truth_paths=sorted(
             f.path for f in expected if f.path not in matched_left
@@ -1392,6 +1390,9 @@ def evaluate_study(
         matched_value_count,
     )
     return EvaluationReport(
+        interpretation="reviewed_scope"
+        if benchmark and benchmark.coverage.complete()
+        else "reference_agreement",
         study_schema_sha256=study_schema_sha256(),
         truth_content_sha256=truth_digest,
         prediction_content_sha256=prediction_digest,
@@ -1449,6 +1450,10 @@ def _input_warnings(
     """Expose metadata conflicts without treating an extracted DOI as source identity."""
 
     warnings = []
+    if benchmark is None or not benchmark.coverage.complete():
+        warnings.append(
+            "Reference coverage/context is not fully reviewed. Counts describe agreement with supplied annotations; precision/F1 are diagnostic, and recall is limited to the annotated subset."
+        )
     if run_manifest_sha256 is None:
         warnings.append(
             "Prediction has no sealed source provenance; source compatibility is unverified."
@@ -1490,7 +1495,7 @@ def evaluate_study_with_explanations(
     """Evaluate once and explain selected facts from that very run's decisions.
 
     Select at most 25 scored JSON paths. The separate explanation artifact does
-    not change the score report, its version, or its independent three match views.
+    not change the score report, its version, or its two independent match views.
     """
 
     collector = ExplanationCollector(facts, max_candidates)
@@ -1841,33 +1846,26 @@ def aggregate_evaluations(
             sum(r.core_facts.micro.truth for r in reports),
             sum(r.core_facts.micro.matched for r in reports),
         ),
-        core_facts_macro_f1=_metric_summary(
-            (r.core_facts.macro_f1 for r in reports),
+        core_facts_mean_paper_f1=_metric_summary(
+            (r.core_facts.micro.f1 for r in reports),
             bootstrap_samples=bootstrap_samples,
             seed=seed + 300,
         ),
-        core_value_only_micro=_prf(
-            sum(r.core_facts.value_only.micro.predicted for r in reports),
-            sum(r.core_facts.value_only.micro.truth for r in reports),
-            sum(r.core_facts.value_only.micro.matched for r in reports),
+        core_recovery_micro=_prf(
+            sum(r.core_facts.recovery.micro.predicted for r in reports),
+            sum(r.core_facts.recovery.micro.truth for r in reports),
+            sum(r.core_facts.recovery.micro.matched for r in reports),
         ),
-        core_value_only_macro_f1=_metric_summary(
-            (r.core_facts.value_only.macro_f1 for r in reports),
+        core_recovery_mean_paper_f1=_metric_summary(
+            (r.core_facts.recovery.micro.f1 for r in reports),
             bootstrap_samples=bootstrap_samples,
             seed=seed + 301,
-        ),
-        core_attribution_micro=_prf(
-            sum(r.core_facts.attribution.micro.predicted for r in reports),
-            sum(r.core_facts.attribution.micro.truth for r in reports),
-            sum(r.core_facts.attribution.micro.matched for r in reports),
-        ),
-        core_attribution_macro_f1=_metric_summary(
-            (r.core_facts.attribution.macro_f1 for r in reports),
-            bootstrap_samples=bootstrap_samples,
-            seed=seed + 302,
         ),
         papers_needing_scoring_review=sum(
             r.core_facts.scoring_status == "needs_review" for r in reports
         ),
         scoring_issue_count=sum(len(r.core_facts.issues) for r in reports),
+        papers_with_unreviewed_scope=sum(
+            r.interpretation != "reviewed_scope" for r in reports
+        ),
     )

@@ -173,8 +173,8 @@ def test_saved_scientific_correction_changes_the_reference_not_the_seed(
         export.ground_truth, StudyExtraction.model_validate(export.seed_extraction)
     )
     after = evaluate_study(export.ground_truth, export.ground_truth)
-    assert before.core_facts.groups["stack"].f1 == 0
-    assert after.core_facts.groups["stack"].f1 == 1
+    assert before.core_facts.groups["material_device_identity"].f1 == 0
+    assert after.core_facts.groups["material_device_identity"].f1 == 1
     assert before.truth_content_sha256 == after.truth_content_sha256
     assert before.prediction_content_sha256 != after.prediction_content_sha256
     # Exercise the actual browser-download format, not just the filesystem exporter.
@@ -195,7 +195,7 @@ def test_saved_scientific_correction_changes_the_reference_not_the_seed(
         ],
     )
     assert result.exit_code == 0, result.output
-    assert json.loads(output.read_text())["core_facts"]["groups"]["stack"]["f1"] == 0
+    assert json.loads(output.read_text())["core_facts"]["groups"]["material_device_identity"]["f1"] == 0
 
 
 def test_invalid_historical_seed_does_not_block_corrected_reference(

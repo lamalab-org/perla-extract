@@ -28,7 +28,7 @@ def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
     contains no omitted facts. Missing review-stage metadata does not prove that a
     reviewer skipped that work; retain the distinction for a provenance audit.
     Indistinguishable measurement identities remain review issues, with every fact
-    retained. Missing value-only credit or unexplained losses are software failures.
+    retained. Missing recovery credit or unexplained losses are software failures.
     """
 
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
@@ -40,7 +40,7 @@ def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
     if provenance is None:
         raise ValueError("A frozen reference directory is required")
     score = evaluate_study(truth, truth, benchmark=provenance, config=config)
-    if score.core_facts.value_only.micro.f1 != 1 or (
+    if score.core_facts.recovery.micro.f1 != 1 or (
         score.core_facts.micro.f1 != 1 and not score.core_facts.issues
     ):
         raise ValueError(
@@ -62,13 +62,18 @@ def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
         "self_score": {
             "status": score.core_facts.scoring_status,
             "micro": score.core_facts.micro.model_dump(),
-            "value_only_micro": score.core_facts.value_only.micro.model_dump(),
+            "recovery_micro": score.core_facts.recovery.micro.model_dump(),
             "issues": [issue.model_dump() for issue in score.core_facts.issues],
             "unmatched_truth_paths": score.core_facts.unmatched_truth_paths,
         },
         "fact_counts": {
             name: counts.truth for name, counts in score.core_facts.groups.items()
         },
+        "subfield_counts": {
+            name: counts.truth for name, counts in score.core_facts.subfields.items()
+        },
+        "reference_coverage": provenance.coverage.model_dump(mode="json"),
+        "interpretation": score.interpretation,
         "record_counts": {
             name: counts.truth for name, counts in score.inventory.items()
         },
@@ -110,6 +115,15 @@ def audit_release(path: Path) -> dict:
         "paper_count": aggregate.paper_count,
         "matcher_version": aggregate.matcher_version,
         "software_checks": "passed",
+        "papers_with_unreviewed_scope": aggregate.papers_with_unreviewed_scope,
+        "review_worklist": {
+            paper: [
+                domain
+                for domain, declaration in scores[i].benchmark.coverage.domains.items()
+                if not declaration.complete()
+            ]
+            for i, paper in enumerate(checks)
+        },
         "papers_needing_scoring_review": sorted(
             paper
             for paper, check in checks.items()

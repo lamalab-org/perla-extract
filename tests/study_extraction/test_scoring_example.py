@@ -31,8 +31,8 @@ def test_public_example_preserves_corrections_and_expected_scores(tmp_path):
     comparison = json.loads((output / "comparison.json").read_text())
     assert comparison["quality_status"] == "ready"
     assert comparison["issues"] == []
-    assert comparison["quality"]["mean_paired_macro_f1_delta"] == 1
-    interval = comparison["quality"]["paired_macro_f1_delta_interval"]
+    assert comparison["quality"]["mean_paired_fact_f1_delta"] == 1
+    interval = comparison["quality"]["paired_fact_f1_delta_interval"]
     assert interval["status"] == "insufficient_papers"
     assert interval["ci95_lower"] is None and interval["ci95_upper"] is None
     with (output / "figure-data" / "paired_papers.csv").open(newline="") as stream:
@@ -47,7 +47,7 @@ def test_public_example_preserves_corrections_and_expected_scores(tmp_path):
             (output / "predictions" / case / "evaluation.json").read_text()
         )
         view = report["core_facts"]
-        if row["view"] != "strict":
+        if row["view"] != "attributed":
             view = view[row["view"]]
         counts = view["subfields"][row["subfield"]]
         for key in ("matched", "predicted", "truth"):

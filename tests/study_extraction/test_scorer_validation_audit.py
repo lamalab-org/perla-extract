@@ -111,7 +111,7 @@ def test_clarifying_a_population_label_preserves_unchanged_scientific_facts():
     before = evaluate_study(truth, prediction)
     # Unchecked prose is not automatically equivalent. Explicit reviewed rules
     # resolve this known false negative without erasing treatment distinctions.
-    assert before.core_facts.groups["population"].matched == 0
+    assert not any(m.truth_path.startswith("/population_statistics/") for m in before.core_facts.matches)
     rules_path = (
         Path(__file__).resolve().parents[2]
         / "examples/scoring/reviewed-descriptors-v2.json"
@@ -120,7 +120,7 @@ def test_clarifying_a_population_label_preserves_unchanged_scientific_facts():
         descriptor_equivalences=json.loads(rules_path.read_text(encoding="utf-8"))
     )
     report = evaluate_study(truth, prediction, config=config)
-    assert report.core_facts.groups["population"].matched == 11
+    assert sum(m.truth_path.startswith("/population_statistics/") for m in report.core_facts.matches) == 11
     assert report.core_facts.micro.f1 == 1
     assert report.prediction_content_sha256 == before.prediction_content_sha256
     assert (
@@ -223,7 +223,7 @@ def test_public_reference_audit_retains_identity_issues(one_paper_release):
     paper = report["papers"]["10.1002--adfm.201500335"]
     score = paper["self_score"]
     assert score["micro"]["truth"] - score["micro"]["matched"] == 10
-    assert score["value_only_micro"]["f1"] == 1
+    assert score["recovery_micro"]["f1"] == 1
     assert score["status"] == "needs_review"
     assert len(score["unmatched_truth_paths"]) == 10
     assert all(issue["kind"] == "ambiguous_record" for issue in score["issues"])

@@ -70,8 +70,8 @@ sealed valid outputs. A rerun creates a numbered attempt and retains previous wo
 
 ## Read the result and make figures
 
-The primary difference is treatment minus control in per-paper, populated-group
-macro F1. Repeat differences are averaged within each paper; papers then receive
+The primary difference is treatment minus control in per-paper attributed fact
+micro F1. Repeat differences are averaged within each paper; papers then receive
 equal weight. The percentile bootstrap resamples papers. Its interval is conditional
 on the observed repeats; it does not estimate all possible model or dataset variation.
 One paper has no paper-bootstrap interval. No interval is produced from missing or
@@ -82,9 +82,12 @@ incompatible quality results.
 | File | Use |
 | --- | --- |
 | `runs.csv` | Plot individual quality, token use, request count, latency and recorded spend; includes failed/missing results |
-| `group_scores.csv` | Inspect strict, value-only and attribution precision/recall/F1 with their truth/predicted/matched counts |
+| `group_scores.csv` | Inspect attributed and recovery precision/recall/F1 with their truth/predicted/matched counts |
 | `paired_papers.csv` | Plot paired paper differences and the number of observed repeats |
 | `analysis.json` | Preserve the estimand, roster hash, factor checks, interval method, seed and diagnostics |
+
+Each score row includes `interpretation`: unreviewed reference scope is diagnostic
+`reference_agreement`. It cannot supply a verified quality comparison.
 
 Empty CSV cells mean unavailable, not zero. `known_total_tokens` retains the observed
 subtotal; token totals are populated only when token accounting is explicitly complete. Known spend remains available even if a

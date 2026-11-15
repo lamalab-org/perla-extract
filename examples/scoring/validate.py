@@ -75,7 +75,6 @@ def convert_units(study):
 def summary(score):
     """Keep counts and matching warnings; never turn an ambiguous score into a rank."""
     return {
-        "macro_f1": score.core_facts.macro_f1,
         "micro_f1": score.core_facts.micro.f1,
         "status": score.core_facts.scoring_status,
         "groups": {k: v.model_dump() for k, v in score.core_facts.groups.items()},
@@ -145,7 +144,7 @@ def validate_control(truth, name, prediction, changes, baseline):
     if name == "equivalent_units":
         if any(
             getattr(score.core_facts, view) != getattr(baseline.core_facts, view)
-            for view in ("groups", "issues", "value_only")
+            for view in ("groups", "issues", "recovery")
         ):
             failures.append("Equivalent units changed scientific credit or alignment")
     elif name == "drop_one_metric":
@@ -264,7 +263,7 @@ def run(
         if reference_content_digest(manifest) != paper["manifest_sha256"]:
             raise ValueError(f"Reference manifest differs from release: {identity}")
         baseline = evaluate_study(truth, truth)
-        if baseline.core_facts.value_only.micro.f1 != 1 or (
+        if baseline.core_facts.recovery.micro.f1 != 1 or (
             baseline.core_facts.micro.f1 != 1 and not baseline.core_facts.issues
         ):
             raise ValueError(f"Unexplained baseline self-check failure: {identity}")
@@ -372,8 +371,8 @@ def run(
         "controls": results,
         "snapshot_sensitivity": sensitivity,
         "missing_snapshots": missing,
-        "snapshot_macro_f1_means": {
-            name: mean(r["scores"][name]["macro_f1"] for r in sensitivity)
+        "snapshot_mean_paper_f1": {
+            name: mean(r["scores"][name]["micro_f1"] for r in sensitivity)
             for name in configurations
         }
         if sensitivity

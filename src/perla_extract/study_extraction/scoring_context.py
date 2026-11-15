@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .models import ReportedValue
+from .models import ReportedValue, SubjectContext
 from .scoring_claims import equal_claims, normalize_claim, scientific_value_text
 
 
@@ -48,13 +48,14 @@ class ContextComponent:
 
 @dataclass(frozen=True)
 class FactContext:
-    """Store ordered scientific requirements with their diagnostic source paths.
-
-    Component values determine equality. Names and paths identify the requirement
-    responsible for a mismatch without becoming additional matching criteria.
-    """
+    """Compare named scientific requirements independently of serialization order."""
 
     components: tuple[ContextComponent, ...] = ()
+
+    def __post_init__(self) -> None:
+        names = [component.name for component in self.components]
+        if len(names) != len(set(names)):
+            raise ValueError("Context component names must be unique within a scope")
 
     @classmethod
     def of(cls, path: str | None = None, **values: object) -> FactContext:
@@ -86,10 +87,8 @@ def equal_value(left: object, right: object, relative: float, absolute: float) -
         )
     if isinstance(left, str) and isinstance(right, str):
         return scientific_value_text(left) == scientific_value_text(right)
-    if isinstance(left, FactContext):
-        left = left.values
-    if isinstance(right, FactContext):
-        right = right.values
+    if isinstance(left, FactContext) and isinstance(right, FactContext):
+        return not compare_context(left, right, relative, absolute)
     if isinstance(left, UnorderedContext) and isinstance(right, UnorderedContext):
         if len(left.items) != len(right.items):
             return False
@@ -129,17 +128,19 @@ class ContextDifference:
     predicted_path: str | None
     truth_value: object
     predicted_value: object
+    reason: str = "conflict"
 
 
 def compare_context(
     left: FactContext, right: FactContext, relative: float, absolute: float
 ) -> tuple[ContextDifference, ...]:
-    """Compare the original ordered requirements, retaining their differing fields."""
+    """Compare requirements by name; a missing requirement cannot match by position."""
 
     differences: list[ContextDifference] = []
-    for i in range(max(len(left.components), len(right.components))):
-        a = left.components[i] if i < len(left.components) else None
-        b = right.components[i] if i < len(right.components) else None
+    left_fields = {c.name: c for c in left.components}
+    right_fields = {c.name: c for c in right.components}
+    for name in sorted(left_fields.keys() | right_fields.keys()):
+        a, b = left_fields.get(name), right_fields.get(name)
         if a is not None and b is not None:
             if isinstance(a.value, FactContext) and isinstance(b.value, FactContext):
                 differences.extend(
@@ -157,6 +158,46 @@ def compare_context(
                 b.path if b is not None else None,
                 a.value if a is not None else None,
                 b.value if b is not None else None,
+                "missing_required"
+                if a is None or b is None or a.value is None or b.value is None
+                else "conflict",
             )
         )
     return tuple(differences)
+
+
+def has_subject_identity(subject: SubjectContext) -> bool:
+    from .scoring_vocabulary import treatment_condition_name
+
+    return any(
+        treatment_condition_name(value.name) is not None for value in subject.conditions
+    )
+
+
+def subject_context(
+    subject: SubjectContext, path: str | None = None, *, identity_only: bool = False
+) -> FactContext:
+    """Preserve treatment meaning and units; labels and outcomes are not identity."""
+    from .scoring_vocabulary import (
+        material_name,
+        property_name,
+        treatment_condition_name,
+    )
+
+    return FactContext.of(
+        path,
+        treatment_stage=subject.treatment_stage,
+        treated_material=material_name(subject.treated_material)
+        if subject.treated_material
+        else None,
+        conditions=UnorderedContext(
+            tuple(
+                (
+                    treatment_condition_name(value.name) or property_name(value.name),
+                    value,
+                )
+                for value in subject.conditions
+                if not identity_only or treatment_condition_name(value.name) is not None
+            )
+        ),
+    )

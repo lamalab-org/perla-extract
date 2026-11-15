@@ -79,7 +79,7 @@ def study():
     )
 
 
-def explain(truth, prediction, *, path=METRIC, side="truth", view="strict", **kwargs):
+def explain(truth, prediction, *, path=METRIC, side="truth", view="attributed", **kwargs):
     report, explanation = evaluate_study_with_explanations(
         truth,
         prediction,
@@ -132,7 +132,7 @@ def test_wrong_scan_reports_context_field_but_value_view_still_matches():
     )
     assert difference.truth_value == "reverse"
     assert difference.predicted_value == "forward"
-    _, recovered = explain(truth, prediction, view="value")
+    _, recovered = explain(truth, prediction, view="recovery")
     assert recovered.reason == "matched"
     assert not recovered.candidates[0].context_equal
 
@@ -180,7 +180,7 @@ def test_record_ambiguity_blocks_primary_but_not_value_credit():
     assert {s.path for s in fact.candidates[0].ambiguity_sources} == {
         "/performance_observations/0"
     }
-    _, value = explain(truth, prediction, view="value")
+    _, value = explain(truth, prediction, view="recovery")
     assert value.reason == "matched"
 
 

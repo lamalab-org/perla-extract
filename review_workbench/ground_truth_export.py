@@ -22,6 +22,7 @@ from perla_extract.study_extraction.models import (
     study_schema_sha256,
 )
 from perla_extract.study_extraction.reference_io import GROUND_TRUTH_FORMAT_VERSION
+from perla_extract.study_extraction.scoring_coverage import ReferenceCoverage
 from perla_extract.study_extraction.validation import validate_study
 from review_workbench.study_review import ReviewEvent, StudyReviewStore
 
@@ -90,6 +91,7 @@ class GroundTruthManifest(BaseModel):
     review: GroundTruthReview
     validation: GroundTruthValidation
     files: dict[str, str]
+    coverage: ReferenceCoverage = Field(default_factory=ReferenceCoverage)
 
 
 class GroundTruthExport(BaseModel):
@@ -211,6 +213,9 @@ def build_ground_truth_export(
         evidence_version=revision.evidence_version,
         evidence_document_sha256=_sha256(document),
         frozen_at=final_event.timestamp,
+        coverage=ReferenceCoverage.model_validate(
+            summary["inventory_audits"].get(adjudicator, {}).get("coverage", {})
+        ),
         source_manifest=source.manifest,
         review={
             "event_count": len(events),

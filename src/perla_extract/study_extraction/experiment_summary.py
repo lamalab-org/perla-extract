@@ -41,14 +41,14 @@ def write_summary(result: dict, path: Path) -> None:
             ]
         )
     else:
-        delta = quality["mean_paired_macro_f1_delta"]
+        delta = quality["mean_paired_fact_f1_delta"]
         lines.extend(
             [
-                f"**Treatment − control: {delta:+.4f} strict macro F1 ({delta * 100:+.2f} percentage points).**",
+                f"**Treatment − control: {delta:+.4f} attributed fact micro F1 ({delta * 100:+.2f} percentage points).**",
                 "Positive favors treatment; negative favors control; zero means equal mean scores.",
             ]
         )
-        interval = quality["paired_macro_f1_delta_interval"]
+        interval = quality["paired_fact_f1_delta_interval"]
         if interval["status"] == "available":
             lines.append(
                 f"95% paper-bootstrap interval: {interval['ci95_lower']:+.4f} to {interval['ci95_upper']:+.4f}."
@@ -112,7 +112,7 @@ def write_summary(result: dict, path: Path) -> None:
             "| Question | File |",
             "| --- | --- |",
             "| Which papers improved or worsened? | [figure-data/paired_papers.csv](figure-data/paired_papers.csv): treatment minus control per paper |",
-            "| Which fact groups changed? | [figure-data/group_scores.csv](figure-data/group_scores.csv): use `strict` for primary quality; `value_only` and `attribution` diagnose errors |",
+            "| Which fact groups changed? | [figure-data/group_scores.csv](figure-data/group_scores.csv): use `attributed` for primary quality and `recovery` for information found; inspect explanations for context errors |",
             "| Which specific fields changed? | [figure-data/subfield_scores.csv](figure-data/subfield_scores.csv): material identity, outcomes, protocol and processing breakdowns; filter `quality_available` for verified runs |",
             "| What did each attempt consume? | [figure-data/runs.csv](figure-data/runs.csv): scores, tokens, requests, time, cost and failures; empty cells mean unavailable |",
             "| Which exact values were wrong? | `runs/paper-NNN/ARM-REPEAT/evaluation.json`: matched and unmatched field paths; `extraction.json` contains the prediction |",

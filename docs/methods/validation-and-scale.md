@@ -19,16 +19,14 @@ The public v2 release contains 30 model-assisted, finalized development referenc
 These papers have informed extraction and scoring changes. Do not relabel a subset
 as held out now: its feedback has already influenced the system.
 
-An audit with matcher v12 / fact profile v9 on 14 November 2026 counted:
+An audit with matcher v14 / fact profile v11 on 15 November 2026 counted:
 
 | Scientific group | Scored facts | Papers with at least one fact |
 | --- | ---: | ---: |
-| Performance | 1,947 | 29 |
-| Population statistics | 560 | 28 |
+| Performance (individual and population) | 2,507 | 30 |
+| Material/device identity | 4,304 | 30 |
+| Processing | 5,382 | 30 |
 | Stability | 1,152 | 23 |
-| Composition | 2,780 | 30 |
-| Stack | 2,159 | 30 |
-| Processing | 5,209 | 30 |
 
 These are scorer-defined facts, not independent experimental replicates. They come
 from 134 families, 340 individual devices, 432 performance observations, 142
@@ -39,6 +37,8 @@ credit is withheld and flagged, while every fact remains counted. Resolve these
 against the sources before treating strict scores as scientific accuracy. Self-checks
 do not establish source completeness or agreement with independent reviewers.
 
+All 30 lack explicit complete domain/channel coverage under the current contract;
+their scores remain diagnostic reference agreement until that coverage is reviewed.
 All 30 public manifests declare adjudication; four retain a completeness-stage
 marker. Trusted-review adoption can record completion differently, so missing markers
 do not mean missing review. Check the private history before claiming uniform
@@ -78,7 +78,7 @@ assignment implementation is also checked against exhaustive small-matrix soluti
 The [scoring reference](../workflows/evaluation.md) states the exact tolerances.
 
 Before ranking models, an expert should inspect a prespecified sample of both
-accepted and rejected matches, covering all six groups. Include genuine model
+accepted and rejected matches, covering all four domains. Include genuine model
 outputs, not only synthetic examples. Show source evidence and both records, but
 hide the model name and whether the cheaper arm produced them where practical.
 Ask separately:
@@ -213,7 +213,7 @@ A smaller prespecified pilot remains a pilot, not a full benchmark. Record insta
 dependency versions and provider settings with the clean code revision; neither
 hashes nor a model name guarantee unchanged hosted weights or provider defaults.
 
-Use paired paper-level differences and all six groups' precision/recall/counts.
+Use paired paper-level differences and all four domains' precision/recall/counts.
 Average repeated runs within papers; do not treat thousands of fields or repeated
 calls as thousands of independent papers. The comparison report includes a
 descriptive paper-level paired bootstrap interval, but does not declare equivalence

@@ -79,15 +79,20 @@ measured properties lose their own credit without changing family identity.
 Device/measurement identity uses declared specimen and protocol fields, excluding
 outcomes, metric names and annotation completeness. Indistinguishable repeated
 measurements remain ambiguous even when their values differ.
-Population cohort labels, and stability specimen labels without explicit
+Population cohort labels (unless both sides supply structured treatment identity),
+and stability specimen labels without explicit
 device links, must agree. This prevents equal outcomes from making a control and a
 treated cohort interchangeable. The rule normalizes typography, not synonyms, so
 different descriptions of the same cohort can still lose credit. Checked label
 equivalences can be supplied explicitly, tied to an exact reference hash. Freeze
 these decisions before comparing models and use the same list for every arm.
 
-Within paired records, the scorer compares facts in six groups: performance,
-population statistics, stability, stack, composition and processing. Context identifies
+The primary score requires correctly attributed facts. A separate information-
+recovery view matches compatible concepts across individual/population containers.
+Both retain one-to-one assignment and the same denominators. Four reporting domains
+cover performance, material/device identity, processing and stability. Qualitative
+observations, unparsed measurement claims and statistical metadata have separate
+breakdowns; they must not be labeled numerical performance measurements. Context identifies
 the cell, scan, layer, constituent, operation or stability checkpoint. Explicit
 sequence fields determine layer and operation order; JSON array position does not.
 Fully ordered recipes align by operation and target with gaps. Only step pairs shared
@@ -118,8 +123,7 @@ gives examples and the full matching algorithm.
 | Result | Question answered |
 | --- | --- |
 | Correct value in correct context | Do the value and its recorded context match the reference? |
-| Value only | Was the value recovered anywhere in the same scientific group/property, ignoring owner and context? |
-| Attribution only | Is the property in the correct context, regardless of its value? |
+| Information recovery | Was the compatible concept/value recovered anywhere in this paper, including across individual/population containers? |
 | Citation validation | Do the cited passages and raw values occur in the supplied evidence? |
 
 For each scientific group, the report includes reference, predicted and matched
@@ -127,9 +131,10 @@ fact counts, precision, recall and F1. A wrong value contributes an unmatched
 prediction and an unmatched reference fact. Extra predictions reduce precision;
 missing facts reduce recall. Duplicate predictions cannot reuse one reference fact.
 
-The group-balanced F1 averages the groups that contain facts in either study.
-Groups empty in both studies are left out. Reports also retain pooled counts and
-per-group scores. Equal weighting does not imply equal scientific importance.
+The per-paper summary is attributed micro F1 over its eligible fact inventory.
+Papers receive equal weight in study comparisons. Domain/subfield scores accompany
+that summary; frequent fact types still receive more weight within a paper.
+Unreviewed reference coverage limits these numbers to diagnostic agreement.
 
 The dataset command combines paper reports that use compatible versions and scoring
 settings. It estimates uncertainty in average scores by resampling papers, keeping
@@ -172,3 +177,22 @@ deterministic comparison.
 When reference labels change, freeze a new revision and rescore saved predictions
 against that revision. Do not compare scores based on different reference versions
 as if only the extractor had changed.
+
+## Coverage and the current summary statistic
+
+Schema 7 adds optional structured subject context, population protocol and error-bar
+meaning. Archived schema-6 references load with unknown defaults; their bytes and
+review history remain unchanged. Ground-truth format 4 remains the single format.
+
+Evaluation format 11 replaces the previous group-macro headline with per-paper
+attributed fact micro F1. Study comparisons average repeats within each paper and
+then take an equal-paper mean of paired differences, with paper resampling. Pooled
+P/R/F1 and domain breakdowns accompany it. This method change requires rescoring
+all arms; old and new scores are not directly comparable.
+
+Exported reference coverage declares text/tables, figures and attribution context
+by domain. Unreviewed or incomplete scope yields diagnostic reference agreement,
+including recall only against the annotated subset. It cannot establish extraction
+precision against all reported claims. Comparisons withhold verified quality
+conclusions until coverage is reviewed. Software self-tests do not replace
+independent source-based calibration or held-out validation.

@@ -71,6 +71,7 @@ def prepare(output: Path) -> Path:
         "src/perla_extract/study_extraction/identifiers.py",
         "src/perla_extract/study_extraction/models.py",
         "src/perla_extract/study_extraction/reference_io.py",
+        "src/perla_extract/study_extraction/scoring_coverage.py",
         "src/perla_extract/study_extraction/units.py",
         "src/perla_extract/study_extraction/validation.py",
         "src/perla_extract/study_extraction/vocabulary.py",

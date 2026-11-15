@@ -18,7 +18,12 @@ from .models import (
     StabilityTest,
 )
 from .scoring_claims import scientific_text
-from .scoring_context import UnorderedContext, equal_value
+from .scoring_context import (
+    UnorderedContext,
+    equal_value,
+    has_subject_identity,
+    subject_context,
+)
 from .scoring_protocol import protocol_claims
 from .scoring_vocabulary import material_name, material_stage, property_name
 
@@ -45,6 +50,50 @@ def record_similarity(
     # must not determine its identity or suppress credit for unchanged children.
     if isinstance(left, DeviceFamily) and isinstance(right, DeviceFamily):
         return _jaccard(_family_features(left), _family_features(right))
+    if isinstance(left, PopulationStatistic) and isinstance(right, PopulationStatistic):
+        if (
+            left.subjects
+            and right.subjects
+            and all(has_subject_identity(s) for s in (*left.subjects, *right.subjects))
+        ):
+            return float(
+                equal_value(
+                    UnorderedContext(
+                        tuple(
+                            subject_context(s, identity_only=True)
+                            for s in left.subjects
+                        )
+                    ),
+                    UnorderedContext(
+                        tuple(
+                            subject_context(s, identity_only=True)
+                            for s in right.subjects
+                        )
+                    ),
+                    relative,
+                    absolute,
+                )
+            )
+    if isinstance(left, IndividualDevice) and isinstance(right, IndividualDevice):
+        if (
+            left.subject_context is not None
+            and right.subject_context is not None
+            and has_subject_identity(left.subject_context)
+            and has_subject_identity(right.subject_context)
+        ):
+            if not equal_value(
+                subject_context(left.subject_context, identity_only=True),
+                subject_context(right.subject_context, identity_only=True),
+                relative,
+                absolute,
+            ):
+                return 0
+            # Treatment establishes the arm, while champion/selection identifies
+            # a particular specimen within it. Repeated identities stay ambiguous.
+            return float(
+                (left.champion_status, left.selection_basis, left.variant)
+                == (right.champion_status, right.selection_basis, right.variant)
+            )
     a, b = _identity_features(left), _identity_features(right)
     shared, total = len(a & b), len(a | b)
     left_protocol, right_protocol = _protocol(left), _protocol(right)

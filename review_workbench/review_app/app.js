@@ -1,4 +1,5 @@
 import { createApiClient } from "./api-client.js";
+import { renderCoverage, readCoverage } from "./reference-coverage.js";
 import { createReviewSession } from "./review-session.js";
 import { createRecordEditor } from "./record-editor.js";
 import { createFinalizationQueue } from "/adjudication.js";
@@ -772,12 +773,14 @@ function savedCensusDraft() {
     }
     return {
       expected_counts: structuredClone(audit.expected_counts || {}),
+      coverage: structuredClone(audit.coverage || {}),
       main_text_figure_census: figureCensus,
       missing_or_ambiguous: audit.missing_or_ambiguous || "",
     };
   }
   return {
     expected_counts: {},
+    coverage: {},
     main_text_figure_census: proposal ? {
       figures_reviewed: 0,
       schema_relevant_figures: 0,
@@ -1107,6 +1110,7 @@ function updateCensusDraft({ panelStatus = null, persist = false } = {}) {
     figure_only_atomic_values: previousFigures.figure_only_atomic_values || 0,
   };
   state.censusDraft = {
+    coverage: readCoverage($("reference-coverage")),
     expected_counts: Object.fromEntries([...document.querySelectorAll("[data-count]")].map((input) => [input.dataset.count, Number(input.value)])),
     main_text_figure_census: {
       ...totals,
@@ -1137,6 +1141,8 @@ function renderInventoryForm() {
       element("input", { properties: { type: "number", min: "0", value: String(draft.expected_counts[key] ?? 0) }, dataset: { count: key } }),
     ]));
   $("inventory-counts").replaceChildren(...inputs);
+  renderCoverage($("reference-coverage"), draft.coverage, element,
+    () => updateCensusDraft({ persist: true }));
   const figures = draft.main_text_figure_census;
   figures.panels ||= [];
   $("figure-census-notes").value = figures.notes || "";

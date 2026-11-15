@@ -162,8 +162,8 @@ def test_missing_family_properties_do_not_erase_unchanged_device_results():
     result = evaluate_study(truth, prediction)
     assert result.core_facts.groups["performance"].f1 == 1
     assert (
-        result.core_facts.groups["composition"].truth
-        - result.core_facts.groups["composition"].matched
+        result.core_facts.groups["material_device_identity"].truth
+        - result.core_facts.groups["material_device_identity"].matched
         == 35
     )
 
@@ -203,11 +203,11 @@ def test_value_recovery_is_independent_of_unmatched_cohort_labels():
         prediction,
         facts=[
             FactSelection(side="truth", path=path, view=view)
-            for view in ("strict", "value")
+            for view in ("attributed", "recovery")
         ],
     )
-    assert report.core_facts.groups["population"].matched == 0
-    assert report.core_facts.value_only.groups["population"].f1 == 1
+    assert report.core_facts.groups["performance"].matched == 0
+    assert report.core_facts.recovery.groups["performance"].f1 == 1
     assert [f.reason for f in explanation.facts] == ["owner_unmatched", "matched"]
     assert not explanation.facts[1].owner_matched
     assert report.core_facts.scoring_status == "needs_review"
@@ -221,12 +221,12 @@ def test_recovery_cannot_credit_one_value_twice_or_replace_attribution():
     left.metrics, right.metrics = right.metrics, left.metrics
     score = evaluate_study(truth, prediction).core_facts
     # Two sample sizes remain correct; all eight values have the wrong treatment.
-    assert score.groups["population"].matched == 2
-    assert score.value_only.groups["population"].matched == 10
+    assert score.groups["performance"].matched == 2
+    assert score.recovery.groups["performance"].matched == 10
     right.metrics.append(right.metrics[0].model_copy(deep=True))
     score = evaluate_study(truth, prediction).core_facts
-    assert score.value_only.groups["population"].matched == 10
-    assert score.value_only.groups["population"].predicted == 11
+    assert score.recovery.groups["performance"].matched == 10
+    assert score.recovery.groups["performance"].predicted == 11
 
 
 def test_relabeling_an_individual_measurement_as_population_is_not_correct():
@@ -248,4 +248,4 @@ def test_relabeling_an_individual_measurement_as_population_is_not_correct():
     prediction.performance_observations.clear()
     score = evaluate_study(truth, prediction).core_facts
     assert score.groups["performance"].matched == 0
-    assert score.groups["population"].matched == 0
+    assert score.groups["performance"].matched == 0

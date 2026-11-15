@@ -119,8 +119,8 @@ def test_cohort_outcomes_cannot_move_between_control_and_treatment():
     # Both cohorts are present, and their two sample counts are still correct.
     # None of the eight metrics is assigned to the right treatment arm.
     assert result.inventory["population_statistics"].matched == 2
-    assert result.core_facts.groups["population"].matched == 2
-    assert result.core_facts.groups["population"].truth == 10
+    assert result.core_facts.groups["performance"].matched == 2
+    assert result.core_facts.groups["performance"].truth == 10
     assert not result.core_facts.issues
 
 
@@ -165,8 +165,8 @@ def test_unknown_cohort_paraphrase_is_not_guessed_to_be_equivalent():
     prediction = truth.model_copy(deep=True)
     prediction.population_statistics[0].label = "untreated cells"
     result = evaluate_study(truth, prediction)
-    assert result.core_facts.groups["population"].matched == 5
-    assert result.core_facts.groups["population"].truth == 10
+    assert result.core_facts.groups["performance"].matched == 5
+    assert result.core_facts.groups["performance"].truth == 10
 
 
 def test_wrong_stability_outcome_loses_credit_even_with_correct_identity():
@@ -280,9 +280,9 @@ def test_loaded_fact_report_must_be_internally_consistent(damage):
     elif damage == "groups":
         del facts["groups"]["processing"]
     elif damage == "views":
-        facts["value_only"] = evaluate_study(
+        facts["recovery"] = evaluate_study(
             study(), study().model_copy(update={"population_statistics": []})
-        ).core_facts.value_only.model_dump(mode="json")
+        ).core_facts.recovery.model_dump(mode="json")
     else:
         facts["scoring_status"] = "needs_review"
     with pytest.raises(ValueError):

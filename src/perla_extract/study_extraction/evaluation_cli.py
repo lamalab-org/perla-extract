@@ -97,8 +97,8 @@ def _prediction(
 @click.option("--explanation-candidates", type=click.IntRange(1, 20), default=5)
 @click.option(
     "--explain-view",
-    type=click.Choice(["strict", "value", "attribution"]),
-    default="strict",
+    type=click.Choice(["attributed", "recovery"]),
+    default="attributed",
 )
 @click.option(
     "--minimum-record-similarity",

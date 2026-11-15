@@ -18,6 +18,10 @@ METRIC_ALIASES = {
     "fillfactor": "ff",
     "referenceefficiencyretained": "efficiencyretention",
     "pceretention": "efficiencyretention",
+    "referencecell'sefficiencyretained": "efficiencyretention",
+    "errorbarstatistic": "errorbarstatistic",
+    "errorbarstatisticforphotovoltaicparameters": "errorbarstatistic",
+    "samplesize": "sample_size",
     "chlorineinresultingperovskitefilms": "chlorineinresultingperovskitefilm",
 }
 
@@ -26,6 +30,41 @@ def property_name(name: str) -> str:
     """Normalize typography and checked property synonyms; retain unknown concepts."""
     key = re.sub(r"[\s_-]+", "", scientific_text(name).casefold())
     return METRIC_ALIASES.get(key, key)
+
+
+def error_bar_statistic(value: str) -> str:
+    """Recognize named uncertainty statistics without guessing from 'error bars'."""
+    key = scientific_text(value).casefold().replace("_", " ")
+    return {
+        "standard deviation": "standard_deviation",
+        "standard error": "standard_error",
+        "standard error of the mean": "standard_error",
+        "confidence interval": "confidence_interval",
+    }.get(key, value)
+
+
+def treatment_condition_name(name: str) -> str | None:
+    """Only declared treatment inputs can establish identity, never outcomes.
+
+    Unknown fields remain stored/scored, but cannot resolve a cohort tie. This
+    allowlist prevents a misplaced efficiency or bandgap from becoming identity.
+    """
+    return {
+        "atmosphere": "atmosphere",
+        "treatmentatmosphere": "atmosphere",
+        "temperature": "temperature",
+        "annealingtemperature": "temperature",
+        "duration": "duration",
+        "annealingtime": "duration",
+        "annealingduration": "duration",
+        "treatmentduration": "duration",
+        "treatment": "treatment",
+        "concentration": "concentration",
+        "pressure": "pressure",
+        "relativehumidity": "relativehumidity",
+        "illumination": "illumination",
+        "illuminationintensity": "illuminationintensity",
+    }.get(property_name(name))
 
 
 MATERIAL_ROLES = {
@@ -170,3 +209,26 @@ def scoped_property_name(name: str, material: str) -> str:
             if rest.startswith(container) and rest[len(container) :] in properties:
                 return rest[len(container) :]
     return key
+
+
+def scientific_concept(
+    group: str, name: str, stage: str | None, *, outcome: bool = False
+) -> tuple[str, str]:
+    """Namespace assertions with different meanings even when their names coincide.
+
+    A population outcome and an individual measurement can recover the same
+    information. A recipe ingredient and a finished material cannot. Aging
+    conditions/outcomes retain their test scope rather than becoming static device
+    properties. Context determines attribution after this candidate gate.
+    """
+    if group in {"performance", "population"}:
+        return "measurement", name
+    if group == "stability":
+        return "aging_outcome" if outcome else "aging_protocol", name
+    if group in {"composition", "stack"}:
+        return (
+            "recipe"
+            if stage == "recipe" or name.startswith("precursor")
+            else "material"
+        ), name
+    return group, name

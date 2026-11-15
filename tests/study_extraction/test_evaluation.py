@@ -443,7 +443,7 @@ def test_core_scores_identical_science_with_reordered_nested_lists():
     prediction.stability_tests[0].checkpoints.reverse()
     report = evaluate_study(truth, prediction)
     assert report.core_facts.micro.f1 == 1
-    assert report.core_facts.macro_f1 == 1
+    assert report.core_facts.micro.f1 == 1
     assert not report.core_facts.unmatched_truth_paths
 
 
@@ -529,9 +529,9 @@ def test_population_mean_and_maximum_cannot_share_metric_credit():
     ]
     prediction = truth.model_copy(deep=True)
     prediction.population_statistics[0].statistic_type = "maximum"
-    assert (
-        evaluate_study(truth, prediction).core_facts.groups["population"].matched == 0
-    )
+    score = evaluate_study(truth, prediction).core_facts
+    assert not any("/population_statistics/0/metrics/" in m.truth_path for m in score.matches)
+    assert score.groups["performance"].matched == 2  # unchanged individual result and cohort count
 
 
 @pytest.mark.parametrize(
@@ -639,7 +639,7 @@ def test_missing_and_duplicate_measurements_affect_recall_and_precision():
         )
     )
     report = evaluate_study(truth, duplicate)
-    assert report.core_facts.value_only.groups["performance"].precision == 0.5
+    assert report.core_facts.recovery.groups["performance"].precision == 0.5
     assert report.core_facts.groups["performance"].precision == 0
     assert report.core_facts.scoring_status == "needs_review"
     assert report.inventory["performance_observations"].precision == 0.5
@@ -649,7 +649,7 @@ def test_fixed_reference_keeps_every_record_in_the_score():
     report = evaluate_study(study(), study(prefix="prediction"))
     assert report.reference_policy == "fixed-no-exclusions"
     assert report.inventory["device_families"].truth == 1
-    assert report.core_facts.groups["stack"].f1 == 1
+    assert report.core_facts.groups["material_device_identity"].f1 == 1
     assert report.core_facts.groups["performance"].f1 == 1
     assert "ignored_prediction_record_keys" not in report.model_dump()
 
@@ -665,9 +665,10 @@ def test_core_dataset_report_preserves_counts_and_groups():
     assert result.core_fact_groups_micro["performance"].precision == 0.5
     assert result.core_fact_groups_macro_f1["performance"].mean == 0.5
     assert result.core_fact_groups_micro["stability"].f1 is None
-    assert result.core_facts_macro_f1.paper_count == 2
-    assert result.core_value_only_micro == result.core_facts_micro
-    assert result.core_attribution_micro.f1 == 1
+    assert result.core_facts_mean_paper_f1.paper_count == 2
+    assert result.core_recovery_micro == result.core_facts_micro
+    assert result.core_recovery_micro.matched == 5
+    assert result.core_recovery_micro.truth == 6
     assert result.papers_needing_scoring_review == 0
     assert result.scoring_issue_count == 0
 
@@ -675,8 +676,8 @@ def test_core_dataset_report_preserves_counts_and_groups():
 def test_wrong_value_is_separate_from_correct_attribution():
     score = evaluate_study(study(), study(pce=value("21%", 21))).core_facts
     assert score.groups["performance"].f1 == 0
-    assert score.value_only.groups["performance"].f1 == 0
-    assert score.attribution.groups["performance"].f1 == 1
+    assert score.recovery.groups["performance"].f1 == 0
+    assert score.groups["performance"].f1 == 0
     assert score.scoring_status == "ready"
 
 
@@ -686,11 +687,11 @@ def test_missing_stability_condition_does_not_hide_recovered_values():
     prediction.stability_tests[0].conditions = []
     score = evaluate_study(truth, prediction).core_facts
     assert score.groups["stability"].matched == 0
-    assert score.value_only.groups["stability"].matched == 4
-    assert score.value_only.groups["stability"].f1 == pytest.approx(8 / 9)
+    assert score.recovery.groups["stability"].matched == 4
+    assert score.recovery.groups["stability"].f1 == pytest.approx(8 / 9)
     assert (
         score.groups["stability"].truth
-        == score.value_only.groups["stability"].truth
+        == score.recovery.groups["stability"].truth
         == 5
     )
     assert score.scoring_status == "ready"
@@ -706,9 +707,10 @@ def test_unsequenced_identical_operations_require_attribution_review():
     report = evaluate_study(truth, prediction)
     score = report.core_facts
     assert score.scoring_status == "needs_review"
-    assert score.value_only.groups["processing"].f1 == 1
-    assert score.groups["processing"].matched == 0
-    assert score.groups["processing"].truth == 6
+    assert score.recovery.groups["processing"].f1 == 1
+    assert score.subfields["processing_operations"].matched == 0
+    assert score.subfields["processing_conditions"].matched == 0
+    assert score.subfields["recipe_composition"].matched == 6
     assert {i.side for i in score.issues} == {"truth", "prediction"}
     assert all(i.kind == "ambiguous_scope" for i in score.issues)
     assert EvaluationReport.model_validate_json(report.model_dump_json()) == report
@@ -791,7 +793,8 @@ def test_operation_aliases_are_explicit_and_frozen_in_reports():
     literal = evaluate_study(
         truth, prediction, config=EvaluationConfig(operation_aliases={})
     )
-    assert literal.core_facts.groups["processing"].f1 == 0
+    assert literal.core_facts.subfields["processing_operations"].f1 == 0
+    assert literal.core_facts.subfields["processing_conditions"].f1 == 0
     with pytest.raises(ValueError, match="incompatible"):
         aggregate_evaluations([literal, evaluate_study(truth, prediction)])
 
@@ -819,7 +822,7 @@ def test_record_ties_propagate_to_linked_measurements():
     report = evaluate_study(truth, prediction)
     assert any(m.ambiguous for m in report.matches if m.kind == "individual_devices")
     assert report.core_facts.groups["performance"].matched == 0
-    assert report.core_facts.value_only.groups["performance"].matched == 1
+    assert report.core_facts.recovery.groups["performance"].matched == 1
     assert report.core_facts.scoring_status == "needs_review"
     prediction.individual_devices.reverse()
     reordered = evaluate_study(truth, prediction)
@@ -906,7 +909,7 @@ def test_cli_and_dataset_gate_write_diagnostics_before_failing(tmp_path):
     payload = json.loads(aggregate.read_text(encoding="utf-8"))
     assert payload["papers_needing_scoring_review"] == 1
     assert payload["scoring_issue_count"] == 2
-    assert payload["core_value_only_micro"]["f1"] == 1
+    assert payload["core_recovery_micro"]["f1"] == 1
 
 
 def test_standard_metric_alias_is_not_a_missing_fact():
@@ -968,7 +971,7 @@ def test_solvent_as_an_extra_layer_reduces_stack_precision():
             evidence=EVIDENCE,
         )
     )
-    score = evaluate_study(truth, prediction).core_facts.groups["stack"]
+    score = evaluate_study(truth, prediction).core_facts.groups["material_device_identity"]
     assert score.precision < 1
     assert score.recall == 1
 
@@ -1009,7 +1012,7 @@ def test_empty_prediction_has_zero_recall_not_a_perfect_score():
     report = evaluate_study(truth, prediction)
     assert report.core_facts.micro.recall == 0
     assert report.core_facts.micro.precision is None
-    assert report.core_facts.macro_f1 == 0
+    assert report.core_facts.micro.f1 == 0
 
 
 def test_administrative_text_does_not_create_extra_scoring_facts():
@@ -1451,18 +1454,18 @@ def test_bootstrap_unavailable_intervals_and_configuration_are_explicit():
     perfect = evaluate_study(study(), study())
     wrong = evaluate_study(study(), study(pce=value("21%", 21)))
     disabled = aggregate_evaluations([perfect, wrong], bootstrap_samples=0, seed=42)
-    assert disabled.core_facts_macro_f1.interval_status == "disabled"
-    assert disabled.core_facts_macro_f1.ci95_lower is None
-    assert disabled.core_facts_macro_f1.ci95_upper is None
+    assert disabled.core_facts_mean_paper_f1.interval_status == "disabled"
+    assert disabled.core_facts_mean_paper_f1.ci95_lower is None
+    assert disabled.core_facts_mean_paper_f1.ci95_upper is None
     assert disabled.bootstrap_samples == 0
     assert disabled.bootstrap_seed == 42
     assert disabled.bootstrap_method == "paper-percentile-95"
     one = aggregate_evaluations([perfect])
-    assert one.core_facts_macro_f1.interval_status == "insufficient_papers"
-    assert one.core_facts_macro_f1.ci95_lower is None
+    assert one.core_facts_mean_paper_f1.interval_status == "insufficient_papers"
+    assert one.core_facts_mean_paper_f1.ci95_lower is None
     assert one.core_fact_groups_macro_f1["stability"].interval_status == "no_values"
     sampled = aggregate_evaluations([perfect, wrong], bootstrap_samples=100, seed=42)
-    assert sampled.core_facts_macro_f1.interval_status == "available"
+    assert sampled.core_facts_mean_paper_f1.interval_status == "available"
     assert sampled == aggregate_evaluations(
         [perfect, wrong], bootstrap_samples=100, seed=42
     )
@@ -1504,8 +1507,8 @@ def test_old_scoring_report_is_not_silently_loaded_as_current():
     from pydantic import ValidationError
 
     payload = evaluate_study(study(), study()).model_dump()
-    assert payload["format_version"] == 10
-    assert payload["core_facts"]["profile"] == "core-scientific-facts-v10"
+    assert payload["format_version"] == 11
+    assert payload["core_facts"]["profile"] == "core-scientific-facts-v11"
     payload["format_version"] = 9
     with pytest.raises(ValidationError):
         EvaluationReport.model_validate(payload)

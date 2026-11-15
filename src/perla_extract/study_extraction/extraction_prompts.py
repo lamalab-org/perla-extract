@@ -52,6 +52,14 @@ Rules:
 - Keep individual devices and population statistics in separate top-level arrays.
   Means, medians, distributions, sample sizes, ranges, and population maxima are not
   individual-device measurements.
+- Record source-backed treatment identity in IndividualDevice.subject_context or
+  PopulationStatistic.subjects, with atmosphere/temperature/duration as separate
+  conditions. Distinguish film treatment before device completion from aging a
+  completed device. Leave subjects empty when that identity is not established.
+- Use one population record with several subjects only for one assertion explicitly
+  applying to that entire set. Do not duplicate shared caption metadata into outcomes.
+  Put error-bar meaning in error_bar_type; it does not establish statistic_type.
+  Report mean, median and measurement protocol only when the evidence establishes them.
 - Mark a device champion only when the source explicitly identifies the device as a
   champion/best-performing device or its efficiency as record/highest. An extremum
   for one attribute (for example voltage, current, or stability) does not make the

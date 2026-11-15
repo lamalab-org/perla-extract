@@ -81,7 +81,7 @@ def test_checked_labels_preserve_original_hashes_and_do_not_credit_changed_value
     before = evaluate_study(truth, prediction)
     config = equivalence_config(truth)
     report = evaluate_study(truth, prediction, config=config)
-    assert report.core_facts.groups["population"].matched == 10
+    assert report.core_facts.groups["performance"].matched == 10
     assert report.prediction_content_sha256 == before.prediction_content_sha256
     assert report.truth_content_sha256 == before.truth_content_sha256
     assert prediction.population_statistics[0].label == "untreated cells"
@@ -89,7 +89,7 @@ def test_checked_labels_preserve_original_hashes_and_do_not_credit_changed_value
     prediction.population_statistics[0].metrics[0].value_number = 99
     assert (
         evaluate_study(truth, prediction, config=config)
-        .core_facts.groups["population"]
+        .core_facts.groups["performance"]
         .matched
         == 9
     )
@@ -103,7 +103,7 @@ def test_rule_cannot_follow_a_changed_reference_or_other_record_kind():
     truth.paper.title = "A changed reference"
     assert (
         evaluate_study(truth, prediction, config=config)
-        .core_facts.groups["population"]
+        .core_facts.groups["performance"]
         .matched
         == 5
     )
@@ -193,7 +193,7 @@ def test_unknown_semicolon_suffix_is_not_deleted():
     prediction = truth.model_copy(deep=True)
     prediction.population_statistics[0].label = "control; with additive"
     assert (
-        evaluate_study(truth, prediction).core_facts.groups["population"].matched == 5
+        evaluate_study(truth, prediction).core_facts.groups["performance"].matched == 5
     )
 
 
@@ -224,7 +224,7 @@ def test_cli_records_equivalences_and_original_input_hashes(tmp_path):
     )
     assert result.exit_code == 0, result.output
     saved = json.loads(output.read_text())
-    assert saved["core_facts"]["groups"]["population"]["matched"] == 10
+    assert saved["core_facts"]["groups"]["performance"]["matched"] == 10
     assert saved["config"] == config.model_dump(mode="json")
     assert (
         saved["prediction_content_sha256"]
@@ -269,7 +269,7 @@ def test_charge_and_atom_count_remain_distinct_in_scored_composition():
     ]
     prediction = truth.model_copy(deep=True)
     prediction.device_families[0].absorbers[0].constituents[0].name = "Fe₃⁺"
-    score = evaluate_study(truth, prediction).core_facts.groups["composition"]
+    score = evaluate_study(truth, prediction).core_facts.groups["material_device_identity"]
     assert score.matched < score.truth
     assert not equal_value("Fe³⁺", "Fe₃⁺", 1e-6, 0)
     assert equal_value("CH₃NH₃PbI₃", "CH3NH3PbI3", 1e-6, 0)

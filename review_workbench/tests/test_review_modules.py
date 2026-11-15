@@ -16,6 +16,7 @@ def run_javascript(script):
         ("api-client.js", "createApiClient, ReviewApiError"),
         ("review-session.js", "createReviewSession"),
         ("record-editor.js", "createRecordEditor, createDraftState"),
+        ("reference-coverage.js", "renderCoverage, readCoverage"),
     ):
         imports += f"import {{ {names} }} from {json.dumps((APP / module).as_uri())};\n"
     dom = Path(__file__).with_name("dom-fixture.mjs")
@@ -54,6 +55,35 @@ const aborting = createApiClient({fetch:async () => {throw new DOMException('Can
 await assert.rejects(aborting.requestWithRetry('/abort'),error => error.name === 'AbortError');
 response = new Response('downloaded');
 assert.equal(await (await api.download('/file')).text(),'downloaded');
+""")
+
+
+def test_coverage_form_preserves_unknowns_and_explicit_source_review():
+    run_javascript("""
+const {element: makeElement} = editorDocument();
+const element = (tag, options = {}, children = []) => {
+  const node = makeElement(tag, options, children);
+  Object.assign(node.dataset, options.dataset || {});
+  return node;
+};
+const container = element('div');
+container.querySelectorAll = () => descendants(container).filter(node => node.dataset?.coverageDomain);
+let edits = 0;
+renderCoverage(container, {}, element, () => edits++);
+let saved = readCoverage(container);
+assert.equal(Object.keys(saved.domains).length, 4);
+assert.equal(saved.domains.performance.figures, 'unreviewed');
+const controls = container.querySelectorAll();
+const figure = controls.find(node => node.dataset.coverageDomain === 'performance' && node.dataset.coverageField === 'figures');
+figure.value = 'partial';
+figure.fire('input');
+const evidence = controls.find(node => node.dataset.coverageDomain === 'performance' && node.dataset.coverageField === 'evidence');
+evidence.value = 'Figure 7 still needs reviewed digitization.';
+saved = readCoverage(container);
+renderCoverage(container, saved, element, () => edits++);
+assert.deepEqual(readCoverage(container), saved);
+assert.equal(edits, 1);
+assert.equal(saved.domains.processing.text_and_tables, 'unreviewed');
 """)
 
 

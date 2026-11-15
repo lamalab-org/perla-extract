@@ -261,7 +261,8 @@ def compile_workbook(
     try:
         review = read_review_workbook(
             workbook_data,
-            truth=study.model_dump(mode="json"),
+            # Optional schema defaults must not change the workbook's seed layout.
+            truth=study_payload if not compatibility_migrations else study.model_dump(mode="json"),
             identifiers=RECORD_IDENTIFIERS,
             labels=RECORD_LABELS,
             paper_id=metadata.paper_id,

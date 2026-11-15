@@ -349,6 +349,11 @@ def _show_input_mapping(experiment: Experiment) -> None:
                 else path
             )
             click.echo(f"    {label}: {shown if shown is not None else 'none'}")
+        _, benchmark = load_reference(attempt.reference)
+        if benchmark is None or not benchmark.coverage.complete():
+            click.echo("    Scoring: diagnostic reference agreement; coverage/context review is incomplete.")
+        else:
+            click.echo("    Scoring: reference scope reviewed.")
 
 
 @click.command()
@@ -381,9 +386,9 @@ def main(experiment_file: Path, check: bool) -> None:
             return
         result = execute(experiment)
         if result["quality"] is not None:
-            delta = result["quality"]["mean_paired_macro_f1_delta"]
+            delta = result["quality"]["mean_paired_fact_f1_delta"]
             click.echo(
-                f"Mean paired macro-F1 change (treatment − control): {delta:+.4f}"
+                f"Mean paired attributed fact-F1 change (treatment − control): {delta:+.4f}"
             )
         click.echo(f"Read first: {experiment.output / 'summary.md'}")
         click.echo(f"Comparison: {experiment.output / 'comparison.json'}")

@@ -38,7 +38,7 @@ def test_frozen_reference_controls_and_explanations_preserve_credit(paper):
     assert (
         baseline.core_facts.micro.truth - baseline.core_facts.micro.matched == withheld
     )
-    assert baseline.core_facts.value_only.micro.f1 == 1
+    assert baseline.core_facts.recovery.micro.f1 == 1
     assert bool(baseline.core_facts.issues) == bool(withheld)
     for name, prediction, changes in controls(truth):
         # Equivalent units preserve credit; one removed metric removes one fact;

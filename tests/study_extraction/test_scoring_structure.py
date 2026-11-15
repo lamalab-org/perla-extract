@@ -88,7 +88,7 @@ def test_outcomes_cannot_disambiguate_identical_measurement_protocols():
     prediction.performance_observations.reverse()
     score = evaluate_study(truth, prediction).core_facts
     assert score.groups["performance"].matched == 0
-    assert score.value_only.groups["performance"].matched == 2
+    assert score.recovery.groups["performance"].matched == 2
     assert score.scoring_status == "needs_review"
 
 
@@ -117,7 +117,7 @@ def test_reversal_and_repeated_step_omissions_do_not_get_guessed_matches():
     steps[0].sequence, steps[1].sequence = 2, 1
     score = evaluate_study(truth, prediction).core_facts
     assert score.groups["processing"].matched == 0
-    assert score.value_only.groups["processing"].f1 == 1
+    assert score.recovery.groups["processing"].f1 == 1
     assert score.scoring_status == "needs_review"
     truth = recipe(["annealing", "annealing"])
     prediction = truth.model_copy(deep=True)
@@ -218,7 +218,7 @@ def test_redundant_linked_property_counts_once_and_can_be_explained(location):
     report, explanation = evaluate_study_with_explanations(
         truth, prediction, facts=[FactSelection(side="truth", path=alias)]
     )
-    assert report.core_facts.groups["composition"].truth == 1
+    assert report.core_facts.subfields["material_properties"].truth == 1
     assert report.core_facts.micro.f1 == 1
     assert explanation.facts[0].selection.path == alias
     assert explanation.facts[0].reason == "matched"
@@ -236,7 +236,7 @@ def test_duplicates_within_one_representation_still_cost_precision():
     prediction = truth.model_copy(deep=True)
     props = prediction.device_families[0].layers[0].reported_properties
     props.append(props[0].model_copy(deep=True))
-    score = evaluate_study(truth, prediction).core_facts.groups["composition"]
+    score = evaluate_study(truth, prediction).core_facts.subfields["material_properties"]
     assert (score.matched, score.predicted, score.truth) == (1, 2, 1)
 
 
@@ -247,9 +247,9 @@ def test_conflicting_linked_properties_are_flagged_and_not_cherry_picked():
         "bandgap", 1.8, "eV"
     )
     score = evaluate_study(truth, prediction).core_facts
-    assert score.groups["composition"].matched == 0
-    assert score.groups["composition"].predicted == 2
-    assert score.value_only.groups["composition"].matched == 1
+    assert score.subfields["material_properties"].matched == 0
+    assert score.subfields["material_properties"].predicted == 2
+    assert score.recovery.subfields["material_properties"].matched == 1
     assert any(i.kind == "conflicting_representations" for i in score.issues)
 
 
@@ -266,7 +266,7 @@ def test_metric_names_and_omissions_cannot_resolve_repeated_protocols():
     prediction.performance_observations.reverse()
     score = evaluate_study(truth, prediction).core_facts
     assert score.groups["performance"].matched == 0
-    assert score.value_only.groups["performance"].matched == 2
+    assert score.recovery.groups["performance"].matched == 2
     assert score.scoring_status == "needs_review"
 
 
@@ -276,7 +276,7 @@ def test_omitting_redundant_absorber_object_preserves_layer_properties():
     prediction.device_families[0].absorbers.clear()
     report = evaluate_study(truth, prediction)
     assert report.core_facts.micro.f1 == 1
-    assert report.core_facts.groups["composition"].truth == 1
+    assert report.core_facts.subfields["material_properties"].truth == 1
 
 
 def test_linked_constituents_merge_but_distinct_layers_stay_separate():
@@ -299,7 +299,8 @@ def test_linked_constituents_merge_but_distinct_layers_stay_separate():
     prediction.device_families[0].absorbers[0].constituents.clear()
     score = evaluate_study(truth, prediction).core_facts
     assert score.micro.f1 == 1
-    assert score.groups["composition"].truth == 8  # Two layers, four facts each.
+    assert score.subfields["material_properties"].truth == 2  # One bandgap per layer.
+    assert score.subfields["recipe_composition"].truth == 6  # Three recipe facts per layer.
     assert not score.issues
 
 
@@ -338,7 +339,7 @@ def test_linked_equivalent_units_merge_despite_conversion_roundoff(left, right):
     truth.device_families[0].layers[0].reported_properties = [left]
     truth.device_families[0].absorbers[0].properties = [right]
     score = evaluate_study(truth, truth).core_facts
-    assert score.groups["composition"].truth == 1
+    assert score.subfields["material_properties"].truth == 1
     assert score.micro.f1 == 1
     assert not score.issues
 
@@ -354,14 +355,14 @@ def test_scientific_tolerance_cannot_merge_distinct_linked_claims():
         score = evaluate_study(
             truth, truth, config=EvaluationConfig(numeric_relative_tolerance=tolerance)
         ).core_facts
-        assert score.groups["composition"].truth == 2
-        assert score.groups["composition"].matched == 0
+        assert score.subfields["material_properties"].truth == 2
+        assert score.subfields["material_properties"].matched == 0
         assert all(
             issue.kind == "conflicting_representations" for issue in score.issues
         )
 
 
-@pytest.mark.parametrize("view", ["value_only", "attribution"])
+@pytest.mark.parametrize("view", ["recovery"])
 def test_diagnostic_views_cannot_substitute_a_different_fact_ledger(view):
     from pydantic import ValidationError
 
@@ -396,4 +397,4 @@ def test_missing_ingredients_do_not_erase_identified_annealing_time_but_do_block
     score = evaluate_study(truth, prediction).core_facts
     assert score.subfields["processing_operations"].matched == 1
     assert score.subfields["processing_conditions"].matched == 1  # Duration only.
-    assert score.value_only.subfields["processing_conditions"].matched == 2
+    assert score.recovery.subfields["processing_conditions"].matched == 2

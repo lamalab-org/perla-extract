@@ -6,7 +6,7 @@ import json
 import pytest
 from click.testing import CliRunner
 
-from examples.scoring.run import quantity, seed_study
+from examples.scoring.run import quantity, seed_study, synthetic_coverage
 from perla_extract.study_extraction.comparison import main, paired_interval, summarize
 from perla_extract.study_extraction.evaluation import (
     BenchmarkProvenance,
@@ -66,6 +66,7 @@ def roster(tmp_path):
                     prediction,
                     benchmark=BenchmarkProvenance(
                         paper_id=paper,
+                        coverage=synthetic_coverage(),
                         split="dev",
                         ground_truth_sha256="0" * 64,
                         source_manifest_sha256=source,
@@ -106,10 +107,24 @@ def roster(tmp_path):
 def test_complete_comparison_preserves_pairing_and_cost(roster):
     result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality_status"] == "ready"
-    assert result["quality"]["mean_paired_macro_f1_delta"] == -0.5
+    assert result["quality"]["mean_paired_fact_f1_delta"] == -0.5
     assert result["recorded_cost_saving_fraction"] == 0.5
     assert result["accounting"]["control"]["planned_runs"] == 4
-    assert result["quality"]["paired_macro_f1_delta_interval"]["paper_count"] == 2
+    assert result["quality"]["paired_fact_f1_delta_interval"]["paper_count"] == 2
+
+
+def test_unreviewed_reference_retains_counts_but_cannot_supply_verified_quality(roster):
+    path = roster.parent / "paper-a/control/1/evaluation.json"
+    report = json.loads(path.read_text())
+    report["benchmark"]["coverage"] = {}
+    report["interpretation"] = "reference_agreement"
+    path.write_text(json.dumps(report))
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
+    assert result["quality"] is None
+    assert any("coverage" in issue for issue in result["quality_issues"])
+    row = next(row for row in result["runs"] if row.get("interpretation") == "reference_agreement")
+    assert row["scientific_scores"]["micro"]["truth"] > 0
+    assert not row["quality_available"]
 
 
 def test_sealed_partial_output_cannot_turn_a_failed_attempt_into_completed_quality(
@@ -301,8 +316,8 @@ def test_plot_tables_retain_counts_pairs_and_missing_measurements(roster):
     assert all(row["total_tokens"] == "" for row in runs)
     assert all(row["known_total_tokens"] == "15" for row in runs)
     assert len(pairs) == 2
-    assert {float(row["mean_macro_f1_delta"]) for row in pairs} == {-0.5}
-    assert len(groups) == 8 * 3 * 6
+    assert {float(row["mean_fact_f1_delta"]) for row in pairs} == {-0.5}
+    assert len(groups) == 8 * 2 * 4
     (roster.parent / "paper-a/control/1/evaluation.json").unlink()
     export_tables(
         summarize(roster, study=roster.with_suffix(".study.json")),
@@ -311,7 +326,7 @@ def test_plot_tables_retain_counts_pairs_and_missing_measurements(roster):
     with (roster.parent / "partial/runs.csv").open() as stream:
         partial = list(csv.DictReader(stream))
     missing = next(row for row in partial if row["quality_available"] == "False")
-    assert missing["macro_f1"] == ""
+    assert missing["fact_f1"] == ""
     assert missing["known_cost_usd"] == "2.0"
 
 
@@ -413,7 +428,7 @@ def test_failed_extra_attempt_adds_spend_without_changing_paired_quality(roster)
     assert result["quality_status"] == "ready"
     assert result["issues"] == []
     assert result["paper_count"] == 2
-    assert result["quality"]["mean_paired_macro_f1_delta"] == -0.5
+    assert result["quality"]["mean_paired_fact_f1_delta"] == -0.5
     assert all(
         len(paper["repeat_deltas"]) == 2 for paper in result["quality"]["papers"]
     )

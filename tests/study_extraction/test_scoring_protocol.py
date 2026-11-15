@@ -28,7 +28,7 @@ def test_conflicting_or_missing_illumination_cannot_earn_strict_pce_credit(
         metrics[1] = quantity("illumination intensity", illumination, "mW/cm2")
     score = evaluate_study(truth, prediction).core_facts
     assert score.groups["performance"].matched == 0
-    assert score.value_only.groups["performance"].matched == 1
+    assert score.recovery.groups["performance"].matched == 1
 
 
 def test_equivalent_irradiance_units_preserve_outcome_and_protocol_credit():
@@ -76,7 +76,7 @@ def test_missing_cohort_size_loses_only_the_count_when_identity_is_unambiguous()
     truth = cohort_study()
     prediction = truth.model_copy(deep=True)
     prediction.population_statistics[0].sample_size = None
-    score = evaluate_study(truth, prediction).core_facts.groups["population"]
+    score = evaluate_study(truth, prediction).core_facts.groups["performance"]
     assert (score.matched, score.predicted, score.truth) == (9, 9, 10)
 
 
@@ -85,7 +85,7 @@ def test_conflicting_cohort_sizes_still_withhold_affected_outcome_credit():
     prediction = truth.model_copy(deep=True)
     prediction.population_statistics[0].sample_size = 21
     assert (
-        evaluate_study(truth, prediction).core_facts.groups["population"].matched == 5
+        evaluate_study(truth, prediction).core_facts.groups["performance"].matched == 5
     )
 
 

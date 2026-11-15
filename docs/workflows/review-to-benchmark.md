@@ -220,7 +220,7 @@ Inspect these fields in order:
    prove that a quote scientifically supports a claim.
 3. `core_facts.issues` and `matches`: did the scorer pair the right records?
 4. `core_facts.groups`: where are precision and recall weak, and with how many facts?
-5. `core_facts.value_only` and `core_facts.attribution`: are failures due to values,
+5. `core_facts.recovery` and fact explanations: are failures due to values,
    missing context, wrong associations or uncertain alignment?
 6. Matched and unmatched JSON paths: inspect concrete errors with the paper.
 

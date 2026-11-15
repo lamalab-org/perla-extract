@@ -108,7 +108,7 @@ def test_one_command_runs_scores_and_compares_with_separate_caches(setup):
     output = path.parent / "results"
     report = json.loads((output / "comparison.json").read_text(encoding="utf-8"))
     assert report["quality_status"] == "ready"
-    assert report["quality"]["mean_paired_macro_f1_delta"] == 0
+    assert report["quality"]["mean_paired_fact_f1_delta"] == 0
     assert report["study"]["factors"] == {
         "claim_recall_passes": {"control": 1, "treatment": 2}
     }

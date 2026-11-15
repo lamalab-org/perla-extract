@@ -81,7 +81,7 @@ def test_precursor_amount_does_not_become_finished_film_composition():
     prediction.device_families[0].absorbers[0].constituents[0].role = "absorber"
     score = evaluate_study(truth, prediction).core_facts
     assert score.subfields["recipe_composition"].matched == 0
-    assert score.value_only.subfields["recipe_composition"].matched == 0
+    assert score.recovery.subfields["recipe_composition"].matched == 0
     assert score.subfields["composition_amounts"].matched == 0
 
 

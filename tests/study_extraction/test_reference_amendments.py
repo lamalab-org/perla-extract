@@ -33,7 +33,7 @@ def amended(item):
         )
     )
     updated = AdjudicationQueue._apply(original, request.proposals[0].changes)
-    return original, updated, request
+    return StudyExtraction.model_validate(original).model_dump(mode="json"), updated, request
 
 
 @pytest.mark.parametrize("item", PLAN["papers"], ids=lambda p: p["paper_id"])
@@ -120,7 +120,7 @@ def test_v2_contains_exactly_the_logged_record_and_note_corrections():
                 / "ground_truth.json"
             ).read_text(encoding="utf-8")
         )
-        assert frozen == expected
+        assert StudyExtraction.model_validate(frozen).model_dump(mode="json") == expected
 
 
 def test_v2_preserves_the_other_26_scientific_jsons():

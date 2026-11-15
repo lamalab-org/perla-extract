@@ -23,7 +23,7 @@ EntityKind = Literal[
     "population_statistic",
     "stability_test",
 ]
-STUDY_SCHEMA_VERSION = 6
+STUDY_SCHEMA_VERSION = 7
 
 
 class StrictModel(BaseModel):
@@ -298,6 +298,22 @@ class DeviceFamily(StrictModel):
         return data
 
 
+class SubjectContext(StrictModel):
+    """Source-backed treatment identity, independent of the measured outcome.
+
+    Conditions identify an experimental arm, for example atmosphere, temperature
+    and duration. They do not contain its measured efficiency. Treatment of a film
+    before device completion must remain distinct from aging a completed device.
+    Empty/unknown fields do not authorize filling them from another extraction.
+    """
+
+    treatment_stage: Literal[
+        "before_device_completion", "completed_device", "other", "not_reported"
+    ]
+    treated_material: ShortText | None
+    conditions: Annotated[list[ReportedValue], Field(min_length=1, max_length=20)]
+
+
 class IndividualDevice(StrictModel):
     """Identify a measured device without treating a population as a device.
 
@@ -312,6 +328,7 @@ class IndividualDevice(StrictModel):
     variant: Annotated[str | None, Field(max_length=500)]
     champion_status: Literal["yes", "no", "not_reported"]
     selection_basis: Literal["champion", "representative", "other", "not_reported"]
+    subject_context: SubjectContext | None = Field(default=None)
     reported_properties: Annotated[
         list[ReportedValue], Field(default_factory=list, max_length=60)
     ]
@@ -330,6 +347,17 @@ class IndividualDevice(StrictModel):
         return self
 
 
+MeasurementType = Literal[
+    "jv_scan",
+    "stabilized_power_output",
+    "certified_measurement",
+    "eqe_integrated_current",
+    "other",
+    "not_reported",
+]
+ScanDirection = Literal["reverse", "forward", "not_applicable", "not_reported"]
+
+
 class PerformanceObservation(StrictModel):
     """Keep one protocol-specific measurement linked to one individual device.
 
@@ -341,15 +369,8 @@ class PerformanceObservation(StrictModel):
 
     observation_id: Identifier
     device_id: Identifier
-    measurement_type: Literal[
-        "jv_scan",
-        "stabilized_power_output",
-        "certified_measurement",
-        "eqe_integrated_current",
-        "other",
-        "not_reported",
-    ]
-    scan_direction: Literal["reverse", "forward", "not_applicable", "not_reported"]
+    measurement_type: MeasurementType
+    scan_direction: ScanDirection
     metrics: Annotated[list[ReportedValue], Field(min_length=1, max_length=40)]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
@@ -376,6 +397,19 @@ class PopulationStatistic(StrictModel):
         "not_reported",
     ]
     sample_size: Annotated[int | None, Field(ge=1)]
+    subjects: Annotated[
+        list[SubjectContext], Field(default_factory=list, max_length=40)
+    ]
+    error_bar_type: Literal[
+        "standard_deviation",
+        "standard_error",
+        "confidence_interval",
+        "range",
+        "other",
+        "not_reported",
+    ] = "not_reported"
+    measurement_type: MeasurementType = "not_reported"
+    scan_direction: ScanDirection = "not_reported"
     metrics: Annotated[list[ReportedValue], Field(min_length=1, max_length=40)]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
@@ -536,15 +570,17 @@ def study_schema_prose_sha256() -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-# The immutable v1/v2 releases use the former prose-inclusive schema fingerprint.
-# Accept that identifier only while the installed structural contract still matches
-# the reviewed schema-6 contract. Never rewrite archived manifests to a new hash.
+# Schema 7 only adds optional context fields with explicit unknown defaults.
+# Archived schema-6 inputs can be read losslessly, without inventing that context.
+# There is one current evaluator; this is data compatibility, not legacy scoring.
 _SCHEMA_6_CONTRACT = "5703bf0addcf3ba8d20104de05673184efb05f33324f6d04c1e6c6f7dacc8e33"
 _SCHEMA_6_ARCHIVED = "0f242f5cb719b47ae6bbcd1818ce8bd382b358136334ecc2abfb9de9db011413"
+_SCHEMA_7_CONTRACT = "073f012a95389a7fd4f9b17d3ff3702e72eac868cb5f545b937715c25117fef3"
 
 
 def compatible_study_schema(fingerprint: object) -> bool:
     current = study_schema_sha256()
     return fingerprint == current or (
-        current == _SCHEMA_6_CONTRACT and fingerprint == _SCHEMA_6_ARCHIVED
+        current == _SCHEMA_7_CONTRACT
+        and fingerprint in (_SCHEMA_6_CONTRACT, _SCHEMA_6_ARCHIVED)
     )

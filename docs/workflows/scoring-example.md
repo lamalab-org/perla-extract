@@ -103,7 +103,7 @@ source review, or include synthetic cases in real-paper benchmark aggregates.
 `runs.csv` pairs the seed as `control` with the corrected prediction as `treatment`.
 These are deliberately edited candidates with the same synthetic source, not two
 model deployments or an ablation. `comparison.json` should have
-`quality_status: "ready"`, no issues, and `mean_paired_macro_f1_delta: 1.0`.
+`quality_status: "ready"`, no issues, and `mean_paired_fact_f1_delta: 1.0`.
 The one-paper interval has status `insufficient_papers` and empty bounds. Both
 arms have zero model calls; their difference is not a measurement of an extraction
 improvement or cost saving.

@@ -81,15 +81,15 @@ You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results. Their scores are diagnostic; source compatibility is unverified.
 
-Reports use format 10, matcher `rich-study-hungarian-v13` and fact profile
-`core-scientific-facts-v10`. Regenerate older reports from saved predictions before
+Reports use format 11, matcher `rich-study-hungarian-v14` and fact profile
+`core-scientific-facts-v11`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
 When loading reports, checks reject impossible match counts or rates that disagree
 with their counts. They also check scientific group totals, the group-average F1,
 the one-to-one ledger of canonical facts and their source fields, and consistency across the
-three fact-score views. These checks detect internally inconsistent reports; they
+two fact-score views. These checks detect internally inconsistent reports; they
 do not authenticate an author or prove that the claimed matches are correct.
 
 Frozen releases retain the scorer versions used when they were published. Do not
@@ -100,20 +100,22 @@ the reference stays fixed while the new report records the new scoring rules.
 
 ### Primary score: correct scientific facts
 
-Use `core_facts` to assess extraction quality. The scorer counts facts in six groups:
+Use `core_facts` for correctly attributed scientific facts and
+`core_facts.recovery` for information found anywhere in the paper. Both use one
+canonical fact inventory and independent one-to-one assignments. Recovery can
+match a population result stored as an individual measurement; attributed credit
+still requires the correct specimen level, treatment and measurement protocol.
 
-| Group | What counts | What must agree for a match |
-| --- | --- | --- |
-| Performance | Reported metrics, such as PCE, Voc, Jsc and FF | Paired record, device/family links, variant, champion status, selection basis, measurement type, scan direction and explicitly recorded protocol conditions |
-| Population | Sample size and aggregate metrics | Paired record, cohort label, family link and statistic type; conflicting reported sample sizes block metrics; an omitted count loses only its own point |
-| Stability | Test conditions, checkpoint times, checkpoint conditions and outcomes | Paired record and specimen links; without an explicit device ID, the specimen label must also agree. Checkpoint facts also depend on the recorded time and conditions, as described below |
-| Composition | Absorber formula and properties (including absorber-layer properties); layer and absorber constituents, roles and amounts | Paired family, absorber/layer context and constituent association |
-| Stack | Layer materials, roles, material forms and non-absorber properties; device polarity | Paired family, recorded sequence and material association |
-| Processing | Operations, materials, conditions and specimen-specific properties | Paired record, aligned operation, target layers and relevant materials or device variant |
+| Scientific group | Included claims |
+| --- | --- |
+| `performance` | Individual and population outcomes, protocol and statistical metadata |
+| `material_device_identity` | Finished-material composition, layer materials/roles/forms, architecture and device polarity |
+| `processing` | Recipe composition, fabrication operations/materials/conditions, specimen properties and structured treatment conditions |
+| `stability` | Aging-test conditions, checkpoint times and outcomes |
 
-These groups select parts of the schema, not a fixed list of paper-specific property
-names. For example, a reported processing condition can count even if its name is
-unfamiliar to the scorer. This is not an assessment of every field in the schema.
+Candidate matching uses a semantic concept key, never a report group/subfield.
+Recipe versus finished material and absolute efficiency versus retention remain
+different concepts. Unknown names stay literal and remain in the counts.
 
 Some details affect how facts are counted:
 
@@ -153,13 +155,19 @@ record pairing; when several absorbers lack layer links, absorber labels also he
 distinguish their context. Champion status constrains performance matches rather
 than earning its own point.
 
-Two labels carry scientific identity in the current schema: a population's `label`
+When structured treatment identity is absent, two labels carry scientific identity: a population's `label`
 and a stability test's `specimen_label` when it has no explicit `device_id`.
 These must agree after Unicode, minus-sign and whitespace normalization. For example,
 two populations called `control` and `treated` must not trade their PCE values and
 still get full credit, even if their family and sample size agree. An explicitly
 device-linked stability test uses the device link instead of its display label.
 This rule is conservative: `control` and `untreated cells` do not automatically match.
+When both population records supply `subjects`, their treatment conditions, treated
+material and treatment stage establish identity instead of prose labels. Conditions
+use the ordinary unit/tolerance rules. Shared subject sets retain multiplicity; one
+assertion applying to several cohorts does not become several predicted facts.
+`error_bar_type` is separate from the outcome's `statistic_type`: SD error bars do
+not establish a mean, nor turn the outcome into a standard deviation.
 
 For quantities, a match requires the property name, value, units and recorded
 context to agree under the rules below. Non-numeric facts use the corresponding
@@ -192,9 +200,10 @@ A rate is `null` when its denominator is zero. For example, an empty prediction
 against a nonempty reference has undefined precision, zero recall and zero F1.
 If both sides are empty, all three rates are undefined.
 
-- `core_facts.groups` gives counts and scores for each of the six groups.
+- `core_facts.groups` gives counts and scores for each scientific group.
 - `core_facts.micro` pools facts across groups before calculating the scores.
-- `core_facts.macro_f1` averages the F1 scores of groups with facts on either side.
+- `core_facts.micro.f1` is the per-paper summary used by experiment comparison.
+  Domain and subfield breakdowns show which kinds of facts contribute to it.
 
 A group with reference facts but no predicted facts scores zero. A group empty on
 both sides is left out of the average. Equal group weighting is a reporting choice,
@@ -205,8 +214,8 @@ alongside the average.
 
 `core_facts.subfields` partitions the same facts into the categories below. Each
 contains `truth`, `predicted`, `matched`, `precision`, `recall` and `f1`; every match
-also names its subfield. The value-only and attribution views have identical
-subfield denominators. **The six parent groups still determine macro F1.**
+also names its subfield. The recovery and attributed views have identical
+subfield denominators. Reporting bins do not determine matching or aggregate weights.
 Subfields do not add weights, and broad `composition` is not pure formula accuracy.
 
 | Subfield | Included keys or source fields |
@@ -218,24 +227,25 @@ Subfields do not add weights, and broad `composition` is not pure formula accura
 | `recipe_composition` | Constituent name/role/amount with explicit precursor or precursor-additive role; composition properties named `precursor…` |
 | `material_properties` | Remaining absorber/layer properties and unfamiliar composition properties |
 | `device_structure` | Layer `role`, `material_form`, family `polarity`, raw stack fallback |
-| `photovoltaic_metrics` | Individual PCE, Voc, Jsc, FF and their checked name aliases |
+| `photovoltaic_metrics` | Parsed individual or population PCE, Voc, Jsc, FF and their checked name aliases |
 | `measurement_protocol` | Recognized conditions in individual or population `metrics`: illumination/intensity/spectrum/standard, scan rate/voltage range/voltage step, measurement temperature/atmosphere/condition, storage before measurement/in glovebox |
 | `other_measurement_fields` | Other individual metrics, including retention; unfamiliar keys remain literal |
-| `population_metrics` | Aggregate metrics other than protocol and metadata |
-| `population_metadata` | `sample_size` and the `error bar statistic` metric |
+| `relative_performance` | Parsed efficiency-retention quantities, from either measurement container |
+| `qualitative_observations` | Literal measurement statements without numerical cues |
+| `unparsed_measurement_claims` | Literal measurement claims containing numerical/bound cues; not silently treated as parsed quantities |
+| `statistical_metadata` | Sample size and error-bar statistic, including `error_bar_type` |
 | `stability_protocol` | Test/checkpoint conditions and checkpoint time |
 | `stability_outcomes` | Checkpoint outcomes |
 | `processing_operations` | Step operation, including an explicitly equivalent method representation |
 | `processing_materials` | Step `materials` entries |
-| `processing_conditions` | Step `conditions` other than a method merged into the operation |
-| `specimen_properties` | Individual-device `reported_properties` |
+| `processing_conditions` | Step conditions (except a method merged into its operation), specimen `reported_properties` and structured treatment conditions |
 
 `scoring_fields.py` is the classifier; `scoring_protocol.py` owns the exact protocol
 aliases. Names ignore whitespace, underscores and hyphens. Unknown concepts remain
 literal, counted in their stated container. `η` and `efficiency` mean PCE only for
 `jv_scan`, `stabilized_power_output` or `certified_measurement` observations.
 
-A wrong or omitted measurement condition withholds strict outcome credit; value-only
+A wrong or omitted measurement condition withholds strict outcome credit; recovery
 credit can still show recovery of the number. Conditions themselves are scored in
 the device/cohort context without depending on the other conditions. No condition
 is inferred from a neighboring record or borrowed from the reference.
@@ -248,26 +258,25 @@ issues block comparison; citation issues and validation coverage remain visible 
 
 ### Separate value recovery from attribution
 
-The report compares the same facts in three ways:
+The report has two views:
 
-| Report field | Question |
+| Report field | Meaning |
 | --- | --- |
-| `core_facts.value_only` | Within the same scientific group, subfield and property, was the value recovered anywhere in the paper, regardless of owner or context? |
-| `core_facts.attribution` | Does the property have matching context, regardless of its value, with no detected ambiguity? |
-| `core_facts` | Do both value and context match, with no detected ambiguity? |
+| `core_facts` | Correct value with compatible scientific context and unambiguous attribution |
+| `core_facts.recovery` | Correct concept/value recovered anywhere within the paper, including across individual/population containers |
 
-All three use the same predicted and reference counts, but each finds its own
-one-to-one fact matches. Do not multiply their scores or combine their match lists
-to reconstruct the primary score. A value-only match does not prove that the value
-belongs to the right specimen or chemical.
-This diagnostic still separates scientific groups and recipe/finished-material claims: an individual-device result
-does not become a population statistic just because its number agrees.
+Each uses the same denominators and its own one-to-one assignment. A recovery
+match cannot establish a specimen's identity. Equal outcomes cannot break an
+identity tie. Do not combine the assignments or multiply the scores.
 
-Consider a stability test with one temperature, two checkpoint times and two
-outcomes: five facts in total. If the prediction omits the temperature but retains
-the four other values, value-only recall is 4/5 and F1 is 8/9. The primary score can
-be zero because the times and outcomes no longer have matching test conditions.
-The separate views show that the numbers were recovered but their context was not.
+Sample sizes and error-bar types are independent metadata facts; a wrong outcome
+statistic does not erase a correctly attributed count. Conflicting reported counts
+still block outcome attribution. A missing count loses its own point only.
+
+For example, 93% retention attached to an individual device can earn recovery
+credit against a population reference while receiving no attributed outcome credit.
+Absolute PCE of 93% cannot earn that recovery credit. Both decisions appear in the
+same report, with source paths and cross-container matches retained.
 
 ### Ambiguity is visible and can stop a benchmark run
 
@@ -292,8 +301,8 @@ Conflicting values for the same scoped property in a layer and its sole linked
 absorber also produce an issue. The scorer keeps both values visible rather than
 selecting whichever agrees with the reference.
 
-Affected facts stay in the counts but receive no primary or attribution credit.
-They can still receive value-only credit. An ambiguous parent record can also
+Affected facts stay in the counts but receive no attributed credit.
+They can still receive recovery credit. An ambiguous parent record can also
 block credit for facts in linked records. These rules deliberately withhold credit
 when the recorded context does not distinguish a match; a reviewer must decide
 whether the ambiguity reflects an extraction error or a scoring limitation.
@@ -369,9 +378,10 @@ Choosing A for reference 1 leaves B for reference 2, totaling 1.30.
 Choosing 1→B and 2→A totals 1.65, so the scorer selects that assignment.
 The report's `matches[].similarity` shows the content score without the bonus.
 
-Primary and attribution scores compare facts only within a paired record, scientific
-group and property name. Value-only matching uses group and property without the
-owner requirement. A comparison either passes or fails; there is no partial credit for
+Attributed scores require paired owners and a compatible semantic concept.
+Recovery matches compatible concepts without the owner requirement, including
+across individual/population containers. Report groups and subfields are not
+candidate matching keys. A comparison either passes or fails; there is no partial credit for
 a value that falls outside the numeric tolerance. Layer and operation order comes
 from explicit sequence fields, not array position.
 
@@ -594,6 +604,22 @@ correct-value-and-context score.
 
 ## Finalize the reference before scoring
 
+The review workbench's **Benchmark reference coverage** section records text/table,
+figure and attribution-context completeness for each scientific domain, with a
+source-based rationale. These declarations travel through the export manifest and
+`benchmark.coverage`. They default to unreviewed for existing exports.
+
+`interpretation="reference_agreement"` means precision/F1 describe agreement with
+the supplied annotations, and recall covers only that annotated subset. They are
+not verified extraction-quality estimates. No prediction is silently excluded.
+`interpretation="reviewed_scope"` requires complete or explicitly not-applicable
+coverage for every domain/channel and attribution context. An unreviewed figure or
+unknown scope keeps the overall benchmark diagnostic; comparison retains its counts
+but withholds a verified quality conclusion. Coverage declarations record review;
+they do not authenticate it. Figure-derived quantities require reviewed extraction
+or digitization and a declared uncertainty policy.
+
+
 The benchmark uses one fixed reference for every compared system. The scorer does
 not exclude reference records or search for predictions to ignore.
 
@@ -668,16 +694,16 @@ The report keeps both pooled counts and paper averages:
 - `core_fact_groups_micro` pools fact counts for each scientific group.
 - `core_fact_groups_macro_f1` averages each group's F1 across papers.
 - `core_facts_micro` pools facts across all groups and papers.
-- `core_facts_macro_f1` averages each paper's group-balanced F1.
+- `core_facts_mean_paper_f1` averages each paper's attributed micro F1.
 
 The last measure gives each paper with a defined score equal weight, rather than
 letting a paper with many fields dominate. Undefined rates are left out, and each
 average records how many papers contributed. Inventory, field and relationship
 diagnostics retain their own counts and paper averages.
 
-The value-only and attribution views remain available as `core_value_only_micro`,
-`core_value_only_macro_f1`, `core_attribution_micro` and
-`core_attribution_macro_f1`. Check `papers_needing_scoring_review` and
+The recovery view remains available as `core_recovery_micro` and
+`core_recovery_mean_paper_f1`. Check `papers_with_unreviewed_scope`,
+`papers_needing_scoring_review` and
 `scoring_issue_count` alongside all scores.
 
 ### Intervals

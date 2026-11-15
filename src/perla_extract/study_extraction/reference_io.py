@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Final, Literal
 from pydantic import ValidationError
 
 from .models import StudyExtraction, compatible_study_schema
+from .scoring_coverage import ReferenceCoverage
 
 if TYPE_CHECKING:
     from .evaluation import BenchmarkProvenance
@@ -151,6 +152,7 @@ def load_reference(
     return (
         load_study(payload, truth_path),
         BenchmarkProvenance(
+            coverage=ReferenceCoverage.model_validate(manifest.get("coverage", {})),
             paper_id=paper_id,
             split=split,
             ground_truth_sha256=expected_truth,

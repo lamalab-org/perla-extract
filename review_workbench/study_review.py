@@ -30,6 +30,7 @@ from perla_extract.study_extraction.models import (
     compatible_study_schema,
     study_schema_sha256,
 )
+from perla_extract.study_extraction.scoring_coverage import ReferenceCoverage
 from perla_extract.study_extraction.validation import validate_study
 from review_workbench.review_storage import (
     LocalReviewStateStorage,
@@ -309,6 +310,7 @@ class InventoryAuditRequest(BaseModel):
         default_factory=MainTextFigureCensus
     )
     missing_or_ambiguous: str = Field(default="", max_length=4000)
+    coverage: ReferenceCoverage = Field(default_factory=ReferenceCoverage)
 
     @model_validator(mode="after")
     def validate_counts(self) -> "InventoryAuditRequest":

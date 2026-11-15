@@ -31,6 +31,11 @@ from perla_extract.study_extraction.models import (
     StudyExtraction,
 )
 from perla_extract.study_extraction.run_artifacts import file_digest, write_run_manifest
+from perla_extract.study_extraction.scoring_coverage import (
+    DomainCoverage,
+    ReferenceCoverage,
+)
+from perla_extract.study_extraction.scoring_fields import FACT_GROUPS
 from perla_extract.study_extraction.spans import (
     build_evidence_spans,
     evidence_spans_sha256,
@@ -69,6 +74,21 @@ def quantity(name: str, number: float) -> ReportedValue:
         value_number=number,
         unit="%",
         evidence=EVIDENCE,
+    )
+
+
+def synthetic_coverage() -> ReferenceCoverage:
+    """Declare completeness only for this fully enumerated synthetic source."""
+    return ReferenceCoverage(
+        domains={
+            group: DomainCoverage(
+                text_and_tables="complete",
+                figures="not_applicable",
+                attribution_context="complete",
+                evidence="Synthetic fixture: TEXT enumerates the complete source; no figures exist.",
+            )
+            for group in FACT_GROUPS
+        }
     )
 
 
@@ -180,6 +200,7 @@ def build_example(output: Path) -> dict:
         InventoryAuditRequest(
             base_revision=bundle["revision"],
             searched_sources=["main"],
+            coverage=synthetic_coverage(),
             expected_counts={},
         ),
         REVIEWER,
@@ -301,7 +322,7 @@ def build_example(output: Path) -> dict:
                 key: report["core_facts"]["groups"][group][key]
                 for key in ("truth", "predicted", "matched")
             }
-            for group in ("stack", "performance")
+            for group in ("material_device_identity", "performance")
         }
         if report["config"] != expected["config"]:
             raise ValueError(

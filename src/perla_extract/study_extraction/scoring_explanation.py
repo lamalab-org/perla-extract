@@ -19,7 +19,7 @@ from .scoring_fields import FactSubfield
 if TYPE_CHECKING:
     from .evaluation import EvaluationReport, FactMatch
 
-ScoreView = Literal["strict", "value", "attribution"]
+ScoreView = Literal["attributed", "recovery"]
 Side = Literal["truth", "prediction"]
 
 
@@ -28,11 +28,12 @@ class FactSelection(StrictModel):
 
     side: Side
     path: str = Field(pattern=r"^/")
-    view: ScoreView = "strict"
+    view: ScoreView = "attributed"
 
 
 class ContextMismatch(StrictModel):
     component: str
+    reason: str
     truth_path: str | None
     predicted_path: str | None
     truth_value: object
@@ -101,7 +102,7 @@ class FactExplanation(StrictModel):
 class ScoreExplanation(StrictModel):
     """Explain selected canonical facts and source aliases from one evaluation."""
 
-    format_version: Literal[3] = 3
+    format_version: Literal[4] = 4
     evaluation_format_version: int
     matcher_version: str
     fact_profile: str
@@ -226,11 +227,11 @@ class ExplanationCollector:
             eligible = sum(d.eligible(selection.view) for _, _, d, _ in candidates)
             if any(chosen for _, _, _, chosen in candidates):
                 reason = "matched"
-            elif selection.view != "value" and fact.owner.unmatched_side is not None:
+            elif selection.view != "recovery" and fact.owner.unmatched_side is not None:
                 reason = "owner_unmatched"
             elif eligible:
                 reason = "one_to_one_competition"
-            elif selection.view != "value" and (
+            elif selection.view != "recovery" and (
                 fact.path in self.blocked[side]
                 or (
                     candidates and all(d.ambiguity_blocked for _, _, d, _ in candidates)
@@ -238,7 +239,7 @@ class ExplanationCollector:
                 or any(
                     d.ambiguity_blocked
                     and d.context_equal
-                    and (selection.view == "attribution" or d.value_equal)
+                    and d.value_equal
                     for _, _, d, _ in candidates
                 )
             ):
@@ -249,10 +250,8 @@ class ExplanationCollector:
                     if any(f.owner == fact.owner for f in self.facts[1 - side])
                     else "no_candidate"
                 )
-            elif selection.view == "value":
+            elif selection.view == "recovery":
                 reason = "value_mismatch"
-            elif selection.view == "attribution":
-                reason = "context_mismatch"
             elif any(d.value_equal for _, _, d, _ in candidates):
                 reason = "context_mismatch"
             elif any(
@@ -294,6 +293,7 @@ class ExplanationCollector:
                         context_mismatches=[
                             ContextMismatch(
                                 component=d.name,
+                                reason=d.reason,
                                 truth_path=d.truth_path,
                                 predicted_path=d.predicted_path,
                                 truth_value=_describe(d.truth_value),

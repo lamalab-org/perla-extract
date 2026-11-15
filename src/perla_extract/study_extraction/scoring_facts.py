@@ -18,6 +18,7 @@ from .models import (
     ReportedValue,
     StabilityTest,
     StudyExtraction,
+    SubjectContext,
 )
 from .scoring_claims import (
     compound_quantity as compound_quantity,
@@ -38,6 +39,8 @@ from .scoring_context import (
     FactContext,
     RecordReference,
     compare_context,
+    has_subject_identity,
+    subject_context,
 )
 from .scoring_context import (
     UnorderedContext as UnorderedContext,
@@ -45,30 +48,26 @@ from .scoring_context import (
 from .scoring_context import (
     equal_value as equal_value,
 )
-from .scoring_fields import FactSubfield, fact_subfield
+from .scoring_fields import FactGroup, FactSubfield, fact_group, fact_subfield
 from .scoring_process import condition_name, describe_process, independent_condition
 from .scoring_protocol import performance_name, protocol_claims, protocol_name
 from .scoring_vocabulary import (
+    error_bar_statistic,
     known_material,
     material_name,
     material_role,
     material_stage,
     property_name,
+    scientific_concept,
     scoped_property_name,
+    treatment_condition_name,
     whole_material_role,
 )
 
-FactGroup = Literal[
+SourceGroup = Literal[
     "performance", "population", "stability", "composition", "stack", "processing"
 ]
-FACT_GROUPS: tuple[FactGroup, ...] = (
-    "performance",
-    "population",
-    "stability",
-    "composition",
-    "stack",
-    "processing",
-)
+
 
 DEFAULT_OPERATION_ALIASES = {
     "thermal annealing": "annealing",
@@ -88,7 +87,11 @@ def scientific_descriptor(record: object) -> str | None:
     """
 
     if isinstance(record, PopulationStatistic):
-        return scientific_text(record.label)
+        return (
+            None
+            if record.subjects and all(has_subject_identity(s) for s in record.subjects)
+            else scientific_text(record.label)
+        )
     if isinstance(record, StabilityTest) and record.device_id is None:
         return scientific_text(record.specimen_label)
     return None
@@ -103,6 +106,7 @@ class ScientificFact:
     value: object
     context: FactContext
     subfield: FactSubfield
+    concept: tuple[str, str]
     source_paths: tuple[str, ...] = ()
 
 
@@ -116,13 +120,9 @@ class FactComparison:
     context_differences: tuple[ContextDifference, ...]
 
     def eligible(self, view: str) -> bool:
-        if view == "value":
+        if view == "recovery":
             return self.value_equal
-        return (
-            not self.ambiguity_blocked
-            and self.context_equal
-            and (view == "attribution" or self.value_equal)
-        )
+        return not self.ambiguity_blocked and self.context_equal and self.value_equal
 
 
 def compare_facts(
@@ -346,11 +346,14 @@ def scientific_facts(
                 variant=device.variant if device else None,
                 champion_status=device.champion_status if device else None,
                 selection_basis=device.selection_basis if device else None,
+                subject_context=subject_context(device.subject_context)
+                if device and device.subject_context is not None
+                else None,
             )
         )
 
     def add(
-        group: FactGroup,
+        group: SourceGroup,
         path: str,
         owner: RecordReference,
         name: str,
@@ -359,34 +362,42 @@ def scientific_facts(
         source_paths: tuple[str, ...] = (),
     ) -> None:
         if value is not None and value != "not_reported" and value != "":
+            if name == "errorbarstatistic":
+                if isinstance(value, str):
+                    value = error_bar_statistic(value)
+                elif (
+                    isinstance(value, ReportedValue)
+                    and value.value_number is None
+                    and value.unit is None
+                ):
+                    value = error_bar_statistic(value.raw_value)
+            stage = next(
+                (
+                    c.value
+                    for c in context.components
+                    if c.name == "material_stage" and isinstance(c.value, str)
+                ),
+                None,
+            )
+            concept = scientific_concept(
+                group, name, stage, outcome="/outcomes/" in path
+            )
             facts.append(
                 ScientificFact(
-                    group=group,
+                    group=fact_group(concept),
                     path=path,
                     owner=owner,
                     name=name,
                     value=value,
                     context=context,
                     source_paths=source_paths or (path,),
-                    subfield=fact_subfield(
-                        group,
-                        name,
-                        path,
-                        next(
-                            (
-                                c.value
-                                for c in context.components
-                                if c.name == "material_stage"
-                                and isinstance(c.value, str)
-                            ),
-                            None,
-                        ),
-                    ),
+                    subfield=fact_subfield(group, name, path, stage, value),
+                    concept=concept,
                 )
             )
 
     def quantities(
-        group: FactGroup,
+        group: SourceGroup,
         path: str,
         owner: RecordReference,
         values: list[ReportedValue],
@@ -401,6 +412,50 @@ def scientific_facts(
 
     def conditions(values: list[ReportedValue]) -> UnorderedContext:
         return UnorderedContext(tuple((property_name(v.name), v) for v in values))
+
+    def treatment_facts(
+        subject: SubjectContext, path: str, owner: RecordReference
+    ) -> None:
+        context = subject_context(subject, path)
+        scopes.append(
+            ScientificScope(
+                owner,
+                "treatment_subject",
+                path,
+                subject_context(subject, path, identity_only=True),
+            )
+        )
+        add(
+            "processing",
+            f"{path}/treatment_stage",
+            owner,
+            "treatment_stage",
+            subject.treatment_stage,
+            context,
+        )
+        add(
+            "processing",
+            f"{path}/treated_material",
+            owner,
+            "treated_material",
+            material_name(subject.treated_material)
+            if subject.treated_material
+            else None,
+            context,
+        )
+        for i, condition in enumerate(subject.conditions):
+            add(
+                "processing",
+                f"{path}/conditions/{i}",
+                owner,
+                "treatment:"
+                + (
+                    treatment_condition_name(condition.name)
+                    or property_name(condition.name)
+                ),
+                condition,
+                context,
+            )
 
     def chemicals(
         path: str,
@@ -761,6 +816,10 @@ def scientific_facts(
                                 else condition_context,
                             )
             elif collection == "individual_devices":
+                if record.subject_context is not None:
+                    treatment_facts(
+                        record.subject_context, f"{path}/subject_context", owner
+                    )
                 context = FactContext.of(
                     path,
                     family_id=reference("device_families", record.family_id),
@@ -777,6 +836,7 @@ def scientific_facts(
                 context = device_context(record.device_id, path).extend(
                     FactContext.of(
                         path,
+                        statistical_level="individual",
                         measurement_type=record.measurement_type,
                         scan_direction=record.scan_direction,
                     )
@@ -794,11 +854,19 @@ def scientific_facts(
                         else context.extend(protocol),
                     )
             elif collection == "population_statistics":
+                for i, subject in enumerate(record.subjects):
+                    treatment_facts(subject, f"{path}/subjects/{i}", owner)
                 context = FactContext.of(
                     path,
+                    statistical_level="population",
                     family_id=reference("device_families", record.family_id),
-                    statistic_type=record.statistic_type,
                     label=scientific_descriptor(record),
+                    subjects=UnorderedContext(
+                        tuple(
+                            subject_context(s, f"{path}/subjects/{i}")
+                            for i, s in enumerate(record.subjects)
+                        )
+                    ),
                 )
                 add(
                     "population",
@@ -808,17 +876,35 @@ def scientific_facts(
                     record.sample_size,
                     context,
                 )
+                add(
+                    "population",
+                    f"{path}/error_bar_type",
+                    owner,
+                    "errorbarstatistic",
+                    record.error_bar_type,
+                    context,
+                )
                 outcome_context = context.extend(
-                    FactContext.of(path, sample_size=CohortSize(record.sample_size))
+                    FactContext.of(
+                        path,
+                        sample_size=CohortSize(record.sample_size),
+                        statistic_type=record.statistic_type,
+                        measurement_type=record.measurement_type,
+                        scan_direction=record.scan_direction,
+                    )
                 ).extend(_protocol_context(record, path))
                 for j, metric in enumerate(record.metrics):
                     add(
                         "population",
                         f"{path}/metrics/{j}",
                         owner,
-                        protocol_name(metric.name) or property_name(metric.name),
+                        performance_name(metric.name, record.measurement_type),
                         metric,
-                        context if protocol_name(metric.name) else outcome_context,
+                        context
+                        if protocol_name(metric.name)
+                        or property_name(metric.name)
+                        in {"errorbarstatistic", "sample_size"}
+                        else outcome_context,
                     )
 
             elif collection == "stability_tests":
@@ -833,7 +919,7 @@ def scientific_facts(
                     "stability", f"{path}/conditions", owner, record.conditions, context
                 )
                 context = context.extend(
-                    FactContext.of(path, conditions=conditions(record.conditions))
+                    FactContext.of(path, test_conditions=conditions(record.conditions))
                 )
                 for i, checkpoint in enumerate(record.checkpoints):
                     base = f"{path}/checkpoints/{i}"
@@ -853,7 +939,8 @@ def scientific_facts(
                         checkpoint.time,
                         context.extend(
                             FactContext.of(
-                                base, conditions=conditions(checkpoint.conditions)
+                                base,
+                                checkpoint_conditions=conditions(checkpoint.conditions),
                             )
                         ),
                     )
@@ -873,7 +960,7 @@ def scientific_facts(
                             FactContext.of(
                                 base,
                                 time=checkpoint.time,
-                                conditions=conditions(checkpoint.conditions),
+                                checkpoint_conditions=conditions(checkpoint.conditions),
                             )
                         ),
                     )

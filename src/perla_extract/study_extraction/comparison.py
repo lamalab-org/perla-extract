@@ -236,11 +236,15 @@ def summarize(
                 prediction_validation=validation.model_dump() if validation else None,
                 input_warnings=report.input_warnings,
                 scientific_scores=report.core_facts.model_dump(),
+                interpretation=report.interpretation,
+                reference_coverage=report.benchmark.coverage.model_dump(),
             )
             if run_accounting.status != "complete":
                 raise ValueError(
                     f"Planned run is {run_accounting.status}; partial output is diagnostic only"
                 )
+            if report.interpretation != "reviewed_scope":
+                raise ValueError("Reference coverage is incomplete or unreviewed; scientific scores are diagnostic reference agreement")
             if validation and any(
                 issue.category != "citation" for issue in validation.issues
             ):
@@ -249,7 +253,7 @@ def summarize(
                 )
             if (
                 report.core_facts.scoring_status != "ready"
-                or report.core_facts.macro_f1 is None
+                or report.core_facts.micro.f1 is None
             ):
                 raise ValueError(
                     "Score has unresolved alignment or no defined scientific F1"
@@ -257,7 +261,7 @@ def summarize(
             scores[key] = report
             row.update(
                 quality_available=True,
-                macro_f1=report.core_facts.macro_f1,
+                fact_f1=report.core_facts.micro.f1,
                 score_sha256=file_digest(path),
                 scientific_scores=report.core_facts.model_dump(),
             )
@@ -292,7 +296,7 @@ def summarize(
                 if row["run_id"] in retained:
                     row.pop("accounting", None)
                 retained.add(row["run_id"])
-                row.pop("macro_f1", None)
+                row.pop("fact_f1", None)
                 row.pop("scientific_scores", None)
     paired_rows = [row for row in rows if row["quality_applicable"]]
     papers = sorted({row["paper_id"] for row in paired_rows})
@@ -363,8 +367,8 @@ def summarize(
         paired = []
         for paper in papers:
             deltas = [
-                scores[paper, repeat, "treatment"].core_facts.macro_f1
-                - scores[paper, repeat, "control"].core_facts.macro_f1
+                scores[paper, repeat, "treatment"].core_facts.micro.f1
+                - scores[paper, repeat, "control"].core_facts.micro.f1
                 for item, repeat in pairs
                 if item == paper
             ]
@@ -372,8 +376,8 @@ def summarize(
                 dict(paper_id=paper, repeat_deltas=deltas, mean_delta=mean(deltas))
             )
         quality = dict(
-            mean_paired_macro_f1_delta=mean(item["mean_delta"] for item in paired),
-            paired_macro_f1_delta_interval=paired_interval(
+            mean_paired_fact_f1_delta=mean(item["mean_delta"] for item in paired),
+            paired_fact_f1_delta_interval=paired_interval(
                 [item["mean_delta"] for item in paired], bootstrap_samples, seed
             ),
             papers=paired,
@@ -424,7 +428,7 @@ def summarize(
         expected_paper_count=len(design.paper_ids),
         paper_count=len(papers),
         factors=list(factors),
-        estimand="Equal-paper mean difference in populated-group macro F1; repeats averaged within paper",
+        estimand="Equal-paper mean difference in attributed fact micro F1; repeats averaged within paper",
         quality_status="needs_attention" if issues else "ready",
         issues=list(dict.fromkeys(issues + accounting_issues)),
         quality_issues=issues,

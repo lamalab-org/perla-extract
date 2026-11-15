@@ -37,6 +37,7 @@ def export_tables(result: dict, directory: Path) -> None:
                 "run_id": run.get("run_id"),
                 "run_dir": run["run_dir"],
                 "quality_available": run["quality_available"],
+                "interpretation": run.get("interpretation", "unavailable"),
                 "validation_status": (run.get("prediction_validation") or {}).get(
                     "status", "unavailable"
                 ),
@@ -49,7 +50,7 @@ def export_tables(result: dict, directory: Path) -> None:
                 "input_warnings": " | ".join(run.get("input_warnings", [])),
                 "cost_available": run["cost_available"],
                 "status": accounting.get("status"),
-                "macro_f1": run.get("macro_f1"),
+                "fact_f1": run.get("fact_f1"),
                 "cost_sources": " | ".join(accounting.get("cost_sources", [])),
                 "known_cost_usd": accounting.get("cost_usd"),
                 "total_cost_usd": accounting.get("cost_usd")
@@ -76,9 +77,8 @@ def export_tables(result: dict, directory: Path) -> None:
         if not score:
             continue
         for view, scores in (
-            ("strict", score),
-            ("value_only", score["value_only"]),
-            ("attribution", score["attribution"]),
+            ("attributed", score),
+            ("recovery", score["recovery"]),
         ):
             for category, rows in (("groups", groups), ("subfields", subfields)):
                 for name, counts in scores[category].items():
@@ -86,6 +86,7 @@ def export_tables(result: dict, directory: Path) -> None:
                         {
                             **identity,
                             "quality_available": run["quality_available"],
+                            "interpretation": run.get("interpretation", "unavailable"),
                             "view": view,
                             "group" if category == "groups" else "subfield": name,
                             **{
@@ -113,6 +114,7 @@ def export_tables(result: dict, directory: Path) -> None:
                 "arm",
                 "repeat",
                 "quality_available",
+                "interpretation",
                 "view",
                 category,
                 "truth",
@@ -128,13 +130,13 @@ def export_tables(result: dict, directory: Path) -> None:
         {
             "paper_id": paper["paper_id"],
             "repeat_count": len(paper["repeat_deltas"]),
-            "mean_macro_f1_delta": paper["mean_delta"],
+            "mean_fact_f1_delta": paper["mean_delta"],
         }
         for paper in (result.get("quality") or {}).get("papers", [])
     ]
     _write(
         directory / "paired_papers.csv",
-        ["paper_id", "repeat_count", "mean_macro_f1_delta"],
+        ["paper_id", "repeat_count", "mean_fact_f1_delta"],
         papers,
     )
     write_json_exclusive(
