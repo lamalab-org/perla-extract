@@ -458,6 +458,15 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
             "family": family_note,
             "measurement_type": observation.measurement_type,
             "scan_direction": observation.scan_direction,
+            "measurement_conditions": [
+                _reported_value_payload(value)
+                for value in observation.measurement_conditions
+            ],
+            "device_subject_context": observation_device.subject_context.model_dump(
+                mode="json"
+            )
+            if observation_device and observation_device.subject_context
+            else None,
             "aggregation": _reduced_performance_aggregation(
                 observation_device, observation.measurement_type
             ),
@@ -522,6 +531,9 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                     ),
                     "champion_status": device.champion_status,
                     "selection_basis": device.selection_basis,
+                    "subject_context": device.subject_context.model_dump(mode="json")
+                    if device.subject_context
+                    else None,
                     "reported_properties": [
                         _reported_value_payload(value)
                         for value in device.reported_properties
@@ -575,6 +587,17 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                     "population_id": population.population_id,
                     "label": population.label,
                     "statistic_type": population.statistic_type,
+                    "subjects": [
+                        subject.model_dump(mode="json")
+                        for subject in population.subjects
+                    ],
+                    "error_bar_type": population.error_bar_type,
+                    "measurement_type": population.measurement_type,
+                    "scan_direction": population.scan_direction,
+                    "measurement_conditions": [
+                        _reported_value_payload(value)
+                        for value in population.measurement_conditions
+                    ],
                     "aggregation": aggregation,
                     "family": family_note,
                     "unprojected_metrics": remainder,
@@ -645,6 +668,11 @@ def to_reduced_with_report(study: StudyExtraction) -> ReducedExport:
                     "family_id": stability_family_id,
                     "specimen_label": test.specimen_label,
                     "link_status": test.link_status,
+                    "device_subject_context": stability_device.subject_context.model_dump(
+                        mode="json"
+                    )
+                    if stability_device and stability_device.subject_context
+                    else None,
                     "device_reported_properties": [
                         _reported_value_payload(value)
                         for value in stability_device.reported_properties

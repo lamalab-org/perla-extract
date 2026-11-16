@@ -133,7 +133,7 @@ def _issue(
     detail: str,
     path: str | None = None,
 ) -> None:
-    """Append a conversion issue through one consistently shaped boundary."""
+    """Identify the source record and target field for a lossy or rejected conversion."""
 
     issues.append(
         NOMADConversionIssue(
@@ -866,6 +866,14 @@ def to_nomad_with_report(
                 "device_id": observation.device_id,
                 "measurement_type": observation.measurement_type,
                 "scan_direction": observation.scan_direction,
+                "measurement_conditions": [
+                    _payload(value) for value in observation.measurement_conditions
+                ],
+                "device_subject_context": observation_device.subject_context.model_dump(
+                    mode="json"
+                )
+                if observation_device and observation_device.subject_context
+                else None,
                 "champion_status": (
                     observation_device.champion_status if observation_device else None
                 ),
@@ -918,6 +926,15 @@ def to_nomad_with_report(
                 "source_kind": "population_statistic",
                 "source_id": population.population_id,
                 "statistic_type": population.statistic_type,
+                "subjects": [
+                    subject.model_dump(mode="json") for subject in population.subjects
+                ],
+                "error_bar_type": population.error_bar_type,
+                "measurement_type": population.measurement_type,
+                "scan_direction": population.scan_direction,
+                "measurement_conditions": [
+                    _payload(value) for value in population.measurement_conditions
+                ],
                 "family": family_note,
                 "unprojected_metrics": remainder,
             },
@@ -970,6 +987,11 @@ def to_nomad_with_report(
                 "source_id": stability.test_id,
                 "device_id": stability.device_id,
                 "link_status": stability.link_status,
+                "device_subject_context": stability_device.subject_context.model_dump(
+                    mode="json"
+                )
+                if stability_device and stability_device.subject_context
+                else None,
                 "device_reported_properties": [
                     _payload(value) for value in stability_device.reported_properties
                 ]
@@ -1013,6 +1035,9 @@ def to_nomad_with_report(
                 ],
                 "champion_status": device.champion_status,
                 "selection_basis": device.selection_basis,
+                "subject_context": device.subject_context.model_dump(mode="json")
+                if device.subject_context
+                else None,
                 "family": family_note,
             },
         )

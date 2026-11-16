@@ -29,6 +29,10 @@ unambiguously to a NOMAD field. Everything else remains in structured
 `additional_notes`, with source IDs and evidence block IDs, and produces a conversion
 issue where a target field was rejected.
 
+Measurement conditions, specimen treatments, cohort subjects and error-bar semantics
+stay in `additional_notes`. Preparation and aging conditions remain separate; they
+are not assigned to a native NOMAD field by guessing from a temperature or duration.
+
 Before conversion, unit typography is normalized without changing meaning. Equivalent
 forms such as Unicode or OCR minus signs, superscript exponents, spaced exponents, and
 common degree-Celsius glyph variants therefore reach the same dimensional conversion.

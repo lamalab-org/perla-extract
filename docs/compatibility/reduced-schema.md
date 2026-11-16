@@ -40,7 +40,8 @@ Rich information that has no faithful reduced field is serialized into
 `additional_notes` with stable source identifiers and evidence-block references. This
 includes full family provenance, every scoped absorber and its constituents,
 multi-absorber formulas that cannot fit the flat slot, unprojected values, detailed
-processing conditions, protocol identity, and ordered stability checkpoints.
+processing conditions, measurement conditions, specimen treatments, cohort subjects,
+error-bar semantics, protocol identity, and ordered stability checkpoints.
 
 `reduced_conversion.json` contains:
 
