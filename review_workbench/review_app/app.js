@@ -1351,7 +1351,7 @@ function renderDeviceContext(entry) {
     contextField("Individual device", device?.label),
     contextField("Device status", device ? `${device.champion_status === "yes" ? "Champion" : "Not marked champion"} · ${device.selection_basis.replaceAll("_", " ")}` : null),
     contextField("Device-specific values", (device?.reported_properties || []).map((value) => `${value.name}: ${value.raw_value}`).join(" · ")),
-    contextField("Architecture", family?.architecture || family?.polarity),
+    contextField("Architecture", family?.architecture || (family?.polarity === "not_reported" ? "Not reported" : family?.polarity)),
     contextField("Layer stack", (family?.layers || []).map(layerLabel).join(" / ") || family?.full_stack_raw),
     contextField("Absorbers", (family?.absorbers || []).map((absorber) => absorber.formula?.raw_value || absorber.label).join(" · ")),
   ];
@@ -1788,6 +1788,10 @@ function humanLabel(value) {
     raw_value: "Reported value",
     value_number: "Numeric value",
     full_stack_raw: "Stack as reported",
+    subject_context: "Specimen treatment",
+    subjects: "Cohort treatments",
+    measurement_conditions: "Measurement conditions",
+    error_bar_type: "Meaning of error bars",
   };
   if (preferred[value]) return preferred[value];
   if (String(value).endsWith("_id")) {

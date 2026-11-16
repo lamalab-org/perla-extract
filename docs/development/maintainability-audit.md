@@ -29,7 +29,7 @@ or alternative scorer was introduced.
 
 ## Checks exercised
 
-- Full repository test suite: **1,233 passed, 63 skipped** in its default invocation.
+- Full repository test suite: **1,234 passed, 63 skipped** in its default invocation.
   The separately enabled reference-release suite passed **124 tests**; optional external checks
   are not evidence of live Docling-model or pinned NOMAD-normalizer compatibility.
 - Automatic controlled contrasts: **574 passed**, with no new labels or model calls.
@@ -64,6 +64,12 @@ than introduce a generic adapter framework or split files by line count alone.
 The largest remaining family projection combines layer, absorber and recipe facts
 because they share explicit layer links. Its field-selection behavior is readable in
 one place but still deserves care when extending tandem or process support.
+
+A full package installation still includes Docling and its model dependencies,
+even when an experiment selects PyMuPDF. The offline scoring example has a small,
+pinned environment. Making Docling optional is a worthwhile packaging follow-up,
+but it must be coordinated with the current Docling parser default and documented
+installation behavior; this pass does not silently switch the scientific parser.
 
 Provider compatibility remains empirical. A model listed by a service may answer a
 short chat yet time out or violate the full extraction schema. Keep a synthetic
