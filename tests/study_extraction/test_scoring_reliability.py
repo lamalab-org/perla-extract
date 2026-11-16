@@ -33,7 +33,7 @@ from tests.study_extraction.test_evaluation import study, value
 
 ROOT = Path(__file__).resolve().parents[2]
 CASES = json.loads(
-    (ROOT / "tests/fixtures/scoring/reliability_cases.json").read_text()
+    (ROOT / "tests/fixtures/scoring/reliability_cases.json").read_text(encoding="utf-8")
 )["cases"]
 METRIC = "/performance_observations/0/metrics/0"
 

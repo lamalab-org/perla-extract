@@ -83,7 +83,7 @@ def prepare(
         raise ValueError(
             "Score does not match the supplied reference and sealed run; score them again"
         )
-    previous = json.loads(baseline.read_text()) if baseline else None
+    previous = json.loads(baseline.read_text(encoding="utf-8")) if baseline else None
     if previous is not None and any(
         previous.get(key) != getattr(score, key)
         for key in ("prediction_content_sha256", "run_id", "run_manifest_sha256")

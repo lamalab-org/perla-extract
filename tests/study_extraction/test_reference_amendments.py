@@ -156,7 +156,7 @@ def test_proposed_microlitre_correction_changes_only_the_two_source_checked_unit
         (
             ROOT
             / "data/study_extraction/ground_truth/v2/dev/10.1038--nmat4014/ground_truth.json"
-        ).read_text()
+        ).read_text(encoding="utf-8")
     )
     assert _digest(original) == plan.study_sha256
     revised = AdjudicationQueue._apply(original, plan.proposals[0].changes)

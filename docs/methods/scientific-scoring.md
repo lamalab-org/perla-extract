@@ -81,7 +81,9 @@ Unknown structured conditions remain required context but cannot identify a
 subject or break an assignment tie. In particular, putting PCE in a condition
 field cannot make the outcome identify its own subject. A missing distinguishing
 condition is unresolved, not a wildcard. Different treatment, specimen, scan
-direction, statistic or supplied protocol blocks attributed credit. If both
+direction, statistic or registered measurement-protocol condition blocks attributed
+credit. Unknown protocol names remain literal facts; the checked protocol registry
+determines which metric fields constrain other outcomes. If both
 inputs omit a qualifier, equality of that omission does not establish the actual
 experimental condition. Sample count is separately scored exactly: an omitted
 count loses its own credit; explicitly conflicting counts block cohort outcomes.
