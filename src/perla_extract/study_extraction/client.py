@@ -38,7 +38,7 @@ from .request_policy import ResolvedStagePolicy
 
 ResponseModel = TypeVar("ResponseModel", bound=BaseModel)
 MessageContent = str | list[dict[str, object]]
-VALIDATION_REPAIR_VERSION = 1
+VALIDATION_REPAIR_VERSION = 2
 RETRYABLE_ERRORS = (
     litellm.RateLimitError,
     litellm.Timeout,
@@ -775,8 +775,12 @@ class ModelClient:
             outcome.status = "success"
         except (TypeError, ValueError) as error:
             outcome.status = "validation_rejected"
+            # The rejected response is retained separately and shown once in the
+            # retry. Repeating it inside every error can exhaust the input budget.
             outcome.validation_errors = (
-                error.errors(include_url=False, include_context=False)
+                error.errors(
+                    include_url=False, include_context=False, include_input=False
+                )
                 if isinstance(error, ValidationError)
                 else [{"type": type(error).__name__, "message": str(error)}]
             )
