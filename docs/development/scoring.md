@@ -147,6 +147,10 @@ frequent fact types carry more weight within a paper.
 Numeric tolerance remains **1% relative, zero absolute**, after unit conversion.
 Counts are exact. Duplicate merging allows conversion roundoff only, independently
 of scoring tolerance. Unknown or inconsistent quantities remain literal.
+`units.py` accepts unit names and arithmetic after its explicit typography rules.
+Comments, braces and secondary quantities in a unit label remain unparsed; Pint
+versions must not silently remove punctuation and change their interpretation.
+Malformed parser input also remains literal instead of aborting the paper score.
 
 Reference coverage defaults to unreviewed, including for archived exports. A perfect
 self-score does not prove completeness. `reference_agreement` is diagnostic;

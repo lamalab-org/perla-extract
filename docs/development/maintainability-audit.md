@@ -15,9 +15,10 @@ observed usability study with new students or a claim that every branch is defec
 | A valid automatic comparison appeared beneath “Comparison unavailable” | Lead with the available reference-agreement result; explain the separate reviewed-scope limitation | Complete, partial and entirely failed experiment cases |
 | The first experiment required understanding a 30-paper roster | Start with the existing one-paper TOML; keep the larger roster optional | A real paper/SI/reference mapping passed `perla-experiment --check` |
 | New maintainers had no map covering the whole repository | Add a responsibility map and an explicit scorer reading path | Paths checked against the checkout; strict documentation build |
-| Some descriptions were stale or overstated scientific guarantees | Distinguish corrected records from source-wide coverage; document treatment/measurement/aging placement; correct the historical composition example | No scoring rules, reference labels, numeric tolerances or extraction prompts changed |
+| Some descriptions were stale or overstated scientific guarantees | Distinguish corrected records from source-wide coverage; document treatment/measurement/aging placement; correct the historical composition example | No matching rules, reference labels, numeric tolerances or extraction prompts changed |
 | Nullable context and empty condition lists required raw JSON editing | Add schema-driven object and list controls with explicit citation guidance | Browser add/clear and list add/remove checks; typed draft and save-boundary tests |
 | Review cards hid fields used by scientific scoring | Display specimen/cohort treatments, measurement conditions and error-bar metadata; retain owning source paths | Imported renderer tests, deployment bundle check and browser verification |
+| Malformed unit text aborted scoring with the Pint release used on Python 3.10/3.11 | Reject unsupported unit syntax consistently and treat parser assertions as unparseable values | Reproduced the CI failure; all 117 full reports match on Python 3.11/Pint 0.25.3 and Python 3.12/Pint 0.26.1 |
 | A truncated response appeared only as “invalid JSON” | Include the provider's truncation status, configured output allowance and retained response path in the error | Exercise the actual response decoder; retain usage and avoid another request with the same limit |
 
 The fact-projection refactor uses a private collector for one input at a time.
@@ -28,7 +29,7 @@ or alternative scorer was introduced.
 
 ## Checks exercised
 
-- Full repository test suite: **1,223 passed, 63 skipped** in its default invocation.
+- Full repository test suite: **1,233 passed, 63 skipped** in its default invocation.
   The separately enabled reference-release suite passed **124 tests**; optional external checks
   are not evidence of live Docling-model or pinned NOMAD-normalizer compatibility.
 - Automatic controlled contrasts: **574 passed**, with no new labels or model calls.
@@ -44,6 +45,8 @@ or alternative scorer was introduced.
   replay exactly; 147 full fact projections contained the same 25,673 facts, scopes,
   linked containers and conflict records. The projection check covers 30 references
   and 117 saved predictions. It does not treat repeated reference facts as new labels.
+- Cross-version replay after the unit-parser fix: all 117 reports match the same
+  baseline on both Python 3.11/Pint 0.25.3 and Python 3.12/Pint 0.26.1.
 
 The accompanying live open-model study uses a separate frozen checkout. Editing
 this checkout therefore cannot change a model prompt halfway through that study.

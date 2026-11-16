@@ -1,4 +1,9 @@
-"""Conservative unit conversion shared by downstream projections."""
+"""Conservative unit conversion shared by downstream projections.
+
+Pint versions supported on older Python releases can raise AssertionError for
+malformed expressions such as ``Ω/``. Catch it only at these conversion boundaries,
+like other parser errors, so callers retain the source label instead of aborting.
+"""
 
 from __future__ import annotations
 
@@ -72,7 +77,13 @@ def _pint_unit(unit: str) -> str:
         r"(?:(?:/|per)\s*(?:sq|square|□)|(?:sq|square)\s*\*\*-1)",
         value,
     )
-    return sheet[1].replace("Ω", "Ω") if sheet else value
+    value = sheet[1].replace("Ω", "Ω") if sheet else value
+    # Accept unit names and arithmetic only. Pint releases differ in whether they
+    # ignore comments, braces and other punctuation. Unsupported notation must
+    # remain literal, not acquire a meaning that depends on the installed parser.
+    if not value or re.fullmatch(r"[\w\s%°/()*+.^-]+", value) is None:
+        raise ValueError("Unsupported unit notation")
+    return value
 
 
 def convert_reported_value(value: ReportedValue, target_unit: str) -> float | None:
@@ -85,16 +96,17 @@ def convert_reported_value(value: ReportedValue, target_unit: str) -> float | No
     unit = value.unit.strip()
     if not unit or not target_unit.strip():
         return None
-    if target_unit == "percent":
-        return (
-            value.value_number
-            if _unit_key(unit) in {"percent", "percentage"} or unit == "%"
-            else None
-        )
     try:
-        quantity = _unit_registry().Quantity(value.value_number, _pint_unit(unit))
-        return float(quantity.to(_pint_unit(target_unit)).magnitude)
-    except (PintError, TokenError, TypeError, ValueError):
+        source, target = _pint_unit(unit), _pint_unit(target_unit)
+        if target_unit == "percent":
+            return (
+                value.value_number
+                if _unit_key(unit) in {"percent", "percentage"} or unit == "%"
+                else None
+            )
+        quantity = _unit_registry().Quantity(value.value_number, source)
+        return float(quantity.to(target).magnitude)
+    except (PintError, TokenError, AssertionError, TypeError, ValueError):
         return None
 
 
@@ -123,7 +135,14 @@ def canonical_quantity(number: float, unit: str) -> tuple[float, str] | None:
         quantity = _unit_registry().Quantity(number, _pint_unit(unit)).to_base_units()
         magnitude = float(quantity.magnitude)
         return (magnitude, str(quantity.units)) if math.isfinite(magnitude) else None
-    except (PintError, TokenError, TypeError, ValueError, OverflowError):
+    except (
+        PintError,
+        TokenError,
+        AssertionError,
+        TypeError,
+        ValueError,
+        OverflowError,
+    ):
         return None
 
 
@@ -151,7 +170,14 @@ def equivalent_unit_spelling(left: str, right: str) -> bool:
             )
             for number in (0, 1)
         )
-    except (PintError, TokenError, TypeError, ValueError, OverflowError):
+    except (
+        PintError,
+        TokenError,
+        AssertionError,
+        TypeError,
+        ValueError,
+        OverflowError,
+    ):
         return False
 
 
@@ -162,21 +188,22 @@ def is_concentration_unit(unit: str | None) -> bool:
 
     if unit is None:
         return False
-    compact = _unit_key(unit)
-    if unit.strip() == "%" or compact in {
-        "percent",
-        "percentage",
-        "wt",
-        "wtpercent",
-        "vol",
-        "volpercent",
-    }:
-        return True
     try:
-        quantity = _unit_registry().Quantity(1, _pint_unit(unit))
+        source = _pint_unit(unit)
+        compact = _unit_key(unit)
+        if unit.strip() == "%" or compact in {
+            "percent",
+            "percentage",
+            "wt",
+            "wtpercent",
+            "vol",
+            "volpercent",
+        }:
+            return True
+        quantity = _unit_registry().Quantity(1, source)
         return any(
             quantity.is_compatible_with(target)
             for target in ("mole / liter", "gram / liter")
         )
-    except (PintError, TokenError, TypeError, ValueError):
+    except (PintError, TokenError, AssertionError, TypeError, ValueError):
         return False
