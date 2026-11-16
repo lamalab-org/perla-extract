@@ -30,7 +30,7 @@ class Ion(BaseModel):
 
     coefficient: Optional[str] = Field(
         None,
-        description="The stoichiometric coefficient of the ion such as “0.75”, or “1-x”. You can break it down from the perovskite formula. For example: FA0.85MA0.15PbI2.55Br0.45 will fill 0.85 coefficient for FA, 0.15 for MA, 1 for Pb, and 2 for I.",
+        description="The reported stoichiometric coefficient, such as '0.75' or '1-x'. For FA0.85MA0.15PbI2.55Br0.45 the coefficients are 0.85 FA, 0.15 MA, 1 Pb, 2.55 I and 0.45 Br.",
     )
 
 
@@ -59,7 +59,7 @@ class Impurity(BaseModel):
     )
     concentration: Optional[Concentration] = Field(
         default=None,
-        description="The concentration of the additive or impurity. (unit: cm^-3)",
+        description="The concentration of the additive or impurity, using a unit supported by Concentration.",
     )
 
 
@@ -82,9 +82,9 @@ class PerovskiteComposition(BaseModel):
         None,
         description="Type of the perovskite (e.g., Polycrystalline film, Single crystal, etc.).",
     )
-    dimensionality: Optional[
-        Literal["0D", "1D", "2D", "3D", "1D/3D", "2D/3D"]
-    ] = Field(None)
+    dimensionality: Optional[Literal["0D", "1D", "2D", "3D", "1D/3D", "2D/3D"]] = Field(
+        None
+    )
     a_ions: Optional[List[Ion]] = Field(
         None,
         description="A-site ions. Only include information that is described in the paper.",
@@ -97,10 +97,6 @@ class PerovskiteComposition(BaseModel):
         None,
         description="X-site ions. Only include information that is described in the paper.",
     )
-    # bandgap: Optional[Bandgap] = Field(
-    #     None,
-    #     description="Bandgap of the perovskite material in eV. Include this field only if the bandgap has been directly measured in the experiment. Do not include estimated or literature values.",
-    # )
     bandgap: Optional[Bandgap] = Field(
         None,
         description="Directly reported bandgap of the perovskite material in eV. Do not estimate a missing value.",
@@ -131,6 +127,7 @@ class VOC(UnitValue):
 
     @model_validator(mode="after")
     def check_voc_value(self):
+        """Enforce the historical consumer's voltage bounds without converting units."""
         if self.value is None:
             return self
         if self.unit == "V" and self.value > 1.5:
@@ -268,9 +265,9 @@ class Stability(BaseModel):
     )
     PCE_at_the_start_of_the_experiment: Optional[PCE]
     PCE_after_1000_hours: Optional[PCE]
-    PCE_at_the_end_of_experiment: Optional[
-        PCE
-    ]  # TODO: We should have percentage of original PCE as that is more reported in the papers. Also keep a field for the value at the end of the stability test. Also add original_pce or pce_at_start like field with actual value.
+    # These legacy fields store absolute PCE. Relative retention and ordered
+    # checkpoints remain in the rich study and the adapter's additional_notes.
+    PCE_at_the_end_of_experiment: Optional[PCE]
     potential_bias: Optional[
         Literal[
             "Open circuit",

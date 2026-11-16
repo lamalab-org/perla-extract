@@ -112,10 +112,10 @@ def test_unreviewed_benchmark_finishes_with_an_automatic_diagnostic_result(setup
     assert report["quality"] is None
     assert report["reference_agreement"]["status"] == "complete_roster"
     assert report["reference_agreement"]["mean_paired_fact_f1_delta"] == 0
-    assert (
-        "Diagnostic reference-agreement difference"
-        in (output / "summary.md").read_text()
-    )
+    summary = (output / "summary.md").read_text()
+    assert "Automatic reference-agreement difference" in summary
+    assert "Comparison unavailable" not in summary
+    assert "Reviewed-scope conclusion unavailable" in summary
     assert (output / "figure-data/paired_reference_agreement.csv").exists()
     assert json.loads((output / "errors.json").read_text()) == []
 
@@ -171,9 +171,23 @@ def test_failed_run_stays_in_roster_and_accounting(setup, monkeypatch):
         == 1
     )
     summary = (path.parent / "results/summary.md").read_text(encoding="utf-8")
-    assert "Comparison unavailable" in summary
+    assert "Reviewed-scope conclusion unavailable" in summary
     assert "Treatment − control:" not in summary
     assert "| control | 1 / 2 | 2 | 2.000000 |" in summary
+
+
+def test_all_failed_attempts_have_no_automatic_effect_estimate(setup, monkeypatch):
+    path, calls, extract = setup
+    monkeypatch.setattr(
+        experiment, "run_extraction", lambda config: extract(config, fail=True)
+    )
+    result = CliRunner().invoke(experiment.main, [str(path)])
+    assert result.exit_code == 1
+    assert len(calls) == 4
+    summary = (path.parent / "results/summary.md").read_text()
+    assert "Comparison unavailable" in summary
+    assert "Automatic reference-agreement difference" not in summary
+    assert "Treatment − control:" not in summary
 
 
 def test_source_mismatch_is_rejected_before_any_output_or_paid_work(setup):

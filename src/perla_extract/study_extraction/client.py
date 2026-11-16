@@ -439,9 +439,16 @@ class ModelClient:
                 )
             except OSError as error:
                 raise _ResponseArtifactError(error, usage) from error
+            truncated = choice.get("finish_reason") == "length"
+            detail = (
+                f" (provider reported output truncation, max_output_tokens={body.get('max_tokens')}; "
+                "not retrying with the same limit)"
+                if truncated
+                else ""
+            )
             raise ModelCallError(
-                f"Model returned invalid JSON; see {failure_path}",
-                retryable=choice.get("finish_reason") != "length",
+                f"Model returned invalid JSON{detail}; see {failure_path}",
+                retryable=not truncated,
                 usage=usage,
             ) from exc
         return result, usage

@@ -211,16 +211,27 @@ def test_length_truncation_is_not_retried(tmp_path, monkeypatch):
     client = ModelClient(
         cache_dir=tmp_path / "cache",
         output_dir=tmp_path / "out",
+        heartbeat_seconds=0,
     )
     attempts = 0
 
     def truncated(*_args, **_kwargs):
         nonlocal attempts
         attempts += 1
-        raise ModelCallError("length", retryable=False)
+        return SimpleNamespace(
+            model_dump=lambda: {
+                "choices": [{"finish_reason": "length", "message": {"content": "{"}}],
+                "usage": {
+                    "prompt_tokens": 10,
+                    "completion_tokens": 1,
+                    "total_tokens": 11,
+                },
+            },
+            _hidden_params={},
+        )
 
-    monkeypatch.setattr(client, "_live", truncated)
-    with pytest.raises(ModelCallError, match="length"):
+    monkeypatch.setattr(litellm, "completion", truncated)
+    with pytest.raises(ModelCallError, match="output truncation, max_output_tokens=1"):
         client.complete(
             kind="test",
             slug="test",
@@ -232,6 +243,12 @@ def test_length_truncation_is_not_retried(tmp_path, monkeypatch):
             reasoning_effort=None,
         )
     assert attempts == 1
+    assert client.calls[0]["usage"]["total_tokens"] == 11
+    assert client.calls[0]["usage"]["finish_reason"] == "length"
+    failure = json.loads(
+        (tmp_path / "out/requests/test.attempt-1.failure.json").read_text()
+    )
+    assert failure["content"] == "{"
 
 
 def test_litellm_timeout_becomes_retryable_model_error(tmp_path, monkeypatch):

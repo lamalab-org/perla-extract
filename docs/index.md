@@ -11,11 +11,14 @@ stability tests. Experts still need to check attribution, interpretation and com
 ```mermaid
 flowchart TD
     A[Paper and supporting information] --> B[Parse text and tables]
-    B --> C[Collect claims and assemble study]
-    C --> D[Revise and repair]
-    D --> E[Finalize and validate]
-    E --> F[Expert review and frozen reference]
-    E --> G[Optional interpretation and NOMAD export]
+    B --> C[Read source into notes - optional]
+    C --> D[Build study records]
+    D --> E[Revise and repair - optional]
+    E --> F[Check source links and save outputs]
+    F --> G[Automatic scoring against a frozen reference]
+    G --> H[Compare experiment settings]
+    F --> I[Optional interpretation and export]
+    F --> J[Optional expert review and reference curation]
 ```
 
 The parser retains source, page, text and available coordinates. Models select
@@ -35,9 +38,10 @@ The [evaluation method](methods/benchmark.md) explains the scientific contract.
 
 ## How extraction works
 
-Models collect claims before assembling records. Long documents can be split at
+By default, models collect source-linked notes before building records. Long documents can be split at
 structural boundaries and read more than once; one global call assembles the cited
-claims. A later pass checks the draft against the evidence. Saved drafts and change
+claims. Disable reading to build directly from the complete source. An optional later
+pass checks the draft against the evidence. Saved drafts and change
 reports let you inspect what each pass changed.
 
 Claims distinguish device designs, processing variants, specimens and measurements.

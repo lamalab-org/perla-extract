@@ -30,15 +30,18 @@ use the same workflow.
 ## Compare two extraction choices
 
 ```bash
-# Edit experiment.toml: model, input paths and control/treatment settings.
-perla-experiment experiment.toml --check
-perla-experiment experiment.toml
+cp examples/experiment.toml my-experiment.toml
+# Edit my-experiment.toml: model, paper/SI paths and control/treatment settings.
+perla-experiment my-experiment.toml --check
+perla-experiment my-experiment.toml
 ```
 
-One TOML file defines both arms and the papers. The included file lists the 30 reviewed
-development references; supply the original PDFs/SIs at its configured paths.
+One TOML file defines both arms and the papers. Start with the one-paper example;
+the root `experiment.toml` lists all 30 frozen development references when you are
+ready to expand. Supply the original PDFs/SIs at the configured paths.
 The command handles extraction and scoring. Open the generated `summary.md` first
-for the effect, uncertainty, run coverage and recorded costs; `figure-data/` contains plotting tables.
+for reference agreement, uncertainty, run coverage and recorded costs;
+`figure-data/` contains plotting tables.
 [Experiment guide](docs/workflows/extraction-ablations.md).
 
 ## Find what you need

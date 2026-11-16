@@ -1,4 +1,4 @@
-"""Public API for evidence-complete, device-centered study records.
+"""Public API for source-linked study records, extraction and evaluation.
 
 Exports are loaded on first access so lightweight consumers of a single schema or
 artifact helper do not import model providers, parsers, or optional export stacks.

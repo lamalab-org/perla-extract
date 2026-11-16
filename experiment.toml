@@ -1,4 +1,4 @@
-# Reviewed development references already included in this checkout.
+# Frozen development references already included in this checkout.
 # Supply the original PDFs at the paths below, or edit these paths.
 # Each [[papers]] block links one main article, its SI, and their ground truth.
 output = "results/reading-passes-dev"

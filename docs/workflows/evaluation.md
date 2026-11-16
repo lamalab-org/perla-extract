@@ -22,7 +22,9 @@ The [worked example](scoring-example.md) runs without PDFs or an API key.
 
 ## Run a comparison
 
-The repository includes a [30-paper reviewed development release](https://github.com/lamalab-org/perla-extract/tree/main/data/study_extraction/ground_truth/v2).
+The repository includes a [30-paper frozen development release](https://github.com/lamalab-org/perla-extract/tree/main/data/study_extraction/ground_truth/v2).
+Its corrected records support automatic reference agreement; unreviewed source
+coverage remains a limitation even when the saved records were reviewed.
 The prediction path below is an example; generate that run separately:
 
 ```bash

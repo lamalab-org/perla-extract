@@ -15,7 +15,7 @@ report = extract_study(
     pdf="paper.pdf",
     supplement="paper_si.pdf",
     output_dir="results/paper",
-    parser="docling",
+    parser="pymupdf",
 )
 ```
 

@@ -57,24 +57,16 @@ def write_summary(result: dict, path: Path) -> None:
             "These counts describe all scored outputs, including partial runs; they are not the paired complete-run contrast below.",
         ]
     )
-    lines.extend(["", "## Quality", ""])
+    lines.extend(["", "## Reference agreement", ""])
     quality = result["quality"]
     if quality is None:
-        lines.extend(
-            [
-                "**Comparison unavailable.** The checks below prevent a verified paired conclusion. "
-                "Possible reasons include incomplete reference review, ambiguous scoring, or missing, failed or inconsistent runs.",
-                "Per-run reference-agreement diagnostics remain in the evaluation files and plotting tables. "
-                "Inspect the issues below and retain failed attempts when accounting for resources.",
-            ]
-        )
         diagnostic = result.get("reference_agreement") or {}
         if diagnostic.get("mean_paired_fact_f1_delta") is not None:
             delta = diagnostic["mean_paired_fact_f1_delta"]
             lines.extend(
                 [
                     "",
-                    f"**Diagnostic reference-agreement difference: {delta:+.4f} attributed fact micro F1 (treatment minus control).**",
+                    f"**Automatic reference-agreement difference: {delta:+.4f} attributed fact micro F1 (treatment minus control).**",
                     f"Scope: `{diagnostic['status']}`; {diagnostic['complete_pair_count']} / {diagnostic['planned_pair_count']} complete paired repetitions across {len(diagnostic['papers'])} papers.",
                     "This is an automatic comparison against the fixed references, not validated extraction accuracy. Unresolved facts retain zero credit; failures and partial runs do not enter this contrast.",
                     "See [paired_reference_agreement.csv](figure-data/paired_reference_agreement.csv) for the contributing papers and repetitions; omitted pairs are listed in comparison.json.",
@@ -85,6 +77,19 @@ def write_summary(result: dict, path: Path) -> None:
                 lines.append(
                     f"95% paper-bootstrap interval, conditional on complete pairs: {interval['ci95_lower']:+.4f} to {interval['ci95_upper']:+.4f}."
                 )
+        else:
+            lines.append(
+                "**Comparison unavailable.** No valid paired effect estimate is available. "
+                "Per-run scores remain in the evaluation files and plotting tables."
+            )
+        lines.extend(
+            [
+                "",
+                "**Reviewed-scope conclusion unavailable.** Inspect the issues below for "
+                "incomplete reference review, ambiguous scoring, or missing, failed or inconsistent runs. "
+                "An available automatic reference-agreement result does not resolve these limitations.",
+            ]
+        )
     else:
         delta = quality["mean_paired_fact_f1_delta"]
         lines.extend(
@@ -156,7 +161,7 @@ def write_summary(result: dict, path: Path) -> None:
             "",
             "| Question | File |",
             "| --- | --- |",
-            "| Which papers improved or worsened? | [figure-data/paired_papers.csv](figure-data/paired_papers.csv): treatment minus control per paper |",
+            "| Which papers improved or worsened? | [figure-data/paired_reference_agreement.csv](figure-data/paired_reference_agreement.csv): automatic treatment minus control; [paired_papers.csv](figure-data/paired_papers.csv) applies the additional review checks |",
             "| Which fact groups changed? | [figure-data/group_scores.csv](figure-data/group_scores.csv): use `attributed` for primary quality and `recovery` for information found; inspect explanations for context errors |",
             "| Which specific fields changed? | [figure-data/subfield_scores.csv](figure-data/subfield_scores.csv): material identity, outcomes, protocol and processing breakdowns; filter `quality_available` for verified runs |",
             "| What did each attempt consume? | [figure-data/runs.csv](figure-data/runs.csv): scores, tokens, requests, time, cost and failures; empty cells mean unavailable |",

@@ -1,4 +1,4 @@
-# Copy to the repository root as experiment.toml, then set your input paths.
+# Copy to the repository root as my-experiment.toml, then set model and input paths.
 # This reference is included; its original paper and SI PDFs must be supplied.
 output = "results/readings"
 repeats = 1
