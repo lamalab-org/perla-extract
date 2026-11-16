@@ -8,7 +8,7 @@ import pytest
 
 from perla_extract.study_extraction.models import StudyExtraction
 from review_workbench.adjudication import AdjudicationQueue, PlanRequest
-from review_workbench.study_review import _digest
+from review_workbench.study_review import RECORD_IDENTIFIERS, _digest
 
 ROOT = Path(__file__).resolve().parents[2]
 AMENDMENTS = ROOT / "data/study_extraction/reference_amendments/2026-10-23"
@@ -58,7 +58,8 @@ def test_amendment_is_guarded_and_preserves_existing_measurements(item):
     change = request.proposals[0].changes[0]
     if change.before is not None:
         records = tampered[change.collection]
-        records.remove(change.before)
+        identifier = RECORD_IDENTIFIERS[change.collection]
+        records[:] = [r for r in records if r[identifier] != change.record_id]
         with pytest.raises(ValueError, match="changed"):
             AdjudicationQueue._apply(tampered, request.proposals[0].changes)
     else:

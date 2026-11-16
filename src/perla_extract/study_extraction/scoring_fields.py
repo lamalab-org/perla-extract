@@ -45,8 +45,14 @@ def fact_subfield(
     if group in {"performance", "population"}:
         if name in {"sample_size", "errorbarstatistic"}:
             return "statistical_metadata"
-        if protocol_name(name):
+        if protocol_name(name) or "/measurement_conditions/" in path:
             return "measurement_protocol"
+        # The declared scientific concept fixes the denominator. A malformed PCE
+        # is still a PCE prediction; parsing failure is a separate diagnostic.
+        if name in {"pce", "voc", "jsc", "ff"}:
+            return "photovoltaic_metrics"
+        if name == "efficiencyretention":
+            return "relative_performance"
         claim = normalize_claim(value) if isinstance(value, ReportedValue) else None
         if isinstance(claim, LiteralClaim):
             # Unparsed bounds/numbers must not be presented as qualitative trends.
@@ -60,13 +66,7 @@ def fact_subfield(
                 if numeric_cue
                 else "qualitative_observations"
             )
-        if name == "efficiencyretention":
-            return "relative_performance"
-        return (
-            "photovoltaic_metrics"
-            if name in {"pce", "voc", "jsc", "ff"}
-            else "other_measurement_fields"
-        )
+        return "other_measurement_fields"
     if group == "stability":
         return "stability_outcomes" if "/outcomes/" in path else "stability_protocol"
     if group == "processing":
@@ -100,6 +100,7 @@ def fact_group(concept: tuple[str, str]) -> FactGroup:
     namespace, _ = concept
     domains: dict[str, FactGroup] = {
         "measurement": "performance",
+        "measurement_condition": "performance",
         "material": "material_device_identity",
         "recipe": "processing",
         "processing": "processing",

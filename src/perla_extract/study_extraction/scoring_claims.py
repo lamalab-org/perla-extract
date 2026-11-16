@@ -21,6 +21,7 @@ from .units import (
 )
 
 
+@lru_cache(maxsize=8192)
 def scientific_text(value: str) -> str:
     """Normalize spacing without flattening chemical superscripts or subscripts.
 
@@ -31,6 +32,7 @@ def scientific_text(value: str) -> str:
     return " ".join(unicodedata.normalize("NFC", value).replace("−", "-").split())
 
 
+@lru_cache(maxsize=8192)
 def scientific_value_text(value: str) -> str:
     """Recognize numeric LaTeX subscripts in simple formulas, not chemical synonyms.
 

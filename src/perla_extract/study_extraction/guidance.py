@@ -63,6 +63,10 @@ RECORD_BOUNDARY_POLICY = """Record boundary:
 - Device area and specimen-specific fabrication settings are device properties. Scan
   direction and measurement protocol distinguish observations. Neither creates a
   population or device family.
+- Put irradiance, illumination spectrum, scan rate and measurement temperature in
+  measurement_conditions on the observation or population statistic; metrics holds
+  its outcomes. Put preparation in processing/subject_context and aging stress in
+  stability_tests. A shared name such as temperature does not establish its purpose.
 - Reconcile repeated mentions globally. Do not create a second record for the same
   device and protocol merely because another passage reports an additional metric.
 - Resolve the specimen separately from the measurement: several explicitly linked

@@ -15,6 +15,7 @@ from .models import ReportedValue, StrictModel
 from .scoring_claims import normalize_claim
 from .scoring_facts import FactComparison, FactGroup, ScientificFact
 from .scoring_fields import FactSubfield
+from .scoring_requirements import requirements_for
 
 if TYPE_CHECKING:
     from .evaluation import EvaluationReport, FactMatch
@@ -77,6 +78,10 @@ class FactExplanation(StrictModel):
     group: FactGroup
     subfield: FactSubfield
     name: str
+    rule_id: str
+    identity_fields: list[str]
+    defining_fields: list[str]
+    independent_fields: list[str]
     owner: str
     owner_matched: bool
     reason: Literal[
@@ -103,7 +108,7 @@ class FactExplanation(StrictModel):
 class ScoreExplanation(StrictModel):
     """Explain selected canonical facts and source aliases from one evaluation."""
 
-    format_version: Literal[5] = 5
+    format_version: Literal[6] = 6
     evaluation_format_version: int
     matcher_version: str
     fact_profile: str
@@ -345,6 +350,16 @@ class ExplanationCollector:
                     group=fact.group,
                     subfield=fact.subfield,
                     name=fact.name,
+                    rule_id=requirements_for(fact.concept, fact.context).rule_id,
+                    identity_fields=list(
+                        requirements_for(fact.concept, fact.context).identity_fields
+                    ),
+                    defining_fields=list(
+                        requirements_for(fact.concept, fact.context).defining_fields
+                    ),
+                    independent_fields=list(
+                        requirements_for(fact.concept, fact.context).independent_fields
+                    ),
                     owner=fact.owner.key,
                     owner_matched=fact.owner.unmatched_side is None,
                     reason=reason,

@@ -53,8 +53,14 @@ from .scoring_context import (
 )
 from .scoring_fields import FactGroup, FactSubfield, fact_group, fact_subfield
 from .scoring_identity import measurement_subject
-from .scoring_process import condition_name, describe_process, independent_condition
-from .scoring_protocol import performance_name, protocol_claims, protocol_name
+from .scoring_process import condition_name, describe_process
+from .scoring_protocol import (
+    canonical_conditions,
+    performance_name,
+    protocol_claims,
+    protocol_name,
+)
+from .scoring_requirements import requirements_for
 from .scoring_vocabulary import (
     error_bar_statistic,
     known_material,
@@ -123,6 +129,9 @@ class FactComparison:
     context_status: Literal["equivalent", "contradictory", "unresolved"]
     ambiguity_blocked: bool
     context_differences: tuple[ContextDifference, ...]
+    owner_equal: bool
+    missing_context: bool
+    conflicting_context: bool
 
     def eligible(self, view: str) -> bool:
         if view == "recovery":
@@ -141,7 +150,14 @@ def compare_facts(
 ) -> FactComparison:
     # One decision path serves scoring and explanation. Explanation only controls
     # retention of the detailed differences, never eligibility.
-    differences = compare_context(left.context, right.context, relative, absolute)
+    differences = compare_context(
+        requirements_for(left.concept, left.context).context(left.context),
+        requirements_for(right.concept, right.context).context(right.context),
+        relative,
+        absolute,
+    )
+    missing_context = any(d.reason == "missing_required" for d in differences)
+    conflicting_context = any(d.reason == "conflict" for d in differences)
     owner_equal = left.owner == right.owner and left.owner.unmatched_side is None
     if not owner_equal:
         differences = (
@@ -170,6 +186,9 @@ def compare_facts(
         ),
         ambiguity_blocked=ambiguity_blocked,
         context_differences=differences if explain else (),
+        owner_equal=owner_equal,
+        missing_context=missing_context,
+        conflicting_context=conflicting_context,
     )
 
 
@@ -302,13 +321,9 @@ class FactProjection:
 def _protocol_context(
     record: PerformanceObservation | PopulationStatistic, path: str
 ) -> FactContext:
-    """Attach shared measurement requirements to their actual source metric array."""
+    """Require every asserted condition, independently of its storage container."""
     return FactContext(
-        (
-            ContextComponent(
-                "protocol", UnorderedContext(protocol_claims(record)), f"{path}/metrics"
-            ),
-        )
+        (ContextComponent("protocol", UnorderedContext(protocol_claims(record)), path),)
     )
 
 
@@ -408,6 +423,8 @@ def scientific_facts(
             concept = scientific_concept(
                 group, name, stage, outcome="/outcomes/" in path
             )
+            if "/measurement_conditions/" in path and protocol_name(name) is None:
+                concept = ("measurement_condition", name)
             facts.append(
                 ScientificFact(
                     group=fact_group(concept),
@@ -415,7 +432,7 @@ def scientific_facts(
                     owner=owner,
                     name=name,
                     value=value,
-                    context=context,
+                    context=requirements_for(concept, context).context(context),
                     source_paths=source_paths or (path,),
                     subfield=fact_subfield(group, name, path, stage, value),
                     concept=concept,
@@ -438,6 +455,38 @@ def scientific_facts(
 
     def conditions(values: list[ReportedValue]) -> UnorderedContext:
         return UnorderedContext(tuple((property_name(v.name), v) for v in values))
+
+    def measurement_conditions(
+        group: SourceGroup,
+        record: PerformanceObservation | PopulationStatistic,
+        path: str,
+        owner: RecordReference,
+        context: FactContext,
+    ) -> None:
+        entries = canonical_conditions(record, path)
+        for item in entries:
+            add(
+                group,
+                item.source_paths[0],
+                owner,
+                item.name,
+                item.value,
+                context,
+                item.source_paths,
+            )
+        # Contradictory copies across the old and new containers cannot establish
+        # a measurement protocol. Keep their facts and flag the affected record.
+        for i, left in enumerate(entries):
+            for right in entries[i + 1 :]:
+                if (
+                    left.name == right.name
+                    and any("/metrics/" in p for p in left.source_paths)
+                    and any("/measurement_conditions/" in p for p in right.source_paths)
+                    and not equal_value(
+                        left.value, right.value, 16 * sys.float_info.epsilon, 0
+                    )
+                ):
+                    material_conflicts.append((path, right.source_paths[0]))
 
     def treatment_facts(
         subject: SubjectContext,
@@ -862,10 +911,7 @@ def scientific_facts(
                                 owner,
                                 condition_name(condition.name, operation),
                                 condition,
-                                context
-                                if process_references.get(base) is not None
-                                and independent_condition(condition.name, operation)
-                                else condition_context,
+                                condition_context,
                             )
             elif collection == "individual_devices":
                 treatment = device_treatment(record, path)
@@ -920,16 +966,17 @@ def scientific_facts(
                 )
                 protocol = _protocol_context(record, path)
                 for j, metric in enumerate(record.metrics):
+                    if protocol_name(metric.name):
+                        continue
                     add(
                         "performance",
                         f"{path}/metrics/{j}",
                         owner,
                         performance_name(metric.name, record.measurement_type),
                         metric,
-                        context
-                        if protocol_name(metric.name)
-                        else context.extend(protocol),
+                        context.extend(protocol),
                     )
+                measurement_conditions("performance", record, path, owner, context)
             elif collection == "population_statistics":
                 for i, subject in enumerate(record.subjects):
                     treatment_facts(subject, f"{path}/subjects/{i}", owner)
@@ -971,6 +1018,8 @@ def scientific_facts(
                     )
                 ).extend(_protocol_context(record, path))
                 for j, metric in enumerate(record.metrics):
+                    if protocol_name(metric.name):
+                        continue
                     add(
                         "population",
                         f"{path}/metrics/{j}",
@@ -978,11 +1027,11 @@ def scientific_facts(
                         performance_name(metric.name, record.measurement_type),
                         metric,
                         context
-                        if protocol_name(metric.name)
-                        or property_name(metric.name)
+                        if property_name(metric.name)
                         in {"errorbarstatistic", "sample_size"}
                         else outcome_context,
                     )
+                measurement_conditions("population", record, path, owner, context)
 
             elif collection == "stability_tests":
                 context = FactContext.of(

@@ -31,6 +31,32 @@ def write_summary(result: dict, path: Path) -> None:
             for arm in ("control", "treatment")
         )
         lines.append(f"- `{name}`: control `{control}` → treatment `{treatment}`.")
+    lines.extend(
+        [
+            "",
+            "## Attribution context",
+            "",
+            "[scoring_diagnostics.csv](figure-data/scoring_diagnostics.csv) records the rule, parsing status and overlapping candidate blockers for every fact. Context availability is independent of value agreement; it is not a probability of correctness.",
+            "",
+            "| Arm | Predicted facts | With compatible attribution context | Literal quantity claims |",
+            "| --- | ---: | ---: | ---: |",
+        ]
+    )
+    for arm in ("control", "treatment"):
+        coverage = [
+            r["scientific_scores"]["diagnostics"]["coverage"]["prediction"]
+            for r in result["runs"]
+            if r["arm"] == arm and r.get("scientific_scores")
+        ]
+        lines.append(
+            f"| {arm} | {sum(c['total'] for c in coverage)} | {sum(c['context_available'] for c in coverage)} | {sum(c['literal_values'] for c in coverage)} |"
+        )
+    lines.extend(
+        [
+            "",
+            "These counts describe all scored outputs, including partial runs; they are not the paired complete-run contrast below.",
+        ]
+    )
     lines.extend(["", "## Quality", ""])
     quality = result["quality"]
     if quality is None:

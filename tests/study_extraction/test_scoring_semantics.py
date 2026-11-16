@@ -272,8 +272,8 @@ def test_metadata_and_qualitative_trends_are_not_numerical_outcomes():
     score = evaluate_study(truth, truth).core_facts
     assert score.subfields["relative_performance"].truth == 1
     assert score.subfields["statistical_metadata"].truth == 2
-    assert score.subfields["qualitative_observations"].truth == 1
-    assert score.subfields["photovoltaic_metrics"].truth == 0
+    assert score.subfields["qualitative_observations"].truth == 0
+    assert score.subfields["photovoltaic_metrics"].truth == 1
     prediction = truth.model_copy(deep=True)
     prediction.population_statistics[0].error_bar_type = "standard_error"
     assert (

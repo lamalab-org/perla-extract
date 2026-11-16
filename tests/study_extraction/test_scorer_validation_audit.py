@@ -35,6 +35,7 @@ def test_controls_have_explicit_expected_credit_on_simple_records():
     assert {r["case"] for r in rows} == {
         "equivalent_units",
         "drop_one_metric",
+        "split_observations",
         "wrong_outcomes_same_identity",
     }
     assert all(r["passed"] for r in rows)
@@ -55,9 +56,12 @@ def test_nonunique_protocol_does_not_claim_known_record_identity():
     second = truth.performance_observations[0].model_copy(deep=True)
     second.observation_id = "second"
     truth.performance_observations.append(second)
-    assert {name for name, _, _ in controls(truth)} == {"equivalent_units"}
+    assert {name for name, _, _ in controls(truth)} == {
+        "equivalent_units",
+        "reorder_observations",
+    }
     baseline = evaluate_study(truth, truth)
-    assert baseline.core_facts.scoring_status == "needs_review"
+    assert baseline.core_facts.scoring_status == "ready"
     rows = [validate_control(truth, *control, baseline) for control in controls(truth)]
     assert all(row["passed"] for row in rows)
 
@@ -111,7 +115,10 @@ def test_clarifying_a_population_label_preserves_unchanged_scientific_facts():
     before = evaluate_study(truth, prediction)
     # Unchecked prose is not automatically equivalent. Explicit reviewed rules
     # resolve this known false negative without erasing treatment distinctions.
-    assert not any(m.truth_path.startswith("/population_statistics/") for m in before.core_facts.matches)
+    assert not any(
+        m.truth_path.startswith("/population_statistics/")
+        for m in before.core_facts.matches
+    )
     rules_path = (
         Path(__file__).resolve().parents[2]
         / "examples/scoring/reviewed-descriptors-v2.json"
@@ -120,7 +127,13 @@ def test_clarifying_a_population_label_preserves_unchanged_scientific_facts():
         descriptor_equivalences=json.loads(rules_path.read_text(encoding="utf-8"))
     )
     report = evaluate_study(truth, prediction, config=config)
-    assert sum(m.truth_path.startswith("/population_statistics/") for m in report.core_facts.matches) == 11
+    assert (
+        sum(
+            m.truth_path.startswith("/population_statistics/")
+            for m in report.core_facts.matches
+        )
+        == 11
+    )
     assert report.core_facts.micro.f1 == 1
     assert report.prediction_content_sha256 == before.prediction_content_sha256
     assert (
@@ -219,14 +232,14 @@ def test_public_reference_audit_retains_identity_issues(one_paper_release):
     report = audit_release(one_paper_release)
     assert report["paper_count"] == 1
     assert report["software_checks"] == "passed"
-    assert report["papers_needing_scoring_review"] == ["10.1002--adfm.201500335"]
+    assert report["papers_needing_scoring_review"] == []
     paper = report["papers"]["10.1002--adfm.201500335"]
     score = paper["self_score"]
-    assert score["micro"]["truth"] - score["micro"]["matched"] == 10
+    assert score["micro"]["truth"] == score["micro"]["matched"]
     assert score["recovery_micro"]["f1"] == 1
-    assert score["status"] == "needs_review"
-    assert len(score["unmatched_truth_paths"]) == 10
-    assert all(issue["kind"] == "ambiguous_record" for issue in score["issues"])
+    assert score["status"] == "ready"
+    assert score["unmatched_truth_paths"] == []
+    assert score["issues"] == []
 
 
 def test_public_reference_audit_still_refuses_changed_manifest(one_paper_release):

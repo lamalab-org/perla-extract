@@ -41,11 +41,6 @@ def condition_name(name: str, operation: str) -> str:
     )
 
 
-def independent_condition(name: str, operation: str) -> bool:
-    """Whether an already aligned operation supplies the condition's subject."""
-    return property_name(name) in OPERATION_CONDITIONS.get(operation, {})
-
-
 @dataclass(frozen=True)
 class ProcessDescription:
     operation: str

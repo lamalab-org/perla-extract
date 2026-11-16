@@ -28,11 +28,20 @@ jobs:
           python -m examples.scoring.reference_audit
           --release data/study_extraction/ground_truth/v2/release.json
           --output "${{ runner.temp }}/reference-audit-v2.json"
+      - name: Verify generated context controls without new labels or model calls
+        env:
+          PYTHONPATH: .:src
+        run: >-
+          python -m examples.scoring.validate
+          --release data/study_extraction/ground_truth/v2/release.json
+          --output "${{ runner.temp }}/context-controls.json"
       - name: Preserve the public reference audit
         uses: actions/upload-artifact@v4
         with:
           name: reference-audit-v2
-          path: ${{ runner.temp }}/reference-audit-v2.json
+          path: |
+            ${{ runner.temp }}/reference-audit-v2.json
+            ${{ runner.temp }}/context-controls.json
           if-no-files-found: error
 
   review-deployment:

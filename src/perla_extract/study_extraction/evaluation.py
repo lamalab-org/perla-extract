@@ -27,6 +27,12 @@ from .models import (
 )
 from .reference_release import ReferenceRelease
 from .scoring_coverage import ReferenceCoverage
+from .scoring_diagnostics import (
+    FactDiagnostic,
+    ScoringDiagnostics,
+    diagnose_fact,
+    summarize_diagnostics,
+)
 from .scoring_explanation import (
     ExplanationCollector,
     FactSelection,
@@ -52,8 +58,9 @@ from .scoring_identity import record_similarity as _record_similarity
 from .scoring_layers import align_layers
 from .scoring_process import align_processes
 
-EVALUATION_FORMAT_VERSION: Final[Literal[11]] = 11
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v16"]] = "rich-study-hungarian-v16"
+EVALUATION_FORMAT_VERSION: Final[Literal[12]] = 12
+MAX_FACT_CANDIDATES = 1_000_000
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v17"]] = "rich-study-hungarian-v17"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -362,11 +369,12 @@ class ScoringIssue(StrictModel):
 class CoreFactScore(FactScoreView):
     """Correctly attributed claims, with recovery over the identical fact inventory."""
 
-    profile: Literal["core-scientific-facts-v13"] = "core-scientific-facts-v13"
+    profile: Literal["core-scientific-facts-v14"] = "core-scientific-facts-v14"
     recovery: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
     issues: list[ScoringIssue]
     fact_sources: dict[Literal["truth", "prediction"], dict[str, list[str]]]
+    diagnostics: ScoringDiagnostics
 
     @model_validator(mode="after")
     def consistent_views(self) -> CoreFactScore:
@@ -416,14 +424,21 @@ class CoreFactScore(FactScoreView):
             flattened = [path for aliases in sources.values() for path in aliases]
             if len(set(flattened)) != len(flattened):
                 raise ValueError("a source field cannot belong to multiple facts")
+            rows = self.diagnostics.facts["truth" if side == "truth" else "prediction"]
+            if len(rows) != len(paths) or {r.path for r in rows} != paths:
+                raise ValueError("diagnostics must cover the complete fact inventory")
+            if sum(r.matched for r in rows) != self.micro.matched:
+                raise ValueError("diagnostic credits disagree with the match ledger")
+        if self.diagnostics != summarize_diagnostics(self.diagnostics.facts):
+            raise ValueError("diagnostic coverage disagrees with its fact ledger")
         return self
 
 
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[11] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v16"] = MATCHER_VERSION
+    format_version: Literal[12] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v17"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -514,8 +529,8 @@ class EvaluationInput(StrictModel):
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[11] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v16"] = MATCHER_VERSION
+    format_version: Literal[12] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v17"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -1123,7 +1138,16 @@ def _core_fact_score(
             buckets.setdefault(fact.concept, ([], []))[side_index].append(fact)
     strict_matches: list[FactMatch] = []
     value_matches: list[FactMatch] = []
+    diagnostic_facts: dict[Literal["truth", "prediction"], list[FactDiagnostic]] = {
+        "truth": [],
+        "prediction": [],
+    }
     for left, right in buckets.values():
+        if len(left) * len(right) > MAX_FACT_CANDIDATES:
+            raise ValueError(
+                f"Scoring resource limit exceeded: {len(left)} x {len(right)} "
+                f"candidates for {left[0].concept}; no truncated score was produced"
+            )
         decisions = [
             [
                 compare_facts(
@@ -1168,6 +1192,25 @@ def _core_fact_score(
                     )
                 )
             matches.extend(bucket_matches[mode])
+        matched_paths = (
+            {m.truth_path for m in bucket_matches["attributed"]},
+            {m.predicted_path for m in bucket_matches["attributed"]},
+        )
+        for side_index, (side, facts) in enumerate(
+            (("truth", left), ("prediction", right))
+        ):
+            for i, fact in enumerate(facts):
+                pairs = (
+                    decisions[i] if side_index == 0 else [row[i] for row in decisions]
+                )
+                diagnostic_facts["truth" if side == "truth" else "prediction"].append(
+                    diagnose_fact(
+                        fact,
+                        pairs,
+                        fact.path in matched_paths[side_index],
+                        ambiguous=fact.path in blocked[side_index],
+                    )
+                )
         if explanation is not None:
             explanation.capture_bucket(left, right, decisions, bucket_matches)
     strict = _fact_score_view(expected, actual, strict_matches)
@@ -1176,6 +1219,7 @@ def _core_fact_score(
         recovery=_fact_score_view(expected, actual, value_matches),
         scoring_status="needs_review" if issues else "ready",
         issues=issues,
+        diagnostics=summarize_diagnostics(diagnostic_facts),
         fact_sources={
             side: {fact.path: list(fact.source_paths) for fact in projection.facts}
             for side, projection in zip(("truth", "prediction"), projections)

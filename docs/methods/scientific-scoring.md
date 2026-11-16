@@ -1,10 +1,9 @@
 # Deterministic evaluation of scientific extractions
 
 This method measures agreement with a fixed reference. It does not use an LLM
-judge. Source completeness and citation support require separate review. The
-current contract is evaluation format 11, matcher `rich-study-hungarian-v16`, fact
-profile `core-scientific-facts-v13`, and explanation format 5. The extraction schema
-and ground-truth format are unchanged.
+judge. Citation checks are separate diagnostics; this method does not establish source completeness. The
+current contract is evaluation format 12, matcher `rich-study-hungarian-v17`, fact
+profile `core-scientific-facts-v14`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
 
 ## Evaluation unit and two score views
 
@@ -14,7 +13,8 @@ and original JSON paths. Generated IDs, display labels and empty placeholders do
 not themselves earn points. Multiple copies within a list remain separate
 assertions. Equal redundant assertions merge only across an explicit link: a
 layer and its sole linked absorber, or a device's structured treatment conditions
-and reported properties. Merging preserves every source path and permits only
+and reported properties, or registered measurement conditions repeated across the
+legacy metrics and measurement_conditions arrays. Merging preserves every source path and permits only
 unit-conversion roundoff (16 machine epsilons relative, zero absolute tolerance).
 Conflicting linked assertions are flagged rather than treated as alternative
 answers.
@@ -45,7 +45,7 @@ agree.
 
 An individual performance observation with an explicit device link is a container
 of facts about that device. Its facts therefore use the device as owner and retain
-the full treatment, measurement-type, scan and registered-protocol requirements.
+the full treatment, measurement-type, scan and asserted-protocol requirements.
 Arbitrary pairing of observation IDs is unnecessary. The existing fact assignment
 compares multisets within this scientific context: splitting, merging or reordering
 observation containers does not change credit when their facts and context are
@@ -95,8 +95,10 @@ subject or break an assignment tie. In particular, putting PCE in a condition
 field cannot make the outcome identify its own subject. A missing distinguishing
 condition is unresolved, not a wildcard. Different treatment, specimen, scan
 direction, statistic or registered measurement-protocol condition blocks attributed
-credit. Unknown protocol names remain literal facts; the checked protocol registry
-determines which metric fields constrain other outcomes. If both
+credit. Explicit measurement conditions constrain outcomes, including unfamiliar names
+retained literally. For archived records, only registered protocol names in metrics
+are interpreted as measurement conditions. Conditions in preparation or aging
+containers never supply missing measurement context. If both
 inputs omit a qualifier, equality of that omission does not establish the actual
 experimental condition. Sample count is separately scored exactly: an omitted
 count loses its own credit; explicitly conflicting counts block cohort outcomes.
@@ -113,6 +115,81 @@ conditions and uses a longer variant description. Those representations now agre
 Changing the reduction duration, dropping a distinguishing input or changing the
 scan still prevents attributed credit. This control establishes one repaired
 comparison, not correctness of the entire extraction or its citations.
+
+## Fact-local requirements
+
+`scoring_requirements.py` is the dependency table used by projection, comparison
+and explanations. A rule removes only its named independent attributes. Unknown
+context remains a requirement; other domains retain their existing strict rules.
+
+| Field | Subject and defining context | Independently scored detail |
+| --- | --- | --- |
+| Individual PCE, Voc, Jsc, FF | Specimen, family, treatment/arm, selection, individual result kind, measurement type, scan, asserted protocol | Unrelated recipe annotations |
+| Annealing temperature/duration | Family, aligned target and ordered annealing step | Optional ingredients of the established step |
+| Spin-coating speed/duration | Family, aligned target and ordered coating step | Optional ingredients of the established step |
+
+The processing rule operates on canonical names, so `speed` and `spin-coating
+speed` have the same dependencies. The target value never establishes step
+identity. Without an established ordered step, the conservative context remains.
+Population and stability outcomes do not inherit individual-measurement rules.
+
+The scorer does not compare citation block IDs or quoted numbers to establish
+identity. Its inputs lack the independently validated, shared source locations
+needed for precise observation anchors. Diagnostics therefore report source
+anchors as unavailable. A common paragraph, matching outcome, or device link does
+not justify ignoring missing measurement conditions. Both sides omitting a
+condition measures agreement in the recorded context, not proof of experimental
+completeness.
+
+```text
+project each study independently into facts with original paths
+align subjects and ordered steps without measured outcomes
+for each pair of facts with the same scientific concept:
+    apply that fact's declared context requirements
+    compare the complete value (including units and qualifiers)
+    retain value eligibility and attributed eligibility separately
+compute a maximum one-to-one assignment for each view
+report both scores over the same complete fact inventories
+```
+
+Known concepts fix their reporting denominator. A malformed or qualitative PCE
+remains in `photovoltaic_metrics`; `value_interpretation` separately distinguishes
+quantities from literal claims. This bin includes both individual and population
+claims; `statistical_level` in diagnostics distinguishes them. It must not be
+described as a validated numeric-only or individual-only subset.
+
+## Automatic diagnostics and software controls
+
+Every fact has a `rule_id`, parsing status, candidate count and attribution-context
+availability. Availability means at least one unambiguous candidate satisfies
+context, independently of value agreement. It is not a confidence probability or
+source-completeness measurement. Unmatched facts record overlapping candidate
+blockers: wrong value, missing owner, ambiguous owner, missing defining context,
+conflicting context, no candidate and one-to-one competition. Blockers inspect
+same-owner candidates when available; otherwise they inspect all same-concept
+candidates. They do not claim that one selected rejection caused a score change.
+
+`examples/scoring/validate.py` tests the frozen references and bounded synthetic
+derivatives. `calibration.py` isolates a measurement with its linked specimen and
+family, records source-path lineage, and explicitly supplies synthetic type, scan
+and protocol context. Each transformation declares allowed and forbidden matches
+before evaluation. Unit arithmetic, missing/conflicting context, misplaced
+protocols, renamed IDs, duplicate predictions, corrupted quantities and composed
+changes have known expected effects. Inapplicable transformations are counted,
+and failures retain their derived inputs. These checks require no new human labels.
+Existing tests additionally cover cohort statistics, aging versus preparation,
+wrong owners, uncertainty, ordered alignment and exhaustive tiny assignment oracles.
+All reference papers are development data; passing controls estimates no natural
+prediction error rate.
+
+Normalization caches only immutable text and quantity tuples, with bounded caches.
+Owner mappings and assignments are recomputed for each prediction. Dense candidate
+work is partitioned by scientific concept, without approximate numeric buckets.
+A bucket exceeding one million pairs raises a scoring error before assignment;
+no truncated score is emitted. Explanations are bounded independently of scoring.
+The saved-study replay uses bounded paper workers and one verified reference per
+paper. Serial/parallel and cached/uncached ledgers must agree; this does not imply
+linear scaling of dense assignment.
 
 ## Numerical and conceptual equivalence
 
@@ -138,8 +215,7 @@ retained.
 Semantic controls test unit/notation invariance, ID changes, record order,
 duplicate predictions, omitted layers, wrong values, wrong owners and ambiguous
 assignments. Real saved prediction/reference cases supplement synthetic controls.
-The fixtures are assistant-inspected development controls; independent
-adjudication is explicitly pending. A higher aggregate F1 is not a validation gate.
+The fixtures are development controls, not independently labeled accuracy data. A higher aggregate F1 is not a validation gate.
 
 Scorer changes are tested by replaying identical saved extractions. Reference
 corrections are isolated in four cells: original/revised scorer crossed with

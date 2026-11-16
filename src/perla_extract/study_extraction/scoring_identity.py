@@ -27,7 +27,7 @@ from .scoring_context import (
     subject_context,
 )
 from .scoring_layers import ordered_layers, stack_similarity
-from .scoring_protocol import protocol_claims
+from .scoring_protocol import canonical_conditions
 from .scoring_vocabulary import material_name, material_stage, property_name
 
 
@@ -158,7 +158,13 @@ def _identity_features(record: object) -> set[str]:
 
 def _protocol(record: object) -> tuple[tuple[object, ...], ...]:
     if isinstance(record, (PerformanceObservation, PopulationStatistic)):
-        return protocol_claims(record)
+        # Explicit but unfamiliar conditions remain required fact context. They
+        # cannot identify observations: an outcome misplaced here is not an anchor.
+        return tuple(
+            (item.name, item.value)
+            for item in canonical_conditions(record)
+            if item.supported
+        )
     if isinstance(record, StabilityTest):
         values = [("test", property_name(v.name), v) for v in record.conditions]
         for checkpoint in record.checkpoints:

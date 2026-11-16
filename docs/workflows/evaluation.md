@@ -81,8 +81,20 @@ You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results. Their scores are diagnostic; source compatibility is unverified.
 
-Reports use format 11, matcher `rich-study-hungarian-v16` and fact profile
-`core-scientific-facts-v13`. Regenerate older reports from saved predictions before
+Measurement conditions belong in `measurement_conditions` on an observation or
+population statistic. For example, `{ "name": "irradiance", "raw_value": "100",
+"value_number": 100, "unit": "mW/cm2", "evidence": [...] }` describes the light
+during measurement. Preparation stays under processing/subject context and aging
+under stability tests. Archived registered protocol entries in `metrics` remain
+readable; no missing conditions are inferred.
+
+`core_facts.diagnostics` explains each fact's rule, parsing status and overlapping
+candidate blockers. Experiment exports include `scoring_diagnostics.csv` with the
+same decisions and original source paths. Read it alongside both score views;
+context availability is not an estimate of extraction correctness.
+
+Reports use format 12, matcher `rich-study-hungarian-v17` and fact profile
+`core-scientific-facts-v14`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.

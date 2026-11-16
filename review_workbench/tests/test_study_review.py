@@ -1265,6 +1265,7 @@ def test_record_reclassification_replaces_wrong_type_atomically(
         "device_id": "device-1",
         "measurement_type": "jv_scan",
         "scan_direction": "not_reported",
+        "measurement_conditions": [],
         "metrics": [metric],
         "evidence": [citation],
     }

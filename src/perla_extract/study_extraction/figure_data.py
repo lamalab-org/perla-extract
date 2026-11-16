@@ -26,6 +26,7 @@ def export_tables(result: dict, directory: Path) -> None:
     runs: list[dict] = []
     groups: list[dict] = []
     subfields: list[dict] = []
+    diagnostics: list[dict] = []
     for run in result["runs"]:
         identity = {name: run[name] for name in ("paper_id", "arm", "repeat")}
         accounting = run.get("accounting", {})
@@ -80,6 +81,19 @@ def export_tables(result: dict, directory: Path) -> None:
         score = run.get("scientific_scores")
         if not score:
             continue
+        for side, rows in score["diagnostics"]["facts"].items():
+            diagnostics.extend(
+                {
+                    **identity,
+                    "side": side,
+                    **row,
+                    "blockers": " | ".join(row["blockers"]),
+                    "source_paths": " | ".join(
+                        score["fact_sources"][side][row["path"]]
+                    ),
+                }
+                for row in rows
+            )
         for view, scores in (
             ("attributed", score),
             ("recovery", score["recovery"]),
@@ -107,6 +121,28 @@ def export_tables(result: dict, directory: Path) -> None:
                         }
                     )
     _write(directory / "runs.csv", list(runs[0]), runs)
+    _write(
+        directory / "scoring_diagnostics.csv",
+        [
+            "paper_id",
+            "arm",
+            "repeat",
+            "side",
+            "path",
+            "rule_id",
+            "statistical_level",
+            "value_interpretation",
+            "unsupported_condition_name",
+            "candidate_count",
+            "owner_paired",
+            "context_available",
+            "eligible_candidates",
+            "matched",
+            "blockers",
+            "source_paths",
+        ],
+        diagnostics,
+    )
     for filename, category, rows in (
         ("group_scores.csv", "group", groups),
         ("subfield_scores.csv", "subfield", subfields),

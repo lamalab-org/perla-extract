@@ -23,7 +23,7 @@ EntityKind = Literal[
     "population_statistic",
     "stability_test",
 ]
-STUDY_SCHEMA_VERSION = 7
+STUDY_SCHEMA_VERSION = 8
 
 
 class StrictModel(BaseModel):
@@ -371,6 +371,11 @@ class PerformanceObservation(StrictModel):
     device_id: Identifier
     measurement_type: MeasurementType
     scan_direction: ScanDirection
+    measurement_conditions: list[ReportedValue] = Field(
+        default_factory=list,
+        max_length=40,
+        description="Conditions during this measurement, such as irradiance, spectrum, scan rate or measurement temperature. Preparation belongs to processing or subject_context; aging belongs to stability_tests. Do not infer missing conditions.",
+    )
     metrics: Annotated[list[ReportedValue], Field(min_length=1, max_length=40)]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
@@ -410,6 +415,11 @@ class PopulationStatistic(StrictModel):
     ] = "not_reported"
     measurement_type: MeasurementType = "not_reported"
     scan_direction: ScanDirection = "not_reported"
+    measurement_conditions: list[ReportedValue] = Field(
+        default_factory=list,
+        max_length=40,
+        description="Conditions under which these population outcomes were measured. Keep preparation in subjects and aging in stability_tests. Do not infer missing conditions.",
+    )
     metrics: Annotated[list[ReportedValue], Field(min_length=1, max_length=40)]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=12)]
 
@@ -570,7 +580,7 @@ def study_schema_prose_sha256() -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-# Schema 7 only adds optional context fields with explicit unknown defaults.
+# Schemas 7 and 8 only add optional context fields with explicit unknown defaults.
 # Archived schema-6 inputs can be read losslessly, without inventing that context.
 # There is one current evaluator; this is data compatibility, not legacy scoring.
 _SCHEMA_6_CONTRACT = "5703bf0addcf3ba8d20104de05673184efb05f33324f6d04c1e6c6f7dacc8e33"
@@ -578,9 +588,12 @@ _SCHEMA_6_ARCHIVED = "0f242f5cb719b47ae6bbcd1818ce8bd382b358136334ecc2abfb9de9db
 _SCHEMA_7_CONTRACT = "073f012a95389a7fd4f9b17d3ff3702e72eac868cb5f545b937715c25117fef3"
 
 
+_SCHEMA_8_CONTRACT = "8c907b376309579bbb73d5137453107abdd508a12185c936bba9cbc678534364"
+
+
 def compatible_study_schema(fingerprint: object) -> bool:
     current = study_schema_sha256()
     return fingerprint == current or (
-        current == _SCHEMA_7_CONTRACT
-        and fingerprint in (_SCHEMA_6_CONTRACT, _SCHEMA_6_ARCHIVED)
+        current == _SCHEMA_8_CONTRACT
+        and fingerprint in (_SCHEMA_6_CONTRACT, _SCHEMA_6_ARCHIVED, _SCHEMA_7_CONTRACT)
     )

@@ -103,11 +103,30 @@ when explicitly redundant linked material representations merge.
 
 ## Current contract and migration
 
-Evaluation format **11**, matcher **v16**, fact profile **v13**, explanation format
-**5**, and study schema **7** are current. Ground-truth format **4** is unchanged.
-Archived schema-6 inputs load through the additive schema with unknown defaults;
+For the local dependency rules, start with `scoring_requirements.py`. It declares
+the subject, defining fields and independent fields for each supported rule.
+`scoring_protocol.py` alone handles explicit/legacy measurement conditions;
+`scoring_diagnostics.py` summarizes the actual decisions without matching again.
+The [methods description](../methods/scientific-scoring.md#fact-local-requirements)
+includes the rule table, pseudocode and limitations.
+
+Run the automatic controls without credentials or new labeling:
+
+```bash
+PYTHONPATH=.:src python -m examples.scoring.validate \
+  --release data/study_extraction/ground_truth/v2/release.json \
+  --output /tmp/scoring-controls.json
+```
+
+Use a new output path. Read `calibration_coverage` for applicable, passed and
+inapplicable cases; the tool exits unsuccessfully if any applicable control fails.
+Synthetic conditions are explicitly marked and never written back into references.
+
+Evaluation format **12**, matcher **v17**, fact profile **v14**, explanation format
+**6**, and study schema **8** are current. Ground-truth format **4** is unchanged.
+Archived schema-6/7 inputs load through the additive schema with unknown defaults;
 no treatment/protocol is inferred and no archived file is overwritten. Existing
-hash-scoped reviewed descriptor rules were rebound to the parsed schema-7 content
+hash-scoped reviewed descriptor rules were rebound to the parsed schema-8 content
 without changing their labels or scientific rationale.
 
 Regenerate old reports from saved extractions. There is no legacy scoring engine.
@@ -179,3 +198,7 @@ contains inclusion probabilities, credit/change strata and both score contracts.
 Inventory removals remain in the complete replay ledger; a current-score sample
 cannot select a fact no longer in its inventory. Historical JSON is read only by
 the audit comparison helper, not supported as a second runtime scorer.
+
+The [saved-extraction validation report](context-calibration-results.md) records
+what changed in the 117-output replay, the automatic controls and the remaining
+context limitations.

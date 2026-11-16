@@ -20,6 +20,7 @@ from zipfile import ZipFile
 import click
 from pydantic import BaseModel
 
+from examples.scoring.calibration import TRANSFORMS, calibration_cases, check_case
 from examples.scoring.equivalence_probe import probe
 from perla_extract.study_extraction.artifacts import write_json_exclusive
 from perla_extract.study_extraction.evaluation import EvaluationConfig, evaluate_study
@@ -129,7 +130,11 @@ def controls(truth):
             observation.measurement_type,
             observation.scan_direction,
         )
-        if observation.metrics and observation.device_id is not None and keys[key] == 1:
+        if (
+            len(observation.metrics) > 1
+            and observation.device_id is not None
+            and keys[key] == 1
+        ):
             index = next(
                 (
                     i
@@ -166,6 +171,7 @@ def controls(truth):
 
 def validate_control(truth, name, prediction, changes, baseline):
     """Return failures against explicit expectations rather than a golden score."""
+    StudyExtraction.model_validate(prediction.model_dump())
     score = evaluate_study(truth, prediction)
     failures = []
     if name in {"reorder_observations", "split_observations"}:
@@ -274,7 +280,7 @@ def run(
                 if hashlib.sha256(encoded).hexdigest() != snapshot["study_sha256"]:
                     raise ValueError(f"Archived snapshot hash mismatch: {key}")
                 snapshots[key] = StudyExtraction.model_validate(snapshot["study"])
-    results, sensitivity, baselines = [], [], []
+    results, sensitivity, baselines, calibration = [], [], [], []
     configurations = {
         "default": EvaluationConfig(),
         "matching_0.20": EvaluationConfig(minimum_record_similarity=0.20),
@@ -322,6 +328,10 @@ def run(
         for name, prediction, changes in controls(truth) if include_controls else []:
             result = validate_control(truth, name, prediction, changes, baseline)
             results.append({"paper_id": identity, **result})
+        for case in calibration_cases(truth) if include_controls else []:
+            calibration.append(
+                {"paper_id": identity, **check_case(case, evaluate_study)}
+            )
         if identity in snapshots:
             scores = {
                 name: summary(evaluate_study(truth, snapshots[identity], config=config))
@@ -345,7 +355,20 @@ def run(
         rows = [r for r in results if r["case"] == name]
         counts[name] = {"tested": len(rows), "passed": sum(r["passed"] for r in rows)}
     return {
-        "format_version": 2,
+        "format_version": 3,
+        "calibration_controls": calibration,
+        "calibration_coverage": {
+            name: {
+                "applicable": sum(r["case"] == name for r in calibration),
+                "passed": sum(r["case"] == name and r["passed"] for r in calibration),
+                "not_applicable": len(release["papers"])
+                - sum(r["case"] == name for r in calibration)
+                if include_controls
+                else 0,
+                "not_run": 0 if include_controls else len(release["papers"]),
+            }
+            for name in TRANSFORMS
+        },
         "scope": "Controlled perturbations and archived reviewed-snapshot sensitivity; not expert calibration or a model ranking",
         "independent_expert_calibration": False,
         "environment": {
@@ -360,6 +383,7 @@ def run(
             for path in [
                 Path(__file__).resolve(),
                 Path(__file__).with_name("equivalence_probe.py"),
+                Path(__file__).with_name("calibration.py"),
                 *[
                     Path(__file__).resolve().parents[2]
                     / "src/perla_extract/study_extraction"
@@ -375,6 +399,8 @@ def run(
                         "scoring_claims.py",
                         "scoring_vocabulary.py",
                         "scoring_explanation.py",
+                        "scoring_requirements.py",
+                        "scoring_diagnostics.py",
                         "units.py",
                         "models.py",
                     )
@@ -456,7 +482,10 @@ def main(release_path, feedback_zip, output, include_controls, descriptor_equiva
     click.echo(
         f"Semantic-equivalence discrepancies: {sum(not item['agrees'] for item in report['equivalence_probe'])}; inspect {output}"
     )
-    if any(not item["passed"] for item in report["controls"]):
+    if any(
+        not item["passed"]
+        for item in (*report["controls"], *report["calibration_controls"])
+    ):
         raise click.ClickException(
             "Controlled regression failures; results were preserved"
         )

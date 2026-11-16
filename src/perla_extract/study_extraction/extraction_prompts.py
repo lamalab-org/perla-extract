@@ -60,6 +60,9 @@ Rules:
   applying to that entire set. Do not duplicate shared caption metadata into outcomes.
   Put error-bar meaning in error_bar_type; it does not establish statistic_type.
   Report mean, median and measurement protocol only when the evidence establishes them.
+- Use measurement_conditions for the conditions during an individual or population
+  measurement (irradiance, spectrum, scan rate, temperature). Keep outcomes in metrics,
+  preparation in processing/subject_context, and aging stress in stability_tests.
 - Mark a device champion only when the source explicitly identifies the device as a
   champion/best-performing device or its efficiency as record/highest. An extremum
   for one attribute (for example voltage, current, or stability) does not make the
