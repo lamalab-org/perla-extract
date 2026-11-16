@@ -316,10 +316,11 @@ def test_stability_review_shows_every_atomic_value_before_related_context():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
 
-    assert "renderStabilityRecord" in source
-    assert "Test-wide conditions" in source
-    assert "Checkpoint-specific conditions" in source
-    assert 'reportedValueGroup(entry, "Outcomes"' in source
+    details = (APP / "record-details.js").read_text(encoding="utf-8")
+    assert "renderStabilityRecord" in details
+    assert "Test-wide conditions" in details
+    assert "Checkpoint-specific conditions" in details
+    assert 'reportedValueGroup(entry, "Outcomes"' in details
     assert "Show value in paper" in source
     assert "recordJsonPath" in source
     assert source.index("renderReviewTarget(entry)") < source.index(

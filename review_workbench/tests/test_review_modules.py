@@ -16,6 +16,7 @@ def run_javascript(script):
         ("api-client.js", "createApiClient, ReviewApiError"),
         ("review-session.js", "createReviewSession"),
         ("record-editor.js", "createRecordEditor, createDraftState"),
+        ("record-details.js", "renderRecordDetails, renderSubjectContext"),
         ("reference-coverage.js", "renderCoverage, readCoverage"),
     ):
         imports += f"import {{ {names} }} from {json.dumps((APP / module).as_uri())};\n"
@@ -322,4 +323,100 @@ finish({revision:2});
 await saving;
 assert.equal(session.paperId,'second');
 assert.equal(session.bundle.revision,8);
+""")
+
+
+def test_nullable_context_and_empty_conditions_are_editable_without_raw_json():
+    run_javascript(
+        EDITOR_SETUP
+        + """
+initial.subject_context = null;
+initial.measurement_conditions = [];
+schema.$defs = {
+  Quantity:{type:'object',properties:{name:{type:'string'},raw_value:{type:'string'},
+    value_number:{anyOf:[{type:'number'},{type:'null'}]},evidence:{type:'array'}}},
+  Subject:{type:'object',properties:{treatment_stage:{enum:['before_device_completion','not_reported']},
+    conditions:{type:'array',minItems:1,maxItems:2,items:{$ref:'#/$defs/Quantity'}}}}
+};
+const properties = schema.properties.individual_devices.items.properties;
+properties.subject_context = {default:null,anyOf:[{$ref:'#/$defs/Subject'},{type:'null'}]};
+properties.measurement_conditions = {type:'array',maxItems:1,items:{$ref:'#/$defs/Quantity'}};
+editor.open('individual_devices',0);
+const all = () => descendants(document.getElementById('structured-editor'));
+const button = text => all().find(node => node.tag === 'button' && node.textContent === text);
+button('Add subject_context').fire('click');
+assert.equal(editor.value().subject_context.treatment_stage,'not_reported');
+assert.equal(editor.value().subject_context.conditions.length,1);
+assert.deepEqual(editor.value().subject_context.conditions[0].evidence,[]);
+const control = document.getElementById('record-field-subject_context-conditions-0-value_number');
+assert.equal(control.type,'number');
+control.value='100';control.fire('input');
+assert.equal(editor.value().subject_context.conditions[0].value_number,100);
+let saved;
+const session = createReviewSession({mutate:async (_split,_paper,payload) => {
+  saved=payload; return {...bundle,revision:6};
+}});
+session.select('synthetic',bundle);
+await session.saveRecord({edit:editor.edit,value:editor.value(),citation});
+assert.deepEqual(saved.value.subject_context.conditions[0].evidence,[citation]);
+assert.deepEqual(editor.value().subject_context.conditions[0].evidence,[]);
+assert.equal(button('Remove Item 1').disabled,true); // Required condition cannot disappear.
+button('Clear subject_context').fire('click');
+assert.equal(editor.value().subject_context,null);
+button('Add item to measurement_conditions').fire('click');
+assert.equal(editor.value().measurement_conditions.length,1);
+assert.equal(button('Add item to measurement_conditions').disabled,true);
+button('Remove Item 1').fire('click');
+assert.deepEqual(editor.value().measurement_conditions,[]);
+assert.deepEqual(initial.measurement_conditions,[]); // Draft never mutates saved input.
+assert.equal(initial.subject_context,null);
+assert.deepEqual(JSON.parse(document.getElementById('record-json').value),editor.value());
+"""
+    )
+
+
+def test_review_details_show_context_with_its_owning_record_and_source_paths():
+    run_javascript("""
+const {element} = editorDocument();
+const groups = [];
+const ui = {element, humanLabel: value => value || 'Not reported',
+  identifiers: {individual_devices:'device_id', device_families:'family_id'},
+  contextField: (label,value) => element('span',{text:`${label}: ${value}`}),
+  reportedValueGroup: (entry,title,values,path,empty,indexed=true) => {
+    groups.push({entry,title,values,path,indexed});
+    return element('section',{text:title});
+  }};
+const treatment = {treatment_stage:'before_device_completion',treated_material:'absorber',
+  conditions:[{name:'Temperature',raw_value:'100 C'}]};
+const light = {name:'Irradiance',raw_value:'100 mW/cm2'};
+const device = {kind:'individual_devices',index:2,item:{subject_context:treatment}};
+const nodes = renderRecordDetails(device,ui);
+assert.ok(nodes.flatMap(descendants).some(node => node.textContent === 'Treatment stage: before_device_completion'));
+assert.equal(groups[0].entry,device);
+assert.deepEqual(groups[0].path,['subject_context','conditions']);
+assert.deepEqual(groups[0].values,treatment.conditions);
+groups.length=0;
+const observation = {kind:'performance_observations',index:0,item:{measurement_conditions:[light],metrics:[]}};
+renderRecordDetails(observation,ui);
+assert.deepEqual(groups[0].path,['measurement_conditions']);
+assert.deepEqual(groups[0].values,[light]);
+assert.equal(groups[0].entry,observation);
+groups.length=0;
+const population = {kind:'population_statistics',index:1,item:{subjects:[treatment],error_bar_type:'standard_error',
+  measurement_type:'jv_scan',scan_direction:'reverse',measurement_conditions:[light],metrics:[]}};
+const text = renderRecordDetails(population,ui).flatMap(descendants).map(node => node.textContent);
+assert.ok(text.includes('Error bars: standard_error'));
+assert.ok(text.includes('Scan direction: reverse'));
+assert.ok(text.includes('Measurement type: jv_scan'));
+assert.deepEqual(groups[0].path,['subjects',0,'conditions']);
+assert.equal(groups[0].entry,population);
+assert.deepEqual(groups[1].path,['measurement_conditions']);
+groups.length=0;
+const time = {name:'Time',raw_value:'100 h'};
+renderRecordDetails({kind:'stability_tests',index:0,item:{conditions:[light],
+  checkpoints:[{checkpoint_id:'point',time,conditions:[],outcomes:[]}]}},ui);
+assert.deepEqual(groups.map(group => group.path),[
+  ['conditions'],['checkpoints',0,'time'],['checkpoints',0,'conditions'],['checkpoints',0,'outcomes']]);
+assert.equal(groups[1].indexed,false); // The singleton time has no array index in JSON.
+assert.deepEqual(device.item.subject_context,treatment); // Rendering does not mutate a reference.
 """)

@@ -8,6 +8,10 @@ export function createDraftState(initial) {
   return {
     get value() { return value; },
     snapshot: () => structuredClone(value),
+    replace(path, next) {
+      const parent = path.slice(0, -1).reduce((node, key) => node[key], value);
+      parent[path.at(-1)] = structuredClone(next);
+    },
     replaceJson(text) {
       const parsed = JSON.parse(text);
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("A record must be a JSON object.");
@@ -83,6 +87,38 @@ export function createRecordEditor({
     if (schema.type === "integer" || schema.type === "number") return schema.minimum ?? 0;
     if (schema.type === "boolean") return false;
     return "";
+  }
+
+  // Nullable referenced objects still have editable fields. Unwrap only a single
+  // non-null choice; an ambiguous union must not be guessed into another type.
+  function concreteSchema(node) {
+    const schema = resolvedSchema(node);
+    const choices = (schema.anyOf || schema.oneOf || []).map(choice => resolvedSchema(choice));
+    const values = choices.filter(choice => choice.type !== "null");
+    if (values.length !== 1) return schema;
+    return { ...schema, ...values[0], anyOf: undefined, oneOf: undefined };
+  }
+
+  function newNestedValue(node, fieldName) {
+    const schema = { ...concreteSchema(node) };
+    if (schema.default == null) delete schema.default;
+    // The review session attaches the citation chosen at save time to empty
+    // evidence arrays, without replacing existing nested citations.
+    return draftFromSchema(schema, fieldName);
+  }
+
+  function replaceNestedValue(path, value) {
+    draft.replace(path, value);
+    $("record-json").value = JSON.stringify(edit.value, null, 2);
+    renderStructuredEditor();
+  }
+
+  function replaceArrayItems(path, items) {
+    const next = structuredClone(items);
+    if (next.every(item => item && typeof item === "object" && Object.hasOwn(item, "sequence"))) {
+      next.forEach((item, index) => { item.sequence = index + 1; });
+    }
+    replaceNestedValue(path, next);
   }
 
   function newRecordDraft(kind) {
@@ -213,6 +249,7 @@ export function createRecordEditor({
   function recordSchemaNode(kind, path = []) {
     let node = resolvedSchema(context().studySchema?.properties?.[kind]?.items);
     for (const part of path) {
+      node = concreteSchema(node);
       node = resolvedSchema((part === "items" || typeof part === "number") ? node?.items : node?.properties?.[part]);
     }
     return node;
@@ -412,7 +449,7 @@ export function createRecordEditor({
     return element("details", { className: "editor-technical" }, [
       element("summary", { text: "Technical details" }),
       element("p", { text: "Record links and identifiers. Most corrections do not need these." }),
-      element("div", { className: "editor-fields" }, entries.map(([key, value]) => structuredLeaf(key, value, [...path, key]))),
+      element("div", { className: "editor-fields" }, entries.map(([key, value]) => structuredNode(key, value, [...path, key]))),
     ]);
   }
 
@@ -463,6 +500,20 @@ export function createRecordEditor({
   }
 
   function structuredNode(label, value, path, open = false) {
+    const node = recordSchemaNode(edit.kind, path);
+    const schema = concreteSchema(node);
+    const nullableObject = (node.anyOf || node.oneOf || []).some(choice => resolvedSchema(choice).type === "null")
+      && (schema.type === "object" || schema.properties);
+    if (value == null && nullableObject) {
+      return element("section", { className: "editor-group" }, [
+        element("strong", { text: humanLabel(label) }),
+        element("p", { className: "muted", text: "Not reported. Add only when supported by the source; new values use the selected citation." }),
+        element("button", {
+          text: `Add ${humanLabel(label)}`, properties: { type: "button" },
+          events: { click: () => replaceNestedValue(path, newNestedValue(node, label)) },
+        }),
+      ]);
+    }
     if (value == null || typeof value !== "object") return structuredLeaf(label, value, path);
     const array = Array.isArray(value);
     const entries = array
@@ -471,11 +522,31 @@ export function createRecordEditor({
     const technical = array ? [] : entries.filter(([key]) => isTechnicalRecordField(key));
     const primary = array ? entries : entries.filter(([key]) => !isTechnicalRecordField(key));
     const ordered = array && isOrderedArray(value);
-    const children = primary.map(([childLabel, item, key]) => ordered
-      ? orderedArrayItem(childLabel, item, key, path, value.length)
-      : structuredNode(childLabel, item, [...path, key]));
+    const children = primary.map(([childLabel, item, key]) => {
+      const child = ordered
+        ? orderedArrayItem(childLabel, item, key, path, value.length)
+        : structuredNode(childLabel, item, [...path, key]);
+      if (!array) return child;
+      return element("div", {}, [child, element("button", {
+        text: `Remove ${humanLabel(childLabel)}`,
+        properties: { type: "button", disabled: value.length <= (schema.minItems || 0) },
+        events: { click: () => replaceArrayItems(path, value.filter((_item, index) => index !== key)) },
+      })]);
+    });
     const technicalSection = technicalFields(technical, path);
     if (technicalSection) children.push(technicalSection);
+    if (array && schema.items) {
+      children.push(element("button", {
+        text: `Add item to ${humanLabel(label)}`,
+        properties: { type: "button", disabled: value.length >= (schema.maxItems ?? Infinity) },
+        events: { click: () => replaceArrayItems(path, [...value, newNestedValue(schema.items, label)]) },
+      }));
+      children.push(element("p", { className: "muted", text: "New values use the selected source citation on save. Check that it supports each added value." }));
+    }
+    if (nullableObject) children.push(element("button", {
+      text: `Clear ${humanLabel(label)}`, properties: { type: "button" },
+      events: { click: () => replaceNestedValue(path, null) },
+    }));
     const count = array ? ` (${value.length})` : "";
     return element("details", { className: "editor-group", properties: { open } }, [
       element("summary", { text: `${humanLabel(label)}${count}` }),
@@ -491,7 +562,7 @@ export function createRecordEditor({
     }
     const simple = entries
       .filter(([key, value]) => !["full_stack_raw", "layers"].includes(key) && !isTechnicalRecordField(key) && (value == null || typeof value !== "object"))
-      .map(([key, value]) => structuredLeaf(key, value, [key]));
+      .map(([key, value]) => structuredNode(key, value, [key]));
     const technical = entries.filter(([key, value]) => !["full_stack_raw", "layers"].includes(key) && isTechnicalRecordField(key) && (value == null || typeof value !== "object"));
     const related = entries
       .filter(([key, value]) => !["full_stack_raw", "layers"].includes(key) && value != null && typeof value === "object")

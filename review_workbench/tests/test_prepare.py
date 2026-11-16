@@ -57,6 +57,7 @@ def test_prepare_bundles_only_runtime_and_rich_schema(tmp_path):
     assert (output / "review_workbench/review_storage.py").exists()
     for asset in (
         "record-editor.js",
+        "record-details.js",
         "api-client.js",
         "review-session.js",
         "package.json",

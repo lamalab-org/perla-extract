@@ -1,6 +1,7 @@
 import { createApiClient } from "./api-client.js";
 import { renderCoverage, readCoverage } from "./reference-coverage.js";
 import { createReviewSession } from "./review-session.js";
+import { renderRecordDetails, renderSubjectContext } from "./record-details.js";
 import { createRecordEditor } from "./record-editor.js";
 import { createFinalizationQueue } from "/adjudication.js";
 import { schemaCompatibilityMessage, reviewProgress, recordEvidenceSection } from "/review-state.js";
@@ -82,15 +83,15 @@ const RECORD_GUIDANCE = {
   },
   individual_devices: {
     census: "One particular measured specimen that the paper distinguishes, such as a champion, representative, or certified cell. Multiple measurements of the same cell are not additional devices.",
-    review: "Check that this is a distinct specimen, that its family link and champion or selection status are supported, and that its specimen-specific properties are correct.",
+    review: "Check that this is a distinct specimen, that its family link and champion or selection status are supported, and that its treatment context and specimen-specific properties are correct.",
   },
   performance_observations: {
     census: "One measurement protocol on one device. Forward and reverse scans, stabilized output, and certification are separate observations—not separate devices.",
-    review: "Check the linked device, measurement type, scan direction, and each reported metric shown below.",
+    review: "Check the linked device, measurement type, scan direction, measurement conditions, and each reported metric shown below.",
   },
   population_statistics: {
     census: "One reported aggregate over multiple devices, such as a mean, median, range, or distribution. Do not count it as an individual device.",
-    review: "Check the family, statistic type, sample size, and every aggregate metric. Do not accept a champion value as a population statistic.",
+    review: "Check the family, cohort treatments, statistic and error-bar types, sample size, measurement conditions, and every aggregate metric. Do not accept a champion value as a population statistic.",
   },
   stability_tests: {
     census: "One aging experiment on a stated specimen or device group. Its checkpoints and multiple reported outcomes remain inside that test.",
@@ -1324,61 +1325,17 @@ function reportedValueGroup(entry, title, values, path, emptyText = "None report
   ]);
 }
 
-function renderStabilityRecord(entry) {
-  const test = entry.item;
-  const checkpoints = test.checkpoints || [];
-  const familyField = state.bundle.summary.record_identifiers.device_families;
-  const deviceField = state.bundle.summary.record_identifiers.individual_devices;
-  return [
-    element("div", { className: "record-facts" }, [
-      contextField("Aged specimen", test.specimen_label),
-      contextField("Identity link", humanLabel(test.link_status)),
-      contextField("Linked device", test[deviceField] || "No device link"),
-      contextField("Linked family", test[familyField] || "No family link"),
-    ]),
-    reportedValueGroup(entry, "Test-wide conditions", test.conditions || [], ["conditions"]),
-    element("section", { className: "checkpoint-list" }, [
-      element("h4", { text: `Checkpoints (${checkpoints.length})` }),
-      ...checkpoints.map((checkpoint, checkpointIndex) => element("details", {
-        className: "stability-checkpoint",
-        properties: { open: checkpointIndex === 0 },
-      }, [
-        element("summary", { text: `${checkpoint.checkpoint_id}${checkpoint.time ? ` · ${checkpoint.time.raw_value}` : " · time not reported"}` }),
-        element("div", { className: "checkpoint-content" }, [
-          reportedValueGroup(entry, "Time", checkpoint.time ? [checkpoint.time] : [], ["checkpoints", checkpointIndex, "time"], "Time not reported", false),
-          reportedValueGroup(entry, "Checkpoint-specific conditions", checkpoint.conditions || [], ["checkpoints", checkpointIndex, "conditions"]),
-          reportedValueGroup(entry, "Outcomes", checkpoint.outcomes || [], ["checkpoints", checkpointIndex, "outcomes"], "No outcome extracted"),
-        ]),
-      ])),
-    ]),
-  ];
+function recordDetailsUI() {
+  return {
+    element, contextField, humanLabel, reportedValueGroup,
+    identifiers: state.bundle.summary.record_identifiers,
+  };
 }
 
 function renderReviewTarget(entry) {
-  const content = [];
-  if (entry.kind === "stability_tests") content.push(...renderStabilityRecord(entry));
-  else if (entry.kind === "performance_observations") {
-    const deviceField = state.bundle.summary.record_identifiers.individual_devices;
-    content.push(element("div", { className: "record-facts" }, [
-      contextField("Measurement type", humanLabel(entry.item.measurement_type)),
-      contextField("Scan direction", humanLabel(entry.item.scan_direction)),
-      contextField("Linked device", entry.item[deviceField]),
-    ]));
-    content.push(reportedValueGroup(entry, "Performance metrics", entry.item.metrics || [], ["metrics"]));
-  } else if (entry.kind === "population_statistics") {
-    const familyField = state.bundle.summary.record_identifiers.device_families;
-    content.push(element("div", { className: "record-facts" }, [
-      contextField("Statistic", humanLabel(entry.item.statistic_type)),
-      contextField("Sample size", entry.item.sample_size == null ? "Not reported" : String(entry.item.sample_size)),
-      contextField("Linked family", entry.item[familyField] || "No family link"),
-    ]));
-    content.push(reportedValueGroup(entry, "Aggregate metrics", entry.item.metrics || [], ["metrics"]));
-  } else if (entry.kind === "individual_devices") {
-    content.push(reportedValueGroup(entry, "Specimen-specific properties", entry.item.reported_properties || [], ["reported_properties"]));
-  }
   return element("section", { className: "review-target" }, [
     element("p", { className: "review-instruction", text: RECORD_GUIDANCE[entry.kind].review }),
-    ...content,
+    ...renderRecordDetails(entry, recordDetailsUI()),
   ]);
 }
 
@@ -1402,6 +1359,10 @@ function renderDeviceContext(entry) {
   return element("details", { className: "device-context", properties: { open: primaryDeviceRecord } }, [
     element("summary", { text: primaryDeviceRecord ? "Device structure and composition" : "Related device context (expand if needed)" }),
     element("div", { className: "context-grid" }, fields),
+    device && entry.kind !== "individual_devices" ? renderSubjectContext(
+      { kind: "individual_devices", index: state.bundle.ground_truth.individual_devices.indexOf(device), item: device },
+      device.subject_context, ["subject_context"], recordDetailsUI(), "Linked specimen treatment",
+    ) : null,
     family ? compositionComparison(family) : null,
   ]);
 }

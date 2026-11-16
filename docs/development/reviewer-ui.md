@@ -13,16 +13,17 @@ From the repository root, run:
 python -m review_workbench.demo
 ```
 
-Open the printed local URL and select **Synthetic UI demo**. This command generates
+Open the printed local URL and select **10.0000--synthetic-ui-demo**. This command generates
 its own one-page source PDF and evidence blocks. It needs no PDFs, provider keys,
 network access or model calls. The server uses the normal local administrator
 identity and real review storage. Its temporary workspace disappears when you stop
 the command with Ctrl-C; each launch starts fresh. Use `--port 8766` if necessary.
 
-1. Open **Records**, select **Champion cell**, then **Correct fields**.
+1. Open **2 · Review records**, choose **Individual devices** in the record-type
+   filter, then select **Correct fields** for **Champion cell**.
 2. Change **Linked device family** from Control to Alternative. The source quote is
    already selected. Save the correction, reload the page, and check the saved owner.
-3. Open the reverse-scan observation. Correct its PCE reported value from `21%` to
+3. Change the record-type filter to **Performance observations** and open the reverse-scan observation. Correct its PCE reported value from `21%` to
    `20%` and its numeric value from `21` to `20`. Save and check **My work & undo**.
 4. To check conflict recovery, open the same correction in two tabs. Save a change
    in one tab, then save the older draft in the other. It should offer to discard
@@ -38,6 +39,7 @@ scientific record. Production operation and imports are described in the
 | --- | --- | --- |
 | Scientific field types and relationship constraints | `src/perla_extract/study_extraction/models.py` | The stored scientific contract changes |
 | Field controls, draft, JSON mode, schema defaults, stack editor | `review_workbench/review_app/record-editor.js` | A field needs a different control or editing behavior |
+| Values, treatment context, measurement conditions and statistics shown on review cards | `review_workbench/review_app/record-details.js` | A stored scientific field must be visible before acceptance |
 | Pure relationship choices and review calculations | `review_workbench/review_app/review-state.js` | Owner options or review calculations change |
 | Authentication headers, endpoint methods, structured HTTP errors | `review_workbench/review_app/api-client.js` | The HTTP contract changes |
 | Selected paper, saved bundle/revision, pending action and record save | `review_workbench/review_app/review-session.js` | A save or navigation transition changes |
@@ -77,3 +79,8 @@ the lightweight DOM test fixture does not establish browser layout or accessibil
 
 New browser modules must be included in `server.py`'s static-asset allowlist.
 `prepare.py` copies the complete `review_app` directory into deployment bundles.
+
+Optional nested objects have **Add** and **Clear** controls. Lists have item controls
+that respect schema minimum/maximum lengths; ordered items retain their sequence.
+New nested values receive the selected citation when saved, while existing citations
+stay intact. Check that this passage supports each added value before saving.
