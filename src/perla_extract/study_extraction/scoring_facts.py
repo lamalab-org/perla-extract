@@ -12,6 +12,8 @@ from dataclasses import dataclass, field, replace
 from typing import Literal
 
 from .models import (
+    DeviceFamily,
+    IndividualDevice,
     MaterialConstituent,
     PerformanceObservation,
     PopulationStatistic,
@@ -327,66 +329,78 @@ def _protocol_context(
     )
 
 
-def scientific_facts(
-    study: StudyExtraction,
-    identities: dict[str, str],
-    side: str,
-    operation_aliases: dict[str, str],
-    process_references: dict[str, str | None] | None = None,
-    layer_references: dict[str, str | None] | None = None,
-) -> FactProjection:
-    """Select key fields while retaining device, layer, recipe and checkpoint context.
+class _FactProjector:
+    """Project one study using only its own records and established owner links.
 
-    ``identities`` contains only established top-level record pairings. Unmatched
-    references stay side-specific so two broken links cannot accidentally agree.
-    Paths refer to the original JSON, making every missed or extra fact inspectable.
+    Collection methods select the scientific fields. Shared helpers attach the
+    same context, source paths and missing-value policy to each selected field.
+    This object never reads the other study's values or chooses record pairings.
     """
 
-    facts: list[ScientificFact] = []
-    scopes: list[ScientificScope] = []
-    linked_containers: list[tuple[str, str]] = []
-    material_aliases: list[tuple[str, str]] = []
-    material_conflicts: list[tuple[str, str]] = []
-    process_references = process_references or {}
-    layer_references = layer_references or {}
-    devices = {item.device_id: item for item in study.individual_devices}
-    device_paths = {
-        item.device_id: f"/individual_devices/{i}"
-        for i, item in enumerate(study.individual_devices)
-    }
+    def __init__(
+        self,
+        study: StudyExtraction,
+        identities: dict[str, str],
+        side: str,
+        operation_aliases: dict[str, str],
+        process_references: dict[str, str | None],
+        layer_references: dict[str, str | None],
+    ) -> None:
+        self.identities = identities
+        self.side = side
+        self.operation_aliases = operation_aliases
+        self.process_references = process_references
+        self.layer_references = layer_references
+        self.facts: list[ScientificFact] = []
+        self.scopes: list[ScientificScope] = []
+        self.linked_containers: list[tuple[str, str]] = []
+        self.material_aliases: list[tuple[str, str]] = []
+        self.material_conflicts: list[tuple[str, str]] = []
+        self.devices = {item.device_id: item for item in study.individual_devices}
+        self.device_paths = {
+            item.device_id: f"/individual_devices/{i}"
+            for i, item in enumerate(study.individual_devices)
+        }
 
-    def reference(collection: str, identifier: str | None) -> RecordReference | None:
+    def reference(
+        self, collection: str, identifier: str | None
+    ) -> RecordReference | None:
+        """Keep an unpaired identifier local to its input, including broken links."""
         if identifier is None:
             return None
         key = f"{collection}:{identifier}"
         return (
-            RecordReference(identities[key])
-            if key in identities
-            else RecordReference(key, side)
+            RecordReference(self.identities[key])
+            if key in self.identities
+            else RecordReference(key, self.side)
         )
 
-    def device_context(identifier: str | None, source_path: str) -> FactContext:
-        device = devices.get(identifier) if identifier is not None else None
+    def device_context(self, identifier: str | None, source_path: str) -> FactContext:
+        """Carry the specimen's design and treatment into its measured outcomes."""
+        device = self.devices.get(identifier) if identifier is not None else None
         return (
             FactContext.of(
-                source_path, device_id=reference("individual_devices", identifier)
+                source_path, device_id=self.reference("individual_devices", identifier)
             )
             .extend(
                 FactContext.of(
-                    device_paths.get(identifier) if identifier is not None else None,
-                    family_id=reference("device_families", device.family_id)
+                    self.device_paths.get(identifier)
+                    if identifier is not None
+                    else None,
+                    family_id=self.reference("device_families", device.family_id)
                     if device
                     else None,
                 )
             )
             .extend(
-                device_identity(device, device_paths[device.device_id])
+                device_identity(device, self.device_paths[device.device_id])
                 if device
                 else FactContext()
             )
         )
 
     def add(
+        self,
         group: SourceGroup,
         path: str,
         owner: RecordReference,
@@ -395,6 +409,7 @@ def scientific_facts(
         context: FactContext = FactContext(),
         source_paths: tuple[str, ...] = (),
     ) -> None:
+        """Count a reported claim once; empty and unknown placeholders earn no fact."""
         if (
             isinstance(value, ReportedValue)
             and value.value_number is None
@@ -425,7 +440,7 @@ def scientific_facts(
             )
             if "/measurement_conditions/" in path and protocol_name(name) is None:
                 concept = ("measurement_condition", name)
-            facts.append(
+            self.facts.append(
                 ScientificFact(
                     group=fact_group(concept),
                     path=path,
@@ -440,6 +455,7 @@ def scientific_facts(
             )
 
     def quantities(
+        self,
         group: SourceGroup,
         path: str,
         owner: RecordReference,
@@ -451,12 +467,13 @@ def scientific_facts(
             name = (
                 scoped_property_name(value.name, material) if material else value.name
             )
-            add(group, f"{path}/{i}", owner, property_name(name), value, context)
+            self.add(group, f"{path}/{i}", owner, property_name(name), value, context)
 
-    def conditions(values: list[ReportedValue]) -> UnorderedContext:
+    def conditions(self, values: list[ReportedValue]) -> UnorderedContext:
         return UnorderedContext(tuple((property_name(v.name), v) for v in values))
 
     def measurement_conditions(
+        self,
         group: SourceGroup,
         record: PerformanceObservation | PopulationStatistic,
         path: str,
@@ -465,7 +482,7 @@ def scientific_facts(
     ) -> None:
         entries = canonical_conditions(record, path)
         for item in entries:
-            add(
+            self.add(
                 group,
                 item.source_paths[0],
                 owner,
@@ -486,16 +503,17 @@ def scientific_facts(
                         left.value, right.value, 16 * sys.float_info.epsilon, 0
                     )
                 ):
-                    material_conflicts.append((path, right.source_paths[0]))
+                    self.material_conflicts.append((path, right.source_paths[0]))
 
     def treatment_facts(
+        self,
         subject: SubjectContext,
         path: str,
         owner: RecordReference,
         context: FactContext | None = None,
     ) -> None:
         context = context if context is not None else subject_context(subject, path)
-        scopes.append(
+        self.scopes.append(
             ScientificScope(
                 owner,
                 "treatment_subject",
@@ -503,7 +521,7 @@ def scientific_facts(
                 subject_context(subject, path, identity_only=True),
             )
         )
-        add(
+        self.add(
             "processing",
             f"{path}/treatment_stage",
             owner,
@@ -511,7 +529,7 @@ def scientific_facts(
             subject.treatment_stage,
             context,
         )
-        add(
+        self.add(
             "processing",
             f"{path}/treated_material",
             owner,
@@ -522,7 +540,7 @@ def scientific_facts(
             context,
         )
         for i, condition in enumerate(subject.conditions):
-            add(
+            self.add(
                 "processing",
                 f"{path}/conditions/{i}",
                 owner,
@@ -536,6 +554,7 @@ def scientific_facts(
             )
 
     def chemicals(
+        self,
         path: str,
         owner: RecordReference,
         constituents: list[MaterialConstituent],
@@ -554,7 +573,7 @@ def scientific_facts(
                     )
                 )
             )
-            scopes.append(
+            self.scopes.append(
                 ScientificScope(
                     owner,
                     "constituent",
@@ -570,7 +589,7 @@ def scientific_facts(
                     ),
                 )
             )
-            add(
+            self.add(
                 "composition",
                 f"{base}/name",
                 owner,
@@ -581,7 +600,7 @@ def scientific_facts(
             chemical_context = constituent_context.extend(
                 FactContext.of(base, name=material_name(constituent.name))
             )
-            add(
+            self.add(
                 "composition",
                 f"{base}/role",
                 owner,
@@ -589,7 +608,7 @@ def scientific_facts(
                 material_role(constituent.role),
                 chemical_context,
             )
-            add(
+            self.add(
                 "composition",
                 f"{base}/amount",
                 owner,
@@ -600,498 +619,512 @@ def scientific_facts(
                 chemical_context,
             )
 
-    identifiers = {
-        "device_families": "family_id",
-        "individual_devices": "device_id",
-        "performance_observations": "observation_id",
-        "population_statistics": "population_id",
-        "stability_tests": "test_id",
-    }
-    for collection, id_field in identifiers.items():
-        for index, record in enumerate(getattr(study, collection)):
-            key = f"{collection}:{getattr(record, id_field)}"
-            owner = (
-                RecordReference(identities[key])
-                if key in identities
-                else RecordReference(key, side)
+    def family(self, record: DeviceFamily, path: str, owner: RecordReference) -> None:
+        """Select stack, absorber and ordered fabrication facts for one design."""
+        self.add("stack", f"{path}/polarity", owner, "polarity", record.polarity)
+        # Raw stack prose is a fallback only; do not reward duplicate representations.
+        if not record.layers:
+            self.add(
+                "stack",
+                f"{path}/full_stack_raw",
+                owner,
+                "stack",
+                record.full_stack_raw or record.architecture,
             )
-            if (subject := measurement_subject(record)) is not None:
-                # Compare facts about the specimen, not generated observation IDs.
-                # Unmatched/dangling links remain side-local through reference().
-                subject_owner = reference(*subject)
-                assert subject_owner is not None
-                owner = subject_owner
-            path = f"/{collection}/{index}"
-            if collection == "device_families":
-                add("stack", f"{path}/polarity", owner, "polarity", record.polarity)
-                # Raw stack prose is a fallback only; do not reward duplicate representations.
-                if not record.layers:
-                    add(
-                        "stack",
-                        f"{path}/full_stack_raw",
-                        owner,
-                        "stack",
-                        record.full_stack_raw or record.architecture,
-                    )
-                layers = {
-                    layer.layer_id: (layer.sequence, material_name(layer.material))
-                    for layer in record.layers
-                }
-                linked_absorbers = {
-                    layer.layer_id: (i, absorber)
-                    for layer in record.layers
-                    for i, absorber in enumerate(record.absorbers)
-                    if absorber.layer_id == layer.layer_id
-                    and sum(a.layer_id == layer.layer_id for a in record.absorbers) == 1
-                }
-                layer_contexts: dict[str, FactContext] = {}
+        layers = {
+            layer.layer_id: (layer.sequence, material_name(layer.material))
+            for layer in record.layers
+        }
+        linked_absorbers = {
+            layer.layer_id: (i, absorber)
+            for layer in record.layers
+            for i, absorber in enumerate(record.absorbers)
+            if absorber.layer_id == layer.layer_id
+            and sum(a.layer_id == layer.layer_id for a in record.absorbers) == 1
+        }
+        layer_contexts: dict[str, FactContext] = {}
 
-                layer_paths = {
-                    layer.layer_id: f"{path}/layers/{i}"
-                    for i, layer in enumerate(record.layers)
-                }
+        layer_paths = {
+            layer.layer_id: f"{path}/layers/{i}"
+            for i, layer in enumerate(record.layers)
+        }
 
-                def whole_constituent(
-                    layer_material: str,
-                    layer_path: str,
-                    constituents: list[MaterialConstituent],
-                    base: str,
-                ) -> None:
-                    """A sole whole-material claim can repeat or contradict its layer."""
-                    if len(constituents) != 1 or not whole_material_role(
-                        constituents[0].role
+        def whole_constituent(
+            layer_material: str,
+            layer_path: str,
+            constituents: list[MaterialConstituent],
+            base: str,
+        ) -> None:
+            """A sole whole-material claim can repeat or contradict its layer."""
+            if len(constituents) != 1 or not whole_material_role(constituents[0].role):
+                return
+            member = constituents[0]
+            paths = (f"{layer_path}/material", f"{base}/constituents/0/name")
+            if material_name(member.name) == material_name(layer_material):
+                self.material_aliases.append(paths)
+            elif known_material(member.name) and known_material(layer_material):
+                self.material_conflicts.append(paths)
+
+        def layer_reference(identifier: str | None) -> object:
+            source = layer_paths.get(identifier) if identifier is not None else None
+            if source in self.layer_references:
+                paired = self.layer_references[source]
+                return (
+                    RecordReference(paired)
+                    if paired is not None
+                    else RecordReference(source, self.side)
+                )
+            return (
+                layers.get(identifier, f"{self.side}:unmatched_layer:{identifier}")
+                if identifier
+                else None
+            )
+
+        for i, layer in enumerate(record.layers):
+            base = f"{path}/layers/{i}"
+            whole_constituent(layer.material, base, layer.constituents, base)
+            self.scopes.append(
+                ScientificScope(
+                    owner,
+                    "layer",
+                    base,
+                    (layer.sequence,)
+                    if layer.sequence is not None
+                    else (material_name(layer.material), layer.role),
+                )
+            )
+            position = (
+                FactContext(
+                    (ContextComponent("layer", layer_reference(layer.layer_id), base),)
+                )
+                if base in self.layer_references
+                else FactContext.of(base, sequence=layer.sequence)
+            )
+            context = FactContext.of(kind="layer").extend(position)
+            self.add(
+                "stack",
+                f"{base}/material",
+                owner,
+                "material",
+                material_name(layer.material),
+                context,
+            )
+            context = context.extend(
+                FactContext.of(base, material=material_name(layer.material))
+            )
+            layer_contexts[layer.layer_id] = context
+            if layer.layer_id in linked_absorbers:
+                absorber_index, _ = linked_absorbers[layer.layer_id]
+                self.linked_containers.append(
+                    (base, f"{path}/absorbers/{absorber_index}")
+                )
+            self.add("stack", f"{base}/role", owner, "role", layer.role, context)
+            self.add(
+                "stack",
+                f"{base}/material_form",
+                owner,
+                "material_form",
+                layer.material_form,
+                context,
+            )
+            self.quantities(
+                "composition"
+                if layer.layer_id in linked_absorbers or layer.role == "absorber"
+                else "stack",
+                f"{base}/reported_properties",
+                owner,
+                layer.reported_properties,
+                context,
+                material=layer.material,
+            )
+            self.chemicals(f"{base}/constituents", owner, layer.constituents, context)
+        for i, absorber in enumerate(record.absorbers):
+            base = f"{path}/absorbers/{i}"
+            if absorber.layer_id in linked_absorbers:
+                layer_index, layer = next(
+                    (j, item)
+                    for j, item in enumerate(record.layers)
+                    if item.layer_id == absorber.layer_id
+                )
+                whole_constituent(
+                    layer.material,
+                    layer_paths[layer.layer_id],
+                    absorber.constituents,
+                    base,
+                )
+                formula = absorber.formula
+                if formula and formula.unit is None and formula.value_number is None:
+                    material_path = f"{path}/layers/{layer_index}/material"
+                    if material_name(formula.raw_value) == material_name(
+                        layer.material
                     ):
-                        return
-                    member = constituents[0]
-                    paths = (f"{layer_path}/material", f"{base}/constituents/0/name")
-                    if material_name(member.name) == material_name(layer_material):
-                        material_aliases.append(paths)
-                    elif known_material(member.name) and known_material(layer_material):
-                        material_conflicts.append(paths)
-
-                def layer_reference(identifier: str | None) -> object:
-                    source = layer_paths.get(identifier)
-                    if source in layer_references:
-                        paired = layer_references[source]
-                        return (
-                            RecordReference(paired)
-                            if paired is not None
-                            else RecordReference(source, side)
+                        self.material_aliases.append((material_path, f"{base}/formula"))
+                    elif known_material(formula.raw_value) and known_material(
+                        layer.material
+                    ):
+                        self.material_conflicts.append(
+                            (material_path, f"{base}/formula")
                         )
-                    return (
-                        layers.get(identifier, f"{side}:unmatched_layer:{identifier}")
-                        if identifier
-                        else None
-                    )
-
-                for i, layer in enumerate(record.layers):
-                    base = f"{path}/layers/{i}"
-                    whole_constituent(layer.material, base, layer.constituents, base)
-                    scopes.append(
-                        ScientificScope(
-                            owner,
-                            "layer",
-                            base,
-                            (layer.sequence,)
-                            if layer.sequence is not None
-                            else (material_name(layer.material), layer.role),
-                        )
-                    )
-                    position = (
-                        FactContext(
-                            (
-                                ContextComponent(
-                                    "layer", layer_reference(layer.layer_id), base
-                                ),
-                            )
-                        )
-                        if base in layer_references
-                        else FactContext.of(base, sequence=layer.sequence)
-                    )
-                    context = FactContext.of(kind="layer").extend(position)
-                    add(
-                        "stack",
-                        f"{base}/material",
-                        owner,
-                        "material",
-                        material_name(layer.material),
-                        context,
-                    )
-                    context = context.extend(
-                        FactContext.of(base, material=material_name(layer.material))
-                    )
-                    layer_contexts[layer.layer_id] = context
-                    if layer.layer_id in linked_absorbers:
-                        absorber_index, _ = linked_absorbers[layer.layer_id]
-                        linked_containers.append(
-                            (base, f"{path}/absorbers/{absorber_index}")
-                        )
-                    add("stack", f"{base}/role", owner, "role", layer.role, context)
-                    add(
-                        "stack",
-                        f"{base}/material_form",
-                        owner,
-                        "material_form",
-                        layer.material_form,
-                        context,
-                    )
-                    quantities(
-                        "composition"
-                        if layer.layer_id in linked_absorbers
-                        or layer.role == "absorber"
-                        else "stack",
-                        f"{base}/reported_properties",
-                        owner,
-                        layer.reported_properties,
-                        context,
-                        material=layer.material,
-                    )
-                    chemicals(
-                        f"{base}/constituents", owner, layer.constituents, context
-                    )
-                for i, absorber in enumerate(record.absorbers):
-                    base = f"{path}/absorbers/{i}"
-                    if absorber.layer_id in linked_absorbers:
-                        layer_index, layer = next(
-                            (j, item)
-                            for j, item in enumerate(record.layers)
-                            if item.layer_id == absorber.layer_id
-                        )
-                        whole_constituent(
-                            layer.material,
-                            layer_paths[layer.layer_id],
-                            absorber.constituents,
-                            base,
-                        )
-                        formula = absorber.formula
-                        if (
-                            formula
-                            and formula.unit is None
-                            and formula.value_number is None
-                        ):
-                            material_path = f"{path}/layers/{layer_index}/material"
-                            if material_name(formula.raw_value) == material_name(
-                                layer.material
-                            ):
-                                material_aliases.append(
-                                    (material_path, f"{base}/formula")
-                                )
-                            elif known_material(formula.raw_value) and known_material(
-                                layer.material
-                            ):
-                                material_conflicts.append(
-                                    (material_path, f"{base}/formula")
-                                )
-                    context = FactContext.of(kind="absorber").extend(
-                        FactContext.of(
-                            base, layer_id=layer_reference(absorber.layer_id)
-                        )
-                    )
-                    # Several unlinked absorbers cannot safely share an anonymous scope.
-                    if absorber.layer_id is None and len(record.absorbers) > 1:
-                        context = context.extend(
-                            FactContext.of(base, label=absorber.label)
-                        )
-                    scopes.append(ScientificScope(owner, "absorber", base, context))
-                    add(
-                        "composition",
-                        f"{base}/formula",
-                        owner,
-                        "formula",
-                        absorber.formula,
-                        context,
-                    )
-                    quantities(
-                        "composition",
-                        f"{base}/properties",
-                        owner,
-                        absorber.properties,
-                        layer_contexts[absorber.layer_id]
-                        if absorber.layer_id in linked_absorbers
-                        else context,
-                        material=next(
-                            (
-                                layer.material
-                                for layer in record.layers
-                                if layer.layer_id == absorber.layer_id
-                            ),
-                            None,
-                        ),
-                    )
-                    chemicals(
-                        f"{base}/constituents",
-                        owner,
-                        absorber.constituents,
-                        layer_contexts[absorber.layer_id]
-                        if absorber.layer_id in linked_absorbers
-                        else context,
-                    )
-                for i, step in enumerate(record.processing_steps):
-                    base = f"{path}/processing_steps/{i}"
-                    targets = UnorderedContext(
-                        tuple(layer_reference(t) for t in step.target_layer_ids)
-                    )
-                    if base in process_references:
-                        paired = process_references[base]
-                        position = FactContext.of(
-                            base,
-                            step_id=RecordReference(
-                                paired or base, None if paired else side
-                            ),
-                        )
-                    else:
-                        position = FactContext.of(base, sequence=step.sequence)
-                    context = (
-                        FactContext.of(kind="step")
-                        .extend(position)
-                        .extend(FactContext.of(base, target_layer_ids=targets))
-                    )
-                    description = describe_process(
-                        step,
-                        [
-                            layer.material
-                            for layer in record.layers
-                            if layer.layer_id in step.target_layer_ids
-                        ],
-                        operation_aliases,
-                    )
-                    operation = description.operation
-                    scopes.append(
-                        ScientificScope(
-                            owner,
-                            "step",
-                            base,
-                            (
-                                step.sequence,
-                                operation,
-                                targets,
-                                UnorderedContext(
-                                    tuple(material_name(m) for m in step.materials)
-                                ),
-                            ),
-                        )
-                    )
-                    add(
-                        "processing",
-                        f"{base}/operation",
-                        owner,
-                        "operation",
-                        operation,
-                        context,
-                        (
-                            f"{base}/operation",
-                            f"{base}/conditions/{description.method_index}",
-                        )
-                        if description.method_index is not None
-                        else (),
-                    )
-                    context = context.extend(FactContext.of(base, operation=operation))
-                    for j, material in enumerate(step.materials):
-                        add(
-                            "processing",
-                            f"{base}/materials/{j}",
-                            owner,
-                            "material",
-                            material_name(material),
-                            context,
-                        )
-                    condition_context = context.extend(
-                        FactContext.of(
-                            base,
-                            materials=UnorderedContext(
-                                tuple(material_name(m) for m in step.materials)
-                            ),
-                        )
-                    )
-                    for j, condition in enumerate(step.conditions):
-                        if j != description.method_index:
-                            add(
-                                "processing",
-                                f"{base}/conditions/{j}",
-                                owner,
-                                condition_name(condition.name, operation),
-                                condition,
-                                condition_context,
-                            )
-            elif collection == "individual_devices":
-                treatment = device_treatment(record, path)
-                parent = FactContext.of(
-                    path, family_id=reference("device_families", record.family_id)
-                )
-                treatment_context = (
-                    parent.extend(treatment) if treatment is not None else None
-                )
-                if record.subject_context is not None:
-                    treatment_facts(
-                        record.subject_context,
-                        f"{path}/subject_context",
-                        owner,
-                        treatment_context,
-                    )
-                    linked_containers.append(
-                        (
-                            f"{path}/subject_context/conditions",
-                            f"{path}/reported_properties",
-                        )
-                    )
-                context = FactContext.of(
-                    path,
-                    family_id=reference("device_families", record.family_id),
-                    variant=record.variant,
-                )
-                for j, value in enumerate(record.reported_properties):
-                    name = treatment_condition_name(value.name)
-                    value_context = context
-                    if name is not None:
-                        assert treatment_context is not None
-                        value_context = treatment_context
-                    add(
-                        "processing",
-                        f"{path}/reported_properties/{j}",
-                        owner,
-                        "treatment:" + name
-                        if name is not None
-                        else property_name(value.name),
-                        value,
-                        value_context,
-                    )
-            elif collection == "performance_observations":
-                context = device_context(record.device_id, path).extend(
-                    FactContext.of(
-                        path,
-                        statistical_level="individual",
-                        measurement_type=record.measurement_type,
-                        scan_direction=record.scan_direction,
-                    )
-                )
-                protocol = _protocol_context(record, path)
-                for j, metric in enumerate(record.metrics):
-                    if protocol_name(metric.name):
-                        continue
-                    add(
-                        "performance",
-                        f"{path}/metrics/{j}",
-                        owner,
-                        performance_name(metric.name, record.measurement_type),
-                        metric,
-                        context.extend(protocol),
-                    )
-                measurement_conditions("performance", record, path, owner, context)
-            elif collection == "population_statistics":
-                for i, subject in enumerate(record.subjects):
-                    treatment_facts(subject, f"{path}/subjects/{i}", owner)
-                context = FactContext.of(
-                    path,
-                    statistical_level="population",
-                    family_id=reference("device_families", record.family_id),
-                    label=scientific_descriptor(record),
-                    subjects=UnorderedContext(
-                        tuple(
-                            subject_context(s, f"{path}/subjects/{i}")
-                            for i, s in enumerate(record.subjects)
-                        )
+            context = FactContext.of(kind="absorber").extend(
+                FactContext.of(base, layer_id=layer_reference(absorber.layer_id))
+            )
+            # Several unlinked absorbers cannot safely share an anonymous scope.
+            if absorber.layer_id is None and len(record.absorbers) > 1:
+                context = context.extend(FactContext.of(base, label=absorber.label))
+            self.scopes.append(ScientificScope(owner, "absorber", base, context))
+            self.add(
+                "composition",
+                f"{base}/formula",
+                owner,
+                "formula",
+                absorber.formula,
+                context,
+            )
+            self.quantities(
+                "composition",
+                f"{base}/properties",
+                owner,
+                absorber.properties,
+                layer_contexts[absorber.layer_id]
+                if absorber.layer_id in linked_absorbers
+                else context,
+                material=next(
+                    (
+                        layer.material
+                        for layer in record.layers
+                        if layer.layer_id == absorber.layer_id
+                    ),
+                    None,
+                ),
+            )
+            self.chemicals(
+                f"{base}/constituents",
+                owner,
+                absorber.constituents,
+                layer_contexts[absorber.layer_id]
+                if absorber.layer_id in linked_absorbers
+                else context,
+            )
+        for i, step in enumerate(record.processing_steps):
+            base = f"{path}/processing_steps/{i}"
+            targets = UnorderedContext(
+                tuple(layer_reference(t) for t in step.target_layer_ids)
+            )
+            if base in self.process_references:
+                paired = self.process_references[base]
+                position = FactContext.of(
+                    base,
+                    step_id=RecordReference(
+                        paired or base, None if paired else self.side
                     ),
                 )
-                add(
-                    "population",
-                    f"{path}/sample_size",
+            else:
+                position = FactContext.of(base, sequence=step.sequence)
+            context = (
+                FactContext.of(kind="step")
+                .extend(position)
+                .extend(FactContext.of(base, target_layer_ids=targets))
+            )
+            description = describe_process(
+                step,
+                [
+                    layer.material
+                    for layer in record.layers
+                    if layer.layer_id in step.target_layer_ids
+                ],
+                self.operation_aliases,
+            )
+            operation = description.operation
+            self.scopes.append(
+                ScientificScope(
                     owner,
-                    "sample_size",
-                    record.sample_size,
+                    "step",
+                    base,
+                    (
+                        step.sequence,
+                        operation,
+                        targets,
+                        UnorderedContext(
+                            tuple(material_name(m) for m in step.materials)
+                        ),
+                    ),
+                )
+            )
+            self.add(
+                "processing",
+                f"{base}/operation",
+                owner,
+                "operation",
+                operation,
+                context,
+                (
+                    f"{base}/operation",
+                    f"{base}/conditions/{description.method_index}",
+                )
+                if description.method_index is not None
+                else (),
+            )
+            context = context.extend(FactContext.of(base, operation=operation))
+            for j, material in enumerate(step.materials):
+                self.add(
+                    "processing",
+                    f"{base}/materials/{j}",
+                    owner,
+                    "material",
+                    material_name(material),
                     context,
                 )
-                add(
-                    "population",
-                    f"{path}/error_bar_type",
-                    owner,
-                    "errorbarstatistic",
-                    record.error_bar_type,
-                    context,
+            condition_context = context.extend(
+                FactContext.of(
+                    base,
+                    materials=UnorderedContext(
+                        tuple(material_name(m) for m in step.materials)
+                    ),
                 )
-                outcome_context = context.extend(
-                    FactContext.of(
-                        path,
-                        sample_size=CohortSize(record.sample_size),
-                        statistic_type=record.statistic_type,
-                        measurement_type=record.measurement_type,
-                        scan_direction=record.scan_direction,
-                    )
-                ).extend(_protocol_context(record, path))
-                for j, metric in enumerate(record.metrics):
-                    if protocol_name(metric.name):
-                        continue
-                    add(
-                        "population",
-                        f"{path}/metrics/{j}",
+            )
+            for j, condition in enumerate(step.conditions):
+                if j != description.method_index:
+                    self.add(
+                        "processing",
+                        f"{base}/conditions/{j}",
                         owner,
-                        performance_name(metric.name, record.measurement_type),
-                        metric,
-                        context
-                        if property_name(metric.name)
-                        in {"errorbarstatistic", "sample_size"}
-                        else outcome_context,
+                        condition_name(condition.name, operation),
+                        condition,
+                        condition_context,
                     )
-                measurement_conditions("population", record, path, owner, context)
 
-            elif collection == "stability_tests":
-                context = FactContext.of(
-                    path,
-                    family_id=reference("device_families", record.family_id),
-                    device_id=device_context(record.device_id, path),
-                    link_status=record.link_status,
-                    specimen_label=scientific_descriptor(record),
+    def device(
+        self, record: IndividualDevice, path: str, owner: RecordReference
+    ) -> None:
+        """Select specimen preparation facts; measured outcomes belong to observations."""
+        treatment = device_treatment(record, path)
+        parent = FactContext.of(
+            path, family_id=self.reference("device_families", record.family_id)
+        )
+        treatment_context = parent.extend(treatment) if treatment is not None else None
+        if record.subject_context is not None:
+            self.treatment_facts(
+                record.subject_context,
+                f"{path}/subject_context",
+                owner,
+                treatment_context,
+            )
+            self.linked_containers.append(
+                (
+                    f"{path}/subject_context/conditions",
+                    f"{path}/reported_properties",
                 )
-                quantities(
-                    "stability", f"{path}/conditions", owner, record.conditions, context
+            )
+        context = FactContext.of(
+            path,
+            family_id=self.reference("device_families", record.family_id),
+            variant=record.variant,
+        )
+        for j, value in enumerate(record.reported_properties):
+            name = treatment_condition_name(value.name)
+            value_context = context
+            if name is not None:
+                assert treatment_context is not None
+                value_context = treatment_context
+            self.add(
+                "processing",
+                f"{path}/reported_properties/{j}",
+                owner,
+                "treatment:" + name if name is not None else property_name(value.name),
+                value,
+                value_context,
+            )
+
+    def performance(
+        self, record: PerformanceObservation, path: str, owner: RecordReference
+    ) -> None:
+        """Attach each individual outcome to its specimen and measurement protocol."""
+        context = self.device_context(record.device_id, path).extend(
+            FactContext.of(
+                path,
+                statistical_level="individual",
+                measurement_type=record.measurement_type,
+                scan_direction=record.scan_direction,
+            )
+        )
+        protocol = _protocol_context(record, path)
+        for j, metric in enumerate(record.metrics):
+            if protocol_name(metric.name):
+                continue
+            self.add(
+                "performance",
+                f"{path}/metrics/{j}",
+                owner,
+                performance_name(metric.name, record.measurement_type),
+                metric,
+                context.extend(protocol),
+            )
+        self.measurement_conditions("performance", record, path, owner, context)
+
+    def population(
+        self, record: PopulationStatistic, path: str, owner: RecordReference
+    ) -> None:
+        """Keep cohort identity, sample counts and statistical outcomes distinct."""
+        for i, subject in enumerate(record.subjects):
+            self.treatment_facts(subject, f"{path}/subjects/{i}", owner)
+        context = FactContext.of(
+            path,
+            statistical_level="population",
+            family_id=self.reference("device_families", record.family_id),
+            label=scientific_descriptor(record),
+            subjects=UnorderedContext(
+                tuple(
+                    subject_context(s, f"{path}/subjects/{i}")
+                    for i, s in enumerate(record.subjects)
                 )
-                context = context.extend(
-                    FactContext.of(path, test_conditions=conditions(record.conditions))
+            ),
+        )
+        self.add(
+            "population",
+            f"{path}/sample_size",
+            owner,
+            "sample_size",
+            record.sample_size,
+            context,
+        )
+        self.add(
+            "population",
+            f"{path}/error_bar_type",
+            owner,
+            "errorbarstatistic",
+            record.error_bar_type,
+            context,
+        )
+        outcome_context = context.extend(
+            FactContext.of(
+                path,
+                sample_size=CohortSize(record.sample_size),
+                statistic_type=record.statistic_type,
+                measurement_type=record.measurement_type,
+                scan_direction=record.scan_direction,
+            )
+        ).extend(_protocol_context(record, path))
+        for j, metric in enumerate(record.metrics):
+            if protocol_name(metric.name):
+                continue
+            self.add(
+                "population",
+                f"{path}/metrics/{j}",
+                owner,
+                performance_name(metric.name, record.measurement_type),
+                metric,
+                context
+                if property_name(metric.name) in {"errorbarstatistic", "sample_size"}
+                else outcome_context,
+            )
+        self.measurement_conditions("population", record, path, owner, context)
+
+    def stability(
+        self, record: StabilityTest, path: str, owner: RecordReference
+    ) -> None:
+        """Attach aging outcomes to their test conditions and ordered checkpoint."""
+        context = FactContext.of(
+            path,
+            family_id=self.reference("device_families", record.family_id),
+            device_id=self.device_context(record.device_id, path),
+            link_status=record.link_status,
+            specimen_label=scientific_descriptor(record),
+        )
+        self.quantities(
+            "stability", f"{path}/conditions", owner, record.conditions, context
+        )
+        context = context.extend(
+            FactContext.of(path, test_conditions=self.conditions(record.conditions))
+        )
+        for i, checkpoint in enumerate(record.checkpoints):
+            base = f"{path}/checkpoints/{i}"
+            self.scopes.append(
+                ScientificScope(
+                    owner,
+                    "checkpoint",
+                    base,
+                    (checkpoint.time, self.conditions(checkpoint.conditions)),
                 )
-                for i, checkpoint in enumerate(record.checkpoints):
-                    base = f"{path}/checkpoints/{i}"
-                    scopes.append(
-                        ScientificScope(
-                            owner,
-                            "checkpoint",
-                            base,
-                            (checkpoint.time, conditions(checkpoint.conditions)),
-                        )
+            )
+            self.add(
+                "stability",
+                f"{base}/time",
+                owner,
+                "time",
+                checkpoint.time,
+                context.extend(
+                    FactContext.of(
+                        base,
+                        checkpoint_conditions=self.conditions(checkpoint.conditions),
                     )
-                    add(
-                        "stability",
-                        f"{base}/time",
-                        owner,
-                        "time",
-                        checkpoint.time,
-                        context.extend(
-                            FactContext.of(
-                                base,
-                                checkpoint_conditions=conditions(checkpoint.conditions),
-                            )
-                        ),
+                ),
+            )
+            self.quantities(
+                "stability",
+                f"{base}/conditions",
+                owner,
+                checkpoint.conditions,
+                context.extend(FactContext.of(base, time=checkpoint.time)),
+            )
+            self.quantities(
+                "stability",
+                f"{base}/outcomes",
+                owner,
+                checkpoint.outcomes,
+                context.extend(
+                    FactContext.of(
+                        base,
+                        time=checkpoint.time,
+                        checkpoint_conditions=self.conditions(checkpoint.conditions),
                     )
-                    quantities(
-                        "stability",
-                        f"{base}/conditions",
-                        owner,
-                        checkpoint.conditions,
-                        context.extend(FactContext.of(base, time=checkpoint.time)),
-                    )
-                    quantities(
-                        "stability",
-                        f"{base}/outcomes",
-                        owner,
-                        checkpoint.outcomes,
-                        context.extend(
-                            FactContext.of(
-                                base,
-                                time=checkpoint.time,
-                                checkpoint_conditions=conditions(checkpoint.conditions),
-                            )
-                        ),
-                    )
-    projection = FactProjection(facts, scopes, linked_containers)
-    projection.merge_linked_representations()
-    projection.merge_material_identities(material_aliases)
-    projection.conflicts.extend(material_conflicts)
-    return projection
+                ),
+            )
+
+    def finish(self) -> FactProjection:
+        """Merge explicitly redundant representations without discarding conflicts."""
+        projection = FactProjection(self.facts, self.scopes, self.linked_containers)
+        projection.merge_linked_representations()
+        projection.merge_material_identities(self.material_aliases)
+        projection.conflicts.extend(self.material_conflicts)
+        return projection
+
+
+def scientific_facts(
+    study: StudyExtraction,
+    identities: dict[str, str],
+    side: str,
+    operation_aliases: dict[str, str],
+    process_references: dict[str, str | None] | None = None,
+    layer_references: dict[str, str | None] | None = None,
+) -> FactProjection:
+    """Select key fields while retaining device, layer, recipe and checkpoint context.
+
+    ``identities`` contains only established top-level record pairings. Unmatched
+    references stay side-specific so two broken links cannot accidentally agree.
+    Paths refer to the original JSON, making every missed or extra fact inspectable.
+    """
+
+    projector = _FactProjector(
+        study,
+        identities,
+        side,
+        operation_aliases,
+        process_references or {},
+        layer_references or {},
+    )
+    collections = (
+        ("device_families", "family_id", projector.family),
+        ("individual_devices", "device_id", projector.device),
+        ("performance_observations", "observation_id", projector.performance),
+        ("population_statistics", "population_id", projector.population),
+        ("stability_tests", "test_id", projector.stability),
+    )
+    for collection, id_field, project in collections:
+        for index, record in enumerate(getattr(study, collection)):
+            owner = projector.reference(collection, getattr(record, id_field))
+            if (subject := measurement_subject(record)) is not None:
+                # Outcomes belong to the specimen, not generated observation IDs.
+                owner = projector.reference(*subject)
+            assert owner is not None
+            project(record, f"/{collection}/{index}", owner)
+    return projector.finish()

@@ -34,6 +34,7 @@ PROTOCOL_NAMES = {
 
 
 def protocol_name(name: str) -> str | None:
+    """Recognize declared measurement conditions; unknown labels stay unclassified."""
     return PROTOCOL_NAMES.get(property_name(name))
 
 

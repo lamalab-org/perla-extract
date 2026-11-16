@@ -31,6 +31,14 @@ project each input independently → align subjects without outcomes
 | Explanations | `scoring_explanation.py` | Consume actual decisions; never run a second matcher |
 | Reference coverage | `scoring_coverage.py`, review/export | Source review determines completeness before model comparison |
 
+To change which fields count, start at `scientific_facts()` in `scoring_facts.py`.
+It visits the five record collections in schema order. `_FactProjector.family`,
+`.device`, `.performance`, `.population` and `.stability` each select fields from
+one record type. Shared helpers attach context and source paths; `finish()` merges
+explicitly redundant representations. For example, a new individual performance
+field belongs in `.performance`, not in the record matcher or CSV writer. Each
+projection reads one input only; it cannot use the other input to fill missing facts.
+
 The concept key separates recipe versus finished material, static measurement
 versus aging-test scope, and absolute efficiency versus retention. Reporting uses
 four domains: performance, material/device identity, processing and stability.
