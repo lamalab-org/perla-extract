@@ -39,7 +39,10 @@ from .scoring_context import (
     FactContext,
     RecordReference,
     compare_context,
+    device_identity,
+    device_treatment,
     has_subject_identity,
+    missing_requirement,
     subject_context,
 )
 from .scoring_context import (
@@ -116,6 +119,7 @@ class FactComparison:
 
     value_equal: bool
     context_equal: bool
+    context_status: Literal["equivalent", "contradictory", "unresolved"]
     ambiguity_blocked: bool
     context_differences: tuple[ContextDifference, ...]
 
@@ -134,30 +138,37 @@ def compare_facts(
     ambiguity_blocked: bool,
     explain: bool = False,
 ) -> FactComparison:
-    # Ordinary scoring needs only booleans and retains the ambiguity short circuit.
-    # Detailed fields are collected solely for requested explanation rows/columns.
-    differences = (
-        compare_context(left.context, right.context, relative, absolute)
-        if explain
-        else ()
-    )
+    # One decision path serves scoring and explanation. Explanation only controls
+    # retention of the detailed differences, never eligibility.
+    differences = compare_context(left.context, right.context, relative, absolute)
     owner_equal = left.owner == right.owner and left.owner.unmatched_side is None
-    if explain and not owner_equal:
+    if not owner_equal:
         differences = (
-            ContextDifference("owner", None, None, left.owner, right.owner),
+            ContextDifference(
+                "owner",
+                None,
+                None,
+                left.owner,
+                right.owner,
+                "missing_required"
+                if missing_requirement(left.owner) or missing_requirement(right.owner)
+                else "conflict",
+            ),
             *differences,
         )
-    context_equal = owner_equal and (
-        not differences
-        if explain
-        else not ambiguity_blocked
-        and equal_value(left.context, right.context, relative, absolute)
-    )
+    context_equal = not differences
     return FactComparison(
         value_equal=equal_value(left.value, right.value, relative, absolute),
         context_equal=context_equal,
+        context_status=(
+            "contradictory"
+            if any(d.reason == "conflict" for d in differences)
+            else "unresolved"
+            if differences or ambiguity_blocked
+            else "equivalent"
+        ),
         ambiguity_blocked=ambiguity_blocked,
-        context_differences=differences,
+        context_differences=differences if explain else (),
     )
 
 
@@ -227,7 +238,10 @@ class FactProjection:
         ]
 
     def merge_linked_representations(self) -> None:
-        """Count equal facts once across a layer and its sole linked absorber.
+        """Count equal facts once across explicitly linked representations.
+
+        Supported links are a layer and its sole absorber, or a device's treatment
+        conditions and reported properties. No links are inferred between subjects.
 
         Only equal property, context and complete value can merge. Unit conversion
         may introduce floating-point roundoff, allowed up to 16 machine epsilons
@@ -303,6 +317,7 @@ def scientific_facts(
     side: str,
     operation_aliases: dict[str, str],
     process_references: dict[str, str | None] | None = None,
+    layer_references: dict[str, str | None] | None = None,
 ) -> FactProjection:
     """Select key fields while retaining device, layer, recipe and checkpoint context.
 
@@ -317,6 +332,7 @@ def scientific_facts(
     material_aliases: list[tuple[str, str]] = []
     material_conflicts: list[tuple[str, str]] = []
     process_references = process_references or {}
+    layer_references = layer_references or {}
     devices = {item.device_id: item for item in study.individual_devices}
     device_paths = {
         item.device_id: f"/individual_devices/{i}"
@@ -335,20 +351,22 @@ def scientific_facts(
 
     def device_context(identifier: str | None, source_path: str) -> FactContext:
         device = devices.get(identifier) if identifier is not None else None
-        return FactContext.of(
-            source_path, device_id=reference("individual_devices", identifier)
-        ).extend(
+        return (
             FactContext.of(
-                device_paths.get(identifier) if identifier is not None else None,
-                family_id=reference("device_families", device.family_id)
+                source_path, device_id=reference("individual_devices", identifier)
+            )
+            .extend(
+                FactContext.of(
+                    device_paths.get(identifier) if identifier is not None else None,
+                    family_id=reference("device_families", device.family_id)
+                    if device
+                    else None,
+                )
+            )
+            .extend(
+                device_identity(device, device_paths[device.device_id])
                 if device
-                else None,
-                variant=device.variant if device else None,
-                champion_status=device.champion_status if device else None,
-                selection_basis=device.selection_basis if device else None,
-                subject_context=subject_context(device.subject_context)
-                if device and device.subject_context is not None
-                else None,
+                else FactContext()
             )
         )
 
@@ -361,6 +379,13 @@ def scientific_facts(
         context: FactContext = FactContext(),
         source_paths: tuple[str, ...] = (),
     ) -> None:
+        if (
+            isinstance(value, ReportedValue)
+            and value.value_number is None
+            and value.unit is None
+            and value.raw_value.strip().casefold() in {"not_reported", "not reported"}
+        ):
+            return
         if value is not None and value != "not_reported" and value != "":
             if name == "errorbarstatistic":
                 if isinstance(value, str):
@@ -414,9 +439,12 @@ def scientific_facts(
         return UnorderedContext(tuple((property_name(v.name), v) for v in values))
 
     def treatment_facts(
-        subject: SubjectContext, path: str, owner: RecordReference
+        subject: SubjectContext,
+        path: str,
+        owner: RecordReference,
+        context: FactContext | None = None,
     ) -> None:
-        context = subject_context(subject, path)
+        context = context if context is not None else subject_context(subject, path)
         scopes.append(
             ScientificScope(
                 owner,
@@ -586,6 +614,14 @@ def scientific_facts(
                         material_conflicts.append(paths)
 
                 def layer_reference(identifier: str | None) -> object:
+                    source = layer_paths.get(identifier)
+                    if source in layer_references:
+                        paired = layer_references[source]
+                        return (
+                            RecordReference(paired)
+                            if paired is not None
+                            else RecordReference(source, side)
+                        )
                     return (
                         layers.get(identifier, f"{side}:unmatched_layer:{identifier}")
                         if identifier
@@ -605,9 +641,18 @@ def scientific_facts(
                             else (material_name(layer.material), layer.role),
                         )
                     )
-                    context = FactContext.of(kind="layer").extend(
-                        FactContext.of(base, sequence=layer.sequence)
+                    position = (
+                        FactContext(
+                            (
+                                ContextComponent(
+                                    "layer", layer_reference(layer.layer_id), base
+                                ),
+                            )
+                        )
+                        if base in layer_references
+                        else FactContext.of(base, sequence=layer.sequence)
                     )
+                    context = FactContext.of(kind="layer").extend(position)
                     add(
                         "stack",
                         f"{base}/material",
@@ -816,22 +861,47 @@ def scientific_facts(
                                 else condition_context,
                             )
             elif collection == "individual_devices":
+                treatment = device_treatment(record, path)
+                parent = FactContext.of(
+                    path, family_id=reference("device_families", record.family_id)
+                )
+                treatment_context = (
+                    parent.extend(treatment) if treatment is not None else None
+                )
                 if record.subject_context is not None:
                     treatment_facts(
-                        record.subject_context, f"{path}/subject_context", owner
+                        record.subject_context,
+                        f"{path}/subject_context",
+                        owner,
+                        treatment_context,
+                    )
+                    linked_containers.append(
+                        (
+                            f"{path}/subject_context/conditions",
+                            f"{path}/reported_properties",
+                        )
                     )
                 context = FactContext.of(
                     path,
                     family_id=reference("device_families", record.family_id),
                     variant=record.variant,
                 )
-                quantities(
-                    "processing",
-                    f"{path}/reported_properties",
-                    owner,
-                    record.reported_properties,
-                    context,
-                )
+                for j, value in enumerate(record.reported_properties):
+                    name = treatment_condition_name(value.name)
+                    value_context = context
+                    if name is not None:
+                        assert treatment_context is not None
+                        value_context = treatment_context
+                    add(
+                        "processing",
+                        f"{path}/reported_properties/{j}",
+                        owner,
+                        "treatment:" + name
+                        if name is not None
+                        else property_name(value.name),
+                        value,
+                        value_context,
+                    )
             elif collection == "performance_observations":
                 context = device_context(record.device_id, path).extend(
                     FactContext.of(

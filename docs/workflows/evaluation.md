@@ -81,8 +81,8 @@ You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results. Their scores are diagnostic; source compatibility is unverified.
 
-Reports use format 11, matcher `rich-study-hungarian-v14` and fact profile
-`core-scientific-facts-v11`. Regenerate older reports from saved predictions before
+Reports use format 11, matcher `rich-study-hungarian-v15` and fact profile
+`core-scientific-facts-v12`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
@@ -122,17 +122,22 @@ Some details affect how facts are counted:
 - Structured layers take precedence over the raw stack string. If there are no
   layers, the scorer counts the raw stack string as one fact, falling back to
   architecture if the string is absent. It does not split the string into layers.
-- A layer material is compared at its recorded sequence. Its role, form and
-  properties also require the material to agree.
+- Fully ordered layers align by material and relative order. Only links shared by
+  all longest alignments establish correspondence; omissions remain unmatched.
+  Roles, forms and properties also require the material to agree. Partial orders
+  retain their explicit scopes.
 - Fully ordered recipes align by operation and target in relative order, allowing
   gaps. A missing middle operation does not invalidate later retained steps solely
   because they were renumbered. Recognized duration/temperature conditions of an unambiguously aligned annealing
   step, and duration/speed of spin coating, do not require an optional material list.
   Concentrations, ratios and unknown conditions still require it to agree. Partially ordered recipes retain their explicit sequence/operation/target
   scopes; no missing sequence is inferred. Specimen-specific properties use the
-  device's family and variant.
+  device's family and canonical treatment context (literal variant when no
+  recognized treatment inputs are supplied).
 - Equal properties and constituents repeated in a layer and its sole explicitly
-  linked absorber count once. `core_facts.fact_sources` retains all original paths
+  linked absorber count once. Equal recognized treatment inputs repeated in a
+  device's structured conditions and reported properties also count once.
+  `core_facts.fact_sources` retains all original paths
   for each canonical fact. Copies within one list or in different layers remain
   separate facts. Merging allows only conversion roundoff (16 machine epsilons
   relatively, zero absolute allowance), independently of matching tolerances.
@@ -326,12 +331,22 @@ The scorer pairs families first, followed by individual devices, performance
 observations, populations and stability tests. It pairs records only within the
 same type. Parent pairings can then guide the child pairings.
 
-Families use the Jaccard overlap of structural features: layer materials and their
-sequence positions, constituent names, absorber formulas and the design variant.
-Without structured layers, raw stack/architecture text supplies the stack features.
-Display labels, recipes and measured properties do not establish family identity.
-Missing properties therefore lose their own recall without erasing unchanged
-measurements linked to the family. Checked material aliases apply to these features.
+Fully ordered families use `(2L+V)/(n+m+1)`: `L` is the longest common material
+subsequence, `n,m` are layer counts, and `V` is one for exactly equal nonempty
+variant labels after spacing normalization. Label length adds no weight. Missing
+and different labels both contribute zero. Exact arm labels can therefore
+preserve a distinction absent from the stack, without interpreting unknown prose.
+Incomplete orders use the conservative Jaccard feature fallback (materials,
+explicit positions, constituent names, absorber formulas and variant); missing
+layers use the raw stack/architecture fallback. Recipes and outcomes cannot
+establish family identity. See the [method specification](../methods/scientific-scoring.md)
+for alignment and ambiguity rules.
+
+When both devices provide treatment context, registered inputs are compared in
+canonical units, together with stage, material and selection. Device properties
+and structured conditions supply the same interpretation. Unknown conditions are
+required by fact context but cannot break an identity tie. If no registered input
+establishes identity, the literal variant is retained.
 
 For other record types, similarity is the Jaccard overlap of declared identity
 features, including a shared record-type feature:
@@ -513,8 +528,10 @@ Text comparison preserves chemical charge superscripts before Unicode normalizat
 standardizes the minus sign and collapses whitespace. It does not turn `Fe³⁺` into
 `Fe3+` (three Fe atoms with charge notation) or conflate `Co` with `CO`. Simple formulas also accept numeric LaTeX subscripts:
 `CH_{3}NH_{3}PbI_{3}` equals `CH3NH3PbI3`. This rule requires the entire string to
-consist of element-like tokens with numeric subscripts. It does not simplify
-symbolic stoichiometry, charges, parentheses or arbitrary prose.
+consist of element-like tokens with numeric or bounded symbolic coefficients:
+`I_{3-x}` equals `I3-x`, but neither equals `I3+x` or `I3-y`. This changes notation
+without evaluating the expression. Charges, parentheses and arbitrary prose are
+not simplified.
 
 Material fields use the small explicit vocabulary in `scoring_vocabulary.py`:
 for example, `silver`, `Ag` and `Silver (Ag)` agree. Both halves of a parenthetical
@@ -734,3 +751,10 @@ Keep calibration, development and test results separate. Papers used to change
 parsing, prompts, schemas, matching, thresholds or model selection are not held out.
 When a reference changes, freeze a new version and rescore all compared predictions
 against it.
+
+
+The [scientific scoring methods](../methods/scientific-scoring.md) give the exact
+identity, layer-alignment, context and numeric rules for a paper methods section.
+Explanation format 5 names context as equivalent, contradictory or unresolved;
+that classification does not turn unresolved facts into matches. The study schema
+and ground-truth format have not changed.

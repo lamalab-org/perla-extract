@@ -100,6 +100,25 @@ def describe_process(
     return ProcessDescription(operation)
 
 
+def _alignment_lengths(a: list[object], b: list[object]) -> list[list[int]]:
+    table = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]
+    for i, x in enumerate(a):
+        for j, y in enumerate(b):
+            table[i + 1][j + 1] = max(
+                table[i][j + 1], table[i + 1][j], table[i][j] + int(x == y)
+            )
+    return table
+
+
+def ordered_overlap(left: list[object], right: list[object]) -> float:
+    """Fraction of entries explained by their longest common ordered sequence."""
+    return (
+        2 * _alignment_lengths(left, right)[-1][-1] / (len(left) + len(right))
+        if left or right
+        else 1.0
+    )
+
+
 def ordered_alignment(
     left: list[object], right: list[object]
 ) -> tuple[set[tuple[int, int]], set[tuple[int, int]]]:
@@ -110,17 +129,8 @@ def ordered_alignment(
     is no outcome-dependent tie breaker and no enumeration of alignments.
     """
 
-    def lengths(a: list[object], b: list[object]) -> list[list[int]]:
-        table = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]
-        for i, x in enumerate(a):
-            for j, y in enumerate(b):
-                table[i + 1][j + 1] = max(
-                    table[i][j + 1], table[i + 1][j], table[i][j] + int(x == y)
-                )
-        return table
-
-    prefix = lengths(left, right)
-    suffix = lengths(left[::-1], right[::-1])
+    prefix = _alignment_lengths(left, right)
+    suffix = _alignment_lengths(left[::-1], right[::-1])
     previous: list[frozenset[tuple[int, int]]] = [frozenset()] * (len(right) + 1)
     for i, x in enumerate(left):
         current: list[frozenset[tuple[int, int]]] = [frozenset()]
@@ -160,6 +170,7 @@ def align_processes(
     prediction: StudyExtraction,
     family_pairs: list[tuple[str, str]],
     aliases: dict[str, str],
+    layer_references: list[dict[str, str | None]] | None = None,
 ) -> ProcessAlignment:
     """Align fully ordered recipes; retain explicit scopes for partial orders."""
 
@@ -177,6 +188,25 @@ def align_processes(
         index: int, family: DeviceFamily, side: int
     ) -> list[tuple[str, object]]:
         layers = {layer.layer_id: layer for layer in family.layers}
+        layer_paths = {
+            layer.layer_id: f"/device_families/{index}/layers/{i}"
+            for i, layer in enumerate(family.layers)
+        }
+        links = layer_references[side] if layer_references is not None else {}
+
+        def target(identifier: str) -> object:
+            path = layer_paths.get(identifier)
+            if path in links:
+                return links[path] or f"{side}:unmatched:{path}"
+            return (
+                (
+                    layers[identifier].sequence,
+                    material_name(layers[identifier].material),
+                )
+                if identifier in layers
+                else (None, f"{side}:unmatched:{identifier}")
+            )
+
         rows: list[tuple[str, object]] = []
         for i, step in sorted(
             enumerate(family.processing_steps), key=lambda pair: pair[1].sequence or 0
@@ -186,12 +216,7 @@ def align_processes(
                 layers[t].material for t in step.target_layer_ids if t in layers
             ]
             targets = sorted(
-                [
-                    (layers[t].sequence, material_name(layers[t].material))
-                    if t in layers
-                    else (None, f"{side}:unmatched:{t}")
-                    for t in step.target_layer_ids
-                ],
+                [target(t) for t in step.target_layer_ids],
                 key=repr,
             )
             operation = describe_process(step, target_names, aliases).operation

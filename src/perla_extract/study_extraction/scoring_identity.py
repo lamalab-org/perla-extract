@@ -20,10 +20,13 @@ from .models import (
 from .scoring_claims import scientific_text
 from .scoring_context import (
     UnorderedContext,
+    device_identity,
+    device_treatment,
     equal_value,
     has_subject_identity,
     subject_context,
 )
+from .scoring_layers import ordered_layers, stack_similarity
 from .scoring_protocol import protocol_claims
 from .scoring_vocabulary import material_name, material_stage, property_name
 
@@ -49,6 +52,9 @@ def record_similarity(
     # A family describes a design. Recipe completeness and measured properties
     # must not determine its identity or suppress credit for unchanged children.
     if isinstance(left, DeviceFamily) and isinstance(right, DeviceFamily):
+        structural = stack_similarity(left, right)
+        if structural is not None:
+            return structural
         return _jaccard(_family_features(left), _family_features(right))
     if isinstance(left, PopulationStatistic) and isinstance(right, PopulationStatistic):
         if (
@@ -75,24 +81,14 @@ def record_similarity(
                 )
             )
     if isinstance(left, IndividualDevice) and isinstance(right, IndividualDevice):
-        if (
-            left.subject_context is not None
-            and right.subject_context is not None
-            and has_subject_identity(left.subject_context)
-            and has_subject_identity(right.subject_context)
-        ):
-            if not equal_value(
-                subject_context(left.subject_context, identity_only=True),
-                subject_context(right.subject_context, identity_only=True),
-                relative,
-                absolute,
-            ):
-                return 0
-            # Treatment establishes the arm, while champion/selection identifies
-            # a particular specimen within it. Repeated identities stay ambiguous.
+        if device_treatment(left) is not None and device_treatment(right) is not None:
             return float(
-                (left.champion_status, left.selection_basis, left.variant)
-                == (right.champion_status, right.selection_basis, right.variant)
+                equal_value(
+                    device_identity(left, identity_only=True),
+                    device_identity(right, identity_only=True),
+                    relative,
+                    absolute,
+                )
             )
     a, b = _identity_features(left), _identity_features(right)
     shared, total = len(a & b), len(a | b)
@@ -171,7 +167,19 @@ def _protocol(record: object) -> tuple[tuple[object, ...], ...]:
 def family_pair_evidence(
     left: DeviceFamily, right: DeviceFamily
 ) -> dict[str, list[str]]:
-    """Expose the exact design features behind a selected family's Jaccard score."""
+    """Expose the ordered materials, or fallback features, used to pair a family."""
+    left_order, right_order = ordered_layers(left), ordered_layers(right)
+    if left_order is not None and right_order is not None:
+        return {
+            "truth_stack": [material_name(layer.material) for _, layer in left_order],
+            "prediction_stack": [
+                material_name(layer.material) for _, layer in right_order
+            ],
+            "truth_variant": [scientific_text(left.variant)] if left.variant else [],
+            "prediction_variant": [scientific_text(right.variant)]
+            if right.variant
+            else [],
+        }
     a, b = _family_features(left), _family_features(right)
     return {
         "shared": sorted(a & b),

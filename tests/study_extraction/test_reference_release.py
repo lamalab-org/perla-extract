@@ -139,8 +139,8 @@ def test_reference_score_invariance_and_negative_controls(release, index, paper)
     # rewrite a frozen reference just to change that historical metadata.
     assert index["matcher_version"] == "rich-study-hungarian-v6"
     assert index["fact_profile"] == "core-scientific-facts-v4"
-    assert same.matcher_version == "rich-study-hungarian-v14"
-    assert same.core_facts.profile == "core-scientific-facts-v11"
+    assert same.matcher_version == "rich-study-hungarian-v15"
+    assert same.core_facts.profile == "core-scientific-facts-v12"
     withheld = AMBIGUOUS_PERFORMANCE_FACTS.get(paper["paper_id"], 0)
     assert same.core_facts.micro.truth - same.core_facts.micro.matched == withheld
     assert same.core_facts.recovery.micro.f1 == 1

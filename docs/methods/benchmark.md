@@ -7,7 +7,8 @@ does not match the same value assigned to a forward scan.
 The scorer is deterministic and makes no model calls. Start with the
 [worked example](../workflows/scoring-example.md) to run it without papers or an API
 key. The [scoring reference](../workflows/evaluation.md) documents the exact matching,
-tolerance and reporting rules.
+tolerance and reporting rules. The [scientific scoring specification](scientific-scoring.md)
+provides the equations, decision rules and validation limits for a methods section.
 
 ## Inputs
 
@@ -74,7 +75,7 @@ records by content within each record type. Family and device pairings, together
 with measurement conditions, help pair their child records. Each prediction can
 match only one reference record.
 
-Family matching uses structure, composition and variant; missing recipes or
+Family matching uses ordered material identity and exact variant support; missing recipes or
 measured properties lose their own credit without changing family identity.
 Device/measurement identity uses declared specimen and protocol fields, excluding
 outcomes, metric names and annotation completeness. Indistinguishable repeated
@@ -109,7 +110,7 @@ temperature expressed in kelvin. It does not represent experimental uncertainty.
 Use `--numeric-relative-tolerance 1e-6` for a stricter sensitivity analysis. Freeze
 the chosen tolerance across all arms; it is recorded in each report. Ranges and
 symmetric uncertainties compare both components after conversion. Simple chemical
-formulas accept numeric LaTeX subscripts. Checked material names and redundant
+formulas accept numeric and bounded symbolic LaTeX subscripts. Checked material names and redundant
 layer-property qualifiers are normalized by a small versioned vocabulary;
 unfamiliar descriptions remain literal. Printed powers of ten and explicit
 ohms-per-square notation are recognized. A unit explicitly present in a raw scalar,

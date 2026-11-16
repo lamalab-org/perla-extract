@@ -33,7 +33,11 @@ def amended(item):
         )
     )
     updated = AdjudicationQueue._apply(original, request.proposals[0].changes)
-    return StudyExtraction.model_validate(original).model_dump(mode="json"), updated, request
+    return (
+        StudyExtraction.model_validate(original).model_dump(mode="json"),
+        updated,
+        request,
+    )
 
 
 @pytest.mark.parametrize("item", PLAN["papers"], ids=lambda p: p["paper_id"])
@@ -120,7 +124,9 @@ def test_v2_contains_exactly_the_logged_record_and_note_corrections():
                 / "ground_truth.json"
             ).read_text(encoding="utf-8")
         )
-        assert StudyExtraction.model_validate(frozen).model_dump(mode="json") == expected
+        assert (
+            StudyExtraction.model_validate(frozen).model_dump(mode="json") == expected
+        )
 
 
 def test_v2_preserves_the_other_26_scientific_jsons():
@@ -136,3 +142,34 @@ def test_v2_preserves_the_other_26_scientific_jsons():
         assert (releases / "v1" / relative).read_bytes() == (
             releases / "v2" / relative
         ).read_bytes()
+
+
+def test_proposed_microlitre_correction_changes_only_the_two_source_checked_units():
+    from copy import deepcopy
+
+    plan = PlanRequest.model_validate_json(
+        (
+            ROOT / "data/study_extraction/reference_amendments/2026-11-16/proposal.json"
+        ).read_bytes()
+    )
+    original = json.loads(
+        (
+            ROOT
+            / "data/study_extraction/ground_truth/v2/dev/10.1038--nmat4014/ground_truth.json"
+        ).read_text()
+    )
+    assert _digest(original) == plan.study_sha256
+    revised = AdjudicationQueue._apply(original, plan.proposals[0].changes)
+    StudyExtraction.model_validate(revised)
+    expected = deepcopy(original)
+    for index, number in ((1, 15), (2, 7.5)):
+        value = expected["device_families"][0]["layers"][5]["constituents"][index][
+            "amount"
+        ]
+        assert value["raw_value"] == f"{number} l" and value["unit"] == "l"
+        value.update(raw_value=f"{number} µl", unit="µl")
+    assert revised == StudyExtraction.model_validate(expected).model_dump(mode="json")
+    tampered = deepcopy(original)
+    tampered["device_families"][0]["label"] = "different revision"
+    with pytest.raises(ValueError, match="changed"):
+        AdjudicationQueue._apply(tampered, plan.proposals[0].changes)

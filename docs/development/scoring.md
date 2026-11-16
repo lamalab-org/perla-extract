@@ -22,7 +22,7 @@ project each input independently → align subjects without outcomes
 | Concept/name equivalence | `scoring_vocabulary.py` | Checked positive and negative examples; unknowns stay literal |
 | Measurement protocol | `scoring_protocol.py` | Identity and outcome context use the same definition |
 | Quantity interpretation | `scoring_claims.py`, `units.py` | Preserve units, bounds, uncertainty and raw/parsed contradictions |
-| Subject identity | `scoring_identity.py` | No scored outcomes or completeness-based tie-breaking |
+| Subject identity | `scoring_identity.py`, `scoring_layers.py` | No scored outcomes or completeness-based tie-breaking |
 | Context | `scoring_context.py` | Named requirements; preserve missingness, units and multiplicity |
 | Fact inventory | `scoring_facts.py` | Project each input without consulting the other; preserve source paths |
 | Display categories | `scoring_fields.py` | Categories never select candidate matches |
@@ -51,6 +51,24 @@ Repeated indistinguishable subjects remain ambiguous, even with different outcom
 Only the checked treatment-condition names may establish identity. Unknown fields
 remain stored/scored but cannot break a tie; a misplaced PCE cannot become identity.
 
+## Identity, required context and description
+
+| Information | Role in scoring |
+| --- | --- |
+| Ordered layer materials, explicit treatment inputs, exact arm labels when needed | Establish correspondence without measured outcomes |
+| Treatment stage/material, scan, statistic, supplied measurement protocol | Required meaning of an attributed claim |
+| A long variant description already established by explicit treatment inputs | Redundant wording; does not veto the outcome |
+| Missing distinguishing inputs or ambiguous owners | Unresolved; no attributed credit |
+| Explicitly different inputs, materials or protocols | Contradictory; no attributed credit |
+| Source evidence and citation validity | Checked separately; recovery cannot establish support |
+
+Device treatment properties and structured conditions share one independent
+projection. Unknown conditions remain required context but cannot establish
+identity. A label remains a fallback when recognized inputs are absent. Layer
+alignment uses ordered materials and passes the same links to composition and
+recipe targets. It never fills omitted layers. See the [paper methods](../methods/scientific-scoring.md)
+for the exact similarity equation, tolerances, score definitions and limits.
+
 ## Run and inspect the existing example
 
 ```bash
@@ -77,8 +95,8 @@ when explicitly redundant linked material representations merge.
 
 ## Current contract and migration
 
-Evaluation format **11**, matcher **v14**, fact profile **v11**, explanation format
-**4**, and study schema **7** are current. Ground-truth format **4** is unchanged.
+Evaluation format **11**, matcher **v15**, fact profile **v12**, explanation format
+**5**, and study schema **7** are current. Ground-truth format **4** is unchanged.
 Archived schema-6 inputs load through the additive schema with unknown defaults;
 no treatment/protocol is inferred and no archived file is overwritten. Existing
 hash-scoped reviewed descriptor rules were rebound to the parsed schema-7 content
@@ -129,3 +147,19 @@ assignment or report code. Independently reviewed cross-paper samples and a
 held-out set remain necessary for scientific calibration. The existing
 `examples.scoring.sample_review` creates blinded blank review sheets and a separate
 analyst key; generating them does not constitute expert validation.
+
+
+To sample a revised score against a retained baseline, without changing the run:
+
+```bash
+PYTHONPATH=.:src python -m examples.scoring.sample_review \
+  --truth path/to/reference --prediction path/to/sealed-run \
+  --score path/to/revised-evaluation.json --baseline path/to/original-evaluation.json \
+  --view both --per-stratum 5 --seed 17 --output path/to/new-review-packet
+```
+
+The review sheet names the score view and leaves decisions blank. The analyst key
+contains inclusion probabilities, credit/change strata and both score contracts.
+Inventory removals remain in the complete replay ledger; a current-score sample
+cannot select a fact no longer in its inventory. Historical JSON is read only by
+the audit comparison helper, not supported as a second runtime scorer.

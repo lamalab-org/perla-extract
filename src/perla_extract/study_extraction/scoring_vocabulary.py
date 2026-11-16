@@ -28,6 +28,12 @@ METRIC_ALIASES = {
 
 def property_name(name: str) -> str:
     """Normalize typography and checked property synonyms; retain unknown concepts."""
+    pair = re.fullmatch(r"(.+?)\s*\(([^()]+)\)", scientific_text(name))
+    if pair:
+        parts = [re.sub(r"[\s_-]+", "", p.casefold()) for p in pair.groups()]
+        concepts = [METRIC_ALIASES.get(p, p) for p in parts]
+        if concepts[0] == concepts[1] and concepts[0] in {"pce", "voc", "jsc", "ff"}:
+            return concepts[0]
     key = re.sub(r"[\s_-]+", "", scientific_text(name).casefold())
     return METRIC_ALIASES.get(key, key)
 
@@ -43,28 +49,48 @@ def error_bar_statistic(value: str) -> str:
     }.get(key, value)
 
 
-def treatment_condition_name(name: str) -> str | None:
-    """Only declared treatment inputs can establish identity, never outcomes.
+TREATMENT_NAMES = {
+    "atmosphere": "atmosphere",
+    "treatmentatmosphere": "atmosphere",
+    "temperature": "temperature",
+    "annealingtemperature": "temperature",
+    "duration": "duration",
+    "annealingtime": "duration",
+    "annealingduration": "duration",
+    "treatmentduration": "duration",
+    "treatment": "treatment",
+    "concentration": "concentration",
+    "pressure": "pressure",
+    "relativehumidity": "relativehumidity",
+    "illumination": "illumination",
+    "illuminationintensity": "illuminationintensity",
+    "electrodepositionpotential": "electrodeposition_potential",
+    "depositionpotential": "electrodeposition_potential",
+    "polymerizationchargedensity": "charge_density",
+    "chargedensity": "charge_density",
+    "postreductionpotential": "postreduction_potential",
+    "postreductiontime": "postreduction_duration",
+    "postreductionduration": "postreduction_duration",
+}
 
-    Unknown fields remain stored/scored, but cannot resolve a cohort tie. This
-    allowlist prevents a misplaced efficiency or bandgap from becoming identity.
+
+def treatment_condition_name(name: str) -> str | None:
+    """Recognize stated treatment inputs, preserving explicit material qualifiers.
+
+    A known material may prefix a registered condition, e.g. ``PEDOT deposition
+    potential``. Unknown qualifiers, starting/ending temperatures and outcomes
+    stay literal and cannot establish a treatment identity.
     """
-    return {
-        "atmosphere": "atmosphere",
-        "treatmentatmosphere": "atmosphere",
-        "temperature": "temperature",
-        "annealingtemperature": "temperature",
-        "duration": "duration",
-        "annealingtime": "duration",
-        "annealingduration": "duration",
-        "treatmentduration": "duration",
-        "treatment": "treatment",
-        "concentration": "concentration",
-        "pressure": "pressure",
-        "relativehumidity": "relativehumidity",
-        "illumination": "illumination",
-        "illuminationintensity": "illuminationintensity",
-    }.get(property_name(name))
+    direct = TREATMENT_NAMES.get(property_name(name))
+    if direct is not None:
+        return direct
+    text = scientific_text(name)
+    for separator in re.finditer(r"\s+", text):
+        material, condition = text[: separator.start()], text[separator.end() :]
+        canonical = TREATMENT_NAMES.get(property_name(condition))
+        if canonical is not None and known_material(material):
+            return f"{canonical}@{material_name(material)}"
+    return None
 
 
 MATERIAL_ROLES = {
@@ -128,6 +154,12 @@ MATERIAL_NAMES = {
     "poly(3-hexylthiophene)": "P3HT",
     "poly-3-hexylthiophene": "P3HT",
     "methylammonium lead triiodide": "MAPbI3",
+    "poly(3,4-ethylenedioxythiophene)": "PEDOT",
+    "glass": "glass",
+    "spiro-meotad": "spiro-MeOTAD",
+    "spiromeotad": "spiro-MeOTAD",
+    "pc61bm": "PC61BM",
+    "fluorinedoped tin oxide conducting glass": "FTO",
 }
 _SYMBOLS = set(MATERIAL_NAMES.values())
 _CONTAINERS = (" layer", " electrode", " contact", " substrate")
@@ -165,6 +197,20 @@ def material_name(value: str) -> str:
         )
         if left is not None and left == right:
             return left
+    # A manufacturer is descriptive only when the full name and abbreviation
+    # independently establish the same material. Unknown/doped names stay literal.
+    vendor = re.fullmatch(r"(.+?)\s*\(([^(),]+),\s*[^()]+\)", text)
+    if vendor:
+        left, right = (_known_material(p.strip()) for p in vendor.groups())
+        if left is not None and left == right:
+            return left
+    form = re.fullmatch(r"(compact|mesoporous)\s+(.+?)(?: layer)?", text, re.IGNORECASE)
+    if form and known_material(form[2]):
+        return f"{form[1].lower()} {material_name(form[2])}"
+    if text.casefold().endswith(" htm"):
+        known = _known_material(text[:-4])
+        if known is not None:
+            return known
     return text
 
 
@@ -221,6 +267,10 @@ def scientific_concept(
     conditions/outcomes retain their test scope rather than becoming static device
     properties. Context determines attribution after this candidate gate.
     """
+    if group == "processing":
+        # Storage under subject context or recipe conditions does not create a
+        # different quantity. Attribution still checks owner and operation.
+        return group, name.removeprefix("treatment:")
     if group in {"performance", "population"}:
         return "measurement", name
     if group == "stability":

@@ -21,6 +21,11 @@ def quantity(raw, number=None, unit=None):
 @pytest.mark.parametrize(
     "left,right",
     [
+        (quantity("E = 1.0 V", 1, "V"), quantity("1 V", 1, "V")),
+        (
+            quantity("Q pol = 10 mC cm -2", 10, "mC cm -2"),
+            quantity("10 mC cm-2", 10, "mC cm-2"),
+        ),
         (quantity("15 Ω sq -1", 15, "Ω sq -1"), quantity("15 Ω sq−1", 15, "Ω sq−1")),
         (quantity("15 Ω/□"), quantity("0.015 kΩ/square", 0.015, "kΩ/square")),
         (quantity("15 ohms per square"), quantity("15 Ω/sq", 15, "Ω/sq")),
@@ -48,6 +53,9 @@ def test_complete_notation_changes_preserve_value_and_public_fact_credit(left, r
 @pytest.mark.parametrize(
     "left,right",
     [
+        (quantity("mean = 1.0 V", 1, "V"), quantity("1 V", 1, "V")),
+        (quantity("E < 1.0 V", 1, "V"), quantity("1 V", 1, "V")),
+        (quantity("E = 1.0 V", 2, "V"), quantity("1 V", 1, "V")),
         (quantity("15 Ω/sq", 15, "Ω/sq"), quantity("15 Ω/m²", 15, "Ω/m²")),
         (quantity("15 Ω/sq", 15, "Ω/sq"), quantity("15 kΩ/sq", 15, "kΩ/sq")),
         (quantity("15 Ω/sq", 15, "kΩ/sq"), quantity("15 Ω/sq", 15, "Ω/sq")),

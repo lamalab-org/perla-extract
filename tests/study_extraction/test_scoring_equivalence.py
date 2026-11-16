@@ -53,7 +53,9 @@ def value(raw, unit=None, number=None):
         (value("CH_{3}NH_{3}PbI_{3}"), value("CH3NH3PbI2"), False),
         (value("CH_{3}NH_{3}PbI_{3}"), value("MAPbI3"), False),
         (value("Co_{2}O_{3}"), value("CO2O3"), False),
-        (value("I_{3-x}"), value("I3-x"), False),
+        (value("I_{3-x}"), value("I3-x"), True),
+        (value("I_{3-x}"), value("I3+x"), False),
+        (value("I_{3-x}"), value("I3-y"), False),
         (value("x_{1} + y_{2}"), value("x1 + y2"), False),
     ],
 )
@@ -269,7 +271,9 @@ def test_charge_and_atom_count_remain_distinct_in_scored_composition():
     ]
     prediction = truth.model_copy(deep=True)
     prediction.device_families[0].absorbers[0].constituents[0].name = "Fe₃⁺"
-    score = evaluate_study(truth, prediction).core_facts.groups["material_device_identity"]
+    score = evaluate_study(truth, prediction).core_facts.groups[
+        "material_device_identity"
+    ]
     assert score.matched < score.truth
     assert not equal_value("Fe³⁺", "Fe₃⁺", 1e-6, 0)
     assert equal_value("CH₃NH₃PbI₃", "CH3NH3PbI3", 1e-6, 0)

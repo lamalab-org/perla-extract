@@ -49,10 +49,11 @@ from .scoring_facts import (
 from .scoring_fields import FACT_GROUPS, FACT_SUBFIELDS, FactSubfield
 from .scoring_identity import family_pair_evidence
 from .scoring_identity import record_similarity as _record_similarity
+from .scoring_layers import align_layers
 from .scoring_process import align_processes
 
 EVALUATION_FORMAT_VERSION: Final[Literal[11]] = 11
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v14"]] = "rich-study-hungarian-v14"
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v15"]] = "rich-study-hungarian-v15"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -361,7 +362,7 @@ class ScoringIssue(StrictModel):
 class CoreFactScore(FactScoreView):
     """Correctly attributed claims, with recovery over the identical fact inventory."""
 
-    profile: Literal["core-scientific-facts-v11"] = "core-scientific-facts-v11"
+    profile: Literal["core-scientific-facts-v12"] = "core-scientific-facts-v12"
     recovery: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
     issues: list[ScoringIssue]
@@ -422,7 +423,7 @@ class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
     format_version: Literal[11] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v14"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v15"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -514,7 +515,7 @@ class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
     format_version: Literal[11] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v14"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v15"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -932,19 +933,25 @@ def _core_fact_score(
     prediction_ids = {
         f"{kind}:{right}": f"{kind}:{left}" for kind, left, right in identities
     }
+    families = [
+        (left, right) for kind, left, right in identities if kind == "device_families"
+    ]
+    layers = align_layers(truth, prediction, families)
     processes = align_processes(
         truth,
         prediction,
-        [
-            (left, right)
-            for kind, left, right in identities
-            if kind == "device_families"
-        ],
+        families,
         config.operation_aliases,
+        layers.references,
     )
     projections = [
         scientific_facts(
-            truth, truth_ids, "truth", config.operation_aliases, processes.references[0]
+            truth,
+            truth_ids,
+            "truth",
+            config.operation_aliases,
+            processes.references[0],
+            layers.references[0],
         ),
         scientific_facts(
             prediction,
@@ -952,6 +959,7 @@ def _core_fact_score(
             "prediction",
             config.operation_aliases,
             processes.references[1],
+            layers.references[1],
         ),
     ]
     issues: list[ScoringIssue] = []
@@ -972,7 +980,19 @@ def _core_fact_score(
                         reason="Both studies contain this record type, but no owners paired. Inspect alignment before interpreting zero contextual credit as failed information recovery.",
                     )
                 )
-    ambiguous_prefixes: list[set[str]] = [set(paths) for paths in processes.ambiguous]
+    ambiguous_prefixes: list[set[str]] = [
+        set(a) | b for a, b in zip(processes.ambiguous, layers.ambiguous)
+    ]
+    for side, layer_paths in zip(("truth", "prediction"), layers.ambiguous):
+        if layer_paths:
+            issues.append(
+                ScoringIssue(
+                    kind="ambiguous_scope",
+                    side=side,
+                    paths=sorted(layer_paths),
+                    reason="Alternative longest ordered material alignments change these layer links; roles, composition and outcomes cannot break the tie.",
+                )
+            )
     for side, process_paths in zip(("truth", "prediction"), processes.ambiguous):
         if process_paths:
             issues.append(

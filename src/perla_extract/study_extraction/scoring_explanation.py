@@ -50,6 +50,7 @@ class CandidateExplanation(StrictModel):
     predicted_path: str
     value_equal: bool
     context_equal: bool
+    context_status: Literal["equivalent", "contradictory", "unresolved"]
     ambiguity_blocked: bool
     eligible: bool
     selected: bool
@@ -102,7 +103,7 @@ class FactExplanation(StrictModel):
 class ScoreExplanation(StrictModel):
     """Explain selected canonical facts and source aliases from one evaluation."""
 
-    format_version: Literal[4] = 4
+    format_version: Literal[5] = 5
     evaluation_format_version: int
     matcher_version: str
     fact_profile: str
@@ -237,9 +238,7 @@ class ExplanationCollector:
                     candidates and all(d.ambiguity_blocked for _, _, d, _ in candidates)
                 )
                 or any(
-                    d.ambiguity_blocked
-                    and d.context_equal
-                    and d.value_equal
+                    d.ambiguity_blocked and d.context_equal and d.value_equal
                     for _, _, d, _ in candidates
                 )
             ):
@@ -285,6 +284,7 @@ class ExplanationCollector:
                         predicted_path=b.path,
                         value_equal=decision.value_equal,
                         context_equal=decision.context_equal,
+                        context_status=decision.context_status,
                         ambiguity_blocked=decision.ambiguity_blocked,
                         eligible=decision.eligible(selection.view),
                         selected=chosen,

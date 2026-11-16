@@ -1,0 +1,1260 @@
+{
+  "review_status": "assistant-inspected; independent adjudication pending",
+  "selection": "Targeted debugging controls, not a probability sample. Family fixtures retain stack fields only; ACS device and observation fields are original records.",
+  "cases": [
+    {
+      "paper": "10.1002--adfm.201500335",
+      "source_sha256": "c270e35211fa3441e43788cb1eb682587596b4221f502501497d9593b616c4fd",
+      "prediction_families": [
+        {
+          "family_id": "FAM_PERO_HSC",
+          "label": "Perovskite Hybrid Solar Cell (Pero-HSC)",
+          "variant": "ITO/PEDOT:PSS/CH3NH3PbI3-xClx/PC61BM/Al",
+          "architecture": "n-i-p planar heterojunction",
+          "polarity": "not_reported",
+          "full_stack_raw": "ITO/PEDOT:PSS/CH3NH3PbI3-xClx/PC61BM/Al",
+          "layers": [
+            {
+              "layer_id": "L_PERO_1",
+              "sequence": 1,
+              "role": "transparent_electrode",
+              "material": "Indium tin oxide (ITO)",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p7_0099_text_be031730e327",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The\npero-HSCs were fabricated in the device with a con\ufb01 guration of ITO/\nPEDOT:PSS/CH 3 NH 3 PbI 3- x Cl x /PC 61 BM/Al, where ITO is indium tin\noxide, CH 3 NH 3 PbI 3- x Cl x is perovskite materials, and Al is Aluminum.\nApproximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO\nglass substrates followed by thermal annealing at 150 \u00b0C for 10 min.\nThe perovskite \ufb01 lms were spin-coated on top of ITO/PEDOT:PSS from\nperovskite precursor solution in the glove box with nitrogen atmosphere.\nThe perovskite thin \ufb01 lms were processed by two-step procedures."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PERO_2",
+              "sequence": 2,
+              "role": "hole_transport_layer",
+              "material": "PEDOT:PSS",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p7_0099_text_be031730e327",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The\npero-HSCs were fabricated in the device with a con\ufb01 guration of ITO/\nPEDOT:PSS/CH 3 NH 3 PbI 3- x Cl x /PC 61 BM/Al, where ITO is indium tin\noxide, CH 3 NH 3 PbI 3- x Cl x is perovskite materials, and Al is Aluminum.\nApproximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO\nglass substrates followed by thermal annealing at 150 \u00b0C for 10 min.\nThe perovskite \ufb01 lms were spin-coated on top of ITO/PEDOT:PSS from\nperovskite precursor solution in the glove box with nitrogen atmosphere.\nThe perovskite thin \ufb01 lms were processed by two-step procedures."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PERO_3",
+              "sequence": 3,
+              "role": "absorber",
+              "material": "CH3NH3PbI3-xClx",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p7_0099_text_be031730e327",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The\npero-HSCs were fabricated in the device with a con\ufb01 guration of ITO/\nPEDOT:PSS/CH 3 NH 3 PbI 3- x Cl x /PC 61 BM/Al, where ITO is indium tin\noxide, CH 3 NH 3 PbI 3- x Cl x is perovskite materials, and Al is Aluminum.\nApproximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO\nglass substrates followed by thermal annealing at 150 \u00b0C for 10 min.\nThe perovskite \ufb01 lms were spin-coated on top of ITO/PEDOT:PSS from\nperovskite precursor solution in the glove box with nitrogen atmosphere.\nThe perovskite thin \ufb01 lms were processed by two-step procedures."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PERO_4",
+              "sequence": 4,
+              "role": "electron_transport_layer",
+              "material": "PC61BM",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p7_0099_text_be031730e327",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The\npero-HSCs were fabricated in the device with a con\ufb01 guration of ITO/\nPEDOT:PSS/CH 3 NH 3 PbI 3- x Cl x /PC 61 BM/Al, where ITO is indium tin\noxide, CH 3 NH 3 PbI 3- x Cl x is perovskite materials, and Al is Aluminum.\nApproximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO\nglass substrates followed by thermal annealing at 150 \u00b0C for 10 min.\nThe perovskite \ufb01 lms were spin-coated on top of ITO/PEDOT:PSS from\nperovskite precursor solution in the glove box with nitrogen atmosphere.\nThe perovskite thin \ufb01 lms were processed by two-step procedures."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PERO_5",
+              "sequence": 5,
+              "role": "back_electrode",
+              "material": "Al",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p7_0099_text_be031730e327",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The\npero-HSCs were fabricated in the device with a con\ufb01 guration of ITO/\nPEDOT:PSS/CH 3 NH 3 PbI 3- x Cl x /PC 61 BM/Al, where ITO is indium tin\noxide, CH 3 NH 3 PbI 3- x Cl x is perovskite materials, and Al is Aluminum.\nApproximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO\nglass substrates followed by thermal annealing at 150 \u00b0C for 10 min.\nThe perovskite \ufb01 lms were spin-coated on top of ITO/PEDOT:PSS from\nperovskite precursor solution in the glove box with nitrogen atmosphere.\nThe perovskite thin \ufb01 lms were processed by two-step procedures."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0099_text_be031730e327",
+              "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The\npero-HSCs were fabricated in the device with a con\ufb01 guration of ITO/\nPEDOT:PSS/CH 3 NH 3 PbI 3- x Cl x /PC 61 BM/Al, where ITO is indium tin\noxide, CH 3 NH 3 PbI 3- x Cl x is perovskite materials, and Al is Aluminum.\nApproximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO\nglass substrates followed by thermal annealing at 150 \u00b0C for 10 min.\nThe perovskite \ufb01 lms were spin-coated on top of ITO/PEDOT:PSS from\nperovskite precursor solution in the glove box with nitrogen atmosphere.\nThe perovskite thin \ufb01 lms were processed by two-step procedures."
+            }
+          ],
+          "absorbers": [],
+          "processing_steps": []
+        }
+      ]
+    },
+    {
+      "paper": "10.1039--c5dt02388b",
+      "source_sha256": "9865c2e3e18f63b7454e697cf367908b85721d2d89dc850c47ace7aa2737a057",
+      "prediction_families": [
+        {
+          "family_id": "fam_meso_tiO2_perovskite",
+          "label": "Meso-superstructured perovskite solar cell (MSSC) with TiCl4-treated mesoporous TiO2",
+          "variant": "TiCl4 processing time on mesoporous TiO2 (0, 5, 10, 20, 30, 60 min)",
+          "architecture": "n-i-p",
+          "polarity": "not_reported",
+          "full_stack_raw": "FTO / compact TiO2 / mesoporous TiO2 (TiCl4 treated) / CH3NH3PbI3 / Spiro-MeOTAD / Ag",
+          "layers": [
+            {
+              "layer_id": "layer_fto",
+              "sequence": 1,
+              "role": "transparent_electrode",
+              "material": "Fluorine-doped tin oxide (FTO)",
+              "constituents": [],
+              "material_form_raw": "conducting glass",
+              "material_form": "other",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p3_0038_text_f2fe6beae370",
+                  "quote": "All materials else were purchased from J&K Scientific\nLtd and used as received. Substrates of the cells are fluorine-\ndoped tin oxide conducting glass (FTO, Pilkington, thickness:\n2.2mm, sheet resistance 14\u03a9/square). CH_{3}NH_{3}I was synthesized\nas the literature ^{33}.\n20"
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_c_tiO2",
+              "sequence": 2,
+              "role": "electron_transport_layer",
+              "material": "Compact TiO2",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p3_0040_text_7c093b6e604f",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were\ncleaned by ultrasonication in an alkaline, aqueous washing\nsolution, rinsed with deionized water, ethanol, acetone and 2-\npropanol, respectively. A hole-blocking layer of compact TiO2\n25\nwith a thickness of about 50nm was deposited by a dip-coating\nmethod with a TiO2 organic solution 34-35, and then followed by a\nsintering process at 500\u2103 for 30min. After cooling to room\ntemperature, the substrates were treated in an 40mM aqueous\nsolution of TiCl4 at 70\u2103 for 30min, rinsed with deionized water\n30\nand dried at 500\u2103 for 30min. The mesoporous TiO2 layer with a\nthickness of 180nm was prepared as previously reported 17."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_meso_tiO2",
+              "sequence": 3,
+              "role": "electron_transport_layer",
+              "material": "Mesoporous TiO2",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p3_0040_text_7c093b6e604f",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were\ncleaned by ultrasonication in an alkaline, aqueous washing\nsolution, rinsed with deionized water, ethanol, acetone and 2-\npropanol, respectively. A hole-blocking layer of compact TiO2\n25\nwith a thickness of about 50nm was deposited by a dip-coating\nmethod with a TiO2 organic solution 34-35, and then followed by a\nsintering process at 500\u2103 for 30min. After cooling to room\ntemperature, the substrates were treated in an 40mM aqueous\nsolution of TiCl4 at 70\u2103 for 30min, rinsed with deionized water\n30\nand dried at 500\u2103 for 30min. The mesoporous TiO2 layer with a\nthickness of 180nm was prepared as previously reported 17."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_perovskite",
+              "sequence": 4,
+              "role": "absorber",
+              "material": "CH3NH3PbI3",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p3_0044_text_e7de97490f5a",
+                  "quote": "The PbI_{2} solution was kept at 70, on the\nheating plate. The mesoporous TiO_{2} films were then infiltrated\n40\nwith PbI_{2} by spin coating at 6,500r.p.m. for 5s and dried. The\nfilms were then dipped in a solution of CH_{3}NH_{3}I in 2-propanol\n(10mg/ml) for 120min, rinsed with 2-propanol and dried at 70,\nfor 30min.\nThe HTM was then deposited by spin coating at 4,000r.p.m. for\n45\n30s. The spin-coating formulation was prepared by dissolving\n72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9-\nspirobifluorene) (spiro-MeOTAD), 28.8\u03bcl 4-tert-butylpyridine,\n17.5\u03bcl of a stock solution of 520mg/ml lithium bis(trifluoro-\nmethylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_htm",
+              "sequence": 5,
+              "role": "hole_transport_layer",
+              "material": "Spiro-MeOTAD",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p3_0044_text_e7de97490f5a",
+                  "quote": "The PbI_{2} solution was kept at 70, on the\nheating plate. The mesoporous TiO_{2} films were then infiltrated\n40\nwith PbI_{2} by spin coating at 6,500r.p.m. for 5s and dried. The\nfilms were then dipped in a solution of CH_{3}NH_{3}I in 2-propanol\n(10mg/ml) for 120min, rinsed with 2-propanol and dried at 70,\nfor 30min.\nThe HTM was then deposited by spin coating at 4,000r.p.m. for\n45\n30s. The spin-coating formulation was prepared by dissolving\n72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9-\nspirobifluorene) (spiro-MeOTAD), 28.8\u03bcl 4-tert-butylpyridine,\n17.5\u03bcl of a stock solution of 520mg/ml lithium bis(trifluoro-\nmethylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_ag",
+              "sequence": 6,
+              "role": "back_electrode",
+              "material": "Ag",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p3_0044_text_e7de97490f5a",
+                  "quote": "50\nFinally, approximate 200nm Ag (measured by SEM) was\nthermally evaporated under vacuum to act as the cathode. The\ndevice fabrication was carried out under controlled atmospheric\nconditions and a humidity of <1% in the cleanroom."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0040_text_7c093b6e604f",
+              "quote": "First, laser-patterned, FTO-coated glass substrates were\ncleaned by ultrasonication in an alkaline, aqueous washing\nsolution, rinsed with deionized water, ethanol, acetone and 2-\npropanol, respectively. A hole-blocking layer of compact TiO2\n25\nwith a thickness of about 50nm was deposited by a dip-coating\nmethod with a TiO2 organic solution 34-35, and then followed by a\nsintering process at 500\u2103 for 30min. After cooling to room\ntemperature, the substrates were treated in an 40mM aqueous\nsolution of TiCl4 at 70\u2103 for 30min, rinsed with deionized water\n30\nand dried at 500\u2103 for 30min. The mesoporous TiO2 layer with a\nthickness of 180nm was prepared as previously reported 17."
+            }
+          ],
+          "absorbers": [],
+          "processing_steps": []
+        }
+      ]
+    },
+    {
+      "paper": "10.1016--j.jmst.2021.03.045",
+      "source_sha256": "433b27e4a915a911666ed4b76d5694efaeac0cd1eb889394792f2de622cec098",
+      "prediction_families": [
+        {
+          "family_id": "fam_ipl_snO2",
+          "label": "IPL-treated amorphous SnO2 ESL PSC",
+          "variant": "IPL-treated amorphous SnO2 ESL",
+          "architecture": "n-i-p",
+          "polarity": "not_reported",
+          "full_stack_raw": "FTO/ESL(I-SnO2)/MAPbI3/spiroMeOTAD/Au",
+          "layers": [
+            {
+              "layer_id": "layer_ipl_fto",
+              "sequence": 1,
+              "role": "transparent_electrode",
+              "material": "FTO",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_ipl_esl",
+              "sequence": 2,
+              "role": "electron_transport_layer",
+              "material": "I-SnO2",
+              "constituents": [],
+              "material_form_raw": "amorphous",
+              "material_form": "other",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_ipl_absorber",
+              "sequence": 3,
+              "role": "absorber",
+              "material": "MAPbI3",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_ipl_htl",
+              "sequence": 4,
+              "role": "hole_transport_layer",
+              "material": "spiroMeOTAD",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_ipl_electrode",
+              "sequence": 5,
+              "role": "back_electrode",
+              "material": "Au",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0027_text_316d543ecc42",
+              "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+            }
+          ],
+          "absorbers": [],
+          "processing_steps": []
+        },
+        {
+          "family_id": "fam_nontreated_snO2",
+          "label": "Nontreated amorphous SnO2 ESL PSC",
+          "variant": "Nontreated amorphous SnO2 ESL",
+          "architecture": "n-i-p",
+          "polarity": "not_reported",
+          "full_stack_raw": "FTO/ESL(A-SnO2)/MAPbI3/spiroMeOTAD/Au",
+          "layers": [
+            {
+              "layer_id": "layer_nontreated_fto",
+              "sequence": 1,
+              "role": "transparent_electrode",
+              "material": "FTO",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_nontreated_esl",
+              "sequence": 2,
+              "role": "electron_transport_layer",
+              "material": "A-SnO2",
+              "constituents": [],
+              "material_form_raw": "amorphous",
+              "material_form": "other",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_nontreated_absorber",
+              "sequence": 3,
+              "role": "absorber",
+              "material": "MAPbI3",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_nontreated_htl",
+              "sequence": 4,
+              "role": "hole_transport_layer",
+              "material": "spiroMeOTAD",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_nontreated_electrode",
+              "sequence": 5,
+              "role": "back_electrode",
+              "material": "Au",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0027_text_316d543ecc42",
+              "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+            }
+          ],
+          "absorbers": [],
+          "processing_steps": []
+        },
+        {
+          "family_id": "fam_heat_treated_snO2",
+          "label": "Heat-treated SnO2 ESL PSC",
+          "variant": "Heat-treated SnO2 ESL",
+          "architecture": "n-i-p",
+          "polarity": "not_reported",
+          "full_stack_raw": "FTO/ESL(SnO2)/MAPbI3/spiroMeOTAD/Au",
+          "layers": [
+            {
+              "layer_id": "layer_heat_treated_fto",
+              "sequence": 1,
+              "role": "transparent_electrode",
+              "material": "FTO",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_heat_treated_esl",
+              "sequence": 2,
+              "role": "electron_transport_layer",
+              "material": "SnO2",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_heat_treated_absorber",
+              "sequence": 3,
+              "role": "absorber",
+              "material": "MAPbI3",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_heat_treated_htl",
+              "sequence": 4,
+              "role": "hole_transport_layer",
+              "material": "spiroMeOTAD",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "layer_id": "layer_heat_treated_electrode",
+              "sequence": 5,
+              "role": "back_electrode",
+              "material": "Au",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0027_text_316d543ecc42",
+                  "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0027_text_316d543ecc42",
+              "quote": "PSCs were fabricated on \ufb02uorine-doped tin oxide (FTO)-coated\nglass substrates (Pilkington, Tec-8), which were patterned us-\ning Zn powder and a dilute HCl solution, followed by cleaning\nwith diluted Hellmanex, acetone, ethanol, and deionized water.\nAmorphous-SnO 2 was prepared as an ESL on the FTO glass by\nspin coating 0.1 M tin(II) chloride dihydrate solution in ethanol\n(Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 \u00b0C for\n1 min, the sample was instantly transferred to an IPL apparatus\n(HI-PULSE 15,0 0 0, PSTEK) for treatment using different \ufb02ash counts\ndelivering different amounts of energy. Fig."
+            }
+          ],
+          "absorbers": [],
+          "processing_steps": []
+        }
+      ]
+    },
+    {
+      "paper": "10.1039--c7nr04692h",
+      "source_sha256": "ddc77ef99b1c1d07108a5f1d1b65151b8e8b1386223f3a8ad1c99fd373b85152",
+      "prediction_families": [
+        {
+          "family_id": "FAM_OSC_PTB7",
+          "label": "PTB7:PC71BM Organic Solar Cell",
+          "variant": "Organic Solar Cell (OSC)",
+          "architecture": "Planar",
+          "polarity": "not_reported",
+          "full_stack_raw": "ITO/HTL/PTB7:PC71BM/LiF/Al",
+          "layers": [
+            {
+              "layer_id": "L_OSC_1",
+              "sequence": 1,
+              "role": "electron_transport_layer",
+              "material": "ITO",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_OSC_2",
+              "sequence": 2,
+              "role": "hole_transport_layer",
+              "material": "HTL",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_OSC_3",
+              "sequence": 3,
+              "role": "absorber",
+              "material": "PTB7:PC71BM",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_OSC_4",
+              "sequence": 4,
+              "role": "electron_transport_layer",
+              "material": "LiF",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_OSC_5",
+              "sequence": 5,
+              "role": "electron_transport_layer",
+              "material": "Al",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_fe91ce5246fc",
+              "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+            }
+          ],
+          "absorbers": [],
+          "processing_steps": []
+        },
+        {
+          "family_id": "FAM_PSC_Pristine",
+          "label": "Perovskite Solar Cell (Pristine HTL)",
+          "variant": "Perovskite Solar Cell (PSC)",
+          "architecture": "Planar",
+          "polarity": "not_reported",
+          "full_stack_raw": "ITO/HTL/CH3NH3PbIxCl3\u2212x/PC61BM/Bphen/Ag",
+          "layers": [
+            {
+              "layer_id": "L_PSC_1",
+              "sequence": 1,
+              "role": "electron_transport_layer",
+              "material": "ITO",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PSC_2",
+              "sequence": 2,
+              "role": "hole_transport_layer",
+              "material": "HTL",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PSC_3",
+              "sequence": 3,
+              "role": "absorber",
+              "material": "CH3NH3PbIxCl3\u2212x",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PSC_4",
+              "sequence": 4,
+              "role": "electron_transport_layer",
+              "material": "PC61BM",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PSC_5",
+              "sequence": 5,
+              "role": "electron_transport_layer",
+              "material": "Bphen",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PSC_6",
+              "sequence": 6,
+              "role": "electron_transport_layer",
+              "material": "Ag",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_fe91ce5246fc",
+              "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+            }
+          ],
+          "absorbers": [],
+          "processing_steps": []
+        },
+        {
+          "family_id": "FAM_PSC_Composite",
+          "label": "Perovskite Solar Cell (Composite HTL)",
+          "variant": "Perovskite Solar Cell (PSC)",
+          "architecture": "Planar",
+          "polarity": "not_reported",
+          "full_stack_raw": "ITO/HTL/CH3NH3PbIxCl3\u2212x/PC61BM/Bphen/Ag",
+          "layers": [
+            {
+              "layer_id": "L_PSCC_1",
+              "sequence": 1,
+              "role": "electron_transport_layer",
+              "material": "ITO",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PSCC_2",
+              "sequence": 2,
+              "role": "hole_transport_layer",
+              "material": "Composite HTL",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PSCC_3",
+              "sequence": 3,
+              "role": "absorber",
+              "material": "CH3NH3PbIxCl3\u2212x",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PSCC_4",
+              "sequence": 4,
+              "role": "electron_transport_layer",
+              "material": "PC61BM",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PSCC_5",
+              "sequence": 5,
+              "role": "electron_transport_layer",
+              "material": "Bphen",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            },
+            {
+              "layer_id": "L_PSCC_6",
+              "sequence": 6,
+              "role": "electron_transport_layer",
+              "material": "Ag",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_fe91ce5246fc",
+                  "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_fe91ce5246fc",
+              "quote": "Organic solar cells with a structure\nof ITO/HTL/PTB7:PC_{71}BM/LiF/Al and perovskite solar cells\nwith a structure of ITO/HTL/CH_{3}NH_{3}PbI_{x}Cl_{3\u2212x}/PC_{61}BM/Bphen/\nAg were fabricated to investigate the functions of the aqueous-\nsolution-processed MoO_{3}, GeO_{2}, V_{2}O_{5} and CrO_{3} HTLs. PEDOT:\nPSS (Baytron PVP Al 4083) based devices were also fabricated\nfor comparison. After HTL deposition, the substrates were\ntransferred into a glovebox for active layer coating."
+            }
+          ],
+          "absorbers": [],
+          "processing_steps": []
+        }
+      ]
+    },
+    {
+      "paper": "10.1021--acs.chemmater.8b01521",
+      "source_sha256": "051352300f5515f05a36f8e751251323220e8c6ca36554a504ebeeead340ec07",
+      "prediction_families": [
+        {
+          "family_id": "fam_001",
+          "label": "FTO/bl-TiO2/mp-TiO2/MAPbI3/PEDOT",
+          "variant": "n-i-p architecture with electrodeposited PEDOT HTL",
+          "architecture": "n-i-p",
+          "polarity": "not_reported",
+          "full_stack_raw": "FTO/bl-TiO2/mp-TiO2/MAPbI3/PEDOT",
+          "layers": [
+            {
+              "layer_id": "fam_001_L1",
+              "sequence": 1,
+              "role": "substrate",
+              "material": "FTO",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p1_0017_text_4fc7e0b5dd11",
+                  "quote": "In this study, we report the electrochemical deposition of\nPEDOT (HTM layer) directly on the MAPbI3 \ufb01lm deposited\non a FTO/TiO2 electrode and its implementation in a\nperovskite solar cell (PSC) with an n\u2212i\u2212p architecture\n(Scheme 1). The e\ufb00ect of electrochemical post-treatments of\nthe HTM layer on the performance of PSC has also been\nscrutinized.\n\u25a0RESULTS AND DISCUSSION\nTypography-preserving rendering: In this study, we report the electrochemical deposition of\nPEDOT (HTM layer) directly on the MAPbI_{3} \ufb01lm deposited\non a FTO/TiO_{2} electrode and its implementation in a\nperovskite solar cell (PSC) with an n\u2212i\u2212p architecture\n(Scheme 1)."
+                }
+              ]
+            },
+            {
+              "layer_id": "fam_001_L2",
+              "sequence": 2,
+              "role": "electron_transport_layer",
+              "material": "TiO2",
+              "constituents": [],
+              "material_form_raw": "blocking layer",
+              "material_form": "compact_layer",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p1_0017_text_4fc7e0b5dd11",
+                  "quote": "In this study, we report the electrochemical deposition of\nPEDOT (HTM layer) directly on the MAPbI3 \ufb01lm deposited\non a FTO/TiO2 electrode and its implementation in a\nperovskite solar cell (PSC) with an n\u2212i\u2212p architecture\n(Scheme 1). The e\ufb00ect of electrochemical post-treatments of\nthe HTM layer on the performance of PSC has also been\nscrutinized.\n\u25a0RESULTS AND DISCUSSION\nTypography-preserving rendering: In this study, we report the electrochemical deposition of\nPEDOT (HTM layer) directly on the MAPbI_{3} \ufb01lm deposited\non a FTO/TiO_{2} electrode and its implementation in a\nperovskite solar cell (PSC) with an n\u2212i\u2212p architecture\n(Scheme 1)."
+                }
+              ]
+            },
+            {
+              "layer_id": "fam_001_L3",
+              "sequence": 3,
+              "role": "electron_transport_layer",
+              "material": "TiO2",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p1_0017_text_4fc7e0b5dd11",
+                  "quote": "In this study, we report the electrochemical deposition of\nPEDOT (HTM layer) directly on the MAPbI3 \ufb01lm deposited\non a FTO/TiO2 electrode and its implementation in a\nperovskite solar cell (PSC) with an n\u2212i\u2212p architecture\n(Scheme 1). The e\ufb00ect of electrochemical post-treatments of\nthe HTM layer on the performance of PSC has also been\nscrutinized.\n\u25a0RESULTS AND DISCUSSION\nTypography-preserving rendering: In this study, we report the electrochemical deposition of\nPEDOT (HTM layer) directly on the MAPbI_{3} \ufb01lm deposited\non a FTO/TiO_{2} electrode and its implementation in a\nperovskite solar cell (PSC) with an n\u2212i\u2212p architecture\n(Scheme 1)."
+                }
+              ]
+            },
+            {
+              "layer_id": "fam_001_L4",
+              "sequence": 4,
+              "role": "absorber",
+              "material": "MAPbI3",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p1_0017_text_4fc7e0b5dd11",
+                  "quote": "In this study, we report the electrochemical deposition of\nPEDOT (HTM layer) directly on the MAPbI3 \ufb01lm deposited\non a FTO/TiO2 electrode and its implementation in a\nperovskite solar cell (PSC) with an n\u2212i\u2212p architecture\n(Scheme 1). The e\ufb00ect of electrochemical post-treatments of\nthe HTM layer on the performance of PSC has also been\nscrutinized.\n\u25a0RESULTS AND DISCUSSION\nTypography-preserving rendering: In this study, we report the electrochemical deposition of\nPEDOT (HTM layer) directly on the MAPbI_{3} \ufb01lm deposited\non a FTO/TiO_{2} electrode and its implementation in a\nperovskite solar cell (PSC) with an n\u2212i\u2212p architecture\n(Scheme 1)."
+                }
+              ]
+            },
+            {
+              "layer_id": "fam_001_L5",
+              "sequence": 5,
+              "role": "hole_transport_layer",
+              "material": "PEDOT",
+              "constituents": [],
+              "material_form_raw": null,
+              "material_form": "not_reported",
+              "reported_properties": [],
+              "evidence": [
+                {
+                  "block_id": "main_p1_0017_text_4fc7e0b5dd11",
+                  "quote": "In this study, we report the electrochemical deposition of\nPEDOT (HTM layer) directly on the MAPbI3 \ufb01lm deposited\non a FTO/TiO2 electrode and its implementation in a\nperovskite solar cell (PSC) with an n\u2212i\u2212p architecture\n(Scheme 1). The e\ufb00ect of electrochemical post-treatments of\nthe HTM layer on the performance of PSC has also been\nscrutinized.\n\u25a0RESULTS AND DISCUSSION\nTypography-preserving rendering: In this study, we report the electrochemical deposition of\nPEDOT (HTM layer) directly on the MAPbI_{3} \ufb01lm deposited\non a FTO/TiO_{2} electrode and its implementation in a\nperovskite solar cell (PSC) with an n\u2212i\u2212p architecture\n(Scheme 1)."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p1_0017_text_4fc7e0b5dd11",
+              "quote": "In this study, we report the electrochemical deposition of\nPEDOT (HTM layer) directly on the MAPbI3 \ufb01lm deposited\non a FTO/TiO2 electrode and its implementation in a\nperovskite solar cell (PSC) with an n\u2212i\u2212p architecture\n(Scheme 1). The e\ufb00ect of electrochemical post-treatments of\nthe HTM layer on the performance of PSC has also been\nscrutinized.\n\u25a0RESULTS AND DISCUSSION\nTypography-preserving rendering: In this study, we report the electrochemical deposition of\nPEDOT (HTM layer) directly on the MAPbI_{3} \ufb01lm deposited\non a FTO/TiO_{2} electrode and its implementation in a\nperovskite solar cell (PSC) with an n\u2212i\u2212p architecture\n(Scheme 1)."
+            }
+          ],
+          "absorbers": [],
+          "processing_steps": []
+        }
+      ],
+      "reference_device": {
+        "device_id": "device-01",
+        "family_id": "family-01",
+        "label": "champion device containing a PEDOT layer with rapid postreduction",
+        "variant": "rapid reduction",
+        "champion_status": "yes",
+        "selection_basis": "champion",
+        "reported_properties": [
+          {
+            "name": "PEDOT electrodeposition potential",
+            "raw_value": "E = 1.0 V",
+            "value_number": 1.0,
+            "unit": "V",
+            "evidence": [
+              {
+                "block_id": "main_p3_0047_text_e7d6b26634be",
+                "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+              }
+            ]
+          },
+          {
+            "name": "PEDOT polymerization charge density",
+            "raw_value": "Q pol = 10 mC cm -2",
+            "value_number": 10.0,
+            "unit": "mC cm -2",
+            "evidence": [
+              {
+                "block_id": "main_p3_0047_text_e7d6b26634be",
+                "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+              }
+            ]
+          },
+          {
+            "name": "postreduction potential",
+            "raw_value": "E = -0.6 V",
+            "value_number": -0.6,
+            "unit": "V",
+            "evidence": [
+              {
+                "block_id": "main_p3_0047_text_e7d6b26634be",
+                "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+              }
+            ]
+          },
+          {
+            "name": "postreduction time",
+            "raw_value": "t = 10 s",
+            "value_number": 10.0,
+            "unit": "s",
+            "evidence": [
+              {
+                "block_id": "main_p3_0047_text_e7d6b26634be",
+                "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+              }
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "block_id": "main_p3_0046_text_76427b454b6e",
+            "quote": "There was an improvement in the V OC of the devices compared to the untreated PEDOT in all cases (Figure S7), but the J SC and the FF remained low in most cases (Figure S9A -D). The only exception was the rapid reduction, where the champion cell had a 5.9% e ffi ciency ( Figure 3D). Topdown and cross-sectional SEM images recorded for samples post-treated with the rapid reduction revealed that the degradation of the MAPbI3 layers can be avoided using this strategy (Figure S8)."
+          },
+          {
+            "block_id": "main_p3_0047_text_e7d6b26634be",
+            "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+          },
+          {
+            "block_id": "main_p4_0056_text_1595b02105ba",
+            "quote": "The electrochemical deposition of PEDOT o ff ers a convenient way to deposit a hole-transport layer on a MAPbI3 layer for designing n -i -p junction perovskite solar cells. By employing potentiostatically controlled electrodeposition technique, it is possible to obtain controlled thicknesses of HTM layers. An electrochemical postreduction step introduced to control the doping level of the as-deposited PEDOT fi lms is an essential step in achieving better performance of PSCs. Care should be exercised not to destroy the underlying MAPbI3 layer during the post-treatment process. The champion device showed a power conversion e ffi ciency of 5.9%."
+          }
+        ]
+      },
+      "prediction_device": {
+        "device_id": "dev_001",
+        "family_id": "fam_001",
+        "label": "Champion device",
+        "variant": "PEDOT electrodeposited at 1.0 V, Qpol = 10 mC cm-2, post-reduced at -0.6 V for 10 s",
+        "champion_status": "yes",
+        "selection_basis": "champion",
+        "subject_context": {
+          "treatment_stage": "not_reported",
+          "treated_material": "not_reported",
+          "conditions": [
+            {
+              "name": "PEDOT deposition potential",
+              "raw_value": "1.0 V",
+              "value_number": 1.0,
+              "unit": "V",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0037_text_9e819f69bcd8",
+                  "quote": "(A) E\ufb00ect of PEDOT thickness (polymerization charge\ndensity) on the open circuit voltage in a FTO/TiO_{2}/MAPbI_{3}/\nPEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B)\nChronoamperometric curves recorded for the PEDOT layers\nelectrodeposited at E = 1.0 V, when a reductive post-treatment at E\n= \u22120.6 V was employed. (C) Buildup of the open circuit potential in a\nFTO/TiO_{2}/MAPbI_{3}/PEDOT SC for the PEDOT layers electro-\ndeposited at E = 1.0 V for Q_{pol} = 10 mC cm^{\u22122}. (D) J\u2212V curve of the\nchampion device containing a PEDOT layer electrodeposited at E =\n1.0 V for Q_{pol} = 10 mC cm^{\u22122}, where the postreduction step was at E =\n\u22120.6 V for t = 10 s."
+                }
+              ]
+            },
+            {
+              "name": "PEDOT charge density",
+              "raw_value": "10 mC cm-2",
+              "value_number": 10.0,
+              "unit": "mC cm-2",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0037_text_9e819f69bcd8",
+                  "quote": "(A) E\ufb00ect of PEDOT thickness (polymerization charge\ndensity) on the open circuit voltage in a FTO/TiO_{2}/MAPbI_{3}/\nPEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B)\nChronoamperometric curves recorded for the PEDOT layers\nelectrodeposited at E = 1.0 V, when a reductive post-treatment at E\n= \u22120.6 V was employed. (C) Buildup of the open circuit potential in a\nFTO/TiO_{2}/MAPbI_{3}/PEDOT SC for the PEDOT layers electro-\ndeposited at E = 1.0 V for Q_{pol} = 10 mC cm^{\u22122}. (D) J\u2212V curve of the\nchampion device containing a PEDOT layer electrodeposited at E =\n1.0 V for Q_{pol} = 10 mC cm^{\u22122}, where the postreduction step was at E =\n\u22120.6 V for t = 10 s."
+                }
+              ]
+            },
+            {
+              "name": "Post-reduction potential",
+              "raw_value": "-0.6 V",
+              "value_number": -0.6,
+              "unit": "V",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0037_text_9e819f69bcd8",
+                  "quote": "(A) E\ufb00ect of PEDOT thickness (polymerization charge\ndensity) on the open circuit voltage in a FTO/TiO_{2}/MAPbI_{3}/\nPEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B)\nChronoamperometric curves recorded for the PEDOT layers\nelectrodeposited at E = 1.0 V, when a reductive post-treatment at E\n= \u22120.6 V was employed. (C) Buildup of the open circuit potential in a\nFTO/TiO_{2}/MAPbI_{3}/PEDOT SC for the PEDOT layers electro-\ndeposited at E = 1.0 V for Q_{pol} = 10 mC cm^{\u22122}. (D) J\u2212V curve of the\nchampion device containing a PEDOT layer electrodeposited at E =\n1.0 V for Q_{pol} = 10 mC cm^{\u22122}, where the postreduction step was at E =\n\u22120.6 V for t = 10 s."
+                }
+              ]
+            },
+            {
+              "name": "Post-reduction duration",
+              "raw_value": "10 s",
+              "value_number": 10.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0037_text_9e819f69bcd8",
+                  "quote": "(A) E\ufb00ect of PEDOT thickness (polymerization charge\ndensity) on the open circuit voltage in a FTO/TiO_{2}/MAPbI_{3}/\nPEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B)\nChronoamperometric curves recorded for the PEDOT layers\nelectrodeposited at E = 1.0 V, when a reductive post-treatment at E\n= \u22120.6 V was employed. (C) Buildup of the open circuit potential in a\nFTO/TiO_{2}/MAPbI_{3}/PEDOT SC for the PEDOT layers electro-\ndeposited at E = 1.0 V for Q_{pol} = 10 mC cm^{\u22122}. (D) J\u2212V curve of the\nchampion device containing a PEDOT layer electrodeposited at E =\n1.0 V for Q_{pol} = 10 mC cm^{\u22122}, where the postreduction step was at E =\n\u22120.6 V for t = 10 s."
+                }
+              ]
+            }
+          ]
+        },
+        "reported_properties": [
+          {
+            "name": "power conversion efficiency",
+            "raw_value": "5.9%",
+            "value_number": 5.9,
+            "unit": "%",
+            "evidence": [
+              {
+                "block_id": "main_p3_0037_text_9e819f69bcd8",
+                "quote": "(A) E\ufb00ect of PEDOT thickness (polymerization charge\ndensity) on the open circuit voltage in a FTO/TiO_{2}/MAPbI_{3}/\nPEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B)\nChronoamperometric curves recorded for the PEDOT layers\nelectrodeposited at E = 1.0 V, when a reductive post-treatment at E\n= \u22120.6 V was employed. (C) Buildup of the open circuit potential in a\nFTO/TiO_{2}/MAPbI_{3}/PEDOT SC for the PEDOT layers electro-\ndeposited at E = 1.0 V for Q_{pol} = 10 mC cm^{\u22122}. (D) J\u2212V curve of the\nchampion device containing a PEDOT layer electrodeposited at E =\n1.0 V for Q_{pol} = 10 mC cm^{\u22122}, where the postreduction step was at E =\n\u22120.6 V for t = 10 s."
+              },
+              {
+                "block_id": "main_p4_0049_text_9962668d7c13",
+                "quote": "Care should be\nexercised not to destroy the underlying MAPbI_{3} layer during\nthe post-treatment process. The champion device showed a\npower conversion e\ufb03ciency of 5.9%. The results presented in\nthis study open new opportunities to employ electrochemistry\nto assemble complex architectures of optically active perov-\nskites.\n\u25a0^{ASSOCIATED} ^{CONTENT}\n*\nS\nSupporting Information\nThe Supporting Information is available free of charge on the\nACS Publications website at DOI: 10.1021/acs.chemma-\nter.8b01521."
+              }
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "block_id": "main_p3_0037_text_9e819f69bcd8",
+            "quote": "(A) E\ufb00ect of PEDOT thickness (polymerization charge\ndensity) on the open circuit voltage in a FTO/TiO_{2}/MAPbI_{3}/\nPEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B)\nChronoamperometric curves recorded for the PEDOT layers\nelectrodeposited at E = 1.0 V, when a reductive post-treatment at E\n= \u22120.6 V was employed. (C) Buildup of the open circuit potential in a\nFTO/TiO_{2}/MAPbI_{3}/PEDOT SC for the PEDOT layers electro-\ndeposited at E = 1.0 V for Q_{pol} = 10 mC cm^{\u22122}. (D) J\u2212V curve of the\nchampion device containing a PEDOT layer electrodeposited at E =\n1.0 V for Q_{pol} = 10 mC cm^{\u22122}, where the postreduction step was at E =\n\u22120.6 V for t = 10 s."
+          },
+          {
+            "block_id": "main_p4_0049_text_9962668d7c13",
+            "quote": "Care should be\nexercised not to destroy the underlying MAPbI_{3} layer during\nthe post-treatment process. The champion device showed a\npower conversion e\ufb03ciency of 5.9%. The results presented in\nthis study open new opportunities to employ electrochemistry\nto assemble complex architectures of optically active perov-\nskites.\n\u25a0^{ASSOCIATED} ^{CONTENT}\n*\nS\nSupporting Information\nThe Supporting Information is available free of charge on the\nACS Publications website at DOI: 10.1021/acs.chemma-\nter.8b01521."
+          }
+        ]
+      },
+      "reference_observation": {
+        "observation_id": "observation-01",
+        "device_id": "device-01",
+        "measurement_type": "jv_scan",
+        "scan_direction": "not_reported",
+        "metrics": [
+          {
+            "name": "power conversion efficiency",
+            "raw_value": "5.9%",
+            "value_number": 5.9,
+            "unit": "%",
+            "evidence": [
+              {
+                "block_id": "main_p3_0046_text_76427b454b6e",
+                "quote": "There was an improvement in the V OC of the devices compared to the untreated PEDOT in all cases (Figure S7), but the J SC and the FF remained low in most cases (Figure S9A -D). The only exception was the rapid reduction, where the champion cell had a 5.9% e ffi ciency ( Figure 3D). Topdown and cross-sectional SEM images recorded for samples post-treated with the rapid reduction revealed that the degradation of the MAPbI3 layers can be avoided using this strategy (Figure S8)."
+              },
+              {
+                "block_id": "main_p4_0056_text_1595b02105ba",
+                "quote": "The electrochemical deposition of PEDOT o ff ers a convenient way to deposit a hole-transport layer on a MAPbI3 layer for designing n -i -p junction perovskite solar cells. By employing potentiostatically controlled electrodeposition technique, it is possible to obtain controlled thicknesses of HTM layers. An electrochemical postreduction step introduced to control the doping level of the as-deposited PEDOT fi lms is an essential step in achieving better performance of PSCs. Care should be exercised not to destroy the underlying MAPbI3 layer during the post-treatment process. The champion device showed a power conversion e ffi ciency of 5.9%."
+              }
+            ]
+          },
+          {
+            "name": "illumination condition",
+            "raw_value": "1 Sun",
+            "value_number": 1.0,
+            "unit": "Sun",
+            "evidence": [
+              {
+                "block_id": "supplement_p9_0137_text_a419752fca23",
+                "quote": "UV-vis absorption spectra of the prepared electrodes were recorded with a Cary 50 Bio spectrophotometer (Varian). Top-down and cross-sectional scanning electron microscopic (SEM) images were captured using a FEI Helios NanoLab\u2122 DualBeam\u2122 instrument. Raman spectroscopic measurements were performed on a DXR Raman Microscope using a green laser ( \u03bb = 532 nm), operating at 10 mW laser power at room temperature. The characterization of the solar cells was performed in a 2-electrode setup on a Princeton Applied Research PARStat 2273 potentiostat under 1 Sun conditions. The voltage was swept with a 50 mV s -1 sweep rate."
+              }
+            ]
+          },
+          {
+            "name": "illumination irradiance",
+            "raw_value": "100 mW cm -2",
+            "value_number": 100.0,
+            "unit": "mW cm -2",
+            "evidence": [
+              {
+                "block_id": "supplement_p11_0144_text_40d5012fec51",
+                "quote": "Figure S4. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: Open circuit voltage, C: fill factor, and D: Overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+              },
+              {
+                "block_id": "supplement_p14_0150_text_3f62af21494b",
+                "quote": "Figure S9. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: open circuit voltage, C: fill factor, and D: overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+              }
+            ]
+          },
+          {
+            "name": "voltage sweep rate",
+            "raw_value": "50 mV s -1",
+            "value_number": 50.0,
+            "unit": "mV s -1",
+            "evidence": [
+              {
+                "block_id": "supplement_p9_0137_text_a419752fca23",
+                "quote": "UV-vis absorption spectra of the prepared electrodes were recorded with a Cary 50 Bio spectrophotometer (Varian). Top-down and cross-sectional scanning electron microscopic (SEM) images were captured using a FEI Helios NanoLab\u2122 DualBeam\u2122 instrument. Raman spectroscopic measurements were performed on a DXR Raman Microscope using a green laser ( \u03bb = 532 nm), operating at 10 mW laser power at room temperature. The characterization of the solar cells was performed in a 2-electrode setup on a Princeton Applied Research PARStat 2273 potentiostat under 1 Sun conditions. The voltage was swept with a 50 mV s -1 sweep rate."
+              },
+              {
+                "block_id": "supplement_p11_0144_text_40d5012fec51",
+                "quote": "Figure S4. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: Open circuit voltage, C: fill factor, and D: Overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+              },
+              {
+                "block_id": "supplement_p14_0150_text_3f62af21494b",
+                "quote": "Figure S9. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: open circuit voltage, C: fill factor, and D: overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+              }
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "block_id": "main_p3_0047_text_e7d6b26634be",
+            "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+          },
+          {
+            "block_id": "main_p3_0046_text_76427b454b6e",
+            "quote": "There was an improvement in the V OC of the devices compared to the untreated PEDOT in all cases (Figure S7), but the J SC and the FF remained low in most cases (Figure S9A -D). The only exception was the rapid reduction, where the champion cell had a 5.9% e ffi ciency ( Figure 3D). Topdown and cross-sectional SEM images recorded for samples post-treated with the rapid reduction revealed that the degradation of the MAPbI3 layers can be avoided using this strategy (Figure S8)."
+          },
+          {
+            "block_id": "main_p4_0056_text_1595b02105ba",
+            "quote": "The electrochemical deposition of PEDOT o ff ers a convenient way to deposit a hole-transport layer on a MAPbI3 layer for designing n -i -p junction perovskite solar cells. By employing potentiostatically controlled electrodeposition technique, it is possible to obtain controlled thicknesses of HTM layers. An electrochemical postreduction step introduced to control the doping level of the as-deposited PEDOT fi lms is an essential step in achieving better performance of PSCs. Care should be exercised not to destroy the underlying MAPbI3 layer during the post-treatment process. The champion device showed a power conversion e ffi ciency of 5.9%."
+          },
+          {
+            "block_id": "supplement_p9_0137_text_a419752fca23",
+            "quote": "UV-vis absorption spectra of the prepared electrodes were recorded with a Cary 50 Bio spectrophotometer (Varian). Top-down and cross-sectional scanning electron microscopic (SEM) images were captured using a FEI Helios NanoLab\u2122 DualBeam\u2122 instrument. Raman spectroscopic measurements were performed on a DXR Raman Microscope using a green laser ( \u03bb = 532 nm), operating at 10 mW laser power at room temperature. The characterization of the solar cells was performed in a 2-electrode setup on a Princeton Applied Research PARStat 2273 potentiostat under 1 Sun conditions. The voltage was swept with a 50 mV s -1 sweep rate."
+          },
+          {
+            "block_id": "supplement_p11_0144_text_40d5012fec51",
+            "quote": "Figure S4. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: Open circuit voltage, C: fill factor, and D: Overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+          },
+          {
+            "block_id": "supplement_p14_0150_text_3f62af21494b",
+            "quote": "Figure S9. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: open circuit voltage, C: fill factor, and D: overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+          }
+        ]
+      },
+      "prediction_observation": {
+        "observation_id": "obs_001",
+        "device_id": "dev_001",
+        "measurement_type": "jv_scan",
+        "scan_direction": "not_reported",
+        "metrics": [
+          {
+            "name": "power conversion efficiency",
+            "raw_value": "5.9%",
+            "value_number": 5.9,
+            "unit": "%",
+            "evidence": [
+              {
+                "block_id": "main_p3_0037_text_9e819f69bcd8",
+                "quote": "(A) E\ufb00ect of PEDOT thickness (polymerization charge\ndensity) on the open circuit voltage in a FTO/TiO_{2}/MAPbI_{3}/\nPEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B)\nChronoamperometric curves recorded for the PEDOT layers\nelectrodeposited at E = 1.0 V, when a reductive post-treatment at E\n= \u22120.6 V was employed. (C) Buildup of the open circuit potential in a\nFTO/TiO_{2}/MAPbI_{3}/PEDOT SC for the PEDOT layers electro-\ndeposited at E = 1.0 V for Q_{pol} = 10 mC cm^{\u22122}. (D) J\u2212V curve of the\nchampion device containing a PEDOT layer electrodeposited at E =\n1.0 V for Q_{pol} = 10 mC cm^{\u22122}, where the postreduction step was at E =\n\u22120.6 V for t = 10 s."
+              },
+              {
+                "block_id": "main_p4_0049_text_9962668d7c13",
+                "quote": "Care should be\nexercised not to destroy the underlying MAPbI_{3} layer during\nthe post-treatment process. The champion device showed a\npower conversion e\ufb03ciency of 5.9%. The results presented in\nthis study open new opportunities to employ electrochemistry\nto assemble complex architectures of optically active perov-\nskites.\n\u25a0^{ASSOCIATED} ^{CONTENT}\n*\nS\nSupporting Information\nThe Supporting Information is available free of charge on the\nACS Publications website at DOI: 10.1021/acs.chemma-\nter.8b01521."
+              }
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "block_id": "main_p3_0037_text_9e819f69bcd8",
+            "quote": "(A) E\ufb00ect of PEDOT thickness (polymerization charge\ndensity) on the open circuit voltage in a FTO/TiO_{2}/MAPbI_{3}/\nPEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B)\nChronoamperometric curves recorded for the PEDOT layers\nelectrodeposited at E = 1.0 V, when a reductive post-treatment at E\n= \u22120.6 V was employed. (C) Buildup of the open circuit potential in a\nFTO/TiO_{2}/MAPbI_{3}/PEDOT SC for the PEDOT layers electro-\ndeposited at E = 1.0 V for Q_{pol} = 10 mC cm^{\u22122}. (D) J\u2212V curve of the\nchampion device containing a PEDOT layer electrodeposited at E =\n1.0 V for Q_{pol} = 10 mC cm^{\u22122}, where the postreduction step was at E =\n\u22120.6 V for t = 10 s."
+          },
+          {
+            "block_id": "main_p4_0049_text_9962668d7c13",
+            "quote": "Care should be\nexercised not to destroy the underlying MAPbI_{3} layer during\nthe post-treatment process. The champion device showed a\npower conversion e\ufb03ciency of 5.9%. The results presented in\nthis study open new opportunities to employ electrochemistry\nto assemble complex architectures of optically active perov-\nskites.\n\u25a0^{ASSOCIATED} ^{CONTENT}\n*\nS\nSupporting Information\nThe Supporting Information is available free of charge on the\nACS Publications website at DOI: 10.1021/acs.chemma-\nter.8b01521."
+          }
+        ]
+      }
+    }
+  ]
+}

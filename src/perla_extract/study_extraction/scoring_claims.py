@@ -35,16 +35,22 @@ def scientific_value_text(value: str) -> str:
     """Recognize numeric LaTeX subscripts in simple formulas, not chemical synonyms.
 
     The complete result must be a sequence of element-like tokens and numeric
-    subscripts. Prose, charges, symbolic stoichiometry and algebra stay literal.
+    subscripts, including a bounded symbolic coefficient such as ``3-x``.
+    Prose, charges and arbitrary algebra stay literal.
     This changes notation only: it never reorders atoms or expands abbreviations.
     """
 
     text = scientific_text(value)
     formula = text.translate(str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789"))
-    formula = re.sub(r"_\{(\d+(?:\.\d+)?)\}|_(\d+)", lambda m: m[1] or m[2], formula)
+    coefficient = r"(?:\d+(?:\.\d+)?(?:\s*-\s*[xyz])?|[xyz])"
+    formula = re.sub(
+        rf"_\{{\s*({coefficient})\s*\}}|_({coefficient})",
+        lambda m: m[1] or m[2],
+        formula,
+    )
     formula = re.sub(r"(?<=[A-Za-z])\s+(?=\d)", "", formula)
-    if re.fullmatch(r"(?:[A-Z][a-z]?(?:\d+(?:\.\d+)?)?)+", formula):
-        return formula
+    if re.fullmatch(rf"(?:[A-Z][a-z]?\s*(?:{coefficient})?\s*)+", formula):
+        return formula.replace(" ", "")
     return text
 
 
@@ -69,7 +75,15 @@ def _quantity_text(raw: str) -> str:
         power = next(group for group in match.groups()[1:] if group is not None)
         return match[1] + "e" + power.translate(_SUPERSCRIPT_DIGITS).replace(" ", "")
 
-    return _SCIENTIFIC_NUMBER.sub(exponent, scientific_text(raw))
+    text = _SCIENTIFIC_NUMBER.sub(exponent, scientific_text(raw))
+    # A single variable with an optional textual subscript is notation, not a
+    # qualifier: E = 1.0 V, t = 10 s, Q_pol = 10 mC/cm2. The complete RHS must
+    # still pass the quantity grammar and parsed-number/unit consistency checks.
+    # Prose such as "mean = ...", inequalities and multiple assignments survive.
+    assignment = re.fullmatch(
+        r"[A-Za-zα-ωΑ-Ω](?:(?:_|\s+)[A-Za-z]+|_\{[A-Za-z]+\})?\s*=\s*(.+)", text
+    )
+    return assignment[1] if assignment else text
 
 
 def _finite_number(text: str) -> float | None:

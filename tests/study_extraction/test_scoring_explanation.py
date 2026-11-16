@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 from click.testing import CliRunner
 
-from perla_extract.study_extraction import evaluation, scoring_facts
+from perla_extract.study_extraction import evaluation
 from perla_extract.study_extraction.evaluation import (
     evaluate_study,
     evaluate_study_with_explanations,
@@ -80,7 +80,9 @@ def study():
     )
 
 
-def explain(truth, prediction, *, path=METRIC, side="truth", view="attributed", **kwargs):
+def explain(
+    truth, prediction, *, path=METRIC, side="truth", view="attributed", **kwargs
+):
     report, explanation = evaluate_study_with_explanations(
         truth,
         prediction,
@@ -285,21 +287,23 @@ def test_explanation_observes_the_same_single_evaluation_and_bounds_candidates()
     assert fact.candidates[0].selected
 
 
-def test_ordinary_scoring_does_not_collect_context_diagnostics():
+def test_explanation_budget_cannot_change_scoring_decisions():
     truth, prediction = study(), study()
     for value in (truth, prediction):
         value.performance_observations[0].metrics.append(
             ReportedValue.model_validate(quantity(80, "%", "FF"))
         )
-    with patch.object(
-        scoring_facts, "compare_context", wraps=scoring_facts.compare_context
-    ) as compare:
-        evaluate_study(truth, prediction)
-        assert compare.call_count == 0
-        evaluate_study_with_explanations(
-            truth, prediction, facts=[FactSelection(side="truth", path=METRIC)]
+    prediction.performance_observations[0].scan_direction = "forward"
+    ordinary = evaluate_study(truth, prediction)
+    for limit in (1, 5):
+        explained, details = evaluate_study_with_explanations(
+            truth,
+            prediction,
+            facts=[FactSelection(side="truth", path=METRIC)],
+            max_candidates=limit,
         )
-        assert compare.call_count == 1
+        assert explained == ordinary
+        assert details.facts[0].reason == "context_mismatch"
 
 
 def test_ambiguity_explanation_retains_the_other_indistinguishable_scope():
