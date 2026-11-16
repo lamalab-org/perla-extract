@@ -213,6 +213,11 @@ The required study JSON declares `paper_ids`, the positive integer `repeats`, an
 values. Missing/extra pairs, wrong arm values, undeclared differences and settings
 that drift across papers/repeats within an arm block the quality aggregate.
 The report and figure metadata retain the study contents and hash.
+`reference_agreement` provides an automatic diagnostic paired contrast even when
+reference coverage is unreviewed. Incomplete subsets are labelled and list their
+omitted pairs. Invalid artifacts or incompatible settings still block comparison.
+Use `--require-reviewed-quality` to require the stricter validated-quality gate;
+by default a complete diagnostic comparison can finish successfully without review.
 Missing quality and missing cost remain separate. See the [artifact reference](experiment-artifacts.md).
 
 Run `perla-extract --help` to see the complete installed command interface.

@@ -81,8 +81,8 @@ You can pass a bare JSON file for either study. Bare references have no manifest
 checks or review-status checks; bare predictions have no evidence-validation
 or run-accounting results. Their scores are diagnostic; source compatibility is unverified.
 
-Reports use format 11, matcher `rich-study-hungarian-v15` and fact profile
-`core-scientific-facts-v12`. Regenerate older reports from saved predictions before
+Reports use format 11, matcher `rich-study-hungarian-v16` and fact profile
+`core-scientific-facts-v13`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
@@ -178,6 +178,13 @@ For quantities, a match requires the property name, value, units and recorded
 context to agree under the rules below. Non-numeric facts use the corresponding
 text or exact-value rules. A match also requires no detected ambiguity affecting
 that fact. Extra facts reduce precision; missing facts reduce recall.
+
+Individual performance facts belong to their explicitly linked device, not the
+observation ID. Repeated observations are compared as one-to-one multisets under
+the same complete scientific context. Splitting a metric array across observation
+records does not change credit; missing/ambiguous devices and different protocols
+still prevent it. This score does not evaluate joint measurement vectors or
+replicate pairing. Cohorts and stability tests retain their existing identity rules.
 
 For example, suppose the reference reports PCE = 20% and the prediction reports 21%
 for the same paired device and scan. The counts are `truth=1`, `predicted=1` and

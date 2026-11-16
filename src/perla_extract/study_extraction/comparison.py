@@ -23,6 +23,7 @@ from .evaluation import EvaluationReport, _study_digest, aggregate_evaluations
 from .figure_data import export_tables
 from .models import StudyExtraction
 from .run_artifacts import (
+    COMPLETE_OUTPUT_STATUSES,
     file_digest,
     load_run_efficiency,
     verify_run_manifest,
@@ -70,6 +71,78 @@ def paired_interval(deltas: list[float], samples: int = 2000, seed: int = 0) -> 
             status="available",
         )
     return result
+
+
+def reference_agreement(
+    scores: dict,
+    pairs: list[tuple[str, int]],
+    blockers: list[str],
+    bootstrap_samples: int,
+    seed: int,
+) -> dict:
+    """Compare verified complete pairs without requiring per-output adjudication.
+
+    This descriptive contrast does not certify reference completeness or turn
+    unresolved attribution into credit. Failed/missing repetitions remain in the
+    roster; a subset estimate states its conditioning explicitly.
+    """
+    complete = [
+        (paper, repeat)
+        for paper, repeat in pairs
+        if all((paper, repeat, arm) in scores for arm in ARMS)
+    ]
+    omitted = [
+        dict(paper_id=paper, repeat=repeat)
+        for paper, repeat in pairs
+        if (paper, repeat) not in complete
+    ]
+    result: dict = dict(
+        interpretation="diagnostic_reference_agreement",
+        estimand="Equal-paper mean difference in attributed fact micro F1 among complete paired repetitions; unresolved facts retain zero credit",
+        status="blocked" if blockers else "no_complete_pairs",
+        issues=list(dict.fromkeys(blockers)),
+        planned_pair_count=len(pairs),
+        complete_pair_count=len(complete),
+        omitted_pairs=omitted,
+        papers=[],
+        mean_paired_fact_f1_delta=None,
+        paired_fact_f1_delta_interval=None,
+    )
+    if blockers or not complete:
+        return result
+    papers = []
+    for paper in sorted({paper for paper, _ in complete}):
+        repeats = [repeat for item, repeat in complete if item == paper]
+        deltas = [
+            scores[paper, repeat, "treatment"].core_facts.micro.f1
+            - scores[paper, repeat, "control"].core_facts.micro.f1
+            for repeat in repeats
+        ]
+        papers.append(
+            dict(
+                paper_id=paper,
+                repeats=repeats,
+                repeat_deltas=deltas,
+                mean_delta=mean(deltas),
+            )
+        )
+    result.update(
+        status="complete_roster" if not omitted else "conditional_on_complete_pairs",
+        papers=papers,
+        mean_paired_fact_f1_delta=mean(item["mean_delta"] for item in papers),
+        paired_fact_f1_delta_interval=paired_interval(
+            [item["mean_delta"] for item in papers], bootstrap_samples, seed
+        ),
+    )
+    return result
+
+
+def automatic_comparison_ready(result: dict) -> bool:
+    """A complete verified diagnostic comparison can finish without human review."""
+    return (
+        result["reference_agreement"]["status"] == "complete_roster"
+        and not result["accounting_issues"]
+    )
 
 
 def _flatten(value: dict, prefix: str = "") -> dict:
@@ -178,7 +251,8 @@ def summarize(
     design = load_study(study)
     factors = tuple(design.factors)
     rows = read_roster(roster)
-    scores, configurations = {}, {}
+    verified_scores, configurations = {}, {}
+    integrity_issues = []
     for row in rows:
         key = (row["paper_id"], row["repeat"], row["arm"])
         directory = Path(row["run_dir"])
@@ -186,6 +260,7 @@ def summarize(
             issues=[],
             accounting_issues=[],
             quality_available=False,
+            reference_agreement_available=False,
             quality_applicable=row["role"] == "paired",
             cost_available=False,
             prediction_validation=None,
@@ -208,6 +283,8 @@ def summarize(
         except (OSError, ValueError) as exc:
             row["accounting_issues"].append(str(exc))
             row["issues"].append(str(exc))
+            if row["quality_applicable"]:
+                integrity_issues.append(f"{key}: {exc}")
             continue
         if not row["quality_applicable"]:
             continue
@@ -239,17 +316,27 @@ def summarize(
                 interpretation=report.interpretation,
                 reference_coverage=report.benchmark.coverage.model_dump(),
             )
-            if run_accounting.status != "complete":
+            if run_accounting.status not in COMPLETE_OUTPUT_STATUSES:
                 raise ValueError(
                     f"Planned run is {run_accounting.status}; partial output is diagnostic only"
                 )
-            if report.interpretation != "reviewed_scope":
-                raise ValueError("Reference coverage is incomplete or unreviewed; scientific scores are diagnostic reference agreement")
+            if run_accounting.status == "complete_needs_review" and validation is None:
+                raise ValueError(
+                    "Completed run has review warnings but no validation details"
+                )
             if validation and any(
                 issue.category != "citation" for issue in validation.issues
             ):
                 raise ValueError(
                     "Prediction has unresolved structural or unclassified validation issues"
+                )
+            if report.core_facts.micro.f1 is not None:
+                verified_scores[key] = report
+                row["reference_agreement_available"] = True
+                row["reference_agreement_f1"] = report.core_facts.micro.f1
+            if report.interpretation != "reviewed_scope":
+                raise ValueError(
+                    "Reference coverage is incomplete or unreviewed; scientific scores are diagnostic reference agreement"
                 )
             if (
                 report.core_facts.scoring_status != "ready"
@@ -258,7 +345,6 @@ def summarize(
                 raise ValueError(
                     "Score has unresolved alignment or no defined scientific F1"
                 )
-            scores[key] = report
             row.update(
                 quality_available=True,
                 fact_f1=report.core_facts.micro.f1,
@@ -267,6 +353,11 @@ def summarize(
             )
         except (OSError, ValueError) as exc:
             row["issues"].append(str(exc))
+            if (
+                key not in verified_scores
+                and run_accounting.status in COMPLETE_OUTPUT_STATUSES
+            ):
+                integrity_issues.append(f"{key}: {exc}")
 
     issues = [
         f"{row['paper_id']}/{row['repeat']}/{row['arm']}: {issue}"
@@ -282,6 +373,9 @@ def summarize(
     run_ids = [row["run_id"] for row in rows if row.get("run_id")]
     duplicates = {identity for identity in run_ids if run_ids.count(identity) > 1}
     if duplicates:
+        integrity_issues.append(
+            "Duplicate run_id: copied attempts are not independent observations"
+        )
         issues.append(
             "A saved attempt was listed more than once (duplicate run_id); copied folders are not independent runs"
         )
@@ -293,6 +387,8 @@ def summarize(
                 )
                 row["cost_available"] = False
                 row["quality_available"] = False
+                row["reference_agreement_available"] = False
+                row.pop("reference_agreement_f1", None)
                 if row["run_id"] in retained:
                     row.pop("accounting", None)
                 retained.add(row["run_id"])
@@ -334,7 +430,8 @@ def summarize(
                     f"{paper}/{repeat}: undeclared configuration differences: {', '.join(sorted(unexpected))}"
                 )
     issues.extend(study_issues)
-    found = list(scores.values())
+    comparability_issues = []
+    found = list(verified_scores.values())
     if found:
         first = found[0]
         if any(
@@ -342,46 +439,51 @@ def summarize(
             != (first.config, first.matcher_version, first.study_schema_sha256)
             for score in found
         ):
-            issues.append("Scorer configuration, matcher or schema differs")
+            comparability_issues.append(
+                "Scorer configuration, matcher or schema differs"
+            )
         for paper in papers:
-            group = [score for key, score in scores.items() if key[0] == paper]
+            group = [score for key, score in verified_scores.items() if key[0] == paper]
             if group and any(
                 (score.truth_content_sha256, score.benchmark)
                 != (group[0].truth_content_sha256, group[0].benchmark)
                 for score in group
             ):
-                issues.append(f"{paper}: references differ between arms or repetitions")
+                comparability_issues.append(
+                    f"{paper}: references differ between arms or repetitions"
+                )
         # One score per paper checks mixed splits and source duplication without
         # treating repeat observations as independent papers.
         unique = [
-            next(score for key, score in scores.items() if key[0] == paper)
+            next(score for key, score in verified_scores.items() if key[0] == paper)
             for paper in papers
-            if any(key[0] == paper for key in scores)
+            if any(key[0] == paper for key in verified_scores)
         ]
         try:
             aggregate_evaluations(unique, bootstrap_samples=0)
         except ValueError as exc:
-            issues.append(str(exc))
+            comparability_issues.append(str(exc))
+    issues.extend(comparability_issues)
+    diagnostic = reference_agreement(
+        verified_scores,
+        pairs,
+        integrity_issues + study_issues + comparability_issues,
+        bootstrap_samples,
+        seed,
+    )
     quality = None
     if not issues:
-        paired = []
-        for paper in papers:
-            deltas = [
-                scores[paper, repeat, "treatment"].core_facts.micro.f1
-                - scores[paper, repeat, "control"].core_facts.micro.f1
-                for item, repeat in pairs
-                if item == paper
-            ]
-            paired.append(
-                dict(paper_id=paper, repeat_deltas=deltas, mean_delta=mean(deltas))
+        # Both outputs use one aggregation. Quality adds eligibility requirements,
+        # not a different estimand, weighting rule or bootstrap implementation.
+        assert diagnostic["status"] == "complete_roster"
+        quality = {
+            key: diagnostic[key]
+            for key in (
+                "mean_paired_fact_f1_delta",
+                "paired_fact_f1_delta_interval",
+                "papers",
             )
-        quality = dict(
-            mean_paired_fact_f1_delta=mean(item["mean_delta"] for item in paired),
-            paired_fact_f1_delta_interval=paired_interval(
-                [item["mean_delta"] for item in paired], bootstrap_samples, seed
-            ),
-            papers=paired,
-        )
+        }
     accounting = {}
     for arm in ARMS:
         arm_rows = [row for row in rows if row["arm"] == arm]
@@ -389,7 +491,8 @@ def summarize(
         complete = not roster_issues and all(row["cost_available"] for row in arm_rows)
         known = sum(row.get("accounting", {}).get("cost_usd", 0) for row in arm_rows)
         paired_complete = sum(
-            row.get("accounting", {}).get("status") == "complete" for row in arm_paired
+            row.get("accounting", {}).get("status") in COMPLETE_OUTPUT_STATUSES
+            for row in arm_paired
         )
         accounting[arm] = dict(
             planned_runs=len(design.expected_pairs()),
@@ -403,7 +506,7 @@ def summarize(
             accounting_only_runs=sum(not row["quality_applicable"] for row in arm_rows),
             accounted_runs=sum("accounting" in row for row in arm_rows),
             complete_runs=sum(
-                row.get("accounting", {}).get("status") == "complete"
+                row.get("accounting", {}).get("status") in COMPLETE_OUTPUT_STATUSES
                 for row in arm_rows
             ),
             known_cost_usd=known,
@@ -434,6 +537,7 @@ def summarize(
         quality_issues=issues,
         accounting_issues=accounting_issues,
         quality=quality,
+        reference_agreement=diagnostic,
         accounting=accounting,
         recorded_cost_saving_fraction=saving,
         cost_scope="All unique listed paired and accounting_only attempts; unlisted work is not inferred",
@@ -475,6 +579,11 @@ def summarize(
     type=click.Path(path_type=Path, file_okay=False),
     help="New directory for plotting CSVs and analysis provenance.",
 )
+@click.option(
+    "--require-reviewed-quality",
+    is_flag=True,
+    help="Fail unless the benchmark and every paired score meet validated-quality requirements.",
+)
 def main(
     roster: Path,
     output: Path,
@@ -482,6 +591,7 @@ def main(
     bootstrap_samples: int,
     seed: int,
     tables_dir: Path | None,
+    require_reviewed_quality: bool,
 ) -> None:
     """Compare saved runs listed in RUNS.CSV; make no model calls."""
 
@@ -497,6 +607,20 @@ def main(
     except (OSError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(str(output))
+    diagnostic = result["reference_agreement"]
+    click.echo(
+        f"Reference agreement: {diagnostic['status']} "
+        f"({diagnostic['complete_pair_count']}/{diagnostic['planned_pair_count']} complete pairs)."
+    )
+    if (
+        not require_reviewed_quality
+        and automatic_comparison_ready(result)
+        and result["quality"] is None
+    ):
+        click.echo(
+            "Diagnostic comparison saved. Validated quality is unavailable; see quality_issues in the report."
+        )
+        return
     if result["issues"]:
         issues = result["issues"]
         details = "\n".join(f"- {issue}" for issue in issues[:5])

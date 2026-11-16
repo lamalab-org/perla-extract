@@ -61,6 +61,9 @@ incomplete cohort cannot produce a complete cohort cost or a cost-saving fractio
 `planned_runs`, `listed_paired_runs`, `paired_complete_runs` and `paired_scored_runs`
 make coverage explicit. `completion_fraction` measures completed paired runs only
 when the roster matches the declared cohort; it is not a scientific accuracy score.
+Both `complete` and `complete_needs_review` mean execution completed. Citation
+warnings remain visible without making a run partial. Structural or unclassified
+validation errors still block the scored comparison, independently of completion.
 
 For a cohort, use `perla-extract-cohort --config method.toml` with the roster and
 source directories described in [batch extraction](../workflows/quality-first-ground-truth.md).
@@ -84,10 +87,21 @@ incompatible quality results.
 | `runs.csv` | Plot individual quality, token use, request count, latency and recorded spend; includes failed/missing results |
 | `group_scores.csv` | Inspect attributed and recovery precision/recall/F1 with their truth/predicted/matched counts |
 | `paired_papers.csv` | Plot paired paper differences and the number of observed repeats |
+| `paired_reference_agreement.csv` | Diagnostic paired differences, contributing repetitions, and complete/subset status |
 | `analysis.json` | Preserve the estimand, roster hash, factor checks, interval method, seed and diagnostics |
 
 Each score row includes `interpretation`: unreviewed reference scope is diagnostic
 `reference_agreement`. It cannot supply a verified quality comparison.
+
+The `reference_agreement` object in `comparison.json` computes a diagnostic
+contrast without per-run review. All source, run, reference, scorer and declared
+setting checks still apply. `complete_roster` includes every planned pair;
+`conditional_on_complete_pairs` explicitly lists omitted pairs and describes only
+the observed complete subset. `blocked` has no effect estimate. Facts with
+unresolved attribution retain zero credit and remain in the denominator. The
+separate `quality` result still requires reviewed benchmark scope and resolved
+alignment. The CLI succeeds for a complete diagnostic comparison; add
+`--require-reviewed-quality` when that stricter gate is needed.
 
 Empty CSV cells mean unavailable, not zero. `known_total_tokens` retains the observed
 subtotal; token totals are populated only when token accounting is explicitly complete. Known spend remains available even if a

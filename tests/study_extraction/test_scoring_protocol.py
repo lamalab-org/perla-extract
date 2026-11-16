@@ -105,12 +105,18 @@ def test_rounding_of_many_conditions_does_not_prevent_record_pairing():
     assert evaluate_study(truth, prediction).core_facts.groups["performance"].f1 == 1
 
 
-def test_protocol_omission_does_not_prove_two_observations_are_distinct():
+def test_protocol_completeness_stays_fact_local_for_one_known_device():
     truth = illuminated_measurement()
     second = truth.performance_observations[0].model_copy(deep=True)
     second.observation_id = "incompletely-described"
     second.metrics.pop()
     truth.performance_observations.append(second)
     score = evaluate_study(truth, truth).core_facts
-    assert score.groups["performance"].matched == 0
-    assert score.scoring_status == "needs_review"
+    assert score.groups["performance"].matched == 3
+    assert score.scoring_status == "ready"
+    prediction = truth.model_copy(deep=True)
+    prediction.performance_observations = [second]
+    score = evaluate_study(truth, prediction).core_facts
+    # Missing protocol cannot satisfy the explicitly illuminated measurement.
+    assert score.groups["performance"].matched == 1
+    assert score.matches[-1].truth_path == "/performance_observations/1/metrics/0"

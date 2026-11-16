@@ -19,7 +19,7 @@ from pydantic import Field
 
 from .artifacts import write_json_exclusive
 from .cli import _load_env
-from .comparison import ARMS, _settings, summarize
+from .comparison import ARMS, _settings, automatic_comparison_ready, summarize
 from .comparison_study import ComparisonStudy, FactorContrast, same_setting
 from .configuration import ExtractionConfig, parse_settings, resolve_config, tomllib
 from .evaluation_cli import main as evaluate
@@ -296,7 +296,6 @@ def execute(experiment: Experiment) -> dict:
                         str(attempt.config.output_dir),
                         "--output",
                         str(attempt.config.output_dir / "evaluation.json"),
-                        "--fail-on-scoring-issues",
                     ],
                     standalone_mode=False,
                 )
@@ -325,6 +324,13 @@ def execute(experiment: Experiment) -> dict:
                 quality_status="needs_attention",
                 recorded_cost_saving_fraction=None,
             )
+            result["reference_agreement"].update(
+                status="blocked",
+                papers=[],
+                mean_paired_fact_f1_delta=None,
+                paired_fact_f1_delta_interval=None,
+                issues=[*result["reference_agreement"]["issues"], issue],
+            )
         write_json_exclusive(output / "comparison.json", result)
         export_tables(result, output / "figure-data")
         write_summary(result, output / "summary.md")
@@ -351,7 +357,9 @@ def _show_input_mapping(experiment: Experiment) -> None:
             click.echo(f"    {label}: {shown if shown is not None else 'none'}")
         _, benchmark = load_reference(attempt.reference)
         if benchmark is None or not benchmark.coverage.complete():
-            click.echo("    Scoring: diagnostic reference agreement; coverage/context review is incomplete.")
+            click.echo(
+                "    Scoring: diagnostic reference agreement; coverage/context review is incomplete."
+            )
         else:
             click.echo("    Scoring: reference scope reviewed.")
 
@@ -390,10 +398,15 @@ def main(experiment_file: Path, check: bool) -> None:
             click.echo(
                 f"Mean paired attributed fact-F1 change (treatment − control): {delta:+.4f}"
             )
+        elif automatic_comparison_ready(result):
+            delta = result["reference_agreement"]["mean_paired_fact_f1_delta"]
+            click.echo(
+                f"Diagnostic reference-agreement change (treatment − control): {delta:+.4f}; validated quality unavailable."
+            )
         click.echo(f"Read first: {experiment.output / 'summary.md'}")
         click.echo(f"Comparison: {experiment.output / 'comparison.json'}")
         click.echo(f"Figure data: {experiment.output / 'figure-data'}")
-        if result["issues"]:
+        if result["issues"] and not automatic_comparison_ready(result):
             raise ValueError(
                 "Experiment needs attention: " + "; ".join(result["issues"][:3])
             )

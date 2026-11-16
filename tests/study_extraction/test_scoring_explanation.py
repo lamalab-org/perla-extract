@@ -150,6 +150,10 @@ def test_missing_property_and_missing_owner_are_distinct():
     assert fact.nearby_properties[0].name == "ff"
     prediction.performance_observations.clear()
     _, fact = explain(truth, prediction)
+    assert fact.reason == "no_candidate"
+    assert fact.owner_matched
+    prediction.individual_devices.clear()
+    _, fact = explain(truth, prediction)
     assert fact.reason == "owner_unmatched"
     assert not fact.owner_matched
 
@@ -199,16 +203,16 @@ def test_eligible_duplicate_loses_credit_to_exact_competing_path():
     assert lost.candidates[0].competing_predicted_path == won.selection.path
 
 
-def test_record_ambiguity_blocks_primary_but_not_value_credit():
+def test_specimen_ambiguity_blocks_primary_but_not_value_credit():
     truth, prediction = study(), study()
-    duplicate = prediction.performance_observations[0].model_copy(deep=True)
-    duplicate.observation_id = "duplicate"
-    prediction.performance_observations.append(duplicate)
+    duplicate = prediction.individual_devices[0].model_copy(deep=True)
+    duplicate.device_id = "duplicate"
+    prediction.individual_devices.append(duplicate)
     _, fact = explain(truth, prediction)
     assert fact.reason == "ambiguity"
     assert fact.candidates[0].ambiguity_blocked
     assert {s.path for s in fact.candidates[0].ambiguity_sources} == {
-        "/performance_observations/0"
+        "/individual_devices/0"
     }
     _, value = explain(truth, prediction, view="recovery")
     assert value.reason == "matched"

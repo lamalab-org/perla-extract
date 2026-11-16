@@ -30,21 +30,6 @@ PAPERS = [
 ]
 
 
-# Frozen v2 records with repeated device/protocol identity. These facts are
-# withheld rather than paired by their outcomes. Changing this roster requires
-# an explained identity-policy change or a newly adjudicated reference release.
-AMBIGUOUS_PERFORMANCE_FACTS = {
-    "10.1002--adfm.201500335": 10,
-    "10.1002--adma.202302143": 12,
-    "10.1002--solr.202300817": 22,
-    "10.1016--j.jallcom.2023.170970": 16,
-    "10.1016--j.matt.2023.09.006": 24,
-    "10.1038--nature12340": 16,
-    "10.1038--s41467-020-20272-3": 6,
-    "10.1038--s41560-022-01102-w": 108,
-}
-
-
 @pytest.mark.parametrize(
     "release,index",
     RELEASES,
@@ -139,17 +124,13 @@ def test_reference_score_invariance_and_negative_controls(release, index, paper)
     # rewrite a frozen reference just to change that historical metadata.
     assert index["matcher_version"] == "rich-study-hungarian-v6"
     assert index["fact_profile"] == "core-scientific-facts-v4"
-    assert same.matcher_version == "rich-study-hungarian-v15"
-    assert same.core_facts.profile == "core-scientific-facts-v12"
-    withheld = AMBIGUOUS_PERFORMANCE_FACTS.get(paper["paper_id"], 0)
-    assert same.core_facts.micro.truth - same.core_facts.micro.matched == withheld
+    assert same.matcher_version == "rich-study-hungarian-v16"
+    assert same.core_facts.profile == "core-scientific-facts-v13"
+    # Repeated observations of the same known device are a fact multiset. Their
+    # generated record IDs need no unique pairing; scientific subjects still do.
+    assert same.core_facts.micro.f1 == 1
     assert same.core_facts.recovery.micro.f1 == 1
-    assert bool(same.core_facts.issues) == bool(withheld)
-    assert all(
-        issue.kind == "ambiguous_record"
-        and all(path.startswith("/performance_observations/") for path in issue.paths)
-        for issue in same.core_facts.issues
-    )
+    assert not same.core_facts.issues
     reordered = StudyExtraction.model_validate(
         _rename_and_reorder(truth.model_dump(mode="json"))
     )

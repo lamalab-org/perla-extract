@@ -31,6 +31,20 @@ from .scoring_protocol import protocol_claims
 from .scoring_vocabulary import material_name, material_stage, property_name
 
 
+def measurement_subject(record: object) -> tuple[str, str] | None:
+    """Identify a measurement's subject independently of its outcome container.
+
+    An observation ID groups fields in JSON; its explicit device link supplies
+    scientific ownership. Full measurement context is still required per fact.
+    Cohorts and stability tests retain their own identity: the schema does not
+    provide an independent cohort/test subject that would justify pooling them.
+    A missing link is never replaced by paper-wide ownership.
+    """
+    if isinstance(record, PerformanceObservation) and record.device_id is not None:
+        return "individual_devices", record.device_id
+    return None
+
+
 def _tokens(values: Iterable[object]) -> set[str]:
     return {
         token

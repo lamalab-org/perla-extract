@@ -18,6 +18,9 @@ from .evaluation import RunEfficiency
 
 REQUIRED_FILES = ("run_configuration.json", "report.json")
 OPTIONAL_FILES = ("extraction.json", "document.json")
+# Execution completion is independent of validation. Callers must still inspect
+# the saved issues; citation warnings do not make a completed extraction partial.
+COMPLETE_OUTPUT_STATUSES = frozenset({"complete", "complete_needs_review"})
 
 
 def verify_source_hashes(reference: list[str], configuration: object) -> None:

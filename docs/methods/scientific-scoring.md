@@ -2,8 +2,8 @@
 
 This method measures agreement with a fixed reference. It does not use an LLM
 judge. Source completeness and citation support require separate review. The
-current contract is evaluation format 11, matcher `rich-study-hungarian-v15`, fact
-profile `core-scientific-facts-v12`, and explanation format 5. The extraction schema
+current contract is evaluation format 11, matcher `rich-study-hungarian-v16`, fact
+profile `core-scientific-facts-v13`, and explanation format 5. The extraction schema
 and ground-truth format are unchanged.
 
 ## Evaluation unit and two score views
@@ -38,9 +38,22 @@ candidates. Repeated assertions cannot share one matching fact within a view.
 
 Top-level records are paired by maximum-weight one-to-one assignment. Identity
 features exclude measured outcomes. Competing optimal assignments are retained as
-ambiguity; their affected facts receive no attributed credit. An inventory pair
+ambiguity; facts depending on an unresolved scientific subject receive no attributed
+credit. An inventory pair
 is a candidate correspondence, not evidence that all of its scientific fields
 agree.
+
+An individual performance observation with an explicit device link is a container
+of facts about that device. Its facts therefore use the device as owner and retain
+the full treatment, measurement-type, scan and registered-protocol requirements.
+Arbitrary pairing of observation IDs is unnecessary. The existing fact assignment
+compares multisets within this scientific context: splitting, merging or reordering
+observation containers does not change credit when their facts and context are
+unchanged. Duplicates retain multiplicity and cannot share one reference fact.
+Missing or ambiguous device links still withhold credit. This evaluates marginal
+reported facts, not joint metric vectors or correspondence between experimental
+replicates. Population and stability-test records retain their own identity;
+identical treatment descriptions alone do not establish the same cohort or test.
 
 For families with distinct, explicit layer positions on both sides, materials
 are compared in order. Let `L` be the length of their longest common material
@@ -150,3 +163,13 @@ within a paper before comparing methods, and resample papers rather than facts
 for uncertainty intervals. State the number of complete paired papers and the
 reference coverage. Without independent completeness and context review, these
 scores are **development reference agreement**, not validated extraction accuracy.
+
+`perla-compare` produces a diagnostic `reference_agreement` contrast automatically
+from complete, verified pairs, even when coverage is unreviewed or some facts have
+unresolved attribution. Such facts retain zero attributed credit and remain in
+the denominator. The stricter `quality` conclusion still requires reviewed scope
+and resolved alignment. Both contrasts enforce the same source, scorer, reference,
+configuration and design compatibility checks. A subset contrast lists omitted
+pairs and is explicitly conditional on complete paired repetitions; it does not
+estimate performance on the failed attempts. No per-prediction review is required
+to run or compare ablations.

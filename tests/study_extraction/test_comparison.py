@@ -111,6 +111,50 @@ def test_complete_comparison_preserves_pairing_and_cost(roster):
     assert result["recorded_cost_saving_fraction"] == 0.5
     assert result["accounting"]["control"]["planned_runs"] == 4
     assert result["quality"]["paired_fact_f1_delta_interval"]["paper_count"] == 2
+    assert result["reference_agreement"]["status"] == "complete_roster"
+    assert result["reference_agreement"]["mean_paired_fact_f1_delta"] == -0.5
+
+
+def test_unreviewed_benchmark_supports_automatic_diagnostic_comparison(roster):
+    for path in roster.parent.glob("paper-*/*/*/evaluation.json"):
+        report = json.loads(path.read_text())
+        report["benchmark"]["coverage"] = {}
+        report["interpretation"] = "reference_agreement"
+        path.write_text(json.dumps(report))
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
+    assert result["quality"] is None
+    diagnostic = result["reference_agreement"]
+    assert diagnostic["status"] == "complete_roster"
+    assert diagnostic["complete_pair_count"] == 4
+    assert diagnostic["mean_paired_fact_f1_delta"] == -0.5
+    assert diagnostic["paired_fact_f1_delta_interval"]["paper_count"] == 2
+    for strict, code in ((False, 0), (True, 1)):
+        output = roster.parent / f"diagnostic-{strict}.json"
+        args = [
+            str(roster),
+            "--study",
+            str(roster.with_suffix(".study.json")),
+            "--output",
+            str(output),
+        ]
+        if strict:
+            args.append("--require-reviewed-quality")
+        run = CliRunner().invoke(main, args)
+        assert run.exit_code == code, run.output
+        assert "Reference agreement: complete_roster" in run.output
+
+
+def test_diagnostic_comparison_rejects_mixed_reference_coverage(roster):
+    path = roster.parent / "paper-a/control/1/evaluation.json"
+    report = json.loads(path.read_text())
+    report["benchmark"]["coverage"] = {}
+    report["interpretation"] = "reference_agreement"
+    path.write_text(json.dumps(report))
+    diagnostic = summarize(roster, study=roster.with_suffix(".study.json"))[
+        "reference_agreement"
+    ]
+    assert diagnostic["status"] == "blocked"
+    assert diagnostic["mean_paired_fact_f1_delta"] is None
 
 
 def test_unreviewed_reference_retains_counts_but_cannot_supply_verified_quality(roster):
@@ -122,7 +166,11 @@ def test_unreviewed_reference_retains_counts_but_cannot_supply_verified_quality(
     result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality"] is None
     assert any("coverage" in issue for issue in result["quality_issues"])
-    row = next(row for row in result["runs"] if row.get("interpretation") == "reference_agreement")
+    row = next(
+        row
+        for row in result["runs"]
+        if row.get("interpretation") == "reference_agreement"
+    )
     assert row["scientific_scores"]["micro"]["truth"] > 0
     assert not row["quality_available"]
 
@@ -150,17 +198,31 @@ def test_sealed_partial_output_cannot_turn_a_failed_attempt_into_completed_quali
     assert any(
         "partial output is diagnostic" in issue for issue in result["quality_issues"]
     )
+    diagnostic = result["reference_agreement"]
+    assert diagnostic["status"] == "conditional_on_complete_pairs"
+    assert diagnostic["complete_pair_count"] == 3
+    assert diagnostic["omitted_pairs"] == [dict(paper_id="paper-a", repeat=1)]
+    assert diagnostic["papers"][0]["repeats"] == [2]
 
 
 @pytest.mark.parametrize(
     "category,ready",
     [("structural", False), ("unspecified", False), ("citation", True)],
 )
+@pytest.mark.parametrize("status", ["complete", "complete_needs_review"])
 def test_validation_categories_are_visible_and_only_safe_diagnostics_allow_comparison(
-    roster, category, ready
+    roster, category, ready, status
 ):
     path = roster.parent / "paper-a/control/1/evaluation.json"
     score = EvaluationReport.model_validate_json(path.read_bytes())
+    report_path = path.with_name("report.json")
+    report = json.loads(report_path.read_text())
+    report["status"] = status
+    report_path.write_text(json.dumps(report))
+    path.with_name("run_manifest.json").unlink()
+    write_run_manifest(path.parent)
+    score.run_manifest_sha256 = verify_run_manifest(path.parent)[1]
+    score.run_efficiency = load_run_efficiency(report_path)
     score.prediction_validation = PredictionValidation(
         status="needs_review",
         counts={},
@@ -169,9 +231,31 @@ def test_validation_categories_are_visible_and_only_safe_diagnostics_allow_compa
     path.write_text(score.model_dump_json())
     result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert (result["quality"] is not None) is ready
+    assert (result["reference_agreement"]["status"] == "complete_roster") is ready
+    assert result["accounting"]["control"]["completion_fraction"] == 1
     assert result["validation_coverage"] == dict(
         checked_runs=1, unavailable_runs=7, issues=1
     )
+
+
+def test_completed_warning_status_requires_validation_details(roster):
+    directory = roster.parent / "paper-a/control/1"
+    report_path = directory / "report.json"
+    report = json.loads(report_path.read_text())
+    report["status"] = "complete_needs_review"
+    report_path.write_text(json.dumps(report))
+    (directory / "run_manifest.json").unlink()
+    write_run_manifest(directory)
+    path = directory / "evaluation.json"
+    score = EvaluationReport.model_validate_json(path.read_bytes())
+    score.run_manifest_sha256 = verify_run_manifest(directory)[1]
+    score.run_efficiency = load_run_efficiency(report_path)
+    assert score.prediction_validation is None
+    path.write_text(score.model_dump_json())
+    result = summarize(roster, study=roster.with_suffix(".study.json"))
+    assert result["reference_agreement"]["status"] == "blocked"
+    assert any("no validation details" in issue for issue in result["quality_issues"])
+    assert result["accounting"]["control"]["completion_fraction"] == 1
 
 
 @pytest.mark.parametrize(
@@ -186,6 +270,8 @@ def test_swapping_any_bound_artifact_cannot_reverse_conclusion(roster, filename)
     b.write_bytes(original_a)
     result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality"] is None
+    assert result["reference_agreement"]["status"] == "blocked"
+    assert result["reference_agreement"]["mean_paired_fact_f1_delta"] is None
     assert result["issues"]
     if filename in {"report.json", "run_configuration.json"}:
         assert result["accounting"]["control"]["total_cost_usd"] is None
@@ -221,6 +307,7 @@ def test_factor_check_rejects_unrelated_intervention(roster):
     wrong_factor(roster)
     result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality"] is None
+    assert result["reference_agreement"]["status"] == "blocked"
     assert any("undeclared configuration" in issue for issue in result["issues"])
 
 
@@ -426,6 +513,7 @@ def test_failed_extra_attempt_adds_spend_without_changing_paired_quality(roster)
     add_accounting_attempt(roster, directory)
     result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["quality_status"] == "ready"
+    assert result["reference_agreement"]["status"] == "complete_roster"
     assert result["issues"] == []
     assert result["paper_count"] == 2
     assert result["quality"]["mean_paired_fact_f1_delta"] == -0.5

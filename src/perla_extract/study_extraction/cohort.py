@@ -32,7 +32,7 @@ from .models import (
     study_schema_prose_sha256,
     study_schema_sha256,
 )
-from .run_artifacts import verify_run_manifest
+from .run_artifacts import COMPLETE_OUTPUT_STATUSES, verify_run_manifest
 from .source import _parser_dependency_versions, _parser_implementation_sha256
 
 
@@ -165,7 +165,7 @@ def _completed_run_matches(
         recorded = {event["source"]: event["source_sha256"] for event in parsing}
         parser_versions = _parser_dependency_versions(wanted.parser)
         return (
-            report.get("status") in {"complete", "complete_needs_review"}
+            report.get("status") in COMPLETE_OUTPUT_STATUSES
             and configuration.get("scientific_settings") == wanted.scientific_settings()
             and configuration.get("schema_sha256") == study_schema_sha256()
             and configuration.get("prompt_sha256") == prompt_sha256()

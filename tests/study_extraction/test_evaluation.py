@@ -640,8 +640,8 @@ def test_missing_and_duplicate_measurements_affect_recall_and_precision():
     )
     report = evaluate_study(truth, duplicate)
     assert report.core_facts.recovery.groups["performance"].precision == 0.5
-    assert report.core_facts.groups["performance"].precision == 0
-    assert report.core_facts.scoring_status == "needs_review"
+    assert report.core_facts.groups["performance"].precision == 0.5
+    assert report.core_facts.scoring_status == "ready"
     assert report.inventory["performance_observations"].precision == 0.5
 
 
@@ -1508,7 +1508,7 @@ def test_old_scoring_report_is_not_silently_loaded_as_current():
 
     payload = evaluate_study(study(), study()).model_dump()
     assert payload["format_version"] == 11
-    assert payload["core_facts"]["profile"] == "core-scientific-facts-v12"
+    assert payload["core_facts"]["profile"] == "core-scientific-facts-v13"
     payload["format_version"] = 9
     with pytest.raises(ValidationError):
         EvaluationReport.model_validate(payload)

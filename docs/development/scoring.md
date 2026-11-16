@@ -23,6 +23,7 @@ project each input independently → align subjects without outcomes
 | Measurement protocol | `scoring_protocol.py` | Identity and outcome context use the same definition |
 | Quantity interpretation | `scoring_claims.py`, `units.py` | Preserve units, bounds, uncertainty and raw/parsed contradictions |
 | Subject identity | `scoring_identity.py`, `scoring_layers.py` | No scored outcomes or completeness-based tie-breaking |
+| Measurement ownership | `scoring_identity.measurement_subject` | Explicit device links identify subjects; observation IDs only group fields |
 | Context | `scoring_context.py` | Named requirements; preserve missingness, units and multiplicity |
 | Fact inventory | `scoring_facts.py` | Project each input without consulting the other; preserve source paths |
 | Display categories | `scoring_fields.py` | Categories never select candidate matches |
@@ -50,6 +51,13 @@ subject set is one assertion, not permission to multiply it into several matches
 Repeated indistinguishable subjects remain ambiguous, even with different outcomes.
 Only the checked treatment-condition names may establish identity. Unknown fields
 remain stored/scored but cannot break a tie; a misplaced PCE cannot become identity.
+
+Repeated observations of an independently established device are different from
+ambiguous subjects. Individual performance facts use that device as owner and keep
+their complete measurement context. The fact matcher handles their multiplicity;
+it does not need a unique pairing of observation IDs. Cohorts and stability tests
+retain their own identity. See `test_measurement_attribution.py` for the split/merge,
+duplicate, missing-link and ambiguous-device contracts.
 
 ## Identity, required context and description
 
@@ -95,7 +103,7 @@ when explicitly redundant linked material representations merge.
 
 ## Current contract and migration
 
-Evaluation format **11**, matcher **v15**, fact profile **v12**, explanation format
+Evaluation format **11**, matcher **v16**, fact profile **v13**, explanation format
 **5**, and study schema **7** are current. Ground-truth format **4** is unchanged.
 Archived schema-6 inputs load through the additive schema with unknown defaults;
 no treatment/protocol is inferred and no archived file is overwritten. Existing
@@ -119,6 +127,14 @@ self-score does not prove completeness. `reference_agreement` is diagnostic;
 failed attempts and diagnostics but withhold a verified quality conclusion for
 unreviewed scope. Read the [evaluation contract](../workflows/evaluation.md) for
 field definitions and interpretation limits.
+
+The same comparison emits `reference_agreement` automatically from verified,
+complete pairs. `complete_roster` means all planned pairs contributed;
+`conditional_on_complete_pairs` lists omitted repetitions. It is diagnostic, not
+certified accuracy. Artifact, reference, scorer or design incompatibility blocks
+this contrast too. The CLI succeeds for a complete diagnostic comparison; use
+`--require-reviewed-quality` to require the stricter publication gate. No review
+of individual predictions is part of the ablation loop.
 
 ## Acceptance checks
 

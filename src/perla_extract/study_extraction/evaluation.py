@@ -47,13 +47,13 @@ from .scoring_facts import (
     scientific_text,
 )
 from .scoring_fields import FACT_GROUPS, FACT_SUBFIELDS, FactSubfield
-from .scoring_identity import family_pair_evidence
+from .scoring_identity import family_pair_evidence, measurement_subject
 from .scoring_identity import record_similarity as _record_similarity
 from .scoring_layers import align_layers
 from .scoring_process import align_processes
 
 EVALUATION_FORMAT_VERSION: Final[Literal[11]] = 11
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v15"]] = "rich-study-hungarian-v15"
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v16"]] = "rich-study-hungarian-v16"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -362,7 +362,7 @@ class ScoringIssue(StrictModel):
 class CoreFactScore(FactScoreView):
     """Correctly attributed claims, with recovery over the identical fact inventory."""
 
-    profile: Literal["core-scientific-facts-v12"] = "core-scientific-facts-v12"
+    profile: Literal["core-scientific-facts-v13"] = "core-scientific-facts-v13"
     recovery: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
     issues: list[ScoringIssue]
@@ -423,7 +423,7 @@ class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
     format_version: Literal[11] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v15"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v16"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -515,7 +515,7 @@ class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
     format_version: Literal[11] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v15"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v16"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -1024,7 +1024,10 @@ def _core_fact_score(
             )
         for kind in RECORD_KINDS:
             for index, record in enumerate(getattr(study, kind)):
-                if _record_key(kind, record) in keys:
+                if (
+                    _record_key(kind, record) in keys
+                    and measurement_subject(record) is None
+                ):
                     path = f"/{kind}/{index}"
                     canonical = (truth_ids, prediction_ids)[i][
                         _record_key(kind, record)

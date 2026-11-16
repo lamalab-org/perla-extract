@@ -37,6 +37,10 @@ def export_tables(result: dict, directory: Path) -> None:
                 "run_id": run.get("run_id"),
                 "run_dir": run["run_dir"],
                 "quality_available": run["quality_available"],
+                "reference_agreement_available": run.get(
+                    "reference_agreement_available", False
+                ),
+                "reference_agreement_f1": run.get("reference_agreement_f1"),
                 "interpretation": run.get("interpretation", "unavailable"),
                 "validation_status": (run.get("prediction_validation") or {}).get(
                     "status", "unavailable"
@@ -138,6 +142,20 @@ def export_tables(result: dict, directory: Path) -> None:
         directory / "paired_papers.csv",
         ["paper_id", "repeat_count", "mean_fact_f1_delta"],
         papers,
+    )
+    _write(
+        directory / "paired_reference_agreement.csv",
+        ["paper_id", "repeats", "repeat_count", "mean_fact_f1_delta", "status"],
+        [
+            dict(
+                paper_id=paper["paper_id"],
+                repeats=" | ".join(map(str, paper["repeats"])),
+                repeat_count=len(paper["repeats"]),
+                mean_fact_f1_delta=paper["mean_delta"],
+                status=result["reference_agreement"]["status"],
+            )
+            for paper in (result.get("reference_agreement") or {}).get("papers", [])
+        ],
     )
     write_json_exclusive(
         directory / "analysis.json",

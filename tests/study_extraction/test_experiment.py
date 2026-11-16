@@ -98,6 +98,28 @@ def test_check_explains_change_without_running_or_creating_output(setup):
     assert not (path.parent / "results").exists()
 
 
+def test_unreviewed_benchmark_finishes_with_an_automatic_diagnostic_result(setup):
+    path, calls, _ = setup
+    manifest_path = path.parent / "example/truth/dev/10.0000--synthetic/manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["coverage"] = {}
+    manifest_path.write_text(json.dumps(manifest))
+    result = CliRunner().invoke(experiment.main, [str(path)])
+    assert result.exit_code == 0, result.output
+    assert len(calls) == 4
+    output = path.parent / "results"
+    report = json.loads((output / "comparison.json").read_text())
+    assert report["quality"] is None
+    assert report["reference_agreement"]["status"] == "complete_roster"
+    assert report["reference_agreement"]["mean_paired_fact_f1_delta"] == 0
+    assert (
+        "Diagnostic reference-agreement difference"
+        in (output / "summary.md").read_text()
+    )
+    assert (output / "figure-data/paired_reference_agreement.csv").exists()
+    assert json.loads((output / "errors.json").read_text()) == []
+
+
 def test_one_command_runs_scores_and_compares_with_separate_caches(setup):
     path, calls, _ = setup
     result = CliRunner().invoke(experiment.main, [str(path)])

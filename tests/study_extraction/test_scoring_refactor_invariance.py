@@ -34,12 +34,9 @@ def test_frozen_reference_controls_and_explanations_preserve_credit(paper):
     truth = StudyExtraction.model_validate_json(path.read_text(encoding="utf-8"))
     original = truth.model_dump_json()
     baseline = evaluate_study(truth, truth)
-    withheld = 6 if paper == "10.1038--s41467-020-20272-3" else 0
-    assert (
-        baseline.core_facts.micro.truth - baseline.core_facts.micro.matched == withheld
-    )
+    assert baseline.core_facts.micro.f1 == 1
     assert baseline.core_facts.recovery.micro.f1 == 1
-    assert bool(baseline.core_facts.issues) == bool(withheld)
+    assert not baseline.core_facts.issues
     for name, prediction, changes in controls(truth):
         # Equivalent units preserve credit; one removed metric removes one fact;
         # corrupt outcomes lose exactly their value credit without changing identity.

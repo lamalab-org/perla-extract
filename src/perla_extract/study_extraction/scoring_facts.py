@@ -52,6 +52,7 @@ from .scoring_context import (
     equal_value as equal_value,
 )
 from .scoring_fields import FactGroup, FactSubfield, fact_group, fact_subfield
+from .scoring_identity import measurement_subject
 from .scoring_process import condition_name, describe_process, independent_condition
 from .scoring_protocol import performance_name, protocol_claims, protocol_name
 from .scoring_vocabulary import (
@@ -565,6 +566,12 @@ def scientific_facts(
                 if key in identities
                 else RecordReference(key, side)
             )
+            if (subject := measurement_subject(record)) is not None:
+                # Compare facts about the specimen, not generated observation IDs.
+                # Unmatched/dangling links remain side-local through reference().
+                subject_owner = reference(*subject)
+                assert subject_owner is not None
+                owner = subject_owner
             path = f"/{collection}/{index}"
             if collection == "device_families":
                 add("stack", f"{path}/polarity", owner, "polarity", record.polarity)

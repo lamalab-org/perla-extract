@@ -42,6 +42,23 @@ def write_summary(result: dict, path: Path) -> None:
                 "Inspect the issues below and retain failed attempts when accounting for resources.",
             ]
         )
+        diagnostic = result.get("reference_agreement") or {}
+        if diagnostic.get("mean_paired_fact_f1_delta") is not None:
+            delta = diagnostic["mean_paired_fact_f1_delta"]
+            lines.extend(
+                [
+                    "",
+                    f"**Diagnostic reference-agreement difference: {delta:+.4f} attributed fact micro F1 (treatment minus control).**",
+                    f"Scope: `{diagnostic['status']}`; {diagnostic['complete_pair_count']} / {diagnostic['planned_pair_count']} complete paired repetitions across {len(diagnostic['papers'])} papers.",
+                    "This is an automatic comparison against the fixed references, not validated extraction accuracy. Unresolved facts retain zero credit; failures and partial runs do not enter this contrast.",
+                    "See [paired_reference_agreement.csv](figure-data/paired_reference_agreement.csv) for the contributing papers and repetitions; omitted pairs are listed in comparison.json.",
+                ]
+            )
+            interval = diagnostic["paired_fact_f1_delta_interval"]
+            if interval["status"] == "available":
+                lines.append(
+                    f"95% paper-bootstrap interval, conditional on complete pairs: {interval['ci95_lower']:+.4f} to {interval['ci95_upper']:+.4f}."
+                )
     else:
         delta = quality["mean_paired_fact_f1_delta"]
         lines.extend(

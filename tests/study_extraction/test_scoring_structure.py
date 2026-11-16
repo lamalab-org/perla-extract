@@ -78,7 +78,7 @@ def test_missing_device_properties_do_not_erase_unchanged_measurements():
     assert not report.core_facts.issues
 
 
-def test_outcomes_cannot_disambiguate_identical_measurement_protocols():
+def test_repeated_measurements_are_scored_as_facts_about_the_known_device():
     truth = study()
     other = truth.performance_observations[0].model_copy(deep=True)
     other.observation_id = "repeat"
@@ -86,10 +86,16 @@ def test_outcomes_cannot_disambiguate_identical_measurement_protocols():
     truth.performance_observations.append(other)
     prediction = truth.model_copy(deep=True)
     prediction.performance_observations.reverse()
-    score = evaluate_study(truth, prediction).core_facts
-    assert score.groups["performance"].matched == 0
+    report = evaluate_study(truth, prediction)
+    score = report.core_facts
+    # Outcomes never select a record identity; arbitrary record pairing remains
+    # ambiguous, while the specimen-attributed multiset is exactly recovered.
+    assert any(
+        m.ambiguous for m in report.matches if m.kind == "performance_observations"
+    )
+    assert score.groups["performance"].matched == 2
     assert score.recovery.groups["performance"].matched == 2
-    assert score.scoring_status == "needs_review"
+    assert score.scoring_status == "ready"
 
 
 def test_removed_renumbered_step_preserves_retained_facts_and_source_paths():
@@ -236,7 +242,9 @@ def test_duplicates_within_one_representation_still_cost_precision():
     prediction = truth.model_copy(deep=True)
     props = prediction.device_families[0].layers[0].reported_properties
     props.append(props[0].model_copy(deep=True))
-    score = evaluate_study(truth, prediction).core_facts.subfields["material_properties"]
+    score = evaluate_study(truth, prediction).core_facts.subfields[
+        "material_properties"
+    ]
     assert (score.matched, score.predicted, score.truth) == (1, 2, 1)
 
 
@@ -253,7 +261,7 @@ def test_conflicting_linked_properties_are_flagged_and_not_cherry_picked():
     assert any(i.kind == "conflicting_representations" for i in score.issues)
 
 
-def test_metric_names_and_omissions_cannot_resolve_repeated_protocols():
+def test_omitting_one_metric_loses_only_that_fact_in_repeated_observations():
     truth = study()
     first = truth.performance_observations[0]
     first.metrics.append(quantity("FF", 80, "%"))
@@ -265,9 +273,9 @@ def test_metric_names_and_omissions_cannot_resolve_repeated_protocols():
     prediction.performance_observations[0].metrics.pop()
     prediction.performance_observations.reverse()
     score = evaluate_study(truth, prediction).core_facts
-    assert score.groups["performance"].matched == 0
+    assert score.groups["performance"].matched == 2
     assert score.recovery.groups["performance"].matched == 2
-    assert score.scoring_status == "needs_review"
+    assert score.scoring_status == "ready"
 
 
 def test_omitting_redundant_absorber_object_preserves_layer_properties():
@@ -300,7 +308,9 @@ def test_linked_constituents_merge_but_distinct_layers_stay_separate():
     score = evaluate_study(truth, prediction).core_facts
     assert score.micro.f1 == 1
     assert score.subfields["material_properties"].truth == 2  # One bandgap per layer.
-    assert score.subfields["recipe_composition"].truth == 6  # Three recipe facts per layer.
+    assert (
+        score.subfields["recipe_composition"].truth == 6
+    )  # Three recipe facts per layer.
     assert not score.issues
 
 

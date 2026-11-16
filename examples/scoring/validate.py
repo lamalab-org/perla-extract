@@ -88,6 +88,33 @@ def controls(truth):
     count = convert_units(converted)
     if count:
         yield "equivalent_units", converted, count
+    if len(truth.performance_observations) > 1:
+        reordered = truth.model_copy(deep=True)
+        reordered.performance_observations.reverse()
+        yield "reorder_observations", reordered, len(reordered.performance_observations)
+    split = truth.model_copy(deep=True)
+    records, changed = [], 0
+    occupied = {record.observation_id for record in split.performance_observations}
+    for record in split.performance_observations:
+        if (
+            record.device_id is None
+            or len(record.metrics) < 2
+            or any(protocol_name(value.name) is not None for value in record.metrics)
+        ):
+            records.append(record)
+            continue
+        for index, metric in enumerate(record.metrics):
+            item = record.model_copy(deep=True)
+            identifier = f"{record.observation_id}-split-{index}"
+            while identifier in occupied:
+                identifier += "-"
+            occupied.add(identifier)
+            item.observation_id, item.metrics = identifier, [metric]
+            records.append(item)
+        changed += 1
+    if changed:
+        split.performance_observations = records
+        yield "split_observations", split, changed
     # Unique device+protocol tuples identify these records without their outcomes.
     keys = Counter(
         (o.device_id, o.measurement_type, o.scan_direction)
@@ -141,7 +168,24 @@ def validate_control(truth, name, prediction, changes, baseline):
     """Return failures against explicit expectations rather than a golden score."""
     score = evaluate_study(truth, prediction)
     failures = []
-    if name == "equivalent_units":
+    if name in {"reorder_observations", "split_observations"}:
+        for view in ("attributed", "recovery"):
+            original = (
+                baseline.core_facts
+                if view == "attributed"
+                else baseline.core_facts.recovery
+            )
+            actual = (
+                score.core_facts if view == "attributed" else score.core_facts.recovery
+            )
+            if (original.groups, original.subfields) != (
+                actual.groups,
+                actual.subfields,
+            ):
+                failures.append(
+                    f"Changing observation containers changed {view} counts"
+                )
+    elif name == "equivalent_units":
         if any(
             getattr(score.core_facts, view) != getattr(baseline.core_facts, view)
             for view in ("groups", "issues", "recovery")
@@ -352,6 +396,8 @@ def run(
             "equivalent_units": "All convertible scalar quantities; preserve baseline credit and ambiguity.",
             "drop_one_metric": "One metric from a unique explicit device/protocol tuple.",
             "wrong_outcomes_same_identity": "Scalar outcomes from unique explicit device/protocol tuples.",
+            "reorder_observations": "Reverse observation arrays without changing their facts or links.",
+            "split_observations": "Split explicitly device-linked arrays without protocol fields into single-metric observations; preserve all facts and context.",
         },
         "control_summary": {
             name: {
@@ -366,6 +412,8 @@ def run(
                 "equivalent_units",
                 "drop_one_metric",
                 "wrong_outcomes_same_identity",
+                "reorder_observations",
+                "split_observations",
             )
         },
         "controls": results,
