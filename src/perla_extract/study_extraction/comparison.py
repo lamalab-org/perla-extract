@@ -24,6 +24,7 @@ from .figure_data import export_tables
 from .models import StudyExtraction
 from .run_artifacts import (
     COMPLETE_OUTPUT_STATUSES,
+    describe_failed_run,
     file_digest,
     load_run_efficiency,
     verify_run_manifest,
@@ -289,8 +290,13 @@ def summarize(
         if not row["quality_applicable"]:
             continue
         try:
-            verify_run_manifest(directory)
             path = directory / "evaluation.json"
+            if run_accounting.status in {"failed", "interrupted"} and not path.exists():
+                report_path = directory / "report.json"
+                run_report = json.loads(report_path.read_text(encoding="utf-8"))
+                row["issues"].append(describe_failed_run(run_report, report_path))
+                continue
+            verify_run_manifest(directory)
             report = EvaluationReport.model_validate_json(path.read_bytes())
             if report.run_id != manifest.run_id or report.run_manifest_sha256 != digest:
                 raise ValueError(

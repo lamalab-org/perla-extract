@@ -893,7 +893,12 @@ class ModelClient:
                     prompt_components=prompt_components,
                 )
             except ModelBudgetExceeded as error:
-                last_error = error
+                if last_error is None:
+                    last_error = error
+                else:
+                    last_error = ModelBudgetExceeded(
+                        f"{last_error} Retry blocked: {error}"
+                    )
                 break
             outcome = self._execute_attempt(
                 call, attempt, response_model, decode, validate

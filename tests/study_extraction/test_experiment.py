@@ -52,6 +52,7 @@ reference = {json.dumps(str(reference.relative_to(tmp_path)))}
         output.mkdir(parents=True)
         report = {
             "status": "failed" if fail else "complete",
+            "errors": ["Provider request timed out"] if fail else [],
             "elapsed_seconds": 1,
             "usage": {
                 "live_calls": 1,
@@ -170,6 +171,11 @@ def test_failed_run_stays_in_roster_and_accounting(setup, monkeypatch):
         (path.parent / "results/comparison.json").read_text(encoding="utf-8")
     )
     assert len(report["runs"]) == 4
+    failed = next(
+        row for row in report["runs"] if row["accounting"]["status"] == "failed"
+    )
+    assert "Provider request timed out" in failed["issues"][0]
+    assert "evaluation.json" not in failed["issues"][0]
     assert report["quality"] is None
     assert sum(arm["known_cost_usd"] for arm in report["accounting"].values()) == 4
     assert (

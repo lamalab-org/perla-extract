@@ -23,6 +23,18 @@ OPTIONAL_FILES = ("extraction.json", "document.json")
 COMPLETE_OUTPUT_STATUSES = frozenset({"complete", "complete_needs_review"})
 
 
+def describe_failed_run(report: dict, path: Path) -> str:
+    """Show the saved extraction failure before linking to the detailed report."""
+    errors = report.get("errors")
+    detail = (
+        " ".join(error for error in errors if isinstance(error, str) and error)
+        if isinstance(errors, list)
+        else ""
+    )
+    status = f"Extraction {report['status']}"
+    return f"{status}: {detail} See {path}" if detail else f"{status}. See {path}"
+
+
 def verify_source_hashes(reference: list[str], configuration: object) -> None:
     """Require the same main paper and supplements when reference hashes exist.
 
