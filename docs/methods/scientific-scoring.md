@@ -2,8 +2,8 @@
 
 This method measures agreement with a fixed reference. It does not use an LLM
 judge. Citation checks are separate diagnostics; this method does not establish source completeness. The
-current contract is evaluation format 13, matcher `rich-study-hungarian-v18`, fact
-profile `core-scientific-facts-v15`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
+current contract is evaluation format 14, matcher `rich-study-hungarian-v19`, fact
+profile `core-scientific-facts-v16`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
 
 ## Evaluation unit and two score views
 
@@ -72,6 +72,16 @@ priority, and alternative optimal assignments remain ambiguous. This lets a know
 device family support a specimen match despite different display prose, without
 using any measured outcome. Fact-level parent, treatment and protocol checks still
 reject incompatible scientific attribution.
+
+For specimens within a paired family, let `C` be that parent-adjusted content
+similarity and `U` the Jaccard overlap of their linked, explicitly named measurement
+types. The specimen similarity is `(C + U) / 2`. An absent, generic `other` or
+unreported method contributes zero measurement evidence. Repeated observations
+have no additional weight. Values, property names and metric completeness are
+excluded. Explicit compact sample designations in label/variant prose reject
+contradictory candidates, preserving case and code order. Additional descriptive
+prose does not change the extracted code. The saved match exposes both codes and
+method sets. Family and treatment/context checks still apply after this assignment.
 
 If an order is absent or incomplete, the existing conservative family-feature
 comparison is used. No missing order is inferred. Within a paired, fully ordered

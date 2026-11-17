@@ -95,8 +95,8 @@ candidate blockers. Experiment exports include `scoring_diagnostics.csv` with th
 same decisions and original source paths. Read it alongside both score views;
 context availability is not an estimate of extraction correctness.
 
-Reports use format 13, matcher `rich-study-hungarian-v18` and fact profile
-`core-scientific-facts-v15`. Regenerate older reports from saved predictions before
+Reports use format 14, matcher `rich-study-hungarian-v19` and fact profile
+`core-scientific-facts-v16`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
@@ -138,6 +138,35 @@ are used for record pairing but do not veto an established correspondence again.
 A reported reference champion status and preparation context remain requirements;
 when the reference omits them, extra prediction details are not certified by the PV
 score. Explicit AM 1.5G notation is normalized, including the word “irradiation.”
+
+The CLI and experiment summary show the following default fields when present.
+`important_fields.csv` selects the same entries from the full field ledger.
+
+| Domain | Fields |
+| --- | --- |
+| PV performance | PCE, FF, Voc, Jsc |
+| Device dimensions | Active area and masked active area, evaluated separately |
+| Device/material identity | Absorber formula, constituents, layer materials, polarity, fallback raw stack |
+| Material properties | Bandgap and layer thickness |
+| Measurement | Irradiance and illumination spectrum |
+| Processing | Operation, temperature, duration and spin-coating speed |
+
+The exact keys and labels live in `scoring_fields.IMPORTANT_FIELDS`. This list
+selects results for display. Linked duplicate formula/material assertions can merge
+into one canonical material fact. Raw stack text is used only when structured
+layers are absent. Process conditions retain their family, target and ordered
+step, even when several operations share a field key such as `processing:duration`.
+Unknown names remain visible in `field_scores.csv`.
+
+Specimen pairing also reads explicit compact sample codes from labels/variants.
+`Device A` agrees with `Device A, Figure 4/Table 1`, while A/B and B/A remain
+different. Conflicting codes exclude a specimen pair. Within an established
+family, linked measurement kinds provide additional evidence for a specimen's use.
+A J–V specimen can therefore be distinguished from a specimen used for stabilized
+power output. Repeating a measurement or changing its results adds no identity
+evidence. `matches[].identity_evidence` records the sample codes and measurement
+kinds used for each selected specimen pair. Equally plausible same-method
+specimens remain ambiguous.
 
 `core_facts.strata` separates measurement fields by individual/population level,
 statistic and measurement type. Credited predictions are assigned to the reference

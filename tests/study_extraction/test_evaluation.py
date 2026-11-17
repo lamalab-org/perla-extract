@@ -818,11 +818,16 @@ def test_record_ties_propagate_to_linked_measurements():
     truth.individual_devices.append(
         truth.individual_devices[0].model_copy(update={"device_id": "other"})
     )
+    truth.performance_observations.append(
+        truth.performance_observations[0].model_copy(
+            update={"observation_id": "other-result", "device_id": "other"}
+        )
+    )
     prediction = truth.model_copy(deep=True)
     report = evaluate_study(truth, prediction)
     assert any(m.ambiguous for m in report.matches if m.kind == "individual_devices")
     assert report.core_facts.groups["performance"].matched == 0
-    assert report.core_facts.recovery.groups["performance"].matched == 1
+    assert report.core_facts.recovery.groups["performance"].matched == 2
     assert report.core_facts.scoring_status == "needs_review"
     prediction.individual_devices.reverse()
     reordered = evaluate_study(truth, prediction)
@@ -1507,8 +1512,8 @@ def test_old_scoring_report_is_not_silently_loaded_as_current():
     from pydantic import ValidationError
 
     payload = evaluate_study(study(), study()).model_dump()
-    assert payload["format_version"] == 13
-    assert payload["core_facts"]["profile"] == "core-scientific-facts-v15"
+    assert payload["format_version"] == 14
+    assert payload["core_facts"]["profile"] == "core-scientific-facts-v16"
     payload["format_version"] = 9
     with pytest.raises(ValidationError):
         EvaluationReport.model_validate(payload)

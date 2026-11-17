@@ -97,6 +97,11 @@ def test_unverified_citation_ids_and_shared_paragraphs_never_supply_identity():
             deep=True, update={"device_id": "second"}
         )
     )
+    prediction.performance_observations.append(
+        prediction.performance_observations[0].model_copy(
+            deep=True, update={"observation_id": "second-result", "device_id": "second"}
+        )
+    )
     score = evaluate_study(truth, prediction).core_facts
     assert score.subfields["photovoltaic_metrics"].matched == 0
     assert "ambiguous_owner" in score.diagnostics.coverage["prediction"].blocker_counts

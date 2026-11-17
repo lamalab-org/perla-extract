@@ -59,6 +59,11 @@ def test_known_family_supports_pairing_without_requiring_identical_display_prose
     sibling = prediction.individual_devices[0].model_copy(deep=True)
     sibling.device_id = "sibling"
     prediction.individual_devices.append(sibling)
+    second = prediction.performance_observations[0].model_copy(deep=True)
+    second.observation_id = "sibling-observation"
+    second.device_id = "sibling"
+    second.metrics = [quantity("PCE", 25, "%")]
+    prediction.performance_observations.append(second)
     assert (
         evaluate_study(truth, prediction).core_facts.fields["measurement:pce"].matched
         == 0

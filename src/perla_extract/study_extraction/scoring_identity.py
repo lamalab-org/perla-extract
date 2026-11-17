@@ -16,6 +16,7 @@ from .models import (
     PerformanceObservation,
     PopulationStatistic,
     StabilityTest,
+    StudyExtraction,
 )
 from .scoring_claims import scientific_text
 from .scoring_context import (
@@ -29,6 +30,46 @@ from .scoring_context import (
 from .scoring_layers import ordered_layers, stack_similarity
 from .scoring_protocol import canonical_conditions
 from .scoring_vocabulary import material_name, material_stage, property_name
+
+
+def sample_code(device: IndividualDevice) -> str | None:
+    """Read an explicitly named compact sample code, preserving case and punctuation.
+
+    Device A and Device A, Table 1 identify the same named sample. Only a single
+    letter sequence or a token containing digits qualifies. Prose such as 'control device'
+    and generated JSON identifiers supply no code. Multiple codes stay unresolved.
+    """
+    codes = set()
+    token = r"[A-Za-z0-9]+(?:[-_/][A-Za-z0-9]+)*"
+    for text in (device.label, device.variant or ""):
+        candidates = re.findall(
+            rf"\b(?:device|sample|cell|specimen|film)\s+({token})\b",
+            text,
+            re.I,
+        )
+        if re.fullmatch(token, text):
+            candidates.append(text)
+        for code in candidates:
+            if re.fullmatch(r"[A-Za-z](?:[-_/][A-Za-z])*", code) or any(
+                c.isdigit() for c in code
+            ):
+                codes.add(code)
+    return next(iter(codes)) if len(codes) == 1 else None
+
+
+def device_measurements(study: StudyExtraction) -> dict[str, frozenset[str]]:
+    """Describe specimen use through linked measurement kinds, never outcomes.
+
+    Multiplicity, values, metric names and annotation length have no weight. An
+    unreported or generic 'other' method supplies no identity evidence.
+    """
+    uses: dict[str, set[str]] = {}
+    for observation in study.performance_observations:
+        if observation.measurement_type not in {"not_reported", "other"}:
+            uses.setdefault(observation.device_id, set()).add(
+                observation.measurement_type
+            )
+    return {key: frozenset(value) for key, value in uses.items()}
 
 
 def measurement_subject(record: object) -> tuple[str, str] | None:

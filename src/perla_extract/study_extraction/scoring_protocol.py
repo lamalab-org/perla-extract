@@ -48,6 +48,8 @@ PROTOCOL_NAMES = {
     "jvscanrate": "scanrate",
     "scanspeed": "scanrate",
     "scanvoltagerange": "scanvoltagerange",
+    "scanprotocol": "scanvoltagerange",
+    "voltagescanprotocol": "scanvoltagerange",
     "voltagestep": "voltagestep",
     "measurementtemperature": "measurementtemperature",
     "measurementatmosphere": "measurementatmosphere",
@@ -107,6 +109,17 @@ def _condition_value(name: str, value: ReportedValue) -> ReportedValue:
     return value
 
 
+def _condition_name(value: ReportedValue) -> str:
+    """Recognize explicitly stated air-mass illumination as a spectrum condition."""
+    name = protocol_name(value.name) or property_name(value.name)
+    if (
+        name in {"illumination", "illuminationstandard"}
+        and _condition_value("illuminationspectrum", value).raw_value == "AM1.5G"
+    ):
+        return "illuminationspectrum"
+    return name
+
+
 def canonical_conditions(
     record: PerformanceObservation | PopulationStatistic, path: str = ""
 ) -> tuple[MeasurementCondition, ...]:
@@ -119,17 +132,18 @@ def canonical_conditions(
     """
     legacy = [
         MeasurementCondition(
-            name, _condition_value(name, value), (f"{path}/metrics/{i}",), True
+            _condition_name(value),
+            _condition_value(_condition_name(value), value),
+            (f"{path}/metrics/{i}",),
+            True,
         )
         for i, value in enumerate(record.metrics)
-        if (name := protocol_name(value.name)) is not None
+        if protocol_name(value.name) is not None
     ]
     explicit = [
         MeasurementCondition(
-            protocol_name(value.name) or property_name(value.name),
-            _condition_value(
-                protocol_name(value.name) or property_name(value.name), value
-            ),
+            _condition_name(value),
+            _condition_value(_condition_name(value), value),
             (f"{path}/measurement_conditions/{i}",),
             protocol_name(value.name) is not None,
         )

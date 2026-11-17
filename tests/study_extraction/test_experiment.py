@@ -146,6 +146,13 @@ def test_one_command_runs_scores_and_compares_with_separate_caches(setup):
     assert len(pce) == 4
     assert all(row["tp"] == "1" and row["fp"] == row["fn"] == "0" for row in pce)
     assert (output / "figure-data/field_strata.csv").is_file()
+    important = list(
+        csv.DictReader((output / "figure-data/important_fields.csv").open())
+    )
+    assert [row for row in important if row["field"] == "measurement:pce"] == [
+        row for row in field_rows if row["field"] == "measurement:pce"
+    ]
+    assert any(row["field"] == "material:stack" for row in important)
     assert (output / "experiment.toml").read_bytes() == path.read_bytes()
     summary = (output / "summary.md").read_text(encoding="utf-8")
     assert "Treatment − control: +0.0000" in summary

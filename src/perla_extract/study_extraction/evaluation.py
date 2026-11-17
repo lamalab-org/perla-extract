@@ -53,14 +53,19 @@ from .scoring_facts import (
     scientific_text,
 )
 from .scoring_fields import FACT_GROUPS, FACT_SUBFIELDS, FactSubfield
-from .scoring_identity import family_pair_evidence, measurement_subject
+from .scoring_identity import (
+    device_measurements,
+    family_pair_evidence,
+    measurement_subject,
+    sample_code,
+)
 from .scoring_identity import record_similarity as _record_similarity
 from .scoring_layers import align_layers
 from .scoring_process import align_processes
 
-EVALUATION_FORMAT_VERSION: Final[Literal[13]] = 13
+EVALUATION_FORMAT_VERSION: Final[Literal[14]] = 14
 MAX_FACT_CANDIDATES = 1_000_000
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v18"]] = "rich-study-hungarian-v18"
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v19"]] = "rich-study-hungarian-v19"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -220,6 +225,7 @@ class RecordMatch(StrictModel):
     similarity: float = Field(ge=0, le=1)
     ambiguous: bool = False
     family_features: dict[str, list[str]] | None = None
+    identity_evidence: dict[str, list[str]] | None = None
 
 
 class FieldAgreement(StrictModel):
@@ -386,7 +392,7 @@ class ScoringIssue(StrictModel):
 class CoreFactScore(FactScoreView):
     """Correctly attributed claims, with recovery over the identical fact inventory."""
 
-    profile: Literal["core-scientific-facts-v15"] = "core-scientific-facts-v15"
+    profile: Literal["core-scientific-facts-v16"] = "core-scientific-facts-v16"
     recovery: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
     issues: list[ScoringIssue]
@@ -454,8 +460,8 @@ class CoreFactScore(FactScoreView):
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[13] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v18"] = MATCHER_VERSION
+    format_version: Literal[14] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v19"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -546,8 +552,8 @@ class EvaluationInput(StrictModel):
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[13] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v18"] = MATCHER_VERSION
+    format_version: Literal[14] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v19"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -798,6 +804,8 @@ def _record_pairs(
     threshold: float,
     relative: float,
     absolute: float,
+    measurement_uses: tuple[dict[str, frozenset[str]], dict[str, frozenset[str]]]
+    | None = None,
 ) -> list[tuple[int, int, float, bool]]:
     """Prefer established parent and protocol context over coincidentally equal numbers.
 
@@ -815,6 +823,14 @@ def _record_pairs(
         # Never let coincidentally equal outcomes override a different identity.
         if scientific_descriptor(left) != scientific_descriptor(right):
             return 0
+        if kind == "individual_devices":
+            left_code, right_code = sample_code(left), sample_code(right)
+            if (
+                left_code is not None
+                and right_code is not None
+                and left_code != right_code
+            ):
+                return 0
         content = _record_similarity(left, right, relative, absolute)
         compatible = any(
             getattr(left, field) is not None for field, _ in fields
@@ -834,6 +850,14 @@ def _record_pairs(
         content = (content + 1.0) / 2 if compatible else content
         if content < threshold:
             return 0
+        if kind == "individual_devices" and compatible:
+            # Linked measurement kinds distinguish otherwise identical specimen
+            # descriptions. Outcomes and metric inventories supply no evidence.
+            if measurement_uses is not None:
+                a = measurement_uses[0].get(left.device_id, frozenset())
+                b = measurement_uses[1].get(right.device_id, frozenset())
+                overlap = len(a & b) / len(a | b) if a and b else 0.0
+                content = (content + overlap) / 2
         protocol = all(
             getattr(left, field, None) == getattr(right, field, None)
             for field in (
@@ -1410,6 +1434,7 @@ def evaluate_study(
     ambiguous_prediction: set[str] = set()
     total_truth_values = 0
     total_prediction_values = 0
+    measurement_uses = (device_measurements(truth), device_measurements(prediction))
 
     for kind in RECORD_KINDS:
         truth_records = list(getattr(truth, kind))
@@ -1422,6 +1447,7 @@ def evaluate_study(
             config.minimum_record_similarity,
             config.numeric_relative_tolerance,
             config.numeric_absolute_tolerance,
+            measurement_uses=measurement_uses,
         )
         total_truth_values += sum(
             len(_reported_values(record)) for record in truth_records
@@ -1465,6 +1491,22 @@ def evaluate_study(
                     ambiguous=ambiguous,
                     family_features=family_pair_evidence(truth_record, predicted_record)
                     if kind == "device_families"
+                    else None,
+                    identity_evidence={
+                        "truth_sample_code": [sample_code(truth_record)]
+                        if sample_code(truth_record)
+                        else [],
+                        "prediction_sample_code": [sample_code(predicted_record)]
+                        if sample_code(predicted_record)
+                        else [],
+                        "truth_measurement_types": sorted(
+                            measurement_uses[0].get(truth_record.device_id, ())
+                        ),
+                        "prediction_measurement_types": sorted(
+                            measurement_uses[1].get(predicted_record.device_id, ())
+                        ),
+                    }
+                    if kind == "individual_devices"
                     else None,
                 )
             )

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .artifacts import write_bytes_exclusive
 from .run_artifacts import COMPLETE_OUTPUT_STATUSES
+from .scoring_fields import IMPORTANT_FIELDS
 
 
 def write_summary(result: dict, path: Path) -> None:
@@ -47,7 +48,7 @@ def write_summary(result: dict, path: Path) -> None:
     lines.extend(
         [
             "",
-            "## Photovoltaic fields",
+            "## Important scientific fields",
             "",
             f"Counts pooled over the same {len(scored_pairs)} paper/repetition pairs with completed, scored outputs in both arms. Failed or unscored runs remain in the completion table; these conditional scores do not measure their missing values. Interpret these as reference agreement unless the annotation scope is complete.",
             "",
@@ -56,17 +57,20 @@ def write_summary(result: dict, path: Path) -> None:
         ]
     )
     for arm in ("control", "treatment"):
-        for metric in ("pce", "ff", "voc", "jsc"):
+        for key, label in IMPORTANT_FIELDS.items():
             counts = [
-                r["scientific_scores"]["fields"]["measurement:" + metric]
+                r["scientific_scores"]["fields"][key]
                 for r in result["runs"]
                 if r["arm"] == arm
                 and (r["paper_id"], r["repeat"]) in scored_pairs
                 and r.get("scientific_scores")
+                and key in r["scientific_scores"]["fields"]
             ]
             truth, predicted, matched = (
                 sum(c[k] for c in counts) for k in ("truth", "predicted", "matched")
             )
+            if not (truth or predicted):
+                continue
             rates = [
                 matched / predicted if predicted else None,
                 matched / truth if truth else None,
@@ -74,7 +78,7 @@ def write_summary(result: dict, path: Path) -> None:
             ]
             formatted = " | ".join(f"{v:.1%}" if v is not None else "—" for v in rates)
             lines.append(
-                f"| {arm} | {metric.upper()} | {matched} | {predicted - matched} | {truth - matched} | {formatted} |"
+                f"| {arm} | {label} | {matched} | {predicted - matched} | {truth - matched} | {formatted} |"
             )
     lines.extend(
         [

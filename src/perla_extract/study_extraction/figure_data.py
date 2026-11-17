@@ -11,6 +11,7 @@ import csv
 from pathlib import Path
 
 from .artifacts import write_json_exclusive
+from .scoring_fields import IMPORTANT_FIELDS
 
 
 def _write(path: Path, columns: list[str], rows: list[dict]) -> None:
@@ -157,6 +158,11 @@ def export_tables(result: dict, directory: Path) -> None:
         ("group_scores.csv", "group", groups),
         ("subfield_scores.csv", "subfield", subfields),
         ("field_scores.csv", "field", fields),
+        (
+            "important_fields.csv",
+            "field",
+            [row for row in fields if row["field"] in IMPORTANT_FIELDS],
+        ),
         ("field_strata.csv", "stratum", strata),
     ):
         _write(

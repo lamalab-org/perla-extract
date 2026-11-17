@@ -25,6 +25,7 @@ from .run_artifacts import (
     verify_source_hashes,
 )
 from .scoring_explanation import FactSelection
+from .scoring_fields import IMPORTANT_FIELDS
 from .validation import validate_study
 
 INPUT = click.Path(path_type=Path, exists=True, readable=True, resolve_path=True)
@@ -245,14 +246,16 @@ def main(
             ) from exc
         click.echo(str(destination))
     click.echo("Field  TP  FP  FN  Precision  Recall  F1")
-    for name in ("pce", "ff", "voc", "jsc"):
-        score = report.core_facts.fields["measurement:" + name]
+    for key, label in IMPORTANT_FIELDS.items():
+        score = report.core_facts.fields.get(key)
+        if score is None or not (score.predicted or score.truth):
+            continue
         rates = "  ".join(
             f"{v:.1%}" if v is not None else "—"
             for v in (score.precision, score.recall, score.f1)
         )
         click.echo(
-            f"{name.upper()}  {score.matched}  {score.predicted - score.matched}  {score.truth - score.matched}  {rates}"
+            f"{label}  {score.matched}  {score.predicted - score.matched}  {score.truth - score.matched}  {rates}"
         )
     for warning in report.input_warnings:
         click.echo(f"Input warning: {warning}", err=True)
