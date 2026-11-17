@@ -55,13 +55,15 @@ def study() -> StudyExtraction:
     )
 
 
-def test_schema_replaces_citations_with_known_span_ids():
+def test_schema_bounds_citations_without_document_sized_enum():
     spans = build_evidence_spans([block()])
     schema = span_citation_schema(StudyExtraction, spans)
 
     citation = schema["$defs"]["EvidenceCitation"]
     assert citation["type"] == "string"
-    assert citation["enum"] == sorted(span.span_id for span in spans)
+    assert "enum" not in citation
+    assert citation["minLength"] == 1
+    assert citation["maxLength"] == 200
     assert (
         "separate ReportedValue objects"
         in schema["$defs"]["ReportedValue"]["properties"]["raw_value"]["description"]
@@ -118,6 +120,20 @@ def test_span_response_rejects_an_unknown_reference():
 
     with pytest.raises(ValueError, match="unknown evidence span"):
         expand_span_citations(compact, spans)
+
+
+def test_long_catalog_does_not_increase_schema_size_or_weaken_membership():
+    spans = build_evidence_spans([block()])
+    many = [spans[0].model_copy(update={"span_id": f"s{i}"}) for i in range(1200)]
+    assert span_citation_schema(StudyExtraction, many) == span_citation_schema(
+        StudyExtraction, spans
+    )
+    with pytest.raises(ValueError, match="unknown evidence span"):
+        expand_span_citations({"evidence": ["s1200"]}, many)
+    assert (
+        expand_span_citations({"evidence": ["s1199"]}, many)["evidence"][0]["quote"]
+        == spans[0].text
+    )
 
 
 def test_compaction_rejects_a_quote_that_is_not_a_generated_span():

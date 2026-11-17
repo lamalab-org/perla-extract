@@ -17,17 +17,13 @@ from .evidence import source_contains_text
 from .spans import EvidenceSpan
 
 
-def _identifier_schema(values: Iterable[str] | None = None) -> dict[str, object]:
-    """Return the bounded identifier contract, optionally constrained to known IDs."""
-
-    schema: dict[str, object] = {
+def _identifier_schema() -> dict[str, object]:
+    """Bound citation syntax; the decoder checks membership in the source catalog."""
+    return {
         "type": "string",
         "minLength": 1,
         "maxLength": 200,
     }
-    if values is not None:
-        schema["enum"] = sorted(set(values))
-    return schema
 
 
 def span_citation_schema(
@@ -47,9 +43,10 @@ def span_citation_schema(
     definitions = schema.get("$defs", {})
     if "EvidenceCitation" not in definitions:
         raise ValueError("response schema does not contain EvidenceCitation")
-    definitions["EvidenceCitation"] = _identifier_schema(
-        span.span_id for span in span_list
-    )
+    # A document-sized enum can exceed provider limits before inference. The
+    # catalog still travels in the prompt; expand_span_citations enforces exact
+    # membership, including for responses accepted by the provider's schema.
+    definitions["EvidenceCitation"] = _identifier_schema()
     return schema
 
 
@@ -62,8 +59,7 @@ def expand_span_citations(
         raise ValueError("model response must be an object")
     data = deepcopy(payload)
     catalog = {
-        span.span_id: {"block_id": span.block_id, "quote": span.text}
-        for span in spans
+        span.span_id: {"block_id": span.block_id, "quote": span.text} for span in spans
     }
 
     def citation(reference: object) -> dict[str, str]:
@@ -104,14 +100,10 @@ def compact_to_span_citations(
     """
 
     data = deepcopy(
-        payload.model_dump(mode="json")
-        if isinstance(payload, BaseModel)
-        else payload
+        payload.model_dump(mode="json") if isinstance(payload, BaseModel) else payload
     )
     span_list = list(spans)
-    identities = {
-        (span.block_id, span.text): span.span_id for span in span_list
-    }
+    identities = {(span.block_id, span.text): span.span_id for span in span_list}
 
     def compact_reference(reference: object) -> str:
         if not isinstance(reference, dict):

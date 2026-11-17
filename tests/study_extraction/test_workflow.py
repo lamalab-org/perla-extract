@@ -555,14 +555,12 @@ def test_direct_and_empty_reading_send_full_source_at_provider_boundary(
     for body in study_calls:
         for block in blocks:
             assert block.text in body["messages"][1]["content"]
-        assert (
-            set(
-                body["response_format"]["json_schema"]["schema"]["$defs"][
-                    "EvidenceCitation"
-                ]["enum"]
-            )
-            == span_ids
-        )
+        citation_schema = body["response_format"]["json_schema"]["schema"]["$defs"][
+            "EvidenceCitation"
+        ]
+        assert citation_schema["type"] == "string"
+        assert "enum" not in citation_schema
+        assert all(span_id in body["messages"][1]["content"] for span_id in span_ids)
     manifest, _ = verify_run_manifest(output)
     assert manifest.run_id == report["run_id"]
     events = [
