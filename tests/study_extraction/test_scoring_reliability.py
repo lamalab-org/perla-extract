@@ -100,6 +100,7 @@ def test_champion_near_neighbors_do_not_receive_attributed_credit(change):
             )
         )
     elif change == "scan":
+        truth.performance_observations[0].scan_direction = "reverse"
         prediction.performance_observations[0].scan_direction = "forward"
     elif change == "owner":
         prediction.performance_observations[0].device_id = None

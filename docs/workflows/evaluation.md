@@ -95,8 +95,16 @@ candidate blockers. Experiment exports include `scoring_diagnostics.csv` with th
 same decisions and original source paths. Read it alongside both score views;
 context availability is not an estimate of extraction correctness.
 
-Reports use format 14, matcher `rich-study-hungarian-v19` and fact profile
-`core-scientific-facts-v16`. Regenerate older reports from saved predictions before
+`unit_source` distinguishes units in a separate field, the raw value or a PV
+field name (`PCE [%]`), plus missing/unsupported units and unparsed claims.
+The CLI flags missing PV unit evidence on each side. Unitless FF may be a
+fraction or an unstated percentage; no blanket scale conversion is applied.
+For PV values, an unreported reference method/scan does not contradict extra
+prediction detail. Explicit contradictions and missing known reference conditions
+still prevent credit. See the [exact context rules](../methods/scientific-scoring.md#treatment-identity-and-context).
+
+Reports use format 15, matcher `rich-study-hungarian-v20` and fact profile
+`core-scientific-facts-v17`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.

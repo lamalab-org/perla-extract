@@ -7,7 +7,9 @@ diagnostics so a reader can trace a reported score to the comparison contract.
 """
 
 from dataclasses import dataclass
+from typing import cast
 
+from .models import ReportedValue
 from .scoring_context import (
     ContextComponent,
     ContextDifference,
@@ -119,7 +121,10 @@ def compare_requirements(
     The reference defines which protocol conditions can be assessed. Every stated
     reference condition remains required, including unknown condition names.
     Additional predicted conditions are scored as their own fields. This does not
-    relax specimen/cohort identity, measurement kind, scan direction or statistic.
+    infer missing conditions. A missing reference method or scan cannot contradict
+    an explicitly reported prediction. Known reference methods/scans remain required.
+    Champion selection is optional metadata once the specimen is independently
+    aligned; two explicit, different champion flags still contradict each other.
     """
     rule = requirements_for(concept, truth)
     left, right = (
@@ -131,13 +136,26 @@ def compare_requirements(
             (c.value for c in left.components if c.name == "protocol"), None
         )
         if isinstance(reference_protocol, UnorderedContext):
-            names = {name for name, _ in reference_protocol.items}
+            # This named component is produced by protocol_claims; other
+            # unordered context components can contain different item types.
+            names = {
+                name
+                for name, _ in cast(
+                    tuple[tuple[str, ReportedValue], ...], reference_protocol.items
+                )
+            }
             right = FactContext(
                 tuple(
                     ContextComponent(
                         c.name,
                         UnorderedContext(
-                            tuple(item for item in c.value.items if item[0] in names)
+                            tuple(
+                                item
+                                for item in cast(
+                                    tuple[tuple[str, ReportedValue], ...], c.value.items
+                                )
+                                if item[0] in names
+                            )
                         ),
                         c.path,
                     )
@@ -158,14 +176,30 @@ def compare_requirements(
             right = FactContext(
                 tuple(c for c in right.components if c.name != "subject_context")
             )
-        if any(
-            c.name == "champion_status" and missing_requirement(c.value)
-            for c in left.components
+        # Selection metadata does not define a different value for an already
+        # aligned specimen. Explicit contradictory champion flags still conflict.
+        omitted = set()
+        for name in (
+            "champion_status",
+            "scan_direction",
+            "measurement_type",
+            "subjects",
         ):
-            left = FactContext(
-                tuple(c for c in left.components if c.name != "champion_status")
+            reference = next((c.value for c in left.components if c.name == name), None)
+            predicted = next(
+                (c.value for c in right.components if c.name == name), None
             )
-            right = FactContext(
-                tuple(c for c in right.components if c.name != "champion_status")
-            )
+            if (
+                missing_requirement(reference)
+                or (name == "measurement_type" and reference == "other")
+                or (
+                    name == "subjects"
+                    and isinstance(reference, UnorderedContext)
+                    and not reference.items
+                )
+                or (name == "champion_status" and missing_requirement(predicted))
+            ):
+                omitted.add(name)
+        left = FactContext(tuple(c for c in left.components if c.name not in omitted))
+        right = FactContext(tuple(c for c in right.components if c.name not in omitted))
     return compare_context(left, right, relative, absolute)

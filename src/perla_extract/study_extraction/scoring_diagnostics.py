@@ -9,7 +9,7 @@ from collections import Counter
 from typing import Literal
 
 from .models import ReportedValue, StrictModel
-from .scoring_claims import LiteralClaim, normalize_claim
+from .scoring_claims import LiteralClaim, ScalarClaim, normalize_claim
 from .scoring_facts import FactComparison, ScientificFact
 from .scoring_protocol import protocol_name
 from .scoring_requirements import requirements_for
@@ -23,6 +23,15 @@ Blocker = Literal[
     "conflicting_context",
     "one_to_one_competition",
 ]
+UnitSource = Literal[
+    "reported",
+    "raw_value",
+    "field_name",
+    "missing",
+    "unsupported",
+    "unparsed",
+    "not_quantity",
+]
 
 
 class FactDiagnostic(StrictModel):
@@ -30,6 +39,7 @@ class FactDiagnostic(StrictModel):
     rule_id: str
     statistical_level: str | None
     value_interpretation: Literal["quantity", "literal", "nonquantity"]
+    unit_source: UnitSource
     unsupported_condition_name: bool
     candidate_count: int
     owner_paired: bool
@@ -90,17 +100,26 @@ def diagnose_fact(
     context = {c.name: c.value for c in fact.context.components}
     level = context.get("statistical_level")
     interpretation: Literal["quantity", "literal", "nonquantity"] = "nonquantity"
+    unit_source: UnitSource = "not_quantity"
     if isinstance(fact.value, ReportedValue):
-        interpretation = (
-            "literal"
-            if isinstance(normalize_claim(fact.value), LiteralClaim)
-            else "quantity"
-        )
+        claim = normalize_claim(fact.value)
+        interpretation = "literal" if isinstance(claim, LiteralClaim) else "quantity"
+        if isinstance(claim, LiteralClaim):
+            unit_source = "unparsed"
+        elif claim.unit is None:
+            unit_source = "missing"
+        elif isinstance(claim, ScalarClaim) and claim.canonical is None:
+            unit_source = "unsupported"
+        else:
+            unit_source = fact.unit_source or (
+                "reported" if fact.value.unit is not None else "raw_value"
+            )
     return FactDiagnostic(
         path=fact.path,
         rule_id=requirements_for(fact.concept, fact.context).rule_id,
         statistical_level=level if isinstance(level, str) else None,
         value_interpretation=interpretation,
+        unit_source=unit_source,
         unsupported_condition_name=(
             fact.subfield == "measurement_protocol" and protocol_name(fact.name) is None
         ),

@@ -143,6 +143,7 @@ def export_tables(result: dict, directory: Path) -> None:
             "rule_id",
             "statistical_level",
             "value_interpretation",
+            "unit_source",
             "unsupported_condition_name",
             "candidate_count",
             "owner_paired",

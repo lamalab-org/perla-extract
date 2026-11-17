@@ -259,6 +259,20 @@ def main(
         )
     for warning in report.input_warnings:
         click.echo(f"Input warning: {warning}", err=True)
+    missing_units = {
+        side: sum(
+            d.unit_source == "missing" and d.rule_id.endswith("-photovoltaic")
+            for d in facts
+        )
+        for side, facts in report.core_facts.diagnostics.facts.items()
+    }
+    if any(missing_units.values()):
+        click.echo(
+            f"PV unit evidence missing: {missing_units['truth']} reference, "
+            f"{missing_units['prediction']} predicted field(s). "
+            "Inspect diagnostics.unit_source; no percentage unit is assumed.",
+            err=True,
+        )
     if fail_on_scoring_issues and report.core_facts.issues:
         raise click.ClickException(
             f"{len(report.core_facts.issues)} scoring issue(s) require review; diagnostics saved to {output}"

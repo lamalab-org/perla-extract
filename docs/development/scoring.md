@@ -60,6 +60,14 @@ Repeated indistinguishable subjects remain ambiguous, even with different outcom
 Only the checked treatment-condition names may establish identity. Unknown fields
 remain stored/scored but cannot break a tie; a misplaced PCE cannot become identity.
 
+The same explicit sample-code parser supports families and cohorts. Known codes
+must agree; extra label prose adds no evidence. A same-code family can align despite
+an incomplete stack, but the missing layers remain misses. PV context comparison
+distinguishes omitted reference scan/method/subjects from explicit contradictions;
+known reference conditions still need a prediction. Champion-status omission does
+not veto an already aligned specimen's value. See `test_attribution_missingness.py`
+for positive cases and wrong-code, wrong-statistic and conflicting-context controls.
+
 Repeated observations of an independently established device are different from
 ambiguous subjects. Individual performance facts use that device as owner and keep
 their complete measurement context. The fact matcher handles their multiplicity;
@@ -130,7 +138,7 @@ Use a new output path. Read `calibration_coverage` for applicable, passed and
 inapplicable cases; the tool exits unsuccessfully if any applicable control fails.
 Synthetic conditions are explicitly marked and never written back into references.
 
-Evaluation format **12**, matcher **v17**, fact profile **v14**, explanation format
+Evaluation format **15**, matcher **v20**, fact profile **v17**, explanation format
 **6**, and study schema **8** are current. Ground-truth format **4** is unchanged.
 Archived schema-6/7 inputs load through the additive schema with unknown defaults;
 no treatment/protocol is inferred and no archived file is overwritten. Existing
@@ -147,6 +155,10 @@ frequent fact types carry more weight within a paper.
 Numeric tolerance remains **1% relative, zero absolute**, after unit conversion.
 Counts are exact. Duplicate merging allows conversion roundoff only, independently
 of scoring tolerance. Unknown or inconsistent quantities remain literal.
+PV units explicitly written in a metric name can fill a missing unit field in the
+scoring projection. `unit_source` in fact diagnostics records the source or the
+unresolved state. No unit is inferred from another fact, a citation or the paired
+reference. Unitless percentages remain unresolved against explicit percentages.
 `units.py` accepts unit names and arithmetic after its explicit typography rules.
 Comments, braces and secondary quantities in a unit label remain unparsed; Pint
 versions must not silently remove punctuation and change their interpretation.

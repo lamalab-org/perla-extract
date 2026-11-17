@@ -2,8 +2,8 @@
 
 This method measures agreement with a fixed reference. It does not use an LLM
 judge. Citation checks are separate diagnostics; this method does not establish source completeness. The
-current contract is evaluation format 14, matcher `rich-study-hungarian-v19`, fact
-profile `core-scientific-facts-v16`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
+current contract is evaluation format 15, matcher `rich-study-hungarian-v20`, fact
+profile `core-scientific-facts-v17`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
 
 ## Evaluation unit and two score views
 
@@ -64,6 +64,15 @@ Thus exact arm labels can distinguish otherwise identical stacks, while lengthy
 prose contributes no additional weight. Candidate similarity must reach **0.35**.
 The threshold is a fixed matching policy, not a calibrated probability.
 
+An explicit, equal sample designation in family labels/variants supplies an
+independent anchor: its candidate score is `(content_similarity + 1) / 2`.
+Different known designations exclude the pair. The same bounded code parser is
+used for families, specimens and cohort labels; generated JSON IDs are excluded.
+A cohort label such as `Device 1 population` can therefore agree with `Device 1
+average`, while its statistic and known treatment subjects remain required.
+Missing/wrong layers still lose their own field credit. Competing equal-code
+candidates remain subject to the same assignment-ambiguity check.
+
 For child records with an established parent correspondence, candidate similarity
 is `(content_similarity + 1) / 2`; without a known compatible parent it is the
 content similarity alone. The same 0.35 threshold applies. Null parent links are
@@ -105,8 +114,10 @@ For an individual device, recognized treatment inputs are read from both
 own interpretation; the reference never fills gaps in a prediction. Registered
 input names and complete quantities establish a treatment description. These features establish candidate specimen correspondences. For PV value credit,
 free-text variant and selection descriptions do not veto a paired specimen again.
-Reference-reported champion status and preparation remain requirements;
-unannotated reference preparation does not certify or veto extra predicted detail. Population treatment sets use the
+Explicitly contradictory champion flags still block PV credit; an omitted flag
+does not change a value for an independently aligned specimen. Reference-reported
+preparation remains required; unannotated reference preparation does not certify
+or veto extra predicted detail. Population treatment sets use the
 same conservative quantity comparison and retain multiplicity.
 
 Reference-reported unknown structured conditions remain required context but cannot
@@ -144,7 +155,7 @@ context remains a requirement; other domains retain their existing strict rules.
 
 | Field | Subject and defining context | Independently scored detail |
 | --- | --- | --- |
-| Individual PCE, Voc, Jsc, FF | Paired specimen, family, reference-reported treatment/champion status, individual result kind, measurement type, scan, reference protocol | Variant/selection wording and extra unannotated protocol |
+| Individual PCE, Voc, Jsc, FF | Paired specimen, family, reference-reported treatment, individual result kind, known reference method/scan/protocol; explicit champion contradictions block | Variant/selection wording, omitted champion flag and extra unannotated protocol |
 | Population PCE, Voc, Jsc, FF | Paired cohort, statistic, family, subjects/label, measurement type, scan, reference protocol; conflicting sample counts block | Extra unannotated protocol |
 | Annealing temperature/duration | Family, aligned target and ordered annealing step | Optional ingredients of the established step |
 | Spin-coating speed/duration | Family, aligned target and ordered coating step | Optional ingredients of the established step |
@@ -161,6 +172,14 @@ anchors as unavailable. A common paragraph, matching outcome, or device link doe
 not justify ignoring missing measurement conditions. Both sides omitting a
 condition measures agreement in the recorded context, not proof of experimental
 completeness.
+
+For the four PV quantities only, a reference method/scan recorded as unreported
+(or generic `other` method) cannot contradict a stated prediction qualifier. A
+known reference method/scan is still required in the prediction. An empty reference
+cohort subject set likewise cannot disprove extra predicted treatment detail once
+the cohort has been independently aligned. Explicitly conflicting subject sets
+still block credit. These are asymmetric reference-agreement rules: added detail
+is not certified by an incomplete reference.
 
 ```text
 project each study independently into facts with original paths
@@ -189,6 +208,10 @@ blockers: wrong value, missing owner, ambiguous owner, missing defining context,
 conflicting context, no candidate and one-to-one competition. Blockers inspect
 same-owner candidates when available; otherwise they inspect all same-concept
 candidates. They do not claim that one selected rejection caused a score change.
+
+`unit_source` records whether a quantity's unit came from its separate unit field,
+raw value or PV field name. Missing units, unsupported units and unparsed claims
+have separate statuses. The same field is exported in `scoring_diagnostics.csv`.
 
 `examples/scoring/validate.py` tests the frozen references and bounded synthetic
 derivatives. `calibration.py` isolates a measurement with its linked specimen and
@@ -221,6 +244,13 @@ as complete claims; a matching central number alone is insufficient. Offset unit
 are converted before comparison. Bounds, unknown units and contradictions between
 raw text, parsed number and unit are not silently discarded. Unsupported claims
 remain literal assertions.
+
+For registered PV names, a recognized, dimensionally compatible trailing unit in brackets or parentheses
+(`PCE [%]`, `Voc (mV)`) supplies a missing unit field in the scoring projection.
+An existing unit field takes precedence. Raw-number/unit consistency checks still
+apply; full-name/abbreviation pairs such as `fill factor (FF)` are not units.
+Inputs and their hashes are unchanged. No percentage-point convention is assumed:
+`20` without a unit does not equal `20%`, and `0.2%` does not equal `20%`.
 
 The grammar accepts printed powers of ten and a single variable assignment such
 as `E = 1.0 V` or `Q_pol = 10 mC/cm2`; it still validates the complete right-hand

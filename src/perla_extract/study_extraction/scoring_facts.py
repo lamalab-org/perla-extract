@@ -53,11 +53,12 @@ from .scoring_context import (
     equal_value as equal_value,
 )
 from .scoring_fields import FactGroup, FactSubfield, fact_group, fact_subfield
-from .scoring_identity import measurement_subject
+from .scoring_identity import measurement_subject, sample_code
 from .scoring_process import condition_name, describe_process
 from .scoring_protocol import (
     canonical_conditions,
     metric_definition,
+    metric_value,
     performance_name,
     protocol_claims,
     protocol_name,
@@ -99,11 +100,12 @@ def scientific_descriptor(record: object) -> str | None:
     """
 
     if isinstance(record, PopulationStatistic):
-        return (
-            None
-            if record.subjects and all(has_subject_identity(s) for s in record.subjects)
-            else scientific_text(record.label)
-        )
+        code = sample_code(record)
+        if code:
+            return "sample:" + code
+        if record.subjects and all(has_subject_identity(s) for s in record.subjects):
+            return None
+        return scientific_text(record.label)
     if isinstance(record, StabilityTest) and record.device_id is None:
         return scientific_text(record.specimen_label)
     return None
@@ -120,6 +122,7 @@ class ScientificFact:
     subfield: FactSubfield
     concept: tuple[str, str]
     source_paths: tuple[str, ...] = ()
+    unit_source: Literal["field_name"] | None = None
 
     @property
     def field_key(self) -> str:
@@ -227,7 +230,7 @@ class FactProjection:
     facts: list[ScientificFact]
     scopes: list[ScientificScope]
     linked_containers: list[tuple[str, str]] = field(default_factory=list)
-    conflicts: list[tuple[str, str]] = field(default_factory=list)
+    conflicts: list[tuple[str, ...]] = field(default_factory=list)
 
     def merge_material_identities(self, aliases: list[tuple[str, str]]) -> None:
         """Attach explicitly redundant whole-material fields to their layer identity.
@@ -373,7 +376,7 @@ class _FactProjector:
         self.scopes: list[ScientificScope] = []
         self.linked_containers: list[tuple[str, str]] = []
         self.material_aliases: list[tuple[str, str]] = []
-        self.material_conflicts: list[tuple[str, str]] = []
+        self.material_conflicts: list[tuple[str, ...]] = []
         self.devices = {item.device_id: item for item in study.individual_devices}
         self.device_paths = {
             item.device_id: f"/individual_devices/{i}"
@@ -458,6 +461,12 @@ class _FactProjector:
             )
             if "/measurement_conditions/" in path and protocol_name(name) is None:
                 concept = ("measurement_condition", name)
+            unit_source: Literal["field_name"] | None = None
+            if isinstance(value, ReportedValue) and concept[0] == "measurement":
+                resolved = metric_value(value)
+                if resolved.unit != value.unit:
+                    unit_source = "field_name"
+                value = resolved
             self.facts.append(
                 ScientificFact(
                     group=fact_group(concept),
@@ -469,6 +478,7 @@ class _FactProjector:
                     source_paths=source_paths or (path,),
                     subfield=fact_subfield(group, name, path, stage, value),
                     concept=concept,
+                    unit_source=unit_source,
                 )
             )
 
@@ -990,7 +1000,7 @@ class _FactProjector:
         path: str,
     ) -> FactContext:
         """Preserve label qualifiers and reject contradictions with structured fields."""
-        _, statistic, method = metric_definition(metric.name)
+        _, statistic, method, _ = metric_definition(metric.name)
         updates = {}
         for name, qualifier in (
             ("statistic_type", statistic),

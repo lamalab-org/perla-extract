@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from .models import PerformanceObservation, PopulationStatistic, ReportedValue
 from .scoring_claims import equal_claims, normalize_claim
 from .scoring_vocabulary import property_name
+from .units import canonical_quantity
 
 # A closed grammar separates a quantity from its stated method/statistic. Do not
 # strip arbitrary words: "relative PCE improvement" is not an absolute PCE.
@@ -25,17 +26,50 @@ _PV_NAME = re.compile(
 )
 
 
-def metric_definition(name: str) -> tuple[str, str | None, str | None]:
+def metric_definition(name: str) -> tuple[str, str | None, str | None, str | None]:
     """Return the base quantity and only qualifiers explicitly present in its name."""
-    text = " ".join(name.casefold().replace("–", "-").replace("−", "-").split())
+    suffix = re.fullmatch(
+        r"(.+?)\s*(?:\[([^\[\]()]+)\]|\(([^\[\]()]+)\))", name.strip()
+    )
+    unit = (suffix[2] or suffix[3]).strip() if suffix else None
+    base = suffix[1].strip() if suffix else name
+    # A full-name/abbreviation pair such as "fill factor (FF)" is a concept
+    # alias, not a unit. The vocabulary validates that the two names agree.
+    if unit and property_name(unit) == property_name(base):
+        return property_name(name), None, None, None
+    text = " ".join(base.casefold().replace("–", "-").replace("−", "-").split())
     match = _PV_NAME.fullmatch(text)
     if match:
+        key = property_name(match["metric"])
+        if unit:
+            # Parentheses also carry qualifiers ("corrected", "min"). Only a
+            # recognized, dimensionally appropriate unit may leave the name.
+            expected = {"pce": "%", "ff": "%", "voc": "V", "jsc": "A/m2"}[key]
+            stated = canonical_quantity(1, unit)
+            target = canonical_quantity(1, expected)
+            if stated is None or target is None or stated[1] != target[1]:
+                return property_name(name), None, None, None
         return (
-            property_name(match["metric"]),
+            key,
             "mean" if match["stat"] else None,
             "jv_scan" if match["method"] else None,
+            unit,
         )
-    return property_name(name), None, None
+    return property_name(name), None, None, None
+
+
+def metric_value(value: ReportedValue) -> ReportedValue:
+    """Read an explicitly printed PV unit from its field label when absent separately.
+
+    The raw claim parser still rejects inconsistent numbers and unit suffixes.
+    This function reads one study's own assertion and does not consult a match.
+    """
+    _, _, _, unit = metric_definition(value.name)
+    return (
+        value.model_copy(update={"unit": unit})
+        if value.unit is None and unit
+        else value
+    )
 
 
 PROTOCOL_NAMES = {
@@ -66,7 +100,7 @@ def protocol_name(name: str) -> str | None:
 
 def performance_name(name: str, measurement_type: str | None) -> str:
     """Eta denotes power efficiency only in an explicitly photovoltaic protocol."""
-    key, _, _ = metric_definition(name)
+    key, _, _, _ = metric_definition(name)
     if key in {"η", "efficiency"} and measurement_type in {
         "jv_scan",
         "stabilized_power_output",

@@ -20,6 +20,8 @@ from typing import Annotated, Final, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .models import (
+    DeviceFamily,
+    IndividualDevice,
     ReportedValue,
     StrictModel,
     StudyExtraction,
@@ -63,9 +65,9 @@ from .scoring_identity import record_similarity as _record_similarity
 from .scoring_layers import align_layers
 from .scoring_process import align_processes
 
-EVALUATION_FORMAT_VERSION: Final[Literal[14]] = 14
+EVALUATION_FORMAT_VERSION: Final[Literal[15]] = 15
 MAX_FACT_CANDIDATES = 1_000_000
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v19"]] = "rich-study-hungarian-v19"
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v20"]] = "rich-study-hungarian-v20"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -392,7 +394,7 @@ class ScoringIssue(StrictModel):
 class CoreFactScore(FactScoreView):
     """Correctly attributed claims, with recovery over the identical fact inventory."""
 
-    profile: Literal["core-scientific-facts-v16"] = "core-scientific-facts-v16"
+    profile: Literal["core-scientific-facts-v17"] = "core-scientific-facts-v17"
     recovery: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
     issues: list[ScoringIssue]
@@ -460,8 +462,8 @@ class CoreFactScore(FactScoreView):
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[14] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v19"] = MATCHER_VERSION
+    format_version: Literal[15] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v20"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -552,8 +554,8 @@ class EvaluationInput(StrictModel):
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[14] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v19"] = MATCHER_VERSION
+    format_version: Literal[15] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v20"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -823,8 +825,17 @@ def _record_pairs(
         # Never let coincidentally equal outcomes override a different identity.
         if scientific_descriptor(left) != scientific_descriptor(right):
             return 0
-        if kind == "individual_devices":
-            left_code, right_code = sample_code(left), sample_code(right)
+        if kind in {"device_families", "individual_devices"}:
+            left_code = (
+                sample_code(left)
+                if isinstance(left, (DeviceFamily, IndividualDevice))
+                else None
+            )
+            right_code = (
+                sample_code(right)
+                if isinstance(right, (DeviceFamily, IndividualDevice))
+                else None
+            )
             if (
                 left_code is not None
                 and right_code is not None
@@ -832,6 +843,12 @@ def _record_pairs(
             ):
                 return 0
         content = _record_similarity(left, right, relative, absolute)
+        if (
+            kind == "device_families"
+            and left_code is not None
+            and left_code == right_code
+        ):
+            content = (content + 1.0) / 2
         compatible = any(
             getattr(left, field) is not None for field, _ in fields
         ) and all(
@@ -850,7 +867,12 @@ def _record_pairs(
         content = (content + 1.0) / 2 if compatible else content
         if content < threshold:
             return 0
-        if kind == "individual_devices" and compatible:
+        if (
+            kind == "individual_devices"
+            and compatible
+            and isinstance(left, IndividualDevice)
+            and isinstance(right, IndividualDevice)
+        ):
             # Linked measurement kinds distinguish otherwise identical specimen
             # descriptions. Outcomes and metric inventories supply no evidence.
             if measurement_uses is not None:
@@ -2035,7 +2057,9 @@ def aggregate_evaluations(
     )
 
 
-def _aggregate_fields(reports: list[EvaluationReport], category: str) -> dict[str, PRF]:
+def _aggregate_fields(
+    reports: Sequence[EvaluationReport], category: str
+) -> dict[str, PRF]:
     """Sum counts before calculating rates; papers with no such field add zero."""
     keys = sorted({key for r in reports for key in getattr(r.core_facts, category)})
     return {

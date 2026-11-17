@@ -32,7 +32,9 @@ from .scoring_protocol import canonical_conditions
 from .scoring_vocabulary import material_name, material_stage, property_name
 
 
-def sample_code(device: IndividualDevice) -> str | None:
+def sample_code(
+    record: DeviceFamily | IndividualDevice | PopulationStatistic,
+) -> str | None:
     """Read an explicitly named compact sample code, preserving case and punctuation.
 
     Device A and Device A, Table 1 identify the same named sample. Only a single
@@ -41,7 +43,7 @@ def sample_code(device: IndividualDevice) -> str | None:
     """
     codes = set()
     token = r"[A-Za-z0-9]+(?:[-_/][A-Za-z0-9]+)*"
-    for text in (device.label, device.variant or ""):
+    for text in (record.label, getattr(record, "variant", None) or ""):
         candidates = re.findall(
             rf"\b(?:device|sample|cell|specimen|film)\s+({token})\b",
             text,
@@ -229,6 +231,11 @@ def family_pair_evidence(
     left: DeviceFamily, right: DeviceFamily
 ) -> dict[str, list[str]]:
     """Expose the ordered materials, or fallback features, used to pair a family."""
+    left_code, right_code = sample_code(left), sample_code(right)
+    codes = {
+        "truth_sample_code": [left_code] if left_code else [],
+        "prediction_sample_code": [right_code] if right_code else [],
+    }
     left_order, right_order = ordered_layers(left), ordered_layers(right)
     if left_order is not None and right_order is not None:
         return {
@@ -240,9 +247,11 @@ def family_pair_evidence(
             "prediction_variant": [scientific_text(right.variant)]
             if right.variant
             else [],
+            **codes,
         }
     a, b = _family_features(left), _family_features(right)
     return {
+        **codes,
         "shared": sorted(a & b),
         "truth_only": sorted(a - b),
         "prediction_only": sorted(b - a),
