@@ -58,9 +58,9 @@ from .scoring_identity import record_similarity as _record_similarity
 from .scoring_layers import align_layers
 from .scoring_process import align_processes
 
-EVALUATION_FORMAT_VERSION: Final[Literal[12]] = 12
+EVALUATION_FORMAT_VERSION: Final[Literal[13]] = 13
 MAX_FACT_CANDIDATES = 1_000_000
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v17"]] = "rich-study-hungarian-v17"
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v18"]] = "rich-study-hungarian-v18"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -291,6 +291,8 @@ class FactMatch(StrictModel):
 
     group: FactGroup
     subfield: FactSubfield
+    field: str
+    stratum: str
     truth_path: str
     predicted_path: str
     truth_container: str
@@ -302,6 +304,8 @@ class FactScoreView(StrictModel):
 
     groups: dict[FactGroup, PRF]
     subfields: dict[FactSubfield, PRF]
+    fields: dict[str, PRF]
+    strata: dict[str, PRF]
     micro: PRF
     matches: list[FactMatch]
     unmatched_truth_paths: list[str]
@@ -332,6 +336,19 @@ class FactScoreView(StrictModel):
         matched_subfields = Counter(match.subfield for match in self.matches)
         if any(matched_subfields[k] != s.matched for k, s in self.subfields.items()):
             raise ValueError("fact match ledger disagrees with subfield counts")
+        for category, attribute in ((self.fields, "field"), (self.strata, "stratum")):
+            if self.micro != _prf(
+                *(
+                    sum(getattr(s, k) for s in category.values())
+                    for k in ("predicted", "truth", "matched")
+                )
+            ):
+                raise ValueError("field counts must partition the fact inventory")
+            credited = Counter(getattr(m, attribute) for m in self.matches)
+            if set(credited) - category.keys() or any(
+                credited[k] != score.matched for k, score in category.items()
+            ):
+                raise ValueError("field counts disagree with the fact match ledger")
         matched_groups = Counter(match.group for match in self.matches)
         if any(matched_groups[g] != score.matched for g, score in self.groups.items()):
             raise ValueError("fact match ledger disagrees with group counts")
@@ -369,7 +386,7 @@ class ScoringIssue(StrictModel):
 class CoreFactScore(FactScoreView):
     """Correctly attributed claims, with recovery over the identical fact inventory."""
 
-    profile: Literal["core-scientific-facts-v14"] = "core-scientific-facts-v14"
+    profile: Literal["core-scientific-facts-v15"] = "core-scientific-facts-v15"
     recovery: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
     issues: list[ScoringIssue]
@@ -437,8 +454,8 @@ class CoreFactScore(FactScoreView):
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[12] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v17"] = MATCHER_VERSION
+    format_version: Literal[13] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v18"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -529,8 +546,8 @@ class EvaluationInput(StrictModel):
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[12] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v17"] = MATCHER_VERSION
+    format_version: Literal[13] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v18"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -560,6 +577,8 @@ class DatasetEvaluationReport(StrictModel):
     core_fact_groups_macro_f1: dict[FactGroup, MetricSummary]
     core_fact_subfields_micro: dict[FactSubfield, PRF]
     core_fact_subfields_macro_f1: dict[FactSubfield, MetricSummary]
+    core_fields_micro: dict[str, PRF]
+    core_field_strata_micro: dict[str, PRF]
     core_facts_micro: PRF
     core_facts_mean_paper_f1: MetricSummary
     core_recovery_micro: PRF
@@ -782,7 +801,7 @@ def _record_pairs(
 ) -> list[tuple[int, int, float, bool]]:
     """Prefer established parent and protocol context over coincidentally equal numbers.
 
-    The lexical threshold still applies. A contextual bonus resolves assignments
+    A known parent contributes to candidate eligibility. A contextual bonus resolves assignments
     such as identical JV results from different devices without relying on list order.
     Incompatible pairs remain available for inventory/link-error diagnostics; they
     cannot earn contextual fact credit.
@@ -797,9 +816,9 @@ def _record_pairs(
         if scientific_descriptor(left) != scientific_descriptor(right):
             return 0
         content = _record_similarity(left, right, relative, absolute)
-        if content < threshold:
-            return 0
-        compatible = bool(fields) and all(
+        compatible = any(
+            getattr(left, field) is not None for field, _ in fields
+        ) and all(
             (getattr(left, field) is None and getattr(right, field) is None)
             or (
                 getattr(left, field) is not None
@@ -808,6 +827,13 @@ def _record_pairs(
             )
             for field, parent in fields
         )
+        # A matched parent is independent identity evidence, not merely a tie
+        # breaker after a lexical cutoff. Give content and an established parent
+        # equal weight. Missing parents add no evidence; contradictory required
+        # context is still rejected when facts are compared.
+        content = (content + 1.0) / 2 if compatible else content
+        if content < threshold:
+            return 0
         protocol = all(
             getattr(left, field, None) == getattr(right, field, None)
             for field in (
@@ -829,7 +855,7 @@ def _record_pairs(
             (
                 i,
                 j,
-                _record_similarity(truth[i], prediction[j], relative, absolute),
+                selected - 2 if selected >= 2 else selected,
                 (i, j) in ambiguous,
             )
         )
@@ -1185,6 +1211,8 @@ def _core_fact_score(
                     FactMatch(
                         group=a.group,
                         subfield=a.subfield,
+                        field=a.field_key,
+                        stratum=a.stratum,
                         truth_path=a.path,
                         predicted_path=b.path,
                         truth_container=a.path.split("/")[1],
@@ -1246,6 +1274,8 @@ def _fact_score_view(
     matched_right = {m.predicted_path for m in matches}
     return FactScoreView(
         groups=groups,
+        fields=_field_counts(expected, actual, matches, "field_key", "field"),
+        strata=_field_counts(expected, actual, matches, "stratum", "stratum"),
         subfields={
             key: _prf(
                 sum(f.subfield == key for f in actual),
@@ -1263,6 +1293,29 @@ def _fact_score_view(
             f.path for f in actual if f.path not in matched_right
         ),
     )
+
+
+def _field_counts(
+    expected: list[ScientificFact],
+    actual: list[ScientificFact],
+    matches: list[FactMatch],
+    fact_key: str,
+    match_key: str,
+) -> dict[str, PRF]:
+    """Derive field totals from the same facts and decisions as the overall score.
+
+    Strata describe the reference measurement for a credited pair. Recovery can
+    cross strata, so its predicted denominator is assigned to that reference
+    stratum too; unmatched predictions retain their own reported stratum.
+    """
+    truth = Counter(getattr(f, fact_key) for f in expected)
+    matched = Counter(getattr(m, match_key) for m in matches)
+    assigned = {m.predicted_path: getattr(m, match_key) for m in matches}
+    predicted = Counter(assigned.get(f.path, getattr(f, fact_key)) for f in actual)
+    keys = truth.keys() | predicted.keys()
+    if fact_key == "field_key":
+        keys |= {"measurement:" + k for k in ("pce", "ff", "voc", "jsc")}
+    return {k: _prf(predicted[k], truth[k], matched[k]) for k in sorted(keys)}
 
 
 def _value_similarity(left: object, right: object) -> float:
@@ -1908,6 +1961,8 @@ def aggregate_evaluations(
             )
             for i, key in enumerate(FACT_SUBFIELDS)
         },
+        core_fields_micro=_aggregate_fields(reports, "fields"),
+        core_field_strata_micro=_aggregate_fields(reports, "strata"),
         core_facts_micro=_prf(
             sum(r.core_facts.micro.predicted for r in reports),
             sum(r.core_facts.micro.truth for r in reports),
@@ -1936,3 +1991,22 @@ def aggregate_evaluations(
             r.interpretation != "reviewed_scope" for r in reports
         ),
     )
+
+
+def _aggregate_fields(reports: list[EvaluationReport], category: str) -> dict[str, PRF]:
+    """Sum counts before calculating rates; papers with no such field add zero."""
+    keys = sorted({key for r in reports for key in getattr(r.core_facts, category)})
+    return {
+        key: _prf(
+            *(
+                sum(
+                    getattr(
+                        getattr(r.core_facts, category).get(key, _prf(0, 0, 0)), count
+                    )
+                    for r in reports
+                )
+                for count in ("predicted", "truth", "matched")
+            )
+        )
+        for key in keys
+    }

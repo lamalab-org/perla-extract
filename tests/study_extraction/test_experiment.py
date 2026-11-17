@@ -136,10 +136,20 @@ def test_one_command_runs_scores_and_compares_with_separate_caches(setup):
     }
     assert report["accounting"]["control"]["total_cost_usd"] == 2
     assert (output / "figure-data/paired_papers.csv").is_file()
+    field_rows = list(csv.DictReader((output / "figure-data/field_scores.csv").open()))
+    pce = [
+        row
+        for row in field_rows
+        if row["field"] == "measurement:pce" and row["view"] == "attributed"
+    ]
+    assert len(pce) == 4
+    assert all(row["tp"] == "1" and row["fp"] == row["fn"] == "0" for row in pce)
+    assert (output / "figure-data/field_strata.csv").is_file()
     assert (output / "experiment.toml").read_bytes() == path.read_bytes()
     summary = (output / "summary.md").read_text(encoding="utf-8")
     assert "Treatment − control: +0.0000" in summary
     assert "only one paper" in summary
+    assert "same 2 paper/repetition pairs with completed, scored outputs" in summary
     assert "| control | 2 / 2 | 2 | 2.000000 |" in summary
     assert "Read first:" in result.output
     repeated = CliRunner().invoke(experiment.main, [str(path)])

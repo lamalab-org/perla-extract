@@ -26,6 +26,8 @@ def export_tables(result: dict, directory: Path) -> None:
     runs: list[dict] = []
     groups: list[dict] = []
     subfields: list[dict] = []
+    fields: list[dict] = []
+    strata: list[dict] = []
     diagnostics: list[dict] = []
     for run in result["runs"]:
         identity = {name: run[name] for name in ("paper_id", "arm", "repeat")}
@@ -98,7 +100,12 @@ def export_tables(result: dict, directory: Path) -> None:
             ("attributed", score),
             ("recovery", score["recovery"]),
         ):
-            for category, rows in (("groups", groups), ("subfields", subfields)):
+            for category, key, rows in (
+                ("groups", "group", groups),
+                ("subfields", "subfield", subfields),
+                ("fields", "field", fields),
+                ("strata", "stratum", strata),
+            ):
                 for name, counts in scores[category].items():
                     rows.append(
                         {
@@ -106,7 +113,10 @@ def export_tables(result: dict, directory: Path) -> None:
                             "quality_available": run["quality_available"],
                             "interpretation": run.get("interpretation", "unavailable"),
                             "view": view,
-                            "group" if category == "groups" else "subfield": name,
+                            key: name,
+                            "tp": counts["matched"],
+                            "fp": counts["predicted"] - counts["matched"],
+                            "fn": counts["truth"] - counts["matched"],
                             **{
                                 key: counts[key]
                                 for key in (
@@ -146,6 +156,8 @@ def export_tables(result: dict, directory: Path) -> None:
     for filename, category, rows in (
         ("group_scores.csv", "group", groups),
         ("subfield_scores.csv", "subfield", subfields),
+        ("field_scores.csv", "field", fields),
+        ("field_strata.csv", "stratum", strata),
     ):
         _write(
             directory / filename,
@@ -157,6 +169,9 @@ def export_tables(result: dict, directory: Path) -> None:
                 "interpretation",
                 "view",
                 category,
+                "tp",
+                "fp",
+                "fn",
                 "truth",
                 "predicted",
                 "matched",

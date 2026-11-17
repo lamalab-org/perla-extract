@@ -150,6 +150,14 @@ Numeric absolute tolerance is in canonical base units, not the reference's displ
 unit. Dataset reports retain `--bootstrap-samples` and `--seed`, explain unavailable
 intervals, and distinguish complete from partial or unknown cost accounting.
 
+Single-paper reports expose `core_facts.fields` (for example `measurement:pce`)
+and measurement/statistic breakdowns in `core_facts.strata`. Dataset reports sum
+field counts in `core_fields_micro` before calculating precision and recall.
+The single-paper CLI prints TP, FP, FN, precision, recall and F1 for PCE/FF/Voc/Jsc.
+Experiment exports include `field_scores.csv` and `field_strata.csv`; the summary's
+PV table uses the same completed paper/repetition pairs for both arms. Completion
+and source/reference coverage must accompany these conditional comparisons.
+
 `--operation-aliases FILE` replaces the scorer's operation equivalence map with a
 frozen JSON object. Both evaluation commands accept `--fail-on-scoring-issues` to
 save diagnostics and then exit nonzero when attribution ambiguity needs inspection.

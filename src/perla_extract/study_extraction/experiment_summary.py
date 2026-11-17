@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from .artifacts import write_bytes_exclusive
+from .run_artifacts import COMPLETE_OUTPUT_STATUSES
 
 
 def write_summary(result: dict, path: Path) -> None:
@@ -31,6 +32,56 @@ def write_summary(result: dict, path: Path) -> None:
             for arm in ("control", "treatment")
         )
         lines.append(f"- `{name}`: control `{control}` → treatment `{treatment}`.")
+    scored_pairs = set.intersection(
+        *(
+            {
+                (r["paper_id"], r["repeat"])
+                for r in result["runs"]
+                if r["arm"] == arm
+                and r.get("scientific_scores")
+                and r.get("accounting", {}).get("status") in COMPLETE_OUTPUT_STATUSES
+            }
+            for arm in ("control", "treatment")
+        )
+    )
+    lines.extend(
+        [
+            "",
+            "## Photovoltaic fields",
+            "",
+            f"Counts pooled over the same {len(scored_pairs)} paper/repetition pairs with completed, scored outputs in both arms. Failed or unscored runs remain in the completion table; these conditional scores do not measure their missing values. Interpret these as reference agreement unless the annotation scope is complete.",
+            "",
+            "| Arm | Field | TP | FP | FN | Precision | Recall | F1 |",
+            "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for arm in ("control", "treatment"):
+        for metric in ("pce", "ff", "voc", "jsc"):
+            counts = [
+                r["scientific_scores"]["fields"]["measurement:" + metric]
+                for r in result["runs"]
+                if r["arm"] == arm
+                and (r["paper_id"], r["repeat"]) in scored_pairs
+                and r.get("scientific_scores")
+            ]
+            truth, predicted, matched = (
+                sum(c[k] for c in counts) for k in ("truth", "predicted", "matched")
+            )
+            rates = [
+                matched / predicted if predicted else None,
+                matched / truth if truth else None,
+                2 * matched / (truth + predicted) if truth + predicted else None,
+            ]
+            formatted = " | ".join(f"{v:.1%}" if v is not None else "—" for v in rates)
+            lines.append(
+                f"| {arm} | {metric.upper()} | {matched} | {predicted - matched} | {truth - matched} | {formatted} |"
+            )
+    lines.extend(
+        [
+            "",
+            "[field_scores.csv](figure-data/field_scores.csv) retains every scored output, including those outside this shared cohort. [field_strata.csv](figure-data/field_strata.csv) separates measurement types and population statistics. This table is conditional on shared scored outputs, not a full-roster model ranking.",
+        ]
+    )
     lines.extend(
         [
             "",

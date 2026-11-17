@@ -7,12 +7,36 @@ to distinguish two observations. No conditions are inferred from other records.
 
 from __future__ import annotations
 
+import re
 import sys
 from dataclasses import dataclass
 
 from .models import PerformanceObservation, PopulationStatistic, ReportedValue
 from .scoring_claims import equal_claims, normalize_claim
 from .scoring_vocabulary import property_name
+
+# A closed grammar separates a quantity from its stated method/statistic. Do not
+# strip arbitrary words: "relative PCE improvement" is not an absolute PCE.
+_PV_NAME = re.compile(
+    r"(?:(?P<stat>(?:population[- ]+)?(?:average|mean))\s+)?"
+    r"(?P<metric>pce|power conversion efficiency|ff|fill factor|voc|open circuit voltage|"
+    r"jsc|short circuit current density)"
+    r"(?P<method>\s+(?:extracted\s+)?from\s+(?:the\s+)?j[- ]?v(?:\s+curve)?)?"
+)
+
+
+def metric_definition(name: str) -> tuple[str, str | None, str | None]:
+    """Return the base quantity and only qualifiers explicitly present in its name."""
+    text = " ".join(name.casefold().replace("–", "-").replace("−", "-").split())
+    match = _PV_NAME.fullmatch(text)
+    if match:
+        return (
+            property_name(match["metric"]),
+            "mean" if match["stat"] else None,
+            "jv_scan" if match["method"] else None,
+        )
+    return property_name(name), None, None
+
 
 PROTOCOL_NAMES = {
     "illuminationintensity": "illuminationintensity",
@@ -40,7 +64,7 @@ def protocol_name(name: str) -> str | None:
 
 def performance_name(name: str, measurement_type: str | None) -> str:
     """Eta denotes power efficiency only in an explicitly photovoltaic protocol."""
-    key = property_name(name)
+    key, _, _ = metric_definition(name)
     if key in {"η", "efficiency"} and measurement_type in {
         "jv_scan",
         "stabilized_power_output",
@@ -67,6 +91,22 @@ class MeasurementCondition:
     supported: bool
 
 
+def _condition_value(name: str, value: ReportedValue) -> ReportedValue:
+    """Canonicalize explicit air-mass notation, preserving unknown spectrum prose."""
+    if (
+        name == "illuminationspectrum"
+        and re.fullmatch(
+            r"am\s*1[.]5\s*g(?:\s+(?:irradiation|illumination|spectrum))?",
+            value.raw_value.strip(),
+            re.I,
+        )
+        and value.value_number is None
+        and value.unit is None
+    ):
+        return value.model_copy(update={"raw_value": "AM1.5G"})
+    return value
+
+
 def canonical_conditions(
     record: PerformanceObservation | PopulationStatistic, path: str = ""
 ) -> tuple[MeasurementCondition, ...]:
@@ -78,14 +118,18 @@ def canonical_conditions(
     containers are never inspected. This function does not mutate either input.
     """
     legacy = [
-        MeasurementCondition(name, value, (f"{path}/metrics/{i}",), True)
+        MeasurementCondition(
+            name, _condition_value(name, value), (f"{path}/metrics/{i}",), True
+        )
         for i, value in enumerate(record.metrics)
         if (name := protocol_name(value.name)) is not None
     ]
     explicit = [
         MeasurementCondition(
             protocol_name(value.name) or property_name(value.name),
-            value,
+            _condition_value(
+                protocol_name(value.name) or property_name(value.name), value
+            ),
             (f"{path}/measurement_conditions/{i}",),
             protocol_name(value.name) is not None,
         )

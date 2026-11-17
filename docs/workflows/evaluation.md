@@ -95,8 +95,8 @@ candidate blockers. Experiment exports include `scoring_diagnostics.csv` with th
 same decisions and original source paths. Read it alongside both score views;
 context availability is not an estimate of extraction correctness.
 
-Reports use format 12, matcher `rich-study-hungarian-v17` and fact profile
-`core-scientific-facts-v14`. Regenerate older reports from saved predictions before
+Reports use format 13, matcher `rich-study-hungarian-v18` and fact profile
+`core-scientific-facts-v15`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
@@ -111,6 +111,47 @@ edit their metadata to use a newer scorer. Generate new evaluation reports inste
 the reference stays fixed while the new report records the new scoring rules.
 
 ## What is scored
+
+### Start with individual fields
+
+`core_facts.fields` reports precision, recall and F1 for each scientific quantity,
+using the current rich reference and schema. The CLI prints PCE, FF, Voc and Jsc;
+their keys are `measurement:pce`, `measurement:ff`, `measurement:voc`, and
+`measurement:jsc`. Other named fields use the same `namespace:quantity` convention.
+`matched` is TP, `predicted - matched` is FP, and `truth - matched` is FN. A wrong
+substitution contributes both FP and FN. Null placeholders earn no credit.
+
+Each field uses the existing one-to-one fact ledger. Correct PCE can earn credit
+when FF or an unrelated processing field is wrong. Its specimen/family must still
+be paired without using the measured numbers, and its measurement type, scan and
+statistical meaning must agree. Ambiguous ownership remains unresolved.
+
+Bounded name normalization recognizes `PCE extracted from the J–V curve` and
+population `average PCE`, preserving the method and statistic. Contradictions
+between such a name and the structured record block credit. Relative improvement,
+retention, population means and individual results are not interchangeable.
+
+For these four PV quantities, the reference's stated protocol is required. Extra
+prediction conditions are scored separately; an unannotated scan rate does not
+invalidate an otherwise matched PCE. Free-text device variants and selection prose
+are used for record pairing but do not veto an established correspondence again.
+A reported reference champion status and preparation context remain requirements;
+when the reference omits them, extra prediction details are not certified by the PV
+score. Explicit AM 1.5G notation is normalized, including the word “irradiation.”
+
+`core_facts.strata` separates measurement fields by individual/population level,
+statistic and measurement type. Credited predictions are assigned to the reference
+stratum; unmatched predictions retain their declared stratum. This distinction is
+especially relevant to recovery, which can match across otherwise incompatible strata.
+Dataset `core_fields_micro` sums field counts before calculating rates. It does not
+average paper precisions. Experiment plotting tables include `field_scores.csv`
+and `field_strata.csv` with paper, arm and repetition, including TP/FP/FN.
+
+Always show completion and reference coverage alongside field scores. Missing
+evaluations do not represent zero precision, and incomplete reference scope does
+not establish that every unannotated prediction is false. Use the same paper roster,
+reference hashes and score contract when comparing models. The current references
+remain authoritative; reproducing an older benchmark is not required.
 
 ### Primary score: correct scientific facts
 

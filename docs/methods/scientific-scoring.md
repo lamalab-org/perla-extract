@@ -2,8 +2,8 @@
 
 This method measures agreement with a fixed reference. It does not use an LLM
 judge. Citation checks are separate diagnostics; this method does not establish source completeness. The
-current contract is evaluation format 12, matcher `rich-study-hungarian-v17`, fact
-profile `core-scientific-facts-v14`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
+current contract is evaluation format 13, matcher `rich-study-hungarian-v18`, fact
+profile `core-scientific-facts-v15`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
 
 ## Evaluation unit and two score views
 
@@ -64,6 +64,15 @@ Thus exact arm labels can distinguish otherwise identical stacks, while lengthy
 prose contributes no additional weight. Candidate similarity must reach **0.35**.
 The threshold is a fixed matching policy, not a calibrated probability.
 
+For child records with an established parent correspondence, candidate similarity
+is `(content_similarity + 1) / 2`; without a known compatible parent it is the
+content similarity alone. The same 0.35 threshold applies. Null parent links are
+not evidence of correspondence. Parent/protocol agreement retains its assignment
+priority, and alternative optimal assignments remain ambiguous. This lets a known
+device family support a specimen match despite different display prose, without
+using any measured outcome. Fact-level parent, treatment and protocol checks still
+reject incompatible scientific attribution.
+
 If an order is absent or incomplete, the existing conservative family-feature
 comparison is used. No missing order is inferred. Within a paired, fully ordered
 family, only layer links present in **every** longest ordered alignment establish
@@ -84,19 +93,20 @@ Family correspondence based on a partial stack does not certify the full design.
 For an individual device, recognized treatment inputs are read from both
 `subject_context.conditions` and `reported_properties`. Each study supplies its
 own interpretation; the reference never fills gaps in a prediction. Registered
-input names and complete quantities establish a treatment description. The stage,
-treated material, champion status and selection basis remain explicit requirements.
-A variant label is redundant when explicit registered inputs supply identity;
-otherwise its literal wording remains required. Population treatment sets use the
+input names and complete quantities establish a treatment description. These features establish candidate specimen correspondences. For PV value credit,
+free-text variant and selection descriptions do not veto a paired specimen again.
+Reference-reported champion status and preparation remain requirements;
+unannotated reference preparation does not certify or veto extra predicted detail. Population treatment sets use the
 same conservative quantity comparison and retain multiplicity.
 
-Unknown structured conditions remain required context but cannot identify a
-subject or break an assignment tie. In particular, putting PCE in a condition
+Reference-reported unknown structured conditions remain required context but cannot
+identify a subject or break an assignment tie. In particular, putting PCE in a condition
 field cannot make the outcome identify its own subject. A missing distinguishing
 condition is unresolved, not a wildcard. Different treatment, specimen, scan
 direction, statistic or registered measurement-protocol condition blocks attributed
-credit. Explicit measurement conditions constrain outcomes, including unfamiliar names
-retained literally. For archived records, only registered protocol names in metrics
+credit. For PV fields, reference-reported measurement conditions constrain outcomes, including
+unfamiliar names retained literally. Extra predicted conditions are independently
+scored fields; they do not veto a value because the reference omits that condition. For archived records, only registered protocol names in metrics
 are interpreted as measurement conditions. Conditions in preparation or aging
 containers never supply missing measurement context. If both
 inputs omit a qualifier, equality of that omission does not establish the actual
@@ -124,7 +134,8 @@ context remains a requirement; other domains retain their existing strict rules.
 
 | Field | Subject and defining context | Independently scored detail |
 | --- | --- | --- |
-| Individual PCE, Voc, Jsc, FF | Specimen, family, treatment/arm, selection, individual result kind, measurement type, scan, asserted protocol | Unrelated recipe annotations |
+| Individual PCE, Voc, Jsc, FF | Paired specimen, family, reference-reported treatment/champion status, individual result kind, measurement type, scan, reference protocol | Variant/selection wording and extra unannotated protocol |
+| Population PCE, Voc, Jsc, FF | Paired cohort, statistic, family, subjects/label, measurement type, scan, reference protocol; conflicting sample counts block | Extra unannotated protocol |
 | Annealing temperature/duration | Family, aligned target and ordered annealing step | Optional ingredients of the established step |
 | Spin-coating speed/duration | Family, aligned target and ordered coating step | Optional ingredients of the established step |
 
@@ -249,3 +260,18 @@ configuration and design compatibility checks. A subset contrast lists omitted
 pairs and is explicitly conditional on complete paired repetitions; it does not
 estimate performance on the failed attempts. No per-prediction review is required
 to run or compare ablations.
+
+## Per-field results
+
+The primary numerical table uses `core_facts.fields`, derived from the same fact
+projection, candidate decisions, and assignments as the group totals. For each
+quantity, TP is matched facts, FP is predicted minus matched, and FN is reference
+minus matched. Precision and recall use these counts; empty denominators remain
+undefined. Dataset field rates sum counts across papers before division.
+
+The four PV fields are normalized with a closed name grammar that preserves
+recognized method/statistic qualifiers. It does not use arbitrary fuzzy names or
+LLM judges. Explicit units use the existing dimensional comparator at 1% relative
+tolerance; missing units are not guessed. Ambiguity and missing owners remain in
+the denominators and explanations. A wrong FF value does not remove correct PCE
+credit. This contract uses the current reviewed schema and reference files.
