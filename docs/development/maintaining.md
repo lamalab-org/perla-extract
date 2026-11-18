@@ -78,6 +78,18 @@ reading/assembly instructions and scientific prompt fingerprint.
 keeps optional interpretations separate from reported facts. `run_reporting.py`
 serializes existing decisions rather than running scientific checks again.
 
+`guidance.py` owns the scientific boundaries shared by reading, assembly and
+correction. Explicitly shared measurement conditions belong on every observation
+covered by the source statement, with scope evidence and narrower exceptions.
+Device labels retain source arm codes; distinguishing preparation belongs in
+`reported_properties` or `subject_context`. A reused design code alone does not
+establish the same physical specimen. These rules use the existing schema.
+
+When testing a guidance change, pin the source, model, schema and scorer. Vary one
+policy at a time and retain failed attempts and collateral field changes. The
+workflow request tests check that the shared policies reach each relevant stage
+exactly once; a live ablation is still needed to measure model behavior.
+
 A citation check and reader-note coverage check are integrity constraints. They
 cannot prove that the extracted scientific attribution is correct. For example,
 a wrong device owner can still carry a genuine quotation. Evaluate scientific
