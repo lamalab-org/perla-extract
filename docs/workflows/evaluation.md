@@ -97,14 +97,17 @@ context availability is not an estimate of extraction correctness.
 
 `unit_source` distinguishes units in a separate field, the raw value or a PV
 field name (`PCE [%]`), plus missing/unsupported units and unparsed claims.
-The CLI flags missing PV unit evidence on each side. Unitless FF may be a
-fraction or an unstated percentage; no blanket scale conversion is applied.
+The CLI reports missing PV units and applications of the fixed convention on
+each side. Unitless absolute PCE/FF are percentage points (`20` means `20%`;
+`0.2` means `0.2%`). Explicit units take precedence, including a raw suffix or
+dimensionless fraction. The convention is recorded as `unit_source=percentage_points`.
+It applies symmetrically to references and predictions; input files are unchanged.
 For PV values, an unreported reference method/scan does not contradict extra
 prediction detail. Explicit contradictions and missing known reference conditions
 still prevent credit. See the [exact context rules](../methods/scientific-scoring.md#treatment-identity-and-context).
 
-Reports use format 15, matcher `rich-study-hungarian-v20` and fact profile
-`core-scientific-facts-v17`. Regenerate older reports from saved predictions before
+Reports use format 16, matcher `rich-study-hungarian-v21` and fact profile
+`core-scientific-facts-v18`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.

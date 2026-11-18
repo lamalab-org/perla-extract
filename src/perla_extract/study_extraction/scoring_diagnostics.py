@@ -27,6 +27,7 @@ UnitSource = Literal[
     "reported",
     "raw_value",
     "field_name",
+    "percentage_points",
     "missing",
     "unsupported",
     "unparsed",

@@ -2,8 +2,8 @@
 
 This method measures agreement with a fixed reference. It does not use an LLM
 judge. Citation checks are separate diagnostics; this method does not establish source completeness. The
-current contract is evaluation format 15, matcher `rich-study-hungarian-v20`, fact
-profile `core-scientific-facts-v17`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
+current contract is evaluation format 16, matcher `rich-study-hungarian-v21`, fact
+profile `core-scientific-facts-v18`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
 
 ## Evaluation unit and two score views
 
@@ -210,7 +210,7 @@ same-owner candidates when available; otherwise they inspect all same-concept
 candidates. They do not claim that one selected rejection caused a score change.
 
 `unit_source` records whether a quantity's unit came from its separate unit field,
-raw value or PV field name. Missing units, unsupported units and unparsed claims
+raw value or PV field name, or the fixed percentage-point convention. Missing units, unsupported units and unparsed claims
 have separate statuses. The same field is exported in `scoring_diagnostics.csv`.
 
 `examples/scoring/validate.py` tests the frozen references and bounded synthetic
@@ -249,8 +249,22 @@ For registered PV names, a recognized, dimensionally compatible trailing unit in
 (`PCE [%]`, `Voc (mV)`) supplies a missing unit field in the scoring projection.
 An existing unit field takes precedence. Raw-number/unit consistency checks still
 apply; full-name/abbreviation pairs such as `fill factor (FF)` are not units.
-Inputs and their hashes are unchanged. No percentage-point convention is assumed:
-`20` without a unit does not equal `20%`, and `0.2%` does not equal `20%`.
+Absolute PCE and FF without a nonempty unit field, recognized field-name unit or
+explicit raw-value unit use a fixed **percentage-point convention**, independently
+on both inputs. Thus unitless `20` means `20%`, and unitless `0.2` means `0.2%`,
+not `20%`. Explicit fractions retain their scale: `0.2 dimensionless` means `20%`.
+No threshold guesses whether a number is a fraction. Scalars, ranges and
+uncertainties must still parse as complete, internally consistent claims. Unknown
+units, bounds and unparsed qualifiers retain their conservative literal handling.
+The convention also applies to absolute PCE/FF aging outcomes; retained/relative
+quantities stay distinct. Other quantities receive no default unit.
+
+Inputs and their hashes are unchanged. `unit_source=percentage_points` marks the
+convention in every affected fact's diagnostics and CSV row; the CLI reports counts
+for each side. It is an explicit scoring assumption, not recovered source evidence.
+Fraction-form source values must carry an explicit dimensionless unit to retain
+that interpretation. This policy changes numeric agreement, without establishing
+specimen identity or supplying missing measurement context.
 
 The grammar accepts printed powers of ten and a single variable assignment such
 as `E = 1.0 V` or `Q_pol = 10 mC/cm2`; it still validates the complete right-hand
@@ -312,6 +326,7 @@ undefined. Dataset field rates sum counts across papers before division.
 The four PV fields are normalized with a closed name grammar that preserves
 recognized method/statistic qualifiers. It does not use arbitrary fuzzy names or
 LLM judges. Explicit units use the existing dimensional comparator at 1% relative
-tolerance; missing units are not guessed. Ambiguity and missing owners remain in
+tolerance. Unitless absolute PCE/FF use the fixed percentage-point convention
+described above; other missing units remain unresolved. Ambiguity and missing owners remain in
 the denominators and explanations. A wrong FF value does not remove correct PCE
 credit. This contract uses the current reviewed schema and reference files.

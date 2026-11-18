@@ -530,8 +530,12 @@ def test_population_mean_and_maximum_cannot_share_metric_credit():
     prediction = truth.model_copy(deep=True)
     prediction.population_statistics[0].statistic_type = "maximum"
     score = evaluate_study(truth, prediction).core_facts
-    assert not any("/population_statistics/0/metrics/" in m.truth_path for m in score.matches)
-    assert score.groups["performance"].matched == 2  # unchanged individual result and cohort count
+    assert not any(
+        "/population_statistics/0/metrics/" in m.truth_path for m in score.matches
+    )
+    assert (
+        score.groups["performance"].matched == 2
+    )  # unchanged individual result and cohort count
 
 
 @pytest.mark.parametrize(
@@ -541,7 +545,7 @@ def test_population_mean_and_maximum_cannot_share_metric_credit():
         ("~20%", 20, "%"),
         ("20 ± 2%", 20, "%"),
         ("20–22%", 20, "%"),
-        ("20", 20, None),
+        ("0.2", 0.2, None),  # The convention means 0.2%, not 20%.
         ("20 V", 20, "V"),
     ],
 )
@@ -690,9 +694,7 @@ def test_missing_stability_condition_does_not_hide_recovered_values():
     assert score.recovery.groups["stability"].matched == 4
     assert score.recovery.groups["stability"].f1 == pytest.approx(8 / 9)
     assert (
-        score.groups["stability"].truth
-        == score.recovery.groups["stability"].truth
-        == 5
+        score.groups["stability"].truth == score.recovery.groups["stability"].truth == 5
     )
     assert score.scoring_status == "ready"
 
@@ -976,7 +978,9 @@ def test_solvent_as_an_extra_layer_reduces_stack_precision():
             evidence=EVIDENCE,
         )
     )
-    score = evaluate_study(truth, prediction).core_facts.groups["material_device_identity"]
+    score = evaluate_study(truth, prediction).core_facts.groups[
+        "material_device_identity"
+    ]
     assert score.precision < 1
     assert score.recall == 1
 
@@ -1512,8 +1516,8 @@ def test_old_scoring_report_is_not_silently_loaded_as_current():
     from pydantic import ValidationError
 
     payload = evaluate_study(study(), study()).model_dump()
-    assert payload["format_version"] == 15
-    assert payload["core_facts"]["profile"] == "core-scientific-facts-v17"
+    assert payload["format_version"] == 16
+    assert payload["core_facts"]["profile"] == "core-scientific-facts-v18"
     payload["format_version"] = 9
     with pytest.raises(ValidationError):
         EvaluationReport.model_validate(payload)

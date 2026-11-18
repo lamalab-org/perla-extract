@@ -124,8 +124,8 @@ def test_reference_score_invariance_and_negative_controls(release, index, paper)
     # rewrite a frozen reference just to change that historical metadata.
     assert index["matcher_version"] == "rich-study-hungarian-v6"
     assert index["fact_profile"] == "core-scientific-facts-v4"
-    assert same.matcher_version == "rich-study-hungarian-v20"
-    assert same.core_facts.profile == "core-scientific-facts-v17"
+    assert same.matcher_version == "rich-study-hungarian-v21"
+    assert same.core_facts.profile == "core-scientific-facts-v18"
     # Repeated observations of the same known device are a fact multiset. Their
     # generated record IDs need no unique pairing; scientific subjects still do.
     assert same.core_facts.micro.f1 == 1

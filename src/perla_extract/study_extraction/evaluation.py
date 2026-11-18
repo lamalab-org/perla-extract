@@ -65,9 +65,9 @@ from .scoring_identity import record_similarity as _record_similarity
 from .scoring_layers import align_layers
 from .scoring_process import align_processes
 
-EVALUATION_FORMAT_VERSION: Final[Literal[15]] = 15
+EVALUATION_FORMAT_VERSION: Final[Literal[16]] = 16
 MAX_FACT_CANDIDATES = 1_000_000
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v20"]] = "rich-study-hungarian-v20"
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v21"]] = "rich-study-hungarian-v21"
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -394,7 +394,7 @@ class ScoringIssue(StrictModel):
 class CoreFactScore(FactScoreView):
     """Correctly attributed claims, with recovery over the identical fact inventory."""
 
-    profile: Literal["core-scientific-facts-v17"] = "core-scientific-facts-v17"
+    profile: Literal["core-scientific-facts-v18"] = "core-scientific-facts-v18"
     recovery: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
     issues: list[ScoringIssue]
@@ -462,8 +462,8 @@ class CoreFactScore(FactScoreView):
 class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
-    format_version: Literal[15] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v20"] = MATCHER_VERSION
+    format_version: Literal[16] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v21"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -554,8 +554,8 @@ class EvaluationInput(StrictModel):
 class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
-    format_version: Literal[15] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v20"] = MATCHER_VERSION
+    format_version: Literal[16] = EVALUATION_FORMAT_VERSION
+    matcher_version: Literal["rich-study-hungarian-v21"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)

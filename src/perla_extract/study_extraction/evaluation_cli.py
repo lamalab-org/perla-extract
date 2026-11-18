@@ -270,7 +270,19 @@ def main(
         click.echo(
             f"PV unit evidence missing: {missing_units['truth']} reference, "
             f"{missing_units['prediction']} predicted field(s). "
-            "Inspect diagnostics.unit_source; no percentage unit is assumed.",
+            "Inspect diagnostics.unit_source.",
+            err=True,
+        )
+    percentage_points = {
+        side: sum(d.unit_source == "percentage_points" for d in facts)
+        for side, facts in report.core_facts.diagnostics.facts.items()
+    }
+    if any(percentage_points.values()):
+        click.echo(
+            "Unitless PCE/FF treated as percentage points: "
+            f"{percentage_points['truth']} reference, "
+            f"{percentage_points['prediction']} predicted field(s). "
+            "Recorded as diagnostics.unit_source=percentage_points.",
             err=True,
         )
     if fail_on_scoring_issues and report.core_facts.issues:

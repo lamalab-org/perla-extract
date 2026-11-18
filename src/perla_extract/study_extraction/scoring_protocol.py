@@ -10,9 +10,10 @@ from __future__ import annotations
 import re
 import sys
 from dataclasses import dataclass
+from typing import Literal
 
 from .models import PerformanceObservation, PopulationStatistic, ReportedValue
-from .scoring_claims import equal_claims, normalize_claim
+from .scoring_claims import CompoundClaim, ScalarClaim, equal_claims, normalize_claim
 from .scoring_vocabulary import property_name
 from .units import canonical_quantity
 
@@ -58,18 +59,30 @@ def metric_definition(name: str) -> tuple[str, str | None, str | None, str | Non
     return property_name(name), None, None, None
 
 
-def metric_value(value: ReportedValue) -> ReportedValue:
-    """Read an explicitly printed PV unit from its field label when absent separately.
+def metric_value(
+    value: ReportedValue, quantity: str
+) -> tuple[ReportedValue, Literal["field_name", "percentage_points"] | None]:
+    """Apply the fixed percentage-point convention only after explicit unit evidence.
 
-    The raw claim parser still rejects inconsistent numbers and unit suffixes.
-    This function reads one study's own assertion and does not consult a match.
+    Unitless absolute PCE/FF are expressed in percentage points: 0.2 means 0.2%.
+    Explicit units in the unit field, label or raw claim retain their meaning.
+    Qualified, inconsistent and unsupported raw claims are never repaired here.
+    Each input is interpreted independently, without consulting a match.
     """
+    if value.unit is not None and value.unit.strip():
+        return value, None
     _, _, _, unit = metric_definition(value.name)
-    return (
-        value.model_copy(update={"unit": unit})
-        if value.unit is None and unit
-        else value
-    )
+    if unit:
+        return value.model_copy(update={"unit": unit}), "field_name"
+    if quantity in {"pce", "ff"}:
+        # An empty unit field is also absent. Parse the complete raw claim first
+        # so an explicit fraction/other suffix cannot acquire a percentage scale.
+        if value.unit is not None:
+            value = value.model_copy(update={"unit": None})
+        claim = normalize_claim(value)
+        if isinstance(claim, (ScalarClaim, CompoundClaim)) and claim.unit is None:
+            return value.model_copy(update={"unit": "%"}), "percentage_points"
+    return value, None
 
 
 PROTOCOL_NAMES = {

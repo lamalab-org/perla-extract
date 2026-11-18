@@ -12,6 +12,7 @@ from perla_extract.study_extraction.scoring_protocol import (
     performance_name,
     protocol_name,
 )
+from perla_extract.study_extraction.units import canonical_quantity
 
 TRANSFORMS = (
     "protocol_relocation",
@@ -168,6 +169,7 @@ def calibration_cases(truth: StudyExtraction):
             "value_plus_relocation",
         }:
             value = record.metrics[target]
+            missing_unit_has_same_meaning = False
             if name in {"wrong_value", "value_plus_relocation"}:
                 # A distant value cannot equal another outcome of this sole
                 # measurement. This precondition avoids accidental false passes.
@@ -178,9 +180,18 @@ def calibration_cases(truth: StudyExtraction):
             elif name == "raw_parsed_conflict":
                 value.raw_value = "1000000000000"
             else:
+                # The oracle is unit arithmetic, independent of the matcher.
+                # Removing % preserves PCE/FF meaning under the fixed convention;
+                # removing a voltage/current-density unit still loses its meaning.
+                missing_unit_has_same_meaning = performance_name(
+                    value.name, record.measurement_type
+                ) in {"pce", "ff"} and canonical_quantity(
+                    value.value_number, value.unit
+                ) == canonical_quantity(value.value_number, "%")
                 value.raw_value, value.unit = str(value.value_number), None
-            allowed = tuple(p for p in allowed if p != target_path)
-            forbidden = (target_path,)
+            if not missing_unit_has_same_meaning:
+                allowed = tuple(p for p in allowed if p != target_path)
+                forbidden = (target_path,)
         if name == "protocol_in_device_properties":
             device = next(
                 d

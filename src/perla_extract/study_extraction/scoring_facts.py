@@ -122,7 +122,7 @@ class ScientificFact:
     subfield: FactSubfield
     concept: tuple[str, str]
     source_paths: tuple[str, ...] = ()
-    unit_source: Literal["field_name"] | None = None
+    unit_source: Literal["field_name", "percentage_points"] | None = None
 
     @property
     def field_key(self) -> str:
@@ -461,12 +461,12 @@ class _FactProjector:
             )
             if "/measurement_conditions/" in path and protocol_name(name) is None:
                 concept = ("measurement_condition", name)
-            unit_source: Literal["field_name"] | None = None
-            if isinstance(value, ReportedValue) and concept[0] == "measurement":
-                resolved = metric_value(value)
-                if resolved.unit != value.unit:
-                    unit_source = "field_name"
-                value = resolved
+            unit_source: Literal["field_name", "percentage_points"] | None = None
+            if isinstance(value, ReportedValue) and (
+                concept[0] == "measurement"
+                or (concept[0] == "aging_outcome" and concept[1] in {"pce", "ff"})
+            ):
+                value, unit_source = metric_value(value, concept[1])
             self.facts.append(
                 ScientificFact(
                     group=fact_group(concept),

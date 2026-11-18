@@ -161,7 +161,7 @@ def test_explicit_units_in_pv_labels_are_read_without_mutating_inputs(
     [
         ("PCE", 20, "%", "20", "reported", 1),
         ("PCE", None, None, "20%", "raw_value", 1),
-        ("PCE", 20, None, "20", "missing", 0),
+        ("PCE", 20, None, "20", "percentage_points", 1),
         ("PCE [%]", 0.2, None, "0.2", "field_name", 0),
         ("PCE", 20, "V", "20", "reported", 0),
         ("PCE", 20, "unknownunit", "20", "unsupported", 0),
@@ -185,7 +185,7 @@ def test_unit_evidence_and_contradictions_stay_visible(
     assert diagnostic.unit_source == source
 
 
-def test_cli_exposes_missing_pv_unit_evidence(tmp_path):
+def test_cli_exposes_percentage_point_convention(tmp_path):
     truth, prediction = study(), study()
     truth.performance_observations[0].metrics = [quantity("PCE", 20, None)]
     for name, data in (("truth", truth), ("prediction", prediction)):
@@ -202,7 +202,10 @@ def test_cli_exposes_missing_pv_unit_evidence(tmp_path):
         ],
     )
     assert result.exit_code == 0, result.output
-    assert "PV unit evidence missing: 1 reference, 0 predicted" in result.output
+    assert (
+        "Unitless PCE/FF treated as percentage points: 1 reference, 0 predicted"
+        in result.output
+    )
 
 
 @pytest.mark.parametrize(
