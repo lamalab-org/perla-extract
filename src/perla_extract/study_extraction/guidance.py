@@ -44,6 +44,17 @@ SHARED_QUANTITY_POLICY = """Shared-quantity boundary:
 - A ratio needs its ordered components and its reference basis. Preserve the reported
   ratio with those identities; do not turn its terms into unrelated concentrations
   or derive absolute amounts without a source-reported basis.
+- Preserve measurement conditions whose scope is explicitly shared by a named set
+  of devices, a table or figure, or a stated measurement procedure. Read the caption,
+  header, footnotes and relevant methods together with the reported results. A
+  condition need not be repeated in every row to apply to every covered observation.
+- In a claim ledger, retain every explicitly covered measurement in shared_targets.
+  In the final extraction, repeat the condition in measurement_conditions on each
+  covered observation or population record. Cite the supplied passages establishing
+  both the condition and its scope. Preserve narrower exceptions separately.
+- A common family, a nearby condition or customary measurement practice does not
+  establish shared scope. Never copy conditions across unrelated measurements or
+  supply an unreported condition from a device's result value.
 """
 
 RECORD_BOUNDARY_POLICY = """Record boundary:
