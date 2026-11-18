@@ -134,6 +134,13 @@ def calibration_cases(truth: StudyExtraction):
     )
     target_path = f"{prefix}/metrics/{target}"
     for name in TRANSFORMS:
+        if name == "voltage_range_alias" and any(
+            protocol_name(v.name) == "scanvoltagerange"
+            for v in (*original.metrics, *original.measurement_conditions)
+        ):
+            # Adding a different range would make this a contradiction control,
+            # not a pure synonym control. Count it as inapplicable for this paper.
+            continue
         case_truth = base
         prediction = base.model_copy(deep=True)
         record = prediction.performance_observations[i]

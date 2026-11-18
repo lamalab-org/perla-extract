@@ -14,6 +14,14 @@ def test_generated_context_contract(case):
     assert result["passed"], result["failures"]
 
 
+def test_synthetic_range_alias_does_not_contradict_an_existing_range():
+    truth = study()
+    value = quantity("scan voltage range", None, "V")
+    value.raw_value = "0.8 to -0.1 V"
+    truth.performance_observations[0].measurement_conditions = [value]
+    assert "voltage_range_alias" not in {case.name for case in calibration_cases(truth)}
+
+
 @pytest.mark.parametrize("extra", [100, 100.5, 50])
 def test_only_roundoff_equal_copies_across_containers_are_redundant(extra):
     truth = study()
