@@ -120,3 +120,43 @@ def test_protocol_completeness_stays_fact_local_for_one_known_device():
     # Missing protocol cannot satisfy the explicitly illuminated measurement.
     assert score.groups["performance"].matched == 1
     assert score.matches[-1].truth_path == "/performance_observations/1/metrics/0"
+
+
+@pytest.mark.parametrize(
+    "name", ["voltage sweep", "voltage scanning protocol", "voltage sweep range"]
+)
+@pytest.mark.parametrize("placement", ["metrics", "measurement_conditions"])
+def test_named_voltage_ranges_agree_across_representations(name, placement):
+    truth = study()
+    condition = quantity("scan voltage range", None, "V")
+    condition.raw_value = "1.2 to -0.05 V"
+    truth.performance_observations[0].measurement_conditions = [condition]
+    prediction = truth.model_copy(deep=True)
+    record = prediction.performance_observations[0]
+    record.measurement_conditions = []
+    condition = condition.model_copy(deep=True, update={"name": name})
+    getattr(record, placement).append(condition)
+    score = evaluate_study(truth, prediction).core_facts
+    assert score.fields["measurement:pce"].matched == 1
+    assert score.subfields["measurement_protocol"].matched == 1
+    condition.raw_value = "1.2 to -0.50 V"
+    assert (
+        evaluate_study(truth, prediction).core_facts.fields["measurement:pce"].matched
+        == 0
+    )
+
+
+@pytest.mark.parametrize(
+    "name", ["voltage sweep rate", "voltage step", "PCE", "unknown sweep setting"]
+)
+def test_related_or_unknown_names_cannot_supply_a_voltage_range(name):
+    truth = study()
+    condition = quantity("scan voltage range", None, "V")
+    condition.raw_value = "1.2 to -0.05 V"
+    truth.performance_observations[0].measurement_conditions = [condition]
+    prediction = truth.model_copy(deep=True)
+    prediction.performance_observations[0].measurement_conditions[0].name = name
+    assert (
+        evaluate_study(truth, prediction).core_facts.fields["measurement:pce"].matched
+        == 0
+    )

@@ -59,19 +59,60 @@ def sample_code(
     return next(iter(codes)) if len(codes) == 1 else None
 
 
-def device_measurements(study: StudyExtraction) -> dict[str, frozenset[str]]:
-    """Describe specimen use through linked measurement kinds, never outcomes.
+MeasurementUse = tuple[str, str | None]
+
+
+def device_measurements(
+    study: StudyExtraction,
+) -> dict[str, frozenset[MeasurementUse]]:
+    """Describe specimen use through explicit measurement kind and scan direction.
 
     Multiplicity, values, metric names and annotation length have no weight. An
-    unreported or generic 'other' method supplies no identity evidence.
+    unreported or generic 'other' method supplies no identity evidence. Missing or
+    inapplicable scan direction supplies no direction evidence.
     """
-    uses: dict[str, set[str]] = {}
+    uses: dict[str, set[MeasurementUse]] = {}
     for observation in study.performance_observations:
         if observation.measurement_type not in {"not_reported", "other"}:
+            direction = (
+                observation.scan_direction
+                if observation.scan_direction in {"forward", "reverse"}
+                else None
+            )
             uses.setdefault(observation.device_id, set()).add(
-                observation.measurement_type
+                (observation.measurement_type, direction)
             )
     return {key: frozenset(value) for key, value in uses.items()}
+
+
+def measurement_use_similarity(
+    reference: frozenset[MeasurementUse], prediction: frozenset[MeasurementUse]
+) -> float:
+    """Corroborate a specimen using reference-reported measurement metadata.
+
+    Method sets use Jaccard overlap. If the reference reports scan directions,
+    average that overlap with direction overlap for those methods. Unreported
+    prediction directions add no corroboration; they never exclude a candidate.
+    Extra directions for methods without reference scan metadata are ignored.
+    Outcome values and the number of repeated observations cannot affect this.
+    """
+    methods = ({kind for kind, _ in reference}, {kind for kind, _ in prediction})
+    overlap = (
+        len(methods[0] & methods[1]) / len(methods[0] | methods[1])
+        if all(methods)
+        else 0.0
+    )
+    known = {(kind, scan) for kind, scan in reference if scan is not None}
+    if not known:
+        return overlap
+    measured = {kind for kind, _ in known}
+    stated = {
+        (kind, scan)
+        for kind, scan in prediction
+        if kind in measured and scan is not None
+    }
+    directions = len(known & stated) / len(known | stated)
+    return (overlap + directions) / 2
 
 
 def measurement_subject(record: object) -> tuple[str, str] | None:

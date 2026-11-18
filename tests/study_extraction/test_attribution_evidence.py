@@ -110,6 +110,43 @@ def test_same_measurement_siblings_stay_ambiguous_despite_one_equal_pce():
     )
 
 
+def test_known_scan_corroborates_specimen_without_following_the_result():
+    truth, prediction = measurement_siblings("jv_scan")
+    prediction.performance_observations[1].scan_direction = "not_reported"
+    score = evaluate_study(truth, prediction)
+    assert score.core_facts.fields["measurement:pce"].matched == 1
+    pair = next(m for m in score.matches if m.kind == "individual_devices")
+    assert pair.predicted_id == prediction.individual_devices[0].device_id
+    assert pair.identity_evidence["prediction_measurement_scans"] == ["jv_scan:reverse"]
+    first, second = prediction.performance_observations
+    first.metrics, second.metrics = second.metrics, first.metrics
+    swapped = evaluate_study(truth, prediction)
+    assert swapped.core_facts.fields["measurement:pce"].matched == 0
+    assert swapped.core_facts.recovery.fields["measurement:pce"].matched == 1
+
+
+def test_missing_reference_scan_cannot_prefer_less_annotated_prediction():
+    truth, prediction = measurement_siblings("jv_scan")
+    truth.performance_observations[0].scan_direction = "not_reported"
+    prediction.performance_observations[1].scan_direction = "not_reported"
+    score = evaluate_study(truth, prediction)
+    assert score.core_facts.fields["measurement:pce"].matched == 0
+    assert next(m for m in score.matches if m.kind == "individual_devices").ambiguous
+
+
+def test_repeated_measurements_do_not_add_specimen_identity_weight():
+    from perla_extract.study_extraction.scoring_identity import device_measurements
+
+    original = study()
+    repeated = original.model_copy(deep=True)
+    repeated.performance_observations.append(
+        repeated.performance_observations[0].model_copy(
+            deep=True, update={"observation_id": "repeat"}
+        )
+    )
+    assert device_measurements(original) == device_measurements(repeated)
+
+
 def test_illumination_and_voltage_interval_aliases_preserve_explicit_requirements():
     truth, prediction = study(), study()
     first = quantity("illumination", None, None)

@@ -2,8 +2,8 @@
 
 This method measures agreement with a fixed reference. It does not use an LLM
 judge. Citation checks are separate diagnostics; this method does not establish source completeness. The
-current contract is evaluation format 16, matcher `rich-study-hungarian-v21`, fact
-profile `core-scientific-facts-v18`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
+current contract is evaluation format 17, matcher `rich-study-hungarian-v22`, fact
+profile `core-scientific-facts-v19`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
 
 ## Evaluation unit and two score views
 
@@ -83,14 +83,21 @@ using any measured outcome. Fact-level parent, treatment and protocol checks sti
 reject incompatible scientific attribution.
 
 For specimens within a paired family, let `C` be that parent-adjusted content
-similarity and `U` the Jaccard overlap of their linked, explicitly named measurement
-types. The specimen similarity is `(C + U) / 2`. An absent, generic `other` or
-unreported method contributes zero measurement evidence. Repeated observations
-have no additional weight. Values, property names and metric completeness are
-excluded. Explicit compact sample designations in label/variant prose reject
+similarity and `U` the overlap of their linked measurement uses. First compare
+explicit method sets with Jaccard overlap. If the reference also reports scan
+directions, average method overlap with the Jaccard overlap of known
+`(method, direction)` pairs for those methods. Missing predicted directions supply
+no scan corroboration; extra directions for methods without reference scan metadata
+are ignored. This is positive identity evidence, not an exclusion rule or proof
+that different measurements used different physical specimens. The specimen
+similarity is `(C + U) / 2`. An absent, generic `other` or unreported method
+contributes zero measurement evidence. Repeated observations have no additional
+weight. Values, property names and metric completeness are excluded.
+Explicit compact sample designations in label/variant prose reject
 contradictory candidates, preserving case and code order. Additional descriptive
-prose does not change the extracted code. The saved match exposes both codes and
-method sets. Family and treatment/context checks still apply after this assignment.
+prose does not change the extracted code. The saved match exposes both codes,
+method sets and known scan directions. Family and treatment/context checks still
+apply after this assignment.
 
 If an order is absent or incomplete, the existing conservative family-feature
 comparison is used. No missing order is inferred. Within a paired, fully ordered
@@ -108,6 +115,12 @@ dopant. Roles, material forms and compositions still require their own fact cred
 Family correspondence based on a partial stack does not certify the full design.
 
 ## Treatment identity and context
+
+`scoring_vocabulary.py` declares one small measurement-condition vocabulary.
+For example, voltage sweep, voltage scanning protocol and scan voltage range
+denote the same condition. Rate, step and range remain different concepts;
+unknown names stay literal. Recognition supplies no missing value or unit and
+does not change numeric tolerances. Both inputs are interpreted independently.
 
 For an individual device, recognized treatment inputs are read from both
 `subject_context.conditions` and `reported_properties`. Each study supplies its

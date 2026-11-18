@@ -18,6 +18,7 @@ TRANSFORMS = (
     "protocol_relocation",
     "protocol_duplicate",
     "protocol_units",
+    "voltage_range_alias",
     "missing_protocol",
     "conflicting_protocol",
     "measurement_type",
@@ -133,6 +134,7 @@ def calibration_cases(truth: StudyExtraction):
     )
     target_path = f"{prefix}/metrics/{target}"
     for name in TRANSFORMS:
+        case_truth = base
         prediction = base.model_copy(deep=True)
         record = prediction.performance_observations[i]
         condition = record.measurement_conditions[index]
@@ -143,6 +145,19 @@ def calibration_cases(truth: StudyExtraction):
             record.metrics.append(condition.model_copy(deep=True))
         if name == "protocol_units":
             condition.raw_value, condition.value_number, condition.unit = "11", 11, "mV"
+        if name == "voltage_range_alias":
+            case_truth = base.model_copy(deep=True)
+            reference = case_truth.performance_observations[i].measurement_conditions[
+                index
+            ]
+            for item in (reference, condition):
+                item.name = "scan voltage range"
+                item.raw_value, item.value_number, item.unit = (
+                    "1.2 to -0.05 V",
+                    None,
+                    "V",
+                )
+            condition.name = "voltage scanning protocol"
         if name == "missing_protocol":
             record.measurement_conditions.pop(index)
             allowed, forbidden = (), (*outcomes, protocol_path)
@@ -214,7 +229,7 @@ def calibration_cases(truth: StudyExtraction):
             record.metrics.append(record.metrics[target].model_copy(deep=True))
         yield CalibrationCase(
             name,
-            base,
+            case_truth,
             prediction,
             allowed,
             forbidden,

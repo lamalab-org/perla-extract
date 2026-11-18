@@ -15,6 +15,7 @@ from typing import Literal
 from .models import PerformanceObservation, PopulationStatistic, ReportedValue
 from .scoring_claims import CompoundClaim, ScalarClaim, equal_claims, normalize_claim
 from .scoring_vocabulary import property_name
+from .scoring_vocabulary import protocol_name as protocol_name
 from .units import canonical_quantity
 
 # A closed grammar separates a quantity from its stated method/statistic. Do not
@@ -83,32 +84,6 @@ def metric_value(
         if isinstance(claim, (ScalarClaim, CompoundClaim)) and claim.unit is None:
             return value.model_copy(update={"unit": "%"}), "percentage_points"
     return value, None
-
-
-PROTOCOL_NAMES = {
-    "illuminationintensity": "illuminationintensity",
-    "irradiance": "illuminationintensity",
-    "illumination": "illumination",
-    "illuminationspectrum": "illuminationspectrum",
-    "illuminationstandard": "illuminationstandard",
-    "scanrate": "scanrate",
-    "jvscanrate": "scanrate",
-    "scanspeed": "scanrate",
-    "scanvoltagerange": "scanvoltagerange",
-    "scanprotocol": "scanvoltagerange",
-    "voltagescanprotocol": "scanvoltagerange",
-    "voltagestep": "voltagestep",
-    "measurementtemperature": "measurementtemperature",
-    "measurementatmosphere": "measurementatmosphere",
-    "measurementcondition": "measurementcondition",
-    "storagebeforemeasurement": "storagebeforemeasurement",
-    "storageinglovebox": "storageinglovebox",
-}
-
-
-def protocol_name(name: str) -> str | None:
-    """Recognize declared measurement conditions; unknown labels stay unclassified."""
-    return PROTOCOL_NAMES.get(property_name(name))
 
 
 def performance_name(name: str, measurement_type: str | None) -> str:
